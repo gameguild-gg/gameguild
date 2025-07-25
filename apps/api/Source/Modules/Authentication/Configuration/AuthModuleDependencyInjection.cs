@@ -1,6 +1,7 @@
 using FluentValidation;
 using GameGuild.Modules.Authentication.Validators;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 
 namespace GameGuild.Modules.Authentication;
@@ -133,6 +134,50 @@ public class JwtOptions {
   public int ExpirationMinutes { get; set; } = 60;
 
   public int RefreshTokenExpirationDays { get; set; } = 7;
+
+  /// <summary>
+  /// Applies fallback values with warnings when environment variables are not set.
+  /// </summary>
+  /// <param name="configuration">Application configuration</param>
+  public void ApplyFallbacksWithWarnings(IConfiguration configuration) {
+    var logger = GetLogger();
+
+    if (string.IsNullOrEmpty(SecretKey)) {
+      SecretKey = "game-guild-production-jwt-secret-key-must-be-at-least-32-characters-long-and-secure";
+      logger?.LogWarning("JWT SecretKey not found in configuration. Using fallback value. Please set Jwt__SecretKey environment variable for production.");
+    }
+
+    if (string.IsNullOrEmpty(Issuer)) {
+      Issuer = "GameGuild.API";
+      logger?.LogWarning("JWT Issuer not found in configuration. Using fallback value 'GameGuild.API'. Please set Jwt__Issuer environment variable.");
+    }
+
+    if (string.IsNullOrEmpty(Audience)) {
+      Audience = "GameGuild.Users";
+      logger?.LogWarning("JWT Audience not found in configuration. Using fallback value 'GameGuild.Users'. Please set Jwt__Audience environment variable.");
+    }
+
+    if (ExpirationMinutes <= 0) {
+      ExpirationMinutes = 15;
+      logger?.LogWarning("JWT ExpirationMinutes not found or invalid in configuration. Using fallback value '15'. Please set Jwt__ExpirationMinutes environment variable.");
+    }
+
+    if (RefreshTokenExpirationDays <= 0) {
+      RefreshTokenExpirationDays = 7;
+      logger?.LogWarning("JWT RefreshTokenExpirationDays not found or invalid in configuration. Using fallback value '7'. Please set Jwt__RefreshTokenExpirationDays environment variable.");
+    }
+  }
+
+  private ILogger? GetLogger() {
+    try {
+      var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+      return loggerFactory.CreateLogger<JwtOptions>();
+    }
+    catch {
+      // If logger creation fails, return null and continue without logging
+      return null;
+    }
+  }
 
   public void Validate() {
     if (string.IsNullOrEmpty(SecretKey)) throw new InvalidOperationException("JWT SecretKey is required");

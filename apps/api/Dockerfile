@@ -2,8 +2,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy project file first for dependency restoration
-COPY ["GameGuild.API.csproj", "./"]
+# Copy solution and project files
+COPY ["GameGuild.sln", "."]
+COPY ["GameGuild.API.csproj", "."]
 
 # Restore dependencies
 RUN dotnet restore "GameGuild.API.csproj"
@@ -34,10 +35,10 @@ COPY --from=build --chown=appuser:appuser /app/publish .
 USER appuser
 
 # Expose port
-EXPOSE 8080
+EXPOSE 5000
 
 # Set environment variables
-ENV ASPNETCORE_URLS=http://+:8080 \
+ENV ASPNETCORE_URLS=http://+:5000 \
     ASPNETCORE_ENVIRONMENT=Production \
     DOTNET_RUNNING_IN_CONTAINER=true \
     DOTNET_USE_POLLING_FILE_WATCHER=true \
@@ -45,7 +46,32 @@ ENV ASPNETCORE_URLS=http://+:8080 \
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+    CMD curl -f http://localhost:5000/health || exit 1
 
 # Entry point
 ENTRYPOINT ["dotnet", "GameGuild.API.dll"]
+
+#
+#FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+#USER $APP_UID
+#WORKDIR /app
+#EXPOSE 8080
+#EXPOSE 8081
+#
+#FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+#ARG BUILD_CONFIGURATION=Release
+#WORKDIR /src
+#COPY ["cms.csproj", "./"]
+#RUN dotnet restore "cms.csproj"
+#COPY . .
+#WORKDIR "/src/"
+#RUN dotnet build "./cms.csproj" -c $BUILD_CONFIGURATION -o /app/build
+#
+#FROM build AS publish
+#ARG BUILD_CONFIGURATION=Release
+#RUN dotnet publish "./cms.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+#
+#FROM base AS final
+#WORKDIR /app
+#COPY --from=publish /app/publish .
+#ENTRYPOINT ["dotnet", "GameGuild.CMS.dll"]

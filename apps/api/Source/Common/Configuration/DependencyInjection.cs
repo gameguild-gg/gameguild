@@ -191,8 +191,8 @@ public static class DependencyInjection {
   }
 
   /// <summary>
-  /// Configures Entity Framework with the appropriate database provider.
-  /// Supports PostgreSQL for production and in-memory for testing.
+  /// Configures Entity Framework with PostgreSQL database provider.
+  /// Supports in-memory database for testing only.
   /// </summary>
   private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration) {
     var dbOptions = InfrastructureConfiguration.CreateDatabaseOptions(configuration);

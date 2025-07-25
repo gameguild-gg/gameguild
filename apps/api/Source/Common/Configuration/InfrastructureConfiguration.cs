@@ -22,7 +22,7 @@ public static class InfrastructureConfiguration {
 
     public string MigrationsHistoryTable { get; set; } = "__EFMigrationsHistory";
 
-    public string SchemaName { get; set; } = "dbo";
+    public string SchemaName { get; set; } = "public";
 
     public void Validate() {
       if (!UseInMemoryDatabase && string.IsNullOrEmpty(ConnectionString)) {
@@ -82,11 +82,12 @@ public static class InfrastructureConfiguration {
 
   /// <summary>
   /// Creates database options from configuration and environment variables.
+  /// PostgreSQL only - no SQLite fallback.
   /// </summary>
   public static DatabaseOptions CreateDatabaseOptions(IConfiguration configuration) {
     var options = new DatabaseOptions {
       ConnectionString = GetDatabaseConnectionString(configuration),
-      UseInMemoryDatabase = ShouldUseInMemoryDatabase(),
+      UseInMemoryDatabase = ShouldUseInMemoryDatabase(), // Only for testing
       EnableSensitiveDataLogging = IsEnvironment("Development"),
       EnableDetailedErrors = IsEnvironment("Development"),
     };
@@ -124,21 +125,38 @@ public static class InfrastructureConfiguration {
   }
 
   /// <summary>
-  /// Gets the database connection string from configuration or environment variables.
+  /// Gets the PostgreSQL database connection string from configuration or environment variables.
   /// Environment variables take precedence for security in production.
+  /// PostgreSQL only - no SQLite fallback.
   /// </summary>
   private static string GetDatabaseConnectionString(IConfiguration configuration) {
     // Try environment variable first (production security best practice)
     var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
 
-    // Fallback to configuration
+    // If not found, try to build PostgreSQL connection string from individual components (for Docker)
+    if (string.IsNullOrEmpty(connectionString)) {
+      var host = Environment.GetEnvironmentVariable("DB_HOST") ?? configuration["DB_HOST"];
+      var port = Environment.GetEnvironmentVariable("DB_PORT") ?? configuration["DB_PORT"] ?? "5432";
+      var database = Environment.GetEnvironmentVariable("DB_DATABASE") ?? configuration["DB_DATABASE"];
+      var username = Environment.GetEnvironmentVariable("DB_USERNAME") ?? configuration["DB_USERNAME"];
+      var password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? configuration["DB_PASSWORD"];
+
+      if (!string.IsNullOrEmpty(host) && !string.IsNullOrEmpty(database) &&
+          !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password)) {
+        connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};";
+      }
+    }
+
+    // Fallback to configuration (PostgreSQL connection strings only)
     connectionString ??= configuration.GetConnectionString("DB_CONNECTION_STRING");
     connectionString ??= configuration.GetConnectionString("DefaultConnection");
 
     if (string.IsNullOrEmpty(connectionString)) {
       throw new InvalidOperationException(
-        "Database connection string not found. Please set DB_CONNECTION_STRING environment variable " +
-        "or configure 'ConnectionStrings:DB_CONNECTION_STRING' in appSettings.json"
+        "PostgreSQL database connection string not found. Please set DB_CONNECTION_STRING environment variable " +
+        "or configure individual DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD environment variables " +
+        "or configure 'ConnectionStrings:DB_CONNECTION_STRING' in appSettings.json. " +
+        "SQLite is not supported - PostgreSQL only."
       );
     }
 
@@ -168,13 +186,8 @@ public static class InfrastructureConfiguration {
   /// Configures Entity Framework DbContext with the specified options.
   /// </summary>
   public static void ConfigureDbContext(DbContextOptionsBuilder options, DatabaseOptions dbOptions) {
-    if (dbOptions.UseInMemoryDatabase) {
-      ConfigureInMemoryDatabase(options);
-    }
-    else {
-      // Always use PostgreSQL for production database
-      ConfigurePostgreSqlDatabase(options, dbOptions);
-    }
+    if (dbOptions.UseInMemoryDatabase) { ConfigureInMemoryDatabase(options); }
+    else { ConfigurePostgreSqlDatabase(options, dbOptions); }
 
     ConfigureDatabaseLogging(options, dbOptions);
   }
@@ -188,15 +201,12 @@ public static class InfrastructureConfiguration {
   }
 
   /// <summary>
-  /// Configures PostgreSQL database for production.
+  /// Configures PostgreSQL database for development and production.
   /// </summary>
   private static void ConfigurePostgreSqlDatabase(DbContextOptionsBuilder options, DatabaseOptions dbOptions) {
-    options.UseNpgsql(dbOptions.ConnectionString, npgsqlOptions => { npgsqlOptions.MigrationsHistoryTable(dbOptions.MigrationsHistoryTable, dbOptions.SchemaName); });
-
-    // Suppress model changes warnings for PostgreSQL in production deployment
-    options.ConfigureWarnings(warnings =>
-                                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning)
-    );
+    options.UseNpgsql(dbOptions.ConnectionString, npgsqlOptions => {
+      npgsqlOptions.MigrationsHistoryTable(dbOptions.MigrationsHistoryTable, dbOptions.SchemaName);
+    });
   }
 
   /// <summary>
