@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-import { auth } from '@/auth';
 import { TenantManagementContent } from '@/components/tenants/tenant-management-content';
 import { getTenantsData, getUserTenants } from '@/lib/tenants/tenants.actions';
 import { TenantResponse } from '@/lib/tenants/types';

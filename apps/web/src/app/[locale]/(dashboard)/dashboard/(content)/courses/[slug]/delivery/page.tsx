@@ -189,7 +189,16 @@ export default function CourseDeliveryPage() {
                   <Label className="text-sm">Limit access period</Label>
                   <Switch
                     checked={!!state.delivery.accessWindow}
-                    onCheckedChange={(checked) => setAccessWindow(checked ? { startDate: undefined, endDate: undefined } : undefined)}
+                    onCheckedChange={(checked) =>
+                      setAccessWindow(
+                        checked
+                          ? {
+                              startDate: undefined,
+                              endDate: undefined,
+                            }
+                          : undefined,
+                      )
+                    }
                   />
                 </div>
 
@@ -239,7 +248,16 @@ export default function CourseDeliveryPage() {
                 <Label className="text-sm">Set enrollment period</Label>
                 <Switch
                   checked={!!state.enrollment.enrollmentWindow}
-                  onCheckedChange={(checked) => setEnrollmentWindow(checked ? { opensAt: undefined, closesAt: undefined } : undefined)}
+                  onCheckedChange={(checked) =>
+                    setEnrollmentWindow(
+                      checked
+                        ? {
+                            opensAt: undefined,
+                            closesAt: undefined,
+                          }
+                        : undefined,
+                    )
+                  }
                 />
               </div>
 
