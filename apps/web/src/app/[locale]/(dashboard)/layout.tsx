@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import { ErrorBoundaryProvider } from '@/components/common/error/error-boundary-provider';
+import { ErrorBoundaryProvider } from '@/components/common/errors/error-boundary-provider';
 import { redirect } from 'next/navigation';
 import React, { PropsWithChildren } from 'react';
 
