@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import { TenantManagementContent } from '@/components/tenants/tenant-management-content';
+import { TenantManagementContent } from '@/components/tenant/management/tenant-management-content';
 import { getTenantsData, getUserTenants } from '@/lib/tenants/tenants.actions';
 import { TenantResponse } from '@/lib/tenants/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
