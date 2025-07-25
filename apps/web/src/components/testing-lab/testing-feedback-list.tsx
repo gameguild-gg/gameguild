@@ -20,7 +20,7 @@ interface TestingFeedbackListProps {
 export function TestingFeedbackList({ data }: TestingFeedbackListProps) {
   const [feedback, setFeedback] = useState<TestingFeedback[]>(data.testingFeedbacks || []);
   const [selectedFeedback, setSelectedFeedback] = useState<TestingFeedback | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Update feedback when data prop changes
