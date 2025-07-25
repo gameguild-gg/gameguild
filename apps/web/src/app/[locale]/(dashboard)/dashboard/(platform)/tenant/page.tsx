@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { TenantManagementContent } from '@/components/tenant/management/tenant-management-content';
-import { getTenantsData } from '@/lib/tenants/tenants.actions';
+import { getTenantsData } from '@/lib/tenants/tenant.actions';
 import { Tenant } from '@/lib/tenants/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
