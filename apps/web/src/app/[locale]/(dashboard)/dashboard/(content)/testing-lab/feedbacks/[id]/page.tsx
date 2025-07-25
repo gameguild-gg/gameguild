@@ -6,7 +6,7 @@ import { PropsWithIdParams } from '@/types';
 export default async function Page({ params }: PropsWithIdParams): Promise<React.JSX.Element> {
   const { id } = await params;
   // Todo: Replace with actual data fetching logic.
-  const testingFeedback = await getTestingRequestById(id);
+  const testingFeedback = await getTestingFeedbackById(id);
 
   if (!testingFeedback) notFound();
 
