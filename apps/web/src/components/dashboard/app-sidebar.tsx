@@ -6,7 +6,7 @@ import { AudioWaveform, BookOpen, Bot, Command, Frame, GalleryVerticalEnd, Map, 
 import { NavMain } from '@/components/nav-main';
 import { NavProjects } from '@/components/nav-projects';
 import { NavUser } from '@/components/nav-user';
-import { TenantSwitcher } from '@/components/dashboard/tenant-switcher';
+import { TenantSwitcher } from '@/components/tenant/common/ui/tenant-switcher';
 import { TenantResponse } from '@/lib/tenants/types';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
 
