@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, type ReactNode } from 'react';
-import { TestingRequest } from './testing-requests.actions';
+import { TestingRequest } from '../../lib/testing-lab/testing-requests.actions';
 
 export interface TestingRequestState {
   requests: TestingRequest[];

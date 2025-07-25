@@ -1,18 +1,18 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { TestingRequestDetails } from '@/components/testing-lab/testing-request-details';
+import { TestingFeedbackDetails } from '@/components/testing-lab/testing-feedback-details';
 import { PropsWithIdParams } from '@/types';
 
 export default async function Page({ params }: PropsWithIdParams): Promise<React.JSX.Element> {
   const { id } = await params;
   // Todo: Replace with actual data fetching logic.
-  const testingRequest = await getTestingRequestById(id);
+  const testingFeedback = await getTestingRequestById(id);
 
-  if (!testingRequest) notFound();
+  if (!testingFeedback) notFound();
 
   return (
     <>
-      <TestingRequestDetails data={testingRequest} />
+      <TestingFeedbackDetails data={testingFeedback} />
     </>
   );
 }

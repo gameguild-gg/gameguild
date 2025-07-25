@@ -52,7 +52,7 @@ interface FeedbackStats {
   averageRating: number;
 }
 
-export function FeedbackManager() {
+export function TestingFeedbackList() {
   const [feedback, setFeedback] = useState<TestingFeedback[]>([]);
   const [stats, setStats] = useState<FeedbackStats>({
     total: 0,
