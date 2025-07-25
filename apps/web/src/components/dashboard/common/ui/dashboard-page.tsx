@@ -10,7 +10,11 @@ export const DashboardPage = async ({ children }: PropsWithChildren): Promise<Re
 };
 
 export const DashboardPageHeader = async ({ children }: PropsWithChildren): Promise<React.JSX.Element> => {
-  return <div className="flex flex-col sticky top-0 z-50 border-b backdrop-blur-sm px-4 py-8 md:px-8">{children}</div>;
+  return (
+    <div className="flex flex-col items-center  sticky top-0 z-50 border-b backdrop-blur-sm px-4 py-4 md:px-8">
+      <div className="flex flex-col flex-1 container">{children}</div>
+    </div>
+  );
 };
 
 export const DashboardPageTitle = async ({ children }: PropsWithChildren): Promise<React.JSX.Element> => {
