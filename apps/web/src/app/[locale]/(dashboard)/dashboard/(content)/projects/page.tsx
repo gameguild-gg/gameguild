@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
-import { ProjectManagementContent } from '@/components/projects/project-management-content';
+import { ProjectManagementContent } from '@/components/project/project-management-content';
 import { getProjectsData } from '@/lib/projects/projects.actions';
 
 export default async function ProjectsPage() {
