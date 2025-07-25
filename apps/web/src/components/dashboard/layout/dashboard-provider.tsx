@@ -2,7 +2,7 @@
 
 import React, { PropsWithChildren } from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { DashboardSidebar } from '../dashboard-sidebar';
+import { DashboardSidebar } from '../common/ui/dashboard-sidebar';
 import { DashboardHeader } from './dashboard-header';
 
 interface DashboardProviderProps extends PropsWithChildren {
