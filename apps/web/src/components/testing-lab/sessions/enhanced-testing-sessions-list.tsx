@@ -9,24 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   BarChart3,
   Calendar,
@@ -47,7 +33,7 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
-import { SessionFilterControls } from './session-filter-controls';
+import { SessionFilterControls } from '../session-filter-controls';
 
 interface TestingSession {
   id: string;
@@ -213,13 +199,18 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
           registeredTesterCount: session.registeredTesterCount || 0,
           registeredProjectMemberCount: session.registeredProjectMemberCount || 0,
           registeredProjectCount: session.registeredProjectCount || 0,
-          status: typeof session.status === 'string' 
-            ? session.status 
-            : session.status === 0 ? 'scheduled'
-            : session.status === 1 ? 'active'
-            : session.status === 2 ? 'completed'
-            : session.status === 3 ? 'cancelled'
-            : 'scheduled',
+          status:
+            typeof session.status === 'string'
+              ? session.status
+              : session.status === 0
+                ? 'scheduled'
+                : session.status === 1
+                  ? 'active'
+                  : session.status === 2
+                    ? 'completed'
+                    : session.status === 3
+                      ? 'cancelled'
+                      : 'scheduled',
           manager: session.manager
             ? {
                 id: session.manager.id || '',
@@ -409,315 +400,309 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
             </p>
           </div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              {userRole.isProfessor && (
-                <Dialog
-                  open={showCreateDialog}
-                  onOpenChange={(open) => {
-                    console.log('Dialog state changing:', open);
-                    setShowCreateDialog(open);
-                  }}
-                >
-                  <DialogTrigger asChild>
-                    <Button
-                      onClick={() => {
-                        console.log('Schedule Session button clicked');
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Schedule Session
-                    </Button>
-                  </DialogTrigger>
-                  <CreateSessionDialog onClose={() => setShowCreateDialog(false)} onSave={refreshSessions} />
-                </Dialog>
-              )}
+          <div className="flex flex-col sm:flex-row gap-4">
+            {userRole.isProfessor && (
+              <Dialog
+                open={showCreateDialog}
+                onOpenChange={(open) => {
+                  console.log('Dialog state changing:', open);
+                  setShowCreateDialog(open);
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button
+                    onClick={() => {
+                      console.log('Schedule Session button clicked');
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Schedule Session
+                  </Button>
+                </DialogTrigger>
+                <CreateSessionDialog onClose={() => setShowCreateDialog(false)} onSave={refreshSessions} />
+              </Dialog>
+            )}
 
-              {/* Always show button in development for testing */}
-              {process.env.NODE_ENV === 'development' && !userRole.isProfessor && (
-                <Dialog
-                  open={showCreateDialog}
-                  onOpenChange={(open) => {
-                    console.log('Test Dialog state changing:', open);
-                    setShowCreateDialog(open);
-                  }}
-                >
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        console.log('Test Schedule Session button clicked');
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Test Create Session
-                    </Button>
-                  </DialogTrigger>
-                  <CreateSessionDialog onClose={() => setShowCreateDialog(false)} onSave={refreshSessions} />
-                </Dialog>
-              )}
+            {/* Always show button in development for testing */}
+            {process.env.NODE_ENV === 'development' && !userRole.isProfessor && (
+              <Dialog
+                open={showCreateDialog}
+                onOpenChange={(open) => {
+                  console.log('Test Dialog state changing:', open);
+                  setShowCreateDialog(open);
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      console.log('Test Schedule Session button clicked');
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Test Create Session
+                  </Button>
+                </DialogTrigger>
+                <CreateSessionDialog onClose={() => setShowCreateDialog(false)} onSave={refreshSessions} />
+              </Dialog>
+            )}
 
-              {/* Debug info */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-                  User: {session?.user?.email || 'No session'} | Role: {userRole.type} | isProfessor: {userRole.isProfessor.toString()}
-                </div>
-              )}
+            {/* Debug info */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
+                User: {session?.user?.email || 'No session'} | Role: {userRole.type} | isProfessor: {userRole.isProfessor.toString()}
+              </div>
+            )}
 
-              <Button variant="outline" onClick={() => refreshSessions()}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-            </div>
+            <Button variant="outline" onClick={() => refreshSessions()}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
 
-          {/* Stats Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total Sessions</p>
-                    <p className="text-3xl font-bold">{Array.isArray(sessions) ? sessions.length : 0}</p>
-                  </div>
-                  <Calendar className="h-8 w-8 text-muted-foreground" />
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Sessions</p>
+                  <p className="text-3xl font-bold">{Array.isArray(sessions) ? sessions.length : 0}</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {Array.isArray(sessions) ? sessions.filter((s) => s.status === 'scheduled').length : 0} scheduled
-                </p>
-              </CardContent>
-            </Card>
+                <Calendar className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {Array.isArray(sessions) ? sessions.filter((s) => s.status === 'scheduled').length : 0} scheduled
+              </p>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Active Participants</p>
-                    <p className="text-3xl font-bold">
-                      {Array.isArray(sessions) ? sessions.reduce((acc, s) => acc + s.registeredTesterCount, 0) : 0}
-                    </p>
-                  </div>
-                  <Users className="h-8 w-8 text-muted-foreground" />
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Active Participants</p>
+                  <p className="text-3xl font-bold">{Array.isArray(sessions) ? sessions.reduce((acc, s) => acc + s.registeredTesterCount, 0) : 0}</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">Across all sessions</p>
-              </CardContent>
-            </Card>
+                <Users className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Across all sessions</p>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Projects Testing</p>
-                    <p className="text-3xl font-bold">
-                      {Array.isArray(sessions) ? sessions.reduce((acc, s) => acc + (s.testingRequests?.length || 0), 0) : 0}
-                    </p>
-                  </div>
-                  <Gamepad2 className="h-8 w-8 text-muted-foreground" />
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Projects Testing</p>
+                  <p className="text-3xl font-bold">{Array.isArray(sessions) ? sessions.reduce((acc, s) => acc + (s.testingRequests?.length || 0), 0) : 0}</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">Games being tested</p>
-              </CardContent>
-            </Card>
+                <Gamepad2 className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Games being tested</p>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Avg Attendance</p>
-                    <p className="text-3xl font-bold">
-                      {Array.isArray(sessions) && sessions.length > 0
-                        ? Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length)
-                        : 0}
-                      %
-                    </p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-muted-foreground" />
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Avg Attendance</p>
+                  <p className="text-3xl font-bold">
+                    {Array.isArray(sessions) && sessions.length > 0
+                      ? Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length)
+                      : 0}
+                    %
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">Session participation</p>
-              </CardContent>
-            </Card>
-          </div>
+                <TrendingUp className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Session participation</p>
+            </CardContent>
+          </Card>
+        </div>
 
-          {/* Enhanced Filters and Search */}
-          <SessionFilterControls
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            onRefresh={refreshSessions}
-            onAddSession={() => setShowCreateDialog(true)}
-            showAddButton={userRole.isProfessor || process.env.NODE_ENV === 'development'}
-          />
+        {/* Enhanced Filters and Search */}
+        <SessionFilterControls
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          onRefresh={refreshSessions}
+          onAddSession={() => setShowCreateDialog(true)}
+          showAddButton={userRole.isProfessor || process.env.NODE_ENV === 'development'}
+        />
 
-          {/* Sessions Display */}
-          {filteredSessions.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4"/>
-                <h3 className="text-xl font-semibold mb-2">No sessions found</h3>
-                <p className="text-muted-foreground">
-                  {searchTerm || statusFilter.length > 0 ? 'Try adjusting your search or filters' : 'No testing sessions have been scheduled yet'}
-                </p>
-              </CardContent>
-            </Card>
-          ) : viewMode === 'table' ? (
-            <Card>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Session</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Time</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Participants</TableHead>
-                      <TableHead>Manager</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSessions.map((session) => (
-                      <TableRow key={ session.id }>
-                        <TableCell className="font-medium">
+        {/* Sessions Display */}
+        {filteredSessions.length === 0 ? (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">No sessions found</h3>
+              <p className="text-muted-foreground">
+                {searchTerm || statusFilter.length > 0 ? 'Try adjusting your search or filters' : 'No testing sessions have been scheduled yet'}
+              </p>
+            </CardContent>
+          </Card>
+        ) : viewMode === 'table' ? (
+          <Card>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Session</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Participants</TableHead>
+                    <TableHead>Manager</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSessions.map((session) => (
+                    <TableRow key={session.id}>
+                      <TableCell className="font-medium">
+                        <div>
+                          <div className="font-semibold">{session.sessionName}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {session.testingRequests?.length || 0} project{(session.testingRequests?.length || 0) !== 1 ? 's' : ''}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span>{formatDate(session.sessionDate)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span>
+                            {formatTime(session.startTime)} - {formatTime(session.endTime)}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
                           <div>
-                            <div className="font-semibold">{session.sessionName}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {session.testingRequests?.length || 0} project{(session.testingRequests?.length || 0) !== 1 ? 's' : ''}
-                            </div>
+                            <div className="font-medium">{session.location?.name || 'Unknown Location'}</div>
+                            <div className="text-xs text-muted-foreground">Capacity: {session.location?.capacity || 0}</div>
                           </div>
-                        </TableCell>
-                        <TableCell>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={getStatusColor(session.status)}>
+                          {session.status ? session.status.charAt(0).toUpperCase() + session.status.slice(1) : 'Unknown'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground"/>
-                            <span>{formatDate(session.sessionDate)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-muted-foreground"/>
-                            <span>
-                              {formatTime(session.startTime)} - {formatTime(session.endTime)}
+                            <Users className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">
+                              {session.registeredTesterCount}/{session.maxTesters}
                             </span>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-muted-foreground"/>
-                            <div>
-                              <div className="font-medium">{session.location?.name || 'Unknown Location'}</div>
-                              <div
-                                className="text-xs text-muted-foreground">Capacity: { session.location?.capacity || 0 }</div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={getStatusColor(session.status)}>
-                            {session.status ? session.status.charAt(0).toUpperCase() + session.status.slice(1) : 'Unknown'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Users className="h-4 w-4 text-muted-foreground"/>
-                              <span className="font-medium">
-                                {session.registeredTesterCount}/{session.maxTesters}
-                              </span>
-                            </div>
-                            <div className="w-16 bg-muted rounded-full h-1">
-                              <div
-                                className={ `h-1 rounded-full ${ isSessionFull(session) ? 'bg-destructive' : 'bg-primary' }` }
-                                style={{
-                                  width: `${Math.min(getSessionProgress(session), 100)}%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{session.manager?.name || 'Unknown Manager'}</div>
+                          <div className="w-16 bg-muted rounded-full h-1">
                             <div
-                              className="text-xs text-muted-foreground">{ session.manager?.email || 'No email' }</div>
+                              className={`h-1 rounded-full ${isSessionFull(session) ? 'bg-destructive' : 'bg-primary'}`}
+                              style={{
+                                width: `${Math.min(getSessionProgress(session), 100)}%`,
+                              }}
+                            />
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{session.manager?.name || 'Unknown Manager'}</div>
+                          <div className="text-xs text-muted-foreground">{session.manager?.email || 'No email'}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSession(session);
+                              setShowDetailDialog(true);
+                              fetchSessionRegistrations();
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {userRole.isProfessor && (
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                setSelectedSession(session);
-                                setShowDetailDialog(true);
-                                fetchSessionRegistrations();
+                                console.log('Edit session:', session.id);
                               }}
                             >
-                              <Eye className="h-4 w-4" />
+                              <Edit className="h-4 w-4" />
                             </Button>
-                            {userRole.isProfessor && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  console.log('Edit session:', session.id);
-                                }}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </Card>
-          ) : (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
-              {filteredSessions.map((session) => (
-                <SessionCard
-                  key={session.id}
-                  session={session}
-                  viewMode={viewMode}
-                  userRole={userRole}
-                  onViewDetails={(session) => {
-                    setSelectedSession(session);
-                    setShowDetailDialog(true);
-                    fetchSessionRegistrations();
-                  }}
-                  onEdit={(session) => {
-                    // Edit functionality
-                    console.log('Edit session:', session.id);
-                  }}
-                  getStatusColor={getStatusColor}
-                  formatDate={formatDate}
-                  formatTime={formatTime}
-                  getSessionProgress={getSessionProgress}
-                  isSessionFull={isSessionFull}
-                  isUpcoming={isUpcoming}
-                />
-              ))}
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          )}
+          </Card>
+        ) : (
+          <div className={viewMode === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6' : 'space-y-4'}>
+            {filteredSessions.map((session) => (
+              <SessionCard
+                key={session.id}
+                session={session}
+                viewMode={viewMode}
+                userRole={userRole}
+                onViewDetails={(session) => {
+                  setSelectedSession(session);
+                  setShowDetailDialog(true);
+                  fetchSessionRegistrations();
+                }}
+                onEdit={(session) => {
+                  // Edit functionality
+                  console.log('Edit session:', session.id);
+                }}
+                getStatusColor={getStatusColor}
+                formatDate={formatDate}
+                formatTime={formatTime}
+                getSessionProgress={getSessionProgress}
+                isSessionFull={isSessionFull}
+                isUpcoming={isUpcoming}
+              />
+            ))}
+          </div>
+        )}
 
-          {/* Enhanced Session Detail Dialog */}
-          {selectedSession && (
-            <SessionDetailDialog
-              session={selectedSession}
-              registrations={registrations}
-              open={showDetailDialog}
-              onClose={() => {
-                setShowDetailDialog(false);
-                setSelectedSession(null);
-              }}
-              userRole={userRole}
-              getRegistrationTypeColor={getRegistrationTypeColor}
-              getRegistrationStatusColor={getRegistrationStatusColor}
-            />
-          )}
-        </div>
+        {/* Enhanced Session Detail Dialog */}
+        {selectedSession && (
+          <SessionDetailDialog
+            session={selectedSession}
+            registrations={registrations}
+            open={showDetailDialog}
+            onClose={() => {
+              setShowDetailDialog(false);
+              setSelectedSession(null);
+            }}
+            userRole={userRole}
+            getRegistrationTypeColor={getRegistrationTypeColor}
+            getRegistrationStatusColor={getRegistrationStatusColor}
+          />
+        )}
       </div>
+    </div>
   );
 }
 
@@ -757,11 +742,11 @@ function SessionCard({
             <div className="flex items-center gap-6 flex-1">
               <div className="flex items-center gap-3">
                 <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center">
-                  <Calendar className="h-6 w-6 text-primary-foreground"/>
+                  <Calendar className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">{ session.sessionName }</h3>
-                  <p className="text-muted-foreground text-sm">{ session.manager?.name || 'Unknown Manager' }</p>
+                  <h3 className="text-lg font-semibold">{session.sessionName}</h3>
+                  <p className="text-muted-foreground text-sm">{session.manager?.name || 'Unknown Manager'}</p>
                 </div>
               </div>
 
@@ -828,14 +813,12 @@ function SessionCard({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div
-              className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Calendar className="h-5 w-5 text-primary-foreground"/>
+            <div className="h-10 w-10 bg-primary rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Calendar className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <CardTitle className="text-lg leading-tight">{ session.sessionName }</CardTitle>
-              <CardDescription className="text-sm">Managed
-                by { session.manager?.name || 'Unknown Manager' }</CardDescription>
+              <CardTitle className="text-lg leading-tight">{session.sessionName}</CardTitle>
+              <CardDescription className="text-sm">Managed by {session.manager?.name || 'Unknown Manager'}</CardDescription>
             </div>
           </div>
 
@@ -872,7 +855,7 @@ function SessionCard({
         {/* Session Info */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm">
-            <CalendarDays className="h-4 w-4 text-muted-foreground"/>
+            <CalendarDays className="h-4 w-4 text-muted-foreground" />
             <span>{formatDate(session.sessionDate)}</span>
             <Badge variant="outline" className={getStatusColor(session.status)}>
               {session.status || 'Unknown'}
@@ -880,16 +863,16 @@ function SessionCard({
           </div>
 
           <div className="flex items-center gap-2 text-sm">
-            <Timer className="h-4 w-4 text-muted-foreground"/>
+            <Timer className="h-4 w-4 text-muted-foreground" />
             <span>
               {formatTime(session.startTime)} - {formatTime(session.endTime)}
             </span>
           </div>
 
           <div className="flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-muted-foreground"/>
+            <MapPin className="h-4 w-4 text-muted-foreground" />
             <span>{session.location?.name || 'Unknown Location'}</span>
-            <span className="text-muted-foreground">({ session.location?.capacity || 0 } capacity)</span>
+            <span className="text-muted-foreground">({session.location?.capacity || 0} capacity)</span>
           </div>
         </div>
 
@@ -903,13 +886,11 @@ function SessionCard({
           </div>
           <div className="w-full bg-muted rounded-full h-2">
             <div
-              className={`h-2 rounded-full ${
-                isSessionFull(session) ? 'bg-destructive' : 'bg-primary'
-              }`}
+              className={`h-2 rounded-full ${isSessionFull(session) ? 'bg-destructive' : 'bg-primary'}`}
               style={{ width: `${getSessionProgress(session)}%` }}
             />
           </div>
-          { isSessionFull(session) && <p className="text-xs text-destructive">Session is full</p> }
+          {isSessionFull(session) && <p className="text-xs text-destructive">Session is full</p>}
         </div>
 
         {/* Testing Requests */}
@@ -918,7 +899,7 @@ function SessionCard({
             <p className="text-sm font-medium">Testing Projects:</p>
             <div className="flex flex-wrap gap-1">
               {session.testingRequests?.slice(0, 2).map((request) => (
-                <Badge key={ request.id } variant="secondary" className="text-xs">
+                <Badge key={request.id} variant="secondary" className="text-xs">
                   {request.title}
                 </Badge>
               )) || []}
@@ -933,11 +914,7 @@ function SessionCard({
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2">
-          <Button
-            size="sm"
-            onClick={() => onViewDetails(session)}
-            className="flex-1"
-          >
+          <Button size="sm" onClick={() => onViewDetails(session)} className="flex-1">
             <Eye className="h-4 w-4 mr-2" />
             View Details
           </Button>
@@ -1071,19 +1048,14 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
   };
 
   return (
-    <Dialog open={ true } onOpenChange={ onClose }>
+    <Dialog open={true} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl">Schedule New Testing Session</DialogTitle>
-          <DialogDescription>Create a new testing session for students to participate in game
-            testing</DialogDescription>
+          <DialogDescription>Create a new testing session for students to participate in game testing</DialogDescription>
         </DialogHeader>
 
-        { errors.general && (
-          <div className="bg-destructive/15 border border-destructive/50 rounded-lg p-3 text-destructive text-sm">
-            { errors.general }
-          </div>
-        ) }
+        {errors.general && <div className="bg-destructive/15 border border-destructive/50 rounded-lg p-3 text-destructive text-sm">{errors.general}</div>}
 
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -1094,154 +1066,139 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
               <Input
                 id="sessionName"
                 placeholder="e.g., Block 3 Final Testing"
-                value={ formData.sessionName }
-                onChange={ (e) => setFormData({ ...formData, sessionName: e.target.value }) }
+                value={formData.sessionName}
+                onChange={(e) => setFormData({ ...formData, sessionName: e.target.value })}
               />
-              { errors.sessionName && <p className="text-destructive text-sm">{ errors.sessionName }</p> }
+              {errors.sessionName && <p className="text-destructive text-sm">{errors.sessionName}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="testingRequest">
                 Testing Request <span className="text-destructive">*</span>
               </Label>
-            <Select value={formData.testingRequestId} onValueChange={(value) => setFormData({ ...formData, testingRequestId: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select testing request" />
-              </SelectTrigger>
-              <SelectContent>
-                {testingRequests.length > 0 ? (
-                  testingRequests.map((request) => (
-                    <SelectItem key={request.id || `request-${Math.random()}`} value={request.id || ''}>
-                      {request.title} - {request.projectVersion?.project?.title}
+              <Select value={formData.testingRequestId} onValueChange={(value) => setFormData({ ...formData, testingRequestId: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select testing request" />
+                </SelectTrigger>
+                <SelectContent>
+                  {testingRequests.length > 0 ? (
+                    testingRequests.map((request) => (
+                      <SelectItem key={request.id || `request-${Math.random()}`} value={request.id || ''}>
+                        {request.title} - {request.projectVersion?.project?.title}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-requests" disabled>
+                      No testing requests available
                     </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="no-requests" disabled>
-                    No testing requests available
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-              { errors.testingRequestId && <p className="text-destructive text-sm">{ errors.testingRequestId }</p> }
+                  )}
+                </SelectContent>
+              </Select>
+              {errors.testingRequestId && <p className="text-destructive text-sm">{errors.testingRequestId}</p>}
+            </div>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
-          <Select value={formData.locationId} onValueChange={(value) => setFormData({ ...formData, locationId: value })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select room" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="room-a204">Room A-204 (40 capacity)</SelectItem>
-              <SelectItem value="room-b105">Room B-105 (32 capacity)</SelectItem>
-              <SelectItem value="room-c301">Room C-301 (25 capacity)</SelectItem>
-              <SelectItem value="online">Online Session (50 capacity)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="sessionDate">
-              Date <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="sessionDate"
-              type="date"
-              value={formData.sessionDate}
-              onChange={(e) => setFormData({ ...formData, sessionDate: e.target.value })}
-            />
-            { errors.sessionDate && <p className="text-destructive text-sm">{ errors.sessionDate }</p> }
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="startTime">
-              Start Time <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="startTime"
-              type="time"
-              value={formData.startTime}
-              onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-            />
-            { errors.startTime && <p className="text-destructive text-sm">{ errors.startTime }</p> }
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="endTime">
-              End Time <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="endTime"
-              type="time"
-              value={formData.endTime}
-              onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-            />
-            { errors.endTime && <p className="text-destructive text-sm">{ errors.endTime }</p> }
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            placeholder="Provide details about this testing session..."
-            rows={3}
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="maxTesters">
-              Maximum Testers <span className="text-destructive">*</span>
-            </Label>
-            <Select value={formData.maxTesters} onValueChange={(value) => setFormData({ ...formData, maxTesters: value })}>
+            <Label htmlFor="location">Location</Label>
+            <Select value={formData.locationId} onValueChange={(value) => setFormData({ ...formData, locationId: value })}>
               <SelectTrigger>
-                <SelectValue placeholder="Select capacity" />
+                <SelectValue placeholder="Select room" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="15">15 testers</SelectItem>
-                <SelectItem value="20">20 testers</SelectItem>
-                <SelectItem value="25">25 testers</SelectItem>
-                <SelectItem value="30">30 testers</SelectItem>
-                <SelectItem value="40">40 testers (full room)</SelectItem>
-                <SelectItem value="50">50 testers (online)</SelectItem>
+                <SelectItem value="room-a204">Room A-204 (40 capacity)</SelectItem>
+                <SelectItem value="room-b105">Room B-105 (32 capacity)</SelectItem>
+                <SelectItem value="room-c301">Room C-301 (25 capacity)</SelectItem>
+                <SelectItem value="online">Online Session (50 capacity)</SelectItem>
               </SelectContent>
             </Select>
-            { errors.maxTesters && <p className="text-destructive text-sm">{ errors.maxTesters }</p> }
           </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="sessionDate">
+                Date <span className="text-destructive">*</span>
+              </Label>
+              <Input id="sessionDate" type="date" value={formData.sessionDate} onChange={(e) => setFormData({ ...formData, sessionDate: e.target.value })} />
+              {errors.sessionDate && <p className="text-destructive text-sm">{errors.sessionDate}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="startTime">
+                Start Time <span className="text-destructive">*</span>
+              </Label>
+              <Input id="startTime" type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
+              {errors.startTime && <p className="text-destructive text-sm">{errors.startTime}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="endTime">
+                End Time <span className="text-destructive">*</span>
+              </Label>
+              <Input id="endTime" type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
+              {errors.endTime && <p className="text-destructive text-sm">{errors.endTime}</p>}
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="sessionType">Session Type</Label>
-            <Select value={formData.sessionType} onValueChange={(value) => setFormData({ ...formData, sessionType: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="regular">Regular Testing</SelectItem>
-                <SelectItem value="final">Final Presentation</SelectItem>
-                <SelectItem value="midterm">Midterm Review</SelectItem>
-                <SelectItem value="playtesting">Playtesting Lab</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Provide details about this testing session..."
+              rows={3}
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
           </div>
-        </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="maxTesters">
+                Maximum Testers <span className="text-destructive">*</span>
+              </Label>
+              <Select value={formData.maxTesters} onValueChange={(value) => setFormData({ ...formData, maxTesters: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select capacity" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="15">15 testers</SelectItem>
+                  <SelectItem value="20">20 testers</SelectItem>
+                  <SelectItem value="25">25 testers</SelectItem>
+                  <SelectItem value="30">30 testers</SelectItem>
+                  <SelectItem value="40">40 testers (full room)</SelectItem>
+                  <SelectItem value="50">50 testers (online)</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.maxTesters && <p className="text-destructive text-sm">{errors.maxTesters}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sessionType">Session Type</Label>
+              <Select value={formData.sessionType} onValueChange={(value) => setFormData({ ...formData, sessionType: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="regular">Regular Testing</SelectItem>
+                  <SelectItem value="final">Final Presentation</SelectItem>
+                  <SelectItem value="midterm">Midterm Review</SelectItem>
+                  <SelectItem value="playtesting">Playtesting Lab</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
         <DialogFooter className="gap-2">
-          <Button type="button" variant="outline" onClick={ onClose } disabled={ isSubmitting }>
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-            <Button type="button" onClick={ handleSubmit } disabled={ isSubmitting }>
-              { isSubmitting ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin"/>
-                  Creating...
-                </>
-              ) : (
-                'Schedule Session'
-              ) }
-            </Button>
-          </DialogFooter>
+          <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              'Schedule Session'
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -1272,12 +1229,10 @@ function SessionDetailDialog({
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl flex items-center gap-3">
-            <Calendar className="h-6 w-6 text-primary"/>
+            <Calendar className="h-6 w-6 text-primary" />
             {session.sessionName}
           </DialogTitle>
-          <DialogDescription className="text-base">
-            {session.description || 'Detailed view of testing session participants and metrics'}
-          </DialogDescription>
+          <DialogDescription className="text-base">{session.description || 'Detailed view of testing session participants and metrics'}</DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="w-full">
@@ -1293,32 +1248,32 @@ function SessionDetailDialog({
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <Card>
                 <CardContent className="p-4 text-center">
-                  <Users className="h-8 w-8 text-primary mx-auto mb-2"/>
-                  <div className="text-2xl font-bold">{ session.registeredTesterCount }</div>
+                  <Users className="h-8 w-8 text-primary mx-auto mb-2" />
+                  <div className="text-2xl font-bold">{session.registeredTesterCount}</div>
                   <div className="text-sm text-muted-foreground">Testers</div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardContent className="p-4 text-center">
-                  <Gamepad2 className="h-8 w-8 text-primary mx-auto mb-2"/>
-                  <div className="text-2xl font-bold">{ session.registeredProjectMemberCount }</div>
+                  <Gamepad2 className="h-8 w-8 text-primary mx-auto mb-2" />
+                  <div className="text-2xl font-bold">{session.registeredProjectMemberCount}</div>
                   <div className="text-sm text-muted-foreground">Developers</div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardContent className="p-4 text-center">
-                  <BarChart3 className="h-8 w-8 text-primary mx-auto mb-2"/>
-                  <div className="text-2xl font-bold">{ session.testingRequests?.length || 0 }</div>
+                  <BarChart3 className="h-8 w-8 text-primary mx-auto mb-2" />
+                  <div className="text-2xl font-bold">{session.testingRequests?.length || 0}</div>
                   <div className="text-sm text-muted-foreground">Projects</div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardContent className="p-4 text-center">
-                  <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2"/>
-                  <div className="text-2xl font-bold">{ session.attendanceRate }%</div>
+                  <TrendingUp className="h-8 w-8 text-primary mx-auto mb-2" />
+                  <div className="text-2xl font-bold">{session.attendanceRate}%</div>
                   <div className="text-sm text-muted-foreground">Expected</div>
                 </CardContent>
               </Card>
@@ -1332,7 +1287,7 @@ function SessionDetailDialog({
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <CalendarDays className="h-5 w-5 text-primary"/>
+                    <CalendarDays className="h-5 w-5 text-primary" />
                     <div>
                       <p className="font-medium">
                         {new Date(session.sessionDate).toLocaleDateString('en-US', {
@@ -1349,18 +1304,18 @@ function SessionDetailDialog({
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <MapPin className="h-5 w-5 text-primary"/>
+                    <MapPin className="h-5 w-5 text-primary" />
                     <div>
-                      <p className="font-medium">{ session.location?.name || 'Unknown Location' }</p>
-                      <p className="text-muted-foreground text-sm">Capacity: { session.location?.capacity || 0 }</p>
+                      <p className="font-medium">{session.location?.name || 'Unknown Location'}</p>
+                      <p className="text-muted-foreground text-sm">Capacity: {session.location?.capacity || 0}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Users className="h-5 w-5 text-primary"/>
+                    <Users className="h-5 w-5 text-primary" />
                     <div>
-                      <p className="font-medium">{ session.manager?.name || 'Unknown Manager' }</p>
-                      <p className="text-muted-foreground text-sm">{ session.manager?.email || 'No email' }</p>
+                      <p className="font-medium">{session.manager?.name || 'Unknown Manager'}</p>
+                      <p className="text-muted-foreground text-sm">{session.manager?.email || 'No email'}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -1379,23 +1334,18 @@ function SessionDetailDialog({
                       </span>
                     </div>
                     <div className="w-full bg-muted rounded-full h-2">
-                      <div
-                        className="h-2 rounded-full bg-primary"
-                        style={{ width: `${(session.registeredTesterCount / session.maxTesters) * 100}%` }}
-                      />
+                      <div className="h-2 rounded-full bg-primary" style={{ width: `${(session.registeredTesterCount / session.maxTesters) * 100}%` }} />
                     </div>
                   </div>
 
                   <div className="pt-2 space-y-2">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Confirmed</span>
-                      <span
-                        className="text-green-600">{ registrations.filter((r) => r.status === 'confirmed').length }</span>
+                      <span className="text-green-600">{registrations.filter((r) => r.status === 'confirmed').length}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Pending</span>
-                      <span
-                        className="text-yellow-600">{ registrations.filter((r) => r.status === 'pending').length }</span>
+                      <span className="text-yellow-600">{registrations.filter((r) => r.status === 'pending').length}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -1420,45 +1370,43 @@ function SessionDetailDialog({
                         <TableHead>Project</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Registered</TableHead>
-                        { userRole.isProfessor && <TableHead>Actions</TableHead> }
+                        {userRole.isProfessor && <TableHead>Actions</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {registrations.map((registration) => (
-                        <TableRow key={ registration.id }>
+                        <TableRow key={registration.id}>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-3">
-                              <div
-                                className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
+                              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
                                 {registration.user.avatar || registration.user.name.charAt(0)}
                               </div>
-                              <span>{ registration.user.name }</span>
+                              <span>{registration.user.name}</span>
                             </div>
                           </TableCell>
-                          <TableCell>{ registration.user.email }</TableCell>
+                          <TableCell>{registration.user.email}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className={getRegistrationTypeColor(registration.registrationType)}>
                               {registration.registrationType}
                             </Badge>
                           </TableCell>
-                          <TableCell>{ registration.project?.title || 'N/A' }</TableCell>
+                          <TableCell>{registration.project?.title || 'N/A'}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className={getRegistrationStatusColor(registration.status)}>
                               {registration.status}
                             </Badge>
                           </TableCell>
-                          <TableCell
-                            className="text-muted-foreground">{ new Date(registration.registeredAt).toLocaleDateString() }</TableCell>
+                          <TableCell className="text-muted-foreground">{new Date(registration.registeredAt).toLocaleDateString()}</TableCell>
                           {userRole.isProfessor && (
                             <TableCell>
                               <div className="flex gap-1">
                                 {registration.status === 'pending' && (
                                   <>
                                     <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                                      <CheckCircle className="h-4 w-4 text-green-500"/>
+                                      <CheckCircle className="h-4 w-4 text-green-500" />
                                     </Button>
                                     <Button size="sm" variant="outline" className="h-8 w-8 p-0">
-                                      <XCircle className="h-4 w-4 text-red-500"/>
+                                      <XCircle className="h-4 w-4 text-red-500" />
                                     </Button>
                                   </>
                                 )}
@@ -1487,13 +1435,13 @@ function SessionDetailDialog({
                 {(session.testingRequests?.length || 0) > 0 ? (
                   <div className="grid gap-4">
                     {session.testingRequests?.map((request) => (
-                      <div key={ request.id } className="flex items-center justify-between p-4 border rounded-lg">
+                      <div key={request.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center gap-4">
                           <div className="h-12 w-12 bg-primary rounded-lg flex items-center justify-center">
-                            <Gamepad2 className="h-6 w-6 text-primary-foreground"/>
+                            <Gamepad2 className="h-6 w-6 text-primary-foreground" />
                           </div>
                           <div>
-                            <h4 className="font-medium">{ request.title }</h4>
+                            <h4 className="font-medium">{request.title}</h4>
                             <p className="text-muted-foreground text-sm">
                               Version {request.projectVersion.versionNumber} • {request.projectVersion.project.title}
                             </p>
@@ -1510,7 +1458,7 @@ function SessionDetailDialog({
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <Gamepad2 className="h-12 w-12 text-muted-foreground mx-auto mb-4"/>
+                    <Gamepad2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <h3 className="font-medium mb-2">No projects assigned</h3>
                     <p className="text-muted-foreground">Projects will be assigned closer to the session date</p>
                   </div>
@@ -1524,21 +1472,21 @@ function SessionDetailDialog({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold text-green-600 mb-2">{ session.attendanceRate }%</div>
+                    <div className="text-3xl font-bold text-green-600 mb-2">{session.attendanceRate}%</div>
                     <div className="text-muted-foreground">Expected Attendance</div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold text-blue-600 mb-2">{ session.averageRating }/5</div>
+                    <div className="text-3xl font-bold text-blue-600 mb-2">{session.averageRating}/5</div>
                     <div className="text-muted-foreground">Avg Session Rating</div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardContent className="p-6 text-center">
-                    <div className="text-3xl font-bold text-purple-600 mb-2">{ session.feedbackCount }</div>
+                    <div className="text-3xl font-bold text-purple-600 mb-2">{session.feedbackCount}</div>
                     <div className="text-muted-foreground">Feedback Responses</div>
                   </CardContent>
                 </Card>
@@ -1551,15 +1499,15 @@ function SessionDetailDialog({
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <TrendingUp className="h-5 w-5 text-green-500"/>
+                      <TrendingUp className="h-5 w-5 text-green-500" />
                       <span>High attendance rate expected based on historical data</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <Users className="h-5 w-5 text-blue-500"/>
+                      <Users className="h-5 w-5 text-blue-500" />
                       <span>Optimal tester-to-project ratio achieved</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <BarChart3 className="h-5 w-5 text-purple-500"/>
+                      <BarChart3 className="h-5 w-5 text-purple-500" />
                       <span>Session scheduled during peak availability window</span>
                     </div>
                   </div>
@@ -1570,7 +1518,7 @@ function SessionDetailDialog({
         </Tabs>
 
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={ onClose }>
+          <Button variant="outline" onClick={onClose}>
             Close
           </Button>
           {userRole.isProfessor && (
@@ -1590,3 +1538,4 @@ function SessionDetailDialog({
     </Dialog>
   );
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 

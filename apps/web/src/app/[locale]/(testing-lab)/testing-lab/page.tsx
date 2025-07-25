@@ -1,4 +1,4 @@
-import { TestingLabLanding } from '@/components/testing-lab/testing-lab-landing';
+import { TestingLabLanding } from '@/components/testing-lab/landing/testing-lab-landing';
 import { getAvailableTestSessions } from '@/lib/api/testing-lab/test-sessions';
 
 export default async function TestingLabPage() {
