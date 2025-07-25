@@ -1,12 +1,12 @@
-import { auth } from '@/auth';
-import { GalleryVerticalEnd } from 'lucide-react';
-import { redirect } from 'next/navigation';
 import React, { PropsWithChildren } from 'react';
+import { redirect } from 'next/navigation';
+import { GalleryVerticalEnd } from 'lucide-react';
+import { auth } from '@/auth';
 
 export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
   const session = await auth();
 
-  if (session) redirect('/dashboard');
+  if (session) redirect('/feed');
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center gap-6 p-6 md:p-10 min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
@@ -17,7 +17,7 @@ export default async function Layout({ children }: PropsWithChildren): Promise<R
           <div className="w-96 h-96 rounded-full bg-gradient-to-t from-blue-600/20 via-purple-500/10 to-transparent blur-3xl"></div>
         </div>
 
-        {/* Top edge glow */}
+        {/* Top-edge glow */}
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/30 to-transparent"></div>
       </div>
 
