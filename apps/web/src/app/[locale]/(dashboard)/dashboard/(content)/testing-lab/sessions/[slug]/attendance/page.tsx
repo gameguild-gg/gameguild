@@ -14,7 +14,7 @@ export default async function AttendancePage({ params }: PropsWithSlugParams): P
   const attendanceData = await getTestingAttendanceBySession(slug);
 
   return (
-    <div className="container space-y-6">
+    <div className="container">
       <AttendanceTracker data={attendanceData} />
     </div>
   );
