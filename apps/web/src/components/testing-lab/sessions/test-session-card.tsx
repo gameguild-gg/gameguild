@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 import { Link, useRouter } from '@/i18n/navigation';
 import { RewardChip } from '@/components/testing-lab/common/ui/reward-chip';
 import { StatusChip } from '@/components/testing-lab/common/ui/status-chip';
-import { LocationChip } from './common/ui/location-chip';
+import { LocationChip } from '../common/ui/location-chip';
 
 interface TestSessionCardProps {
   session: TestSession;
