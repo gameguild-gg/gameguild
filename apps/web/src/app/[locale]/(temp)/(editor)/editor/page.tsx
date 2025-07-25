@@ -1,6 +1,6 @@
 'use client';
 
-import { Editor } from '@/components/editor/lexical-editor';
+import { Editor } from '@/components/content/editor/lexical-editor';
 import { Button } from '@/components/editor/ui/button';
 import { Input } from '@/components/editor/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/editor/ui/dialog';
