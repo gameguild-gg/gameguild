@@ -130,7 +130,7 @@ const COURSE_SECTION_GROUPS = [
   },
 ];
 
-export function CourseSidebar() {
+export function CourseEditorSidebar() {
   const pathname = usePathname();
   const params = useParams();
   const slug = params.slug as string;
