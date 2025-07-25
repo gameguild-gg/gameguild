@@ -13,10 +13,10 @@ import { SidebarInset } from '@/components/ui/sidebar';
 
 export default async function Layout({ children, params }: PropsWithChildren<PropsWithSlugParams>): Promise<React.JSX.Element> {
   const { slug } = await params;
-
-  const course = await getCourseBySlug(slug);
-
-  if (!course) notFound();
+  //
+  // const course = await getCourseBySlug(slug);
+  //
+  // if (!course) notFound();
 
   return (
     <>
@@ -26,12 +26,12 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
           <DashboardPageDescription></DashboardPageDescription>
         </DashboardPageHeader>
         <DashboardPageContent>
-          <CourseEditorProvider course={course}>
-            {/*<SidebarProvider>*/}
-            {/*  <CourseEditorSidebar />*/}
-            <SidebarInset>{children}</SidebarInset>
-            {/*</SidebarProvider>*/}
-          </CourseEditorProvider>
+          {/*<CourseEditorProvider course={course}>*/}
+          {/*<SidebarProvider>*/}
+          {/*  <CourseEditorSidebar />*/}
+          {/*<SidebarInset>{children}</SidebarInset>*/}
+          {/*</SidebarProvider>*/}
+          {/*</CourseEditorProvider>*/}
         </DashboardPageContent>
       </DashboardPage>
     </>
