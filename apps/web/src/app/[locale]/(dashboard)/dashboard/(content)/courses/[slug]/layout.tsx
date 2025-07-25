@@ -1,5 +1,4 @@
 import React, { PropsWithChildren } from 'react';
-import { notFound } from 'next/navigation';
 import {
   DashboardPage,
   DashboardPageContent,
@@ -9,7 +8,8 @@ import {
 } from '@/components/dashboard/common/ui/dashboard-page';
 
 import { PropsWithSlugParams } from '@/types';
-import { CourseEditorProvider, getCourseBySlug } from '@/components/courses/editor';
+import { CourseEditorProvider } from '@/components/courses/editor';
+import { SidebarInset } from '@/components/ui/sidebar';
 
 export default async function Layout({ children, params }: PropsWithChildren<PropsWithSlugParams>): Promise<React.JSX.Element> {
   const { slug } = await params;
@@ -27,8 +27,10 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
         </DashboardPageHeader>
         <DashboardPageContent>
           <CourseEditorProvider course={course}>
-            {/*TODO: Add a layout to edit the course here. it may contain a sidebar for navigation. */}
-            {children}
+            {/*<SidebarProvider>*/}
+            {/*  <CourseEditorSidebar />*/}
+            <SidebarInset>{children}</SidebarInset>
+            {/*</SidebarProvider>*/}
           </CourseEditorProvider>
         </DashboardPageContent>
       </DashboardPage>
