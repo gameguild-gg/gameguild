@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, Download, FileText, MessageSquare, Play, Users } from 'lucide-react';
 import Link from 'next/link';
-import { testingLabApi, TestingRequest } from '@/lib/api/testing-lab/testing-lab-api';
+import type { TestingRequest } from '@/lib/api/generated/types.gen';
 import { RequestFilterControls } from './request-filter-controls';
 
 interface UserRole {
@@ -17,11 +17,18 @@ interface UserRole {
   isAdmin: boolean;
 }
 
-export function TestingRequestList() {
+interface TestingRequestListProps {
+  data: {
+    testingRequests: TestingRequest[];
+    total: number;
+  };
+}
+
+export function TestingRequestList({ data }: TestingRequestListProps) {
   const { data: session } = useSession();
-  const [requests, setRequests] = useState<TestingRequest[]>([]);
-  const [filteredRequests, setFilteredRequests] = useState<TestingRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [requests, setRequests] = useState<TestingRequest[]>(data.testingRequests);
+  const [filteredRequests, setFilteredRequests] = useState<TestingRequest[]>(data.testingRequests);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>('grid');
@@ -49,87 +56,11 @@ export function TestingRequestList() {
     }
   }, [session]);
 
-  // Load testing requests based on user role
+  // Update requests when data prop changes
   useEffect(() => {
-    const fetchRequests = async () => {
-      setLoading(true);
-      try {
-        // Use the new server action
-        const response = await getTestingRequests();
-        const data = response.testingRequests;
-        setRequests(data);
-        setFilteredRequests(data);
-      } catch (error) {
-        console.error('Failed to load testing requests:', error);
-        // Fallback to empty array
-        setRequests([]);
-        setFilteredRequests([]);
-          {
-            id: '1',
-            title: 'Space Adventure v1.2',
-            description: 'A thrilling space exploration game with new combat mechanics',
-            projectVersionId: 'pv1',
-            downloadUrl: 'https://example.com/space-adventure-v1.2.zip',
-            instructionsType: 'inline',
-            instructionsContent: 'Play for 30 minutes, focus on the new combat system',
-            maxTesters: 8,
-            currentTesterCount: 3,
-            startDate: '2024-12-15',
-            endDate: '2024-12-22',
-            status: 'open',
-            createdBy: {
-              id: 'user1',
-              name: 'Team Alpha',
-              email: 'team.alpha@mymail.champlain.edu',
-            },
-            projectVersion: {
-              id: 'pv1',
-              versionNumber: '1.2.0',
-              project: {
-                id: 'proj1',
-                title: 'Space Adventure',
-              },
-            },
-          },
-          {
-            id: '2',
-            title: 'Puzzle Quest Beta',
-            description: 'Mind-bending puzzles with progressive difficulty',
-            projectVersionId: 'pv2',
-            downloadUrl: 'https://example.com/puzzle-quest-beta.zip',
-            instructionsType: 'url',
-            instructionsUrl: 'https://docs.google.com/doc/puzzle-instructions',
-            maxTesters: 12,
-            currentTesterCount: 7,
-            startDate: '2024-12-16',
-            endDate: '2024-12-23',
-            status: 'open',
-            createdBy: {
-              id: 'user2',
-              name: 'Team Beta',
-              email: 'team.beta@mymail.champlain.edu',
-            },
-            projectVersion: {
-              id: 'pv2',
-              versionNumber: '0.8.0',
-              project: {
-                id: 'proj2',
-                title: 'Puzzle Quest',
-              },
-            },
-          },
-        ];
-        setRequests(mockData);
-        setFilteredRequests(mockData);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (userRole.type !== 'student' || session?.user) {
-      fetchRequests();
-    }
-  }, [userRole, session]);
+    setRequests(data.testingRequests);
+    setFilteredRequests(data.testingRequests);
+  }, [data]);
 
   // Filter requests based on search and status
   useEffect(() => {
@@ -138,9 +69,9 @@ export function TestingRequestList() {
     if (searchTerm) {
       filtered = filtered.filter(
         (request) =>
-          request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.createdBy.name.toLowerCase().includes(searchTerm.toLowerCase()),
+          request.createdByUserId?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 

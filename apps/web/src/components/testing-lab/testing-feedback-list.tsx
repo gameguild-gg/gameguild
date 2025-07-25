@@ -8,40 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckCircle, Eye, Flag, MessageSquare, Star, ThumbsDown, ThumbsUp, XCircle } from 'lucide-react';
 import { FeedbackFilterControls } from './feedback-filter-controls';
-
-interface TestingFeedback {
-  id: string;
-  testingRequest: {
-    id: string;
-    title: string;
-    projectVersion: {
-      versionNumber: string;
-      project: {
-        title: string;
-      };
-    };
-  };
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  feedbackData: {
-    rating: number;
-    responses: Record<string, string>;
-    generalComments?: string;
-  };
-  testingContext: 'session' | 'individual';
-  submittedAt: string;
-  reviewStatus: 'pending' | 'approved' | 'flagged' | 'rejected';
-  qualityRating?: 'positive' | 'negative' | 'neutral';
-  developerResponse?: string;
-  session?: {
-    id: string;
-    sessionName: string;
-    sessionDate: string;
-  };
-}
+import type { TestingFeedback } from '@/lib/api/generated/types.gen';
 
 interface FeedbackStats {
   total: number;
@@ -52,10 +19,17 @@ interface FeedbackStats {
   averageRating: number;
 }
 
-export function TestingFeedbackList() {
-  const [feedback, setFeedback] = useState<TestingFeedback[]>([]);
+interface TestingFeedbackListProps {
+  data: {
+    testingFeedbacks: TestingFeedback[];
+    total: number;
+  };
+}
+
+export function TestingFeedbackList({ data }: TestingFeedbackListProps) {
+  const [feedback, setFeedback] = useState<TestingFeedback[]>(data.testingFeedbacks);
   const [stats, setStats] = useState<FeedbackStats>({
-    total: 0,
+    total: data.total,
     pending: 0,
     approved: 0,
     flagged: 0,
@@ -63,103 +37,27 @@ export function TestingFeedbackList() {
     averageRating: 0,
   });
   const [selectedFeedback, setSelectedFeedback] = useState<TestingFeedback | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>('table');
   const [sortBy, setSortBy] = useState<'date' | 'rating' | 'project'>('date');
 
+  // Update feedback when data prop changes
   useEffect(() => {
-    fetchFeedback();
-  }, [statusFilter, sortBy]);
+    setFeedback(data.testingFeedbacks);
+    
+    // Calculate stats
+    const feedbackList = data.testingFeedbacks;
+    const total = feedbackList.length;
+    const pending = 0; // These would need to be calculated based on actual feedback status
+    const approved = 0;
+    const flagged = 0;
+    const rejected = 0;
+    const averageRating = feedbackList.reduce((sum, f) => sum + (f.overallRating || 0), 0) / (total || 1);
 
-  const fetchFeedback = async () => {
-    try {
-      setLoading(true);
-      // Mock data - replace with actual API call
-      const mockFeedback: TestingFeedback[] = [
-        {
-          id: 'fb1',
-          testingRequest: {
-            id: 'req1',
-            title: 'Space Adventure v1.2 Testing',
-            projectVersion: {
-              versionNumber: '1.2.0',
-              project: { title: 'Space Adventure' },
-            },
-          },
-          user: {
-            id: 'user1',
-            name: 'John Doe',
-            email: 'john.doe@mymail.champlain.edu',
-          },
-          feedbackData: {
-            rating: 4,
-            responses: {
-              'How was the difficulty level?': 'The difficulty was well-balanced. Not too easy, not too hard.',
-              'Were the controls intuitive?': 'Yes, the controls felt natural after a few minutes of play.',
-              'What did you like most about the game?': 'The art style and the puzzle mechanics are really engaging.',
-              'What could be improved?': 'Some sound effects are missing and the tutorial could be clearer.',
-            },
-            generalComments:
-              "Overall, this is a solid game with great potential. The core mechanics work well and it's fun to play. Looking forward to the next version!",
-          },
-          testingContext: 'session',
-          submittedAt: '2024-12-15T14:30:00Z',
-          reviewStatus: 'pending',
-          session: {
-            id: 'session1',
-            sessionName: 'Block 3 Testing Session',
-            sessionDate: '2024-12-15',
-          },
-        },
-        {
-          id: 'fb2',
-          testingRequest: {
-            id: 'req2',
-            title: 'Racing Game v2.1 Testing',
-            projectVersion: {
-              versionNumber: '2.1.0',
-              project: { title: 'Racing Game' },
-            },
-          },
-          user: {
-            id: 'user2',
-            name: 'Jane Smith',
-            email: 'jane.smith@mymail.champlain.edu',
-          },
-          feedbackData: {
-            rating: 2,
-            responses: {
-              'How was the performance?': 'The game lagged significantly during races.',
-              'How were the graphics?': 'Graphics look good but the frame rate drops hurt the experience.',
-              'What needs improvement?': 'Optimize performance and fix collision detection bugs.',
-            },
-          },
-          testingContext: 'individual',
-          submittedAt: '2024-12-14T16:45:00Z',
-          reviewStatus: 'approved',
-          qualityRating: 'positive',
-        },
-      ];
-
-      setFeedback(mockFeedback);
-
-      // Calculate stats
-      const total = mockFeedback.length;
-      const pending = mockFeedback.filter((f) => f.reviewStatus === 'pending').length;
-      const approved = mockFeedback.filter((f) => f.reviewStatus === 'approved').length;
-      const flagged = mockFeedback.filter((f) => f.reviewStatus === 'flagged').length;
-      const rejected = mockFeedback.filter((f) => f.reviewStatus === 'rejected').length;
-      const averageRating = mockFeedback.reduce((sum, f) => sum + f.feedbackData.rating, 0) / total;
-
-      setStats({ total, pending, approved, flagged, rejected, averageRating });
-    } catch (error) {
-      console.error('Error fetching feedback:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setStats({ total, pending, approved, flagged, rejected, averageRating });
+  }, [data]);
 
   const updateFeedbackStatus = async (feedbackId: string, status: 'approved' | 'flagged' | 'rejected', qualityRating?: 'positive' | 'negative' | 'neutral') => {
     try {
