@@ -12,17 +12,17 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { TenantResponse, useTenant } from '@/components/tenant';
+import { Tenant, useTenant } from '@/components/tenant';
 
 export const TenantSwitcher = (): React.JSX.Element => {
   const { isMobile } = useSidebar();
   const { currentTenant, availableTenants, loading, switchCurrentTenant } = useTenant();
 
   // Create default "Game Guild" tenant if no tenants available
-  const defaultTenant: TenantResponse = {
-    id: 'game-guild-default',
+  const defaultTenant: Tenant = {
+    id: 'game-guild',
     name: 'Game Guild',
-    description: 'Default Game Guild tenant',
+    description: 'Default',
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -70,7 +70,7 @@ export const TenantSwitcher = (): React.JSX.Element => {
     );
   }
 
-  const handleTenantSwitch = async (tenant: TenantResponse) => {
+  const handleTenantSwitch = async (tenant: Tenant) => {
     try {
       await switchCurrentTenant(tenant.id);
     } catch (error) {

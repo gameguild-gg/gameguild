@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useTenant } from './context/tenant-provider';
-import type { TenantResponse } from './types';
+import type { Tenant } from './types';
 
 /**
  * Hook that provides tenant-aware utilities and checks
@@ -18,7 +18,7 @@ export function useTenantUtils() {
       },
 
       // Get tenant by ID
-      getTenantById: (tenantId: string): TenantResponse | undefined => {
+      getTenantById: (tenantId: string): Tenant | undefined => {
         return availableTenants.find((tenant) => tenant.id === tenantId);
       },
 
@@ -28,7 +28,7 @@ export function useTenantUtils() {
       },
 
       // Get active tenants only
-      getActiveTenants: (): TenantResponse[] => {
+      getActiveTenants: (): Tenant[] => {
         return availableTenants.filter((tenant) => tenant.isActive);
       },
 
@@ -38,7 +38,7 @@ export function useTenantUtils() {
       },
 
       // Get tenant display name with fallback
-      getTenantDisplayName: (tenant?: TenantResponse | null): string => {
+      getTenantDisplayName: (tenant?: Tenant | null): string => {
         return tenant?.name || 'Unknown Tenant';
       },
 
@@ -48,7 +48,7 @@ export function useTenantUtils() {
       },
 
       // Get default tenant (first active tenant)
-      getDefaultTenant: (): TenantResponse | null => {
+      getDefaultTenant: (): Tenant | null => {
         const activeTenants = availableTenants.filter((tenant) => tenant.isActive);
         return activeTenants[0] || null;
       },
