@@ -1,6 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { TestingSessionDetails } from '@/components/testing-lab/testing-session-details';
+import { TestingSessionDetails } from '@/components/testing-lab';
 import { getTestingSessionBySlug } from '@/lib/testing-lab/testing-lab.actions';
 import { PropsWithSlugParams } from '@/types';
 
