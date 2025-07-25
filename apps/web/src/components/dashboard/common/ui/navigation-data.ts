@@ -49,7 +49,7 @@ export const navigationData = {
     },
     {
       name: 'Feedbacks',
-      url: '/dashboard/testing-lab/feedback',
+      url: '/dashboard/testing-lab/feedbacks',
       icon: MessageSquare,
     },
     // {
