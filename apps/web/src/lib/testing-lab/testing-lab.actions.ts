@@ -28,6 +28,8 @@ import {
   getTestingRequestsByRequestIdStatistics,
   getTestingFeedbackByUserByUserId,
   postTestingFeedback,
+  getTestingAttendanceStudents,
+  getTestingAttendanceSessions,
 } from '@/lib/api/generated/sdk.gen';
 import type { TestingRequest, TestingSession, TestingFeedback, SessionStatus, PutTestingSessionsByIdData } from '@/lib/api/generated/types.gen';
 
@@ -965,5 +967,89 @@ export async function getTestingRequestsBySession(sessionSlug: string) {
   } catch (error) {
     console.error('Error fetching session requests:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch session requests');
+  }
+}
+
+// Get student attendance data
+export async function getTestingAttendanceStudentsData() {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await getTestingAttendanceStudents({
+      baseUrl: environment.apiBaseUrl,
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return response.data || [];
+  } catch (error) {
+    console.error('Error fetching student attendance data:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch student attendance data');
+  }
+}
+
+// Get session attendance data
+export async function getTestingAttendanceSessionsData() {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    const response = await getTestingAttendanceSessions({
+      baseUrl: environment.apiBaseUrl,
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return response.data || [];
+  } catch (error) {
+    console.error('Error fetching session attendance data:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch session attendance data');
+  }
+}
+
+// Get session-specific attendance data (filtered by session slug)
+export async function getTestingAttendanceBySession(slug: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    // Get the session data first
+    const sessionData = await getTestingSessionBySlug(slug);
+    if (!sessionData) {
+      throw new Error('Session not found');
+    }
+
+    // Get all attendance data
+    const [studentData, sessionData_] = await Promise.all([getTestingAttendanceStudentsData(), getTestingAttendanceSessionsData()]);
+
+    // Filter attendance data related to this session
+    // Note: This is a mock implementation - you may need to adjust based on actual API structure
+    return {
+      students: studentData,
+      sessions: Array.isArray(sessionData_)
+        ? sessionData_.filter((s: unknown) => {
+            const session = s as { sessionId?: string };
+            return session.sessionId === sessionData.id;
+          })
+        : [],
+      session: sessionData,
+    };
+  } catch (error) {
+    console.error('Error fetching session attendance data:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch session attendance data');
   }
 }

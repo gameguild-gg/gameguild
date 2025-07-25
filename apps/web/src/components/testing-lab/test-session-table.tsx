@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Clock, Gamepad2, Monitor, Star, Trophy, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link, useRouter } from '@/i18n/navigation';
-import { RewardChip } from './reward-chip';
-import { LocationChip } from './location-chip';
+import { RewardChip } from '@/components/testing-lab/common/ui/reward-chip';
+import { LocationChip } from './common/ui/location-chip';
 
 interface TestSessionTableProps {
   sessions: TestSession[];
