@@ -17,7 +17,7 @@ interface UserRole {
   isAdmin: boolean;
 }
 
-export function TestingRequestsList() {
+export function TestingRequestList() {
   const { data: session } = useSession();
   const [requests, setRequests] = useState<TestingRequest[]>([]);
   const [filteredRequests, setFilteredRequests] = useState<TestingRequest[]>([]);

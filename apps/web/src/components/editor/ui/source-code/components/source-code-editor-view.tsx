@@ -8,7 +8,7 @@ import { FileTabs } from '../file-tabs';
 import { CodeEditor } from '../code-editor';
 import { Terminal } from '../terminal';
 import { SettingsPanel } from '../settings-panel';
-import { ContentEditMenu, type EditMenuOption } from '../../content-edit-menu';
+import { ContentEditMenu, type EditMenuOption } from '../../../../content/editor/ui/content-edit-menu';
 
 interface SourceCodeEditorViewProps {
   // File management
