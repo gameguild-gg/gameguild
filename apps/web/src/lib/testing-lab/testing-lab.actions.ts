@@ -4,7 +4,7 @@ import { revalidateTag } from 'next/cache';
 import { auth } from '@/auth';
 import { environment } from '@/configs/environment';
 import {
-  getTestingRequests,
+  getTestingRequests as getTestingRequestsApi,
   postTestingRequests,
   getTestingRequestsById,
   putTestingRequestsById,
@@ -27,6 +27,7 @@ import {
   postTestingRequestsByRequestIdFeedback,
   getTestingRequestsByRequestIdStatistics,
   getTestingFeedbackByUserByUserId,
+  postTestingFeedback,
 } from '@/lib/api/generated/sdk.gen';
 import type { TestingRequest, TestingSession, TestingFeedback, SessionStatus, PutTestingSessionsByIdData } from '@/lib/api/generated/types.gen';
 
@@ -39,7 +40,7 @@ export async function getTestingRequestsData(params?: { status?: string; project
   }
 
   try {
-    const response = await getTestingRequests({
+    const response = await getTestingRequestsApi({
       baseUrl: environment.apiBaseUrl,
       query: params,
       headers: {
@@ -850,5 +851,44 @@ export async function getTestingFeedbackById(id: string) {
   } catch (error) {
     console.error('Error fetching testing feedback by ID:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch testing feedback');
+  }
+}
+
+// Get all testing requests (alias for getTestingRequestsData for consistency)
+export async function getTestingRequests(params?: { status?: string; projectVersionId?: string; creatorId?: string; skip?: number; take?: number }) {
+  return await getTestingRequestsData(params);
+}
+
+// Get all testing feedbacks
+export async function getTestingFeedbacks(params?: { userId?: string; testingRequestId?: string; skip?: number; take?: number }) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    // Since there's no general getFeedbacks endpoint, we'll need to implement this differently
+    // For now, we'll use the current user's feedback as a fallback
+    const response = await getTestingFeedbackByUserByUserId({
+      baseUrl: environment.apiBaseUrl,
+      path: { userId: session.user?.id || '' },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to fetch testing feedbacks');
+    }
+
+    return {
+      testingFeedbacks: response.data,
+      total: response.data.length,
+    };
+  } catch (error) {
+    console.error('Error fetching testing feedbacks:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch testing feedbacks');
   }
 }
