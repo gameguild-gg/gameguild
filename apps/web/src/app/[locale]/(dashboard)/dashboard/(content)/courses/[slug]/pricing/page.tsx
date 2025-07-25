@@ -1,36 +1,20 @@
-'use client';
+import React from 'react';
+import {
+  DashboardPage,
+  DashboardPageContent,
+  DashboardPageDescription,
+  DashboardPageHeader,
+  DashboardPageTitle,
+} from '@/components/dashboard/common/ui/dashboard-page';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SalesShowcaseSection } from '@/components/courses/course-editor/sections/sales-showcase-section';
-
-export default function CoursePricingPage() {
+export default async function Page(): Promise<React.JSX.Element> {
   return (
-    <div className="flex-1 flex flex-col min-h-0">
-      {/* Sticky Header */}
-      <div className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">Pricing & Products</h1>
-              <p className="text-sm text-muted-foreground">Configure course pricing, products, and sales showcase settings</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 p-6 overflow-auto">
-        <div className="max-w-4xl mx-auto">
-          <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">💰 Sales & Pricing</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SalesShowcaseSection />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+    <DashboardPage>
+      <DashboardPageHeader>
+        <DashboardPageTitle>Sales & Pricing</DashboardPageTitle>
+        <DashboardPageDescription>Configure course pricing, products, and sales showcase settings</DashboardPageDescription>
+      </DashboardPageHeader>
+      <DashboardPageContent></DashboardPageContent>
+    </DashboardPage>
   );
 }
