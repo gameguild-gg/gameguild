@@ -12,8 +12,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useTenant } from '../../context/tenant-provider';
-import { TenantResponse } from '../../types';
+import { TenantResponse, useTenant } from '@/components/tenant';
 
 export const TenantSwitcher = (): React.JSX.Element => {
   const { isMobile } = useSidebar();
