@@ -15,7 +15,7 @@ export interface TenantResponse {
   name: string;
   description?: string;
   isActive: boolean;
-  createdAt: string;
+  createdAt?: string; // Make optional to match session data
   updatedAt?: string;
 }
 

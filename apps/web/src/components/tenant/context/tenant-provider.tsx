@@ -2,7 +2,7 @@
 
 import React, { createContext, Dispatch, PropsWithChildren, useCallback, useContext, useEffect, useReducer } from 'react';
 import { useSession } from 'next-auth/react';
-import type { TenantResponse } from './types';
+import type { TenantResponse } from '@/lib/tenants';
 
 export const TenantActionType = {
   SET_CURRENT_TENANT: 'SET_CURRENT_TENANT',
@@ -24,12 +24,13 @@ export type TenantAction =
   | { type: typeof TenantActionType.INVALIDATE_CACHE };
 
 export type SwitchCurrentTenant = (tenantId: string) => Promise<TenantResponse | null>;
+export type SetCurrentTenant = (tenant: TenantResponse | null) => Promise<TenantResponse | null>;
 export type OnSessionUpdate = (session: unknown) => Promise<void>;
+export type UpdateAvailableTenants = (availableTenants: TenantResponse[]) => Promise<TenantResponse[]>;
 export type SetLoading = (loading: boolean) => void;
 export type SetError = (error: string) => void;
 export type ClearError = () => void;
 export type TenantReducer = (initialState: Partial<TenantState>) => [TenantState, Dispatch<TenantAction>];
-export type UpdateTenantData = (data: { currentTenant?: TenantResponse | null; availableTenants?: TenantResponse[] }) => void;
 
 interface TenantContextValue {
   currentTenant: TenantResponse | null;
@@ -37,7 +38,7 @@ interface TenantContextValue {
   loading: boolean;
   error: string | null;
   switchCurrentTenant: SwitchCurrentTenant;
-  updateTenantData: UpdateTenantData;
+  updateAvailableTenants: UpdateAvailableTenants;
   setError: SetError;
   clearError: ClearError;
 }
@@ -120,27 +121,8 @@ interface TenantProviderProps {
 }
 
 export const TenantProvider = ({ children, initialState = {} }: PropsWithChildren<TenantProviderProps>): React.JSX.Element => {
+  const [state, dispatch] = useTenantReducer(initialState);
   const { data: session, update: updateSession } = useSession();
-
-  // Merge initial state with session data, prioritizing initialState when provided
-  const getFinalInitialState = useCallback(() => {
-    if (!session) return { ...defaultTenantState, ...initialState };
-
-    const sessionTyped = session as {
-      user?: unknown;
-      availableTenants?: TenantResponse[];
-      currentTenant?: TenantResponse;
-    };
-
-    return {
-      currentTenant: initialState.currentTenant ?? sessionTyped.currentTenant ?? null,
-      availableTenants: initialState.availableTenants ?? sessionTyped.availableTenants ?? [],
-      loading: initialState.loading ?? false,
-      error: initialState.error ?? null,
-    };
-  }, [session, initialState]);
-
-  const [state, dispatch] = useTenantReducer(getFinalInitialState());
 
   const setLoading: SetLoading = useCallback(
     (loading: boolean): void => {
@@ -160,16 +142,24 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
     dispatch({ type: 'CLEAR_ERROR' });
   }, [dispatch]);
 
-  const updateTenantData: UpdateTenantData = useCallback(
-    (data: { currentTenant?: TenantResponse | null; availableTenants?: TenantResponse[] }): void => {
-      if (data.availableTenants !== undefined) {
-        dispatch({ type: 'SET_AVAILABLE_TENANTS', payload: data.availableTenants });
-      }
-      if (data.currentTenant !== undefined) {
-        dispatch({ type: 'SET_CURRENT_TENANT', payload: data.currentTenant });
-      }
+  const updateAvailableTenants: UpdateAvailableTenants = useCallback(
+    async (availableTenants: TenantResponse[]): Promise<TenantResponse[]> => {
+      setLoading(true);
+      dispatch({ type: 'SET_AVAILABLE_TENANTS', payload: availableTenants });
+      setLoading(false);
+      return availableTenants;
     },
-    [dispatch],
+    [dispatch, setLoading],
+  );
+
+  const setCurrentTenant: SetCurrentTenant = useCallback(
+    async (tenant: TenantResponse | null): Promise<TenantResponse | null> => {
+      setLoading(true);
+      dispatch({ type: 'SET_CURRENT_TENANT', payload: tenant });
+      setLoading(false);
+      return tenant;
+    },
+    [dispatch, setLoading],
   );
 
   const switchCurrentTenant: SwitchCurrentTenant = useCallback(
@@ -177,7 +167,7 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
       setLoading(true);
 
       try {
-        // Find tenant by ID from available tenants
+        // Find a tenant by ID from available tenants
         const tenant = state.availableTenants.find((t) => t.id === tenantId);
 
         if (!tenant) {
@@ -185,7 +175,7 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
           return null;
         }
 
-        // Update the session with new tenant
+        // Update the session with a new tenant
         await updateSession({ ...session, currentTenant: tenant });
 
         // Update local state
@@ -216,13 +206,11 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
 
       try {
         if (!session?.user) {
-          // User logged out - clear all tenant data
-          dispatch({ type: 'SET_AVAILABLE_TENANTS', payload: [] });
-          dispatch({ type: 'SET_CURRENT_TENANT', payload: null });
+          await updateAvailableTenants([]);
+          await setCurrentTenant(null);
         } else {
-          // User logged in - update tenant data from session
-          dispatch({ type: 'SET_AVAILABLE_TENANTS', payload: session.availableTenants ?? [] });
-          dispatch({ type: 'SET_CURRENT_TENANT', payload: session.currentTenant ?? null });
+          await updateAvailableTenants(session.availableTenants ?? []);
+          await setCurrentTenant(session.currentTenant ?? null);
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to update session';
@@ -231,10 +219,9 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
         setLoading(false);
       }
     },
-    [setLoading, setError, dispatch],
+    [updateAvailableTenants, setCurrentTenant, setLoading, setError],
   );
 
-  // Update state when session changes
   useEffect(() => {
     if (session !== undefined) void onSessionUpdate(session);
   }, [session, onSessionUpdate]);
@@ -245,7 +232,7 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
     loading: state.loading,
     error: state.error,
     switchCurrentTenant,
-    updateTenantData,
+    updateAvailableTenants,
     setError,
     clearError,
   };
@@ -270,17 +257,12 @@ export function useAuthenticatedApi() {
 
   const makeRequest = useCallback(
     async (endpoint: string, options: RequestInit = {}) => {
-      const sessionTyped = session as {
-        user?: unknown;
-        accessToken?: string;
-      };
-
-      if (!sessionTyped?.accessToken) {
+      if (!session?.accessToken) {
         throw new Error('No authentication token available');
       }
 
       const headers = {
-        Authorization: `Bearer ${sessionTyped.accessToken}`,
+        Authorization: `Bearer ${session.accessToken}`,
         'Content-Type': 'application/json',
         ...(currentTenant ? { 'X-Tenant-Id': currentTenant.id } : {}),
         ...options.headers,
@@ -300,12 +282,7 @@ export function useAuthenticatedApi() {
     [session, currentTenant],
   );
 
-  const sessionTyped = session as {
-    user?: unknown;
-    accessToken?: string;
-  };
-
-  const isAuthenticated = !!sessionTyped?.accessToken;
+  const isAuthenticated = !!session?.accessToken;
   const tenantId = currentTenant?.id;
 
   return { makeRequest, isAuthenticated, tenantId, currentTenant };
