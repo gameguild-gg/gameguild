@@ -14,4 +14,4 @@ export { TestingFeedbackDetails } from './testing-feedback-details';
 
 // List components
 export { TestingRequestList } from './testing-request-list';
-export { default as TestingFeedbackList } from './testing-feedback-list';
+export { TestingFeedbackList } from './testing-feedback-list';
