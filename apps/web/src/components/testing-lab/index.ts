@@ -6,3 +6,8 @@ export type { TestingLabSession } from './filters/enhanced-testing-lab-filter-co
 // Legacy components (maintain backward compatibility)
 export { TestingLabSessions } from './testing-lab-sessions';
 export { TestingLabFilterControls } from './filters/testing-lab-filter-controls';
+
+// Detail components
+export { TestingSessionDetails } from './testing-session-details';
+export { TestingRequestDetails } from './testing-request-details';
+export { TestingFeedbackDetails } from './testing-feedback-details';
