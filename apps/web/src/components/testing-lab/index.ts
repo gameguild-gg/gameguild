@@ -11,3 +11,7 @@ export { TestingLabFilterControls } from './filters/testing-lab-filter-controls'
 export { TestingSessionDetails } from './testing-session-details';
 export { TestingRequestDetails } from './testing-request-details';
 export { TestingFeedbackDetails } from './testing-feedback-details';
+
+// List components
+export { TestingRequestList } from './testing-request-list';
+export { default as TestingFeedbackList } from './testing-feedback-list';
