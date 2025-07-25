@@ -4,7 +4,7 @@ export { EnhancedTestingLabFilters } from './filters/enhanced-testing-lab-filter
 export type { TestingLabSession } from './filters/enhanced-testing-lab-filter-controls';
 
 // Legacy components (maintain backward compatibility)
-export { TestingLabSessions } from './sessions/testing-lab-sessions';
+export { TestingSessions } from './sessions/landing/testing-sessions';
 export { TestingLabFilterControls } from './filters/testing-lab-filter-controls';
 
 // Detail components

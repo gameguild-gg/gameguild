@@ -4,7 +4,7 @@ interface SessionHeaderProps {
   sessionCount: number;
 }
 
-export function SessionHeader({ sessionCount }: SessionHeaderProps) {
+export function TestingSessionsHeader({ sessionCount }: SessionHeaderProps) {
   return (
     <div className="text-center mb-12">
       <div className="mb-6">

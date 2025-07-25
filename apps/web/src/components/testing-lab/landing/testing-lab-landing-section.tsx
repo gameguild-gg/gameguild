@@ -11,7 +11,7 @@ interface TestingLabLandingProps {
   testSessions: TestSession[];
 }
 
-export function TestingLabLanding({ testSessions }: TestingLabLandingProps) {
+export function TestingLabLandingSection({ testSessions }: TestingLabLandingProps) {
   const openSessions = testSessions.filter((session) => session.status === 'open');
   const upcomingSessions = testSessions.filter((session) => new Date(session.sessionDate) > new Date());
 

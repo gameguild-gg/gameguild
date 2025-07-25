@@ -1,9 +1,9 @@
-import { TestingLabLanding } from '@/components/testing-lab/landing/testing-lab-landing';
+import { TestingLabLandingSection } from '@/components/testing-lab/landing/testing-lab-landing-section';
 import { getAvailableTestSessions } from '@/lib/api/testing-lab/test-sessions';
 
 export default async function TestingLabPage() {
   // Fetch available test sessions server-side
   const testSessions = await getAvailableTestSessions();
 
-  return <TestingLabLanding testSessions={testSessions} />;
+  return <TestingLabLandingSection testSessions={testSessions} />;
 }
