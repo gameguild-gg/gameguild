@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, Clock, Edit, Globe, MapPin, Monitor, Plus, Trash2, User, Users, Video } from 'lucide-react';
-import { useCourseEditor } from '@/lib/courses/course-editor.context';
+import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { useState } from 'react';
 import { format } from 'date-fns';
 
