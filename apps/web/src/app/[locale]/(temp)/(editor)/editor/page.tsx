@@ -1,20 +1,21 @@
 'use client';
 
 import { Editor } from '@/components/content/editor/lexical-editor';
-import { Button } from '@/components/editor/ui/button';
-import { Input } from '@/components/editor/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/editor/ui/dialog';
-import { Label } from '@/components/editor/ui/label';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Save, SaveAll, HardDrive, Settings } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { Sun, Moon } from 'lucide-react';
 import type { LexicalEditor } from 'lexical';
-import { OpenProjectDialog } from '@/components/editor/ui/editor/open-project-dialog';
-import { CreateProjectDialog } from '@/components/editor/ui/editor/create-project-dialog';
-import { EnhancedStorageAdapter } from '@/lib/storage/enhanced-storage-adapter';
-import { SyncSettingsDialog } from '@/components/editor/ui/editor/sync-settings-dialog';
+
 import { syncConfig } from '@/lib/sync/sync-config';
+import { OpenProjectDialog } from '@/components/content/editor/ui/editor/open-project-dialog';
+import { CreateProjectDialog } from '@/components/content/editor/ui/editor/create-project-dialog';
+import { SyncSettingsDialog } from '@/components/content/editor/ui/editor/sync-settings-dialog';
+import { EnhancedStorageAdapter } from '@/lib/storage/enhanced-storage-adapter';
 
 interface ProjectData {
   id: string;
