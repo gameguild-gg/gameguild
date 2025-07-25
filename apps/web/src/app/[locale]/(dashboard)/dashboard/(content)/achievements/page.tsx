@@ -1,10 +1,10 @@
 import React, { Suspense } from 'react';
-import { getAchievements, getUserAchievements, getAchievementStatistics } from '@/lib/achievements/achievements.actions';
+import { getAchievements, getAchievementStatistics, getUserAchievements } from '@/lib/achievements/achievements.actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Trophy, Award, Target, TrendingUp, Eye, Edit, Star } from 'lucide-react';
+import { Award, Edit, Eye, Plus, Star, Target, TrendingUp, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 

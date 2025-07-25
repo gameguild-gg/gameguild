@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, BookOpen, Package, Trophy, CreditCard, TrendingUp, Eye, Plus, Activity, DollarSign, Target, Calendar } from 'lucide-react';
+import { Activity, BookOpen, Calendar, CreditCard, DollarSign, Package, Plus, Target, TrendingUp, Trophy, Users } from 'lucide-react';
 
 // Import the individual action functions
 import { getUserStatistics } from '@/lib/users/users.actions';

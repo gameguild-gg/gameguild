@@ -1,5 +1,4 @@
 import { auth } from '@/auth';
-import { SyncProvider } from '@/lib/sync/sync-provider';
 import { ErrorBoundaryProvider } from '@/components/common/error/error-boundary-provider';
 import { redirect } from 'next/navigation';
 import React, { PropsWithChildren } from 'react';

@@ -11,24 +11,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import {
+  ArrowDown,
+  ArrowUp,
   BookOpen,
-  Plus,
-  FileText,
-  Video,
-  PlayCircle,
-  Clock,
-  Edit,
-  Trash2,
-  MoreHorizontal,
   ChevronDown,
   ChevronRight,
+  Clock,
+  Copy,
+  Edit,
   Eye,
   EyeOff,
-  Copy,
-  Move,
-  ArrowUp,
-  ArrowDown,
+  FileText,
   GripVertical,
+  MoreHorizontal,
+  Move,
+  PlayCircle,
+  Plus,
+  Trash2,
+  Video,
 } from 'lucide-react';
 import { useCourseEditor } from '@/lib/courses/course-editor.context';
 import { useState } from 'react';
@@ -106,7 +106,16 @@ export default function CourseContentPage() {
       visibility: 'public',
     };
 
-    setModules((prev) => prev.map((moduleItem) => (moduleItem.id === moduleId ? { ...moduleItem, lessons: [...moduleItem.lessons, newLesson] } : moduleItem)));
+    setModules((prev) =>
+      prev.map((moduleItem) =>
+        moduleItem.id === moduleId
+          ? {
+              ...moduleItem,
+              lessons: [...moduleItem.lessons, newLesson],
+            }
+          : moduleItem,
+      ),
+    );
     setIsAddingLesson(null);
   };
 
@@ -117,7 +126,12 @@ export default function CourseContentPage() {
   const handleDeleteLesson = (moduleId: string, lessonId: string) => {
     setModules((prev) =>
       prev.map((moduleItem) =>
-        moduleItem.id === moduleId ? { ...moduleItem, lessons: moduleItem.lessons.filter((lesson) => lesson.id !== lessonId) } : moduleItem,
+        moduleItem.id === moduleId
+          ? {
+              ...moduleItem,
+              lessons: moduleItem.lessons.filter((lesson) => lesson.id !== lessonId),
+            }
+          : moduleItem,
       ),
     );
   };
