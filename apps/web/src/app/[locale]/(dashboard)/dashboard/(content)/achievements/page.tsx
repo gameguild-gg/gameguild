@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React from 'react';
 import { getAchievements, getAchievementStatistics, getUserAchievements } from '@/lib/achievements/achievements.actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Award, Edit, Eye, Plus, Star, Target, TrendingUp, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import {
+  DashboardPage,
+  DashboardPageContent,
+  DashboardPageDescription,
+  DashboardPageHeader,
+  DashboardPageTitle,
+} from '@/components/dashboard/common/ui/dashboard-page';
 
 interface AchievementsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -95,8 +102,8 @@ async function AchievementsContent({ searchParams }: AchievementsPageProps) {
   const statistics = statisticsResult.data;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col flex-1 space-y-6">
+      <div className="flex flex-1 justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Achievements</h1>
           <p className="text-gray-600">Manage achievements and user progress</p>
@@ -296,8 +303,14 @@ async function AchievementsContent({ searchParams }: AchievementsPageProps) {
 
 export default async function AchievementsPage({ searchParams }: AchievementsPageProps) {
   return (
-    <Suspense fallback={<AchievementsLoading />}>
-      <AchievementsContent searchParams={searchParams} />
-    </Suspense>
+    <DashboardPage>
+      <DashboardPageHeader>
+        <DashboardPageTitle>Achievements</DashboardPageTitle>
+        <DashboardPageDescription>Manage achievements</DashboardPageDescription>
+      </DashboardPageHeader>
+      <DashboardPageContent>
+        <AchievementsContent searchParams={searchParams} />
+      </DashboardPageContent>
+    </DashboardPage>
   );
 }

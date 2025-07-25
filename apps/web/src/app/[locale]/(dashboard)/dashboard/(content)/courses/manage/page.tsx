@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { Metadata } from 'next';
-import { CourseManagementContent } from '@/components/dashboard/courses/course-management-content';
+import { CourseManagementContent } from '@/components/courses/course-management-content';
 import { Loader2 } from 'lucide-react';
 
 export const metadata: Metadata = {
