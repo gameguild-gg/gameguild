@@ -26,8 +26,9 @@ import {
   getTestingRequestsByRequestIdFeedback,
   postTestingRequestsByRequestIdFeedback,
   getTestingRequestsByRequestIdStatistics,
+  getTestingFeedbackByUserByUserId,
 } from '@/lib/api/generated/sdk.gen';
-import type { TestingRequest, TestingSession, SessionStatus, PutTestingSessionsByIdData } from '@/lib/api/generated/types.gen';
+import type { TestingRequest, TestingSession, TestingFeedback, SessionStatus, PutTestingSessionsByIdData } from '@/lib/api/generated/types.gen';
 
 // Get all testing requests
 export async function getTestingRequestsData(params?: { status?: string; projectVersionId?: string; creatorId?: string; skip?: number; take?: number }) {
@@ -777,5 +778,77 @@ export async function getTestingRequestStatistics(requestId: string) {
   } catch (error) {
     console.error('Error fetching testing request statistics:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch statistics');
+  }
+}
+
+// Get testing session by slug - Since there's no direct API endpoint for slug,
+// we'll need to get all sessions and filter by slug or convert slug to ID
+export async function getTestingSessionBySlug(slug: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    // For now, we'll assume the slug is actually an ID
+    // In a real implementation, you might need to:
+    // 1. Get all sessions and filter by slug
+    // 2. Or have a separate endpoint for slug-based lookup
+    const response = await getTestingSessionsById({
+      baseUrl: environment.apiBaseUrl,
+      path: { id: slug },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    if (!response.data) {
+      throw new Error('Testing session not found');
+    }
+
+    return response.data as TestingSession;
+  } catch (error) {
+    console.error('Error fetching testing session by slug:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch testing session');
+  }
+}
+
+// Get testing feedback by ID - Using available user feedback endpoint as a fallback
+export async function getTestingFeedbackById(id: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    // Since there's no direct endpoint for feedback by ID, we'll use the user feedback endpoint
+    // In a real implementation, you would need a proper endpoint like /testing/feedback/{id}
+    const response = await getTestingFeedbackByUserByUserId({
+      baseUrl: environment.apiBaseUrl,
+      path: { userId: session.user?.id || '' },
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    if (!response.data || !Array.isArray(response.data)) {
+      throw new Error('Testing feedback not found');
+    }
+
+    // Find the feedback by ID
+    const feedback = response.data.find((f: TestingFeedback) => f.id === id);
+    
+    if (!feedback) {
+      throw new Error('Testing feedback not found');
+    }
+
+    return feedback as TestingFeedback;
+  } catch (error) {
+    console.error('Error fetching testing feedback by ID:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch testing feedback');
   }
 }
