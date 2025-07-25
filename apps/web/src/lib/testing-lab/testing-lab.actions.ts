@@ -842,7 +842,7 @@ export async function getTestingFeedbackById(id: string) {
 
     // Find the feedback by ID
     const feedback = response.data.find((f: TestingFeedback) => f.id === id);
-    
+
     if (!feedback) {
       throw new Error('Testing feedback not found');
     }
@@ -890,5 +890,80 @@ export async function getTestingFeedbacks(params?: { userId?: string; testingReq
   } catch (error) {
     console.error('Error fetching testing feedbacks:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch testing feedbacks');
+  }
+}
+
+// Get testing feedbacks filtered by session slug
+export async function getTestingFeedbacksBySession(sessionSlug: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    // First get the session to verify it exists
+    const sessionData = await getTestingSessionBySlug(sessionSlug);
+    if (!sessionData) {
+      throw new Error('Session not found');
+    }
+
+    // Get all feedbacks and filter by session ID
+    const allFeedbacks = await getTestingFeedbacks();
+
+    // Filter feedbacks that belong to this session
+    const sessionFeedbacks = allFeedbacks.testingFeedbacks.filter(
+      (feedback) => feedback.sessionId === sessionData.id || feedback.session?.id === sessionData.id,
+    );
+
+    return {
+      testingFeedbacks: sessionFeedbacks,
+      total: sessionFeedbacks.length,
+    };
+  } catch (error) {
+    console.error('Error fetching session feedbacks:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch session feedbacks');
+  }
+}
+
+// Get testing requests filtered by session slug
+export async function getTestingRequestsBySession(sessionSlug: string) {
+  const session = await auth();
+
+  if (!session?.accessToken) {
+    throw new Error('Authentication required');
+  }
+
+  try {
+    // First get the session to verify it exists
+    const sessionData = await getTestingSessionBySlug(sessionSlug);
+    if (!sessionData) {
+      throw new Error('Session not found');
+    }
+
+    // If the session has a testingRequestId, get that specific request
+    if (sessionData.testingRequestId) {
+      const request = await getTestingRequestById(sessionData.testingRequestId);
+      return {
+        testingRequests: request ? [request] : [],
+        total: request ? 1 : 0,
+      };
+    }
+
+    // Otherwise, get all requests and filter by session relationship
+    const allRequests = await getTestingRequests();
+    const sessionRequests = allRequests.testingRequests.filter(
+      (request) =>
+        // Check if any session associated with this request matches our session
+        request.id === sessionData.testingRequestId,
+    );
+
+    return {
+      testingRequests: sessionRequests,
+      total: sessionRequests.length,
+    };
+  } catch (error) {
+    console.error('Error fetching session requests:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch session requests');
   }
 }
