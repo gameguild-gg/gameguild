@@ -34,21 +34,13 @@ FROM base AS runner
 # Create app directory.
 WORKDIR /app
 # Set environment variables.
-ENV NODE_ENV production
+ENV NODE_ENV=production
 # Disable telemetry to prevent Next.js from collecting anonymous usage data.
 ENV NEXT_TELEMETRY_DISABLED=1
-# Create a non-root group for running the application.
-# The group is created with a specific GID (1001) to ensure consistent permissions.
-# This is important for security and to avoid running the application as root.
-RUN addgroup --system --gid 1001 nodejs
-# Create a non-root user for running the application.
-# The user is created with a specific UID (1001) to ensure consistent permissions.
-# This is important for security and to avoid running the application as root.
-RUN adduser --system --uid 1001 nextjs
 # Change ownership to node user.
-RUN chown -R node:node /usr/src/app
+RUN chown -R node:node /app
 
-COPY --from=builder /app/public ./public
+#COPY --from=builder /app/public ./public
 
 # Automatically leverage output traces to reduce image size.
 # https://nextjs.org/docs/advanced-features/output-file-tracing.
@@ -62,6 +54,9 @@ COPY --from=builder --chown=node:node /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=node:node /app/apps/web/.next/static ./.next/static
 # Copy files from the "public" directory to the corresponding "public" directory in the container image.
 COPY --from=builder --chown=node:node /app/apps/web/public ./public
+# Set the user to run the application.
+# This ensures that the application runs with non-root privileges, enhancing security.
+USER node
 # Define an argument for the port with a default value of 3000.
 ARG PORT=3000
 # Expose the port to inform Docker that the container will listen on the specified port.
