@@ -2,7 +2,7 @@
 
 import React, { createContext, Dispatch, PropsWithChildren, useCallback, useContext, useEffect, useReducer } from 'react';
 import { useSession } from 'next-auth/react';
-import type { TenantResponse } from '../types';
+import type { Tenant } from '../types';
 
 export const TenantActionType = {
   SET_CURRENT_TENANT: 'SET_CURRENT_TENANT',
@@ -16,25 +16,25 @@ export const TenantActionType = {
 export type TenantActionType = (typeof TenantActionType)[keyof typeof TenantActionType];
 
 export type TenantAction =
-  | { type: typeof TenantActionType.SET_CURRENT_TENANT; payload: TenantResponse | null }
-  | { type: typeof TenantActionType.SET_AVAILABLE_TENANTS; payload: TenantResponse[] }
+  | { type: typeof TenantActionType.SET_CURRENT_TENANT; payload: Tenant | null }
+  | { type: typeof TenantActionType.SET_AVAILABLE_TENANTS; payload: Tenant[] }
   | { type: typeof TenantActionType.SET_LOADING; payload: boolean }
   | { type: typeof TenantActionType.SET_ERROR; payload: string }
   | { type: typeof TenantActionType.CLEAR_ERROR }
   | { type: typeof TenantActionType.INVALIDATE_CACHE };
 
-export type SwitchCurrentTenant = (tenantId: string) => Promise<TenantResponse | null>;
-export type SetCurrentTenant = (tenant: TenantResponse | null) => Promise<TenantResponse | null>;
+export type SwitchCurrentTenant = (tenantId: string) => Promise<Tenant | null>;
+export type SetCurrentTenant = (tenant: Tenant | null) => Promise<Tenant | null>;
 export type OnSessionUpdate = (session: unknown) => Promise<void>;
-export type UpdateAvailableTenants = (availableTenants: TenantResponse[]) => Promise<TenantResponse[]>;
+export type UpdateAvailableTenants = (availableTenants: Tenant[]) => Promise<Tenant[]>;
 export type SetLoading = (loading: boolean) => void;
 export type SetError = (error: string) => void;
 export type ClearError = () => void;
 export type TenantReducer = (initialState: Partial<TenantState>) => [TenantState, Dispatch<TenantAction>];
 
 interface TenantContextValue {
-  currentTenant: TenantResponse | null;
-  availableTenants: TenantResponse[];
+  currentTenant: Tenant | null;
+  availableTenants: Tenant[];
   loading: boolean;
   error: string | null;
   switchCurrentTenant: SwitchCurrentTenant;
@@ -44,8 +44,8 @@ interface TenantContextValue {
 }
 
 export interface TenantState {
-  currentTenant: TenantResponse | null;
-  availableTenants: TenantResponse[];
+  currentTenant: Tenant | null;
+  availableTenants: Tenant[];
   loading: boolean;
   error: string | null;
 }
@@ -143,7 +143,7 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
   }, [dispatch]);
 
   const updateAvailableTenants: UpdateAvailableTenants = useCallback(
-    async (availableTenants: TenantResponse[]): Promise<TenantResponse[]> => {
+    async (availableTenants: Tenant[]): Promise<Tenant[]> => {
       setLoading(true);
       dispatch({ type: 'SET_AVAILABLE_TENANTS', payload: availableTenants });
       setLoading(false);
@@ -153,7 +153,7 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
   );
 
   const setCurrentTenant: SetCurrentTenant = useCallback(
-    async (tenant: TenantResponse | null): Promise<TenantResponse | null> => {
+    async (tenant: Tenant | null): Promise<Tenant | null> => {
       setLoading(true);
       dispatch({ type: 'SET_CURRENT_TENANT', payload: tenant });
       setLoading(false);
@@ -163,7 +163,7 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
   );
 
   const switchCurrentTenant: SwitchCurrentTenant = useCallback(
-    async (tenantId: string): Promise<TenantResponse | null> => {
+    async (tenantId: string): Promise<Tenant | null> => {
       setLoading(true);
 
       try {
@@ -198,8 +198,8 @@ export const TenantProvider = ({ children, initialState = {} }: PropsWithChildre
     async (sessionData: unknown): Promise<void> => {
       const session = sessionData as {
         user?: unknown;
-        availableTenants?: TenantResponse[];
-        currentTenant?: TenantResponse;
+        availableTenants?: Tenant[];
+        currentTenant?: Tenant;
       };
 
       setLoading(true);

@@ -2,10 +2,10 @@
 
 import { revalidateTag } from 'next/cache';
 import { auth } from '@/auth';
-import { TenantResponse, CreateTenantRequest, UpdateTenantRequest } from '@/components/tenant/types';
+import { Tenant, CreateTenantRequest, UpdateTenantRequest } from '@/components/tenant/types';
 
 export interface TenantData {
-  tenants: TenantResponse[];
+  tenants: Tenant[];
   pagination?: {
     page: number;
     limit: number;
@@ -17,7 +17,7 @@ export interface TenantData {
 export interface TenantActionState {
   success: boolean;
   error?: string;
-  tenant?: TenantResponse;
+  tenant?: Tenant;
 }
 
 // Cache configuration
@@ -70,7 +70,7 @@ export async function getTenantsData(page: number = 1, limit: number = 20, searc
       throw new Error(`Failed to fetch tenants: ${response.status} ${response.statusText}`);
     }
 
-    const tenants: TenantResponse[] = await response.json();
+    const tenants: Tenant[] = await response.json();
 
     return {
       tenants,
@@ -98,7 +98,7 @@ export async function getTenantsData(page: number = 1, limit: number = 20, searc
 /**
  * Get current user's tenants with authentication
  */
-export async function getUserTenants(): Promise<TenantResponse[]> {
+export async function getUserTenants(): Promise<Tenant[]> {
   try {
     const session = await auth();
 
@@ -138,7 +138,7 @@ export async function getUserTenants(): Promise<TenantResponse[]> {
 /**
  * Get tenant by ID with authentication
  */
-export async function getTenantById(id: string): Promise<TenantResponse | null> {
+export async function getTenantById(id: string): Promise<Tenant | null> {
   try {
     const session = await auth();
 
@@ -181,7 +181,7 @@ export async function getTenantById(id: string): Promise<TenantResponse | null> 
 /**
  * Get tenant by name with authentication
  */
-export async function getTenantByName(name: string): Promise<TenantResponse | null> {
+export async function getTenantByName(name: string): Promise<Tenant | null> {
   try {
     const session = await auth();
 
