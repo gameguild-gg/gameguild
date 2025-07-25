@@ -23,7 +23,7 @@ export const DashboardPageDescription = async ({ children }: PropsWithChildren):
 
 export const DashboardPageContent = async ({ children }: PropsWithChildren): Promise<React.JSX.Element> => {
   return (
-    <div className=" flex flex-col flex-1 px-4 md:px-8">
+    <div className=" flex flex-col flex-1 items-center px-4 md:px-8">
       <div className="flex flex-col flex-1 container">
         {/* Main Content */}
         {children}
