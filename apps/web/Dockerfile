@@ -8,19 +8,25 @@ RUN apk add --no-cache libc6-compat
 FROM base AS builder
 # Create app directory.
 WORKDIR /app
-# Copy application dependency manifests to the container image.
+# Copy root package.json and package-lock.json first for better caching
 COPY package*.json ./
-# Generate package-lock.json.
+# Copy packages directory (contains local workspace dependencies)
+COPY packages/ ./packages/
+# Copy web app package.json
+COPY apps/web/package*.json ./apps/web/
+# Generate package-lock.json from root
 RUN npm install --package-lock-only
-# Install app dependencies.
-RUN npm ci 
+# Install all dependencies (including workspace dependencies)
+RUN npm ci
 # Clean npm cache.
 RUN npm cache clean --force
-# Bundle app source.
-COPY . .
+# Copy web app source code
+COPY apps/web/ ./apps/web/
+# Set working directory to web app
+WORKDIR /app/apps/web
 # Build app.
 RUN npm run build 
-# Prune dev dependencies.
+# Prune dev dependencies from the web app
 RUN npm prune --production
 
 # Production image, copy all files and run next
@@ -33,12 +39,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+COPY --from=builder /app/apps/web/public ./public
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
 
 USER nextjs
 
