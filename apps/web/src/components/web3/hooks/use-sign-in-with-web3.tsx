@@ -1,11 +1,8 @@
 'use client';
 
-import { useWeb3 } from '@/components/web3/use-web3';
-import { useConnectToWallet } from '@/components/web3/use-connect-to-wallet';
 import { useCallback, useEffect } from 'react';
-import { signInWithWeb3 } from '@/lib/auth/sign-in-with-web3';
-import { getSession } from 'next-auth/react';
-import { postAuthWeb3Challenge } from '@/lib/api/generated';
+import { useWeb3 } from '@/components/web3/hooks/use-web3';
+import { useConnectToWallet } from '@/components/web3/hooks/use-connect-to-wallet';
 
 export enum Web3ProviderChoice {
   METAMASK = 'METAMASK',
