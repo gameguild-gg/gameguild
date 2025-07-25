@@ -19,10 +19,10 @@ import type { TestingRequest } from '@/lib/api/generated/types.gen';
 import { joinTestingRequest, leaveTestingRequest, checkTestingRequestParticipation, submitTestingRequestFeedback } from '@/lib/testing-lab/testing-lab.actions';
 
 interface TestingRequestDetailsProps {
-  request: TestingRequest;
-  participants: any[];
-  feedback: any[];
-  statistics: any;
+  data: TestingRequest;
+  participants?: any[];
+  feedback?: any[];
+  statistics?: any;
 }
 
 interface FeedbackForm {
@@ -31,7 +31,7 @@ interface FeedbackForm {
   wouldRecommend: boolean;
 }
 
-export function TestingRequestDetails({ request, participants, feedback, statistics }: TestingRequestDetailsProps) {
+export function TestingRequestDetails({ data: request, participants = [], feedback = [], statistics = {} }: TestingRequestDetailsProps) {
   const { data: session } = useSession();
   const router = useRouter();
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
