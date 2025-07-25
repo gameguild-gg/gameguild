@@ -4,7 +4,7 @@ import React, { useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Play, Upload, X } from 'lucide-react';
-import { useCourseEditor } from '@/lib/courses/course-editor.context';
+import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 
 export function ThumbnailMediaSection() {
   const { state, setThumbnail, setShowcaseVideo } = useCourseEditor();

@@ -31,7 +31,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { type CourseLesson, type CourseModule, useCourseEditor } from '@/lib/courses/course-editor.context';
+import { type CourseLesson, type CourseModule, useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 
 // Content type icons
 const CONTENT_TYPE_ICONS = {

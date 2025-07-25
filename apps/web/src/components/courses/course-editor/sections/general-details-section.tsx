@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCourseEditor } from '@/lib/courses/course-editor.context';
+import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { RichTextEditor } from '../rich-text-editor';
 import { CourseLevel } from '@/components/legacy/types/courses';
 
