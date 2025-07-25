@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { Building, ChevronsUpDown, Plus } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
@@ -13,15 +12,12 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { TenantResponse } from '@/lib/tenants/types';
+import { useTenant } from '../../context/tenant-provider';
+import { TenantResponse } from '../../types';
 
-interface TenantSwitcherProps {
-  initialTenants?: TenantResponse[];
-}
-
-export const TenantSwitcher = ({ initialTenants = [] }: TenantSwitcherProps): React.JSX.Element => {
-  const { data: session } = useSession();
+export const TenantSwitcher = (): React.JSX.Element => {
   const { isMobile } = useSidebar();
+  const { currentTenant, availableTenants, loading, switchCurrentTenant } = useTenant();
 
   // Create default "Game Guild" tenant if no tenants available
   const defaultTenant: TenantResponse = {
@@ -33,20 +29,12 @@ export const TenantSwitcher = ({ initialTenants = [] }: TenantSwitcherProps): Re
     updatedAt: new Date().toISOString(),
   };
 
-  const [tenants] = React.useState<TenantResponse[]>(initialTenants.length > 0 ? initialTenants : [defaultTenant]);
-  const [activeTenant, setActiveTenant] = React.useState<TenantResponse | null>(null);
-  const [isLoading] = React.useState(false);
-
-  // Set the active tenant based on session and available tenants
-  React.useEffect(() => {
-    if (tenants.length > 0) {
-      const currentTenant = session?.tenantId ? tenants.find((t: TenantResponse) => t.id === session.tenantId) || tenants[0] : tenants[0];
-      setActiveTenant(currentTenant);
-    }
-  }, [session?.tenantId, tenants]);
+  // Use available tenants from context, fallback to default
+  const tenants = availableTenants.length > 0 ? availableTenants : [defaultTenant];
+  const activeTenant = currentTenant || tenants[0] || null;
 
   // Show loading state
-  if (isLoading) {
+  if (loading) {
     return (
       <SidebarMenu>
         <SidebarMenuItem>
@@ -83,10 +71,12 @@ export const TenantSwitcher = ({ initialTenants = [] }: TenantSwitcherProps): Re
     );
   }
 
-  const handleTenantSwitch = (tenant: TenantResponse) => {
-    setActiveTenant(tenant);
-    // Here you could also trigger a context update or session refresh
-    // to switch the user's active tenant context
+  const handleTenantSwitch = async (tenant: TenantResponse) => {
+    try {
+      await switchCurrentTenant(tenant.id);
+    } catch (error) {
+      console.error('Failed to switch tenant:', error);
+    }
   };
 
   return (
