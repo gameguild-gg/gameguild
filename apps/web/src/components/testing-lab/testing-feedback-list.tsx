@@ -59,60 +59,47 @@ export function TestingFeedbackList({ data }: TestingFeedbackListProps) {
     setStats({ total, pending, approved, flagged, rejected, averageRating });
   }, [data]);
 
-  const updateFeedbackStatus = async (feedbackId: string, status: 'approved' | 'flagged' | 'rejected', qualityRating?: 'positive' | 'negative' | 'neutral') => {
+  const updateFeedbackStatus = async (feedbackId: string, status: 'approved' | 'flagged' | 'rejected') => {
     try {
       // API call would go here
-      setFeedback((prev) => prev.map((f) => (f.id === feedbackId ? { ...f, reviewStatus: status, qualityRating } : f)));
+      setFeedback((prev) => prev.map((f) => (f.id === feedbackId ? { ...f } : f)));
     } catch (error) {
       console.error('Error updating feedback status:', error);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-600/20 text-yellow-400';
-      case 'approved':
-        return 'bg-green-600/20 text-green-400';
-      case 'flagged':
-        return 'bg-orange-600/20 text-orange-400';
-      case 'rejected':
-        return 'bg-red-600/20 text-red-400';
-      default:
-        return 'bg-gray-600/20 text-gray-400';
+  const getStatusColor = (isReported?: boolean) => {
+    if (isReported) {
+      return 'bg-red-600/20 text-red-400';
     }
+    return 'bg-green-600/20 text-green-400';
   };
 
-  const getQualityColor = (quality?: string) => {
-    switch (quality) {
-      case 'positive':
-        return 'text-green-400';
-      case 'negative':
-        return 'text-red-400';
-      case 'neutral':
-        return 'text-gray-400';
-      default:
-        return 'text-gray-500';
-    }
+  const getQualityColor = (quality?: number) => {
+    if (!quality) return 'text-gray-500';
+    if (quality >= 4) return 'text-green-400';
+    if (quality >= 3) return 'text-gray-400';
+    return 'text-red-400';
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }).map((_, i) => <Star key={i} className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`} />);
+  const renderStars = (rating?: number) => {
+    const actualRating = rating || 0;
+    return Array.from({ length: 5 }).map((_, i) => (
+      <Star key={i} className={`h-4 w-4 ${i < actualRating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`} />
+    ));
   };
 
   const filteredFeedback = feedback.filter((f) => {
-    // Filter by status
-    const statusMatch = statusFilter.length === 0 || statusFilter.includes(f.reviewStatus);
-
-    // Filter by search term
-    const searchMatch =
-      !searchTerm ||
-      f.testingRequest.projectVersion.project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      f.testingRequest.title.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return statusMatch && searchMatch;
+    // Simple text search
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        f.id?.toLowerCase().includes(searchLower) ||
+        f.feedbackData?.toLowerCase().includes(searchLower) ||
+        f.additionalNotes?.toLowerCase().includes(searchLower)
+      );
+    }
+    return true;
   });
 
   if (loading) {
