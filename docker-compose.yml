@@ -15,53 +15,60 @@ services:
     ports:
       - '${API_PORT:-5000}:5000'
     environment:
+      # Database Configuration (PostgreSQL)
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_DATABASE=${DB_DATABASE:-postgres}
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
       # Database Configuration (PostgreSQL connection string format)
-      - DB_CONNECTION_STRING=Host=postgres;Port=5432;Database=gameguild;Username=postgres;Password=postgres123;
-      
+      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING:-Host=postgres;Port=5432;Database=postgres;Username=postgres;Password=postgres;}
       # Application Environment
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:5000
-      
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_URLS=${ASPNETCORE_URLS:-http://+:5000}
       # JWT Configuration (ASP.NET Core format with double underscores)
-      - Jwt__SecretKey=game-guild-production-jwt-secret-key-must-be-at-least-32-characters-long-and-secure
-      - Jwt__Issuer=GameGuild.API
-      - Jwt__Audience=GameGuild.Users
-      - Jwt__ExpirationMinutes=15
-      - Jwt__RefreshTokenExpirationDays=7
-      
+      - Jwt__SecretKey=${JWT_SECRET_KEY:-game-guild-production-jwt-secret-key-must-be-at-least-32-characters-long-and-secure}
+      - Jwt__Issuer=${JWT_ISSUER:-GameGuild.API}
+      - Jwt__Audience=${JWT_AUDIENCE:-GameGuild.Users}
+      - Jwt__ExpirationMinutes=${JWT_EXPIRATION_MINUTES:-15}
+      - Jwt__RefreshTokenExpirationDays=${JWT_REFRESH_TOKEN_EXPIRATION_DAYS:-7}
       # OAuth Configuration (set these for production)
-      - GITHUB_CLIENT_ID=
-      - GITHUB_CLIENT_SECRET=
-      - GOOGLE_CLIENT_ID=
-      - GOOGLE_CLIENT_SECRET=
-      
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
       # CORS Configuration (ASP.NET Core format with double underscores)
-      - Cors__AllowedOrigins__0=http://localhost:3000
-      - Cors__AllowedOrigins__1=http://localhost:5173
-      - Cors__AllowedOrigins__2=https://yourdomain.com
-      - Cors__AllowCredentials=true
-      
+      - Cors__AllowedOrigins__0=${CORS_ALLOWED_ORIGIN_0:-http://localhost:3000}
+      - Cors__AllowedOrigins__1=${CORS_ALLOWED_ORIGIN_1:-http://localhost:5173}
+      - Cors__AllowedOrigins__2=${CORS_ALLOWED_ORIGIN_2:-https://yourdomain.com}
+      - Cors__AllowedOrigins__3=${CORS_ALLOWED_ORIGIN_3:-https://gameguild.gg}
+      - Cors__AllowedOrigins__4=${CORS_ALLOWED_ORIGIN_4:-https://dev.gameguild.gg}
+      - Cors__AllowCredentials=${CORS_ALLOW_CREDENTIALS:-true}
       # Logging Configuration
-      - LOGGING_LEVEL=Information
-      
+      - LOGGING_LEVEL=${LOGGING_LEVEL:-Information}
       # Additional API Configuration
-      - DOCUMENTATION_ENABLED=true
+      - DOCUMENTATION_ENABLED=${DOCUMENTATION_ENABLED:-true}
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
+    links:
+      - postgres
     networks:
       - game-guild-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
 
   web:
     build:
-      context: .
-      dockerfile: apps/web/Dockerfile
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-https://dev-api.gameguild.gg}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://dev-api.gameguild.gg}
+        - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL:-https://dev.gameguild.gg}
     image: game-guild-web
     container_name: game-guild-web
     restart: always
@@ -69,87 +76,83 @@ services:
       - '${WEB_PORT:-3000}:3000'
     environment:
       # Next.js API Configuration (NEXT_PUBLIC_ vars are used by browser, others by server)
-      - NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
-      - API_URL=http://api:5000
-      - BACKEND_URL=http://api:5000
-      - NEXT_PUBLIC_API_URL=http://localhost:5000
-      - NEXT_PUBLIC_WEB_URL=http://localhost:3000
-      - WEB_URL=http://localhost:3000
+      - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-http://localhost:5000}
+      - API_URL=${API_URL:-http://api:5000}
+      - BACKEND_URL=${BACKEND_URL:-http://api:5000}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
+      - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL:-http://localhost:3000}
+      - WEB_URL=${WEB_URL:-http://localhost:3000}
       
       # NextAuth Configuration
-      - NEXTAUTH_SECRET=nextauth-production-secret-key-change-this-for-production-use
-      - NEXTAUTH_URL=http://localhost:3000
-      - AUTH_TRUST_HOST=true
-      - NEXTAUTH_URL_INTERNAL=http://localhost:3000
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-nextauth-production-secret-key-change-this-for-production-use}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - AUTH_TRUST_HOST=${AUTH_TRUST_HOST:-true}
+      - NEXTAUTH_URL_INTERNAL=${NEXTAUTH_URL_INTERNAL:-http://web:3000}
       
       # Ghost CMS Configuration (optional)
-      - GHOST_ADMIN_DOMAIN=gameguild.gg
-      - GHOST_CONTENT_API_KEY=08d94ec90b24258a9cf39bbd0f
+      - GHOST_ADMIN_DOMAIN=${GHOST_ADMIN_DOMAIN:-gameguild.gg}
+      - GHOST_CONTENT_API_KEY=${GHOST_CONTENT_API_KEY:-}
       
       # Google Services (set these for production)
-      - GOOGLE_ANALYTICS_MEASUREMENT_ID=
-      - GOOGLE_CLIENT_ID=
-      - GOOGLE_CLIENT_SECRET=
-      - GOOGLE_TAG_MANAGER_ID=
+      - GOOGLE_ANALYTICS_MEASUREMENT_ID=${GOOGLE_ANALYTICS_MEASUREMENT_ID:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_TAG_MANAGER_ID=${GOOGLE_TAG_MANAGER_ID:-}
       
       # IPFS Configuration (optional)
-      - IPFS_KEY=
+      - IPFS_KEY=${IPFS_KEY:-}
       
       # Development Tools
-      - REACT_EDITOR=vscode
-      - GITHUB_TOKEN=
+      - REACT_EDITOR=${REACT_EDITOR:-vscode}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       
       # Node.js Environment
-      - NODE_ENV=production
-      - NODE_OPTIONS=--dns-result-order=ipv4first
+      - NODE_ENV=${NODE_ENV:-production}
+      - NODE_OPTIONS=${NODE_OPTIONS:---dns-result-order=ipv4first}
     depends_on:
-      api:
-        condition: service_healthy
+      - api
     networks:
       game-guild-network:
         aliases:
           - web
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -f http://$(hostname):3000 || exit 1"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s  
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres
     container_name: game-guild-postgres
     restart: always
     ports:
-      - '5432:5432'
+      - '${DB_PORT:-5432}:5432'
     environment:
       # PostgreSQL Configuration
-      POSTGRES_DB: gameguild
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
-      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
-      
-      # Timezone Configuration
-      TZ: UTC
-      PGTZ: UTC
-      
+      POSTGRES_DB: ${DB_DATABASE:-postgres}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      TZ: ${DB_TIMEZONE:-UTC}
+      PGTZ: ${DB_TIMEZONE:-UTC}
+      POSTGRES_INITDB_ARGS: ${POSTGRES_INITDB_ARGS:---auth-host=scram-sha-256}
       # Performance Tuning
-      POSTGRES_SHARED_PRELOAD_LIBRARIES: ""
-      POSTGRES_MAX_CONNECTIONS: 100
-      POSTGRES_SHARED_BUFFERS: 128MB
-      POSTGRES_WORK_MEM: 4MB
-      POSTGRES_MAINTENANCE_WORK_MEM: 64MB
+      POSTGRES_SHARED_PRELOAD_LIBRARIES: ${POSTGRES_SHARED_PRELOAD_LIBRARIES:-""}
+      POSTGRES_MAX_CONNECTIONS: ${POSTGRES_MAX_CONNECTIONS:-100}
+      POSTGRES_SHARED_BUFFERS: ${POSTGRES_SHARED_BUFFERS:-128MB}
+      POSTGRES_WORK_MEM: ${POSTGRES_WORK_MEM:-4MB}
+      POSTGRES_MAINTENANCE_WORK_MEM: ${POSTGRES_MAINTENANCE_WORK_MEM:-64MB}
     volumes:
       # Database persistence
-      - postgres_data:/var/lib/postgresql/data
+      - postgres:/var/lib/postgresql/data
       # Optional: Custom initialization scripts
       # - ./scripts/database:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d gameguild"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+    # healthcheck:
+    #   test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 30s
     networks:
       - game-guild-network
 
@@ -187,16 +190,6 @@ services:
 #    #      start_interval: 1s
 #    security_opt: [ 'no-new-privileges:true' ]
 
-#  adminer:
-#    image: adminer
-#    restart: always
-#    ports:
-#      - 8081:8080
-#    depends_on:
-#      - postgres
-#    networks:
-#      - game-guild-network
-
   # Database Administration (optional - uncomment to enable)
   # adminer:
   #   image: adminer:4.8.1
@@ -213,6 +206,8 @@ services:
   #     - game-guild-network
 
 volumes:
-  postgres_data:
-    name: game-guild-postgres-data
+  #  minio-data:
+  #    driver: local
+  postgres:
+    name: game-guild-postgres
     driver: local

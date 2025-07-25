@@ -1,9 +1,13 @@
 import { NextConfig } from 'next';
-import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
+  trailingSlash: false,
+  // Handle proxy headers from Cloudflare Tunnel
+  experimental: {
+    trustHost: true,
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -73,5 +77,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-const withNextIntl = createNextIntlPlugin();
-export default withNextIntl(nextConfig);
+// Internationalization disabled - exporting config directly without next-intl plugin
+export default nextConfig;
