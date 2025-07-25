@@ -1,6 +1,6 @@
 'use client';
 
-import { TestingLabOverview } from '@/components/testing-lab/testing-lab-overview';
+import { TestingLabOverview } from '@/components/testing-lab/overview/testing-lab-overview';
 
 export function TestingLabPage() {
   return (
