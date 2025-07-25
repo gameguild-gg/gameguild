@@ -15,8 +15,8 @@ export default async function Page(): Promise<React.JSX.Element> {
   return (
     <DashboardPage>
       <DashboardPageHeader>
-        <DashboardPageTitle>Testing Requests</DashboardPageTitle>
-        <DashboardPageDescription>Manage request submitted to testing sessions you coordinate</DashboardPageDescription>
+        <DashboardPageTitle>Testing Feedbacks</DashboardPageTitle>
+        <DashboardPageDescription>Manage feedbacks submitted to testing sessions you coordinate</DashboardPageDescription>
       </DashboardPageHeader>
       <DashboardPageContent>
         <TestingFeedbackList data={testingFeedbacks} />
