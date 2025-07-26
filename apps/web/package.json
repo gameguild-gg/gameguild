@@ -11,21 +11,7 @@
     "build": "run-s api:gen build:next",
     "build:next": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:ci": "jest --ci --coverage --watchAll=false",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:headed": "playwright test --headed",
-    "test:e2e:debug": "playwright test --debug",
-    "test:e2e:api": "playwright test --config=playwright-api.config.ts",
-    "test:e2e:comprehensive": "bash e2e/run-comprehensive-tests.sh",
-    "test:e2e:data-flow": "playwright test e2e/integration/data-flow-validation.spec.ts",
-    "test:e2e:real-world": "playwright test e2e/integration/real-world-frontend-api.spec.ts",
-    "test:e2e:integration": "playwright test e2e/integration/",
-    "test:e2e:report": "playwright show-report"
+    "lint": "next lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
