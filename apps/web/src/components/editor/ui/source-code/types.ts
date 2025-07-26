@@ -60,7 +60,7 @@ export interface TerminalProps {
   testCases: Record<
     string,
     {
-      type: "simple" | "inout" | "predicate" | "custom" | "function"
+      type: "custom" | "function" | "console"
       input?: string
       expectedOutput?: string
       args?: any[]
@@ -75,7 +75,7 @@ export interface TerminalProps {
     cases: Record<
       string,
       {
-        type: "simple" | "inout" | "predicate" | "custom" | "function"
+        type: "custom" | "function" | "console"
         input?: string
         expectedOutput?: string
         args?: any[]

@@ -102,7 +102,7 @@ export interface SourceCodeRendererProps {
   testCases: Record<
     string,
     {
-      type: "simple" | "inout"
+      type: "custom" | "function" | "console"
       input?: string
       expectedOutput?: string
       args?: any[]
@@ -113,7 +113,7 @@ export interface SourceCodeRendererProps {
     cases: Record<
       string,
       {
-        type: "simple" | "inout"
+        type: "custom" | "function" | "console"
         input?: string
         expectedOutput?: string
         args?: any[]
@@ -123,13 +123,13 @@ export interface SourceCodeRendererProps {
   ) => void
   testResults: Record<string, { passed: boolean; actual: string; expected: string }[]>
   setTestResults: (results: Record<string, { passed: boolean; actual: string; expected: string }[]>) => void
-  addTestCase: (fileId: string, type?: "simple" | "inout") => void
+  addTestCase: (fileId: string, type?: "custom" | "function" | "console") => void
   removeTestCase: (fileId: string, index: number) => void
   updateTestCase: (
     fileId: string,
     index: number,
     testData: Partial<{
-      type: "simple" | "inout"
+      type: "custom" | "function" | "console"
       input?: string
       expectedOutput?: string
       args?: any[]
