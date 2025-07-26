@@ -1,12 +1,10 @@
 import React, { PropsWithChildren } from 'react';
 import Image from 'next/image';
-
 import { cn } from '@/lib/utils';
 
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { NavigationMenuLink } from '@radix-ui/react-navigation-menu';
-import { NotificationDropdown } from '@/components/legacy/notifications';
-import { UserProfileDropdown } from '@/components/legacy/profile';
+import { UserProfile } from '@/components/common/header/common/ui/user-profile';
 
 type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>;
 
@@ -91,8 +89,8 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
           </NavigationMenu>
         </div>
         <div className="flex items-center space-x-4">
-          <NotificationDropdown />
-          <UserProfileDropdown />
+          {/*<NotificationDropdown />*/}
+          <UserProfile />
         </div>
         {children}
       </div>
