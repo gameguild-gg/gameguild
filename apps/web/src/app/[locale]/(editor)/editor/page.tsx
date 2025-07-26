@@ -12,7 +12,7 @@ import { Sun, Moon } from "lucide-react"
 import type { LexicalEditor } from "lexical"
 import { OpenProjectDialog } from "@/components/editor/ui/editor/open-project-dialog"
 import { CreateProjectDialog } from "@/components/editor/ui/editor/create-project-dialog"
-import { EnhancedStorageAdapter } from "@/lib/storage/enhanced-storage-adapter"
+import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { SyncSettingsDialog } from "@/components/editor/ui/editor/sync-settings-dialog"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 
@@ -66,9 +66,6 @@ export default function Page() {
   const [currentProjectSize, setCurrentProjectSize] = useState<number>(0)
   const [totalStorageUsed, setTotalStorageUsed] = useState<number>(0)
   const setLoadingRef = useRef<((loading: boolean) => void) | null>(null)
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null)
 
   // Estado para modo escuro
   const [isDark, setIsDark] = useState(
