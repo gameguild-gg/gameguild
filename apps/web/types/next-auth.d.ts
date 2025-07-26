@@ -18,6 +18,7 @@ declare module 'next-auth' {
    * The shape of the account object returned in the OAuth providers' `account` callback,
    * Usually contains information about the provider being used, like OAuth tokens (`access_token`, etc).
    */
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface Account {}
 
   /**
@@ -36,7 +37,7 @@ declare module 'next-auth' {
     api: {
       accessToken?: string;
     };
-    error?: 'RefreshTokenError' | 'SessionCorrupted';
+    error?: 'RefreshTokenError' | 'CorruptedSessionError';
   }
 }
 
@@ -51,5 +52,6 @@ declare module 'next-auth/jwt' {
     availableTenants?: Array<Tenant>;
     currentTenant?: Tenant;
     expiresAt?: string;
+    error?: 'RefreshTokenError' | 'CorruptedSessionError';
   }
 }
