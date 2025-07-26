@@ -16,12 +16,12 @@ export const isUserWithAuthData = (user: User): user is User & Partial<SignInRes
  */
 export const handleSessionCorruption = (): void => {
   console.error('Session corrupted - forcing sign out');
-  
+
   // Clear any local storage/session storage auth data
   if (typeof window !== 'undefined') {
     localStorage.removeItem('auth-token');
     sessionStorage.removeItem('auth-token');
-    
+
     // Force redirect to sign-in page
     window.location.href = '/sign-in?error=CorruptedSessionError';
   }
