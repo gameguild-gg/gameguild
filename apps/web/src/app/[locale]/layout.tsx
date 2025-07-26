@@ -1,33 +1,35 @@
 import React, { PropsWithChildren } from 'react';
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
 import { SessionProvider } from 'next-auth/react';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { WebVitals } from '@/components/analytics';
-import { ThemeProvider } from '@/components/theme';
-import { Web3Provider } from '@/components/web3/context/web3-context';
-import { TenantProvider } from '@/components/tenant';
 import { ErrorBoundaryProvider } from '@/components/common/errors/error-boundary-provider';
+import { ThemeProvider } from '@/components/theme';
+import { TenantProvider } from '@/components/tenant';
+import { Toaster } from '@/components/ui/sonner';
+import { Web3Provider } from '@/components/web3';
 import { environment } from '@/configs/environment';
 import { auth } from '@/auth';
-import { routing } from '@/i18n/routing';
+import { routing } from '@/i18n';
 import { PropsWithLocaleParams } from '@/types';
-import { Toaster } from '@/components/ui/sonner';
 
-// TODO: Uncomment this when you have the metadata fetching logic ready.
-// export async function generateMetadata({ params }: PropsWithLocaleParams): Promise<Metadata> {
-//   const { locale } = await params;
-//   // TODO: Use the locale to fetch metadata if needed.
-//   // const metadata = getWebsiteMetadata(locale);
-//
-//   return {
-//     title: {
-//       template: ' %s | Game Guild',
-//       default: 'Game Guild',
-//     },
-//   };
-// }
+export async function generateMetadata({ params }: PropsWithLocaleParams): Promise<Metadata> {
+  const { locale } = await params;
+
+  console.debug('Generating metadata for locale:', locale);
+  // TODO: Uncomment this when you have the metadata fetching logic ready.
+  // const metadata = getWebsiteMetadata(locale);
+
+  return {
+    title: {
+      template: ' %s | Game Guild',
+      default: 'Game Guild',
+    },
+  };
+}
 
 export default async function Layout({ children, params }: PropsWithChildren<PropsWithLocaleParams>): Promise<React.JSX.Element> {
   const session = await auth();
@@ -55,7 +57,7 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
                     {/*<ThemeToggle />*/}
                     {children}
                     {/*TODO: Move this to a better place*/}
-                    {/*<FeedbackFloatingButton />*/}ø
+                    {/*<FeedbackFloatingButton />*/}
                     <Toaster />
                   </TenantProvider>
                 </SessionProvider>
