@@ -1,6 +1,6 @@
 import { Account, DefaultSession, NextAuthConfig, Profile, Session, User } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
-import type { Provider } from 'next-auth/providers';
+import type { CredentialInput, Provider } from 'next-auth/providers';
 import Credentials from 'next-auth/providers/credentials';
 import GitHub from 'next-auth/providers/github';
 import Google from 'next-auth/providers/google';
@@ -57,7 +57,16 @@ export const authConfig: NextAuthConfig = {
     strategy: 'jwt',
   },
   callbacks: {
-    signIn: async ({ user, account }) => {
+    signIn: async ({
+      user,
+      account,
+    }: {
+      user: User;
+      account?: Account | null;
+      profile?: Profile;
+      email?: { verificationRequest?: boolean };
+      credentials?: Record<string, CredentialInput>;
+    }): Promise<boolean> => {
       if (account?.provider === 'google') {
         if (!account?.id_token) return false;
         try {
@@ -77,23 +86,21 @@ export const authConfig: NextAuthConfig = {
           return false;
         }
       }
-
       // Allow local authentication.
       return account?.provider === 'local';
     },
     jwt: async ({
       token,
       user,
-      // account,
       trigger,
-      // session,
+      session,
     }: {
       token: JWT;
       user: User;
-      account?: Account | null | undefined;
-      profile?: Profile | undefined;
+      account?: Account | null;
+      profile?: Profile;
       trigger?: 'update' | 'signIn' | 'signUp';
-      isNewUser?: boolean | undefined;
+      isNewUser?: boolean;
       session?: Session;
     }): Promise<JWT | null> => {
       // This is called when a user signing-in or signing-up.
@@ -108,6 +115,8 @@ export const authConfig: NextAuthConfig = {
         }
 
         token.id = user.id;
+        token.username = user.name || '';
+        token.email = user.email || '';
         token.api = {
           accessToken: user.accessToken || '',
           refreshToken: user.refreshToken || '',
@@ -141,8 +150,8 @@ export const authConfig: NextAuthConfig = {
 
             // Update tenant ID if present in refresh response
             if (response.tenantId) {
-              // Tenant must exist in the available tenants list. If not, the session is corrupted
-              const tenantFromList = token.availableTenants?.find((t) => t.id === response.tenantId);
+              // Tenant must exist in the available tenants list. Otherwise, the session is corrupted
+              const tenantFromList = token.availableTenants?.find((tenant) => tenant.id === response.tenantId);
               if (!tenantFromList) {
                 // Tenant not in an available list means that the session is corrupted.
                 console.error('Session corrupted: refreshed tenantId not found in availableTenants');
@@ -159,8 +168,55 @@ export const authConfig: NextAuthConfig = {
         }
 
         // This is called when the user updates their profile or switches tenants.
-        // You can update the token with new user data here if needed.
-        // TODO: Handle updates to their profile or switches tenants here.
+        // Handle session updates with new user data
+        if (session) {
+          // Handle tenant switching
+          if (session.currentTenant?.id && session.currentTenant.id !== token.currentTenant?.id) {
+            // Validate that the new tenant exists in availableTenants
+            const tenantFromList = token.availableTenants?.find((tenant) => tenant.id === session.currentTenant?.id);
+            if (!tenantFromList) {
+              // Tenant must exist in the available tenants list. Otherwise, the session is corrupted
+              console.error('Session corrupted: refreshed tenantId not found in availableTenants');
+              return null;
+            }
+            token.currentTenant = tenantFromList;
+            console.log(`Switched to tenant: ${tenantFromList.name}`);
+          }
+
+          // Handle profile updates (username, email, etc.)
+          if (session.user) {
+            // Update user fields if they've changed
+            if (session.user.username && session.user.username !== token.username) {
+              token.username = session.user.username;
+            }
+            if (session.user.email && session.user.email !== token.email) {
+              token.email = session.user.email;
+            }
+            if (session.user.displayName && session.user.displayName !== token.displayName) {
+              token.displayName = session.user.displayName;
+            }
+            if (session.user.profilePictureUrl && session.user.profilePictureUrl !== token.profilePictureUrl) {
+              token.profilePictureUrl = session.user.profilePictureUrl;
+            }
+          }
+
+          // Handle availableTenants updates (if a user gained/lost access to tenants)
+          // TODO: Fetch new available tenants from the API if needed.
+          if (session.availableTenants) {
+            token.availableTenants = session.availableTenants;
+
+            // Validate currentTenant is still in the updated availableTenants list
+            if (token.currentTenant?.id) {
+              // Tenant must exist in the available tenants list. Otherwise, the user is no longer in that tenant.
+              const currentTenantStillAvailable = session.availableTenants.find((tenant) => tenant.id === token.currentTenant?.id);
+              if (!currentTenantStillAvailable) {
+                // If the current tenant is no longer available, clear it.
+                token.currentTenant = undefined;
+                console.log('No tenants available, cleared currentTenant');
+              }
+            }
+          }
+        }
       }
 
       return token;
@@ -173,7 +229,7 @@ export const authConfig: NextAuthConfig = {
       session: Session;
       token: JWT | null;
       newSession?: Session;
-      trigger?: 'update' | undefined;
+      trigger?: 'update';
     }): Promise<Session | DefaultSession> => {
       // Check if the token is null (JWT callback returned null due to corruption)
       if (!token) {
@@ -193,12 +249,15 @@ export const authConfig: NextAuthConfig = {
       };
 
       if (trigger === 'update') {
-        // TODO: Handle session updates when the user updates their profile or switches tenants.
-        // This is where you can update the session with new user data.
+        // Handle session updates when the user updates their profile or switches tenants.
+        // The JWT callback has already processed the updates, so we just need to copy the data
+        console.log('Session update triggered - data already processed in JWT callback');
       }
 
       // Add user ID, available tenants, and current tenant to the session
       if (token.id) session.user.id = token.id;
+      if (token.username) session.user.username = token.username;
+      if (token.email) session.user.email = token.email;
       if (token.availableTenants) session.availableTenants = token.availableTenants;
       if (token.currentTenant) session.currentTenant = token.currentTenant;
 
