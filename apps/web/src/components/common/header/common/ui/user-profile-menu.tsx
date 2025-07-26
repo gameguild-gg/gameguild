@@ -6,7 +6,6 @@ import { LogOut, MoveUpRight } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { signOut } from 'next-auth/react';
-import { TenantSwitcherDropdown } from '@/components/tenant';
 import type { Session } from 'next-auth';
 import { Separator } from '@/components/ui/separator';
 
@@ -58,7 +57,8 @@ export const UserProfileMenu = ({ session, menuItems = [] }: UserProfileMenuProp
             </div>
 
             {/* Tenant Switcher */}
-            <TenantSwitcherDropdown className="w-full" currentTenant={session.currentTenant} availableTenants={session.availableTenants || []} />
+
+            {/*<TenantSwitcherDropdown className="w-full" currentTenant={session.currentTenant} availableTenants={session.availableTenants || []} />*/}
             <Separator className="my-1" />
             <div className="space-y-">
               {menuItems.map((item) => (
