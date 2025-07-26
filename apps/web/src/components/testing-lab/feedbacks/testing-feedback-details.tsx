@@ -35,21 +35,12 @@ export function TestingFeedbackDetails({ data: feedback }: TestingFeedbackDetail
   };
 
   const getRatingStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={`w-4 h-4 ${
-          i < rating 
-            ? 'fill-yellow-400 text-yellow-400' 
-            : 'text-gray-300'
-        }`}
-      />
-    ));
+    return Array.from({ length: 5 }, (_, i) => <Star key={i} className={`w-4 h-4 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />);
   };
 
   const getQualityBadge = (quality?: number) => {
     if (!quality) return <Badge variant="outline">Not Rated</Badge>;
-    
+
     switch (quality) {
       case 1:
         return <Badge variant="destructive">Poor</Badge>;
@@ -92,9 +83,7 @@ export function TestingFeedbackDetails({ data: feedback }: TestingFeedbackDetail
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Feedback Details</h1>
-          <p className="text-muted-foreground mt-2">
-            Testing feedback submitted by user
-          </p>
+          <p className="text-muted-foreground mt-2">Testing feedback submitted by user</p>
         </div>
         <div className="flex items-center gap-2">
           {getQualityBadge(feedback.qualityRating as number)}
@@ -121,12 +110,8 @@ export function TestingFeedbackDetails({ data: feedback }: TestingFeedbackDetail
                 <div>
                   <Label className="text-sm font-medium">Rating</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className="flex items-center gap-1">
-                      {getRatingStars(feedback.overallRating || 0)}
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      ({feedback.overallRating || 0}/5)
-                    </span>
+                    <div className="flex items-center gap-1">{getRatingStars(feedback.overallRating || 0)}</div>
+                    <span className="text-sm text-muted-foreground">({feedback.overallRating || 0}/5)</span>
                   </div>
                 </div>
 
@@ -185,12 +170,12 @@ export function TestingFeedbackDetails({ data: feedback }: TestingFeedbackDetail
                 <div className="flex items-center justify-between p-3 border rounded-md">
                   <div>
                     <p className="font-medium">Testing Request</p>
-                    <p className="text-sm text-muted-foreground">
-                      View the original testing request
-                    </p>
+                    <p className="text-sm text-muted-foreground">View the original testing request</p>
                   </div>
                   <Link href={`/dashboard/testing-lab/requests/${feedback.testingRequestId}`}>
-                    <Button variant="outline" size="sm">View Request</Button>
+                    <Button variant="outline" size="sm">
+                      View Request
+                    </Button>
                   </Link>
                 </div>
               )}
@@ -199,9 +184,7 @@ export function TestingFeedbackDetails({ data: feedback }: TestingFeedbackDetail
                 <div className="flex items-center justify-between p-3 border rounded-md">
                   <div>
                     <p className="font-medium">Testing Session</p>
-                    <p className="text-sm text-muted-foreground">
-                      View the testing session details
-                    </p>
+                    <p className="text-sm text-muted-foreground">View the testing session details</p>
                   </div>
                   <Link href={`/dashboard/testing-lab/sessions/${feedback.sessionId}`}>
                     <Button variant="outline" size="sm">
@@ -222,19 +205,12 @@ export function TestingFeedbackDetails({ data: feedback }: TestingFeedbackDetail
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button 
-                onClick={handleReportFeedback} 
-                disabled={loading}
-                variant="outline"
-                className="w-full"
-              >
+              <Button onClick={handleReportFeedback} disabled={loading} variant="outline" className="w-full">
                 {loading ? 'Reporting...' : 'Report Feedback'}
               </Button>
-              
+
               <Button variant="outline" className="w-full" asChild>
-                <Link href="/dashboard/testing-lab/feedback">
-                  Back to Feedback
-                </Link>
+                <Link href="/dashboard/testing-lab/feedback">Back to Feedback</Link>
               </Button>
             </CardContent>
           </Card>
