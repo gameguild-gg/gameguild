@@ -4,7 +4,7 @@ import type { Provider } from 'next-auth/providers';
 import Credentials from 'next-auth/providers/credentials';
 import GitHub from 'next-auth/providers/github';
 import Google from 'next-auth/providers/google';
-import { fetchTenantDetails, googleIdTokenSignIn, localSign, refreshAccessToken } from '@/lib/auth/auth.actions';
+import { googleIdTokenSignIn, localSign, refreshAccessToken } from '@/lib/auth/auth.actions';
 import { SignInResponse } from '@/lib/auth/auth.types';
 import { isUserWithAuthData } from '@/lib/auth/auth.utils';
 
@@ -96,8 +96,8 @@ export const authConfig: NextAuthConfig = {
       isNewUser?: boolean | undefined;
       session?: Session;
     }): Promise<JWT | null> => {
+      // This is called when user signing-in or signing-up.
       if (trigger === 'signIn' || trigger === 'signUp') {
-        // This is the first time the user is signing in or signing up.
         // We must have auth data from our API, otherwise the session is corrupted.
 
         if (!isUserWithAuthData(user)) {
@@ -114,22 +114,25 @@ export const authConfig: NextAuthConfig = {
         };
         token.availableTenants = user.availableTenants;
 
-        // If we have a tenant ID, fetch the tenant details
-        if (user.tenantId && user.accessToken) {
-          try {
-            const tenantDetails = await fetchTenantDetails(user.tenantId, user.accessToken);
-            token.currentTenant = tenantDetails;
-          } catch (error) {
-            console.error('Failed to fetch tenant details:', error);
-            // Fallback to basic tenant info
-            token.currentTenant = { id: user.tenantId, name: `Tenant ${user.tenantId}`, isActive: true };
+        // Set the current tenant from availableTenants (it must exist in the list)
+        if (user.tenantId) {
+          // Find a tenant in availableTenants
+          const tenantFromList = user.availableTenants?.find((tenant) => tenant.id === user.tenantId);
+          // Tenant not in an available list means that the session is corrupted.
+          if (!tenantFromList) {
+            console.error('Session corrupted: currentTenant not found in availableTenants');
+            return null;
           }
+
+          // Set the current tenant in the token
+          token.currentTenant = tenantFromList;
         }
       } else if (trigger === 'update') {
         // This is called when the user updates their profile or switches tenants.
         // You can update the token with new user data here if needed.
         // TODO: Handle updates to their profile or switches tenants here.
       }
+
       return token;
     },
     session: async ({
@@ -156,7 +159,7 @@ export const authConfig: NextAuthConfig = {
 
       // Check token expiration and refresh if needed (handle expired tokens first)
       if (!token?.expiresAt || Date.now() >= new Date(token.expiresAt).getTime()) {
-        // Token expired or no expiration set, try to refresh
+        // Token expired or no expiration set, try to refresh it
         try {
           const response = await refreshAccessToken(token.api.refreshToken);
 
@@ -165,22 +168,17 @@ export const authConfig: NextAuthConfig = {
           token.api.refreshToken = response.refreshToken;
           token.expiresAt = response.expiresAt;
 
-          // Add refreshed token to session
-          session.api = {
-            accessToken: response.accessToken,
-          };
-
-          // Handle tenantId if present
+          // Update tenant ID if present in refresh response
           if (response.tenantId) {
-            try {
-              const tenantDetails = await fetchTenantDetails(response.tenantId, response.accessToken);
-              token.currentTenant = tenantDetails;
-              session.currentTenant = tenantDetails;
-            } catch (error) {
-              console.error('Failed to fetch tenant details after refresh:', error);
-              // Fallback to basic tenant info
-              token.currentTenant = { id: response.tenantId, name: `Tenant ${response.tenantId}`, isActive: true };
-              session.currentTenant = token.currentTenant;
+            // Tenant must exist in availableTenants list - if not, session is corrupted
+            const tenantFromList = token.availableTenants?.find((t) => t.id === response.tenantId);
+            if (tenantFromList) {
+              token.currentTenant = tenantFromList;
+            } else {
+              // Tenant not in an available list means a corrupted session
+              console.error('Session corrupted: refreshed tenantId not found in availableTenants');
+              session.error = 'CorruptedSessionError';
+              return session;
             }
           }
         } catch (error) {
@@ -191,7 +189,7 @@ export const authConfig: NextAuthConfig = {
         }
       }
 
-      // Token is still valid, add it to the session
+      // Always set the session with the current valid token (whether refreshed or original)
       session.api = {
         accessToken: token.api.accessToken,
       };
@@ -201,10 +199,10 @@ export const authConfig: NextAuthConfig = {
         // This is where you can update the session with new user data.
       }
 
-      // Add user ID and current tenant to the session
+      // Add user ID, available tenants, and current tenant to the session
       if (token.id) session.user.id = token.id;
-      if (token.currentTenant) session.currentTenant = token.currentTenant;
       if (token.availableTenants) session.availableTenants = token.availableTenants;
+      if (token.currentTenant) session.currentTenant = token.currentTenant;
 
       return session;
     },
