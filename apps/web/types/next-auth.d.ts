@@ -8,10 +8,10 @@ declare module 'next-auth' {
    */
   interface User {
     id: string;
-    displayName: string;
+    // displayName: string;
     username?: string;
     email?: string;
-    profilePictureUrl?: string;
+    // profilePictureUrl?: string;
   }
 
   /**
@@ -27,7 +27,7 @@ declare module 'next-auth' {
   interface Session {
     user: {
       id: string;
-      displayName: string;
+      displayName?: string;
       username: string;
       email?: string;
       profilePictureUrl?: string;
@@ -45,6 +45,10 @@ declare module 'next-auth/jwt' {
   /** Returned by the `jwt` callback and `auth`, when using JWT sessions */
   interface JWT {
     id: string;
+    username?: string;
+    email?: string;
+    displayName?: string;
+    profilePictureUrl?: string;
     api: {
       accessToken: string;
       refreshToken: string;
@@ -52,6 +56,5 @@ declare module 'next-auth/jwt' {
     availableTenants?: Array<Tenant>;
     currentTenant?: Tenant;
     expiresAt?: string;
-    error?: 'RefreshTokenError' | 'CorruptedSessionError';
   }
 }
