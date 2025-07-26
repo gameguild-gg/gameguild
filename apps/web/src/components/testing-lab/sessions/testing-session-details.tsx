@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Calendar, Clock, Users, MapPin, User, TestTube } from 'lucide-react';
+import { Calendar, Clock, MapPin, TestTube, User, Users } from 'lucide-react';
 import Link from 'next/link';
 import type { TestingSession } from '@/lib/api/generated/types.gen';
 
@@ -74,9 +74,7 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{session.sessionName}</h1>
-          <p className="text-muted-foreground mt-2">
-            Testing Session Details
-          </p>
+          <p className="text-muted-foreground mt-2">Testing Session Details</p>
         </div>
         <div className="flex items-center gap-2">
           {getStatusBadge(session.status || 0)}
@@ -142,9 +140,7 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">Request ID: {session.testingRequestId}</p>
-                    <p className="text-sm text-muted-foreground">
-                      View the testing request for more details about what needs to be tested.
-                    </p>
+                    <p className="text-sm text-muted-foreground">View the testing request for more details about what needs to be tested.</p>
                   </div>
                   <Link href={`/dashboard/testing-lab/requests/${session.testingRequestId}`}>
                     <Button variant="outline">View Request</Button>
@@ -170,9 +166,7 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
                   </div>
                   <div>
                     <p className="font-medium">Manager ID: {session.managerId}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Contact this person for any questions about the session.
-                    </p>
+                    <p className="text-sm text-muted-foreground">Contact this person for any questions about the session.</p>
                   </div>
                 </div>
               </CardContent>
@@ -189,19 +183,13 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
             </CardHeader>
             <CardContent className="space-y-3">
               {session.status === 0 && (
-                <Button 
-                  onClick={handleJoinSession} 
-                  disabled={loading}
-                  className="w-full"
-                >
+                <Button onClick={handleJoinSession} disabled={loading} className="w-full">
                   {loading ? 'Joining...' : 'Join Session'}
                 </Button>
               )}
-              
+
               <Button variant="outline" className="w-full" asChild>
-                <Link href="/dashboard/testing-lab/sessions">
-                  Back to Sessions
-                </Link>
+                <Link href="/dashboard/testing-lab/sessions">Back to Sessions</Link>
               </Button>
             </CardContent>
           </Card>
@@ -219,9 +207,9 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
                 </div>
                 <Progress value={0} className="h-2" />
               </div>
-              
+
               <Separator />
-              
+
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Session ID:</span>
