@@ -6,34 +6,23 @@ import Google from 'next-auth/providers/google';
 import { googleIdTokenSignIn, refreshAccessToken } from '@/lib/auth/auth.actions';
 import { SignInResponse } from '@/lib/auth/types';
 
-// Helper function to decode JWT expiry date
-// async function getExpirationDateFromJWT(token: string): Promise<Date | null> {
-//   try {
-//     const payload = JSON.parse(Buffer.from(token.split('.')[1] as string, 'base64').toString('utf-8')) as {
-//       exp?: number;
-//     };
-//     return payload.exp ? new Date(payload.exp * 1000) : null;
-//   } catch {
-//     return null;
-//   }
-// }
 const providers: Provider[] = [
-  // Credentials({
-  //   id: 'local',
-  //   credentials: {
-  //     email: { label: 'Email', type: 'text' },
-  //     password: { label: 'Password', type: 'password' },
-  //   },
-  //   authorize: async (credentials: Partial<Record<string, unknown>>, request: Request): Promise<User | null> => {
-  //     const user = null;
-  //
-  //     // TODO: Implement local authentication logic here.
-  //
-  //     if (!user) throw new Error('Invalid credentials');
-  //
-  //     return user;
-  //   },
-  // }),
+  Credentials({
+    id: 'local',
+    credentials: {
+      email: { label: 'Email', type: 'text' },
+      password: { label: 'Password', type: 'password' },
+    },
+    authorize: async (credentials: Partial<Record<string, unknown>>, request: Request): Promise<User | null> => {
+      const user = null;
+
+      // TODO: Implement local authentication logic here.
+
+      if (!user) throw new Error('Invalid credentials');
+
+      return user;
+    },
+  }),
   GitHub,
   Google,
   // Google({
