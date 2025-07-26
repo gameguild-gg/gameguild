@@ -212,7 +212,7 @@ export function SourceCodeEditorView({
         showFilePropertiesInReadMode={showFilePropertiesInReadMode}
         setShowBasicFileActionsInReadMode={setShowBasicFileActionsInReadMode}
         setShowFilePropertiesInReadMode={setShowFilePropertiesInReadMode}
-        isFileReadOnly={(file) => isFileReadOnly(file, readonly)}
+        isFileReadOnly={(file: CodeFile) => isFileReadOnly(file, readonly)}
       />
 
       {/* Code editor */}
@@ -301,13 +301,30 @@ export function SourceCodeEditorView({
         <SettingsPanel
           isDarkTheme={isDarkTheme}
           readonly={readonly}
-          setReadonly={() => {}} // No-op in view mode
+          setReadonly={() => { } } // No-op in view mode
           showExecution={showExecution}
-          setShowExecution={() => {}} // No-op in view mode
+          setShowExecution={() => { } } // No-op in view mode
           showTests={showTests}
-          setShowTests={() => {}} // No-op in view mode
-          updateSourceCode={updateSourceCode}
-        />
+          setShowTests={() => { } } // No-op in view mode
+          updateSourceCode={updateSourceCode} setSelectedLanguage={function (language: ProgrammingLanguage): void {
+            throw new Error("Function not implemented.")
+          } } fontSize={0} setFontSize={function (size: number): void {
+            throw new Error("Function not implemented.")
+          } } tabSize={0} setTabSize={function (size: number): void {
+            throw new Error("Function not implemented.")
+          } } wordWrap={false} setWordWrap={function (wrap: boolean): void {
+            throw new Error("Function not implemented.")
+          } } showLineNumbers={false} setShowLineNumbers={function (show: boolean): void {
+            throw new Error("Function not implemented.")
+          } } showMinimap={false} setShowMinimap={function (show: boolean): void {
+            throw new Error("Function not implemented.")
+          } } setIsDarkTheme={function (dark: boolean): void {
+            throw new Error("Function not implemented.")
+          } } clearTerminalOnRun={false} setClearTerminalOnRun={function (clear: boolean): void {
+            throw new Error("Function not implemented.")
+          } } setShowSettings={function (show: boolean): void {
+            throw new Error("Function not implemented.")
+          } } selectedLanguage={"javascript"}        />
       )}
     </div>
   )

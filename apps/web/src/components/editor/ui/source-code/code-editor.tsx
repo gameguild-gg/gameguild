@@ -12,6 +12,7 @@ import { CLanguageService } from "./c/c-language-service"
 import { CppLanguageService } from "./cpp/cpp-language-service"
 import { XMLLanguageService } from "./xml/xml-language-service"
 import { YAMLLanguageService } from "./yaml/yaml-language-service"
+import { editor } from "monaco-editor"
 
 export interface CodeEditorProps {
   codeEditorHeight: number
