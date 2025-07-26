@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { CreditCard, FileText, Settings, User } from 'lucide-react';
+import { Settings, User } from 'lucide-react';
 import { auth } from '@/auth';
 import { UserProfileMenu } from './user-profile-menu';
 
@@ -31,41 +31,22 @@ export const UserProfile = async (): Promise<React.JSX.Element> => {
     );
   }
 
-  // Prepare user data for the client component
-  const userData = {
-    id: session.user.id,
-    username: session.user.username,
-    email: session.user.email,
-  };
-
   // Generate username for profile URL
-  const profileUsername = userData.username?.toLowerCase().replace(/\s+/g, '') || 'user';
+  const profileUsername = session.user.username?.toLowerCase().replace(/\s+/g, '') || 'user';
 
   // Define menu items
   const menuItems = [
     {
       label: 'Profile',
       href: `/users/${profileUsername}`,
-      icon: <User className="w-4 h-4" />,
-    },
-    {
-      label: 'Subscription',
-      href: '/subscription',
-      icon: <CreditCard className="w-4 h-4" />,
-      external: false,
+      icon: <User className="size-4" />,
     },
     {
       label: 'Settings',
       href: '/settings',
-      icon: <Settings className="w-4 h-4" />,
-    },
-    {
-      label: 'Terms & Policies',
-      href: '/terms',
-      icon: <FileText className="w-4 h-4" />,
-      external: true,
+      icon: <Settings className="size-4" />,
     },
   ];
 
-  return <UserProfileMenu user={userData} menuItems={menuItems} />;
+  return <UserProfileMenu session={session} menuItems={menuItems} />;
 };
