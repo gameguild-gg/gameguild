@@ -1,0 +1,146 @@
+import React from 'react';
+import { AlertCircle, Eye, FileText, GitBranch, GitPullRequest, Shield, Users } from 'lucide-react';
+import type { Issue, PullRequest, Repository } from '@/lib/integrations/github';
+
+interface ProjectStat {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  change?: string;
+}
+
+interface RepoData {
+  totalIssues: number;
+  totalPulls: number;
+  totalReleases: number;
+  totalBranches: number;
+  totalContributors: number;
+  data: {
+    issues: Issue[];
+    pulls: PullRequest[];
+    releases: Repository[];
+    branches: Repository[];
+    contributors: Repository[];
+    license: Repository;
+  };
+}
+
+interface GitHubProjectStatsProps {
+  repositoryData: RepoData;
+}
+
+export function GitHubProjectStats({ repositoryData }: GitHubProjectStatsProps) {
+  // Format numbers for display
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
+  };
+
+  // Calculate stats from real data
+  const openIssues = repositoryData.data.issues.filter((issue) => issue.state === 'open').length;
+  const mergedPulls = repositoryData.data.pulls.filter((pr) => pr.state === 'closed' && pr.merged_at).length;
+
+  // Stats using real GitHub data
+  const topRowStats: ProjectStat[] = [
+    {
+      icon: <Users className="size-4" />,
+      label: 'Contributors',
+      value: formatNumber(repositoryData.totalContributors),
+    },
+    {
+      icon: <GitPullRequest className="size-4" />,
+      label: 'Pull Requests',
+      value: formatNumber(repositoryData.totalPulls),
+    },
+    {
+      icon: <AlertCircle className="size-4" />,
+      label: 'Issues',
+      value: formatNumber(repositoryData.totalIssues),
+    },
+    {
+      icon: <GitBranch className="size-4" />,
+      label: 'Branches',
+      value: formatNumber(repositoryData.totalBranches),
+    },
+  ];
+
+  const bottomRowStats: ProjectStat[] = [
+    {
+      icon: <FileText className="size-4" />,
+      label: 'Releases',
+      value: formatNumber(repositoryData.totalReleases),
+    },
+    {
+      icon: <Eye className="size-4" />,
+      label: 'Open Issues',
+      value: formatNumber(openIssues),
+    },
+    {
+      icon: <GitPullRequest className="size-4" />,
+      label: 'Merged PRs',
+      value: formatNumber(mergedPulls),
+    },
+    {
+      icon: <Shield className="size-4" />,
+      label: 'License',
+      value: repositoryData.data.license?.name?.split(' ')[0] || 'MIT',
+    },
+  ];
+
+  return (
+    <section className="w-full mb-12">
+      {/* Background with planet effect */}
+      <div className="relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+        {/* Planet/sphere background */}
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
+          <div className="w-96 h-96 rounded-full bg-gradient-to-t from-blue-600/30 via-purple-500/20 to-transparent blur-3xl"></div>
+        </div>
+
+        {/* Additional glow effects */}
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"></div>
+
+        {/* Centered content container */}
+        <div className="max-w-7xl mx-auto relative p-8 md:p-12">
+          {/* Command line header */}
+          <div className="mb-8">
+            <div className="text-slate-400 text-sm font-mono mb-6">gh pulse --year 2024 --repo gameguild-gg/gameguild</div>
+          </div>
+
+          {/* Stats Grid - Top Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+            {topRowStats.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <span className="text-slate-400 text-sm">{stat.icon}</span>
+                  <span className="text-slate-400 text-sm">{stat.label}</span>
+                </div>
+                <div className="text-white text-3xl md:text-4xl font-bold mb-1">{stat.value}</div>
+                {stat.change && <div className="text-slate-400 text-xs">{stat.change}</div>}
+              </div>
+            ))}
+          </div>
+
+          {/* Stats Grid - Bottom Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+            {bottomRowStats.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <span className="text-slate-400 text-sm">{stat.icon}</span>
+                  <span className="text-slate-400 text-sm">{stat.label}</span>
+                </div>
+                <div className="text-white text-3xl md:text-4xl font-bold mb-1">{stat.value}</div>
+                {stat.change && <div className="text-slate-400 text-xs">{stat.change}</div>}
+              </div>
+            ))}
+          </div>
+
+          {/* Repository Activity Summary */}
+          <div className="text-center text-slate-400">
+            <p className="text-sm">Real-time data from GitHub API • Last updated: {new Date().toLocaleDateString()}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
