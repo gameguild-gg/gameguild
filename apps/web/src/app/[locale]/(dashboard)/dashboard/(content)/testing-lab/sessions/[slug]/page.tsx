@@ -3,13 +3,7 @@ import { notFound } from 'next/navigation';
 import { TestingSessionDetails } from '@/components/testing-lab';
 import { getTestingSessionBySlug } from '@/lib/testing-lab/testing-lab.actions';
 import { PropsWithSlugParams } from '@/types';
-import {
-  DashboardPage,
-  DashboardPageContent,
-  DashboardPageDescription,
-  DashboardPageHeader,
-  DashboardPageTitle,
-} from '@/components/dashboard/common/ui/dashboard-page';
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
 
 export default async function Page({ params }: PropsWithSlugParams): Promise<React.JSX.Element> {
   const { slug } = await params;
