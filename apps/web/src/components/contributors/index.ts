@@ -6,5 +6,5 @@ export { GlobalRankingTable } from './global-ranking-table';
 export { TopContributorsSection } from './top-contributors-section';
 export { HowToContribute } from './how-to-contribute';
 export { ProjectRoadmap } from './project-roadmap';
-export { ProjectStats } from './project-stats';
+export { GitHubProjectStats } from './git-hub-project-stats';
 export { HorizontalRoadmap } from './horizontal-roadmap';
