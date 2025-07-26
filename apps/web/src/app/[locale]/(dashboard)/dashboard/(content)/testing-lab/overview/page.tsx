@@ -1,11 +1,5 @@
 import { TestingLabOverview } from '@/components/testing-lab/overview/testing-lab-overview';
-import {
-  DashboardPage,
-  DashboardPageContent,
-  DashboardPageDescription,
-  DashboardPageHeader,
-  DashboardPageTitle,
-} from '@/components/dashboard/common/ui/dashboard-page';
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
 import React from 'react';
 
 export default function TestingLabPage() {
