@@ -92,11 +92,11 @@ export const authConfig: NextAuthConfig = {
       user: User;
       account?: Account | null | undefined;
       profile?: Profile | undefined;
-      trigger?: 'update' | 'signIn' | 'signUp' | undefined;
+      trigger?: 'update' | 'signIn' | 'signUp';
       isNewUser?: boolean | undefined;
       session?: Session;
     }): Promise<JWT | null> => {
-      // This is called when user signing-in or signing-up.
+      // This is called when a user signing-in or signing-up.
       if (trigger === 'signIn' || trigger === 'signUp') {
         // We must have auth data from our API, otherwise the session is corrupted.
 
@@ -128,6 +128,36 @@ export const authConfig: NextAuthConfig = {
           token.currentTenant = tenantFromList;
         }
       } else if (trigger === 'update') {
+        // Check token expiration and refresh if needed (only on updates, not fresh sign-ins)
+        if (token?.api?.refreshToken && (!token?.expiresAt || Date.now() >= new Date(token.expiresAt).getTime())) {
+          // Token expired or no expiration set, try to refresh it
+          try {
+            const response = await refreshAccessToken(token.api.refreshToken);
+
+            // Update token with new values
+            token.api.accessToken = response.accessToken;
+            token.api.refreshToken = response.refreshToken;
+            token.expiresAt = response.expiresAt;
+
+            // Update tenant ID if present in refresh response
+            if (response.tenantId) {
+              // Tenant must exist in the available tenants list. If not, the session is corrupted
+              const tenantFromList = token.availableTenants?.find((t) => t.id === response.tenantId);
+              if (!tenantFromList) {
+                // Tenant not in an available list means that the session is corrupted.
+                console.error('Session corrupted: refreshed tenantId not found in availableTenants');
+                return null;
+              }
+
+              token.currentTenant = tenantFromList;
+            }
+          } catch (error) {
+            console.error('Error refreshing api access token', error);
+            // If we fail to refresh the token, return null to force the sign-out.
+            return null;
+          }
+        }
+
         // This is called when the user updates their profile or switches tenants.
         // You can update the token with new user data here if needed.
         // TODO: Handle updates to their profile or switches tenants here.
@@ -151,45 +181,13 @@ export const authConfig: NextAuthConfig = {
         return session;
       }
 
-      // Check if we have API tokens first - we need these for any API operations including updates
-      if (token && (!token.api?.accessToken || !token.api?.refreshToken)) {
+      // Check if we have API tokens first - we need these for any API operations
+      if (!token.api?.accessToken || !token.api?.refreshToken) {
         session.error = 'CorruptedSessionError';
         return session;
       }
 
-      // Check token expiration and refresh if needed (handle expired tokens first)
-      if (!token?.expiresAt || Date.now() >= new Date(token.expiresAt).getTime()) {
-        // Token expired or no expiration set, try to refresh it
-        try {
-          const response = await refreshAccessToken(token.api.refreshToken);
-
-          // Update token with new values
-          token.api.accessToken = response.accessToken;
-          token.api.refreshToken = response.refreshToken;
-          token.expiresAt = response.expiresAt;
-
-          // Update tenant ID if present in refresh response
-          if (response.tenantId) {
-            // Tenant must exist in availableTenants list - if not, session is corrupted
-            const tenantFromList = token.availableTenants?.find((t) => t.id === response.tenantId);
-            if (tenantFromList) {
-              token.currentTenant = tenantFromList;
-            } else {
-              // Tenant not in an available list means a corrupted session
-              console.error('Session corrupted: refreshed tenantId not found in availableTenants');
-              session.error = 'CorruptedSessionError';
-              return session;
-            }
-          }
-        } catch (error) {
-          console.error('Error refreshing api access token', error);
-          // If we fail to refresh the token, return an error so we can handle it on the page.
-          session.error = 'RefreshTokenError';
-          return session;
-        }
-      }
-
-      // Always set the session with the current valid token (whether refreshed or original)
+      // Always set the session with the current valid token (refreshed in JWT callback if needed)
       session.api = {
         accessToken: token.api.accessToken,
       };
