@@ -118,37 +118,6 @@ export async function refreshAccessToken(refreshToken: string): Promise<RefreshT
   }
 }
 
-export async function fetchTenantDetails(tenantId: string, accessToken: string): Promise<{ id: string; name: string; isActive: boolean }> {
-  try {
-    const response = await fetch(`${environment.apiBaseUrl}/api/tenants/${tenantId}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch tenant details: ${response.status} ${response.statusText}`);
-    }
-
-    const tenant = await response.json();
-    return {
-      id: tenant.id,
-      name: tenant.name || `Tenant ${tenant.id}`,
-      isActive: tenant.isActive ?? true,
-    };
-  } catch (error) {
-    console.error('Failed to fetch tenant details:', error);
-    // Return fallback data if fetch fails
-    return {
-      id: tenantId,
-      name: `Tenant ${tenantId}`,
-      isActive: true,
-    };
-  }
-}
-
 export async function forceSignOut(): Promise<void> {
   try {
     await signOut({ redirect: true, redirectTo: '/sign-in' });
