@@ -10,6 +10,32 @@ interface GoogleSignInRequest {
   tenantId?: string;
 }
 
+export async function signInWithEmailAndPassword(email: string, password: string): Promise<void> {
+  try {
+    try {
+      await signIn('local');
+    } catch (error) {
+      // Handle known NextAuth errors
+      if (error instanceof AuthError) {
+        switch (error.type) {
+          case 'OAuthSignInError':
+            throw new Error('OAuth sign-in failed');
+          case 'OAuthCallbackError':
+            throw new Error('OAuth callback error');
+          case 'AccessDenied':
+            throw new Error('Access denied');
+          case 'OAuthAccountNotLinked':
+            throw new Error('Email already in use with different provider');
+          default:
+            throw new Error('Authentication error occurred');
+        }
+      }
+      // Re-throw other errors
+      throw error;
+    }
+  }
+}
+
 export async function signInWithGoogle() {
   try {
     await signIn('google');
@@ -34,9 +60,28 @@ export async function signInWithGoogle() {
   }
 }
 
+export async function localSign(payload: { email: string; password: string }): Promise<SignInResponse> {
+  try {
+    const response = await fetch(`${ environment.apiBaseUrl }/api/auth/sign-in`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) throw new Error(`Authentication failed: ${ response.status } ${ response.statusText }`);
+
+    return await response.json();
+  } catch (error) {
+    console.error('local sign-in failed:', error);
+    throw new Error('Failed to authenticate with local credentials');
+  }
+}
+
 export async function googleIdTokenSignIn(request: GoogleSignInRequest): Promise<SignInResponse> {
   try {
-    const response = await fetch(`${environment.apiBaseUrl}/api/auth/google/id-token`, {
+    const response = await fetch(`${ environment.apiBaseUrl }/api/auth/google`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
