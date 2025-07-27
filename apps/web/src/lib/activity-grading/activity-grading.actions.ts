@@ -256,10 +256,7 @@ export async function getProgramGradingAnalytics(programId: string) {
   await configureAuthenticatedClient();
 
   try {
-    const [statistics, pendingGrades] = await Promise.all([
-      getGradingStatistics(programId),
-      getPendingGrades(programId),
-    ]);
+    const [statistics, pendingGrades] = await Promise.all([getGradingStatistics(programId), getPendingGrades(programId)]);
 
     return {
       statistics,
@@ -287,9 +284,7 @@ export async function getGraderAnalytics(programId: string, graderProgramUserId:
 
     const analytics = {
       totalGrades: grades.length,
-      averageScore: grades.length > 0 
-        ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length 
-        : 0,
+      averageScore: grades.length > 0 ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length : 0,
       gradingDistribution: {
         excellent: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 90).length,
         good: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 80 && (grade.grade || 0) < 90).length,
@@ -298,9 +293,8 @@ export async function getGraderAnalytics(programId: string, graderProgramUserId:
       },
       feedbackMetrics: {
         totalWithFeedback: grades.filter((grade: ActivityGradeDto) => grade.feedback && grade.feedback.trim().length > 0).length,
-        averageFeedbackLength: grades.length > 0
-          ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.feedback?.length || 0), 0) / grades.length
-          : 0,
+        averageFeedbackLength:
+          grades.length > 0 ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.feedback?.length || 0), 0) / grades.length : 0,
       },
     };
 
@@ -330,9 +324,7 @@ export async function getStudentAnalytics(programId: string, programUserId: stri
     const grades = await getGradesByStudent(programId, programUserId);
 
     const totalGrades = grades.length;
-    const averageScore = grades.length > 0 
-      ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length 
-      : 0;
+    const averageScore = grades.length > 0 ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length : 0;
     const highestScore = grades.length > 0 ? Math.max(...grades.map((grade: ActivityGradeDto) => grade.grade || 0)) : 0;
     const lowestScore = grades.length > 0 ? Math.min(...grades.map((grade: ActivityGradeDto) => grade.grade || 0)) : 0;
 
@@ -349,17 +341,10 @@ export async function getStudentAnalytics(programId: string, programUserId: stri
       },
       progress: {
         trend: calculateImprovementTrend(grades),
-        improvementRate: totalGrades > 1 ? ((highestScore - lowestScore) / totalGrades) : 0,
+        improvementRate: totalGrades > 1 ? (highestScore - lowestScore) / totalGrades : 0,
       },
       performance: {
-        overallPerformance:
-          averageScore >= 90
-            ? 'Excellent'
-            : averageScore >= 80
-              ? 'Good'
-              : averageScore >= 70
-                ? 'Satisfactory'
-                : 'Needs Improvement',
+        overallPerformance: averageScore >= 90 ? 'Excellent' : averageScore >= 80 ? 'Good' : averageScore >= 70 ? 'Satisfactory' : 'Needs Improvement',
         passingGrades: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 70).length,
       },
     };
@@ -391,20 +376,19 @@ export async function getContentGradingAnalytics(programId: string, contentId: s
 
     const analytics = {
       totalSubmissions: grades.length,
-      averageScore: grades.length > 0 
-        ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length 
-        : 0,
+      averageScore: grades.length > 0 ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length : 0,
       scoreDistribution: {
         excellent: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 90).length,
         good: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 80 && (grade.grade || 0) < 90).length,
         satisfactory: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 70 && (grade.grade || 0) < 80).length,
         needsImprovement: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) < 70).length,
       },
-      difficulty: grades.length > 0 
-        ? (grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length < 75 
-          ? 'High' 
-          : 'Moderate')
-        : 'Unknown',
+      difficulty:
+        grades.length > 0
+          ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length < 75
+            ? 'High'
+            : 'Moderate'
+          : 'Unknown',
     };
 
     return {
@@ -414,9 +398,7 @@ export async function getContentGradingAnalytics(programId: string, contentId: s
         programId,
         contentId,
         contentDifficulty: analytics.difficulty,
-        passRate: grades.length > 0 
-          ? (grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 70).length / grades.length) * 100 
-          : 0,
+        passRate: grades.length > 0 ? (grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 70).length / grades.length) * 100 : 0,
         generatedAt: new Date().toISOString(),
       },
     };
@@ -435,21 +417,21 @@ export async function getContentGradingAnalytics(programId: string, contentId: s
  */
 function calculateImprovementTrend(grades: ActivityGradeDto[]): 'improving' | 'declining' | 'stable' {
   if (grades.length < 2) return 'stable';
-  
+
   const sortedGrades = grades
     .filter((grade) => grade.createdAt && grade.grade !== null)
     .sort((a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime());
-  
+
   if (sortedGrades.length < 2) return 'stable';
-  
+
   const firstHalf = sortedGrades.slice(0, Math.ceil(sortedGrades.length / 2));
   const secondHalf = sortedGrades.slice(Math.ceil(sortedGrades.length / 2));
-  
+
   const firstHalfAvg = firstHalf.reduce((sum, grade) => sum + (grade.grade || 0), 0) / firstHalf.length;
   const secondHalfAvg = secondHalf.reduce((sum, grade) => sum + (grade.grade || 0), 0) / secondHalf.length;
-  
+
   const difference = secondHalfAvg - firstHalfAvg;
-  
+
   if (difference > 5) return 'improving';
   if (difference < -5) return 'declining';
   return 'stable';
