@@ -1,200 +1,306 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
   getApiUsers,
-  getApiUsersById,
   postApiUsers,
-  putApiUsersById,
   deleteApiUsersById,
+  getApiUsersById,
+  putApiUsersById,
   postApiUsersByIdRestore,
   putApiUsersByIdBalance,
-  getApiUsersSearch,
   getApiUsersStatistics,
+  getApiUsersSearch,
+  postApiUsersBulk,
+  patchApiUsersBulkActivate,
+  patchApiUsersBulkDeactivate,
+  getApiUsersByUserIdAchievements,
+  getApiUsersByUserIdAchievementsProgress,
+  getApiUsersByUserIdAchievementsSummary,
+  getApiUsersByUserIdAchievementsAvailable,
+  postApiUsersByUserIdAchievementsByAchievementIdProgress,
+  getApiUsersByUserIdAchievementsByAchievementIdPrerequisites,
 } from '@/lib/api/generated/sdk.gen';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
+import type {
+  GetApiUsersData,
+  PostApiUsersData,
+  DeleteApiUsersByIdData,
+  GetApiUsersByIdData,
+  PutApiUsersByIdData,
+  PostApiUsersByIdRestoreData,
+  PutApiUsersByIdBalanceData,
+  GetApiUsersStatisticsData,
+  GetApiUsersSearchData,
+  PostApiUsersBulkData,
+  PatchApiUsersBulkActivateData,
+  PatchApiUsersBulkDeactivateData,
+  GetApiUsersByUserIdAchievementsData,
+  GetApiUsersByUserIdAchievementsProgressData,
+  GetApiUsersByUserIdAchievementsSummaryData,
+  GetApiUsersByUserIdAchievementsAvailableData,
+  PostApiUsersByUserIdAchievementsByAchievementIdProgressData,
+  GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData,
+} from '@/lib/api/generated/types.gen';
+
+// =============================================================================
+// USER MANAGEMENT
+// =============================================================================
 
 /**
- * Get paginated users with optional filtering
+ * Get all users with optional filtering
  */
-export async function getUsersData(params?: { skip?: number; take?: number; includeDeleted?: boolean; isActive?: boolean }) {
+export async function getUsers(data?: GetApiUsersData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiUsers({
-      query: {
-        skip: params?.skip,
-        take: params?.take,
-        includeDeleted: params?.includeDeleted,
-        isActive: params?.isActive,
-      },
-    });
-
-    revalidateTag('users');
-    return { data: response.data, error: null };
-  } catch (error) {
-    console.error('Error in getUsersData:', error);
-    return { data: null, error: 'Failed to fetch users' };
-  }
-}
-
-/**
- * Get a specific user by ID
- */
-export async function getUserById(id: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiUsersById({ path: { id } });
-    return { data: response.data, error: null };
-  } catch (error) {
-    console.error('Error in getUserById:', error);
-    return { data: null, error: 'Failed to fetch user' };
-  }
+  
+  return getApiUsers({
+    query: data?.query,
+  });
 }
 
 /**
  * Create a new user
  */
-export async function createUser(userData: { name: string; email: string; password?: string; tenantId?: string; roleIds?: string[]; isActive?: boolean }) {
+export async function createUser(data?: PostApiUsersData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiUsers({ body: userData });
-    revalidateTag('users');
-    return { data: response.data, error: null };
-  } catch (error) {
-    console.error('Error creating user:', error);
-    return { data: null, error: 'Failed to create user' };
-  }
+  
+  const result = await postApiUsers({
+    body: data?.body,
+  });
+  
+  // Revalidate users cache
+  revalidateTag('users');
+  
+  return result;
 }
 
 /**
- * Update an existing user
+ * Delete a user by ID
  */
-export async function updateUser(id: string, userData: { name?: string; email?: string; isActive?: boolean }) {
+export async function deleteUser(data: DeleteApiUsersByIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await putApiUsersById({ path: { id }, body: userData });
-    revalidateTag('users');
-    revalidateTag(`user-${id}`);
-    return { data: response.data, error: null };
-  } catch (error) {
-    console.error('Error updating user:', error);
-    return { data: null, error: 'Failed to update user' };
-  }
+  
+  const result = await deleteApiUsersById({
+    path: data.path,
+  });
+  
+  // Revalidate users cache
+  revalidateTag('users');
+  
+  return result;
 }
 
 /**
- * Delete a user (soft delete)
+ * Get a specific user by ID
  */
-export async function deleteUser(id: string) {
+export async function getUserById(data: GetApiUsersByIdData) {
   await configureAuthenticatedClient();
+  
+  return getApiUsersById({
+    path: data.path,
+  });
+}
 
-  try {
-    const response = await deleteApiUsersById({ path: { id } });
-    revalidateTag('users');
-    revalidateTag(`user-${id}`);
-    return { data: response.data, error: null };
-  } catch (error) {
-    console.error('Error deleting user:', error);
-    return { data: null, error: 'Failed to delete user' };
-  }
+/**
+ * Update a user by ID
+ */
+export async function updateUser(data: PutApiUsersByIdData) {
+  await configureAuthenticatedClient();
+  
+  const result = await putApiUsersById({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate users cache
+  revalidateTag('users');
+  
+  return result;
 }
 
 /**
  * Restore a deleted user
  */
-export async function restoreUser(id: string) {
+export async function restoreUser(data: PostApiUsersByIdRestoreData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiUsersByIdRestore({ path: { id } });
-    revalidateTag('users');
-    revalidateTag(`user-${id}`);
-    return { data: response.data, error: null };
-  } catch (error) {
-    console.error('Error restoring user:', error);
-    return { data: null, error: 'Failed to restore user' };
-  }
+  
+  const result = await postApiUsersByIdRestore({
+    path: data.path,
+  });
+  
+  // Revalidate users cache
+  revalidateTag('users');
+  
+  return result;
 }
 
 /**
  * Update user balance
  */
-export async function updateUserBalance(id: string, balanceData: { amount: number; reason?: string }) {
+export async function updateUserBalance(data: PutApiUsersByIdBalanceData) {
   await configureAuthenticatedClient();
+  
+  const result = await putApiUsersByIdBalance({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate users cache
+  revalidateTag('users');
+  
+  return result;
+}
 
-  try {
-    const response = await putApiUsersByIdBalance({ path: { id }, body: balanceData });
-    revalidateTag('users');
-    revalidateTag(`user-${id}`);
-    return { data: response.data, error: null };
-  } catch (error) {
-    console.error('Error updating user balance:', error);
-    return { data: null, error: 'Failed to update user balance' };
-  }
+// =============================================================================
+// USER ANALYTICS & SEARCH
+// =============================================================================
+
+/**
+ * Get user statistics
+ */
+export async function getUserStatistics(data?: GetApiUsersStatisticsData) {
+  await configureAuthenticatedClient();
+  
+  return getApiUsersStatistics({
+    query: data?.query,
+  });
 }
 
 /**
  * Search users
  */
-export async function searchUsers(
-  searchTerm: string,
-  params?: {
-    skip?: number;
-    take?: number;
-    isActive?: boolean;
-    minBalance?: number;
-    maxBalance?: number;
-    createdAfter?: string;
-    createdBefore?: string;
-    includeDeleted?: boolean;
-  },
-) {
+export async function searchUsers(data?: GetApiUsersSearchData) {
   await configureAuthenticatedClient();
+  
+  return getApiUsersSearch({
+    query: data?.query,
+  });
+}
 
-  try {
-    const response = await getApiUsersSearch({
-      query: {
-        searchTerm: searchTerm,
-        skip: params?.skip,
-        take: params?.take,
-        isActive: params?.isActive,
-        minBalance: params?.minBalance,
-        maxBalance: params?.maxBalance,
-        createdAfter: params?.createdAfter,
-        createdBefore: params?.createdBefore,
-        includeDeleted: params?.includeDeleted,
-      },
-    });
+// =============================================================================
+// BULK USER OPERATIONS
+// =============================================================================
 
-    return { data: response.data, error: null };
-  } catch (error) {
-    console.error('Error searching users:', error);
-    return { data: null, error: 'Failed to search users' };
-  }
+/**
+ * Create users in bulk
+ */
+export async function createUsersBulk(data?: PostApiUsersBulkData) {
+  await configureAuthenticatedClient();
+  
+  const result = await postApiUsersBulk({
+    body: data?.body,
+  });
+  
+  // Revalidate users cache
+  revalidateTag('users');
+  
+  return result;
 }
 
 /**
- * Get user statistics
+ * Activate users in bulk
  */
-export async function getUserStatistics(params?: { fromDate?: string; toDate?: string; includeDeleted?: boolean }) {
+export async function activateUsersBulk(data?: PatchApiUsersBulkActivateData) {
   await configureAuthenticatedClient();
+  
+  const result = await patchApiUsersBulkActivate({
+    body: data?.body,
+  });
+  
+  // Revalidate users cache
+  revalidateTag('users');
+  
+  return result;
+}
 
-  try {
-    const response = await getApiUsersStatistics({
-      query: {
-        fromDate: params?.fromDate,
-        toDate: params?.toDate,
-        includeDeleted: params?.includeDeleted,
-      },
-    });
+/**
+ * Deactivate users in bulk
+ */
+export async function deactivateUsersBulk(data?: PatchApiUsersBulkDeactivateData) {
+  await configureAuthenticatedClient();
+  
+  const result = await patchApiUsersBulkDeactivate({
+    body: data?.body,
+  });
+  
+  // Revalidate users cache
+  revalidateTag('users');
+  
+  return result;
+}
 
-    return { data: response.data, error: null };
-  } catch (error) {
-    console.error('Error fetching user statistics:', error);
-    return { data: null, error: 'Failed to fetch user statistics' };
-  }
+// =============================================================================
+// USER ACHIEVEMENTS INTEGRATION
+// =============================================================================
+
+/**
+ * Get user achievements
+ */
+export async function getUserAchievements(data: GetApiUsersByUserIdAchievementsData) {
+  await configureAuthenticatedClient();
+  
+  return getApiUsersByUserIdAchievements({
+    path: data.path,
+  });
+}
+
+/**
+ * Get user achievement progress
+ */
+export async function getUserAchievementProgress(data: GetApiUsersByUserIdAchievementsProgressData) {
+  await configureAuthenticatedClient();
+  
+  return getApiUsersByUserIdAchievementsProgress({
+    path: data.path,
+  });
+}
+
+/**
+ * Get user achievement summary
+ */
+export async function getUserAchievementSummary(data: GetApiUsersByUserIdAchievementsSummaryData) {
+  await configureAuthenticatedClient();
+  
+  return getApiUsersByUserIdAchievementsSummary({
+    path: data.path,
+  });
+}
+
+/**
+ * Get available achievements for user
+ */
+export async function getUserAvailableAchievements(data: GetApiUsersByUserIdAchievementsAvailableData) {
+  await configureAuthenticatedClient();
+  
+  return getApiUsersByUserIdAchievementsAvailable({
+    path: data.path,
+  });
+}
+
+/**
+ * Update user achievement progress
+ */
+export async function updateUserAchievementProgress(data: PostApiUsersByUserIdAchievementsByAchievementIdProgressData) {
+  await configureAuthenticatedClient();
+  
+  const result = await postApiUsersByUserIdAchievementsByAchievementIdProgress({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate user achievements cache
+  revalidateTag('user-achievements');
+  
+  return result;
+}
+
+/**
+ * Get achievement prerequisites for user
+ */
+export async function getUserAchievementPrerequisites(data: GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData) {
+  await configureAuthenticatedClient();
+  
+  return getApiUsersByUserIdAchievementsByAchievementIdPrerequisites({
+    path: data.path,
+  });
 }
