@@ -9,10 +9,10 @@ import type { GetApiPostsData, PostApiPostsData, GetApiPostsByPostIdData } from 
  * Get all posts with optional filtering
  */
 export async function getPosts(data?: GetApiPostsData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
+  
   return getApiPosts({
-    client,
-    ...data,
+    query: data?.query,
   });
 }
 
@@ -20,10 +20,10 @@ export async function getPosts(data?: GetApiPostsData) {
  * Create a new post
  */
 export async function createPost(data?: PostApiPostsData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
+  
   const result = await postApiPosts({
-    client,
-    ...data,
+    body: data?.body,
   });
   
   // Revalidate posts cache
@@ -36,9 +36,9 @@ export async function createPost(data?: PostApiPostsData) {
  * Get a specific post by ID
  */
 export async function getPostById(data: GetApiPostsByPostIdData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
+  
   return getApiPostsByPostId({
-    client,
-    ...data,
+    path: data.path,
   });
 }

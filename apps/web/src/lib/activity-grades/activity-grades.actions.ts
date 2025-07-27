@@ -12,7 +12,7 @@ import {
   getApiProgramsByProgramIdActivityGradesStatistics,
   getApiProgramsByProgramIdActivityGradesContentByContentId,
 } from '@/lib/api/generated/sdk.gen';
-import { configureAuthenticatedClient } from '@/lib/auth/utils';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import type {
   PostApiProgramsByProgramIdActivityGradesData,
   GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData,
@@ -29,10 +29,10 @@ import type {
  * Create a new activity grade for a program
  */
 export async function createActivityGrade(data: PostApiProgramsByProgramIdActivityGradesData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   const result = await postApiProgramsByProgramIdActivityGrades({
-    client,
-    ...data,
+    path: data.path,
+    body: data.body,
   });
   
   // Revalidate activity grades cache
@@ -46,10 +46,9 @@ export async function createActivityGrade(data: PostApiProgramsByProgramIdActivi
  * Get activity grades by content interaction ID
  */
 export async function getActivityGradesByInteraction(data: GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   return getApiProgramsByProgramIdActivityGradesInteractionByContentInteractionId({
-    client,
-    ...data,
+    path: data.path,
   });
 }
 
@@ -57,10 +56,9 @@ export async function getActivityGradesByInteraction(data: GetApiProgramsByProgr
  * Get activity grades by grader program user ID
  */
 export async function getActivityGradesByGrader(data: GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   return getApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserId({
-    client,
-    ...data,
+    path: data.path,
   });
 }
 
@@ -68,10 +66,9 @@ export async function getActivityGradesByGrader(data: GetApiProgramsByProgramIdA
  * Get activity grades by student program user ID
  */
 export async function getActivityGradesByStudent(data: GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   return getApiProgramsByProgramIdActivityGradesStudentByProgramUserId({
-    client,
-    ...data,
+    path: data.path,
   });
 }
 
@@ -79,10 +76,9 @@ export async function getActivityGradesByStudent(data: GetApiProgramsByProgramId
  * Delete an activity grade by ID
  */
 export async function deleteActivityGrade(data: DeleteApiProgramsByProgramIdActivityGradesByGradeIdData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   const result = await deleteApiProgramsByProgramIdActivityGradesByGradeId({
-    client,
-    ...data,
+    path: data.path,
   });
   
   // Revalidate activity grades cache
@@ -96,10 +92,10 @@ export async function deleteActivityGrade(data: DeleteApiProgramsByProgramIdActi
  * Update an activity grade by ID
  */
 export async function updateActivityGrade(data: PutApiProgramsByProgramIdActivityGradesByGradeIdData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   const result = await putApiProgramsByProgramIdActivityGradesByGradeId({
-    client,
-    ...data,
+    path: data.path,
+    body: data.body,
   });
   
   // Revalidate activity grades cache
@@ -113,10 +109,9 @@ export async function updateActivityGrade(data: PutApiProgramsByProgramIdActivit
  * Get pending activity grades for a program
  */
 export async function getPendingActivityGrades(data: GetApiProgramsByProgramIdActivityGradesPendingData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   return getApiProgramsByProgramIdActivityGradesPending({
-    client,
-    ...data,
+    path: data.path,
   });
 }
 
@@ -124,10 +119,9 @@ export async function getPendingActivityGrades(data: GetApiProgramsByProgramIdAc
  * Get activity grades statistics for a program
  */
 export async function getActivityGradesStatistics(data: GetApiProgramsByProgramIdActivityGradesStatisticsData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   return getApiProgramsByProgramIdActivityGradesStatistics({
-    client,
-    ...data,
+    path: data.path,
   });
 }
 
@@ -135,9 +129,8 @@ export async function getActivityGradesStatistics(data: GetApiProgramsByProgramI
  * Get activity grades by content ID for a program
  */
 export async function getActivityGradesByContent(data: GetApiProgramsByProgramIdActivityGradesContentByContentIdData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   return getApiProgramsByProgramIdActivityGradesContentByContentId({
-    client,
-    ...data,
+    path: data.path,
   });
 }
