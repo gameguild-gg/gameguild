@@ -354,5 +354,29 @@ export const getGitHubRepositoryData = async () => {
   }
 };
 
+/**
+ * Get license content from GitHub API
+ */
+export async function getLicenseContent(): Promise<{ content: string; name: string; spdx_id: string } | null> {
+  try {
+    const { data: license } = await octokit.licenses.getForRepo({
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+    });
+
+    // The license content is base64 encoded, so we need to decode it
+    const content = Buffer.from(license.content, 'base64').toString('utf8');
+
+    return {
+      content,
+      name: license.license?.name || 'Unknown License',
+      spdx_id: license.license?.spdx_id || 'Unknown',
+    };
+  } catch (error) {
+    console.error('Error fetching license content:', error);
+    return null;
+  }
+}
+
 // Re-export types for convenience
 export type { Contributor, EnhancedContributor, GitHubCommitStat, Repository, Issue, PullRequest };
