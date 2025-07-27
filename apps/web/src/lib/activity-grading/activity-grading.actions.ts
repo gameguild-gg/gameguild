@@ -2,6 +2,7 @@
 
 import { revalidateTag } from 'next/cache';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
+import type { ActivityGradeDto } from '@/lib/api/generated/types.gen';
 import {
   // Activity Grading Management
   postApiProgramsByProgramIdActivityGrades,
@@ -286,17 +287,19 @@ export async function getGraderAnalytics(programId: string, graderProgramUserId:
 
     const analytics = {
       totalGrades: grades.length,
-      averageScore: grades.length > 0 ? grades.reduce((sum: number, grade: any) => sum + (grade.score || 0), 0) / grades.length : 0,
+      averageScore: grades.length > 0 
+        ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length 
+        : 0,
       gradingDistribution: {
-        excellent: grades.filter((grade: any) => (grade.score || 0) >= 90).length,
-        good: grades.filter((grade: any) => (grade.score || 0) >= 80 && (grade.score || 0) < 90).length,
-        satisfactory: grades.filter((grade: any) => (grade.score || 0) >= 70 && (grade.score || 0) < 80).length,
-        needsImprovement: grades.filter((grade: any) => (grade.score || 0) < 70).length,
+        excellent: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 90).length,
+        good: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 80 && (grade.grade || 0) < 90).length,
+        satisfactory: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 70 && (grade.grade || 0) < 80).length,
+        needsImprovement: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) < 70).length,
       },
       feedbackMetrics: {
-        totalWithFeedback: grades.filter((grade: any) => grade.feedback && grade.feedback.trim().length > 0).length,
-        averageFeedbackLength: grades.length > 0 
-          ? grades.reduce((sum: number, grade: any) => sum + (grade.feedback?.length || 0), 0) / grades.length 
+        totalWithFeedback: grades.filter((grade: ActivityGradeDto) => grade.feedback && grade.feedback.trim().length > 0).length,
+        averageFeedbackLength: grades.length > 0
+          ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.feedback?.length || 0), 0) / grades.length
           : 0,
       },
     };
@@ -320,23 +323,44 @@ export async function getGraderAnalytics(programId: string, graderProgramUserId:
 /**
  * Get student performance analytics
  */
-export async function getStudentGradingAnalytics(programId: string, studentProgramUserId: string) {
+export async function getStudentAnalytics(programId: string, programUserId: string) {
   await configureAuthenticatedClient();
 
   try {
-    const grades = await getGradesByStudent(programId, studentProgramUserId);
+    const grades = await getGradesByStudent(programId, programUserId);
+
+    const totalGrades = grades.length;
+    const averageScore = grades.length > 0 
+      ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length 
+      : 0;
+    const highestScore = grades.length > 0 ? Math.max(...grades.map((grade: ActivityGradeDto) => grade.grade || 0)) : 0;
+    const lowestScore = grades.length > 0 ? Math.min(...grades.map((grade: ActivityGradeDto) => grade.grade || 0)) : 0;
 
     const analytics = {
-      totalGrades: grades.length,
-      averageScore: grades.length > 0 ? grades.reduce((sum: number, grade: any) => sum + (grade.score || 0), 0) / grades.length : 0,
-      highestScore: grades.length > 0 ? Math.max(...grades.map((grade: any) => grade.score || 0)) : 0,
-      lowestScore: grades.length > 0 ? Math.min(...grades.map((grade: any) => grade.score || 0)) : 0,
-      improvementTrend: grades.length >= 2 ? calculateImprovementTrend(grades) : null,
-      performanceDistribution: {
-        excellent: grades.filter((grade: any) => (grade.score || 0) >= 90).length,
-        good: grades.filter((grade: any) => (grade.score || 0) >= 80 && (grade.score || 0) < 90).length,
-        satisfactory: grades.filter((grade: any) => (grade.score || 0) >= 70 && (grade.score || 0) < 80).length,
-        needsImprovement: grades.filter((grade: any) => (grade.score || 0) < 70).length,
+      totalGrades,
+      averageScore,
+      highestScore,
+      lowestScore,
+      gradeDistribution: {
+        excellent: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 90).length,
+        good: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 80 && (grade.grade || 0) < 90).length,
+        satisfactory: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 70 && (grade.grade || 0) < 80).length,
+        needsImprovement: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) < 70).length,
+      },
+      progress: {
+        trend: calculateImprovementTrend(grades),
+        improvementRate: totalGrades > 1 ? ((highestScore - lowestScore) / totalGrades) : 0,
+      },
+      performance: {
+        overallPerformance:
+          averageScore >= 90
+            ? 'Excellent'
+            : averageScore >= 80
+              ? 'Good'
+              : averageScore >= 70
+                ? 'Satisfactory'
+                : 'Needs Improvement',
+        passingGrades: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 70).length,
       },
     };
 
@@ -345,16 +369,14 @@ export async function getStudentGradingAnalytics(programId: string, studentProgr
       grades,
       summary: {
         programId,
-        studentProgramUserId,
-        overallPerformance: analytics.averageScore >= 90 ? 'Excellent' : 
-                           analytics.averageScore >= 80 ? 'Good' : 
-                           analytics.averageScore >= 70 ? 'Satisfactory' : 'Needs Improvement',
+        programUserId,
+        lastGraded: grades.length > 0 ? grades[0]?.gradedAt : null,
         generatedAt: new Date().toISOString(),
       },
     };
   } catch (error) {
-    console.error('Error generating student grading analytics:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to generate student grading analytics');
+    console.error('Error generating student analytics:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to generate student analytics');
   }
 }
 
@@ -369,14 +391,20 @@ export async function getContentGradingAnalytics(programId: string, contentId: s
 
     const analytics = {
       totalSubmissions: grades.length,
-      averageScore: grades.length > 0 ? grades.reduce((sum: number, grade: any) => sum + (grade.score || 0), 0) / grades.length : 0,
+      averageScore: grades.length > 0 
+        ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length 
+        : 0,
       scoreDistribution: {
-        excellent: grades.filter((grade: any) => (grade.score || 0) >= 90).length,
-        good: grades.filter((grade: any) => (grade.score || 0) >= 80 && (grade.score || 0) < 90).length,
-        satisfactory: grades.filter((grade: any) => (grade.score || 0) >= 70 && (grade.score || 0) < 80).length,
-        needsImprovement: grades.filter((grade: any) => (grade.score || 0) < 70).length,
+        excellent: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 90).length,
+        good: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 80 && (grade.grade || 0) < 90).length,
+        satisfactory: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 70 && (grade.grade || 0) < 80).length,
+        needsImprovement: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) < 70).length,
       },
-      difficulty: grades.length > 0 ? (grades.reduce((sum: number, grade: any) => sum + (grade.score || 0), 0) / grades.length) < 75 ? 'High' : 'Moderate' : 'Unknown',
+      difficulty: grades.length > 0 
+        ? (grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length < 75 
+          ? 'High' 
+          : 'Moderate')
+        : 'Unknown',
     };
 
     return {
@@ -386,7 +414,9 @@ export async function getContentGradingAnalytics(programId: string, contentId: s
         programId,
         contentId,
         contentDifficulty: analytics.difficulty,
-        passRate: grades.length > 0 ? (grades.filter((grade: any) => (grade.score || 0) >= 70).length / grades.length) * 100 : 0,
+        passRate: grades.length > 0 
+          ? (grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 70).length / grades.length) * 100 
+          : 0,
         generatedAt: new Date().toISOString(),
       },
     };
@@ -403,20 +433,20 @@ export async function getContentGradingAnalytics(programId: string, contentId: s
 /**
  * Calculate improvement trend from grades over time
  */
-function calculateImprovementTrend(grades: any[]): 'improving' | 'declining' | 'stable' {
+function calculateImprovementTrend(grades: ActivityGradeDto[]): 'improving' | 'declining' | 'stable' {
   if (grades.length < 2) return 'stable';
   
   const sortedGrades = grades
-    .filter(grade => grade.createdAt && grade.score !== null)
-    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    .filter((grade) => grade.createdAt && grade.grade !== null)
+    .sort((a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime());
   
   if (sortedGrades.length < 2) return 'stable';
   
   const firstHalf = sortedGrades.slice(0, Math.ceil(sortedGrades.length / 2));
   const secondHalf = sortedGrades.slice(Math.ceil(sortedGrades.length / 2));
   
-  const firstHalfAvg = firstHalf.reduce((sum, grade) => sum + grade.score, 0) / firstHalf.length;
-  const secondHalfAvg = secondHalf.reduce((sum, grade) => sum + grade.score, 0) / secondHalf.length;
+  const firstHalfAvg = firstHalf.reduce((sum, grade) => sum + (grade.grade || 0), 0) / firstHalf.length;
+  const secondHalfAvg = secondHalf.reduce((sum, grade) => sum + (grade.grade || 0), 0) / secondHalf.length;
   
   const difference = secondHalfAvg - firstHalfAvg;
   
