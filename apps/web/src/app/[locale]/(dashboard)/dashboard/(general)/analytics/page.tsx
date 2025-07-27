@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Download, RefreshCw } from 'lucide-react';
 
-export default async function AnalyticsPage() {
+export default async function Page(): Promise<React.JSX.Element> {
   return (
     <div className="space-y-6">
       {/* Header */}
