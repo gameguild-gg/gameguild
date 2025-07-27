@@ -1,367 +1,868 @@
-import { revalidateTag, unstable_cache } from 'next/cache';
-import { auth } from '@/auth';
+'use server';
 
-// Types for Products
-export interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  currency: string;
-  isActive: boolean;
-  category?: string;
-  tags?: string[];
-  imageUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-  tenantId: string;
-}
+import { revalidateTag } from 'next/cache';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
+import {
+  // Product CRUD
+  getApiProduct,
+  postApiProduct,
+  deleteApiProductById,
+  getApiProductById,
+  putApiProductById,
+  // Product Discovery
+  getApiProductPublished,
+  getApiProductSearch,
+  getApiProductTypeByType,
+  getApiProductCreatorByCreatorId,
+  getApiProductPriceRange,
+  getApiProductPopular,
+  getApiProductRecent,
+  // Product Management
+  postApiProductByIdPublish,
+  postApiProductByIdUnpublish,
+  postApiProductByIdArchive,
+  putApiProductByIdVisibility,
+  // Bundle Management
+  getApiProductByIdBundleItems,
+  deleteApiProductByBundleIdBundleItemsByProductId,
+  postApiProductByBundleIdBundleItemsByProductId,
+  // Pricing & Subscription
+  getApiProductByIdPricingCurrent,
+  getApiProductByIdPricingHistory,
+  postApiProductByIdPricing,
+  getApiProductByIdSubscriptionPlans,
+  postApiProductByIdSubscriptionPlans,
+  getApiProductSubscriptionPlansByPlanId,
+  // Access Control
+  deleteApiProductByIdAccessByUserId,
+  getApiProductByIdAccessByUserId,
+  postApiProductByIdAccessByUserId,
+  getApiProductByIdUserProductByUserId,
+  // Analytics
+  getApiProductAnalyticsCount,
+  getApiProductByIdAnalyticsUserCount,
+  getApiProductByIdAnalyticsRevenue,
+} from '@/lib/api/generated/sdk.gen';
+import type {
+  CreateProductCommand,
+  UpdateProductCommand,
+  ProductType,
+  AccessLevel,
+  ProductSubscriptionPlan,
+  ContentStatus,
+} from '@/lib/api/generated/types.gen';
 
-export interface ProductFormData {
-  name: string;
-  description?: string;
-  price: number;
-  currency: string;
-  isActive: boolean;
-  category?: string;
-  tags?: string[];
-  imageUrl?: string;
-}
-
-export interface ProductsResponse {
-  success: boolean;
-  data?: Product[];
-  error?: string;
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-export interface ProductStatistics {
-  totalProducts: number;
-  activeProducts: number;
-  inactiveProducts: number;
-  totalRevenue: number;
-  averagePrice: number;
-  productsCreatedToday: number;
-  productsCreatedThisWeek: number;
-  productsCreatedThisMonth: number;
-}
-
-// Cache configuration
-const CACHE_TAGS = {
-  PRODUCTS: 'products',
-  PRODUCT_DETAIL: 'product-detail',
-  PRODUCT_STATISTICS: 'product-statistics',
-} as const;
-
-const REVALIDATION_TIME = 300; // 5 minutes
+// =============================================================================
+// PRODUCT CRUD OPERATIONS
+// =============================================================================
 
 /**
- * Get products with authentication
+ * Get all products with optional filtering
  */
-export async function getProducts(page: number = 1, limit: number = 20, category?: string, isActive?: boolean): Promise<ProductsResponse> {
+export async function getProducts() {
+  await configureAuthenticatedClient();
+
   try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
-
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      ...(category && { category }),
-      ...(isActive !== undefined && { isActive: isActive.toString() }),
-    });
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products?${queryParams}`, {
+    const response = await getApiProduct({
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
-      },
-      next: {
-        revalidate: REVALIDATION_TIME,
-        tags: [CACHE_TAGS.PRODUCTS],
+        'Cache-Control': 'no-store',
       },
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
-    }
-
-    const products: Product[] = await response.json();
-
-    return {
-      success: true,
-      data: products,
-      pagination: {
-        page,
-        limit,
-        total: products.length, // TODO: Get from headers if API provides it
-        totalPages: Math.ceil(products.length / limit),
-      },
-    };
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error('Error fetching products:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
-}
-
-/**
- * Get single product by ID
- */
-export async function getProduct(id: string): Promise<{ success: boolean; data?: Product; error?: string }> {
-  try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${id}`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
-      },
-      next: {
-        revalidate: REVALIDATION_TIME,
-        tags: [CACHE_TAGS.PRODUCT_DETAIL, `product-${id}`],
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
-    }
-
-    const product: Product = await response.json();
-    return { success: true, data: product };
-  } catch (error) {
-    console.error('Error fetching product:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
-}
-
-/**
- * Get product statistics
- */
-export async function getProductStatistics(fromDate?: string, toDate?: string): Promise<{ success: boolean; data?: ProductStatistics; error?: string }> {
-  try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
-
-    const queryParams = new URLSearchParams({
-      ...(fromDate && { fromDate }),
-      ...(toDate && { toDate }),
-    });
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/statistics?${queryParams}`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
-      },
-      next: {
-        revalidate: REVALIDATION_TIME,
-        tags: [CACHE_TAGS.PRODUCT_STATISTICS],
-      },
-    });
-
-    if (!response.ok) {
-      // If endpoint doesn't exist, return mock data
-      if (response.status === 404) {
-        return {
-          success: true,
-          data: {
-            totalProducts: 0,
-            activeProducts: 0,
-            inactiveProducts: 0,
-            totalRevenue: 0,
-            averagePrice: 0,
-            productsCreatedToday: 0,
-            productsCreatedThisWeek: 0,
-            productsCreatedThisMonth: 0,
-          },
-        };
-      }
-
-      const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
-    }
-
-    const statistics: ProductStatistics = await response.json();
-    return { success: true, data: statistics };
-  } catch (error) {
-    console.error('Error fetching product statistics:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch products');
   }
 }
 
 /**
  * Create a new product
  */
-export async function createProduct(formData: ProductFormData): Promise<{ success: boolean; data?: Product; error?: string }> {
-  'use server';
+export async function createProduct(productData: { name: string; description?: string; type?: ProductType; price?: number; isActive?: boolean }) {
+  await configureAuthenticatedClient();
 
   try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
+    const createCommand: CreateProductCommand = {
+      name: productData.name,
+      description: productData.description,
+      type: productData.type,
+    };
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
-      },
-      body: JSON.stringify(formData),
+    const response = await postApiProduct({
+      body: createCommand,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
+    if (!response.data) {
+      throw new Error('Failed to create product');
     }
 
-    const product: Product = await response.json();
-
-    // Revalidate cache
-    revalidateTag(CACHE_TAGS.PRODUCTS);
-    revalidateTag(CACHE_TAGS.PRODUCT_STATISTICS);
-
-    return { success: true, data: product };
+    revalidateTag('products');
+    revalidateTag('product-analytics');
+    return response.data;
   } catch (error) {
     console.error('Error creating product:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    throw new Error(error instanceof Error ? error.message : 'Failed to create product');
   }
 }
 
 /**
- * Update an existing product
+ * Get product by ID
  */
-export async function updateProduct(id: string, formData: ProductFormData): Promise<{ success: boolean; data?: Product; error?: string }> {
-  'use server';
+export async function getProductById(productId: string) {
+  await configureAuthenticatedClient();
 
   try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${id}`, {
-      method: 'PUT',
+    const response = await getApiProductById({
+      path: { id: productId },
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
+        'Cache-Control': 'no-store',
       },
-      body: JSON.stringify(formData),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch product');
+  }
+}
+
+/**
+ * Update product
+ */
+export async function updateProduct(
+  productId: string,
+  productData: { name?: string; description?: string; type?: ProductType; price?: number; isActive?: boolean },
+) {
+  await configureAuthenticatedClient();
+
+  try {
+    const updateCommand: UpdateProductCommand = {
+      productId,
+      name: productData.name,
+      description: productData.description,
+      type: productData.type,
+    };
+
+    const response = await putApiProductById({
+      path: { id: productId },
+      body: updateCommand,
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to update product');
     }
 
-    const product: Product = await response.json();
-
-    // Revalidate cache
-    revalidateTag(CACHE_TAGS.PRODUCTS);
-    revalidateTag(CACHE_TAGS.PRODUCT_DETAIL);
-    revalidateTag(`product-${id}`);
-    revalidateTag(CACHE_TAGS.PRODUCT_STATISTICS);
-
-    return { success: true, data: product };
+    revalidateTag('products');
+    revalidateTag(`product-${productId}`);
+    return response.data;
   } catch (error) {
     console.error('Error updating product:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    throw new Error(error instanceof Error ? error.message : 'Failed to update product');
   }
 }
 
 /**
- * Delete a product
+ * Delete product
  */
-export async function deleteProduct(id: string): Promise<{ success: boolean; error?: string }> {
-  'use server';
+export async function deleteProduct(productId: string) {
+  await configureAuthenticatedClient();
 
   try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
+    const response = await deleteApiProductById({
+      path: { id: productId },
+    });
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/${id}`, {
-      method: 'DELETE',
+    revalidateTag('products');
+    revalidateTag(`product-${productId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to delete product');
+  }
+}
+
+// =============================================================================
+// PRODUCT DISCOVERY & SEARCH
+// =============================================================================
+
+/**
+ * Get published products
+ */
+export async function getPublishedProducts() {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductPublished({
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
+        'Cache-Control': 'no-store',
       },
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
-    }
-
-    // Revalidate cache
-    revalidateTag(CACHE_TAGS.PRODUCTS);
-    revalidateTag(CACHE_TAGS.PRODUCT_DETAIL);
-    revalidateTag(`product-${id}`);
-    revalidateTag(CACHE_TAGS.PRODUCT_STATISTICS);
-
-    return { success: true };
+    return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
-    console.error('Error deleting product:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    console.error('Error fetching published products:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch published products');
   }
 }
 
 /**
- * Server-only function to refresh products cache
+ * Search products
  */
-export async function refreshProducts(): Promise<void> {
-  'use server';
-  revalidateTag(CACHE_TAGS.PRODUCTS);
-  revalidateTag(CACHE_TAGS.PRODUCT_STATISTICS);
+export async function searchProducts() {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductSearch({
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error searching products:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to search products');
+  }
 }
 
 /**
- * Cached version of getProducts for better performance
+ * Get products by type
  */
-export const getCachedProducts = unstable_cache(
-  async (page: number, limit: number, category?: string, isActive?: boolean) => {
-    return getProducts(page, limit, category, isActive);
-  },
-  ['products'],
-  {
-    tags: [CACHE_TAGS.PRODUCTS],
-    revalidate: REVALIDATION_TIME,
-  },
-);
+export async function getProductsByType(type: ProductType) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductTypeByType({
+      path: { type },
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching products by type:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch products by type');
+  }
+}
+
+/**
+ * Get products by creator
+ */
+export async function getProductsByCreator(creatorId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductCreatorByCreatorId({
+      path: { creatorId },
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching products by creator:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch products by creator');
+  }
+}
+
+/**
+ * Get product price range
+ */
+export async function getProductPriceRange() {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductPriceRange({
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching product price range:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch product price range');
+  }
+}
+
+/**
+ * Get popular products
+ */
+export async function getPopularProducts() {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductPopular({
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching popular products:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch popular products');
+  }
+}
+
+/**
+ * Get recent products
+ */
+export async function getRecentProducts() {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductRecent({
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching recent products:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch recent products');
+  }
+}
+
+// =============================================================================
+// PRODUCT MANAGEMENT
+// =============================================================================
+
+/**
+ * Publish product
+ */
+export async function publishProduct(productId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await postApiProductByIdPublish({
+      path: { id: productId },
+    });
+
+    revalidateTag('products');
+    revalidateTag(`product-${productId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error publishing product:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to publish product');
+  }
+}
+
+/**
+ * Unpublish product
+ */
+export async function unpublishProduct(productId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await postApiProductByIdUnpublish({
+      path: { id: productId },
+    });
+
+    revalidateTag('products');
+    revalidateTag(`product-${productId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error unpublishing product:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to unpublish product');
+  }
+}
+
+/**
+ * Archive product
+ */
+export async function archiveProduct(productId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await postApiProductByIdArchive({
+      path: { id: productId },
+    });
+
+    revalidateTag('products');
+    revalidateTag(`product-${productId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error archiving product:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to archive product');
+  }
+}
+
+/**
+ * Update product visibility
+ */
+export async function updateProductVisibility(productId: string, visibility: AccessLevel) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await putApiProductByIdVisibility({
+      path: { id: productId },
+      body: visibility,
+    });
+
+    revalidateTag('products');
+    revalidateTag(`product-${productId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating product visibility:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to update product visibility');
+  }
+}
+
+// =============================================================================
+// BUNDLE MANAGEMENT
+// =============================================================================
+
+/**
+ * Get bundle items for a product
+ */
+export async function getBundleItems(bundleId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductByIdBundleItems({
+      path: { id: bundleId },
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching bundle items:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch bundle items');
+  }
+}
+
+/**
+ * Add product to bundle
+ */
+export async function addProductToBundle(bundleId: string, productId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await postApiProductByBundleIdBundleItemsByProductId({
+      path: { bundleId, productId },
+    });
+
+    revalidateTag('products');
+    revalidateTag(`product-${bundleId}`);
+    revalidateTag(`bundle-${bundleId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding product to bundle:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to add product to bundle');
+  }
+}
+
+/**
+ * Remove product from bundle
+ */
+export async function removeProductFromBundle(bundleId: string, productId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await deleteApiProductByBundleIdBundleItemsByProductId({
+      path: { bundleId, productId },
+    });
+
+    revalidateTag('products');
+    revalidateTag(`product-${bundleId}`);
+    revalidateTag(`bundle-${bundleId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error removing product from bundle:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to remove product from bundle');
+  }
+}
+
+// =============================================================================
+// PRICING & SUBSCRIPTION MANAGEMENT
+// =============================================================================
+
+/**
+ * Get current pricing for a product
+ */
+export async function getProductCurrentPricing(productId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductByIdPricingCurrent({
+      path: { id: productId },
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching current pricing:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch current pricing');
+  }
+}
+
+/**
+ * Get pricing history for a product
+ */
+export async function getProductPricingHistory(productId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductByIdPricingHistory({
+      path: { id: productId },
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching pricing history:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch pricing history');
+  }
+}
+
+/**
+ * Create pricing for a product
+ */
+export async function createProductPricing(productId: string, pricingData: { price: number; currency?: string; isActive?: boolean }) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await postApiProductByIdPricing({
+      path: { id: productId },
+      body: pricingData,
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to create pricing');
+    }
+
+    revalidateTag('products');
+    revalidateTag(`product-${productId}`);
+    revalidateTag('product-pricing');
+    return response.data;
+  } catch (error) {
+    console.error('Error creating pricing:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to create pricing');
+  }
+}
+
+/**
+ * Get subscription plans for a product
+ */
+export async function getProductSubscriptionPlans(productId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductByIdSubscriptionPlans({
+      path: { id: productId },
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching subscription plans:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch subscription plans');
+  }
+}
+
+/**
+ * Create subscription plan for a product
+ */
+export async function createProductSubscriptionPlan(productId: string, planData: { name: string; price?: number; currency?: string; intervalCount?: number }) {
+  await configureAuthenticatedClient();
+
+  try {
+    const subscriptionPlan: ProductSubscriptionPlan = {
+      productId,
+      name: planData.name,
+      price: planData.price,
+      currency: planData.currency,
+      intervalCount: planData.intervalCount,
+    };
+
+    const response = await postApiProductByIdSubscriptionPlans({
+      path: { id: productId },
+      body: subscriptionPlan,
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to create subscription plan');
+    }
+
+    revalidateTag('products');
+    revalidateTag(`product-${productId}`);
+    revalidateTag('subscription-plans');
+    return response.data;
+  } catch (error) {
+    console.error('Error creating subscription plan:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to create subscription plan');
+  }
+}
+
+/**
+ * Get subscription plan by ID
+ */
+export async function getSubscriptionPlan(planId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductSubscriptionPlansByPlanId({
+      path: { planId },
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching subscription plan:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch subscription plan');
+  }
+}
+
+// =============================================================================
+// ACCESS CONTROL
+// =============================================================================
+
+/**
+ * Grant user access to product
+ */
+export async function grantProductAccess(
+  productId: string,
+  userId: string,
+  accessData: { level?: string; expiresAt?: string; metadata?: Record<string, unknown> },
+) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await postApiProductByIdAccessByUserId({
+      path: { id: productId, userId },
+      body: accessData,
+    });
+
+    if (!response.data) {
+      throw new Error('Failed to grant product access');
+    }
+
+    revalidateTag('products');
+    revalidateTag(`product-${productId}`);
+    revalidateTag('product-access');
+    return response.data;
+  } catch (error) {
+    console.error('Error granting product access:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to grant product access');
+  }
+}
+
+/**
+ * Get user access to product
+ */
+export async function getUserProductAccess(productId: string, userId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductByIdAccessByUserId({
+      path: { id: productId, userId },
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user product access:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch user product access');
+  }
+}
+
+/**
+ * Revoke user access to product
+ */
+export async function revokeProductAccess(productId: string, userId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await deleteApiProductByIdAccessByUserId({
+      path: { id: productId, userId },
+    });
+
+    revalidateTag('products');
+    revalidateTag(`product-${productId}`);
+    revalidateTag('product-access');
+    return response.data;
+  } catch (error) {
+    console.error('Error revoking product access:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to revoke product access');
+  }
+}
+
+/**
+ * Get user product relationship
+ */
+export async function getUserProductRelationship(productId: string, userId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductByIdUserProductByUserId({
+      path: { id: productId, userId },
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user product relationship:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch user product relationship');
+  }
+}
+
+// =============================================================================
+// ANALYTICS
+// =============================================================================
+
+/**
+ * Get product analytics count
+ */
+export async function getProductAnalyticsCount(options?: { type?: ProductType; status?: ContentStatus }) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductAnalyticsCount({
+      query: options,
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching product analytics count:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch product analytics count');
+  }
+}
+
+/**
+ * Get product user count analytics
+ */
+export async function getProductUserCount(productId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductByIdAnalyticsUserCount({
+      path: { id: productId },
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching product user count:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch product user count');
+  }
+}
+
+/**
+ * Get product revenue analytics
+ */
+export async function getProductRevenue(productId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const response = await getApiProductByIdAnalyticsRevenue({
+      path: { id: productId },
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching product revenue:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch product revenue');
+  }
+}
+
+// =============================================================================
+// COMPREHENSIVE ANALYTICS
+// =============================================================================
+
+/**
+ * Get comprehensive product analytics dashboard
+ */
+export async function getProductAnalyticsDashboard(productId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const [product, userCount, revenue, pricing] = await Promise.all([
+      getProductById(productId),
+      getProductUserCount(productId),
+      getProductRevenue(productId),
+      getProductCurrentPricing(productId),
+    ]);
+
+    return {
+      product,
+      analytics: {
+        userCount,
+        revenue,
+        pricing,
+      },
+      summary: {
+        productId,
+        generatedAt: new Date().toISOString(),
+      },
+    };
+  } catch (error) {
+    console.error('Error generating product analytics dashboard:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to generate product analytics dashboard');
+  }
+}
+
+/**
+ * Get comprehensive products overview
+ */
+export async function getProductsOverview(options?: { includeAnalytics?: boolean; includePopular?: boolean; includeRecent?: boolean; limit?: number }) {
+  await configureAuthenticatedClient();
+
+  try {
+    const promises: Promise<unknown>[] = [getProducts()];
+
+    if (options?.includeAnalytics) {
+      promises.push(getProductAnalyticsCount());
+    }
+
+    if (options?.includePopular) {
+      promises.push(getPopularProducts());
+    }
+
+    if (options?.includeRecent) {
+      promises.push(getRecentProducts());
+    }
+
+    const [products, analyticsCount, popularProducts, recentProducts] = await Promise.all(promises);
+
+    return {
+      products,
+      analytics: options?.includeAnalytics ? analyticsCount : undefined,
+      popular: options?.includePopular ? popularProducts : undefined,
+      recent: options?.includeRecent ? recentProducts : undefined,
+      summary: {
+        totalProducts: Array.isArray(products) ? products.length : 0,
+        generatedAt: new Date().toISOString(),
+      },
+    };
+  } catch (error) {
+    console.error('Error generating products overview:', error);
+    throw new Error(error instanceof Error ? error.message : 'Failed to generate products overview');
+  }
+}
