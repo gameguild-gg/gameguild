@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
-import { configureAuthenticatedClient, getAuthenticatedSession } from '@/lib/api/authenticated-client';
 import {
   getApiPaymentMethodsMe,
   postApiPaymentIntent,
@@ -21,303 +20,261 @@ import {
   getApiPaymentsStats,
   getApiPaymentsRevenueReport,
 } from '@/lib/api/generated/sdk.gen';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
+import type {
+  GetApiPaymentMethodsMeData,
+  PostApiPaymentIntentData,
+  PostApiPaymentByIdProcessData,
+  PostApiPaymentByIdRefundData,
+  GetApiPaymentByIdData,
+  GetApiPaymentUserByUserIdData,
+  GetApiPaymentStatsData,
+  PostApiPaymentsData,
+  GetApiPaymentsByIdData,
+  GetApiPaymentsMyPaymentsData,
+  GetApiPaymentsUsersByUserIdData,
+  GetApiPaymentsProductsByProductIdData,
+  PostApiPaymentsByIdProcessData,
+  PostApiPaymentsByIdRefundData,
+  PostApiPaymentsByIdCancelData,
+  GetApiPaymentsStatsData,
+  GetApiPaymentsRevenueReportData,
+} from '@/lib/api/generated/types.gen';
 
-// Get my payment methods
-export async function getMyPaymentMethods() {
+// =============================================================================
+// PAYMENT METHODS & SETUP
+// =============================================================================
+
+/**
+ * Get user's payment methods
+ */
+export async function getMyPaymentMethods(data?: GetApiPaymentMethodsMeData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await getApiPaymentMethodsMe();
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get payment methods:', error);
-    return { success: false, error: 'Failed to get payment methods' };
-  }
+  
+  return getApiPaymentMethodsMe({
+    query: data?.query,
+  });
 }
 
-// Create payment intent
-export async function createPaymentIntent(data?: { amount?: number; currency?: string; productId?: string }) {
+/**
+ * Create payment intent
+ */
+export async function createPaymentIntent(data?: PostApiPaymentIntentData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await postApiPaymentIntent({
-      body: data,
-    });
-
-    if (result.data) {
-      revalidateTag('payments');
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to create payment intent:', error);
-    return { success: false, error: 'Failed to create payment intent' };
-  }
+  
+  return postApiPaymentIntent({
+    body: data?.body,
+  });
 }
 
-// Process payment by ID
-export async function processPayment(paymentId: string, data?: { paymentMethodId?: string }) {
+// =============================================================================
+// PAYMENT PROCESSING
+// =============================================================================
+
+/**
+ * Process a payment
+ */
+export async function processPayment(data: PostApiPaymentByIdProcessData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await postApiPaymentByIdProcess({
-      path: { id: paymentId },
-      body: data,
-    });
-
-    if (result.data) {
-      revalidateTag('payments');
-      revalidateTag(`payment-${paymentId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to process payment:', error);
-    return { success: false, error: 'Failed to process payment' };
-  }
+  
+  const result = await postApiPaymentByIdProcess({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate payments cache
+  revalidateTag('payments');
+  
+  return result;
 }
 
-// Refund payment by ID
-export async function refundPayment(paymentId: string, data?: { amount?: number; reason?: string }) {
+/**
+ * Refund a payment
+ */
+export async function refundPayment(data: PostApiPaymentByIdRefundData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await postApiPaymentByIdRefund({
-      path: { id: paymentId },
-      body: data,
-    });
-
-    if (result.data) {
-      revalidateTag('payments');
-      revalidateTag(`payment-${paymentId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to refund payment:', error);
-    return { success: false, error: 'Failed to refund payment' };
-  }
+  
+  const result = await postApiPaymentByIdRefund({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate payments cache
+  revalidateTag('payments');
+  
+  return result;
 }
 
-// Get payment by ID
-export async function getPaymentById(paymentId: string) {
+/**
+ * Create a new payment
+ */
+export async function createPayment(data?: PostApiPaymentsData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await getApiPaymentById({
-      path: { id: paymentId },
-    });
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get payment:', error);
-    return { success: false, error: 'Failed to get payment' };
-  }
+  
+  const result = await postApiPayments({
+    body: data?.body,
+  });
+  
+  // Revalidate payments cache
+  revalidateTag('payments');
+  
+  return result;
 }
 
-// Get payments for a user
-export async function getUserPayments(userId: string) {
+/**
+ * Process payment (alternative API)
+ */
+export async function processPaymentById(data: PostApiPaymentsByIdProcessData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await getApiPaymentUserByUserId({
-      path: { userId },
-    });
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get user payments:', error);
-    return { success: false, error: 'Failed to get user payments' };
-  }
+  
+  const result = await postApiPaymentsByIdProcess({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate payments cache
+  revalidateTag('payments');
+  
+  return result;
 }
 
-// Get payment statistics
-export async function getPaymentStats() {
+/**
+ * Refund payment (alternative API)
+ */
+export async function refundPaymentById(data: PostApiPaymentsByIdRefundData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await getApiPaymentStats();
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get payment stats:', error);
-    return { success: false, error: 'Failed to get payment stats' };
-  }
+  
+  const result = await postApiPaymentsByIdRefund({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate payments cache
+  revalidateTag('payments');
+  
+  return result;
 }
 
-// Create payment
-export async function createPayment(data?: { amount?: number; currency?: string; userId?: string; productId?: string }) {
+/**
+ * Cancel a payment
+ */
+export async function cancelPayment(data: PostApiPaymentsByIdCancelData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await postApiPayments({
-      body: data,
-    });
-
-    if (result.data) {
-      revalidateTag('payments');
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to create payment:', error);
-    return { success: false, error: 'Failed to create payment' };
-  }
+  
+  const result = await postApiPaymentsByIdCancel({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate payments cache
+  revalidateTag('payments');
+  
+  return result;
 }
 
-// Get payments by ID (alternative endpoint)
-export async function getPaymentsById(paymentId: string) {
+// =============================================================================
+// PAYMENT RETRIEVAL
+// =============================================================================
+
+/**
+ * Get a specific payment by ID
+ */
+export async function getPaymentById(data: GetApiPaymentByIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await getApiPaymentsById({
-      path: { id: paymentId },
-    });
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get payments by ID:', error);
-    return { success: false, error: 'Failed to get payments by ID' };
-  }
+  
+  return getApiPaymentById({
+    path: data.path,
+  });
 }
 
-// Get my payments
-export async function getMyPayments() {
+/**
+ * Get payments by payment ID (alternative API)
+ */
+export async function getPaymentsById(data: GetApiPaymentsByIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await getApiPaymentsMyPayments();
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get my payments:', error);
-    return { success: false, error: 'Failed to get my payments' };
-  }
+  
+  return getApiPaymentsById({
+    path: data.path,
+  });
 }
 
-// Get payments by user ID (alternative endpoint)
-export async function getPaymentsByUserId(userId: string) {
+/**
+ * Get current user's payments
+ */
+export async function getMyPayments(data?: GetApiPaymentsMyPaymentsData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await getApiPaymentsUsersByUserId({
-      path: { userId },
-    });
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get payments by user ID:', error);
-    return { success: false, error: 'Failed to get payments by user ID' };
-  }
+  
+  return getApiPaymentsMyPayments({
+    query: data?.query,
+  });
 }
 
-// Get payments by product ID
-export async function getPaymentsByProductId(productId: string) {
+/**
+ * Get payments for a specific user
+ */
+export async function getPaymentsByUser(data: GetApiPaymentUserByUserIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await getApiPaymentsProductsByProductId({
-      path: { productId },
-    });
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get payments by product ID:', error);
-    return { success: false, error: 'Failed to get payments by product ID' };
-  }
+  
+  return getApiPaymentUserByUserId({
+    path: data.path,
+  });
 }
 
-// Process payment (alternative endpoint)
-export async function processPaymentAlternative(paymentId: string, data?: { paymentMethodId?: string }) {
+/**
+ * Get payments for a user (alternative API)
+ */
+export async function getPaymentsByUserId(data: GetApiPaymentsUsersByUserIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await postApiPaymentsByIdProcess({
-      path: { id: paymentId },
-      body: data,
-    });
-
-    if (result.data) {
-      revalidateTag('payments');
-      revalidateTag(`payment-${paymentId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to process payment (alternative):', error);
-    return { success: false, error: 'Failed to process payment' };
-  }
+  
+  return getApiPaymentsUsersByUserId({
+    path: data.path,
+  });
 }
 
-// Refund payment (alternative endpoint)
-export async function refundPaymentAlternative(paymentId: string, data?: { amount?: number; reason?: string }) {
+/**
+ * Get payments for a specific product
+ */
+export async function getPaymentsByProduct(data: GetApiPaymentsProductsByProductIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await postApiPaymentsByIdRefund({
-      path: { id: paymentId },
-      body: data,
-    });
-
-    if (result.data) {
-      revalidateTag('payments');
-      revalidateTag(`payment-${paymentId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to refund payment (alternative):', error);
-    return { success: false, error: 'Failed to refund payment' };
-  }
+  
+  return getApiPaymentsProductsByProductId({
+    path: data.path,
+  });
 }
 
-// Cancel payment
-export async function cancelPayment(paymentId: string, data?: { reason?: string }) {
+// =============================================================================
+// PAYMENT ANALYTICS & REPORTING
+// =============================================================================
+
+/**
+ * Get payment statistics
+ */
+export async function getPaymentStatistics(data?: GetApiPaymentStatsData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await postApiPaymentsByIdCancel({
-      path: { id: paymentId },
-      body: data,
-    });
-
-    if (result.data) {
-      revalidateTag('payments');
-      revalidateTag(`payment-${paymentId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to cancel payment:', error);
-    return { success: false, error: 'Failed to cancel payment' };
-  }
+  
+  return getApiPaymentStats({
+    query: data?.query,
+  });
 }
 
-// Get payments statistics (alternative endpoint)
-export async function getPaymentsStatsAlternative() {
+/**
+ * Get detailed payment statistics
+ */
+export async function getDetailedPaymentStats(data?: GetApiPaymentsStatsData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await getApiPaymentsStats();
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get payments stats:', error);
-    return { success: false, error: 'Failed to get payments stats' };
-  }
+  
+  return getApiPaymentsStats({
+    query: data?.query,
+  });
 }
 
-// Get payments revenue report
-export async function getPaymentsRevenueReport() {
+/**
+ * Get revenue report
+ */
+export async function getRevenueReport(data?: GetApiPaymentsRevenueReportData) {
   await configureAuthenticatedClient();
-
-  try {
-    const result = await getApiPaymentsRevenueReport();
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get payments revenue report:', error);
-    return { success: false, error: 'Failed to get payments revenue report' };
-  }
+  
+  return getApiPaymentsRevenueReport({
+    query: data?.query,
+  });
 }
