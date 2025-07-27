@@ -11,164 +11,131 @@ import {
   postApiSubscriptionByIdCancel,
   postApiSubscriptionByIdResume,
   putApiSubscriptionByIdPaymentMethod,
-  getApiProductByIdSubscriptionPlans,
 } from '@/lib/api/generated/sdk.gen';
 
-// Get my subscriptions
-export async function getMySubscriptions() {
+import type {
+  GetApiSubscriptionMeData,
+  GetApiSubscriptionMeActiveData,
+  GetApiSubscriptionByIdData,
+  GetApiSubscriptionData,
+  PostApiSubscriptionData,
+  PostApiSubscriptionByIdCancelData,
+  PostApiSubscriptionByIdResumeData,
+  PutApiSubscriptionByIdPaymentMethodData,
+} from '@/lib/api/generated/types.gen';
+
+/**
+ * Get current user's subscriptions
+ */
+export async function getMySubscriptionsAction(params?: GetApiSubscriptionMeData) {
   await configureAuthenticatedClient();
+  const result = await getApiSubscriptionMe({
+    ...params,
+  });
 
-  try {
-    const result = await getApiSubscriptionMe();
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get my subscriptions:', error);
-    return { success: false, error: 'Failed to get my subscriptions' };
-  }
+  revalidateTag('my-subscriptions');
+  return result;
 }
 
-// Get my active subscriptions
-export async function getMyActiveSubscriptions() {
+/**
+ * Get current user's active subscriptions
+ */
+export async function getMyActiveSubscriptionsAction(params?: GetApiSubscriptionMeActiveData) {
   await configureAuthenticatedClient();
+  const result = await getApiSubscriptionMeActive({
+    ...params,
+  });
 
-  try {
-    const result = await getApiSubscriptionMeActive();
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get active subscriptions:', error);
-    return { success: false, error: 'Failed to get active subscriptions' };
-  }
+  revalidateTag('my-subscriptions');
+  revalidateTag('my-active-subscriptions');
+  return result;
 }
 
-// Get subscription by ID
-export async function getSubscriptionById(subscriptionId: string) {
+/**
+ * Get a subscription by ID
+ */
+export async function getSubscriptionByIdAction(data: GetApiSubscriptionByIdData) {
   await configureAuthenticatedClient();
+  const result = await getApiSubscriptionById({
+    path: { id: data.path.id },
+  });
 
-  try {
-    const result = await getApiSubscriptionById({
-      path: { id: subscriptionId },
-    });
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get subscription:', error);
-    return { success: false, error: 'Failed to get subscription' };
-  }
+  revalidateTag(`subscription-${data.path.id}`);
+  return result;
 }
 
-// Get all subscriptions
-export async function getAllSubscriptions() {
+/**
+ * Get all subscriptions
+ */
+export async function getSubscriptionsAction(params?: GetApiSubscriptionData) {
   await configureAuthenticatedClient();
+  const result = await getApiSubscription({
+    ...params,
+  });
 
-  try {
-    const result = await getApiSubscription();
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get subscriptions:', error);
-    return { success: false, error: 'Failed to get subscriptions' };
-  }
+  revalidateTag('subscriptions');
+  return result;
 }
 
-// Create subscription
-export async function createSubscription(data?: { planId?: string; paymentMethodId?: string }) {
+/**
+ * Create a new subscription
+ */
+export async function createSubscriptionAction(data: PostApiSubscriptionData) {
   await configureAuthenticatedClient();
+  const result = await postApiSubscription({
+    body: data.body,
+  });
 
-  try {
-    const result = await postApiSubscription({
-      body: data,
-    });
-
-    if (result.data) {
-      revalidateTag('subscriptions');
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to create subscription:', error);
-    return { success: false, error: 'Failed to create subscription' };
-  }
+  revalidateTag('subscriptions');
+  revalidateTag('my-subscriptions');
+  return result;
 }
 
-// Cancel subscription
-export async function cancelSubscription(subscriptionId: string, data?: { reason?: string; cancelAtPeriodEnd?: boolean }) {
+/**
+ * Cancel a subscription
+ */
+export async function cancelSubscriptionAction(data: PostApiSubscriptionByIdCancelData) {
   await configureAuthenticatedClient();
+  const result = await postApiSubscriptionByIdCancel({
+    path: { id: data.path.id },
+    body: data.body,
+  });
 
-  try {
-    const result = await postApiSubscriptionByIdCancel({
-      path: { id: subscriptionId },
-      body: data,
-    });
-
-    if (result.data) {
-      revalidateTag('subscriptions');
-      revalidateTag(`subscription-${subscriptionId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to cancel subscription:', error);
-    return { success: false, error: 'Failed to cancel subscription' };
-  }
+  revalidateTag('subscriptions');
+  revalidateTag('my-subscriptions');
+  revalidateTag('my-active-subscriptions');
+  revalidateTag(`subscription-${data.path.id}`);
+  return result;
 }
 
-// Resume subscription
-export async function resumeSubscription(subscriptionId: string) {
+/**
+ * Resume a cancelled subscription
+ */
+export async function resumeSubscriptionAction(data: PostApiSubscriptionByIdResumeData) {
   await configureAuthenticatedClient();
+  const result = await postApiSubscriptionByIdResume({
+    path: { id: data.path.id },
+  });
 
-  try {
-    const result = await postApiSubscriptionByIdResume({
-      path: { id: subscriptionId },
-    });
-
-    if (result.data) {
-      revalidateTag('subscriptions');
-      revalidateTag(`subscription-${subscriptionId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to resume subscription:', error);
-    return { success: false, error: 'Failed to resume subscription' };
-  }
+  revalidateTag('subscriptions');
+  revalidateTag('my-subscriptions');
+  revalidateTag('my-active-subscriptions');
+  revalidateTag(`subscription-${data.path.id}`);
+  return result;
 }
 
-// Update subscription payment method
-export async function updateSubscriptionPaymentMethod(subscriptionId: string, data?: { paymentMethodId?: string }) {
+/**
+ * Update payment method for a subscription
+ */
+export async function updateSubscriptionPaymentMethodAction(data: PutApiSubscriptionByIdPaymentMethodData) {
   await configureAuthenticatedClient();
+  const result = await putApiSubscriptionByIdPaymentMethod({
+    path: { id: data.path.id },
+    body: data.body,
+  });
 
-  try {
-    const result = await putApiSubscriptionByIdPaymentMethod({
-      path: { id: subscriptionId },
-      body: data,
-    });
-
-    if (result.data) {
-      revalidateTag('subscriptions');
-      revalidateTag(`subscription-${subscriptionId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to update subscription payment method:', error);
-    return { success: false, error: 'Failed to update subscription payment method' };
-  }
-}
-
-// Get subscription plans for a product
-export async function getProductSubscriptionPlans(productId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const result = await getApiProductByIdSubscriptionPlans({
-      path: { id: productId },
-    });
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get product subscription plans:', error);
-    return { success: false, error: 'Failed to get product subscription plans' };
-  }
+  revalidateTag('subscriptions');
+  revalidateTag('my-subscriptions');
+  revalidateTag(`subscription-${data.path.id}`);
+  return result;
 }
