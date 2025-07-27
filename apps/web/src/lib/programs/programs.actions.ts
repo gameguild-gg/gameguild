@@ -1,359 +1,270 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
   getApiProgram,
   postApiProgram,
+  deleteApiProgramById,
   getApiProgramById,
   putApiProgramById,
-  deleteApiProgramById,
   getApiProgramPublished,
   getApiProgramCategoryByCategory,
   getApiProgramDifficultyByDifficulty,
-  getApiProgramSearch,
   getApiProgramCreatorByCreatorId,
   getApiProgramPopular,
   getApiProgramRecent,
+  getApiProgramSearch,
+  getApiProgramSlugBySlug,
   getApiProgramByIdWithContent,
   postApiProgramByIdClone,
-  getApiProgramSlugBySlug,
   postApiProgramByIdContent,
   deleteApiProgramByIdContentByContentId,
+  putApiProgramByIdContentByContentId,
+  postApiProgramByIdContentReorder,
+  deleteApiProgramByIdUsersByUserId,
+  postApiProgramByIdUsersByUserId,
+  getApiProgramByIdUsers,
+  getApiProgramByIdUsersByUserIdProgress,
   getApiProgramsByProgramIdContent,
-  getApiProgramsByProgramIdContentById,
-  putApiProgramsByProgramIdContentById,
+  postApiProgramsByProgramIdContent,
   getApiProgramsByProgramIdContentTopLevel,
   deleteApiProgramsByProgramIdContentById,
+  getApiProgramsByProgramIdContentById,
+  putApiProgramsByProgramIdContentById,
   getApiProgramsByProgramIdContentByParentIdChildren,
   postApiProgramsByProgramIdContentReorder,
   postApiProgramsByProgramIdContentByIdMove,
   getApiProgramsByProgramIdContentRequired,
-  getApiProgramsByProgramIdContentByTypeByType,
-  getApiProgramsByProgramIdContentByVisibilityByVisibility,
-  postApiProgramsByProgramIdContentSearch,
-  getApiProgramsByProgramIdContentStats,
-  postApiProgramByIdUsersByUserId,
-  getApiProgramByIdUsers,
-  deleteApiProgramByIdUsersByUserId,
-  postApiProgramByIdSubmit,
-  postApiProgramByIdApprove,
-  postApiProgramByIdReject,
-  postApiProgramByIdWithdraw,
 } from '@/lib/api/generated/sdk.gen';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import type {
-  CreateProgramDto,
-  CloneProgramDto,
-  CreateContentDto,
-  UpdateContentDto,
-  ProgramCategory,
-  ProgramDifficulty,
-  ProgramContentType,
-  Visibility,
+  GetApiProgramData,
+  PostApiProgramData,
+  DeleteApiProgramByIdData,
+  GetApiProgramByIdData,
+  PutApiProgramByIdData,
+  GetApiProgramPublishedData,
+  GetApiProgramCategoryByCategoryData,
+  GetApiProgramDifficultyByDifficultyData,
+  GetApiProgramCreatorByCreatorIdData,
+  GetApiProgramPopularData,
+  GetApiProgramRecentData,
+  GetApiProgramSearchData,
+  GetApiProgramSlugBySlugData,
+  GetApiProgramByIdWithContentData,
+  PostApiProgramByIdCloneData,
+  PostApiProgramByIdContentData,
+  DeleteApiProgramByIdContentByContentIdData,
+  PutApiProgramByIdContentByContentIdData,
+  PostApiProgramByIdContentReorderData,
+  DeleteApiProgramByIdUsersByUserIdData,
+  PostApiProgramByIdUsersByUserIdData,
+  GetApiProgramByIdUsersData,
+  GetApiProgramByIdUsersByUserIdProgressData,
+  GetApiProgramsByProgramIdContentData,
+  PostApiProgramsByProgramIdContentData,
+  GetApiProgramsByProgramIdContentTopLevelData,
+  DeleteApiProgramsByProgramIdContentByIdData,
+  GetApiProgramsByProgramIdContentByIdData,
+  PutApiProgramsByProgramIdContentByIdData,
+  GetApiProgramsByProgramIdContentByParentIdChildrenData,
+  PostApiProgramsByProgramIdContentReorderData,
+  PostApiProgramsByProgramIdContentByIdMoveData,
+  GetApiProgramsByProgramIdContentRequiredData,
 } from '@/lib/api/generated/types.gen';
 
 // =============================================================================
-// CORE PROGRAM MANAGEMENT
+// PROGRAM MANAGEMENT
 // =============================================================================
 
 /**
- * Get all programs with optional filters
+ * Get all programs with optional filtering
  */
-export async function getPrograms(params?: { skip?: number; take?: number }) {
+export async function getPrograms(data?: GetApiProgramData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgram({
-      query: {
-        skip: params?.skip,
-        take: params?.take,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching programs:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch programs');
-  }
+  
+  return getApiProgram({
+    query: data?.query,
+  });
 }
 
 /**
  * Create a new program
  */
-export async function createProgram(programData: CreateProgramDto) {
+export async function createProgram(data?: PostApiProgramData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiProgram({
-      body: programData,
-    });
-
-    revalidateTag('programs');
-    revalidateTag('programs-published');
-    return response.data;
-  } catch (error) {
-    console.error('Error creating program:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to create program');
-  }
+  
+  const result = await postApiProgram({
+    body: data?.body,
+  });
+  
+  // Revalidate programs cache
+  revalidateTag('programs');
+  
+  return result;
 }
 
 /**
- * Get program by ID
+ * Delete a program by ID
  */
-export async function getProgramById(programId: string) {
+export async function deleteProgram(data: DeleteApiProgramByIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramById({
-      path: { id: programId },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching program by ID:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch program');
-  }
+  
+  const result = await deleteApiProgramById({
+    path: data.path,
+  });
+  
+  // Revalidate programs cache
+  revalidateTag('programs');
+  
+  return result;
 }
 
 /**
- * Update program by ID
+ * Get a specific program by ID
  */
-export async function updateProgram(programId: string, programData: CreateProgramDto) {
+export async function getProgramById(data: GetApiProgramByIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await putApiProgramById({
-      path: { id: programId },
-      body: programData,
-    });
-
-    revalidateTag('programs');
-    revalidateTag('programs-published');
-    revalidateTag(`program-${programId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error updating program:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to update program');
-  }
+  
+  return getApiProgramById({
+    path: data.path,
+  });
 }
 
 /**
- * Delete program by ID
+ * Update a program by ID
  */
-export async function deleteProgram(programId: string) {
+export async function updateProgram(data: PutApiProgramByIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await deleteApiProgramById({
-      path: { id: programId },
-    });
-
-    revalidateTag('programs');
-    revalidateTag('programs-published');
-    revalidateTag(`program-${programId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error deleting program:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to delete program');
-  }
+  
+  const result = await putApiProgramById({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate programs cache
+  revalidateTag('programs');
+  
+  return result;
 }
 
 /**
- * Get program by slug (SEO-friendly)
+ * Get a program with its content
  */
-export async function getProgramBySlug(slug: string) {
+export async function getProgramWithContent(data: GetApiProgramByIdWithContentData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramSlugBySlug({
-      path: { slug },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching program by slug:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch program');
-  }
+  
+  return getApiProgramByIdWithContent({
+    path: data.path,
+  });
 }
 
 /**
- * Get program with all content included
+ * Clone a program
  */
-export async function getProgramWithContent(programId: string) {
+export async function cloneProgram(data: PostApiProgramByIdCloneData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramByIdWithContent({
-      path: { id: programId },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching program with content:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch program with content');
-  }
-}
-
-/**
- * Clone an existing program
- */
-export async function cloneProgram(programId: string, cloneData?: CloneProgramDto) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiProgramByIdClone({
-      path: { id: programId },
-      body: cloneData,
-    });
-
-    revalidateTag('programs');
-    return response.data;
-  } catch (error) {
-    console.error('Error cloning program:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to clone program');
-  }
+  
+  const result = await postApiProgramByIdClone({
+    path: data.path,
+  });
+  
+  // Revalidate programs cache
+  revalidateTag('programs');
+  
+  return result;
 }
 
 // =============================================================================
-// PROGRAM DISCOVERY & FILTERING
+// PROGRAM DISCOVERY & SEARCH
 // =============================================================================
 
 /**
  * Get published programs
  */
-export async function getPublishedPrograms(params?: { skip?: number; take?: number }) {
+export async function getPublishedPrograms(data?: GetApiProgramPublishedData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramPublished({
-      query: {
-        skip: params?.skip,
-        take: params?.take,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching published programs:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch published programs');
-  }
-}
-
-/**
- * Get programs by category
- */
-export async function getProgramsByCategory(category: ProgramCategory, params?: { skip?: number; take?: number }) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramCategoryByCategory({
-      path: { category },
-      query: {
-        skip: params?.skip,
-        take: params?.take,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching programs by category:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch programs by category');
-  }
-}
-
-/**
- * Get programs by difficulty level
- */
-export async function getProgramsByDifficulty(difficulty: ProgramDifficulty, params?: { skip?: number; take?: number }) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramDifficultyByDifficulty({
-      path: { difficulty },
-      query: {
-        skip: params?.skip,
-        take: params?.take,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching programs by difficulty:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch programs by difficulty');
-  }
+  
+  return getApiProgramPublished({
+    query: data?.query,
+  });
 }
 
 /**
  * Search programs
  */
-export async function searchPrograms(searchTerm: string, params?: { skip?: number; take?: number }) {
+export async function searchPrograms(data?: GetApiProgramSearchData) {
   await configureAuthenticatedClient();
+  
+  return getApiProgramSearch({
+    query: data?.query,
+  });
+}
 
-  try {
-    const response = await getApiProgramSearch({
-      query: {
-        searchTerm,
-        skip: params?.skip,
-        take: params?.take,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error searching programs:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to search programs');
-  }
+/**
+ * Get program by slug
+ */
+export async function getProgramBySlug(data: GetApiProgramSlugBySlugData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProgramSlugBySlug({
+    path: data.path,
+  });
+}
+
+/**
+ * Get programs by category
+ */
+export async function getProgramsByCategory(data: GetApiProgramCategoryByCategoryData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProgramCategoryByCategory({
+    path: data.path,
+  });
+}
+
+/**
+ * Get programs by difficulty
+ */
+export async function getProgramsByDifficulty(data: GetApiProgramDifficultyByDifficultyData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProgramDifficultyByDifficulty({
+    path: data.path,
+  });
 }
 
 /**
  * Get programs by creator
  */
-export async function getProgramsByCreator(creatorId: string, params?: { skip?: number; take?: number }) {
+export async function getProgramsByCreator(data: GetApiProgramCreatorByCreatorIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramCreatorByCreatorId({
-      path: { creatorId },
-      query: {
-        skip: params?.skip,
-        take: params?.take,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching programs by creator:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch programs by creator');
-  }
+  
+  return getApiProgramCreatorByCreatorId({
+    path: data.path,
+  });
 }
 
 /**
  * Get popular programs
  */
-export async function getPopularPrograms(params?: { count?: number }) {
+export async function getPopularPrograms(data?: GetApiProgramPopularData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramPopular({
-      query: {
-        count: params?.count,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching popular programs:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch popular programs');
-  }
+  
+  return getApiProgramPopular({
+    query: data?.query,
+  });
 }
 
 /**
  * Get recent programs
  */
-export async function getRecentPrograms(params?: { count?: number }) {
+export async function getRecentPrograms(data?: GetApiProgramRecentData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramRecent({
-      query: {
-        count: params?.count,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching recent programs:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch recent programs');
-  }
+  
+  return getApiProgramRecent({
+    query: data?.query,
+  });
 }
 
 // =============================================================================
@@ -361,443 +272,181 @@ export async function getRecentPrograms(params?: { count?: number }) {
 // =============================================================================
 
 /**
- * Get all content for a program
+ * Create program content
  */
-export async function getProgramContent(programId: string) {
+export async function createProgramContent(data: PostApiProgramByIdContentData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramsByProgramIdContent({
-      path: { programId },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching program content:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch program content');
-  }
+  
+  const result = await postApiProgramByIdContent({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate program content cache
+  revalidateTag('program-content');
+  
+  return result;
 }
 
 /**
- * Add content to a program
+ * Delete program content
  */
-export async function addContentToProgram(programId: string, contentData: CreateContentDto) {
+export async function deleteProgramContent(data: DeleteApiProgramByIdContentByContentIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiProgramByIdContent({
-      path: { id: programId },
-      body: contentData,
-    });
-
-    revalidateTag(`program-${programId}`);
-    revalidateTag(`program-content-${programId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error adding content to program:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to add content to program');
-  }
-}
-
-/**
- * Get specific content by ID
- */
-export async function getProgramContentById(programId: string, contentId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramsByProgramIdContentById({
-      path: { programId, id: contentId },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching program content by ID:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch program content');
-  }
+  
+  const result = await deleteApiProgramByIdContentByContentId({
+    path: data.path,
+  });
+  
+  // Revalidate program content cache
+  revalidateTag('program-content');
+  
+  return result;
 }
 
 /**
  * Update program content
  */
-export async function updateProgramContent(programId: string, contentId: string, contentData: UpdateContentDto) {
+export async function updateProgramContent(data: PutApiProgramByIdContentByContentIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await putApiProgramsByProgramIdContentById({
-      path: { programId, id: contentId },
-      body: { ...contentData, id: contentId },
-    });
-
-    revalidateTag(`program-${programId}`);
-    revalidateTag(`program-content-${programId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error updating program content:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to update program content');
-  }
-}
-
-/**
- * Remove content from program
- */
-export async function removeProgramContent(programId: string, contentId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await deleteApiProgramsByProgramIdContentById({
-      path: { programId, id: contentId },
-    });
-
-    revalidateTag(`program-${programId}`);
-    revalidateTag(`program-content-${programId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error removing program content:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to remove program content');
-  }
-}
-
-// =============================================================================
-// PROGRAM USER MANAGEMENT
-// =============================================================================
-
-/**
- * Get users enrolled in a program
- */
-export async function getProgramUsers(programId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramByIdUsers({
-      path: { id: programId },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching program users:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch program users');
-  }
-}
-
-/**
- * Enroll user in program
- */
-export async function enrollUserInProgram(programId: string, userId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiProgramByIdUsersByUserId({
-      path: { id: programId, userId },
-    });
-
-    revalidateTag(`program-${programId}`);
-    revalidateTag(`program-users-${programId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error enrolling user in program:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to enroll user in program');
-  }
-}
-
-/**
- * Remove user from program
- */
-export async function removeUserFromProgram(programId: string, userId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await deleteApiProgramByIdUsersByUserId({
-      path: { id: programId, userId },
-    });
-
-    revalidateTag(`program-${programId}`);
-    revalidateTag(`program-users-${programId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error removing user from program:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to remove user from program');
-  }
-}
-
-// =============================================================================
-// PROGRAM APPROVAL WORKFLOW
-// =============================================================================
-
-/**
- * Submit program for approval
- */
-export async function submitProgramForApproval(programId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiProgramByIdSubmit({
-      path: { id: programId },
-    });
-
-    revalidateTag(`program-${programId}`);
-    revalidateTag('programs');
-    return response.data;
-  } catch (error) {
-    console.error('Error submitting program for approval:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to submit program for approval');
-  }
-}
-
-/**
- * Approve a program
- */
-export async function approveProgram(programId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiProgramByIdApprove({
-      path: { id: programId },
-    });
-
-    revalidateTag(`program-${programId}`);
-    revalidateTag('programs');
-    revalidateTag('programs-published');
-    return response.data;
-  } catch (error) {
-    console.error('Error approving program:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to approve program');
-  }
-}
-
-/**
- * Reject a program
- */
-export async function rejectProgram(programId: string, rejectionReason?: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiProgramByIdReject({
-      path: { id: programId },
-      body: rejectionReason ? { reason: rejectionReason } : undefined,
-    });
-
-    revalidateTag(`program-${programId}`);
-    revalidateTag('programs');
-    return response.data;
-  } catch (error) {
-    console.error('Error rejecting program:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to reject program');
-  }
-}
-
-/**
- * Withdraw a program from approval
- */
-export async function withdrawProgram(programId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiProgramByIdWithdraw({
-      path: { id: programId },
-    });
-
-    revalidateTag(`program-${programId}`);
-    revalidateTag('programs');
-    return response.data;
-  } catch (error) {
-    console.error('Error withdrawing program:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to withdraw program');
-  }
-}
-
-// =============================================================================
-// ADVANCED CONTENT MANAGEMENT
-// =============================================================================
-
-/**
- * Get top-level content for a program
- */
-export async function getProgramTopLevelContent(programId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramsByProgramIdContentTopLevel({
-      path: { programId },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching program top-level content:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch program top-level content');
-  }
-}
-
-/**
- * Get children content by parent ID
- */
-export async function getProgramContentChildren(programId: string, parentId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramsByProgramIdContentByParentIdChildren({
-      path: { programId, parentId },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching program content children:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch program content children');
-  }
+  
+  const result = await putApiProgramByIdContentByContentId({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate program content cache
+  revalidateTag('program-content');
+  
+  return result;
 }
 
 /**
  * Reorder program content
  */
-export async function reorderProgramContent(
-  programId: string,
-  reorderData: {
-    contentIds: string[];
-    newOrder: number[];
-  },
-) {
+export async function reorderProgramContent(data: PostApiProgramByIdContentReorderData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiProgramsByProgramIdContentReorder({
-      path: { programId },
-      body: reorderData,
-    });
-
-    revalidateTag(`program-${programId}`);
-    revalidateTag(`program-content-${programId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error reordering program content:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to reorder program content');
-  }
+  
+  const result = await postApiProgramByIdContentReorder({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate program content cache
+  revalidateTag('program-content');
+  
+  return result;
 }
 
 /**
- * Move content to different parent/position
+ * Get program content (alternative API)
  */
-export async function moveProgramContent(
-  programId: string,
-  contentId: string,
-  moveData: {
-    newParentId?: string;
-    newSortOrder: number;
-  },
-) {
+export async function getProgramContent(data: GetApiProgramsByProgramIdContentData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiProgramsByProgramIdContentByIdMove({
-      path: { programId, id: contentId },
-      body: {
-        contentId,
-        newParentId: moveData.newParentId,
-        newSortOrder: moveData.newSortOrder,
-      },
-    });
-
-    revalidateTag(`program-${programId}`);
-    revalidateTag(`program-content-${programId}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error moving program content:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to move program content');
-  }
+  
+  return getApiProgramsByProgramIdContent({
+    path: data.path,
+  });
 }
 
 /**
- * Get required content for a program
+ * Get top-level program content
  */
-export async function getProgramRequiredContent(programId: string) {
+export async function getTopLevelProgramContent(data: GetApiProgramsByProgramIdContentTopLevelData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramsByProgramIdContentRequired({
-      path: { programId },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching program required content:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch program required content');
-  }
+  
+  return getApiProgramsByProgramIdContentTopLevel({
+    path: data.path,
+  });
 }
 
 /**
- * Get content by type
+ * Get program content by ID
  */
-export async function getProgramContentByType(programId: string, contentType: ProgramContentType) {
+export async function getProgramContentById(data: GetApiProgramsByProgramIdContentByIdData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramsByProgramIdContentByTypeByType({
-      path: { programId, type: contentType },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching program content by type:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch program content by type');
-  }
+  
+  return getApiProgramsByProgramIdContentById({
+    path: data.path,
+  });
 }
 
 /**
- * Get content by visibility
+ * Get program content children
  */
-export async function getProgramContentByVisibility(programId: string, visibility: Visibility) {
+export async function getProgramContentChildren(data: GetApiProgramsByProgramIdContentByParentIdChildrenData) {
   await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiProgramsByProgramIdContentByVisibilityByVisibility({
-      path: { programId, visibility },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching program content by visibility:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch program content by visibility');
-  }
+  
+  return getApiProgramsByProgramIdContentByParentIdChildren({
+    path: data.path,
+  });
 }
 
 /**
- * Search program content
+ * Get required program content
  */
-export async function searchProgramContent(
-  programId: string,
-  searchData: {
-    searchTerm: string;
-    type?: ProgramContentType;
-    visibility?: Visibility;
-    isRequired?: boolean;
-    parentId?: string;
-  },
-) {
+export async function getRequiredProgramContent(data: GetApiProgramsByProgramIdContentRequiredData) {
   await configureAuthenticatedClient();
+  
+  return getApiProgramsByProgramIdContentRequired({
+    path: data.path,
+  });
+}
 
-  try {
-    const response = await postApiProgramsByProgramIdContentSearch({
-      path: { programId },
-      body: {
-        programId,
-        searchTerm: searchData.searchTerm,
-        type: searchData.type,
-        visibility: searchData.visibility,
-        isRequired: searchData.isRequired,
-        parentId: searchData.parentId,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error searching program content:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to search program content');
-  }
+// =============================================================================
+// PROGRAM ENROLLMENT & USER MANAGEMENT
+// =============================================================================
+
+/**
+ * Enroll user in program
+ */
+export async function enrollUserInProgram(data: PostApiProgramByIdUsersByUserIdData) {
+  await configureAuthenticatedClient();
+  
+  const result = await postApiProgramByIdUsersByUserId({
+    path: data.path,
+  });
+  
+  // Revalidate program enrollments cache
+  revalidateTag('program-enrollments');
+  
+  return result;
 }
 
 /**
- * Get program content statistics
+ * Remove user from program
  */
-export async function getProgramContentStats(programId: string) {
+export async function removeUserFromProgram(data: DeleteApiProgramByIdUsersByUserIdData) {
   await configureAuthenticatedClient();
+  
+  const result = await deleteApiProgramByIdUsersByUserId({
+    path: data.path,
+  });
+  
+  // Revalidate program enrollments cache
+  revalidateTag('program-enrollments');
+  
+  return result;
+}
 
-  try {
-    const response = await getApiProgramsByProgramIdContentStats({
-      path: { programId },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching program content stats:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch program content stats');
-  }
+/**
+ * Get program users
+ */
+export async function getProgramUsers(data: GetApiProgramByIdUsersData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProgramByIdUsers({
+    path: data.path,
+  });
+}
+
+/**
+ * Get user progress in program
+ */
+export async function getUserProgramProgress(data: GetApiProgramByIdUsersByUserIdProgressData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProgramByIdUsersByUserIdProgress({
+    path: data.path,
+  });
 }
