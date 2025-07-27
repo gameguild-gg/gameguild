@@ -1,8 +1,6 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
-import { auth } from '@/auth';
-import { environment } from '@/configs/environment';
 import {
   deleteApiProjectsById,
   getApiProjects,
@@ -11,384 +9,257 @@ import {
   getApiProjectsPopular,
   getApiProjectsRecent,
   getApiProjectsSearch,
+  getApiProjectsSlugBySlug,
+  getApiProjectsByIdStatistics,
+  getApiProjectsCategoryByCategoryId,
+  getApiProjectsCreatorByCreatorId,
   postApiProjects,
   postApiProjectsByIdArchive,
   postApiProjectsByIdPublish,
   postApiProjectsByIdUnpublish,
   putApiProjectsById,
 } from '@/lib/api/generated/sdk.gen';
-import type { PostApiProjectsData, Project, PutApiProjectsByIdData } from '@/lib/api/generated/types.gen';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
+import type {
+  PostApiProjectsData,
+  PutApiProjectsByIdData,
+  GetApiProjectsData,
+  DeleteApiProjectsByIdData,
+  GetApiProjectsByIdData,
+  GetApiProjectsSlugBySlugData,
+  PostApiProjectsByIdPublishData,
+  PostApiProjectsByIdUnpublishData,
+  PostApiProjectsByIdArchiveData,
+  GetApiProjectsSearchData,
+  GetApiProjectsPopularData,
+  GetApiProjectsRecentData,
+  GetApiProjectsFeaturedData,
+  GetApiProjectsByIdStatisticsData,
+  GetApiProjectsCategoryByCategoryIdData,
+  GetApiProjectsCreatorByCreatorIdData,
+} from '@/lib/api/generated/types.gen';
 
-// Get all projects with optional filtering
-export async function getProjectsData(params?: {
-  searchTerm?: string;
-  categoryId?: string;
-  creatorId?: string;
-  type?: string;
-  status?: string;
-  visibility?: number;
-  skip?: number;
-  take?: number;
-}) {
-  const session = await auth();
+// =============================================================================
+// PROJECT CRUD OPERATIONS
+// =============================================================================
 
-  if (!session?.accessToken) {
-    throw new Error('Authentication required');
-  }
-
-  try {
-    const response = await getApiProjects({
-      baseUrl: environment.apiBaseUrl,
-      query: params,
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Cache-Control': 'no-store',
-      },
-    });
-
-    if (!response.data) {
-      throw new Error('Failed to fetch projects');
-    }
-
-    return {
-      projects: response.data,
-      total: response.data.length,
-    };
-  } catch (error) {
-    console.error('Error fetching projects:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch projects');
-  }
+/**
+ * Get all projects with optional filtering
+ */
+export async function getProjects(data?: GetApiProjectsData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProjects({
+    query: data?.query,
+  });
 }
 
-// Get a single project by ID
-export async function getProjectById(id: string) {
-  const session = await auth();
-
-  if (!session?.accessToken) {
-    throw new Error('Authentication required');
-  }
-
-  try {
-    const response = await getApiProjectsById({
-      path: { id },
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Cache-Control': 'no-store',
-      },
-    });
-
-    if (!response.data) {
-      throw new Error('Project not found');
-    }
-
-    return response.data as Project;
-  } catch (error) {
-    console.error('Error fetching project:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch project');
-  }
+/**
+ * Create a new project
+ */
+export async function createProject(data?: PostApiProjectsData) {
+  await configureAuthenticatedClient();
+  
+  const result = await postApiProjects({
+    body: data?.body,
+  });
+  
+  // Revalidate projects cache
+  revalidateTag('projects');
+  
+  return result;
 }
 
-// Create a new project
-export async function createProject(projectData: {
-  title: string;
-  description?: string;
-  shortDescription?: string;
-  visibility: number;
-  category?: string;
-  type?: string;
-  developmentStatus?: string;
-  websiteUrl?: string;
-  repositoryUrl?: string;
-  downloadUrl?: string;
-  tags?: string[];
-  imageUrl?: string;
-}) {
-  const session = await auth();
-
-  if (!session?.accessToken) {
-    throw new Error('Authentication required');
-  }
-
-  try {
-    const response = await postApiProjects({
-      body: {
-        ...projectData,
-        tags: projectData.tags?.join(','),
-      } as PostApiProjectsData['body'],
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.data) {
-      throw new Error('Failed to create project');
-    }
-
-    // Revalidate projects cache
-    revalidateTag('projects');
-
-    return response.data as Project;
-  } catch (error) {
-    console.error('Error creating project:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to create project');
-  }
+/**
+ * Delete a project by ID
+ */
+export async function deleteProject(data: DeleteApiProjectsByIdData) {
+  await configureAuthenticatedClient();
+  
+  const result = await deleteApiProjectsById({
+    path: data.path,
+  });
+  
+  // Revalidate projects cache
+  revalidateTag('projects');
+  
+  return result;
 }
 
-// Update an existing project
-export async function updateProject(
-  id: string,
-  projectData: {
-    title?: string;
-    description?: string;
-    shortDescription?: string;
-    visibility?: number;
-    category?: string;
-    type?: string;
-    developmentStatus?: string;
-    websiteUrl?: string;
-    repositoryUrl?: string;
-    downloadUrl?: string;
-    tags?: string[];
-    imageUrl?: string;
-  },
-) {
-  const session = await auth();
-
-  if (!session?.accessToken) {
-    throw new Error('Authentication required');
-  }
-
-  try {
-    const response = await putApiProjectsById({
-      path: { id },
-      body: {
-        ...projectData,
-        tags: projectData.tags?.join(','),
-      } as PutApiProjectsByIdData['body'],
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.data) {
-      throw new Error('Failed to update project');
-    }
-
-    // Revalidate projects cache
-    revalidateTag('projects');
-
-    return response.data as Project;
-  } catch (error) {
-    console.error('Error updating project:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to update project');
-  }
+/**
+ * Get a specific project by ID
+ */
+export async function getProjectById(data: GetApiProjectsByIdData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProjectsById({
+    path: data.path,
+  });
 }
 
-// Delete a project
-export async function deleteProject(id: string) {
-  const session = await auth();
-
-  if (!session?.accessToken) {
-    throw new Error('Authentication required');
-  }
-
-  try {
-    await deleteApiProjectsById({
-      path: { id },
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-      },
-    });
-
-    // Revalidate projects cache
-    revalidateTag('projects');
-
-    return { success: true };
-  } catch (error) {
-    console.error('Error deleting project:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to delete project');
-  }
+/**
+ * Update a project by ID
+ */
+export async function updateProject(data: PutApiProjectsByIdData) {
+  await configureAuthenticatedClient();
+  
+  const result = await putApiProjectsById({
+    path: data.path,
+    body: data.body,
+  });
+  
+  // Revalidate projects cache
+  revalidateTag('projects');
+  
+  return result;
 }
 
-// Publish a project
-export async function publishProject(id: string) {
-  const session = await auth();
-
-  if (!session?.accessToken) {
-    throw new Error('Authentication required');
-  }
-
-  try {
-    const response = await postApiProjectsByIdPublish({
-      path: { id },
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-      },
-    });
-
-    // Revalidate projects cache
-    revalidateTag('projects');
-
-    return response.data;
-  } catch (error) {
-    console.error('Error publishing project:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to publish project');
-  }
+/**
+ * Get a project by slug
+ */
+export async function getProjectBySlug(data: GetApiProjectsSlugBySlugData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProjectsSlugBySlug({
+    path: data.path,
+  });
 }
 
-// Unpublish a project
-export async function unpublishProject(id: string) {
-  const session = await auth();
+// =============================================================================
+// PROJECT LIFECYCLE MANAGEMENT
+// =============================================================================
 
-  if (!session?.accessToken) {
-    throw new Error('Authentication required');
-  }
-
-  try {
-    const response = await postApiProjectsByIdUnpublish({
-      path: { id },
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-      },
-    });
-
-    // Revalidate projects cache
-    revalidateTag('projects');
-
-    return response.data;
-  } catch (error) {
-    console.error('Error unpublishing project:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to unpublish project');
-  }
+/**
+ * Publish a project
+ */
+export async function publishProject(data: PostApiProjectsByIdPublishData) {
+  await configureAuthenticatedClient();
+  
+  const result = await postApiProjectsByIdPublish({
+    path: data.path,
+  });
+  
+  // Revalidate projects cache
+  revalidateTag('projects');
+  
+  return result;
 }
 
-// Archive a project
-export async function archiveProject(id: string) {
-  const session = await auth();
-
-  if (!session?.accessToken) {
-    throw new Error('Authentication required');
-  }
-
-  try {
-    const response = await postApiProjectsByIdArchive({
-      path: { id },
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-      },
-    });
-
-    // Revalidate projects cache
-    revalidateTag('projects');
-
-    return response.data;
-  } catch (error) {
-    console.error('Error archiving project:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to archive project');
-  }
+/**
+ * Unpublish a project
+ */
+export async function unpublishProject(data: PostApiProjectsByIdUnpublishData) {
+  await configureAuthenticatedClient();
+  
+  const result = await postApiProjectsByIdUnpublish({
+    path: data.path,
+  });
+  
+  // Revalidate projects cache
+  revalidateTag('projects');
+  
+  return result;
 }
 
-// Search projects
-export async function searchProjects(
-  query: string,
-  filters?: {
-    category?: string;
-    type?: string;
-    status?: string;
-  },
-) {
-  const session = await auth();
-
-  if (!session?.accessToken) {
-    throw new Error('Authentication required');
-  }
-
-  try {
-    const response = await getApiProjectsSearch({
-      query: { q: query, ...filters },
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Cache-Control': 'no-store',
-      },
-    });
-
-    return response.data as { projects: Project[]; total: number };
-  } catch (error) {
-    console.error('Error searching projects:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to search projects');
-  }
+/**
+ * Archive a project
+ */
+export async function archiveProject(data: PostApiProjectsByIdArchiveData) {
+  await configureAuthenticatedClient();
+  
+  const result = await postApiProjectsByIdArchive({
+    path: data.path,
+  });
+  
+  // Revalidate projects cache
+  revalidateTag('projects');
+  
+  return result;
 }
 
-// Get popular projects
-export async function getPopularProjects(limit = 10) {
-  const session = await auth();
+// =============================================================================
+// PROJECT DISCOVERY & SEARCH
+// =============================================================================
 
-  if (!session?.accessToken) {
-    throw new Error('Authentication required');
-  }
-
-  try {
-    const response = await getApiProjectsPopular({
-      query: { limit },
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Cache-Control': 'no-store',
-      },
-    });
-
-    return response.data as unknown as { projects: Project[] };
-  } catch (error) {
-    console.error('Error fetching popular projects:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch popular projects');
-  }
+/**
+ * Search projects
+ */
+export async function searchProjects(data?: GetApiProjectsSearchData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProjectsSearch({
+    query: data?.query,
+  });
 }
 
-// Get recent projects
-export async function getRecentProjects(limit = 10) {
-  const session = await auth();
-
-  if (!session?.accessToken) {
-    throw new Error('Authentication required');
-  }
-
-  try {
-    const response = await getApiProjectsRecent({
-      query: { limit },
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Cache-Control': 'no-store',
-      },
-    });
-
-    return response.data as { projects: Project[] };
-  } catch (error) {
-    console.error('Error fetching recent projects:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch recent projects');
-  }
+/**
+ * Get popular projects
+ */
+export async function getPopularProjects(data?: GetApiProjectsPopularData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProjectsPopular({
+    query: data?.query,
+  });
 }
 
-// Get featured projects
-export async function getFeaturedProjects(limit = 10) {
-  const session = await auth();
+/**
+ * Get recent projects
+ */
+export async function getRecentProjects(data?: GetApiProjectsRecentData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProjectsRecent({
+    query: data?.query,
+  });
+}
 
-  if (!session?.accessToken) {
-    throw new Error('Authentication required');
-  }
+/**
+ * Get featured projects
+ */
+export async function getFeaturedProjects(data?: GetApiProjectsFeaturedData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProjectsFeatured({
+    query: data?.query,
+  });
+}
 
-  try {
-    const response = await getApiProjectsFeatured({
-      query: { limit },
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Cache-Control': 'no-store',
-      },
-    });
+/**
+ * Get projects by category
+ */
+export async function getProjectsByCategory(data: GetApiProjectsCategoryByCategoryIdData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProjectsCategoryByCategoryId({
+    path: data.path,
+    query: data.query,
+  });
+}
 
-    return response.data as { projects: Project[] };
-  } catch (error) {
-    console.error('Error fetching featured projects:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch featured projects');
-  }
+/**
+ * Get projects by creator
+ */
+export async function getProjectsByCreator(data: GetApiProjectsCreatorByCreatorIdData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProjectsCreatorByCreatorId({
+    path: data.path,
+    query: data.query,
+  });
+}
+
+// =============================================================================
+// PROJECT ANALYTICS
+// =============================================================================
+
+/**
+ * Get project statistics
+ */
+export async function getProjectStatistics(data: GetApiProjectsByIdStatisticsData) {
+  await configureAuthenticatedClient();
+  
+  return getApiProjectsByIdStatistics({
+    path: data.path,
+  });
 }
