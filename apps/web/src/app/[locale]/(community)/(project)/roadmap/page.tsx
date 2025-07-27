@@ -1,6 +1,7 @@
 import React from 'react';
 import { Metadata } from 'next';
 import { ProjectRoadmap } from '@/components/contributors/project-roadmap';
+import Link from 'next/link';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -41,14 +42,14 @@ export default function RoadmapPage(): React.JSX.Element {
               Help us build the future of gaming communities. Every contribution, whether code, feedback, or ideas, helps shape our roadmap.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
+              <Link
                 href="/contributors"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
               >
                 <span>👥</span>
                 View Contributors
-              </a>
-              <a
+              </Link>
+              <Link
                 href="https://github.com/gameguild-gg/website"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -56,7 +57,7 @@ export default function RoadmapPage(): React.JSX.Element {
               >
                 <span>🌟</span>
                 Star on GitHub
-              </a>
+              </Link>
             </div>
           </div>
         </div>
