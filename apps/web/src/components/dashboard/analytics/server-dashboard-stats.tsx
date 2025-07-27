@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency, formatNumber } from '@/lib/utils';
-import { Activity, BarChart3, BookOpen, Calendar, DollarSign, TrendingDown, TrendingUp, UserCheck, Users } from 'lucide-react';
+import { Activity, Calendar, DollarSign, TrendingDown, TrendingUp, UserCheck, Users } from 'lucide-react';
 import type { UserStatistics } from '@/lib/users/users.actions';
 
 interface ServerDashboardStatsProps {
