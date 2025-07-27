@@ -13,7 +13,7 @@ import {
   postApiAchievementsByAchievementIdBulkAward,
   getApiAchievementsByAchievementIdStatistics,
 } from '@/lib/api/generated/sdk.gen';
-import { configureAuthenticatedClient } from '@/lib/auth/utils';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import type {
   GetApiAchievementsData,
   PostApiAchievementsData,
@@ -31,10 +31,9 @@ import type {
  * Get all achievements with optional filtering
  */
 export async function getAchievements(data?: GetApiAchievementsData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   return getApiAchievements({
-    client,
-    ...data,
+    query: data?.query,
   });
 }
 
@@ -42,10 +41,9 @@ export async function getAchievements(data?: GetApiAchievementsData) {
  * Get achievements leaderboard
  */
 export async function getAchievementsLeaderboard(data?: GetApiAchievementsLeaderboardData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   return getApiAchievementsLeaderboard({
-    client,
-    ...data,
+    query: data?.query,
   });
 }
 
@@ -53,10 +51,9 @@ export async function getAchievementsLeaderboard(data?: GetApiAchievementsLeader
  * Get achievements statistics
  */
 export async function getAchievementsStatistics(data?: GetApiAchievementsStatisticsData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   return getApiAchievementsStatistics({
-    client,
-    ...data,
+    query: data?.query,
   });
 }
 
@@ -64,10 +61,9 @@ export async function getAchievementsStatistics(data?: GetApiAchievementsStatist
  * Create a new achievement
  */
 export async function createAchievement(data?: PostApiAchievementsData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   const result = await postApiAchievements({
-    client,
-    ...data,
+    body: data?.body,
   });
   
   // Revalidate achievements cache
@@ -80,10 +76,9 @@ export async function createAchievement(data?: PostApiAchievementsData) {
  * Delete an achievement by ID
  */
 export async function deleteAchievement(data: DeleteApiAchievementsByAchievementIdData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   const result = await deleteApiAchievementsByAchievementId({
-    client,
-    ...data,
+    path: data.path,
   });
   
   // Revalidate achievements cache
@@ -96,10 +91,9 @@ export async function deleteAchievement(data: DeleteApiAchievementsByAchievement
  * Get achievement by ID
  */
 export async function getAchievementById(data: GetApiAchievementsByAchievementIdData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   return getApiAchievementsByAchievementId({
-    client,
-    ...data,
+    path: data.path,
   });
 }
 
@@ -107,10 +101,10 @@ export async function getAchievementById(data: GetApiAchievementsByAchievementId
  * Update an achievement by ID
  */
 export async function updateAchievement(data: PutApiAchievementsByAchievementIdData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   const result = await putApiAchievementsByAchievementId({
-    client,
-    ...data,
+    path: data.path,
+    body: data.body,
   });
   
   // Revalidate achievements cache
@@ -123,10 +117,10 @@ export async function updateAchievement(data: PutApiAchievementsByAchievementIdD
  * Award an achievement to a user
  */
 export async function awardAchievement(data: PostApiAchievementsByAchievementIdAwardData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   const result = await postApiAchievementsByAchievementIdAward({
-    client,
-    ...data,
+    path: data.path,
+    body: data.body,
   });
   
   // Revalidate achievements and user achievements cache
@@ -140,10 +134,10 @@ export async function awardAchievement(data: PostApiAchievementsByAchievementIdA
  * Award an achievement to multiple users (bulk operation)
  */
 export async function bulkAwardAchievement(data: PostApiAchievementsByAchievementIdBulkAwardData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   const result = await postApiAchievementsByAchievementIdBulkAward({
-    client,
-    ...data,
+    path: data.path,
+    body: data.body,
   });
   
   // Revalidate achievements and user achievements cache
@@ -157,9 +151,8 @@ export async function bulkAwardAchievement(data: PostApiAchievementsByAchievemen
  * Get statistics for a specific achievement
  */
 export async function getAchievementStatistics(data: GetApiAchievementsByAchievementIdStatisticsData) {
-  const client = await configureAuthenticatedClient();
+  await configureAuthenticatedClient();
   return getApiAchievementsByAchievementIdStatistics({
-    client,
-    ...data,
+    path: data.path,
   });
 }
