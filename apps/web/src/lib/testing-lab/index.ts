@@ -8,8 +8,11 @@ export * from './requests/requests.actions';
 // Testing Sessions
 export * from './sessions/testing-sessions.actions';
 
-// Participant Management
+// Participant Management  
 export * from './participants/participants.actions';
+
+// User-Focused Testing Actions (COMPLETE SET)
+export * from './users';
 
 // Feedback Management
 export * from './feedback/general-feedback.actions';
