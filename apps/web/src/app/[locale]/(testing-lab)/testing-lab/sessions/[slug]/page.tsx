@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTestSessionBySlug } from '@/lib/api/testing-lab/test-sessions';
-import { SessionDetail } from '@/components/testing-lab/sessions/session-detail';
+import { SessionDetail } from '@/components/testing-lab/management/sessions/session-detail';
 
 interface SessionPageProps {
   params: Promise<{
