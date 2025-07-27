@@ -1,5 +1,5 @@
 import React from 'react';
-import { TestingRequestList } from '@/components/testing-lab/requests/testing-request-list';
+import { TestingRequestList } from '@/components/testing-lab/management/requests/testing-request-list';
 import { getTestingRequests } from '@/lib/testing-lab/testing-lab.actions';
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
 
