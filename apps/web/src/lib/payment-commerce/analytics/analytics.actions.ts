@@ -242,7 +242,7 @@ export async function exportAnalyticsData(type: 'payments' | 'subscriptions') {
 
   try {
     let csvData = '';
-    
+
     if (type === 'payments') {
       const myPayments = await getMyPaymentAnalytics();
       if (myPayments) {

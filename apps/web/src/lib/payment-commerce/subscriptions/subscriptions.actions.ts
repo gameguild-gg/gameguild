@@ -233,7 +233,7 @@ export async function hasActiveSubscriptionForProduct(productId: string) {
 
   try {
     const activeSubscriptions = await getMyActiveSubscriptions();
-    
+
     if (!activeSubscriptions) {
       return false;
     }
@@ -256,7 +256,7 @@ export async function getSubscriptionUsage(subscriptionId: string) {
 
   try {
     const subscription = await getSubscriptionById(subscriptionId);
-    
+
     if (!subscription) {
       throw new Error('Subscription not found');
     }

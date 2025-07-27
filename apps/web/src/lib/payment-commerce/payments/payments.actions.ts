@@ -111,7 +111,7 @@ export async function processPayment(paymentId: string, paymentData: { providerT
       path: { id: paymentId },
       body: paymentData,
     });
-    
+
     revalidateTag('payments');
     revalidateTag('payment-analytics');
     return response.data;
@@ -132,7 +132,7 @@ export async function refundPayment(paymentId: string, refundData: { amount?: nu
       path: { id: paymentId },
       body: refundData,
     });
-    
+
     revalidateTag('payments');
     revalidateTag('payment-analytics');
     return response.data;
@@ -193,7 +193,7 @@ export async function createPayment(paymentData: {
     const response = await postApiPayments({
       body: paymentData,
     });
-    
+
     revalidateTag('payments');
     revalidateTag('payment-analytics');
     return response.data;
@@ -278,7 +278,7 @@ export async function processPaymentAlternative(
       path: { id: paymentId },
       body: paymentData,
     });
-    
+
     revalidateTag('payments');
     revalidateTag('payment-analytics');
     return response.data;
@@ -299,7 +299,7 @@ export async function refundPaymentAlternative(paymentId: string, refundData: { 
       path: { id: paymentId },
       body: refundData,
     });
-    
+
     revalidateTag('payments');
     revalidateTag('payment-analytics');
     return response.data;
@@ -319,7 +319,7 @@ export async function cancelPayment(paymentId: string) {
     const response = await postApiPaymentsByIdCancel({
       path: { id: paymentId },
     });
-    
+
     revalidateTag('payments');
     revalidateTag('payment-analytics');
     return response.data;
