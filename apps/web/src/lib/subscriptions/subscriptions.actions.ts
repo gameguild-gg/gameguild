@@ -1,401 +1,174 @@
-import { revalidateTag, unstable_cache } from 'next/cache';
-import { auth } from '@/auth';
+'use server';
 
-// Types for Subscriptions
-export interface Subscription {
-  id: string;
-  userId: string;
-  productId?: string;
-  planName: string;
-  status: 'Active' | 'Cancelled' | 'Expired' | 'Pending';
-  startDate: string;
-  endDate?: string;
-  nextBillingDate?: string;
-  amount: number;
-  currency: string;
-  interval: 'monthly' | 'yearly' | 'lifetime';
-  trialEndDate?: string;
-  isActive: boolean;
-  metadata?: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-  tenantId: string;
-}
+import { revalidateTag } from 'next/cache';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
+import {
+  getApiSubscriptionMe,
+  getApiSubscriptionMeActive,
+  getApiSubscriptionById,
+  getApiSubscription,
+  postApiSubscription,
+  postApiSubscriptionByIdCancel,
+  postApiSubscriptionByIdResume,
+  putApiSubscriptionByIdPaymentMethod,
+  getApiProductByIdSubscriptionPlans,
+} from '@/lib/api/generated/sdk.gen';
 
-export interface SubscriptionPlan {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  currency: string;
-  interval: 'monthly' | 'yearly' | 'lifetime';
-  features: string[];
-  isActive: boolean;
-  isPopular?: boolean;
-  trialDays?: number;
-  metadata?: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-  tenantId: string;
-}
+// Get my subscriptions
+export async function getMySubscriptions() {
+  await configureAuthenticatedClient();
 
-export interface SubscriptionStatistics {
-  totalSubscriptions: number;
-  activeSubscriptions: number;
-  cancelledSubscriptions: number;
-  expiredSubscriptions: number;
-  totalRevenue: number;
-  monthlyRevenue: number;
-  averageSubscriptionValue: number;
-  churnRate: number;
-  newSubscriptionsToday: number;
-  newSubscriptionsThisWeek: number;
-  newSubscriptionsThisMonth: number;
-}
-
-export interface SubscriptionsResponse {
-  success: boolean;
-  data?: Subscription[];
-  error?: string;
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-export interface SubscriptionPlansResponse {
-  success: boolean;
-  data?: SubscriptionPlan[];
-  error?: string;
-}
-
-// Cache configuration
-const CACHE_TAGS = {
-  SUBSCRIPTIONS: 'subscriptions',
-  SUBSCRIPTION_PLANS: 'subscription-plans',
-  SUBSCRIPTION_STATISTICS: 'subscription-statistics',
-  USER_SUBSCRIPTION: 'user-subscription',
-} as const;
-
-const REVALIDATION_TIME = 300; // 5 minutes
-
-/**
- * Get user's subscriptions
- */
-export async function getUserSubscriptions(userId?: string, page: number = 1, limit: number = 20): Promise<SubscriptionsResponse> {
   try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
+    const result = await getApiSubscriptionMe();
 
-    const targetUserId = userId || session.userId;
-    const endpoint = targetUserId ? `/api/subscription/user/${targetUserId}` : '/api/subscription/me';
-
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-    });
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}?${queryParams}`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
-      },
-      next: {
-        revalidate: REVALIDATION_TIME,
-        tags: [CACHE_TAGS.SUBSCRIPTIONS, targetUserId ? `user-subscription-${targetUserId}` : CACHE_TAGS.USER_SUBSCRIPTION],
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
-    }
-
-    const result = await response.json();
-    const subscriptions = Array.isArray(result) ? result : result.data || [];
-
-    return {
-      success: true,
-      data: subscriptions,
-      pagination: {
-        page,
-        limit,
-        total: result.total || subscriptions.length,
-        totalPages: Math.ceil((result.total || subscriptions.length) / limit),
-      },
-    };
+    return { success: true, data: result.data };
   } catch (error) {
-    console.error('Error fetching user subscriptions:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    console.error('Failed to get my subscriptions:', error);
+    return { success: false, error: 'Failed to get my subscriptions' };
   }
 }
 
-/**
- * Get active subscription for current user
- */
-export async function getActiveSubscription(): Promise<{ success: boolean; data?: Subscription; error?: string }> {
+// Get my active subscriptions
+export async function getMyActiveSubscriptions() {
+  await configureAuthenticatedClient();
+
   try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
+    const result = await getApiSubscriptionMeActive();
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscription/me/active`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
-      },
-      next: {
-        revalidate: REVALIDATION_TIME,
-        tags: [CACHE_TAGS.USER_SUBSCRIPTION],
-      },
-    });
-
-    if (response.status === 404) {
-      return { success: true, data: undefined }; // No active subscription
-    }
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
-    }
-
-    const subscription: Subscription = await response.json();
-    return { success: true, data: subscription };
+    return { success: true, data: result.data };
   } catch (error) {
-    console.error('Error fetching active subscription:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    console.error('Failed to get active subscriptions:', error);
+    return { success: false, error: 'Failed to get active subscriptions' };
   }
 }
 
-/**
- * Get all subscriptions (admin only)
- */
-export async function getAllSubscriptions(page: number = 1, limit: number = 20, status?: string): Promise<SubscriptionsResponse> {
+// Get subscription by ID
+export async function getSubscriptionById(subscriptionId: string) {
+  await configureAuthenticatedClient();
+
   try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
-
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
-      ...(status && { status }),
+    const result = await getApiSubscriptionById({
+      path: { id: subscriptionId },
     });
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscription/all?${queryParams}`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
-      },
-      next: {
-        revalidate: REVALIDATION_TIME,
-        tags: [CACHE_TAGS.SUBSCRIPTIONS],
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
-    }
-
-    const result = await response.json();
-    const subscriptions = Array.isArray(result) ? result : result.data || [];
-
-    return {
-      success: true,
-      data: subscriptions,
-      pagination: {
-        page,
-        limit,
-        total: result.total || subscriptions.length,
-        totalPages: Math.ceil((result.total || subscriptions.length) / limit),
-      },
-    };
+    return { success: true, data: result.data };
   } catch (error) {
-    console.error('Error fetching all subscriptions:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    console.error('Failed to get subscription:', error);
+    return { success: false, error: 'Failed to get subscription' };
   }
 }
 
-/**
- * Get subscription statistics
- */
-export async function getSubscriptionStatistics(): Promise<{ success: boolean; data?: SubscriptionStatistics; error?: string }> {
+// Get all subscriptions
+export async function getAllSubscriptions() {
+  await configureAuthenticatedClient();
+
   try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
+    const result = await getApiSubscription();
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscription/statistics`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
-      },
-      next: {
-        revalidate: REVALIDATION_TIME,
-        tags: [CACHE_TAGS.SUBSCRIPTION_STATISTICS],
-      },
-    });
-
-    if (!response.ok) {
-      // If endpoint doesn't exist, return mock data
-      if (response.status === 404) {
-        return {
-          success: true,
-          data: {
-            totalSubscriptions: 0,
-            activeSubscriptions: 0,
-            cancelledSubscriptions: 0,
-            expiredSubscriptions: 0,
-            totalRevenue: 0,
-            monthlyRevenue: 0,
-            averageSubscriptionValue: 0,
-            churnRate: 0,
-            newSubscriptionsToday: 0,
-            newSubscriptionsThisWeek: 0,
-            newSubscriptionsThisMonth: 0,
-          },
-        };
-      }
-
-      const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
-    }
-
-    const statistics: SubscriptionStatistics = await response.json();
-    return { success: true, data: statistics };
+    return { success: true, data: result.data };
   } catch (error) {
-    console.error('Error fetching subscription statistics:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    console.error('Failed to get subscriptions:', error);
+    return { success: false, error: 'Failed to get subscriptions' };
   }
 }
 
-/**
- * Cancel subscription
- */
-export async function cancelSubscription(subscriptionId: string): Promise<{ success: boolean; error?: string }> {
-  'use server';
+// Create subscription
+export async function createSubscription(data?: { planId?: string; paymentMethodId?: string }) {
+  await configureAuthenticatedClient();
 
   try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscription/${subscriptionId}/cancel`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
-      },
+    const result = await postApiSubscription({
+      body: data,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
+    if (result.data) {
+      revalidateTag('subscriptions');
     }
 
-    // Revalidate cache
-    revalidateTag(CACHE_TAGS.SUBSCRIPTIONS);
-    revalidateTag(CACHE_TAGS.USER_SUBSCRIPTION);
-    revalidateTag(CACHE_TAGS.SUBSCRIPTION_STATISTICS);
-
-    return { success: true };
+    return { success: true, data: result.data };
   } catch (error) {
-    console.error('Error cancelling subscription:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    console.error('Failed to create subscription:', error);
+    return { success: false, error: 'Failed to create subscription' };
   }
 }
 
-/**
- * Reactivate subscription
- */
-export async function reactivateSubscription(subscriptionId: string): Promise<{ success: boolean; error?: string }> {
-  'use server';
+// Cancel subscription
+export async function cancelSubscription(subscriptionId: string, data?: { reason?: string; cancelAtPeriodEnd?: boolean }) {
+  await configureAuthenticatedClient();
 
   try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
-
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subscription/${subscriptionId}/reactivate`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
-      },
+    const result = await postApiSubscriptionByIdCancel({
+      path: { id: subscriptionId },
+      body: data,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
+    if (result.data) {
+      revalidateTag('subscriptions');
+      revalidateTag(`subscription-${subscriptionId}`);
     }
 
-    // Revalidate cache
-    revalidateTag(CACHE_TAGS.SUBSCRIPTIONS);
-    revalidateTag(CACHE_TAGS.USER_SUBSCRIPTION);
-    revalidateTag(CACHE_TAGS.SUBSCRIPTION_STATISTICS);
-
-    return { success: true };
+    return { success: true, data: result.data };
   } catch (error) {
-    console.error('Error reactivating subscription:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
+    console.error('Failed to cancel subscription:', error);
+    return { success: false, error: 'Failed to cancel subscription' };
   }
 }
 
-/**
- * Server-only function to refresh subscriptions cache
- */
-export async function refreshSubscriptions(): Promise<void> {
-  'use server';
-  revalidateTag(CACHE_TAGS.SUBSCRIPTIONS);
-  revalidateTag(CACHE_TAGS.USER_SUBSCRIPTION);
-  revalidateTag(CACHE_TAGS.SUBSCRIPTION_STATISTICS);
-  revalidateTag(CACHE_TAGS.SUBSCRIPTION_PLANS);
+// Resume subscription
+export async function resumeSubscription(subscriptionId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const result = await postApiSubscriptionByIdResume({
+      path: { id: subscriptionId },
+    });
+
+    if (result.data) {
+      revalidateTag('subscriptions');
+      revalidateTag(`subscription-${subscriptionId}`);
+    }
+
+    return { success: true, data: result.data };
+  } catch (error) {
+    console.error('Failed to resume subscription:', error);
+    return { success: false, error: 'Failed to resume subscription' };
+  }
 }
 
-/**
- * Cached version of getUserSubscriptions for better performance
- */
-export const getCachedUserSubscriptions = unstable_cache(
-  async (userId?: string, page: number = 1, limit: number = 20) => {
-    return getUserSubscriptions(userId, page, limit);
-  },
-  ['user-subscriptions'],
-  {
-    tags: [CACHE_TAGS.SUBSCRIPTIONS],
-    revalidate: REVALIDATION_TIME,
-  },
-);
+// Update subscription payment method
+export async function updateSubscriptionPaymentMethod(subscriptionId: string, data?: { paymentMethodId?: string }) {
+  await configureAuthenticatedClient();
+
+  try {
+    const result = await putApiSubscriptionByIdPaymentMethod({
+      path: { id: subscriptionId },
+      body: data,
+    });
+
+    if (result.data) {
+      revalidateTag('subscriptions');
+      revalidateTag(`subscription-${subscriptionId}`);
+    }
+
+    return { success: true, data: result.data };
+  } catch (error) {
+    console.error('Failed to update subscription payment method:', error);
+    return { success: false, error: 'Failed to update subscription payment method' };
+  }
+}
+
+// Get subscription plans for a product
+export async function getProductSubscriptionPlans(productId: string) {
+  await configureAuthenticatedClient();
+
+  try {
+    const result = await getApiProductByIdSubscriptionPlans({
+      path: { id: productId },
+    });
+
+    return { success: true, data: result.data };
+  } catch (error) {
+    console.error('Failed to get product subscription plans:', error);
+    return { success: false, error: 'Failed to get product subscription plans' };
+  }
+}
