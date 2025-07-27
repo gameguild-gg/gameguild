@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
-import { configureAuthenticatedClient, getAuthenticatedSession } from '@/lib/api/authenticated-client';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
   getCredentials,
   postCredentials,
@@ -17,279 +17,204 @@ import {
   postCredentialsByIdActivate,
   getCredentialsDeleted,
 } from '@/lib/api/generated/sdk.gen';
-import type { CreateCredentialDto, UpdateCredentialDto } from '@/lib/api/generated/types.gen';
 
-// Get all credentials with pagination and filtering
-export async function getCredentialsData() {
+import type {
+  GetCredentialsData,
+  PostCredentialsData,
+  GetCredentialsUserByUserIdData,
+  DeleteCredentialsByIdData,
+  GetCredentialsByIdData,
+  PutCredentialsByIdData,
+  GetCredentialsUserByUserIdTypeByTypeData,
+  PostCredentialsByIdRestoreData,
+  DeleteCredentialsByIdHardData,
+  PostCredentialsByIdMarkUsedData,
+  PostCredentialsByIdDeactivateData,
+  PostCredentialsByIdActivateData,
+  GetCredentialsDeletedData,
+} from '@/lib/api/generated/types.gen';
+
+/**
+ * Get all credentials
+ */
+export async function getCredentialsAction(params?: GetCredentialsData) {
   await configureAuthenticatedClient();
+  const result = await getCredentials({
+    ...params,
+  });
 
-  try {
-    const result = await getCredentials();
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get credentials:', error);
-    return { success: false, error: 'Failed to get credentials' };
-  }
+  revalidateTag('credentials');
+  return result;
 }
 
-// Create a new credential
-export async function createCredential(data: {
-  userId?: string;
-  type: string;
-  value: string;
-  metadata?: Record<string, unknown> | string | null;
-  expiresAt?: string | null;
-  isActive?: boolean;
-}) {
+/**
+ * Create a new credential
+ */
+export async function createCredentialAction(data: PostCredentialsData) {
   await configureAuthenticatedClient();
-  const session = await getAuthenticatedSession();
+  const result = await postCredentials({
+    body: data.body,
+  });
 
-  try {
-    const requestData: CreateCredentialDto = {
-      userId: data.userId || session.user.id,
-      type: data.type,
-      value: data.value,
-      metadata: typeof data.metadata === 'object' && data.metadata !== null ? JSON.stringify(data.metadata) : data.metadata || null,
-      expiresAt: data.expiresAt || null,
-      isActive: data.isActive ?? true,
-    };
-
-    const result = await postCredentials({
-      body: requestData,
-    });
-
-    if (result.data) {
-      revalidateTag('credentials');
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to create credential:', error);
-    return { success: false, error: 'Failed to create credential' };
-  }
+  revalidateTag('credentials');
+  return result;
 }
 
-// Get credentials for a specific user
-export async function getUserCredentials(userId: string) {
+/**
+ * Get credentials for a specific user
+ */
+export async function getUserCredentialsAction(data: GetCredentialsUserByUserIdData) {
   await configureAuthenticatedClient();
+  const result = await getCredentialsUserByUserId({
+    path: { userId: data.path.userId },
+  });
 
-  try {
-    const result = await getCredentialsUserByUserId({
-      path: { userId },
-    });
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get user credentials:', error);
-    return { success: false, error: 'Failed to get user credentials' };
-  }
+  revalidateTag('credentials');
+  revalidateTag(`user-credentials-${data.path.userId}`);
+  return result;
 }
 
-// Delete a credential (soft delete)
-export async function deleteCredential(credentialId: string) {
+/**
+ * Delete a credential by ID
+ */
+export async function deleteCredentialAction(data: DeleteCredentialsByIdData) {
   await configureAuthenticatedClient();
+  const result = await deleteCredentialsById({
+    path: { id: data.path.id },
+  });
 
-  try {
-    const result = await deleteCredentialsById({
-      path: { id: credentialId },
-    });
-
-    if (result.data) {
-      revalidateTag('credentials');
-      revalidateTag(`credential-${credentialId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to delete credential:', error);
-    return { success: false, error: 'Failed to delete credential' };
-  }
+  revalidateTag('credentials');
+  revalidateTag(`credential-${data.path.id}`);
+  return result;
 }
 
-// Get a credential by ID
-export async function getCredentialById(credentialId: string) {
+/**
+ * Get a credential by ID
+ */
+export async function getCredentialByIdAction(data: GetCredentialsByIdData) {
   await configureAuthenticatedClient();
+  const result = await getCredentialsById({
+    path: { id: data.path.id },
+  });
 
-  try {
-    const result = await getCredentialsById({
-      path: { id: credentialId },
-    });
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get credential:', error);
-    return { success: false, error: 'Failed to get credential' };
-  }
+  revalidateTag(`credential-${data.path.id}`);
+  return result;
 }
 
-// Update a credential
-export async function updateCredential(credentialId: string, data: {
-  type: string;
-  value: string;
-  metadata?: Record<string, unknown> | string | null;
-  expiresAt?: string | null;
-  isActive?: boolean;
-}) {
+/**
+ * Update a credential by ID
+ */
+export async function updateCredentialAction(data: PutCredentialsByIdData) {
   await configureAuthenticatedClient();
+  const result = await putCredentialsById({
+    path: { id: data.path.id },
+    body: data.body,
+  });
 
-  try {
-    const requestData: UpdateCredentialDto = {
-      type: data.type,
-      value: data.value,
-      metadata: typeof data.metadata === 'object' && data.metadata !== null ? JSON.stringify(data.metadata) : data.metadata || null,
-      expiresAt: data.expiresAt || null,
-      isActive: data.isActive,
-    };
-
-    const result = await putCredentialsById({
-      path: { id: credentialId },
-      body: requestData,
-    });
-
-    if (result.data) {
-      revalidateTag('credentials');
-      revalidateTag(`credential-${credentialId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to update credential:', error);
-    return { success: false, error: 'Failed to update credential' };
-  }
+  revalidateTag('credentials');
+  revalidateTag(`credential-${data.path.id}`);
+  return result;
 }
 
-// Get user credentials by type
-export async function getUserCredentialsByType(userId: string, type: string) {
+/**
+ * Get credentials for a user by type
+ */
+export async function getUserCredentialsByTypeAction(data: GetCredentialsUserByUserIdTypeByTypeData) {
   await configureAuthenticatedClient();
+  const result = await getCredentialsUserByUserIdTypeByType({
+    path: {
+      userId: data.path.userId,
+      type: data.path.type,
+    },
+  });
 
-  try {
-    const result = await getCredentialsUserByUserIdTypeByType({
-      path: { userId, type },
-    });
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get user credentials by type:', error);
-    return { success: false, error: 'Failed to get user credentials by type' };
-  }
+  revalidateTag('credentials');
+  revalidateTag(`user-credentials-${data.path.userId}`);
+  revalidateTag(`user-credentials-${data.path.userId}-${data.path.type}`);
+  return result;
 }
 
-// Restore a deleted credential
-export async function restoreCredential(credentialId: string) {
+/**
+ * Restore a deleted credential
+ */
+export async function restoreCredentialAction(data: PostCredentialsByIdRestoreData) {
   await configureAuthenticatedClient();
+  const result = await postCredentialsByIdRestore({
+    path: { id: data.path.id },
+  });
 
-  try {
-    const result = await postCredentialsByIdRestore({
-      path: { id: credentialId },
-    });
-
-    if (result.data) {
-      revalidateTag('credentials');
-      revalidateTag(`credential-${credentialId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to restore credential:', error);
-    return { success: false, error: 'Failed to restore credential' };
-  }
+  revalidateTag('credentials');
+  revalidateTag('credentials-deleted');
+  revalidateTag(`credential-${data.path.id}`);
+  return result;
 }
 
-// Hard delete a credential (permanent)
-export async function hardDeleteCredential(credentialId: string) {
+/**
+ * Permanently delete a credential (hard delete)
+ */
+export async function hardDeleteCredentialAction(data: DeleteCredentialsByIdHardData) {
   await configureAuthenticatedClient();
+  const result = await deleteCredentialsByIdHard({
+    path: { id: data.path.id },
+  });
 
-  try {
-    const result = await deleteCredentialsByIdHard({
-      path: { id: credentialId },
-    });
-
-    if (result.data) {
-      revalidateTag('credentials');
-      revalidateTag(`credential-${credentialId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to hard delete credential:', error);
-    return { success: false, error: 'Failed to hard delete credential' };
-  }
+  revalidateTag('credentials');
+  revalidateTag('credentials-deleted');
+  revalidateTag(`credential-${data.path.id}`);
+  return result;
 }
 
-// Mark credential as used
-export async function markCredentialAsUsed(credentialId: string) {
+/**
+ * Mark a credential as used
+ */
+export async function markCredentialUsedAction(data: PostCredentialsByIdMarkUsedData) {
   await configureAuthenticatedClient();
+  const result = await postCredentialsByIdMarkUsed({
+    path: { id: data.path.id },
+  });
 
-  try {
-    const result = await postCredentialsByIdMarkUsed({
-      path: { id: credentialId },
-    });
-
-    if (result.data) {
-      revalidateTag('credentials');
-      revalidateTag(`credential-${credentialId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to mark credential as used:', error);
-    return { success: false, error: 'Failed to mark credential as used' };
-  }
+  revalidateTag('credentials');
+  revalidateTag(`credential-${data.path.id}`);
+  return result;
 }
 
-// Deactivate a credential
-export async function deactivateCredential(credentialId: string) {
+/**
+ * Deactivate a credential
+ */
+export async function deactivateCredentialAction(data: PostCredentialsByIdDeactivateData) {
   await configureAuthenticatedClient();
+  const result = await postCredentialsByIdDeactivate({
+    path: { id: data.path.id },
+  });
 
-  try {
-    const result = await postCredentialsByIdDeactivate({
-      path: { id: credentialId },
-    });
-
-    if (result.data) {
-      revalidateTag('credentials');
-      revalidateTag(`credential-${credentialId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to deactivate credential:', error);
-    return { success: false, error: 'Failed to deactivate credential' };
-  }
+  revalidateTag('credentials');
+  revalidateTag(`credential-${data.path.id}`);
+  return result;
 }
 
-// Activate a credential
-export async function activateCredential(credentialId: string) {
+/**
+ * Activate a credential
+ */
+export async function activateCredentialAction(data: PostCredentialsByIdActivateData) {
   await configureAuthenticatedClient();
+  const result = await postCredentialsByIdActivate({
+    path: { id: data.path.id },
+  });
 
-  try {
-    const result = await postCredentialsByIdActivate({
-      path: { id: credentialId },
-    });
-
-    if (result.data) {
-      revalidateTag('credentials');
-      revalidateTag(`credential-${credentialId}`);
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to activate credential:', error);
-    return { success: false, error: 'Failed to activate credential' };
-  }
+  revalidateTag('credentials');
+  revalidateTag(`credential-${data.path.id}`);
+  return result;
 }
 
-// Get deleted credentials
-export async function getDeletedCredentials() {
+/**
+ * Get all deleted credentials
+ */
+export async function getDeletedCredentialsAction(params?: GetCredentialsDeletedData) {
   await configureAuthenticatedClient();
+  const result = await getCredentialsDeleted({
+    ...params,
+  });
 
-  try {
-    const result = await getCredentialsDeleted();
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Failed to get deleted credentials:', error);
-    return { success: false, error: 'Failed to get deleted credentials' };
-  }
+  revalidateTag('credentials-deleted');
+  return result;
 }
