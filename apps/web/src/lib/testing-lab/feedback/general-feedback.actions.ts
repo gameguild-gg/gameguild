@@ -282,7 +282,7 @@ export async function submitSimpleTestingRequest(requestData: {
  */
 export async function getUserTestingDashboard(userId?: string) {
   await configureAuthenticatedClient();
-  
+
   try {
     const [myRequests, availableOpportunities, myFeedback, userActivity] = await Promise.all([
       getMyTestingRequests(),
