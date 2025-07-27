@@ -79,7 +79,7 @@ export async function getRequestsData(page: number = 1, limit: number = 20, sear
     // Get authenticated session
     const session = await auth();
 
-    if (!session?.accessToken) {
+    if (!session?.api.accessToken) {
       return {
         requests: [],
         pagination: { page, limit, total: 0, totalPages: 0 },
@@ -99,7 +99,7 @@ export async function getRequestsData(page: number = 1, limit: number = 20, sear
 
       const response = await fetch(`${apiUrl}/api/requests/search?${params}`, {
         headers: {
-          Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.api.accessToken}`,
           'Content-Type': 'application/json',
         },
         next: {
@@ -132,7 +132,7 @@ export async function getRequestsData(page: number = 1, limit: number = 20, sear
 
     const response = await fetch(`${apiUrl}/api/requests?${params}`, {
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
@@ -178,7 +178,7 @@ export async function getRequestById(id: string): Promise<Request | null> {
   try {
     const session = await auth();
 
-    if (!session?.accessToken) {
+    if (!session?.api.accessToken) {
       throw new Error('Unauthorized');
     }
 
@@ -186,7 +186,7 @@ export async function getRequestById(id: string): Promise<Request | null> {
 
     const response = await fetch(`${apiUrl}/api/requests/${id}`, {
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
@@ -216,7 +216,7 @@ export async function getRequestStatistics(): Promise<RequestStatistics> {
   try {
     const session = await auth();
 
-    if (!session?.accessToken) {
+    if (!session?.api.accessToken) {
       throw new Error('Unauthorized');
     }
 
@@ -224,7 +224,7 @@ export async function getRequestStatistics(): Promise<RequestStatistics> {
 
     const response = await fetch(`${apiUrl}/api/requests/statistics`, {
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
