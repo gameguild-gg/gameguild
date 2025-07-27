@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Activity, BookOpen, Calendar, DollarSign, Eye, GraduationCap, TrendingDown, TrendingUp, UserCheck, Users } from 'lucide-react';
-import { fetchUserStatistics } from '@/lib/api/dashboard';
+import { fetchUserStatistics } from '@/lib/dashboard/dashboard';
 
 interface DashboardStatsProps {
   className?: string;
