@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MessageSquare, Settings } from 'lucide-react';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarRail } from '@/components/ui/sidebar';
-import { PlatformManagementSidebarContent } from '@/components/dashboard/platform-management-sidebar-content';
-import { ContentManagementSidebarContent } from '@/components/dashboard/content-management-sidebar-content';
+
 import { TenantSwitcher } from '@/components/tenant/common/ui/tenant-switcher';
 import { navigationData } from '@/components/dashboard/common/ui/navigation-data';
+import { PlatformManagementSidebarContent } from '@/components/dashboard/common/ui/platform-management-sidebar-content';
+import { ContentManagementSidebarContent } from '@/components/dashboard/common/ui/content-management-sidebar-content';
 
 export const DashboardSidebar = ({ ...props }: ComponentProps<typeof Sidebar>): React.JSX.Element => {
   const pathname = usePathname();
@@ -26,11 +27,7 @@ export const DashboardSidebar = ({ ...props }: ComponentProps<typeof Sidebar>): 
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton 
-              size="lg" 
-              isActive={pathname === '/dashboard/feedback' || pathname.startsWith('/dashboard/feedback/')}
-              asChild
-            >
+            <SidebarMenuButton size="lg" isActive={pathname === '/dashboard/feedback' || pathname.startsWith('/dashboard/feedback/')} asChild>
               <Link href="/dashboard/feedback">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
                   <MessageSquare className="size-4" />
@@ -43,11 +40,7 @@ export const DashboardSidebar = ({ ...props }: ComponentProps<typeof Sidebar>): 
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton 
-              size="lg" 
-              isActive={pathname === '/dashboard/settings' || pathname.startsWith('/dashboard/settings/')}
-              asChild
-            >
+            <SidebarMenuButton size="lg" isActive={pathname === '/dashboard/settings' || pathname.startsWith('/dashboard/settings/')} asChild>
               <Link href="/dashboard/settings">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
                   <Settings className="size-4" />
