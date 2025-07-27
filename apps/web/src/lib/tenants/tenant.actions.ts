@@ -36,7 +36,7 @@ export async function getTenantsData(page: number = 1, limit: number = 20, searc
   try {
     const session = await auth();
 
-    if (!session?.accessToken) {
+    if (!session?.api.accessToken) {
       return {
         tenants: [],
         pagination: { page, limit, total: 0, totalPages: 0 },
@@ -57,7 +57,7 @@ export async function getTenantsData(page: number = 1, limit: number = 20, searc
 
     const response = await fetch(`${apiUrl}/api/tenants?${params}`, {
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
@@ -102,7 +102,7 @@ export async function getUserTenants(): Promise<Tenant[]> {
   try {
     const session = await auth();
 
-    if (!session?.accessToken) {
+    if (!session?.api.accessToken) {
       return [];
     }
 
@@ -110,7 +110,7 @@ export async function getUserTenants(): Promise<Tenant[]> {
 
     const response = await fetch(`${apiUrl}/api/tenants/user`, {
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
@@ -142,7 +142,7 @@ export async function getTenantById(id: string): Promise<Tenant | null> {
   try {
     const session = await auth();
 
-    if (!session?.accessToken) {
+    if (!session?.api.accessToken) {
       return null;
     }
 
@@ -150,7 +150,7 @@ export async function getTenantById(id: string): Promise<Tenant | null> {
 
     const response = await fetch(`${apiUrl}/api/tenants/${id}`, {
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
@@ -185,7 +185,7 @@ export async function getTenantByName(name: string): Promise<Tenant | null> {
   try {
     const session = await auth();
 
-    if (!session?.accessToken) {
+    if (!session?.api.accessToken) {
       return null;
     }
 
@@ -193,7 +193,7 @@ export async function getTenantByName(name: string): Promise<Tenant | null> {
 
     const response = await fetch(`${apiUrl}/api/tenants/by-name/${encodeURIComponent(name)}`, {
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
       },
       next: {
@@ -228,7 +228,7 @@ export async function createTenant(prevState: TenantActionState, formData: FormD
   try {
     const session = await auth();
 
-    if (!session?.accessToken) {
+    if (!session?.api.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
 
@@ -252,7 +252,7 @@ export async function createTenant(prevState: TenantActionState, formData: FormD
     const response = await fetch(`${apiUrl}/api/tenants`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(tenantData),
@@ -265,7 +265,7 @@ export async function createTenant(prevState: TenantActionState, formData: FormD
 
     const tenant = await response.json();
 
-    // Revalidate caches
+    // Re-validate caches
     await revalidateTenantsData();
 
     return { success: true, tenant };
@@ -285,7 +285,7 @@ export async function updateTenant(id: string, prevState: TenantActionState, for
   try {
     const session = await auth();
 
-    if (!session?.accessToken) {
+    if (!session?.api.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
 
@@ -309,7 +309,7 @@ export async function updateTenant(id: string, prevState: TenantActionState, for
     const response = await fetch(`${apiUrl}/api/tenants/${id}`, {
       method: 'PUT',
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(tenantData),
@@ -343,7 +343,7 @@ export async function deleteTenant(id: string): Promise<{ success: boolean; erro
   try {
     const session = await auth();
 
-    if (!session?.accessToken) {
+    if (!session?.api.accessToken) {
       return { success: false, error: 'Authentication required' };
     }
 
@@ -352,7 +352,7 @@ export async function deleteTenant(id: string): Promise<{ success: boolean; erro
     const response = await fetch(`${apiUrl}/api/tenants/${id}`, {
       method: 'DELETE',
       headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
       },
     });
