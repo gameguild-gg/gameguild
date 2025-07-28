@@ -1,18 +1,19 @@
-import { TestSession } from '@/lib/api/testing-lab/test-sessions';
+import { SESSION_STATUS, TestSession } from '@/lib/admin';
 import { TestingLabHero } from './testing-lab-hero';
-import { TestingLabStats } from '../management/testing-lab-stats';
-import { TestingLabHowItWorks } from './testing-lab-how-it-works';
+import { TestingLabStats } from './testing-lab-stats';
 import { FloatingIcons } from '../common/ui/floating-icons';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { TestingLabHowItWorks } from '@/components/testing-lab';
 
 interface TestingLabLandingProps {
   testSessions: TestSession[];
 }
 
 export function TestingLabLandingSection({ testSessions }: TestingLabLandingProps) {
-  const openSessions = testSessions.filter((session) => session.status === 'open');
+  // Filter sessions by status using constants
+  const openSessions = testSessions.filter((session) => session.status === SESSION_STATUS.SCHEDULED || session.status === SESSION_STATUS.ACTIVE);
   const upcomingSessions = testSessions.filter((session) => new Date(session.sessionDate) > new Date());
 
   return (
