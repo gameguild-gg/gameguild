@@ -1,5 +1,5 @@
 import { TestingLabLandingSection } from '@/components/testing-lab/landing/testing-lab-landing-section';
-import { getAvailableTestSessions } from '@/lib/api/testing-lab/test-sessions';
+import { getAvailableTestSessions } from '@/lib/admin';
 
 export default async function TestingLabPage() {
   // Fetch available test sessions server-side
