@@ -2,7 +2,7 @@
 
 import { useRouter } from '@/i18n/navigation';
 import { useEffect, useState, use, useCallback } from 'react';
-import { getTestSessionBySlug, TestSession } from '@/lib/api/testing-lab/test-sessions';
+import { getTestSessionBySlug, TestSession } from '@/lib/admin';
 import { JoinProcessModal } from '@/components/testing-lab/join/join-process-modal';
 
 interface JoinModalProps {
@@ -83,7 +83,7 @@ export default function JoinModal({ params }: JoinModalProps) {
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={handleBackdropClick}>
       <div className="bg-slate-900 rounded-lg border border-slate-700 p-6 max-w-4xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-white">Join Testing Session: {session.title}</h2>
+          <h2 className="text-xl font-bold text-white">Join Testing Session: {session.sessionName}</h2>
           <button onClick={handleClose} className="text-slate-400 hover:text-white text-2xl">
             ×
           </button>
