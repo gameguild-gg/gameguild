@@ -8,6 +8,17 @@ RUN apk add --no-cache libc6-compat curl
 FROM base AS builder
 # Create app directory.
 WORKDIR /app
+
+# Accept build arguments for Next.js public environment variables
+ARG NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_API_URL  
+ARG NEXT_PUBLIC_WEB_URL
+
+# Set environment variables from build args
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
+
 # Copy package files
 COPY package*.json ./
 # Generate package-lock.json.
@@ -43,6 +54,8 @@ COPY --from=builder --chown=node:node /app/public ./public
 ARG PORT=3000
 # Set an environment variable for the port using the ARG value.
 ENV PORT=${PORT}
+# Set hostname to bind to all interfaces
+ENV HOSTNAME=0.0.0.0
 # Expose the port to inform Docker that the container will listen on the specified port.
 EXPOSE ${PORT}
 # Run the web service on container startup.

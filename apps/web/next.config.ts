@@ -3,6 +3,11 @@ import { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
+  trailingSlash: false,
+  // Handle proxy headers from Cloudflare Tunnel
+  experimental: {
+    trustHost: true,
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
