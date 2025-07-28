@@ -65,6 +65,10 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL:-https://dev-api.gameguild.gg}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://dev-api.gameguild.gg}
+        - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL:-https://dev.gameguild.gg}
     image: game-guild-web
     container_name: game-guild-web
     restart: always
