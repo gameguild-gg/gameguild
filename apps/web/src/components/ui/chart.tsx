@@ -1,9 +1,8 @@
 'use client';
 
+import { cn } from '@/lib/utils';
 import * as React from 'react';
 import * as RechartsPrimitive from 'recharts';
-
-import { cn } from '@/lib/utils';
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: '', dark: '.dark' } as const;
@@ -154,13 +153,7 @@ function ChartTooltipContent({
           const indicatorColor = color || item.payload.fill || item.color;
 
           return (
-            <div
-              key={item.dataKey}
-              className={cn(
-                '[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5',
-                indicator === 'dot' && 'items-center',
-              )}
-            >
+            <div key={item.dataKey} className={cn('[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5', indicator === 'dot' && 'items-center')}>
               {formatter && item?.value !== undefined && item.name ? (
                 formatter(item.value, item.name, item, index, item.payload)
               ) : (
