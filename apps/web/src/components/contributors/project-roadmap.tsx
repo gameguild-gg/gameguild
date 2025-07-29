@@ -73,10 +73,7 @@ export function ProjectRoadmap() {
         {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-foreground mb-4">Project Roadmap</h2>
-          <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
-            Track our journey from initial launch to becoming the premier gaming community platform. Each milestone represents significant features and
-            improvements.
-          </p>
+          <p className="text-muted-foreground text-lg max-w-3xl mx-auto">Track our journey from initial launch to becoming the premier gaming community platform. Each milestone represents significant features and improvements.</p>
         </div>
 
         {/* Progress Overview */}
@@ -128,11 +125,7 @@ export function ProjectRoadmap() {
                       <div className="flex items-center space-x-2">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            milestone.status === 'completed'
-                              ? 'bg-primary/10 text-primary'
-                              : milestone.status === 'current'
-                                ? 'bg-accent/10 text-accent'
-                                : 'bg-muted text-muted-foreground'
+                            milestone.status === 'completed' ? 'bg-primary/10 text-primary' : milestone.status === 'current' ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'
                           }`}
                         >
                           {milestone.status === 'completed' ? 'Released' : milestone.status === 'current' ? 'In Progress' : 'Planned'}
@@ -148,9 +141,7 @@ export function ProjectRoadmap() {
                       </div>
                       <div className="w-full bg-muted rounded-full h-2">
                         <div
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            milestone.status === 'completed' ? 'bg-primary' : milestone.status === 'current' ? 'bg-accent' : 'bg-muted-foreground'
-                          }`}
+                          className={`h-2 rounded-full transition-all duration-300 ${milestone.status === 'completed' ? 'bg-primary' : milestone.status === 'current' ? 'bg-accent' : 'bg-muted-foreground'}`}
                           style={{ width: `${milestone.progress}%` }}
                         ></div>
                       </div>
@@ -162,11 +153,7 @@ export function ProjectRoadmap() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {milestone.features.map((feature, featureIndex) => (
                           <div key={featureIndex} className="flex items-center text-sm text-muted-foreground">
-                            <div
-                              className={`w-1.5 h-1.5 rounded-full mr-2 ${
-                                milestone.status === 'completed' ? 'bg-primary' : milestone.status === 'current' ? 'bg-accent' : 'bg-muted-foreground'
-                              }`}
-                            ></div>
+                            <div className={`w-1.5 h-1.5 rounded-full mr-2 ${milestone.status === 'completed' ? 'bg-primary' : milestone.status === 'current' ? 'bg-accent' : 'bg-muted-foreground'}`}></div>
                             {feature}
                           </div>
                         ))}

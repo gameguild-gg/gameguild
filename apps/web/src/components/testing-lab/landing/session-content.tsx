@@ -1,6 +1,6 @@
 'use client';
 
-import { TestSession } from '@/lib/api/testing-lab/test-sessions';
+import { TestSession } from '@/lib/admin';
 import { TestSessionGrid } from './test-session-grid';
 import { TestSessionRow } from './test-session-row';
 import { TestSessionTable } from './test-session-table';

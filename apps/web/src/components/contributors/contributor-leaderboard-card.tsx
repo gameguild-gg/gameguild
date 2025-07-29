@@ -83,18 +83,8 @@ export const ContributorLeaderboardCard: React.FC<ContributorLeaderboardCardProp
 
       {/* Bottom Stats */}
       <div className="flex justify-between items-center">
-        <ContributorStats
-          label="Additions"
-          value={contributor.additions || 0}
-          icon={<span className="text-green-600 dark:text-green-400">+</span>}
-          variant="primary"
-        />
-        <ContributorStats
-          label="Deletions"
-          value={contributor.deletions || 0}
-          icon={<span className="text-red-600 dark:text-red-400">-</span>}
-          variant="secondary"
-        />
+        <ContributorStats label="Additions" value={contributor.additions || 0} icon={<span className="text-green-600 dark:text-green-400">+</span>} variant="primary" />
+        <ContributorStats label="Deletions" value={contributor.deletions || 0} icon={<span className="text-red-600 dark:text-red-400">-</span>} variant="secondary" />
       </div>
     </Card>
   );

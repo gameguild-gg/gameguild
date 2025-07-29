@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useContext } from 'react';
 import { BaseFilterState, FilterProvider, useFilterContext } from '@/components/common/filters/filter-context';
-import { TestSession } from '@/lib/api/testing-lab/test-sessions';
+import { adaptTestingSessionForComponent, SESSION_STATUS, TestSession } from '@/lib/admin';
 
 // Testing Lab specific filter state
 export type TestingLabFilterState = BaseFilterState;
@@ -33,14 +33,21 @@ export function useTestingLabFilters() {
 function filterAndSortSessions(sessions: TestSession[], filters: TestingLabFilterState): TestSession[] {
   return sessions
     .filter((session) => {
-      const matchesSearch =
-        session.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) || session.description.toLowerCase().includes(filters.searchTerm.toLowerCase());
-      const matchesStatus = filters.selectedStatuses.length === 0 || filters.selectedStatuses.includes(session.status);
-      const matchesType = filters.selectedTypes.length === 0 || filters.selectedTypes.includes(session.sessionType);
+      const adapted = adaptTestingSessionForComponent(session);
+      const matchesSearch = adapted.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) || adapted.description.toLowerCase().includes(filters.searchTerm.toLowerCase());
+
+      // Convert numeric status to string for comparison
+      const statusString = adapted.status === SESSION_STATUS.SCHEDULED ? 'open' : adapted.status === SESSION_STATUS.ACTIVE ? 'active' : adapted.status === SESSION_STATUS.COMPLETED ? 'completed' : 'cancelled';
+
+      const matchesStatus = filters.selectedStatuses.length === 0 || filters.selectedStatuses.includes(statusString);
+      const matchesType = filters.selectedTypes.length === 0 || filters.selectedTypes.includes(adapted.sessionType);
 
       return matchesSearch && matchesStatus && matchesType;
     })
     .sort((a, b) => {
+      const adaptedA = adaptTestingSessionForComponent(a);
+      const adaptedB = adaptTestingSessionForComponent(b);
+
       // Define status priority order
       const statusPriority: Record<string, number> = {
         'in-progress': 0,
@@ -61,7 +68,7 @@ function filterAndSortSessions(sessions: TestSession[], filters: TestingLabFilte
       }
 
       // Fallback to title if no date comparison possible
-      return a.title.localeCompare(b.title);
+      return adaptedA.title.localeCompare(adaptedB.title);
     });
 }
 

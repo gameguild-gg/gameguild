@@ -22,11 +22,7 @@ const defaultTypeOptions: FilterOption[] = [
   { value: 'faculty-review', label: 'Faculty Review' },
 ];
 
-export function TestingLabFilterControls({
-  hideViewToggle = false,
-  statusOptions = defaultStatusOptions,
-  typeOptions = defaultTypeOptions,
-}: TestingLabFilterControlsProps) {
+export function TestingLabFilterControls({ hideViewToggle = false, statusOptions = defaultStatusOptions, typeOptions = defaultTypeOptions }: TestingLabFilterControlsProps) {
   const { state, setSearchTerm, toggleStatus, toggleType, setPeriod, setViewMode } = useTestingLabFilters();
 
   return (
@@ -40,20 +36,8 @@ export function TestingLabFilterControls({
 
         {/* Center - Filter Dropdowns */}
         <div className="flex gap-3 items-center">
-          <MultiSelectFilter
-            options={statusOptions}
-            selectedValues={state.selectedStatuses}
-            onToggle={toggleStatus}
-            placeholder="Status"
-            searchPlaceholder="Search status..."
-          />
-          <MultiSelectFilter
-            options={typeOptions}
-            selectedValues={state.selectedTypes}
-            onToggle={toggleType}
-            placeholder="Session Type"
-            searchPlaceholder="Search types..."
-          />
+          <MultiSelectFilter options={statusOptions} selectedValues={state.selectedStatuses} onToggle={toggleStatus} placeholder="Status" searchPlaceholder="Search status..." />
+          <MultiSelectFilter options={typeOptions} selectedValues={state.selectedTypes} onToggle={toggleType} placeholder="Session Type" searchPlaceholder="Search types..." />
         </div>
 
         {/* Right Side - Period Selector and View Mode Toggle */}
@@ -82,20 +66,8 @@ export function TestingLabFilterControls({
 
           {/* Filter Dropdowns */}
           <div className="flex gap-3 items-center flex-shrink-0">
-            <MultiSelectFilter
-              options={statusOptions}
-              selectedValues={state.selectedStatuses}
-              onToggle={toggleStatus}
-              placeholder="Status"
-              searchPlaceholder="Search status..."
-            />
-            <MultiSelectFilter
-              options={typeOptions}
-              selectedValues={state.selectedTypes}
-              onToggle={toggleType}
-              placeholder="Type"
-              searchPlaceholder="Search types..."
-            />
+            <MultiSelectFilter options={statusOptions} selectedValues={state.selectedStatuses} onToggle={toggleStatus} placeholder="Status" searchPlaceholder="Search status..." />
+            <MultiSelectFilter options={typeOptions} selectedValues={state.selectedTypes} onToggle={toggleType} placeholder="Type" searchPlaceholder="Search types..." />
           </div>
         </div>
       </div>
