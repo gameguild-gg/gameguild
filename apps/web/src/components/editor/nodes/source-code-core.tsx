@@ -34,7 +34,7 @@ export interface SourceCodeNodeData {
   testCases?: Record<
     string,
     {
-      type: "simple" | "inout" | "predicate" | "custom" | "function"
+      type: "custom" | "function" | "console"
       input?: string
       expectedOutput?: string
       args?: any[]
@@ -107,7 +107,7 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
     Record<
       string,
       {
-        type: "simple" | "inout" | "predicate" | "custom" | "function"
+        type: "custom" | "function" | "console"
         input?: string
         expectedOutput?: string
         args?: any[]
@@ -234,7 +234,7 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
     clearTerminal,
     addOutput,
   } = useTerminal({
-    onCommand: (command) => {
+    onCommand: (_command) => {
       return true
     },
     scrollToBottom: scrollTerminalToBottom,
@@ -315,46 +315,19 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
 
   // Update the addTestCase function to handle the predicate test type
   const addTestCase = useCallback(
-    (fileId: string, type: "simple" | "inout" | "predicate" | "custom" | "function" = "simple") => {
+    (fileId: string, type: "custom" | "function" | "console" = "console") => {
       setTestCases((prev) => {
         const fileCases = prev[fileId] || []
 
         // If there are existing tests, use their type
         const testType = fileCases.length > 0 ? fileCases[0].type : type
 
-        // If this is the first In/Out or Predicate test, add the solution template to the file
-        if ((testType === "inout" || testType === "predicate") && fileCases.length === 0) {
-          const file = files.find((f) => f.id === fileId)
-          if (file) {
-            const content = file.content
-            const updatedContent = insertSolutionTemplate(content, selectedLanguage)
-
-            // Update the file content
-            setFiles((prevFiles) =>
-              prevFiles.map((f) => {
-                if (f.id === fileId) {
-                  return {
-                    ...f,
-                    content: updatedContent,
-                  }
-                }
-                return f
-              }),
-            )
-          }
-        }
-
         return {
           ...prev,
           [fileId]: [
             ...fileCases,
             {
-              type: testType,
-              ...(testType === "simple"
-                ? { expectedOutput: "" }
-                : testType === "predicate"
-                  ? { args: [], predicate: "result => typeof result === 'number'" }
-                  : { args: [], expectedReturn: [] }),
+              type: testType
             },
           ],
         }
@@ -390,7 +363,7 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
       fileId: string,
       index: number,
       testData: Partial<{
-        type: "simple" | "inout" | "predicate" | "custom" | "function"
+        type: "custom" | "function" | "console"
         input?: string
         expectedOutput?: string
         args?: any[]
@@ -488,8 +461,7 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
     updateSourceCode({
       readonly,
       showExecution,
-      files: filesCopy,
-      testCases: testCases,
+      files: filesCopy
     })
 
     setIsEditing(false)
