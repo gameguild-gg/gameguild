@@ -1,9 +1,9 @@
 // Error boundaries must be Client Components.
 'use client';
 
-import React, { useEffect } from 'react';
 import { ErrorProps } from '@/types';
 import Link from 'next/link';
+import React, { useEffect } from 'react';
 
 export default function GlobalError({ error, reset }: ErrorProps): React.JSX.Element {
   const isDevelopment = process.env.NODE_ENV === 'development';

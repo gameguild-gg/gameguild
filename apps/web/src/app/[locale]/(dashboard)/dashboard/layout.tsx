@@ -1,7 +1,7 @@
-import React, { PropsWithChildren } from 'react';
-import { cookies } from 'next/headers';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { DashboardHeader, DashboardSidebar } from '@/components/dashboard';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { cookies } from 'next/headers';
+import React, { PropsWithChildren } from 'react';
 
 export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
   const cookieStore = await cookies();
