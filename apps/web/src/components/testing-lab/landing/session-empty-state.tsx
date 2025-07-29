@@ -31,16 +31,13 @@ export function SessionEmptyState({ hasFilters, hasSessions }: SessionEmptyState
               <div
                 className="w-16 h-16 mx-auto mb-4 rounded-full border border-blue-400/30 flex items-center justify-center"
                 style={{
-                  background:
-                    'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 50%, rgba(29, 78, 216, 0.1) 100%)',
+                  background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 50%, rgba(29, 78, 216, 0.1) 100%)',
                 }}
               >
                 <Search className="h-6 w-6 text-blue-400" />
               </div>
               <h3 className="text-2xl font-semibold text-white mb-3">No sessions match your filters</h3>
-              <p className="text-slate-400 leading-relaxed">
-                Try adjusting your search terms or filters to find the testing sessions you're looking for. New sessions are added regularly!
-              </p>
+              <p className="text-slate-400 leading-relaxed">Try adjusting your search terms or filters to find the testing sessions you're looking for. New sessions are added regularly!</p>
             </div>
           </div>
         </div>
