@@ -3,27 +3,13 @@
  * @type {import('prettier').Config}
  */
 const config = {
-  printWidth: 160,
+  endOfLine: 'lf',
+  ignorePath: '.gitignore',
+  printWidth: 240,
   singleQuote: true,
   tabWidth: 2,
   trailingComma: 'all',
   useTabs: false,
-  // Ignore patterns for directories and files that shouldn't be formatted
-  ignoreFiles: [
-    '**/node_modules/**',
-    '**/dist/**',
-    '**/build/**',
-    '**/.next/**',
-    '**/coverage/**',
-    '**/.nuxt/**',
-    '**/public/**',
-    '**/static/**',
-    '**/*.min.js',
-    '**/*.min.css',
-    '**/package-lock.json',
-    '**/yarn.lock',
-    '**/pnpm-lock.yaml',
-  ],
 };
 
 export default config;
