@@ -1,12 +1,12 @@
+import { googleIdTokenSignIn, localSign, refreshAccessToken } from '@/lib/auth/auth.actions.backup';
+import { SignInResponse } from '@/lib/auth/auth.types';
+import { isUserWithAuthData } from '@/lib/auth/auth.utils';
 import { Account, DefaultSession, NextAuthConfig, Profile, Session, User } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
 import type { CredentialInput, Provider } from 'next-auth/providers';
 import Credentials from 'next-auth/providers/credentials';
 import GitHub from 'next-auth/providers/github';
 import Google from 'next-auth/providers/google';
-import { googleIdTokenSignIn, localSign, refreshAccessToken } from '@/lib/auth/auth.actions';
-import { SignInResponse } from '@/lib/auth/auth.types';
-import { isUserWithAuthData } from '@/lib/auth/auth.utils';
 
 const providers: Provider[] = [
   Credentials({
@@ -57,16 +57,7 @@ export const authConfig: NextAuthConfig = {
     strategy: 'jwt',
   },
   callbacks: {
-    signIn: async ({
-      user,
-      account,
-    }: {
-      user: User;
-      account?: Account | null;
-      profile?: Profile;
-      email?: { verificationRequest?: boolean };
-      credentials?: Record<string, CredentialInput>;
-    }): Promise<boolean> => {
+    signIn: async ({ user, account }: { user: User; account?: Account | null; profile?: Profile; email?: { verificationRequest?: boolean }; credentials?: Record<string, CredentialInput> }): Promise<boolean> => {
       if (account?.provider === 'google') {
         if (!account?.id_token) return false;
         try {
@@ -89,20 +80,7 @@ export const authConfig: NextAuthConfig = {
       // Allow local authentication.
       return account?.provider === 'local';
     },
-    jwt: async ({
-      token,
-      user,
-      trigger,
-      session,
-    }: {
-      token: JWT;
-      user: User;
-      account?: Account | null;
-      profile?: Profile;
-      trigger?: 'update' | 'signIn' | 'signUp';
-      isNewUser?: boolean;
-      session?: Session;
-    }): Promise<JWT | null> => {
+    jwt: async ({ token, user, trigger, session }: { token: JWT; user: User; account?: Account | null; profile?: Profile; trigger?: 'update' | 'signIn' | 'signUp'; isNewUser?: boolean; session?: Session }): Promise<JWT | null> => {
       // This is called when a user signing-in or signing-up.
       if (trigger === 'signIn' || trigger === 'signUp') {
         // We must have auth data from our API, otherwise the session is corrupted.
@@ -221,16 +199,7 @@ export const authConfig: NextAuthConfig = {
 
       return token;
     },
-    session: async ({
-      session,
-      token,
-      trigger,
-    }: {
-      session: Session;
-      token: JWT | null;
-      newSession?: Session;
-      trigger?: 'update';
-    }): Promise<Session | DefaultSession> => {
+    session: async ({ session, token, trigger }: { session: Session; token: JWT | null; newSession?: Session; trigger?: 'update' }): Promise<Session | DefaultSession> => {
       // Check if the token is null (JWT callback returned null due to corruption)
       if (!token) {
         session.error = 'CorruptedSessionError';
