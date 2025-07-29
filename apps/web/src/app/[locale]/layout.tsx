@@ -1,20 +1,20 @@
-import React, { PropsWithChildren } from 'react';
-import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
-import { SessionProvider } from 'next-auth/react';
-import { hasLocale, NextIntlClientProvider } from 'next-intl';
-import { setRequestLocale } from 'next-intl/server';
+import { auth } from '@/auth';
 import { WebVitals } from '@/components/analytics';
 import { ErrorBoundaryProvider } from '@/components/common/errors/error-boundary-provider';
-import { ThemeProvider } from '@/components/theme';
 import { TenantProvider } from '@/components/tenant';
+import { ThemeProvider } from '@/components/theme';
 import { Toaster } from '@/components/ui/sonner';
 import { Web3Provider } from '@/components/web3';
 import { environment } from '@/configs/environment';
-import { auth } from '@/auth';
 import { routing } from '@/i18n';
 import { PropsWithLocaleParams } from '@/types';
+import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
+import { Metadata } from 'next';
+import { SessionProvider } from 'next-auth/react';
+import { hasLocale, NextIntlClientProvider } from 'next-intl';
+import { setRequestLocale } from 'next-intl/server';
+import { notFound } from 'next/navigation';
+import React, { PropsWithChildren } from 'react';
 
 export async function generateMetadata({ params }: PropsWithLocaleParams): Promise<Metadata> {
   const { locale } = await params;
