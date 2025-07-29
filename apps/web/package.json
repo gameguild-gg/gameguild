@@ -11,7 +11,7 @@
     "build": "run-s api:gen build:next",
     "build:next": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint --fix"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
