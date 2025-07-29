@@ -1,6 +1,6 @@
-import React from 'react';
-import { getLicenseContent } from '@/lib/integrations/github/github.actions';
 import { MarkdownContent } from '@/components/content/markdown';
+import { getLicenseContent } from '@/lib/integrations/github/github.actions';
+import React from 'react';
 
 export default async function Page(): Promise<React.JSX.Element> {
   const licenseData = await getLicenseContent();
