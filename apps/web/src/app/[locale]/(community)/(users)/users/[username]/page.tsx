@@ -1,7 +1,7 @@
-import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import UserProfile from '@/components/legacy/user-profile';
 import { getUserByUsername, userExists } from '@/lib/users/users.actions';
+import { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 
 interface PageProps {
   params: Promise<{
