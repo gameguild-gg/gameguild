@@ -80,21 +80,13 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
               >
                 {/* Rank */}
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 ${colorClasses.rankBg} rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg`}>
-                    {rank}
-                  </div>
+                  <div className={`w-10 h-10 ${colorClasses.rankBg} rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg`}>{rank}</div>
                 </div>
 
                 {/* User */}
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <Image
-                      src={contributor.avatar_url}
-                      alt={contributor.name || contributor.login}
-                      width={40}
-                      height={40}
-                      className="rounded-full ring-2 ring-slate-600/50"
-                    />
+                    <Image src={contributor.avatar_url} alt={contributor.name || contributor.login} width={40} height={40} className="rounded-full ring-2 ring-slate-600/50" />
                     {rank <= 3 && <div className={`absolute -top-1 -right-1 w-4 h-4 ${colorClasses.rankBg} rounded-full border-2 border-slate-800`}></div>}
                   </div>
                   <div>

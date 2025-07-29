@@ -6,7 +6,7 @@ import { TestingSessionsHeader } from '@/components/testing-lab/landing/testing-
 import { TestingSessionsContent } from '@/components/testing-lab/landing/testing-sessions-content';
 import { TestingLabFilterProvider } from '@/components/testing-lab/landing/testing-lab-filter-context';
 import { SessionNavigation } from '@/components/testing-lab/landing/session-navigation';
-import { TestSession } from '@/lib';
+import { TestSession } from '@/lib/admin';
 
 interface TestingLabSessionsProps {
   testSessions: TestSession[];

@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { Link, useRouter } from '@/i18n/navigation';
 import { RewardChip } from '@/components/testing-lab/common/ui/reward-chip';
 import { LocationChip } from '@/components/testing-lab/common/ui/location-chip';
+import { TestSession, adaptTestingSessionForComponent, SESSION_STATUS } from '@/lib/admin';
 
 interface TestSessionTableProps {
   sessions: TestSession[];
@@ -65,22 +66,36 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
           </thead>
           <tbody>
             {sessions.map((session) => {
-              const sessionDate = new Date(session.sessionDate);
+              // Adapt the API session data to component-friendly format
+              const adaptedSession = adaptTestingSessionForComponent(session);
+              const sessionDate = new Date(adaptedSession.sessionDate);
+
+              // Helper function to convert numeric status to string
+              const getStatusString = (status: number): 'open' | 'full' | 'in-progress' | 'closed' => {
+                switch (status) {
+                  case SESSION_STATUS.SCHEDULED:
+                    return 'open';
+                  case SESSION_STATUS.ACTIVE:
+                    return 'in-progress';
+                  case SESSION_STATUS.COMPLETED:
+                    return 'closed';
+                  case SESSION_STATUS.CANCELLED:
+                    return 'closed';
+                  default:
+                    return 'closed';
+                }
+              };
 
               return (
-                <tr
-                  key={session.id}
-                  className="border-b border-slate-700/50 hover:bg-slate-800/30 cursor-pointer transition-colors"
-                  onClick={() => handleRowClick(session.slug)}
-                >
+                <tr key={session.id} className="border-b border-slate-700/50 hover:bg-slate-800/30 cursor-pointer transition-colors" onClick={() => handleRowClick(adaptedSession.slug)}>
                   <td className="p-4">
                     <div>
-                      <div className="font-medium text-white text-sm">{session.title}</div>
-                      <div className="text-xs text-slate-400 mt-1 max-w-xs truncate">{session.description}</div>
+                      <div className="font-medium text-white text-sm">{adaptedSession.title}</div>
+                      <div className="text-xs text-slate-400 mt-1 max-w-xs truncate">{adaptedSession.description}</div>
                     </div>
                   </td>
                   <td className="p-4 text-center">
-                    <LocationChip isOnline={session.isOnline} variant="inline" />
+                    <LocationChip isOnline={adaptedSession.isOnline} variant="inline" />
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex flex-col items-end gap-1">
@@ -95,65 +110,63 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
                     </div>
                   </td>
                   <td className="p-4 text-right">
-                    <span className="text-slate-300 text-sm">{session.duration} min</span>
+                    <span className="text-slate-300 text-sm">{adaptedSession.duration} min</span>
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex flex-col items-end gap-1">
                       <div className="flex items-center gap-2 text-slate-300 text-sm">
                         <Users className="h-3 w-3" />
                         <span>
-                          {session.currentTesters}/{session.maxTesters}
+                          {adaptedSession.currentTesters}/{adaptedSession.maxTesters}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-slate-300 text-sm">
                         <Gamepad2 className="h-3 w-3" />
                         <span>
-                          {session.currentGames}/{session.maxGames}
+                          {adaptedSession.currentGames}/{adaptedSession.maxGames}
                         </span>
                       </div>
                     </div>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2 text-slate-300 text-sm">
-                      {getSessionTypeIcon(session.sessionType)}
-                      <span className="capitalize">{session.sessionType.replace('-', ' ')}</span>
+                      {getSessionTypeIcon(adaptedSession.sessionType)}
+                      <span className="capitalize">{adaptedSession.sessionType.replace('-', ' ')}</span>
                     </div>
                   </td>
                   <td className="p-4">
                     <div className="flex flex-wrap gap-1">
-                      {session.platform.slice(0, 2).map((platform) => (
-                        <Badge key={platform} variant="secondary" className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1.5 py-0.5">
+                      {adaptedSession.platform.slice(0, 2).map((platform) => (
+                        <Badge key={platform} variant="outline" className="text-xs border-slate-600 text-slate-300">
                           {platform}
                         </Badge>
                       ))}
-                      {session.platform.length > 2 && (
-                        <Badge variant="secondary" className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1.5 py-0.5">
-                          +{session.platform.length - 2}
+                      {adaptedSession.platform.length > 2 && (
+                        <Badge variant="outline" className="text-xs border-slate-600 text-slate-300">
+                          +{adaptedSession.platform.length - 2}
                         </Badge>
                       )}
                     </div>
                   </td>
-                  <td className="p-4">
-                    {session.rewards ? <RewardChip value={session.rewards.value} variant="inline" /> : <span className="text-slate-500 text-xs">-</span>}
-                  </td>
+                  <td className="p-4">{adaptedSession.rewards ? <RewardChip value={adaptedSession.rewards.value.toString()} variant="inline" /> : <span className="text-slate-500 text-xs">-</span>}</td>
                   <td className="p-4 text-center">
                     <div className="flex justify-center">
-                      <Badge variant="outline" className={`${getStatusColor(session.status)} text-xs w-20 justify-center`}>
-                        {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+                      <Badge variant="outline" className={`${getStatusColor(getStatusString(adaptedSession.status))} text-xs w-20 justify-center`}>
+                        {getStatusString(adaptedSession.status).charAt(0).toUpperCase() + getStatusString(adaptedSession.status).slice(1)}
                       </Badge>
                     </div>
                   </td>
                   <td className="p-4">
                     <div onClick={(e) => e.stopPropagation()}>
-                      {session.status === 'open' ? (
+                      {getStatusString(adaptedSession.status) === 'open' ? (
                         <Button
                           asChild
                           size="sm"
                           className="bg-gradient-to-r from-blue-600/30 to-blue-500/30 backdrop-blur-md border border-blue-400/40 text-white hover:from-blue-600/90 hover:to-blue-500/90 hover:border-blue-300/90 font-semibold transition-all duration-200 text-xs"
                         >
-                          <Link href={`/testing-lab/sessions/${session.slug}/join`}>Join Session</Link>
+                          <Link href={`/testing-lab/sessions/${adaptedSession.slug}/join`}>Join Session</Link>
                         </Button>
-                      ) : session.status === 'full' ? (
+                      ) : getStatusString(adaptedSession.status) === 'full' ? (
                         <Button disabled size="sm" variant="outline" className="text-xs">
                           Full Session
                         </Button>
