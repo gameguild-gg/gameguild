@@ -1,9 +1,9 @@
 'use client';
 
-import { useRouter } from '@/i18n/navigation';
-import { useEffect, useState, use, useCallback } from 'react';
-import { getTestSessionBySlug, TestSession } from '@/lib/admin';
 import { JoinProcessModal } from '@/components/testing-lab/join/join-process-modal';
+import { useRouter } from '@/i18n/navigation';
+import { getTestSessionBySlug, TestSession } from '@/lib/admin';
+import { use, useCallback, useEffect, useState } from 'react';
 
 interface JoinModalProps {
   params: Promise<{
