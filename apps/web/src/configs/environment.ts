@@ -1,5 +1,5 @@
 export const environment = {
-  apiBaseUrl: `${process.env.NEXT_PUBLIC_API_URL!}`,
+  apiBaseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
   googleAnalyticsMeasurementId: `${process.env.GOOGLE_ANALYTICS_MEASUREMENT_ID!}`,
   googleClientId: `${process.env.GOOGLE_CLIENT_ID!}`,
   googleClientSecret: `${process.env.GOOGLE_CLIENT_SECRET!}`,
