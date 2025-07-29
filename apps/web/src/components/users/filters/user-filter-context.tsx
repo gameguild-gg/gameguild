@@ -31,8 +31,7 @@ export function useUserFilters() {
 function filterAndSortUsers(users: User[], filters: UserFilterState): User[] {
   return users
     .filter((user) => {
-      const matchesSearch =
-        user.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) || user.email.toLowerCase().includes(filters.searchTerm.toLowerCase());
+      const matchesSearch = user.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) || user.email.toLowerCase().includes(filters.searchTerm.toLowerCase());
 
       const matchesStatus = filters.selectedStatuses.length === 0 || filters.selectedStatuses.includes(user.isActive ? 'active' : 'inactive');
 

@@ -18,16 +18,11 @@ export function UserHeader({ userCount }: UserHeaderProps) {
             </div>
           </div>
         )}
-        <h1
-          className="text-5xl md:text-6xl font-bold text-white my-8"
-          style={{ textShadow: '0 0 8px rgba(59, 130, 246, 0.25), 0 0 16px rgba(147, 51, 234, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15)' }}
-        >
+        <h1 className="text-5xl md:text-6xl font-bold text-white my-8" style={{ textShadow: '0 0 8px rgba(59, 130, 246, 0.25), 0 0 16px rgba(147, 51, 234, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15)' }}>
           User Management
         </h1>
       </div>
-      <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-        Manage user accounts, permissions, and platform access. Monitor user activity, handle registrations, and ensure the community stays safe and engaged.
-      </p>
+      <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">Manage user accounts, permissions, and platform access. Monitor user activity, handle registrations, and ensure the community stays safe and engaged.</p>
     </div>
   );
 }

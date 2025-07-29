@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from 'react';
 import { useUserContext, useUserFilters as useContextUserFilters, useUserPagination, useUserSelection } from '@/lib/users/users.context';
-import { createUserAction, deleteUserAction, revalidateUsersDataAction, toggleUserStatusAction, updateUserAction } from '@/lib/users/user-management';
+import { createUserAction, deleteUserAction, revalidateUsersDataAction, toggleUserStatusAction, updateUserAction } from '@/lib/user-management';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,12 +17,11 @@ import { Label } from '@/components/ui/label';
 import { Edit, Filter, Loader2, MoreHorizontal, Plus, RefreshCw, Search, Trash2, UserCheck, Users, UserX } from 'lucide-react';
 
 // Import the new enhanced components
-import { User } from '@/components/legacy/types/user';
+import type { UserResponseDto } from '@/lib/api/generated/types.gen';
 import { UserFilterProvider, UserFilterControls, UserActiveFilters, useUserFilters } from './filters';
 import { UserNavigation } from './user-navigation';
 import { UserContent } from './user-content';
 import { UserEmptyState } from './user-empty-state';
-import { useResponsiveViewMode } from '../common/hooks/use-responsive-view-mode';
 
 interface UserManagementContentProps {
   initialPagination?: {
@@ -36,9 +35,20 @@ interface UserManagementContentProps {
 // Enhanced content component using new filter system
 function EnhancedUserManagementContent() {
   const { state, filteredUsers, hasActiveFilters } = useUserFilters();
-  const { isSmallScreen } = useResponsiveViewMode();
+  // Simple responsive detection
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<UserResponseDto | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
@@ -154,11 +164,11 @@ function EnhancedUserManagementContent() {
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-name">Full Name</Label>
-                  <Input id="edit-name" name="name" defaultValue={editingUser.name} required />
+                  <Input id="edit-name" name="name" defaultValue={editingUser.name || ''} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-email">Email Address</Label>
-                  <Input id="edit-email" name="email" type="email" defaultValue={editingUser.email} required />
+                  <Input id="edit-email" name="email" type="email" defaultValue={editingUser.email || ''} required />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox id="edit-isActive" name="isActive" defaultChecked={editingUser.isActive} />
@@ -360,10 +370,7 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
               </div>
             </div>
 
-            <Select
-              value={filters.isActive === 'all' ? 'all' : filters.isActive.toString()}
-              onValueChange={(value) => setActiveFilter(value === 'all' ? 'all' : value === 'true')}
-            >
+            <Select value={filters.isActive === 'all' ? 'all' : filters.isActive.toString()} onValueChange={(value) => setActiveFilter(value === 'all' ? 'all' : value === 'true')}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -452,10 +459,10 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
                       <Avatar className="h-8 w-8">
                         <AvatarFallback>
                           {user.name
-                            .split(' ')
-                            .map((n) => n[0])
+                            ?.split(' ')
+                            .map((n: string) => n[0])
                             .join('')
-                            .toUpperCase()}
+                            .toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
@@ -559,11 +566,11 @@ export function UserManagementContent({ initialPagination }: UserManagementConte
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-name">Full Name</Label>
-                  <Input id="edit-name" name="name" defaultValue={editingUser.name} required />
+                  <Input id="edit-name" name="name" defaultValue={editingUser.name || ''} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-email">Email Address</Label>
-                  <Input id="edit-email" name="email" type="email" defaultValue={editingUser.email} required />
+                  <Input id="edit-email" name="email" type="email" defaultValue={editingUser.email || ''} required />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox id="edit-isActive" name="isActive" defaultChecked={editingUser.isActive} />
