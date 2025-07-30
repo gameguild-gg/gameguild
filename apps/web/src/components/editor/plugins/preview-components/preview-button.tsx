@@ -1,7 +1,7 @@
 "use client"
 
 import type { SerializedButtonNode } from "../../nodes/button-node"
-import { Button } from "../../ui/button"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ArrowRight, Copy, Download, ExternalLink, Mail } from "lucide-react"
 
