@@ -1,11 +1,5 @@
 import React, { PropsWithChildren } from 'react';
-import {
-  DashboardPage,
-  DashboardPageContent,
-  DashboardPageDescription,
-  DashboardPageHeader,
-  DashboardPageTitle,
-} from '@/components/dashboard/common/ui/dashboard-page';
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/common/ui/dashboard-page';
 
 import { PropsWithSlugParams } from '@/types';
 import { CourseEditorProvider } from '@/components/courses/editor';
