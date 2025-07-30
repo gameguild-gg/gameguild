@@ -1,7 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 using FluentValidation;
+using GameGuild.Common.Configuration;
 using GameGuild.Common.Extensions;
+using GameGuild.Common.Services;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Payments;
@@ -168,6 +170,7 @@ public static class DependencyInjection {
            .AddAuthenticationInternal(configuration, excludeAuth)
            .AddGraphQLInfrastructure(GraphQLOptionsFactory.ForProduction())
            .AddHealthChecksInternal(configuration)
+           .AddCloudflareServices(configuration)
            .AddHttpContextAccessor();
     // Required for GraphQL authorization
   }
@@ -186,6 +189,25 @@ public static class DependencyInjection {
 
     // Database seeding
     services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
+
+    return services;
+  }
+
+  /// <summary>
+  /// Adds Cloudflare Dynamic DNS services.
+  /// </summary>
+  private static IServiceCollection AddCloudflareServices(this IServiceCollection services, IConfiguration configuration) {
+    // Configure Cloudflare Dynamic DNS options
+    services.Configure<CloudflareDynamicDnsOptions>(configuration.GetSection(CloudflareDynamicDnsOptions.SectionName));
+
+    // Add HTTP client for Cloudflare API
+    services.AddHttpClient<ICloudflareExternalIpService, CloudflareExternalIpService>();
+
+    // Add the main service
+    services.AddSingleton<ICloudflareExternalIpService, CloudflareExternalIpService>();
+
+    // Add hosted service for background processing
+    services.AddHostedService<CloudflareExternalIpHostedService>();
 
     return services;
   }
