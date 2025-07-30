@@ -1,12 +1,12 @@
-import React from 'react';
-import { Metadata } from 'next';
-import { getContributors, getGitHubRepositoryData } from '@/lib/integrations/github';
 import { ContributorsHeader } from '@/components/contributors/contributors-header';
-import { TopContributorsSection } from '@/components/contributors/top-contributors-section';
-import { GlobalRankingTable } from '@/components/contributors/global-ranking-table';
 import { GitHubProjectStats } from '@/components/contributors/git-hub-project-stats';
+import { GlobalRankingTable } from '@/components/contributors/global-ranking-table';
 import { HorizontalRoadmap } from '@/components/contributors/horizontal-roadmap';
 import { HowToContribute } from '@/components/contributors/how-to-contribute';
+import { TopContributorsSection } from '@/components/contributors/top-contributors-section';
+import { getContributors, getGitHubRepositoryData } from '@/lib/integrations/github';
+import { Metadata } from 'next';
+import React from 'react';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
