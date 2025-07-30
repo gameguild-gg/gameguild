@@ -1,10 +1,9 @@
-import { Suspense } from 'react';
-import { Metadata } from 'next';
-import { getUsersData } from '@/lib/users/users.actions';
-import { UserProvider } from '@/lib/users/users.context';
 import { UserManagementContent } from '@/components/users/user-management-content';
+import { getUsers } from '@/lib/user-management/users/users.actions';
+import { UserProvider } from '@/lib/user-management/users/users.context';
 import { Loader2 } from 'lucide-react';
-import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
+import { Metadata } from 'next';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'User Management | Game Guild Dashboard',
@@ -27,7 +26,24 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
   const search = params.search || '';
 
   try {
-    const userData = await getUsersData(page, limit, search);
+    const response = await getUsers();
+
+    const users = response.data || [];
+    // For now, handle pagination and search client-side since the API structure is different
+    const filteredUsers = search ? users.filter((user) => user.name?.toLowerCase().includes(search.toLowerCase()) || user.email?.toLowerCase().includes(search.toLowerCase())) : users;
+
+    const startIndex = (page - 1) * limit;
+    const paginatedUsers = filteredUsers.slice(startIndex, startIndex + limit);
+
+    const userData = {
+      users: paginatedUsers,
+      pagination: {
+        page,
+        limit,
+        total: filteredUsers.length,
+        totalPages: Math.ceil(filteredUsers.length / limit),
+      },
+    };
 
     return (
       <div className="container mx-auto px-4 py-8">
@@ -36,19 +52,17 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           <p className="text-gray-600 dark:text-gray-400 mt-2">Manage users, roles, and permissions across the platform.</p>
         </div>
 
-        <ErrorBoundary fallback={<div className="text-red-500">Failed to load user management interface</div>}>
-          <UserProvider initialUsers={userData.users} initialPagination={userData.pagination}>
-            <Suspense
-              fallback={
-                <div className="flex items-center justify-center p-4">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                </div>
-              }
-            >
-              <UserManagementContent initialPagination={userData.pagination} />
-            </Suspense>
-          </UserProvider>
-        </ErrorBoundary>
+        <UserProvider initialUsers={userData.users} initialPagination={userData.pagination}>
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center p-4">
+                <Loader2 className="h-4 w-4 animate-spin" />
+              </div>
+            }
+          >
+            <UserManagementContent initialPagination={userData.pagination} />
+          </Suspense>
+        </UserProvider>
       </div>
     );
   } catch (error) {

@@ -52,18 +52,7 @@ const DELIVERY_MODES = [
   },
 ];
 
-const TIMEZONES = [
-  'UTC',
-  'America/New_York',
-  'America/Chicago',
-  'America/Denver',
-  'America/Los_Angeles',
-  'Europe/London',
-  'Europe/Paris',
-  'Asia/Tokyo',
-  'Asia/Shanghai',
-  'Australia/Sydney',
-];
+const TIMEZONES = ['UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'Europe/London', 'Europe/Paris', 'Asia/Tokyo', 'Asia/Shanghai', 'Australia/Sydney'];
 
 export default function CourseDeliveryPage() {
   const { state, setDeliveryMode, setAccessWindow, setEnrollmentWindow, addSession, updateSession, removeSession, setTimezone } = useCourseEditor();
@@ -150,13 +139,7 @@ export default function CourseDeliveryPage() {
                   const isSelected = state.delivery.mode === mode.value;
 
                   return (
-                    <Card
-                      key={mode.value}
-                      className={`cursor-pointer transition-all ${
-                        isSelected ? `ring-2 ring-primary ${mode.bgColor} ${mode.borderColor}` : 'hover:shadow-md border-border'
-                      }`}
-                      onClick={() => handleModeChange(mode.value)}
-                    >
+                    <Card key={mode.value} className={`cursor-pointer transition-all ${isSelected ? `ring-2 ring-primary ${mode.bgColor} ${mode.borderColor}` : 'hover:shadow-md border-border'}`} onClick={() => handleModeChange(mode.value)}>
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
                           <Icon className={`h-5 w-5 ${mode.color}`} />
@@ -337,32 +320,17 @@ export default function CourseDeliveryPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="md:col-span-2">
                           <Label htmlFor="session-title">Session Title</Label>
-                          <Input
-                            id="session-title"
-                            value={newSession.title}
-                            onChange={(e) => setNewSession({ ...newSession, title: e.target.value })}
-                            placeholder="e.g., Week 1: Introduction"
-                          />
+                          <Input id="session-title" value={newSession.title} onChange={(e) => setNewSession({ ...newSession, title: e.target.value })} placeholder="e.g., Week 1: Introduction" />
                         </div>
 
                         <div>
                           <Label htmlFor="session-start">Start Date & Time</Label>
-                          <Input
-                            id="session-start"
-                            type="datetime-local"
-                            value={newSession.startDate}
-                            onChange={(e) => setNewSession({ ...newSession, startDate: e.target.value })}
-                          />
+                          <Input id="session-start" type="datetime-local" value={newSession.startDate} onChange={(e) => setNewSession({ ...newSession, startDate: e.target.value })} />
                         </div>
 
                         <div>
                           <Label htmlFor="session-end">End Date & Time</Label>
-                          <Input
-                            id="session-end"
-                            type="datetime-local"
-                            value={newSession.endDate}
-                            onChange={(e) => setNewSession({ ...newSession, endDate: e.target.value })}
-                          />
+                          <Input id="session-end" type="datetime-local" value={newSession.endDate} onChange={(e) => setNewSession({ ...newSession, endDate: e.target.value })} />
                         </div>
 
                         <div>
@@ -524,10 +492,7 @@ export default function CourseDeliveryPage() {
                   )}
                   {state.enrollment.enrollmentWindow && (
                     <p>
-                      <strong>Enrollment:</strong>{' '}
-                      {state.enrollment.enrollmentWindow.opensAt
-                        ? `Opens ${format(state.enrollment.enrollmentWindow.opensAt, 'MMM d, yyyy')}`
-                        : 'Open enrollment'}
+                      <strong>Enrollment:</strong> {state.enrollment.enrollmentWindow.opensAt ? `Opens ${format(state.enrollment.enrollmentWindow.opensAt, 'MMM d, yyyy')}` : 'Open enrollment'}
                     </p>
                   )}
                 </div>
