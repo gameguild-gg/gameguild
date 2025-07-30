@@ -1,16 +1,11 @@
 import React from 'react';
-import {
-  DashboardPage,
-  DashboardPageContent,
-  DashboardPageDescription,
-  DashboardPageHeader,
-  DashboardPageTitle,
-} from '@/components/dashboard/common/ui/dashboard-page';
-import { CourseList } from '@/components/courses/common/ui/course-list';
-import { getCourses } from '@/lib/courses/actions';
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/common/ui/dashboard-page';
+import { CourseListWrapper } from '@/components/courses/common';
+import { getPrograms as getCourses } from '@/lib/content-management/programs/programs.actions';
 
 export default async function Page(): Promise<React.JSX.Element> {
-  const courses = await getCourses();
+  const response = await getCourses();
+  const courses = response.data || [];
 
   return (
     <DashboardPage>
@@ -19,7 +14,7 @@ export default async function Page(): Promise<React.JSX.Element> {
         <DashboardPageDescription>Manage your courses</DashboardPageDescription>
       </DashboardPageHeader>
       <DashboardPageContent>
-        <CourseList courses={courses} />
+        <CourseListWrapper courses={courses} />
       </DashboardPageContent>
     </DashboardPage>
   );
