@@ -10,12 +10,10 @@ FROM base AS builder
 WORKDIR /app
 
 # Accept build arguments for Next.js public environment variables
-ARG NEXT_PUBLIC_API_BASE_URL
 ARG NEXT_PUBLIC_API_URL  
 ARG NEXT_PUBLIC_WEB_URL
 
 # Set environment variables from build args
-ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
 
