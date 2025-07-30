@@ -82,3 +82,7 @@ temp/
 # Miscellaneous
 *.tgz
 *.tar.gz
+
+# ignore env files
+.env
+.env.*
