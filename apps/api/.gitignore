@@ -1,35 +1,40 @@
-# compiled output
-/dist
-/node_modules
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.docstates
+[Dd]ebug/
+[Rr]elease/
+build/
+[Bb]in/
+[Oo]bj/
+x64/
+x86/
+*.exe
+*.dll
+*.pdb
 
-# Logs
-logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
+# SQLite database files - DO NOT COMMIT TO GIT
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# IDE
+.vs/
+.vscode/
+*.swp
+*.swo
+*~
+.idea/
 
 # OS
 .DS_Store
+Thumbs.db
 
-# Tests
-/coverage
-/.nyc_output
-
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+# Environment files
+.env.local
+.env.development
+.env.production

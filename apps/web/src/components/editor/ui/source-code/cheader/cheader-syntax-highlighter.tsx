@@ -1,206 +1,206 @@
-"use client"
+'use client';
 
-import { useEffect } from "react"
-import type { editor } from "monaco-editor"
+import { useEffect } from 'react';
+import type { editor } from 'monaco-editor';
 
 interface CHeaderSyntaxHighlighterProps {
- monaco: typeof import("monaco-editor") | null
- editor: editor.IStandaloneCodeEditor | null
+  monaco: typeof import('monaco-editor') | null;
+  editor: editor.IStandaloneCodeEditor | null;
 }
 
 export function CHeaderSyntaxHighlighter({ monaco, editor }: CHeaderSyntaxHighlighterProps) {
- useEffect(() => {
-   if (!monaco || !editor) return
+  useEffect(() => {
+    if (!monaco || !editor) return;
 
-   // Register C Header language if not already registered
-   const languages = monaco.languages.getLanguages()
-   const cHeaderLanguage = languages.find((lang) => lang.id === "cheader")
+    // Register C Header language if not already registered
+    const languages = monaco.languages.getLanguages();
+    const cHeaderLanguage = languages.find((lang) => lang.id === 'cheader');
 
-   if (!cHeaderLanguage) {
-     console.log("Registering C Header language")
+    if (!cHeaderLanguage) {
+      console.log('Registering C Header language');
 
-     // Define C Header tokens and syntax highlighting rules
-     monaco.languages.register({ id: "cheader" })
+      // Define C Header tokens and syntax highlighting rules
+      monaco.languages.register({ id: 'cheader' });
 
-     monaco.languages.setMonarchTokensProvider("cheader", {
-       defaultToken: "invalid",
-       tokenPostfix: ".cheader",
+      monaco.languages.setMonarchTokensProvider('cheader', {
+        defaultToken: 'invalid',
+        tokenPostfix: '.cheader',
 
-       keywords: [
-         "auto",
-         "break",
-         "case",
-         "char",
-         "const",
-         "continue",
-         "default",
-         "do",
-         "double",
-         "else",
-         "enum",
-         "extern",
-         "float",
-         "for",
-         "goto",
-         "if",
-         "int",
-         "long",
-         "register",
-         "return",
-         "short",
-         "signed",
-         "sizeof",
-         "static",
-         "struct",
-         "switch",
-         "typedef",
-         "union",
-         "unsigned",
-         "void",
-         "volatile",
-         "while",
-         "_Alignas",
-         "_Alignof",
-         "_Atomic",
-         "_Bool",
-         "_Complex",
-         "_Generic",
-         "_Imaginary",
-         "_Noreturn",
-         "_Static_assert",
-         "_Thread_local",
-         "inline",
-         "restrict",
-       ],
+        keywords: [
+          'auto',
+          'break',
+          'case',
+          'char',
+          'const',
+          'continue',
+          'default',
+          'do',
+          'double',
+          'else',
+          'enum',
+          'extern',
+          'float',
+          'for',
+          'goto',
+          'if',
+          'int',
+          'long',
+          'register',
+          'return',
+          'short',
+          'signed',
+          'sizeof',
+          'static',
+          'struct',
+          'switch',
+          'typedef',
+          'union',
+          'unsigned',
+          'void',
+          'volatile',
+          'while',
+          '_Alignas',
+          '_Alignof',
+          '_Atomic',
+          '_Bool',
+          '_Complex',
+          '_Generic',
+          '_Imaginary',
+          '_Noreturn',
+          '_Static_assert',
+          '_Thread_local',
+          'inline',
+          'restrict',
+        ],
 
-       typeKeywords: [
-         "bool",
-         "complex",
-         "imaginary",
-         "FILE",
-         "size_t",
-         "time_t",
-         "wchar_t",
-         "int8_t",
-         "int16_t",
-         "int32_t",
-         "int64_t",
-         "uint8_t",
-         "uint16_t",
-         "uint32_t",
-         "uint64_t",
-         "intptr_t",
-         "uintptr_t",
-         "ptrdiff_t",
-       ],
+        typeKeywords: [
+          'bool',
+          'complex',
+          'imaginary',
+          'FILE',
+          'size_t',
+          'time_t',
+          'wchar_t',
+          'int8_t',
+          'int16_t',
+          'int32_t',
+          'int64_t',
+          'uint8_t',
+          'uint16_t',
+          'uint32_t',
+          'uint64_t',
+          'intptr_t',
+          'uintptr_t',
+          'ptrdiff_t',
+        ],
 
-       operators: [
-         "=",
-         ">",
-         "<",
-         "!",
-         "~",
-         "?",
-         ":",
-         "==",
-         "<=",
-         ">=",
-         "!=",
-         "&&",
-         "||",
-         "++",
-         "--",
-         "+",
-         "-",
-         "*",
-         "/",
-         "&",
-         "|",
-         "^",
-         "%",
-         "<<",
-         ">>",
-         "+=",
-         "-=",
-         "*=",
-         "/=",
-         "&=",
-         "|=",
-         "^=",
-         "%=",
-         "<<=",
-         ">>=",
-       ],
+        operators: [
+          '=',
+          '>',
+          '<',
+          '!',
+          '~',
+          '?',
+          ':',
+          '==',
+          '<=',
+          '>=',
+          '!=',
+          '&&',
+          '||',
+          '++',
+          '--',
+          '+',
+          '-',
+          '*',
+          '/',
+          '&',
+          '|',
+          '^',
+          '%',
+          '<<',
+          '>>',
+          '+=',
+          '-=',
+          '*=',
+          '/=',
+          '&=',
+          '|=',
+          '^=',
+          '%=',
+          '<<=',
+          '>>=',
+        ],
 
-       symbols: /[=><!~?:&|+\-*/^%]+/,
+        symbols: /[=><!~?:&|+\-*/^%]+/,
 
-       escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
+        escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
 
-       // The main tokenizer for our languages
-       tokenizer: {
-         root: [
-           // preprocessor directives
-           [/^\s*#\s*\w+/, "keyword.directive"],
+        // The main tokenizer for our languages
+        tokenizer: {
+          root: [
+            // preprocessor directives
+            [/^\s*#\s*\w+/, 'keyword.directive'],
 
-           // identifiers and keywords
-           [
-             /[a-zA-Z_]\w*/,
-             {
-               cases: {
-                 "@keywords": "keyword",
-                 "@typeKeywords": "type",
-                 "@default": "identifier",
-               },
-             },
-           ],
+            // identifiers and keywords
+            [
+              /[a-zA-Z_]\w*/,
+              {
+                cases: {
+                  '@keywords': 'keyword',
+                  '@typeKeywords': 'type',
+                  '@default': 'identifier',
+                },
+              },
+            ],
 
-           // whitespace
-           { include: "@whitespace" },
+            // whitespace
+            { include: '@whitespace' },
 
-           // delimiters and operators
-           [/[{}()[\]]/, "@brackets"],
-           [/[<>](?!@symbols)/, "@brackets"],
-           [
-             /@symbols/,
-             {
-               cases: {
-                 "@operators": "operator",
-                 "@default": "",
-               },
-             },
-           ],
+            // delimiters and operators
+            [/[{}()[\]]/, '@brackets'],
+            [/[<>](?!@symbols)/, '@brackets'],
+            [
+              /@symbols/,
+              {
+                cases: {
+                  '@operators': 'operator',
+                  '@default': '',
+                },
+              },
+            ],
 
-           // numbers
-           [/\d*\.\d+([eE][-+]?\d+)?/, "number.float"],
-           [/0[xX][0-9a-fA-F]+/, "number.hex"],
-           [/\d+/, "number"],
+            // numbers
+            [/\d*\.\d+([eE][-+]?\d+)?/, 'number.float'],
+            [/0[xX][0-9a-fA-F]+/, 'number.hex'],
+            [/\d+/, 'number'],
 
-           // delimiter: after number because of .\d floats
-           [/[;,.]/, "delimiter"],
+            // delimiter: after number because of .\d floats
+            [/[;,.]/, 'delimiter'],
 
-           // strings
-           [/"([^"\\]|\\.)*$/, "string.invalid"], // non-terminated string
-           [/"/, { token: "string.quote", bracket: "@open", next: "@string" }],
+            // strings
+            [/"([^"\\]|\\.)*$/, 'string.invalid'], // non-terminated string
+            [/"/, { token: 'string.quote', bracket: '@open', next: '@string' }],
 
-           // characters
-           [/'[^\\']'/, "string"],
-           [/(')(@escapes)(')/, ["string", "string.escape", "string"]],
-           [/'/, "string.invalid"],
-         ],
+            // characters
+            [/'[^\\']'/, 'string'],
+            [/(')(@escapes)(')/, ['string', 'string.escape', 'string']],
+            [/'/, 'string.invalid'],
+          ],
 
-         comment: [
-           [/[^/*]+/, "comment"],
-           [/\/\*/, "comment", "@push"], // nested comment
-           ["\\*/", "comment", "@pop"],
-           [/[/*]/, "comment"],
-         ],
+          comment: [
+            [/[^/*]+/, 'comment'],
+            [/\/\*/, 'comment', '@push'], // nested comment
+            ['\\*/', 'comment', '@pop'],
+            [/[/*]/, 'comment'],
+          ],
 
-         string: [
-           [/[^\\"]+/, "string"],
-           [/@escapes/, "string.escape"],
-           [/\\./, "string.escape.invalid"],
-           [/"/, { token: "string.quote", bracket: "@close", next: "@pop" }],
-         ],
+          string: [
+            [/[^\\"]+/, 'string'],
+            [/@escapes/, 'string.escape'],
+            [/\\./, 'string.escape.invalid'],
+            [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }],
+          ],
 
          whitespace: [
            [/[ \t\r]+/, "white"],
@@ -211,16 +211,16 @@ export function CHeaderSyntaxHighlighter({ monaco, editor }: CHeaderSyntaxHighli
      })
    }
 
-   // Set the language for the current model if it's C Header
-   const model = editor.getModel()
-   if (model && model.getLanguageId() === "cheader") {
-     monaco.editor.setModelLanguage(model, "cheader")
-   }
+    // Set the language for the current model if it's C Header
+    const model = editor.getModel();
+    if (model && model.getLanguageId() === 'cheader') {
+      monaco.editor.setModelLanguage(model, 'cheader');
+    }
 
-   return () => {
-     // Cleanup if needed
-   }
- }, [monaco, editor])
+    return () => {
+      // Cleanup if needed
+    };
+  }, [monaco, editor]);
 
- return null
+  return null;
 }

@@ -1,261 +1,68 @@
 'use server';
 
-import { httpClientFactory } from '@/lib/core/http';
-import { environment } from '@/configs/environment';
-import { auth } from '@/auth';
+import { signIn, signOut } from '@/auth';
+import { AuthError } from 'next-auth';
 
-export type AuthActionState = {
-  error?: string;
-  success?: boolean;
-  message?: string;
-};
-
-export async function sendEmailVerification(
-  previousState: AuthActionState,
-  formData: FormData,
-): Promise<AuthActionState> {
+/**
+ * Server action for Google sign-in
+ */
+export async function googleSignInAction() {
   try {
-    const email = formData.get('email') as string;
-    const tenantId = formData.get('tenantId') as string | undefined;
-
-    if (!email) {
-      return {
-        error: 'Email is required',
-        success: false,
-      };
-    }
-
-    const httpClient = httpClientFactory();
-
-    const response = await httpClient.request({
-      method: 'POST',
-      url: `${environment.apiBaseUrl}/auth/send-email-verification`,
-      body: {
-        email,
-        tenantId: tenantId || undefined,
-      },
-    });
-
-    if (response.statusCode !== 200) {
-      return {
-        error: (response.body as any)?.message || 'Failed to send verification email',
-        success: false,
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Verification email sent successfully',
-    };
+    await signIn('google');
   } catch (error) {
-    console.error('Send email verification error:', error);
-    return {
-      error: error instanceof Error ? error.message : 'An unexpected error occurred',
-      success: false,
-    };
+    // Handle known NextAuth errors
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'OAuthSignInError':
+          throw new Error('OAuth sign-in failed');
+        case 'OAuthCallbackError':
+          throw new Error('OAuth callback error');
+        case 'AccessDenied':
+          throw new Error('Access denied');
+        case 'OAuthAccountNotLinked':
+          throw new Error('Email already in use with different provider');
+        default:
+          throw new Error('Authentication error occurred');
+      }
+    }
+    // Re-throw other errors
+    throw error;
   }
 }
 
-export async function verifyEmail(
-  previousState: AuthActionState,
-  formData: FormData,
-): Promise<AuthActionState> {
+/**
+ * Server action for sign-out
+ */
+export async function signOutAction() {
   try {
-    const token = formData.get('token') as string;
-
-    if (!token) {
-      return {
-        error: 'Verification token is required',
-        success: false,
-      };
-    }
-
-    const httpClient = httpClientFactory();
-
-    const response = await httpClient.request({
-      method: 'POST',
-      url: `${environment.apiBaseUrl}/auth/verify-email`,
-      body: { token },
-    });
-
-    if (response.statusCode !== 200) {
-      return {
-        error: (response.body as any)?.message || 'Failed to verify email',
-        success: false,
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Email verified successfully',
-    };
+    await signOut();
   } catch (error) {
-    console.error('Verify email error:', error);
-    return {
-      error: error instanceof Error ? error.message : 'An unexpected error occurred',
-      success: false,
-    };
+    console.error('Sign-out error:', error);
+    throw error;
   }
 }
 
-export async function forgotPassword(
-  previousState: AuthActionState,
-  formData: FormData,
-): Promise<AuthActionState> {
+/**
+ * Server action for sign-in with redirect URL
+ */
+export async function signInWithRedirectAction(provider: string, redirectTo?: string) {
   try {
-    const email = formData.get('email') as string;
-    const tenantId = formData.get('tenantId') as string | undefined;
-
-    if (!email) {
-      return {
-        error: 'Email is required',
-        success: false,
-      };
-    }
-
-    const httpClient = httpClientFactory();
-
-    const response = await httpClient.request({
-      method: 'POST',
-      url: `${environment.apiBaseUrl}/auth/forgot-password`,
-      body: {
-        email,
-        tenantId: tenantId || undefined,
-      },
-    });
-
-    if (response.statusCode !== 200) {
-      return {
-        error: (response.body as any)?.message || 'Failed to send reset email',
-        success: false,
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Password reset email sent successfully',
-    };
+    await signIn(provider, { redirectTo });
   } catch (error) {
-    console.error('Forgot password error:', error);
-    return {
-      error: error instanceof Error ? error.message : 'An unexpected error occurred',
-      success: false,
-    };
-  }
-}
-
-export async function resetPassword(
-  previousState: AuthActionState,
-  formData: FormData,
-): Promise<AuthActionState> {
-  try {
-    const token = formData.get('token') as string;
-    const newPassword = formData.get('newPassword') as string;
-    const confirmPassword = formData.get('confirmPassword') as string;
-
-    if (!token || !newPassword) {
-      return {
-        error: 'Reset token and new password are required',
-        success: false,
-      };
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'OAuthSignInError':
+          throw new Error('OAuth sign-in failed');
+        case 'OAuthCallbackError':
+          throw new Error('OAuth callback error');
+        case 'AccessDenied':
+          throw new Error('Access denied');
+        case 'OAuthAccountNotLinked':
+          throw new Error('Email already in use with different provider');
+        default:
+          throw new Error('Authentication error occurred');
+      }
     }
-
-    if (newPassword !== confirmPassword) {
-      return {
-        error: 'Passwords do not match',
-        success: false,
-      };
-    }
-
-    const httpClient = httpClientFactory();
-
-    const response = await httpClient.request({
-      method: 'POST',
-      url: `${environment.apiBaseUrl}/auth/reset-password`,
-      body: {
-        token,
-        newPassword,
-      },
-    });
-
-    if (response.statusCode !== 200) {
-      return {
-        error: (response.body as any)?.message || 'Failed to reset password',
-        success: false,
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Password reset successfully',
-    };
-  } catch (error) {
-    console.error('Reset password error:', error);
-    return {
-      error: error instanceof Error ? error.message : 'An unexpected error occurred',
-      success: false,
-    };
-  }
-}
-
-export async function changePassword(
-  previousState: AuthActionState,
-  formData: FormData,
-): Promise<AuthActionState> {
-  try {
-    const session = await auth();
-    if (!session?.accessToken) {
-      return {
-        error: 'Not authenticated',
-        success: false,
-      };
-    }
-
-    const oldPassword = formData.get('oldPassword') as string;
-    const newPassword = formData.get('newPassword') as string;
-    const confirmPassword = formData.get('confirmPassword') as string;
-
-    if (!oldPassword || !newPassword) {
-      return {
-        error: 'Old password and new password are required',
-        success: false,
-      };
-    }
-
-    if (newPassword !== confirmPassword) {
-      return {
-        error: 'New passwords do not match',
-        success: false,
-      };
-    }
-
-    const httpClient = httpClientFactory();
-
-    const response = await httpClient.request({
-      method: 'POST',
-      url: `${environment.apiBaseUrl}/auth/change-password`,
-      body: {
-        oldPassword,
-        newPassword,
-      },
-    });
-
-    if (response.statusCode !== 200) {
-      return {
-        error: (response.body as any)?.message || 'Failed to change password',
-        success: false,
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Password changed successfully',
-    };
-  } catch (error) {
-    console.error('Change password error:', error);
-    return {
-      error: error instanceof Error ? error.message : 'An unexpected error occurred',
-      success: false,
-    };
+    throw error;
   }
 }

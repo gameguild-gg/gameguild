@@ -1,9 +1,0 @@
-{
-  "name": "@game-guild/typescript-config",
-  "description": "",
-  "version": "0.1.0",
-  "author": "",
-  "license": "MIT",
-  "private": true,
-  "type": "module"
-}

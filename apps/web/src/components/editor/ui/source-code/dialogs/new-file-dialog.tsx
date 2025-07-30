@@ -1,4 +1,4 @@
-"use client"
+'use client';
 
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -36,10 +36,10 @@ export function NewFileDialog({
   getLanguageLabel,
   isPreview = false,
 }: NewFileDialogProps) {
-  const [fileNameError, setFileNameError] = useState(false)
-  const [testInputs, setTestInputs] = useState<string[]>([""])
+  const [fileNameError, setFileNameError] = useState(false);
+  const [testInputs, setTestInputs] = useState<string[]>(['']);
 
-  if (!showFileDialog) return null
+  if (!showFileDialog) return null;
 
   return (
     <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -52,11 +52,11 @@ export function NewFileDialog({
               id="file-name"
               value={newFileName}
               onChange={(e) => {
-                setNewFileName(e.target.value)
-                if (e.target.value) setFileNameError(false)
+                setNewFileName(e.target.value);
+                if (e.target.value) setFileNameError(false);
               }}
               placeholder="e.g. utils.js"
-              className={`mt-1 ${fileNameError ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+              className={`mt-1 ${fileNameError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
             />
             {fileNameError && <p className="text-red-500 text-xs mt-1">File name is required</p>}
           </div>
@@ -82,10 +82,10 @@ export function NewFileDialog({
             <Button
               onClick={() => {
                 if (!newFileName.trim()) {
-                  setFileNameError(true)
-                  return
+                  setFileNameError(true);
+                  return;
                 }
-                addNewFile()
+                addNewFile();
               }}
             >
               Add File
@@ -94,5 +94,5 @@ export function NewFileDialog({
         </div>
       </div>
     </div>
-  )
+  );
 }

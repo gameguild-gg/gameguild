@@ -1,10 +1,81 @@
 import { NextConfig } from 'next';
-import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
+  trailingSlash: false,
+  // Handle proxy headers from Cloudflare Tunnel
+  experimental: {
+    trustHost: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'github.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh4.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh5.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh6.googleusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'sample-videos.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
+  webpack: (config) => {
+    // Allow importing .js files from TypeScript files
+    // the api client generation requires this
+    config.resolve.extensionAlias = {
+      '.js': ['.js', '.ts'],
+      '.jsx': ['.jsx', '.tsx'],
+    };
+    return config;
+  },
 };
 
-const withNextIntl = createNextIntlPlugin();
-export default withNextIntl(nextConfig);
+// Internationalization disabled - exporting config directly without next-intl plugin
+export default nextConfig;

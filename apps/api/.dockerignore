@@ -1,6 +1,5 @@
-**/.classpath
-**/.dockerignore
-**/.env.dockerignore copy
+﻿**/.dockerignore
+**/.env
 **/.git
 **/.gitignore
 **/.project
@@ -8,12 +7,14 @@
 **/.toolstarget
 **/.vs
 **/.vscode
+**/.idea
 **/*.*proj.user
 **/*.dbmdl
 **/*.jfm
+**/azds.yaml
+**/bin
 **/charts
 **/docker-compose*
-**/compose*
 **/Dockerfile*
 **/node_modules
 **/npm-debug.log
@@ -22,3 +23,23 @@
 **/values.dev.yaml
 LICENSE
 README.md
+
+# .NET build outputs - DO NOT INCLUDE IN DOCKER CONTEXT
+bin/
+obj/
+# Database files
+*.db
+*.db-shm
+*.db-wal
+# Logs
+logs/
+*.log
+# Cache and temp
+.cache/
+temp/
+tmp/
+# IDE files
+.idea/
+.vscode/
+# ignore all env files
+.env*

@@ -1,22 +1,45 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Web App",
   "compilerOptions": {
-    "target": "ES2017",
+    /* Projects */
+    "incremental": false,
+    
+    /* Language and Environment */
+    "target": "ES2022",
     "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
     ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
+    "jsx": "preserve",
+    "moduleDetection": "force",
+    
+    /* Modules */
+    "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": false,
+    
+    /* JavaScript Support */
+    "allowJs": true,
+    
+    /* Emit */
+    "declaration": false,
+    "noEmit": true,
+    
+    /* Interop Constraints */
     "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    /* Type Checking */
+    "strict": true,
+    "noImplicitAny": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    
     "plugins": [
       {
         "name": "next"

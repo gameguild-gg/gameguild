@@ -1,0 +1,34 @@
+# Base Image.
+FROM node:18
+
+# set the working directory
+WORKDIR /app
+
+RUN apt-get clean && apt-get update
+
+RUN apt install -y build-essential cmake git unzip wget graphicsmagick
+
+# copy all files to the container. Hack to ensure the .git is present there
+RUN git clone https://github.com/gameguild-gg/website.git /app
+# hack to disable cache
+COPY .. /app
+
+# install dependencies
+RUN NODE_ENV=development npm install
+RUN NODE_ENV=development npm run install:api
+
+# build
+RUN npm run build:api
+
+# Install system image dependencies.
+RUN wget -q https://github.com/official-stockfish/Stockfish/archive/refs/tags/sf_16.1.zip
+RUN unzip sf_16.1.zip
+RUN rm sf_16.1.zip
+RUN cd Stockfish-sf_16.1/src && make build
+RUN mv Stockfish-sf_16.1/src/stockfish /app/stockfish
+RUN rm -rf Stockfish-sf_16.1
+RUN /app/stockfish --help
+RUN cp /app/stockfish /usr/local/bin/stockfish
+
+# start the app
+CMD ["npm", "run", "start:api"]

@@ -1,11 +1,11 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useReducer } from 'react';
+import React, { createContext, useCallback, useEffect, useReducer } from 'react';
 import { BrowserProvider } from 'ethers';
 
 export const Web3ActionTypes = {
   CHECK_PROVIDER: 'CHECK_PROVIDER',
-  PROVIDER_AVAILABLE: 'PROVIDER_AVAILABLE',  
+  PROVIDER_AVAILABLE: 'PROVIDER_AVAILABLE',
   PROVIDER_UNAVAILABLE: 'PROVIDER_UNAVAILABLE',
   CONNECT_START: 'CONNECT_START',
   CONNECT_SUCCESS: 'CONNECT_SUCCESS',
@@ -119,10 +119,10 @@ export function Web3Provider({ children }: Web3ProviderProps) {
   // Check if provider is available without connecting
   useEffect(() => {
     dispatch({ type: Web3ActionTypes.CHECK_PROVIDER });
-    
+
     if (window.ethereum) {
       dispatch({ type: Web3ActionTypes.PROVIDER_AVAILABLE });
-      
+
       // Set up account change listener
       const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length === 0) {
@@ -136,19 +136,21 @@ export function Web3Provider({ children }: Web3ProviderProps) {
           });
         }
       };
-      
+
       window.ethereum.on('accountsChanged', handleAccountsChanged);
-      
+
       return () => {
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        if (window.ethereum) {
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        }
       };
     } else {
-      dispatch({ 
+      dispatch({
         type: Web3ActionTypes.PROVIDER_UNAVAILABLE,
-        payload: { error: 'No Ethereum provider found. Please install MetaMask.' }
+        payload: { error: 'No Ethereum provider found. Please install MetaMask.' },
       });
     }
-  }, []);
+  }, [state.accountAddress]);
 
   const connect = useCallback(async () => {
     if (!window.ethereum) {
@@ -163,7 +165,7 @@ export function Web3Provider({ children }: Web3ProviderProps) {
       dispatch({ type: Web3ActionTypes.CONNECT_START });
 
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      
+
       const provider = new BrowserProvider(window.ethereum);
 
       dispatch({
@@ -198,9 +200,9 @@ export function Web3Provider({ children }: Web3ProviderProps) {
 declare global {
   interface Window {
     ethereum?: {
-      request: (args: { method: string; params?: any[] }) => Promise<any>;
-      on: (event: string, listener: any) => void;
-      removeListener: (event: string, listener: any) => void;
+      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+      on: (event: string, listener: (...args: unknown[]) => void) => void;
+      removeListener: (event: string, listener: (...args: unknown[]) => void) => void;
     };
   }
 }

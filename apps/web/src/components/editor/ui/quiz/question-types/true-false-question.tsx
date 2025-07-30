@@ -1,32 +1,25 @@
-"use client"
+'use client';
 
 import { Button } from "@/components/ui/button"
 import { Check, X } from "lucide-react"
 
 interface TrueFalseQuestionProps {
-  question: string
-  correctAnswer: boolean
-  selectedAnswer: boolean | null
-  onAnswerSelect: (answer: boolean) => void
-  showFeedback: boolean
-  isCorrect: boolean
-  disabled?: boolean
+  question: string;
+  correctAnswer: boolean;
+  selectedAnswer: boolean | null;
+  onAnswerSelect: (answer: boolean) => void;
+  showFeedback: boolean;
+  isCorrect: boolean;
+  disabled?: boolean;
 }
 
-export function TrueFalseQuestion({
-  question,
-  selectedAnswer,
-  onAnswerSelect,
-  showFeedback,
-  isCorrect,
-  disabled = false,
-}: TrueFalseQuestionProps) {
+export function TrueFalseQuestion({ question, selectedAnswer, onAnswerSelect, showFeedback, isCorrect, disabled = false }: TrueFalseQuestionProps) {
   return (
     <div className="space-y-4">
       <div className="font-semibold">{question}</div>
       <div className="flex gap-4">
         <Button
-          variant={selectedAnswer === true ? "default" : "outline"}
+          variant={selectedAnswer === true ? 'default' : 'outline'}
           onClick={() => onAnswerSelect(true)}
           disabled={disabled}
           className="flex items-center gap-2"
@@ -35,7 +28,7 @@ export function TrueFalseQuestion({
           True
         </Button>
         <Button
-          variant={selectedAnswer === false ? "default" : "outline"}
+          variant={selectedAnswer === false ? 'default' : 'outline'}
           onClick={() => onAnswerSelect(false)}
           disabled={disabled}
           className="flex items-center gap-2"
@@ -45,5 +38,5 @@ export function TrueFalseQuestion({
         </Button>
       </div>
     </div>
-  )
+  );
 }

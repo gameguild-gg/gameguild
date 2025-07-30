@@ -1,40 +1,39 @@
-"use client"
+'use client';
 
-import type React from "react"
-
-import { useMemo, useCallback } from "react"
-import type { CodeFile } from "@/components/editor/ui/source-code/types"
+import type React from 'react';
+import { useCallback, useMemo } from 'react';
+import type { CodeFile } from '../../components/editor/ui/source-code/types';
 
 interface UseFileContentProps {
-  files: CodeFile[]
-  setFiles: React.Dispatch<React.SetStateAction<CodeFile[]>>
-  activeFileId: string
+  files: CodeFile[];
+  setFiles: React.Dispatch<React.SetStateAction<CodeFile[]>>;
+  activeFileId: string;
 }
 
 interface UseFileContentReturn {
-  activeFile: CodeFile | undefined
-  activeFileContent: string
-  updateActiveFileContent: (content: string) => void
-  getVisibleFiles: (isEditing: boolean) => CodeFile[]
-  addSolutionTemplate: () => void
+  activeFile: CodeFile | undefined;
+  activeFileContent: string;
+  updateActiveFileContent: (content: string) => void;
+  getVisibleFiles: (isEditing: boolean) => CodeFile[];
+  addSolutionTemplate: () => void;
 }
 
 export function insertSolutionTemplate(content: string, language: string): string {
   // Check if a solution function already exists
   if (
-    content.includes("function solution") ||
-    content.includes("def solution") ||
-    content.includes("int solution") ||
-    content.includes("auto solution") ||
-    content.includes("class Solution")
+    content.includes('function solution') ||
+    content.includes('def solution') ||
+    content.includes('int solution') ||
+    content.includes('auto solution') ||
+    content.includes('class Solution')
   ) {
-    return content
+    return content;
   }
 
-  let template = ""
+  let template = '';
 
   switch (language) {
-    case "javascript":
+    case 'javascript':
       template = `
 // Write your solution function here
 
@@ -44,35 +43,35 @@ function solution(a) {
   // console.log(a);
   return a;
 }
-`
-      break
-    case "typescript":
+`;
+      break;
+    case 'typescript':
       template = `
 // Write your solution function here
-function solution(value: any): any[] {
+function solution(value: unknown): unknown[] {
   // Your solution here
   return [];
 }
-`
-      break
-    case "python":
+`;
+      break;
+    case 'python':
       template = `
 # Write your solution function here
 def solution(value):
     # Your solution here
     return []
-`
-      break
-    case "lua":
+`;
+      break;
+    case 'lua':
       template = `
 -- Write your solution function here
 function solution(value)
     -- Your solution here
     return {}
 end
-`
-      break
-    case "c":
+`;
+      break;
+    case 'c':
       template = `
 #include <stdio.h>
 #include <stdlib.h>
@@ -87,9 +86,9 @@ int solution(int value) {
     // Your solution here
     return 0;
 }
-`
-      break
-    case "cpp":
+`;
+      break;
+    case 'cpp':
       template = `
 #include <iostream>
 #include <vector>
@@ -113,9 +112,9 @@ std::vector<int> solution(int value) {
     return {};
 }
 */
-`
-      break
-    case "h":
+`;
+      break;
+    case 'h':
       template = `
 #ifndef SOLUTION_H
 #define SOLUTION_H
@@ -141,9 +140,9 @@ int solution(int value) {
 #endif
 
 #endif // SOLUTION_H
-`
-      break
-    case "hpp":
+`;
+      break;
+    case 'hpp':
       template = `
 #ifndef SOLUTION_HPP
 #define SOLUTION_HPP
@@ -191,65 +190,68 @@ int solution(int value) {
 #endif
 
 #endif // SOLUTION_HPP
-`
-      break
+`;
+      break;
     default:
-      return content
+      return content;
   }
 
-  return content + template
+  return content + template;
 }
 
 export function useFileContent({ files, setFiles, activeFileId }: UseFileContentProps): UseFileContentReturn {
   // Get visible files based on editing mode
-  const getVisibleFiles = (isEditing: boolean) => {
-    return isEditing ? files : files.filter((file) => file.isVisible)
-  }
+  const getVisibleFiles = useCallback(
+    (isEditing: boolean) => {
+      return isEditing ? files : files.filter((file) => file.isVisible);
+    },
+    [files],
+  );
 
   // Get active file
   const activeFile = useMemo(() => {
-    const visibleFiles = getVisibleFiles(true) // Always check all files first
+    const visibleFiles = getVisibleFiles(true); // Always check all files first
     // First try to find the active file in all files
-    const file = visibleFiles.find((file) => file.id === activeFileId)
-    if (file) return file
+    const file = visibleFiles.find((file) => file.id === activeFileId);
+    if (file) return file;
 
     // If active file is not found, select the first file
-    return visibleFiles[0] || files[0]
-  }, [files, activeFileId])
+    return visibleFiles[0] || files[0];
+  }, [files, activeFileId, getVisibleFiles]);
 
   // Get active file content based on selected language
   const activeFileContent = useMemo(() => {
-    return activeFile?.content || ""
-  }, [activeFile])
+    return activeFile?.content || '';
+  }, [activeFile]);
 
   // Update active file content
   const updateActiveFileContent = useCallback(
     (content: string) => {
       // Check if file is in read-only mode
-      const currentFile = files.find((file) => file.id === activeFileId)
-      if (currentFile?.readOnlyState === "always") {
-        console.log("File is read-only, cannot update content")
-        return
+      const currentFile = files.find((file) => file.id === activeFileId);
+      if (currentFile?.readOnlyState === 'always') {
+        console.log('File is read-only, cannot update content');
+        return;
       }
 
-      console.log("Updating file content:", activeFileId, content.substring(0, 20) + "...")
+      console.log('Updating file content:', activeFileId, content.substring(0, 20) + '...');
       setFiles((prevFiles) =>
         prevFiles.map((file) => {
-          if (file.id !== activeFileId) return file
-          return { ...file, content }
+          if (file.id !== activeFileId) return file;
+          return { ...file, content };
         }),
-      )
+      );
     },
     [activeFileId, files, setFiles],
-  )
+  );
 
   // Add a function to add the solution template to the active file
   const addSolutionTemplate = useCallback(() => {
-    if (!activeFile) return
+    if (!activeFile) return;
 
-    const newContent = insertSolutionTemplate(activeFileContent, activeFile.language || "javascript")
-    updateActiveFileContent(newContent)
-  }, [activeFile, activeFileContent, updateActiveFileContent])
+    const newContent = insertSolutionTemplate(activeFileContent, activeFile.language || 'javascript');
+    updateActiveFileContent(newContent);
+  }, [activeFile, activeFileContent, updateActiveFileContent]);
 
   return {
     activeFile,
@@ -257,5 +259,5 @@ export function useFileContent({ files, setFiles, activeFileId }: UseFileContent
     updateActiveFileContent,
     getVisibleFiles,
     addSolutionTemplate,
-  }
+  };
 }

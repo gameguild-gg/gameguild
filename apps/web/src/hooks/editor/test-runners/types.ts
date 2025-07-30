@@ -1,12 +1,12 @@
 import type { CodeFile, ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
 
 export interface TestResult {
-  passed: boolean
-  actual: string
-  expected: string
+  passed: boolean;
+  actual: string;
+  expected: string;
 }
 
-export type TestType = "simple" | "inout" | "predicate"
+export type TestType = 'simple' | 'inout' | 'predicate';
 
 export interface TestRunnerOptions {
   fileId: string
@@ -20,4 +20,4 @@ export interface TestRunnerOptions {
   normalizeOutput: (output: string) => string
 }
 
-export type TestRunner = (options: TestRunnerOptions) => Promise<void>
+export type TestRunner = (options: TestRunnerOptions) => Promise<void>;
