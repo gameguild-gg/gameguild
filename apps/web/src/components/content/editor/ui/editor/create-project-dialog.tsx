@@ -1,11 +1,11 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { useState, useEffect } from "react"
+import { toast } from "sonner"
 
 interface ProjectData {
   id: string;
@@ -38,7 +38,6 @@ interface CreateProjectDialogProps {
 export function CreateProjectDialog({
   open,
   onOpenChange,
-  isDbInitialized,
   storageAdapter,
   availableTags,
   onProjectCreate,

@@ -11,6 +11,10 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { EditorLoadingContext } from '../lexical-editor';
 
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { EditorLoadingContext } from "../lexical-editor"
+
 // Update the HeaderData interface to include the style
 export interface HeaderData {
   text: string;

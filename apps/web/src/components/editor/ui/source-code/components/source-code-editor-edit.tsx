@@ -1,15 +1,15 @@
 'use client';
 
-import type React from 'react';
-import { useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
-import type { CodeFile, ProgrammingLanguage } from '../types';
-import { FileTabs } from '../file-tabs';
-import { CodeEditor } from '../code-editor';
-import { Terminal } from '../terminal';
+import type React from "react"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
+import type { CodeFile, ProgrammingLanguage } from "../types"
+import { FileTabs } from "../file-tabs"
+import { CodeEditor } from "../code-editor"
+import { Terminal } from "../terminal"
+import { useEffect } from "react"
 
 interface SourceCodeEditorEditProps {
   // File management

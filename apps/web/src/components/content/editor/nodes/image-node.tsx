@@ -5,10 +5,11 @@ import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexica
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { Move, Type, X } from 'lucide-react';
 
-import { ImageSizeControl } from '@/components/ui/image-size-control';
-import { CaptionInput } from '@/components/ui/caption-input';
-import { Button } from '@/components/ui/button';
-import { ContentEditMenu, type EditMenuOption } from '@/components/ui/content-edit-menu';
+import { ImageSizeControl } from "@/components/editor/ui/image-size-control"
+import { CaptionInput } from "@/components/editor/ui/caption-input"
+import { Button } from "@/components/ui/button"
+import { X } from "lucide-react"
+import { ContentEditMenu, type EditMenuOption } from "@/components/editor/ui/content-edit-menu"
 
 export interface ImageData {
   src: string;

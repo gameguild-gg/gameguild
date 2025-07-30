@@ -46,8 +46,8 @@ export function FileTabs({
 
   const setShowDeleteConfirmDialog = externalSetShowDeleteConfirmDialog || setLocalShowDeleteConfirmDialog;
 
-  const visibleFiles = isEditing ? files : files.filter((file) => file.isVisible && file.readOnlyState !== 'hidden');
-  const activeFile = files.find((file) => file.id === activeFileId) || files[0];
+  const visibleFiles = isEditing ? files : files.filter((file: { isVisible: any; readOnlyState: string }) => file.isVisible && file.readOnlyState !== "hidden")
+  const activeFile = files.find((file: { id: any }) => file.id === activeFileId) || files[0]
 
   // Determine if the File button should be shown in read mode
   const showFileButtonInReadMode = showBasicFileActionsInReadMode || showFilePropertiesInReadMode;

@@ -35,25 +35,32 @@ import {
   Youtube,
 } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Separator } from '@/components/ui/separator';
-import { MediaUploadDialog, type MediaUploadResult } from '@/components/content/editor/ui/media-upload-dialog';
-import type { ImageData } from '../nodes/image-node';
-import type { VideoData } from '../nodes/video-node';
-import type { AudioData } from '../nodes/audio-node'; // Import type for AudioData
-import type { HeaderData } from '../nodes/header-node';
-import type { DividerData } from '../nodes/divider-node';
-import type { ButtonData } from '../nodes/button-node';
-import type { CalloutData } from '../nodes/callout-node';
-import type { YouTubeData } from '../nodes/youtube-node';
-import { extractYouTubeVideoId } from '../nodes/youtube-node';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import type { SpotifyData } from '../nodes/spotify-node';
-import { extractSpotifyInfo } from '../nodes/spotify-node';
+import { Button } from "@/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Separator } from "@/components/ui/separator"
+import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/ui/media-upload-dialog"
+import type { ImageData } from "../nodes/image-node"
+import type { VideoData } from "../nodes/video-node"
+import type { AudioData } from "../nodes/audio-node" // Import type for AudioData
+import type { HeaderData } from "../nodes/header-node"
+import type { DividerData } from "../nodes/divider-node"
+import type { ButtonData } from "../nodes/button-node"
+import type { CalloutData } from "../nodes/callout-node"
+import type { YouTubeData } from "../nodes/youtube-node"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { extractYouTubeVideoId } from "../nodes/youtube-node"
+import type { SpotifyData } from "../nodes/spotify-node"
+import { extractSpotifyInfo } from "../nodes/spotify-node"
 
 // Image insertion mode: 0 = both upload and URL, 1 = only upload, 2 = only URL
 const IMAGE_INSERTION_MODE = 0;

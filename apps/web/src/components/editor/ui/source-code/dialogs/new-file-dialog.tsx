@@ -1,11 +1,11 @@
 'use client';
 
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { NewFileDialogProps } from '../types';
-import { useState } from 'react';
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { NewFileDialogProps } from "../types"
+import { useState } from "react"
 
 // export interface NewFileDialogProps {
 //   showFileDialog: boolean;

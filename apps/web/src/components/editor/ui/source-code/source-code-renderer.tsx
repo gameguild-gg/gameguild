@@ -1,8 +1,8 @@
 'use client';
 
-import type React from 'react';
-import { useEffect } from 'react';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import type React from "react"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { useEffect } from "react"
 
 // Import types
 import type { CodeFile, LanguageType, ProgrammingLanguage, SourceCodeData } from './types';
@@ -102,38 +102,38 @@ export interface SourceCodeRendererProps {
   testCases: Record<
     string,
     {
-      type: 'simple' | 'inout';
-      input?: string;
-      expectedOutput?: string;
-      args?: any[];
-      expectedReturn?: any[];
+      type: "custom" | "function" | "console"
+      input?: string
+      expectedOutput?: string
+      args?: any[]
+      expectedReturn?: any[]
     }[]
   >;
   setTestCases: (
     cases: Record<
       string,
       {
-        type: 'simple' | 'inout';
-        input?: string;
-        expectedOutput?: string;
-        args?: any[];
-        expectedReturn?: any[];
+        type: "custom" | "function" | "console"
+        input?: string
+        expectedOutput?: string
+        args?: any[]
+        expectedReturn?: any[]
       }[]
     >,
-  ) => void;
-  testResults: Record<string, { passed: boolean; actual: string; expected: string }[]>;
-  setTestResults: (results: Record<string, { passed: boolean; actual: string; expected: string }[]>) => void;
-  addTestCase: (fileId: string, type?: 'simple' | 'inout') => void;
-  removeTestCase: (fileId: string, index: number) => void;
+  ) => void
+  testResults: Record<string, { passed: boolean; actual: string; expected: string }[]>
+  setTestResults: (results: Record<string, { passed: boolean; actual: string; expected: string }[]>) => void
+  addTestCase: (fileId: string, type?: "custom" | "function" | "console") => void
+  removeTestCase: (fileId: string, index: number) => void
   updateTestCase: (
     fileId: string,
     index: number,
     testData: Partial<{
-      type: 'simple' | 'inout';
-      input?: string;
-      expectedOutput?: string;
-      args?: any[];
-      expectedReturn?: any[];
+      type: "custom" | "function" | "console"
+      input?: string
+      expectedOutput?: string
+      args?: any[]
+      expectedReturn?: any[]
     }>,
   ) => void;
   runTests: (fileId: string) => void;

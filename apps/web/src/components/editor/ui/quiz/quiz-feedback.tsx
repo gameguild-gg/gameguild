@@ -1,7 +1,7 @@
 'use client';
 
-import { Check, RotateCcw, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Check, X, RotateCcw } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface QuizFeedbackProps {
   isCorrect: boolean;

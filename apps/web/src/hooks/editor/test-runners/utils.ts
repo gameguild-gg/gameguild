@@ -1,26 +1,3 @@
-import type { TestCase } from './types';
-
-/**
- * Format test output for display
- */
-export function formatTestOutput(
-  test: TestCase,
-  result: {
-    passed: boolean;
-    error?: string;
-    expected: unknown;
-    actual: unknown;
-  },
-): string {
-  if (result.passed) {
-    return `✅ Test passed`;
-  } else if (result.error) {
-    return `❌ Error: ${result.error}`;
-  } else {
-    return `❌ Expected: ${JSON.stringify(result.expected)}, Actual: ${JSON.stringify(result.actual)}`;
-  }
-}
-
 /**
  * Deep equality comparison for objects and arrays
  */

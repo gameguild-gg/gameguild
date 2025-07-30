@@ -6,16 +6,16 @@ import { Pencil, Plus, RotateCcw, Trash2, X } from 'lucide-react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import type { JSX } from 'react/jsx-runtime';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { QuizDisplay } from '@/components/editor/ui/quiz/quiz-display';
-import { QuizWrapper } from '@/components/editor/ui/quiz/quiz-wrapper';
-import { QuizAnswerItem } from '@/components/editor/ui/quiz/quiz-answer-item';
-import { useQuizLogic } from '@/hooks/editor/use-quiz-logic';
-import { ContentEditMenu } from '@/components/ui/content-edit-menu';
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { QuizDisplay } from "@/components/editor/ui/quiz/quiz-display"
+import { QuizWrapper } from "@/components/editor/ui/quiz/quiz-wrapper"
+import { QuizAnswerItem } from "@/components/editor/ui/quiz/quiz-answer-item"
+import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
+import { ContentEditMenu } from "@/components/editor/ui/content-edit-menu"
 
 // Adicionar no topo do arquivo, após os imports
 const EditorLoadingContext = createContext<boolean>(false);

@@ -1,6 +1,6 @@
-'use client';
-import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+"use client"
+import { Button } from "@/components/ui/button"
+import { ChevronUp, ChevronDown } from "lucide-react"
 
 interface OrderingQuestionProps {
   question: string;

@@ -14,6 +14,31 @@ import type { SerializedAudioNode } from '../nodes/audio-node';
 import DOMPurify from 'dompurify';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
+import { useCallback, useRef, useState, useEffect } from "react"
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import {
+  ExternalLink,
+  ImageIcon,
+  LayoutGrid,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  AlertCircle,
+  RotateCcw,
+} from "lucide-react"
+import ReactMarkdown from "react-markdown"
+import type { SerializedEditorState } from "lexical"
+import type { SerializedQuizNode } from "../nodes/quiz-node"
+import type { SerializedImageNode } from "../nodes/image-node"
+import type { SerializedMarkdownNode } from "../nodes/markdown-node"
+import type { SerializedHTMLNode } from "../nodes/html-node"
+import type { SerializedVideoNode } from "../nodes/video-node"
+import type { SerializedAudioNode } from "../nodes/audio-node"
+import DOMPurify from "dompurify"
+
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+
 // Adicione o import para o SerializedHeaderNode
 import type { SerializedHeaderNode } from '../nodes/header-node';
 import type { SerializedDividerNode } from '../nodes/divider-node';

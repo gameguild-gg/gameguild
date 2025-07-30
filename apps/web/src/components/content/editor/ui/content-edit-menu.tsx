@@ -1,9 +1,9 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import { Edit } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import type { ReactNode } from "react"
+import { Edit } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 export interface EditMenuOption {
   id: string;

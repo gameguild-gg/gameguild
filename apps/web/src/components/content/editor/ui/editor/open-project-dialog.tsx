@@ -2,14 +2,14 @@
 
 import type React from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { FolderOpen, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import type { LexicalEditor } from 'lexical';
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { FolderOpen, Trash2 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { toast } from "sonner"
+import type { LexicalEditor } from "lexical"
 
 interface ProjectData {
   id: string;
@@ -270,38 +270,41 @@ export function OpenProjectDialog({
             Open
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-4xl max-h-[80vh]" onInteractOutside={(e) => e.preventDefault()}>
+        <DialogContent className="max-w-2xl min-w-xl max-h-[80vh]" onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>{isFirstTime ? 'Welcome! Choose an Option' : 'Open Project'}</DialogTitle>
             {isFirstTime && <p className="text-sm text-muted-foreground">To get started, please open an existing project or create a new one.</p>}
           </DialogHeader>
           <div className="space-y-4">
-            {/* Search and Filter Section */}
             <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="flex gap-3">
+
+              {/* Search and Filter Section */}
+              <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Filter by Projects:</Label>
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs text-gray-700 dark:text-gray-400">Items per page:</Label>
+                      <select
+                        value={itemsPerPage}
+                        onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                        className="px-2 py-1 border rounded text-sm bg-background"
+                      >
+                      <option value={3}>3</option>
+                      <option value={6}>6</option>
+                      <option value={12}>12</option>
+                      <option value={24}>24</option>
+                  </select>
+                  </div>
+                </div>
                 <div className="flex-1">
                   <Input placeholder="Search projects by name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm whitespace-nowrap">Items per page:</Label>
-                  <select
-                    value={itemsPerPage}
-                    onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                    className="px-2 py-1 border rounded text-sm bg-background"
-                  >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                  </select>
-                </div>
-              </div>
 
               {/* Tags Filter */}
-              <div className="space-y-2">
+              <div className="space-y-2 min-h-[15vh] border-b">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">Filter by tags:</Label>
                   <div className="flex items-center gap-2">
-                    <Label className="text-xs text-gray-500 dark:text-gray-400">Match:</Label>
+                    <Label className="text-xs text-gray-700 dark:text-gray-400">Match tags:</Label>
                     <select
                       value={tagFilterMode}
                       onChange={(e) => setTagFilterMode(e.target.value as 'all' | 'any')}
@@ -312,6 +315,7 @@ export function OpenProjectDialog({
                     </select>
                   </div>
                 </div>
+                
                 <div className="relative">
                   <div className="flex gap-2">
                     <div className="relative flex-1">
@@ -428,6 +432,7 @@ export function OpenProjectDialog({
                   </div>
                 )}
               </div>
+              
 
               {isStorageNearLimit() && (
                 <div className="p-3 bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-700 rounded-lg mb-4">
@@ -447,9 +452,10 @@ export function OpenProjectDialog({
                   </p>
                 </div>
               )}
+              
 
               {/* Projects List */}
-              <div className="min-h-[400px]">
+              <div className="max-h-[30vh] overflow-y-auto">
                 {filteredProjects.length === 0 ? (
                   <div className="text-center py-12">
                     <FolderOpen className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
@@ -516,8 +522,11 @@ export function OpenProjectDialog({
                         );
                       })}
                     </div>
+                  </>
+                )}
+              </div>
 
-                    {/* Pagination */}
+              {/* Pagination */}
                     {Math.ceil(totalProjects / itemsPerPage) > 1 && (
                       <div className="flex items-center justify-between mt-4 pt-4 border-t dark:border-gray-700">
                         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -568,9 +577,6 @@ export function OpenProjectDialog({
                         </div>
                       </div>
                     )}
-                  </>
-                )}
-              </div>
 
               <div className="flex justify-between items-center pt-4 border-t dark:border-gray-700">
                 {isStorageNearLimit() ? (

@@ -1,10 +1,10 @@
 'use client';
 
-import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import type { ProgrammingLanguage } from '@/lib/types';
+import { X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import type { ProgrammingLanguage } from "./types"
 
 interface SettingsPanelProps {
   selectedLanguage: ProgrammingLanguage;

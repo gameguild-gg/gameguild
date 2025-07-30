@@ -1,10 +1,16 @@
 'use client';
 
-import { useCallback } from 'react';
-import { $getSelection, $isRangeSelection } from 'lexical';
-import { DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useCallback } from "react"
+import { $getSelection, $isRangeSelection } from "lexical"
+import {
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface FontSizeMenuComponentProps {
   editor: any;

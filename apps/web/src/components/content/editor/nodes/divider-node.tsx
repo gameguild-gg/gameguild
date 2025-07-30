@@ -9,7 +9,9 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { EditorLoadingContext } from '../lexical-editor';
 
-export type DividerStyle = 'simple' | 'double' | 'dashed' | 'dotted' | 'gradient' | 'icon';
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { EditorLoadingContext } from "../lexical-editor"
 
 export interface DividerData {
   style: DividerStyle;

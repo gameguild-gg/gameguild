@@ -61,30 +61,30 @@ export interface TerminalProps {
   testCases: Record<
     string,
     {
-      type: 'simple' | 'inout' | 'predicate' | 'custom' | 'function';
-      input?: string;
-      expectedOutput?: string;
-      args?: any[];
-      expectedReturn?: any[];
-      predicate?: string;
-      customCode?: string;
-      customCodeFirst?: string | Record<ProgrammingLanguage, string>;
-      customCodeSecond?: string | Record<ProgrammingLanguage, string>;
+      type: "custom" | "function" | "console"
+      input?: string
+      expectedOutput?: string
+      args?: any[]
+      expectedReturn?: any[]
+      predicate?: string
+      customCode?: string
+      customCodeFirst?: string | Record<ProgrammingLanguage, string>
+      customCodeSecond?: string | Record<ProgrammingLanguage, string>
     }[]
   >;
   setTestCases: (
     cases: Record<
       string,
       {
-        type: 'simple' | 'inout' | 'predicate' | 'custom' | 'function';
-        input?: string;
-        expectedOutput?: string;
-        args?: any[];
-        expectedReturn?: any[];
-        predicate?: string;
-        customCode?: string;
-        customCodeFirst?: string | Record<ProgrammingLanguage, string>;
-        customCodeSecond?: string | Record<ProgrammingLanguage, string>;
+        type: "custom" | "function" | "console"
+        input?: string
+        expectedOutput?: string
+        args?: any[]
+        expectedReturn?: any[]
+        predicate?: string
+        customCode?: string
+        customCodeFirst?: string | Record<ProgrammingLanguage, string>
+        customCodeSecond?: string | Record<ProgrammingLanguage, string>
       }[]
     >,
   ) => void;

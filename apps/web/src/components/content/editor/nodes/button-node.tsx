@@ -1,17 +1,18 @@
 'use client';
 
-import { useContext, useEffect, useState } from 'react';
-import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { ArrowRight, Check, ChevronDown, Copy, Download, ExternalLink, Mail, Pencil } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
-import type { JSX } from 'react/jsx-runtime';
-import { EditorLoadingContext } from '../lexical-editor';
+import { useState, useEffect, useContext } from "react"
+import { DecoratorNode, type SerializedLexicalNode } from "lexical"
+import { $getNodeByKey } from "lexical"
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import { ChevronDown, Pencil, Check, ExternalLink, Download, ArrowRight, Mail, Copy } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
+import type { JSX } from "react/jsx-runtime"
+import { EditorLoadingContext } from "../lexical-editor"
 
 export type ButtonVariant = 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
 export type ButtonSize = 'default' | 'sm' | 'lg' | 'icon';

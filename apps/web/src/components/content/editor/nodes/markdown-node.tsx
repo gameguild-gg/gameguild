@@ -11,6 +11,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { EditorLoadingContext } from '../lexical-editor';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 
+import { useEffect, useRef, useState, useContext } from "react"
+import { DecoratorNode, type SerializedLexicalNode, $getNodeByKey } from "lexical"
+import { FileText } from "lucide-react"
+import ReactMarkdown from "react-markdown"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { EditorLoadingContext } from "../lexical-editor"
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+
 export interface MarkdownData {
   content: string;
 }

@@ -202,14 +202,14 @@ export function CHeaderSyntaxHighlighter({ monaco, editor }: CHeaderSyntaxHighli
             [/"/, { token: 'string.quote', bracket: '@close', next: '@pop' }],
           ],
 
-          whitespace: [
-            [/[ \t\r\n]+/, 'white'],
-            [/\/\*/, 'comment', '@comment'],
-            [/\/\/.*$/, 'comment'],
-          ],
-        },
-      });
-    }
+         whitespace: [
+           [/[ \t\r]+/, "white"],
+           [/\/\*/, "comment", "@comment"],
+           [/\/\/.*$/, "comment"],
+         ],
+       },
+     })
+   }
 
     // Set the language for the current model if it's C Header
     const model = editor.getModel();
