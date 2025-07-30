@@ -1,10 +1,10 @@
-import React from 'react';
-import { TestingRequestList } from '@/components/testing-lab/management/requests/testing-request-list';
-import { getTestingRequests } from '@/lib/testing-lab/testing-lab.actions';
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
+import { TestingRequestList } from '@/components/testing-lab/management/requests/testing-request-list';
+import { getAllTestingRequests } from '@/lib/admin';
+import React from 'react';
 
 export default async function Page(): Promise<React.JSX.Element> {
-  const testingRequests = await getTestingRequests();
+  const testingRequests = await getAllTestingRequests();
 
   return (
     <DashboardPage>

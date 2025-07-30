@@ -104,18 +104,7 @@ const SKILL_LEVELS = [
 const SKILL_CATEGORIES = ['Programming', 'Frontend', 'Backend', 'Data', 'Tools', 'Quality', 'DevOps', 'Design', 'Business'];
 
 export default function Page() {
-  const {
-    state,
-    addRequiredSkill,
-    removeRequiredSkill,
-    addProvidedSkill,
-    removeProvidedSkill,
-    reorderRequiredSkills,
-    reorderProvidedSkills,
-    addCertificate,
-    removeCertificate,
-    updateCertificate,
-  } = useCourseEditor();
+  const { state, addRequiredSkill, removeRequiredSkill, addProvidedSkill, removeProvidedSkill, reorderRequiredSkills, reorderProvidedSkills, addCertificate, removeCertificate, updateCertificate } = useCourseEditor();
 
   const [showSkillSearch, setShowSkillSearch] = useState(false);
   const [skillSearchQuery, setSkillSearchQuery] = useState('');
@@ -130,14 +119,9 @@ export default function Page() {
   });
   const [showNewSkillForm, setShowNewSkillForm] = useState(false);
 
-  const filteredSkills = AVAILABLE_SKILLS.filter(
-    (skill) => skill.name.toLowerCase().includes(skillSearchQuery.toLowerCase()) || skill.category.toLowerCase().includes(skillSearchQuery.toLowerCase()),
-  );
+  const filteredSkills = AVAILABLE_SKILLS.filter((skill) => skill.name.toLowerCase().includes(skillSearchQuery.toLowerCase()) || skill.category.toLowerCase().includes(skillSearchQuery.toLowerCase()));
 
-  const filteredCertificates = AVAILABLE_CERTIFICATES.filter(
-    (cert) =>
-      cert.name.toLowerCase().includes(certificateSearchQuery.toLowerCase()) || cert.description.toLowerCase().includes(certificateSearchQuery.toLowerCase()),
-  );
+  const filteredCertificates = AVAILABLE_CERTIFICATES.filter((cert) => cert.name.toLowerCase().includes(certificateSearchQuery.toLowerCase()) || cert.description.toLowerCase().includes(certificateSearchQuery.toLowerCase()));
 
   const handleAddSkill = (skill: CourseSkill, mode: 'required' | 'provided') => {
     if (mode === 'required') {
@@ -381,20 +365,13 @@ export default function Page() {
                 <h3 className="font-semibold mb-2">How students will see this course:</h3>
                 <div className="space-y-3 text-sm">
                   <div>
-                    <strong>Prerequisites:</strong>{' '}
-                    {state.certificates.skillsRequired.length > 0 ? state.certificates.skillsRequired.map((s) => s.name).join(', ') : 'None required'}
+                    <strong>Prerequisites:</strong> {state.certificates.skillsRequired.length > 0 ? state.certificates.skillsRequired.map((s) => s.name).join(', ') : 'None required'}
                   </div>
                   <div>
-                    <strong>You'll Learn:</strong>{' '}
-                    {state.certificates.skillsProvided.length > 0
-                      ? state.certificates.skillsProvided.map((s) => s.name).join(', ')
-                      : 'Learning outcomes not specified'}
+                    <strong>You'll Learn:</strong> {state.certificates.skillsProvided.length > 0 ? state.certificates.skillsProvided.map((s) => s.name).join(', ') : 'Learning outcomes not specified'}
                   </div>
                   <div>
-                    <strong>Certificates:</strong>{' '}
-                    {state.certificates.certificates.length > 0
-                      ? `${state.certificates.certificates.length} certificate(s) available`
-                      : 'No certificates offered'}
+                    <strong>Certificates:</strong> {state.certificates.certificates.length > 0 ? `${state.certificates.certificates.length} certificate(s) available` : 'No certificates offered'}
                   </div>
                 </div>
               </div>
@@ -466,11 +443,7 @@ export default function Page() {
                   </div>
                   <div>
                     <Label className="text-xs">Description</Label>
-                    <Input
-                      value={newSkill.description}
-                      onChange={(e) => setNewSkill({ ...newSkill, description: e.target.value })}
-                      placeholder="Optional description"
-                    />
+                    <Input value={newSkill.description} onChange={(e) => setNewSkill({ ...newSkill, description: e.target.value })} placeholder="Optional description" />
                   </div>
                 </div>
                 <div className="flex gap-2 mt-3">
@@ -487,11 +460,7 @@ export default function Page() {
             <div className="p-4 max-h-96 overflow-y-auto">
               <div className="space-y-2">
                 {filteredSkills.map((skill) => (
-                  <div
-                    key={skill.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                    onClick={() => handleAddSkill(skill, skillSearchMode)}
-                  >
+                  <div key={skill.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => handleAddSkill(skill, skillSearchMode)}>
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{skill.name}</span>
@@ -524,23 +493,14 @@ export default function Page() {
               </div>
               <div className="relative mt-3">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search certificates..."
-                  value={certificateSearchQuery}
-                  onChange={(e) => setCertificateSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+                <Input placeholder="Search certificates..." value={certificateSearchQuery} onChange={(e) => setCertificateSearchQuery(e.target.value)} className="pl-10" />
               </div>
             </div>
 
             <div className="p-4 max-h-96 overflow-y-auto">
               <div className="space-y-3">
                 {filteredCertificates.map((cert) => (
-                  <div
-                    key={cert.id}
-                    className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                    onClick={() => handleAddCertificate(cert)}
-                  >
+                  <div key={cert.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => handleAddCertificate(cert)}>
                     <div className="flex gap-3">
                       <Award className="h-8 w-8 text-yellow-600 mt-1" />
                       <div>
