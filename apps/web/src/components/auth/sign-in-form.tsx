@@ -1,16 +1,16 @@
 'use client';
 
-import React, { ComponentPropsWithoutRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
+import { useSearchParams } from 'next/navigation';
+import React, { ComponentPropsWithoutRef, useState } from 'react';
 
-import { useAuthError } from '@/lib/hooks/useAuthError';
 import { Link } from '@/i18n/navigation';
 import { googleSignInAction } from '@/lib/auth/auth-actions';
+import { useAuthError } from '@/lib/hooks/useAuthError';
 
 export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'div'>) => {
   const { hasError, error } = useAuthError();
