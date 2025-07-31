@@ -56,9 +56,9 @@ ARG PORT=3000
 ENV PORT=$PORT
 EXPOSE $PORT
 
-# Health check
+# Health check - use root route instead of non-existent /api/health
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:$PORT/api/health || exit 1
+    CMD curl -f http://localhost:$PORT/ || exit 1
 
 # Start the application
 CMD ["node", "server.js"]
