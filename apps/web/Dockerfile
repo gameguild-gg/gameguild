@@ -21,8 +21,8 @@ ENV NODE_ENV=production
 # Copy package files first for better layer caching
 COPY package*.json ./
 
-# Install all dependencies (including dev dependencies needed for build)
-RUN npm install && \
+# Install ALL dependencies including dev dependencies needed for build
+RUN npm install --include=dev && \
     npm cache clean --force
 
 # Copy source code
@@ -39,26 +39,25 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Set environment variables
-ENV NODE_ENV=production
-ENV HOSTNAME=0.0.0.0
-
-# Copy built application
+# Copy built application from builder stage
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# Set environment variables for Next.js to listen on all addresses
+ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+
 # Switch to non-root user
 USER nextjs
 
-# Define port argument with default
-ARG PORT=3000
-ENV PORT=$PORT
-EXPOSE $PORT
+# Expose port
+EXPOSE 3000
 
-# Health check - use root route instead of non-existent /api/health
+# Health check - use 0.0.0.0 to listen on all addresses
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:$PORT/ || exit 1
+    CMD curl -f http://0.0.0.0:3000/ || exit 1
 
 # Start the application
 CMD ["node", "server.js"]
