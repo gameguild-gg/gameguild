@@ -1,17 +1,17 @@
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
-import { UserDetailContent } from '@/components/users/user-detail-content';
+import { UserPermissionsContent } from '@/components/users/user-permissions-content';
 import { getUserById } from '@/lib/users/users.actions';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import React from 'react';
 
-interface UserDetailPageProps {
+interface UserPermissionsPageProps {
   params: Promise<{
     username: string;
   }>;
 }
 
-export async function generateMetadata({ params }: UserDetailPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: UserPermissionsPageProps): Promise<Metadata> {
   const { username } = await params;
   
   try {
@@ -22,18 +22,18 @@ export async function generateMetadata({ params }: UserDetailPageProps): Promise
     const user = userResponse.data;
     
     return {
-      title: `${user?.name || 'User'} | User Management | Game Guild Dashboard`,
-      description: `Manage ${user?.name || 'user'} profile, permissions, and settings.`,
+      title: `${user?.name || 'User'} Permissions | User Management | Game Guild Dashboard`,
+      description: `Manage ${user?.name || 'user'} permissions and access control.`,
     };
   } catch {
     return {
-      title: 'User | Game Guild Dashboard',
-      description: 'User management and settings.',
+      title: 'User Permissions | Game Guild Dashboard',
+      description: 'User permissions management.',
     };
   }
 }
 
-export default async function UserDetailPage({ params }: UserDetailPageProps): Promise<React.JSX.Element> {
+export default async function UserPermissionsPage({ params }: UserPermissionsPageProps): Promise<React.JSX.Element> {
   const { username } = await params;
   
   try {
@@ -50,11 +50,11 @@ export default async function UserDetailPage({ params }: UserDetailPageProps): P
     return (
       <DashboardPage>
         <DashboardPageHeader>
-          <DashboardPageTitle>{user.name}</DashboardPageTitle>
-          <DashboardPageDescription>Manage user profile, permissions, and settings</DashboardPageDescription>
+          <DashboardPageTitle>{user.name} - Permissions</DashboardPageTitle>
+          <DashboardPageDescription>Manage user permissions and access control</DashboardPageDescription>
         </DashboardPageHeader>
         <DashboardPageContent>
-          <UserDetailContent user={user} />
+          <UserPermissionsContent user={user} />
         </DashboardPageContent>
       </DashboardPage>
     );
