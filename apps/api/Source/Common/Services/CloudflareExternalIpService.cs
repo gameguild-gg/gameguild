@@ -220,7 +220,6 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
 
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Add("Authorization", $"Bearer {_options.ApiToken}");
-        request.Headers.Add("Content-Type", "application/json");
 
         var response = await _httpClient.SendAsync(request, cancellationToken);
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -323,6 +322,22 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
     }
 
     private void ValidateConfiguration() {
+        // Debug logging to see what's actually being bound
+        _logger.LogInformation("Cloudflare Dynamic DNS configuration debug:");
+        _logger.LogInformation("  Enabled: {Enabled}", _options.Enabled);
+        _logger.LogInformation("  ApiToken: {ApiToken}", string.IsNullOrEmpty(_options.ApiToken) ? "NULL" : "SET");
+        _logger.LogInformation("  ZoneId: {ZoneId}", string.IsNullOrEmpty(_options.ZoneId) ? "NULL" : "SET");
+        _logger.LogInformation("  DnsRecords count: {Count}", _options.DnsRecords?.Count ?? 0);
+        
+        if (_options.DnsRecords?.Any() == true) {
+            foreach (var (record, index) in _options.DnsRecords.Select((r, i) => (r, i))) {
+                _logger.LogInformation("  DNS Record {Index}: Type={Type}, Name={Name}, TTL={Ttl}, Proxied={Proxied}",
+                    index, record.Type, record.Name, record.Ttl, record.Proxied);
+            }
+        } else {
+            _logger.LogWarning("  No DNS records found! This indicates a configuration binding issue.");
+        }
+
         if (!_options.Enabled) {
             _logger.LogInformation("Cloudflare Dynamic DNS service is disabled");
             _isEnabled = false;
