@@ -37,4 +37,19 @@ public class TestingLabQueries {
   /// Get a specific testing session by ID
   /// </summary>
   public async Task<TestingSession?> GetTestingSession([Service] ITestService testService, Guid id) { return await testService.GetTestingSessionByIdAsync(id); }
+
+  /// <summary>
+  /// Get all testing locations
+  /// </summary>
+  public async Task<IEnumerable<TestingLocation>> GetTestingLocations(
+    [Service] ITestService testService, int skip = 0,
+    int take = 50
+  ) {
+    return await testService.GetTestingLocationsAsync(skip, take);
+  }
+
+  /// <summary>
+  /// Get a specific testing location by ID
+  /// </summary>
+  public async Task<TestingLocation?> GetTestingLocation([Service] ITestService testService, Guid id) { return await testService.GetTestingLocationByIdAsync(id); }
 }

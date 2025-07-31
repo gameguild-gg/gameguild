@@ -11,6 +11,7 @@ using GameGuild.Modules.Posts.GraphQL;
 using GameGuild.Modules.Posts.Services;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs;
+using GameGuild.Common.Services;
 
 
 namespace GameGuild.Common;
@@ -76,6 +77,9 @@ public static class ServiceCollectionExtensions {
 
     // Add permission service for three-layer permission system
     services.AddScoped<IPermissionService, PermissionService>();
+    
+    // Add module permission service for granular module-based permissions
+    services.AddScoped<IModulePermissionService, ModulePermissionService>();
 
     return services;
   }

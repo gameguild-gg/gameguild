@@ -40,7 +40,7 @@ namespace GameGuild.Modules.Authentication {
     private static string? ExtractTokenFromHeader(HttpRequest request) {
       var authHeader = request.Headers.Authorization.FirstOrDefault();
 
-      if (authHeader != null && authHeader.StartsWith("Bearer ")) return authHeader.Substring("Bearer ".Length).Trim();
+      if (authHeader != null && authHeader.StartsWith("Bearer ")) return authHeader["Bearer ".Length..].Trim();
 
       return null;
     }
