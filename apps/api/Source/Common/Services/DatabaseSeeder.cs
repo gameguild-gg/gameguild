@@ -1436,7 +1436,9 @@ public class DatabaseSeeder(
           StartTime = sessionStart,
           EndTime = sessionEnd,
           MaxTesters = Math.Min(randomLocation.MaxTestersCapacity, 15),
+          MaxProjects = Math.Min(randomLocation.MaxProjectsCapacity, 5), // Add MaxProjects capacity
           RegisteredTesterCount = new Random().Next(0, 8), // Random number of registered testers
+          RegisteredProjectCount = new Random().Next(1, 4), // Random number of registered projects
           Status = SessionStatus.Scheduled,
           ManagerId = randomManager.Id,
           ManagerUserId = randomManager.Id,
@@ -1466,7 +1468,9 @@ public class DatabaseSeeder(
         StartTime = pastDate.Date.AddHours(14), // 2 PM
         EndTime = pastDate.Date.AddHours(16), // 4 PM
         MaxTesters = 10,
+        MaxProjects = 3, // Add MaxProjects capacity
         RegisteredTesterCount = new Random().Next(5, 11),
+        RegisteredProjectCount = new Random().Next(1, 4), // Add registered project count
         Status = SessionStatus.Completed,
         ManagerId = randomManager.Id,
         ManagerUserId = randomManager.Id,
@@ -1478,7 +1482,55 @@ public class DatabaseSeeder(
 
     await context.Set<TestingSession>().AddRangeAsync(mockSessions);
     await context.SaveChangesAsync();
+
+    // Now seed SessionProjects for each session
+    await SeedSessionProjectsAsync(mockSessions);
+
     logger.LogInformation("Mock testing sessions seeded successfully with {SessionCount} sessions", mockSessions.Count);
+  }
+
+  /// <summary>
+  /// Seed SessionProjects (projects registered to be tested in sessions)
+  /// </summary>
+  private async Task SeedSessionProjectsAsync(List<TestingSession> sessions) {
+    logger.LogInformation("Seeding session projects...");
+
+    // Get available projects
+    var projects = await context.Set<Project>()
+                                .Where(p => p.Status == ContentStatus.Published)
+                                .Take(20) // Limit to 20 projects for seeding
+                                .ToListAsync();
+
+    if (projects.Count == 0) {
+      logger.LogWarning("No published projects found for session project seeding");
+      return;
+    }
+
+    var sessionProjects = new List<SessionProject>();
+    var random = new Random();
+
+    foreach (var session in sessions) {
+      // Register 1-3 random projects per session (up to MaxProjects)
+      var projectCount = Math.Min(random.Next(1, 4), session.MaxProjects);
+      var selectedProjects = projects.OrderBy(x => random.Next()).Take(projectCount);
+
+      foreach (var project in selectedProjects) {
+        sessionProjects.Add(new SessionProject {
+          SessionId = session.Id,
+          ProjectId = project.Id,
+          Notes = $"Testing {project.Title} in {session.SessionName}",
+          RegisteredAt = DateTime.UtcNow.AddDays(-random.Next(1, 7)), // Random registration date in past week
+          RegisteredById = session.CreatedById,
+          IsActive = true,
+          CreatedAt = DateTime.UtcNow,
+          UpdatedAt = DateTime.UtcNow,
+        });
+      }
+    }
+
+    await context.Set<SessionProject>().AddRangeAsync(sessionProjects);
+    await context.SaveChangesAsync();
+    logger.LogInformation("Session projects seeded successfully with {ProjectCount} session-project relationships", sessionProjects.Count);
   }
 
   /// <summary>
