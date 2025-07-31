@@ -1,16 +1,16 @@
 'use client';
 
+import { CourseSidebar } from '@/components/courses/course-editor/course-sidebar';
+import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { Skeleton } from '@/components/ui/skeleton';
+import { CourseManagementProvider } from '@/lib/courses/context/course-management.context';
+import { CourseEditorProvider, useCourseEditor } from '@/lib/courses/course-editor.context';
 import { useParams } from 'next/navigation';
 import React, { PropsWithChildren, useEffect, useState } from 'react';
-import { CourseEditorProvider, useCourseEditor } from '@/lib/courses/course-editor.context';
-import { CourseSidebar } from '@/components/courses/course-editor/course-sidebar';
-import { Skeleton } from '@/components/ui/skeleton';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 // Inner component that has access to the course editor context
 function Courseimport React, { PropsWithChildren } from 'react';
-import { CourseManagementProvider } from '@/lib/courses/context/course-management.context';
-import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
 
 export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
   return (
