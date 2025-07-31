@@ -128,7 +128,7 @@ function NotificationItem({ notification, compact = false, onAction }: Notificat
               {notification.metadata?.projectName && ` ${notification.metadata.projectName}`}
             </p>
           </div>
-          
+
           {/* Action menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -323,7 +323,7 @@ export function Notifications({ className, showFilters = true, compact = false }
               </TabsTrigger>
             ))}
           </TabsList>
-          
+
           {tabs.map((tab) => (
             <TabsContent key={tab.id} value={tab.id} className="mt-0">
               <ScrollArea className="h-[600px]">

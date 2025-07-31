@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useReducer, useCallback, useEffect, useMemo } from 'react';
 import type { NotificationState, NotificationAction, Notification, NotificationFilters } from '@/types/notification';
-import { notificationReducer, initialNotificationState, getFilteredNotifications } from '@/lib/notifications/notification-reducer';
+import { notificationReducer, initialNotificationState, getFilteredNotifications } from '@/components/notifications/notification-reducer';
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, archiveNotification } from '@/lib/communication/notifications/notifications.actions';
 
 interface NotificationContextValue {
@@ -175,7 +175,7 @@ export function useNotificationFilters() {
 
 export function useNotificationActions() {
   const { markAsRead, markAllAsRead, archiveNotification, toggleStar, removeNotification, addNotification, refreshNotifications } = useNotifications();
-  
+
   return {
     markAsRead,
     markAllAsRead,

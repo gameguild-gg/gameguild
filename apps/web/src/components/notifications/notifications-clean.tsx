@@ -98,15 +98,9 @@ function NotificationItem({ notification, compact = false, onAction }: Notificat
   };
 
   return (
-    <div
-      className={`group relative flex gap-3 p-4 border-b last:border-b-0 hover:bg-muted/50 transition-colors ${
-        !notification.isRead ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''
-      }`}
-    >
+    <div className={`group relative flex gap-3 p-4 border-b last:border-b-0 hover:bg-muted/50 transition-colors ${!notification.isRead ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}`}>
       {/* Priority indicator */}
-      {notification.priority && (
-        <div className={`absolute left-0 top-0 bottom-0 w-1 ${getPriorityColor(notification.priority)}`} />
-      )}
+      {notification.priority && <div className={`absolute left-0 top-0 bottom-0 w-1 ${getPriorityColor(notification.priority)}`} />}
 
       {/* Unread indicator */}
       {!notification.isRead && <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />}
@@ -119,9 +113,7 @@ function NotificationItem({ notification, compact = false, onAction }: Notificat
             <AvatarFallback>{notification.user.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         ) : (
-          <div className={`${compact ? 'w-8 h-8' : 'w-10 h-10'} rounded-full bg-muted flex items-center justify-center text-sm`}>
-            {getNotificationIcon(notification.type)}
-          </div>
+          <div className={`${compact ? 'w-8 h-8' : 'w-10 h-10'} rounded-full bg-muted flex items-center justify-center text-sm`}>{getNotificationIcon(notification.type)}</div>
         )}
       </div>
 
@@ -129,16 +121,14 @@ function NotificationItem({ notification, compact = false, onAction }: Notificat
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <h4 className={`font-medium text-foreground ${compact ? 'text-sm' : 'text-base'}`}>
-              {notification.title}
-            </h4>
+            <h4 className={`font-medium text-foreground ${compact ? 'text-sm' : 'text-base'}`}>{notification.title}</h4>
             <p className={`text-muted-foreground ${compact ? 'text-xs' : 'text-sm'} mt-1`}>
               {notification.user && `${notification.user.name} `}
               {notification.message}
               {notification.metadata?.projectName && ` ${notification.metadata.projectName}`}
             </p>
           </div>
-          
+
           {/* Action menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -276,10 +266,7 @@ export function Notifications({ className, showFilters = true, compact = false }
                 <DropdownMenuContent align="end" className="w-48">
                   <div className="p-2">
                     <label className="text-xs font-medium text-muted-foreground">Type</label>
-                    <Select
-                      value={state.filters.notificationType || 'all'}
-                      onValueChange={(value) => setFilters({ notificationType: value as NotificationType | 'all' })}
-                    >
+                    <Select value={state.filters.notificationType || 'all'} onValueChange={(value) => setFilters({ notificationType: value as NotificationType | 'all' })}>
                       <SelectTrigger className="h-8 mt-1">
                         <SelectValue />
                       </SelectTrigger>
@@ -297,10 +284,7 @@ export function Notifications({ className, showFilters = true, compact = false }
                   <DropdownMenuSeparator />
                   <div className="p-2">
                     <label className="text-xs font-medium text-muted-foreground">Priority</label>
-                    <Select
-                      value={state.filters.priority || 'all'}
-                      onValueChange={(value) => setFilters({ priority: value as NotificationPriority | 'all' })}
-                    >
+                    <Select value={state.filters.priority || 'all'} onValueChange={(value) => setFilters({ priority: value as NotificationPriority | 'all' })}>
                       <SelectTrigger className="h-8 mt-1">
                         <SelectValue />
                       </SelectTrigger>
@@ -341,19 +325,14 @@ export function Notifications({ className, showFilters = true, compact = false }
               </TabsTrigger>
             ))}
           </TabsList>
-          
+
           {tabs.map((tab) => (
             <TabsContent key={tab.id} value={tab.id} className="mt-0">
               <ScrollArea className="h-[600px]">
                 {tab.notifications.length > 0 ? (
                   <div>
                     {tab.notifications.map((notification) => (
-                      <NotificationItem
-                        key={notification.id}
-                        notification={notification}
-                        compact={compact}
-                        onAction={(action) => handleNotificationAction(notification.id, action)}
-                      />
+                      <NotificationItem key={notification.id} notification={notification} compact={compact} onAction={(action) => handleNotificationAction(notification.id, action)} />
                     ))}
                   </div>
                 ) : (
@@ -362,9 +341,9 @@ export function Notifications({ className, showFilters = true, compact = false }
                     <h3 className="font-medium text-lg mb-2">No {tab.label.toLowerCase()} notifications</h3>
                     <p className="text-muted-foreground text-sm">
                       {tab.id === 'unread' && "You're all caught up! ✨"}
-                      {tab.id === 'read' && "No read notifications yet."}
-                      {tab.id === 'starred' && "Star important notifications to see them here."}
-                      {tab.id === 'archived' && "No archived notifications."}
+                      {tab.id === 'read' && 'No read notifications yet.'}
+                      {tab.id === 'starred' && 'Star important notifications to see them here.'}
+                      {tab.id === 'archived' && 'No archived notifications.'}
                     </p>
                   </div>
                 )}
