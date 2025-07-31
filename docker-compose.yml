@@ -54,6 +54,11 @@ services:
       - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__NAME:-console-minio}
       - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TTL:-300}
       - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__PROXIED:-true}
+      # CORS Configuration
+      - CORS__ALLOWED_ORIGINS__0=${CORS__ALLOWED_ORIGINS__0:-https://web.gameguild.gg}
+      - CORS__ALLOWED_ORIGINS__1=${CORS__ALLOWED_ORIGINS__1:-https://www.gameguild.gg}
+      - CORS__ALLOWED_ORIGINS__2=${CORS__ALLOWED_ORIGINS__2:-https://gameguild.gg}
+      - CORS__ALLOW_CREDENTIALS=${CORS__ALLOW_CREDENTIALS:-true}
     depends_on:
       postgres:
         condition: service_healthy
