@@ -16,21 +16,19 @@ ARG NEXT_PUBLIC_WEB_URL
 # Set environment variables from build args
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
+# Ensure we're in development mode for the build to allow API generation
+ENV NODE_ENV=development
 
 # Copy package files
 COPY package*.json ./
-# Generate package-lock.json.
-RUN npm install --package-lock-only
-# Install app dependencies.
-RUN npm ci 
+# Install all dependencies (including dev dependencies needed for build)
+RUN npm ci --only=production=false
 # Clean npm cache.
 RUN npm cache clean --force
 # Copy source code (excluding large assets via .dockerignore)
 COPY . ./
-# Build app.
-RUN npm run build 
-# Prune dev dependencies.
-RUN npm prune --production
+# Build app (this will run api:gen and build:next)
+RUN npm run build
 
 # Production Stage.
 FROM base AS runner
