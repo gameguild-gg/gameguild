@@ -1245,12 +1245,12 @@ export default function Page() {
                     >
                       <div
                         className={`w-2 h-2 rounded-full ${syncStats.isOnline
-                            ? syncStats.isSyncing
-                              ? 'bg-blue-500 animate-pulse'
-                              : 'bg-green-500'
-                            : syncConfig.isEnabled()
-                              ? 'bg-red-500'
-                              : 'bg-gray-400'
+                          ? syncStats.isSyncing
+                            ? 'bg-blue-500 animate-pulse'
+                            : 'bg-green-500'
+                          : syncConfig.isEnabled()
+                            ? 'bg-red-500'
+                            : 'bg-gray-400'
                           }`}
                       ></div>
                       <span className="text-xs text-gray-500 dark:text-gray-300">
