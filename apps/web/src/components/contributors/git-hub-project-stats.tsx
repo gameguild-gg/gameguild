@@ -37,9 +37,9 @@ export function GitHubProjectStats({ repositoryData }: GitHubProjectStatsProps) 
     return num.toString();
   };
 
-  // Calculate stats from real data
-  const openIssues = repositoryData.data.issues.filter((issue) => issue.state === 'open').length;
-  const mergedPulls = repositoryData.data.pulls.filter((pr) => pr.state === 'closed' && pr.merged_at).length;
+  // Calculate stats from real data with safe fallbacks
+  const openIssues = repositoryData.data.issues?.filter((issue) => issue.state === 'open').length || 0;
+  const mergedPulls = repositoryData.data.pulls?.filter((pr) => pr.state === 'closed' && pr.merged_at).length || 0;
 
   // Stats using real GitHub data
   const topRowStats: ProjectStat[] = [
