@@ -40,14 +40,14 @@ export function NotificationsPanel({ isOpen, onClose, className }: Notifications
   const formatTimeAgo = (date: Date): string => {
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours === 1) return '1 hour ago';
     if (diffInHours < 24) return `${diffInHours} hours ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays === 1) return '1 day ago';
-    
+
     return `${diffInDays} days ago`;
   };
 
@@ -71,7 +71,7 @@ export function NotificationsPanel({ isOpen, onClose, className }: Notifications
             </p>
             <p className="text-xs text-muted-foreground mt-1">{formatTimeAgo(notification.timestamp)}</p>
           </div>
-          
+
           {!notification.isRead && <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2" />}
         </div>
 
@@ -105,7 +105,7 @@ export function NotificationsPanel({ isOpen, onClose, className }: Notifications
     <div className={`fixed inset-0 z-50 ${className}`}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/20" onClick={onClose} />
-      
+
       {/* Panel */}
       <div className="absolute right-0 top-0 h-full w-96 bg-background border-l shadow-lg">
         <Card className="h-full rounded-none border-0">
