@@ -122,7 +122,7 @@ namespace GameGuild.Modules.Authentication {
       var lines = challenge.Split('\n');
       var walletLine = lines.FirstOrDefault(l => l.StartsWith("Wallet: "));
 
-      return walletLine?.Substring("Wallet: ".Length) ?? "";
+      return walletLine?["Wallet: ".Length..] ?? "";
     }
 
     private Task<bool> VerifyEthereumSignature(string message, string signature, string walletAddress) {

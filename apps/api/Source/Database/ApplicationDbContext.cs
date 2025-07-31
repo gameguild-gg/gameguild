@@ -146,6 +146,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<TestingSession> TestingSessions { get; set; }
 
+  public DbSet<SessionProject> SessionProjects { get; set; }
+
   public DbSet<TestingParticipant> TestingParticipants { get; set; }
 
   public DbSet<TestingFeedback> TestingFeedback { get; set; }
