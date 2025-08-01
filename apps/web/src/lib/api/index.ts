@@ -6,6 +6,9 @@ export interface ApiError {
 }
 
 export class ApiClient {
+  getProjectsMetadata: any;
+  getProject: any;
+  checkProjectHash: any;
   static handleError(error: any): ApiError {
     if (error instanceof Response) {
       return {

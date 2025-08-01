@@ -5,13 +5,7 @@ import { useCallback, useState } from 'react';
 import type { CodeFile, ProgrammingLanguage } from '../../components/editor/ui/source-code/types';
 import { getExecutor } from './executors/executor-factory';
 import type { ExecutionContext } from './executors/types';
-import { getTestRunner } from './test-runners';
-import type { TestCase } from './test-runners/types';
 
-import { useState, useCallback } from "react"
-import type { CodeFile, ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
-import { getExecutor } from "./executors/executor-factory"
-import type { ExecutionContext } from "./executors/types"
 
 interface UseCodeExecutionOptions {
   files: CodeFile[]

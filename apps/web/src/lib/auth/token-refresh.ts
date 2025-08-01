@@ -4,7 +4,7 @@
  * Token refresh utilities for NextAuth.js
  */
 
-import { apiClient } from '@/lib/api/api-client';
+import { apiClient } from '@/lib/api/editor/api-client';
 import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
 import { RefreshTokenResponse } from '@/components/legacy/types/auth';
 

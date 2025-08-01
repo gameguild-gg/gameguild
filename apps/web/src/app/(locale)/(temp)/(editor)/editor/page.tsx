@@ -10,17 +10,11 @@ import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import { Sun, Moon } from "lucide-react"
 import type { LexicalEditor } from "lexical"
-import { OpenProjectDialog } from "@/components/editor/ui/editor/open-project-dialog"
-import { CreateProjectDialog } from "@/components/editor/ui/editor/create-project-dialog"
+import { OpenProjectDialog } from "@/components/content/editor/ui/editor/open-project-dialog"
+import { CreateProjectDialog } from "@/components/content/editor/ui/editor/create-project-dialog"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
-import { SyncSettingsDialog } from "@/components/editor/ui/editor/sync-settings-dialog"
+import { SyncSettingsDialog } from "@/components/content/editor/ui/editor/sync-settings-dialog"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
-
-import { syncConfig } from '@/lib/sync/sync-config';
-import { OpenProjectDialog } from '@/components/content/editor/ui/editor/open-project-dialog';
-import { CreateProjectDialog } from '@/components/content/editor/ui/editor/create-project-dialog';
-import { SyncSettingsDialog } from '@/components/content/editor/ui/editor/sync-settings-dialog';
-import { EnhancedStorageAdapter } from '@/lib/storage/enhanced-storage-adapter';
 
 interface ProjectData {
   id: string;

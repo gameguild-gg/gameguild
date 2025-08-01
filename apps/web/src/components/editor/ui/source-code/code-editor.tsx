@@ -11,17 +11,6 @@ import { CLanguageService } from './c/c-language-service';
 import { CppLanguageService } from './cpp/cpp-language-service';
 import { XMLLanguageService } from './xml/xml-language-service';
 import { YAMLLanguageService } from './yaml/yaml-language-service';
-
-import { useRef, useEffect, useState } from "react"
-import Editor, { useMonaco } from "@monaco-editor/react"
-import { GripVertical } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { PythonLanguageService } from "./python/python-language-service"
-import { LuaLanguageService } from "./lua/lua-language-service"
-import { CLanguageService } from "./c/c-language-service"
-import { CppLanguageService } from "./cpp/cpp-language-service"
-import { XMLLanguageService } from "./xml/xml-language-service"
-import { YAMLLanguageService } from "./yaml/yaml-language-service"
 import { editor } from "monaco-editor"
 
 export interface CodeEditorProps {

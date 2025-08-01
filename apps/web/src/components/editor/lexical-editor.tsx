@@ -13,67 +13,67 @@ import { ListItemNode, ListNode } from "@lexical/list"
 import { CodeNode } from "@lexical/code"
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table"
 import { AutoLinkNode, LinkNode } from "@lexical/link"
-import { HTMLNode } from "./nodes/html-node"
+import { HTMLNode } from "@/components/content/editor/nodes/html-node"
 
 import { cn } from "@/lib/utils"
-import { ImageNode } from "./nodes/image-node"
-import { QuizNode } from "./nodes/quiz-node"
-import { MarkdownNode } from "./nodes/markdown-node"
-import { VideoNode } from "./nodes/video-node"
-import { FloatingContentInsertPlugin } from "./plugins/floating-content-insert-plugin"
-import { FloatingTextFormatToolbarPlugin } from "./plugins/floating-text-format-toolbar-plugin"
-import { ImagePlugin } from "./plugins/image-plugin"
-import { QuizPlugin } from "./plugins/quiz-plugin"
-import { MarkdownPlugin } from "./plugins/markdown-plugin"
-import { HTMLPlugin } from "./plugins/html-plugin"
-import { VideoPlugin } from "./plugins/video-plugin"
-import { EditorToolbar } from "./editor-toolbar"
-import { AudioNode } from "./nodes/audio-node"
-import { AudioPlugin } from "./plugins/audio-plugin"
-import { YouTubeAudioStyle } from "./youtube-audio-style"
+import { ImageNode } from "@/components/content/editor/nodes/image-node"
+import { QuizNode } from "@/components/content/editor/nodes/quiz-node"
+import { MarkdownNode } from "@/components/content/editor/nodes/markdown-node"
+import { VideoNode } from "@/components/content/editor/nodes/video-node"
+import { FloatingContentInsertPlugin } from "@/components/content/editor/plugins/floating-content-insert-plugin"
+import { FloatingTextFormatToolbarPlugin } from "@/components/content/editor/plugins/floating-text-format-toolbar-plugin"
+import { ImagePlugin } from "@/components/content/editor/plugins/image-plugin"
+import { QuizPlugin } from "@/components/content/editor/plugins/quiz-plugin"
+import { MarkdownPlugin } from "@/components/content/editor/plugins/markdown-plugin"
+import { HTMLPlugin } from "@/components/content/editor/plugins/html-plugin"
+import { VideoPlugin } from "@/components/content/editor/plugins/video-plugin"
+import { EditorToolbar } from "@/components/content/editor/editor-toolbar"
+import { AudioNode } from "@/components/content/editor/nodes/audio-node"
+import { AudioPlugin } from "@/components/content/editor/plugins/audio-plugin"
+import { YouTubeAudioStyle } from "@/components/content/editor/youtube-audio-style"
 // Adicione o import para o HeaderNode
-import { HeaderNode } from "./nodes/header-node"
+import { HeaderNode } from "@/components/content/editor/nodes/header-node"
 
 // Adicione o import para o HeaderPlugin
-import { HeaderPlugin } from "./plugins/header-plugin"
+import { HeaderPlugin } from "@/components/content/editor/plugins/header-plugin"
 
-import { DividerNode } from "./nodes/divider-node"
-import { DividerPlugin } from "./plugins/divider-plugin"
-import { CodePlugin } from "./plugins/code-plugin"
-
-// Add these imports
-import { ButtonNode } from "./nodes/button-node"
-import { ButtonPlugin } from "./plugins/button-plugin"
+import { DividerNode } from "@/components/content/editor/nodes/divider-node"
+import { DividerPlugin } from "@/components/content/editor/plugins/divider-plugin"
+import { CodePlugin } from "@/components/content/editor/plugins/code-plugin"
 
 // Add these imports
-import { CalloutNode } from "./nodes/callout-node"
-import { CalloutPlugin } from "./plugins/callout-plugin"
+import { ButtonNode } from "@/components/content/editor/nodes/button-node"
+import { ButtonPlugin } from "@/components/content/editor/plugins/button-plugin"
 
 // Add these imports
-import { GalleryNode } from "./nodes/gallery-node"
-import { GalleryPlugin } from "./plugins/gallery-plugin"
+import { CalloutNode } from "@/components/content/editor/nodes/callout-node"
+import { CalloutPlugin } from "@/components/content/editor/plugins/callout-plugin"
+
+// Add these imports
+import { GalleryNode } from "@/components/content/editor/nodes/gallery-node"
+import { GalleryPlugin } from "@/components/content/editor/plugins/gallery-plugin"
 
 // Add the import for the PresentationNode:
-import { PresentationNode } from "./nodes/presentation-node"
+import { PresentationNode } from "@/components/content/editor/nodes/presentation-node"
 
 // Add the import for the PresentationPlugin:
-import { PresentationPlugin } from "./plugins/presentation-plugin"
+import { PresentationPlugin } from "@/components/content/editor/plugins/presentation-plugin"
 
 // Add the import for the SourceNode and SourcePlugin:
-import { SourceNode } from "./nodes/source-node"
-import { SourcePlugin } from "./plugins/source-plugin"
+import { SourceNode } from "@/components/content/editor/nodes/source-node"
+import { SourcePlugin } from "@/components/content/editor/plugins/source-plugin"
 
 // Add the import for the YouTubeNode and YouTubePlugin:
-import { YouTubeNode } from "./nodes/youtube-node"
-import { YouTubePlugin } from "./plugins/youtube-plugin"
+import { YouTubeNode } from "@/components/content/editor/nodes/youtube-node"
+import { YouTubePlugin } from "@/components/content/editor/plugins/youtube-plugin"
 
 // Add these imports
-import { SpotifyNode } from "./nodes/spotify-node"
-import { SpotifyPlugin } from "./plugins/spotify-plugin"
+import { SpotifyNode } from "@/components/content/editor/nodes/spotify-node"
+import { SpotifyPlugin } from "@/components/content/editor/plugins/spotify-plugin"
 
 // Add the import for the SourceCodeNode and SourceCodePlugin:
-import { SourceCodeNode } from "./nodes/source-code-node"
-import { SourceCodePlugin } from "./plugins/source-code-plugin"
+import { SourceCodeNode } from "@/components/content/editor/nodes/source-code-node"
+import { SourceCodePlugin } from "@/components/content/editor/plugins/source-code-plugin"
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import {

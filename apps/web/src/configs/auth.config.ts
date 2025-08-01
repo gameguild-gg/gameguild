@@ -2,7 +2,7 @@ import { NextAuthConfig } from 'next-auth';
 import Google from 'next-auth/providers/google';
 import { environment } from '@/configs/environment';
 import { SignInResponse } from '@/components/legacy/types/auth';
-import { apiClient } from '@/lib/api/api-client';
+import { apiClient } from '@/lib/api/editor/api-client';
 import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
 import { refreshAccessToken } from '@/lib/auth/token-refresh';
 

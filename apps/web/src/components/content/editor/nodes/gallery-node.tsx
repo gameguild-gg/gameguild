@@ -16,15 +16,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EditorLoadingContext } from '../lexical-editor';
 
-import { Button } from "@/components/ui/button"
-import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/ui/media-upload-dialog"
-import { ContentEditMenu, type EditMenuOption } from "@/components/editor/ui/content-edit-menu"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { EditorLoadingContext } from "../lexical-editor"
-
 export type ImageDisplayMode = 'crop' | 'adaptive';
 
 export interface GalleryImage {

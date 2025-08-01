@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Callout as UICallout, type CalloutType } from "@/components/editor/ui/callout"
-import { ContentEditMenu } from "@/components/editor/ui/content-edit-menu"
+import { Callout as UICallout, type CalloutType } from "@/components/content/editor/ui/callout"
+import { ContentEditMenu } from "@/components/content/editor/ui/content-edit-menu"
 import { EditorLoadingContext } from "../lexical-editor"
 
 export interface CalloutData {

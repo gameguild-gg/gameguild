@@ -1,7 +1,8 @@
-import { ApiClient } from '../api/api-client';
+import { apiClient } from '@/lib/api/editor/api-client';
 import { SyncQueue } from './sync-queue';
 import { HashManager } from './hash-manager';
 import { syncConfig } from './sync-config';
+import { ApiClient } from '@/lib/api';
 
 interface ProjectData {
   id: string;

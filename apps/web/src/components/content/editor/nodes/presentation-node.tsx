@@ -18,18 +18,6 @@ import { Progress } from '@/components/ui/progress';
 import type { JSX } from 'react/jsx-runtime'; // Import JSX from react/jsx-runtime
 import { EditorLoadingContext } from '../lexical-editor';
 
-import { Button } from "@/components/ui/button"
-import { ContentEditMenu, type EditMenuOption } from "@/components/editor/ui/content-edit-menu"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { cn } from "@/lib/utils"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
-import type { JSX } from "react/jsx-runtime" // Import JSX from react/jsx-runtime
-import { EditorLoadingContext } from "../lexical-editor"
-
 export interface Slide {
   id: string;
   title?: string;

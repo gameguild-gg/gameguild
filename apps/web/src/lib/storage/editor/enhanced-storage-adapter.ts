@@ -1,5 +1,5 @@
-import { SyncManager } from '../sync/sync-manager';
-import { HashManager } from '../sync/hash-manager';
+import { SyncManager } from '@/lib/sync/editor/sync-manager';
+import { HashManager } from '@/lib/sync/editor/hash-manager';
 
 interface ProjectData {
   id: string;

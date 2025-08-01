@@ -32,16 +32,6 @@ interface UseSourceCodeEditorProps {
   setShowFilePropertiesInReadMode: (show: boolean) => void;
   showSettings: boolean;
   setShowSettings: (show: boolean) => void;
-  testCases: Record<
-    string,
-    {
-      type: 'simple' | 'inout';
-      input?: string;
-      expectedOutput?: string;
-      args?: unknown[];
-      expectedReturn?: unknown[];
-    }[]
-  >;
   setTestResults: (results: Record<string, { passed: boolean; actual: string; expected: string }[]>) => void;
   handleExecute: () => void;
   updateSourceCode: (newData: Partial<SourceCodeData>) => void;
@@ -74,7 +64,6 @@ export function useSourceCodeEditor({
   setShowSettings,
   output,
   setOutput,
-  testCases,
   setTestResults,
   handleExecute,
   updateSourceCode,
@@ -173,15 +162,12 @@ export function useSourceCodeEditor({
     setIsExecuting: setCodeIsExecuting,
     handleExecute: executeCode,
     handleStopExecution: stopCodeExecution,
-    handleTerminalCommand,
-    runTests: executeTests,
   } = useCodeExecution({
     files,
     selectedLanguage,
     clearTerminalOnRun,
     addOutput,
     clearTerminal,
-    testCases,
     setTestResults,
   });
 
@@ -228,7 +214,6 @@ export function useSourceCodeEditor({
     setCodeIsExecuting,
     executeCode,
     stopCodeExecution,
-    executeTests,
 
     // Handlers
     handleEditorMount,
