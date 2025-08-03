@@ -31,7 +31,7 @@ export async function getTestingSessionsData(params?: { status?: string; testing
     // For now, return all sessions without filtering
     // TODO: Implement server-side filtering when backend supports it
     let filteredSessions = sessions;
-    
+
     if (params) {
       // Apply client-side filtering as a temporary solution
       if (params.status) {

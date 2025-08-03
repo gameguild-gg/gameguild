@@ -172,9 +172,7 @@ export function TestingSessionsManagement({ initialSessions = [] }: TestingSessi
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-600 dark:text-orange-300 text-sm font-medium">Avg Attendance</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {sessions.length > 0 ? Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length) : 0}%
-                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">{sessions.length > 0 ? Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length) : 0}%</p>
               </div>
               <TrendingUp className="h-8 w-8 text-orange-500 dark:text-orange-400" />
             </div>
@@ -208,12 +206,7 @@ export function TestingSessionsManagement({ initialSessions = [] }: TestingSessi
             <div className="flex flex-col sm:flex-row gap-4 flex-1">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400 h-4 w-4" />
-                <Input
-                  placeholder="Search sessions, locations, or managers..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+                <Input placeholder="Search sessions, locations, or managers..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
               </div>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -252,9 +245,7 @@ export function TestingSessionsManagement({ initialSessions = [] }: TestingSessi
           <CardContent className="p-12 text-center">
             <Calendar className="h-12 w-12 text-gray-400 dark:text-slate-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-700 dark:text-slate-300 mb-2">No sessions found</h3>
-            <p className="text-gray-500 dark:text-slate-500">
-              {searchTerm || statusFilter !== 'all' ? 'Try adjusting your search or filters' : 'No testing sessions have been scheduled yet'}
-            </p>
+            <p className="text-gray-500 dark:text-slate-500">{searchTerm || statusFilter !== 'all' ? 'Try adjusting your search or filters' : 'No testing sessions have been scheduled yet'}</p>
           </CardContent>
         </Card>
       ) : (

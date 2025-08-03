@@ -42,13 +42,7 @@ function EnhancedProgramManagementContentInner({ programs, onCreateProgram }: En
       {isActiveFilters && <ProgramActiveFilters totalCount={programs.length} statusOptions={statusOptions} visibilityOptions={visibilityOptions} />}
 
       {/* Content */}
-      <ProgramContent
-        programs={filteredPrograms}
-        viewMode={state.viewMode}
-        hasFilters={isActiveFilters}
-        onCreateProgram={onCreateProgram}
-        onClearFilters={handleClearFilters}
-      />
+      <ProgramContent programs={filteredPrograms} viewMode={state.viewMode} hasFilters={isActiveFilters} onCreateProgram={onCreateProgram} onClearFilters={handleClearFilters} />
     </div>
   );
 }

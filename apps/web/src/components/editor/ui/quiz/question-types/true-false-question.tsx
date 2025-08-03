@@ -18,21 +18,11 @@ export function TrueFalseQuestion({ question, selectedAnswer, onAnswerSelect, sh
     <div className="space-y-4">
       <div className="font-semibold">{question}</div>
       <div className="flex gap-4">
-        <Button
-          variant={selectedAnswer === true ? 'default' : 'outline'}
-          onClick={() => onAnswerSelect(true)}
-          disabled={disabled}
-          className="flex items-center gap-2"
-        >
+        <Button variant={selectedAnswer === true ? 'default' : 'outline'} onClick={() => onAnswerSelect(true)} disabled={disabled} className="flex items-center gap-2">
           <Check className="h-4 w-4" />
           True
         </Button>
-        <Button
-          variant={selectedAnswer === false ? 'default' : 'outline'}
-          onClick={() => onAnswerSelect(false)}
-          disabled={disabled}
-          className="flex items-center gap-2"
-        >
+        <Button variant={selectedAnswer === false ? 'default' : 'outline'} onClick={() => onAnswerSelect(false)} disabled={disabled} className="flex items-center gap-2">
           <X className="h-4 w-4" />
           False
         </Button>

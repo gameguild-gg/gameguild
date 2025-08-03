@@ -133,45 +133,10 @@ export function PythonCompletionProvider({ monaco, editor }: PythonCompletionPro
         ];
 
         // Python types for type annotations
-        const types = [
-          'int',
-          'float',
-          'str',
-          'bool',
-          'list',
-          'dict',
-          'tuple',
-          'set',
-          'None',
-          'Any',
-          'List',
-          'Dict',
-          'Tuple',
-          'Set',
-          'Optional',
-          'Union',
-          'Callable',
-          'Type',
-        ];
+        const types = ['int', 'float', 'str', 'bool', 'list', 'dict', 'tuple', 'set', 'None', 'Any', 'List', 'Dict', 'Tuple', 'Set', 'Optional', 'Union', 'Callable', 'Type'];
 
         // Common modules
-        const modules = [
-          'os',
-          'sys',
-          'math',
-          'random',
-          'datetime',
-          'time',
-          'json',
-          're',
-          'collections',
-          'itertools',
-          'functools',
-          'typing',
-          'pathlib',
-          'shutil',
-          'subprocess',
-        ];
+        const modules = ['os', 'sys', 'math', 'random', 'datetime', 'time', 'json', 're', 'collections', 'itertools', 'functools', 'typing', 'pathlib', 'shutil', 'subprocess'];
 
         // Get the line text before the cursor
         const textUntilPosition = model.getValueInRange({

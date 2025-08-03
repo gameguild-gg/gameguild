@@ -4,29 +4,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Activity,
-  BookOpen,
-  CheckSquare,
-  ChevronDown,
-  ChevronRight,
-  Copy,
-  Edit,
-  Eye,
-  EyeOff,
-  File,
-  FileText,
-  Folder,
-  FolderOpen,
-  GripVertical,
-  HelpCircle,
-  MoreHorizontal,
-  Plus,
-  Redo,
-  Trash2,
-  Undo,
-  Video,
-} from 'lucide-react';
+import { Activity, BookOpen, CheckSquare, ChevronDown, ChevronRight, Copy, Edit, Eye, EyeOff, File, FileText, Folder, FolderOpen, GripVertical, HelpCircle, MoreHorizontal, Plus, Redo, Trash2, Undo, Video } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -293,11 +271,7 @@ export function ContentStructureSection() {
     return (
       <div key={module.id} className="border border-border rounded-lg overflow-hidden">
         {/* Module header */}
-        <div
-          className={`group flex items-center gap-3 p-4 transition-all hover:bg-muted/30 ${
-            state.content.selectedItems.includes(module.id) ? 'bg-primary/5 border-primary/20' : 'bg-background'
-          }`}
-        >
+        <div className={`group flex items-center gap-3 p-4 transition-all hover:bg-muted/30 ${state.content.selectedItems.includes(module.id) ? 'bg-primary/5 border-primary/20' : 'bg-background'}`}>
           {/* Drag handle */}
           <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 cursor-grab" />
 
@@ -458,21 +432,12 @@ export function ContentStructureSection() {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium">Title</label>
-              <Input
-                placeholder="Module title..."
-                value={moduleFormData.title}
-                onChange={(e) => setModuleFormData({ ...moduleFormData, title: e.target.value })}
-              />
+              <Input placeholder="Module title..." value={moduleFormData.title} onChange={(e) => setModuleFormData({ ...moduleFormData, title: e.target.value })} />
             </div>
 
             <div>
               <label className="text-sm font-medium">Description</label>
-              <Textarea
-                placeholder="Brief description of this module..."
-                value={moduleFormData.description}
-                onChange={(e) => setModuleFormData({ ...moduleFormData, description: e.target.value })}
-                rows={3}
-              />
+              <Textarea placeholder="Brief description of this module..." value={moduleFormData.description} onChange={(e) => setModuleFormData({ ...moduleFormData, description: e.target.value })} rows={3} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -534,21 +499,12 @@ export function ContentStructureSection() {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium">Title</label>
-              <Input
-                placeholder="Lesson title..."
-                value={lessonFormData.title}
-                onChange={(e) => setLessonFormData({ ...lessonFormData, title: e.target.value })}
-              />
+              <Input placeholder="Lesson title..." value={lessonFormData.title} onChange={(e) => setLessonFormData({ ...lessonFormData, title: e.target.value })} />
             </div>
 
             <div>
               <label className="text-sm font-medium">Description</label>
-              <Textarea
-                placeholder="Brief description of this lesson..."
-                value={lessonFormData.description}
-                onChange={(e) => setLessonFormData({ ...lessonFormData, description: e.target.value })}
-                rows={3}
-              />
+              <Textarea placeholder="Brief description of this lesson..." value={lessonFormData.description} onChange={(e) => setLessonFormData({ ...lessonFormData, description: e.target.value })} rows={3} />
             </div>
 
             <div>

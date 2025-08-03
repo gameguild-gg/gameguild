@@ -8,7 +8,7 @@ export default async function Page(): Promise<React.JSX.Element> {
   // For now, we'll simulate admin permissions
   // In production, implement proper permission checking
   const isAdmin = true;
-  
+
   // Load tenants data
   let tenants: Tenant[] = [];
   try {

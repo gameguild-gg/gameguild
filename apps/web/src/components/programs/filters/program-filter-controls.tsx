@@ -24,12 +24,7 @@ const defaultVisibilityOptions: FilterOption[] = [
   { value: 'Restricted', label: 'Restricted' },
 ];
 
-export function ProgramFilterControls({
-  hideViewToggle = false,
-  statusOptions = defaultStatusOptions,
-  visibilityOptions = defaultVisibilityOptions,
-  onCreateProgram,
-}: ProgramFilterControlsProps) {
+export function ProgramFilterControls({ hideViewToggle = false, statusOptions = defaultStatusOptions, visibilityOptions = defaultVisibilityOptions, onCreateProgram }: ProgramFilterControlsProps) {
   const { state, setSearchTerm, toggleStatus, toggleVisibility, setViewMode } = useProgramFilters();
 
   return (
@@ -43,20 +38,8 @@ export function ProgramFilterControls({
 
         {/* Center - Filter Dropdowns */}
         <div className="flex gap-3 items-center">
-          <MultiSelectFilter
-            options={statusOptions}
-            selectedValues={state.selectedStatuses}
-            onToggle={toggleStatus}
-            placeholder="Status"
-            searchPlaceholder="Search status..."
-          />
-          <MultiSelectFilter
-            options={visibilityOptions}
-            selectedValues={state.selectedTypes}
-            onToggle={toggleVisibility}
-            placeholder="Visibility"
-            searchPlaceholder="Search visibility..."
-          />
+          <MultiSelectFilter options={statusOptions} selectedValues={state.selectedStatuses} onToggle={toggleStatus} placeholder="Status" searchPlaceholder="Search status..." />
+          <MultiSelectFilter options={visibilityOptions} selectedValues={state.selectedTypes} onToggle={toggleVisibility} placeholder="Visibility" searchPlaceholder="Search visibility..." />
         </div>
 
         {/* Right Side - Create Program Button and View Mode Toggle */}
@@ -95,20 +78,8 @@ export function ProgramFilterControls({
 
           {/* Filter Dropdowns */}
           <div className="flex gap-3 items-center flex-shrink-0">
-            <MultiSelectFilter
-              options={statusOptions}
-              selectedValues={state.selectedStatuses}
-              onToggle={toggleStatus}
-              placeholder="Status"
-              searchPlaceholder="Search status..."
-            />
-            <MultiSelectFilter
-              options={visibilityOptions}
-              selectedValues={state.selectedTypes}
-              onToggle={toggleVisibility}
-              placeholder="Visibility"
-              searchPlaceholder="Search visibility..."
-            />
+            <MultiSelectFilter options={statusOptions} selectedValues={state.selectedStatuses} onToggle={toggleStatus} placeholder="Status" searchPlaceholder="Search status..." />
+            <MultiSelectFilter options={visibilityOptions} selectedValues={state.selectedTypes} onToggle={toggleVisibility} placeholder="Visibility" searchPlaceholder="Search visibility..." />
           </div>
         </div>
       </div>

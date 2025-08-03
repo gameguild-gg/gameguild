@@ -72,15 +72,9 @@ export function PostFiltersStatic({ filters, postTypes }: PostFiltersStaticProps
       {/* Active Filters Display */}
       {(filters.searchTerm || filters.postType) && (
         <div className="flex flex-wrap gap-2">
-          {filters.searchTerm && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-900/50 text-purple-200 border border-purple-700">
-              Search: "{filters.searchTerm}"
-            </span>
-          )}
+          {filters.searchTerm && <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-900/50 text-purple-200 border border-purple-700">Search: "{filters.searchTerm}"</span>}
           {filters.postType && (
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-900/50 text-blue-200 border border-blue-700">
-              Type: {filters.postType.charAt(0).toUpperCase() + filters.postType.slice(1).replace('_', ' ')}
-            </span>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-900/50 text-blue-200 border border-blue-700">Type: {filters.postType.charAt(0).toUpperCase() + filters.postType.slice(1).replace('_', ' ')}</span>
           )}
         </div>
       )}

@@ -8,11 +8,11 @@ export interface UserDetail extends UserResponseDto {
   // These fields are from the actual API and should be used as-is:
   // id, version, name, email, isActive, balance, availableBalance
   // createdAt, updatedAt, deletedAt, isDeleted, activeSubscription, role, subscriptionType
-  
+
   // Computed/derived fields for UI display
   displayName?: string; // Computed from name/email
   avatar?: string; // Generated avatar URL
-  
+
   // Real data from API endpoints
   achievements?: Array<{
     id: string;
@@ -23,7 +23,7 @@ export interface UserDetail extends UserResponseDto {
     earnedAt?: string;
     progress?: number;
   }>;
-  
+
   profile?: {
     bio?: string;
     website?: string;
@@ -33,14 +33,14 @@ export interface UserDetail extends UserResponseDto {
     skills?: string[];
     interests?: string[];
   };
-  
+
   // Statistics from real API
   achievementStats?: {
     totalAchievements: number;
     completedAchievements: number;
     recentAchievements: number;
   };
-  
+
   // Extended fields that don't exist in API yet - marked as placeholders
   // TODO: These should be implemented in backend API or removed from UI
   lastActive?: string; // PLACEHOLDER - not available in API
@@ -49,7 +49,7 @@ export interface UserDetail extends UserResponseDto {
   mfaEnabled?: boolean; // PLACEHOLDER - not available in API
   ownedObjectsCount?: number; // PLACEHOLDER - needs separate API call for projects/programs
   grantsReceivedCount?: number; // PLACEHOLDER - needs separate API call
-  
+
   // Complex data that requires separate API endpoints - TODO: implement these
   tenantMemberships?: Array<{
     tenantId: string;
@@ -57,7 +57,7 @@ export interface UserDetail extends UserResponseDto {
     role: string;
     joinedAt: string;
   }>; // PLACEHOLDER - needs separate API endpoint
-  
+
   sessions?: Array<{
     id: string;
     deviceInfo: string;
@@ -65,7 +65,7 @@ export interface UserDetail extends UserResponseDto {
     lastActive: string;
     isActive: boolean;
   }>; // PLACEHOLDER - needs separate sessions API endpoint
-  
+
   activities?: Array<{
     id: string;
     type: string;
@@ -73,7 +73,7 @@ export interface UserDetail extends UserResponseDto {
     timestamp: string;
     metadata?: Record<string, unknown>;
   }>; // PLACEHOLDER - needs separate activity log API endpoint
-  
+
   communicationPreferences?: {
     email: boolean;
     push: boolean;
@@ -123,7 +123,7 @@ export function useUserDetail(userId: string): UseUserDetailResult {
           console.warn('Failed to fetch user achievements:', err);
           return null;
         }),
-        
+
         // Fetch user profile
         getUserProfileByUserId(userId).catch((err) => {
           console.warn('Failed to fetch user profile:', err);
@@ -134,7 +134,7 @@ export function useUserDetail(userId: string): UseUserDetailResult {
       // Process achievements data (use any available data, ignore structure for now)
       let achievements: UserDetail['achievements'] = undefined;
       let achievementStats: UserDetail['achievementStats'] = undefined;
-      
+
       if (achievementsResponse.status === 'fulfilled' && achievementsResponse.value?.data) {
         const achievementsData = achievementsResponse.value.data;
         // Note: Using basic structure since exact API response structure is unclear

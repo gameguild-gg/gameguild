@@ -49,7 +49,7 @@ export function TenantDetailContent({ tenant, isAdmin = false }: TenantDetailCon
 
   const handleSave = async () => {
     if (!tenant.id) return;
-    
+
     setIsSaving(true);
     try {
       const formData = new FormData();
@@ -60,7 +60,7 @@ export function TenantDetailContent({ tenant, isAdmin = false }: TenantDetailCon
       }
 
       const result = await updateTenantClient(tenant.id, { success: false }, formData);
-      
+
       if (result.success) {
         setIsEditing(false);
         router.refresh(); // Refresh the page to get updated data
@@ -158,7 +158,7 @@ export function TenantDetailContent({ tenant, isAdmin = false }: TenantDetailCon
                   <p className="text-sm text-gray-600 mt-1">{tenant.slug || '-'}</p>
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="description">Description</Label>
                 {isEditing ? (

@@ -97,21 +97,15 @@ export default async function Page({ params }: PageProps): Promise<React.JSX.Ele
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    {program.programContents?.length || 0} lessons
-                  </span>
+                  <span className="text-sm">{program.programContents?.length || 0} lessons</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    {program.estimatedHours || 0}h estimated
-                  </span>
+                  <span className="text-sm">{program.estimatedHours || 0}h estimated</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    {program.currentEnrollments || 0} enrolled
-                  </span>
+                  <span className="text-sm">{program.currentEnrollments || 0} enrolled</span>
                 </div>
                 {program.averageRating && (
                   <div className="flex items-center gap-2">
@@ -165,9 +159,7 @@ export default async function Page({ params }: PageProps): Promise<React.JSX.Ele
               <CardContent className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Enrollment Status</label>
-                  <p className="text-sm mt-1 capitalize">
-                    {program.isEnrollmentOpen ? 'Open' : 'Closed'}
-                  </p>
+                  <p className="text-sm mt-1 capitalize">{program.isEnrollmentOpen ? 'Open' : 'Closed'}</p>
                 </div>
                 {program.maxEnrollments && (
                   <div>
@@ -178,9 +170,7 @@ export default async function Page({ params }: PageProps): Promise<React.JSX.Ele
                 {program.enrollmentDeadline && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Enrollment Deadline</label>
-                    <p className="text-sm mt-1">
-                      {new Date(program.enrollmentDeadline).toLocaleDateString()}
-                    </p>
+                    <p className="text-sm mt-1">{new Date(program.enrollmentDeadline).toLocaleDateString()}</p>
                   </div>
                 )}
                 <div>
@@ -200,22 +190,16 @@ export default async function Page({ params }: PageProps): Promise<React.JSX.Ele
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                 <div>
                   <label className="font-medium text-muted-foreground">Created</label>
-                  <p className="mt-1">
-                    {program.createdAt ? new Date(program.createdAt).toLocaleDateString() : 'Unknown'}
-                  </p>
+                  <p className="mt-1">{program.createdAt ? new Date(program.createdAt).toLocaleDateString() : 'Unknown'}</p>
                 </div>
                 <div>
                   <label className="font-medium text-muted-foreground">Last Updated</label>
-                  <p className="mt-1">
-                    {program.updatedAt ? new Date(program.updatedAt).toLocaleDateString() : 'Unknown'}
-                  </p>
+                  <p className="mt-1">{program.updatedAt ? new Date(program.updatedAt).toLocaleDateString() : 'Unknown'}</p>
                 </div>
                 {program.deletedAt && (
                   <div>
                     <label className="font-medium text-muted-foreground">Deleted</label>
-                    <p className="mt-1">
-                      {new Date(program.deletedAt).toLocaleDateString()}
-                    </p>
+                    <p className="mt-1">{new Date(program.deletedAt).toLocaleDateString()}</p>
                   </div>
                 )}
               </div>

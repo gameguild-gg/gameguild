@@ -200,8 +200,7 @@ export function AttendanceTracker({ data }: AttendanceTrackerProps) {
 
   // Filter functions
   const filteredStudentProgress = studentProgress.filter((student) => {
-    const matchesSearch =
-      student.user.name.toLowerCase().includes(searchTerm.toLowerCase()) || student.user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = student.user.name.toLowerCase().includes(searchTerm.toLowerCase()) || student.user.email.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
@@ -396,12 +395,7 @@ export function AttendanceTracker({ data }: AttendanceTrackerProps) {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className="w-20 bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${
-                              student.attendanceRate >= 80 ? 'bg-green-500' : student.attendanceRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                            }`}
-                            style={{ width: `${student.attendanceRate}%` }}
-                          />
+                          <div className={`h-2 rounded-full ${student.attendanceRate >= 80 ? 'bg-green-500' : student.attendanceRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${student.attendanceRate}%` }} />
                         </div>
                         <span className="text-sm">{student.attendanceRate}%</span>
                       </div>
@@ -452,12 +446,7 @@ export function AttendanceTracker({ data }: AttendanceTrackerProps) {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${
-                              session.attendanceRate >= 80 ? 'bg-green-500' : session.attendanceRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                            }`}
-                            style={{ width: `${session.attendanceRate}%` }}
-                          />
+                          <div className={`h-2 rounded-full ${session.attendanceRate >= 80 ? 'bg-green-500' : session.attendanceRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${session.attendanceRate}%` }} />
                         </div>
                         <span className="text-sm">{session.attendanceRate}%</span>
                       </div>

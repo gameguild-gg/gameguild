@@ -138,12 +138,7 @@ export function ReportButton({ reportType, targetId, targetTitle, variant = 'gho
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Additional details (optional)</label>
-            <Textarea
-              placeholder="Provide additional context about the issue..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-            />
+            <Textarea placeholder="Provide additional context about the issue..." value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
           </div>
 
           <div className="flex gap-2 justify-end">

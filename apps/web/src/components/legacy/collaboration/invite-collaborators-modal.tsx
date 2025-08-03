@@ -47,9 +47,7 @@ export function InviteCollaboratorsModal({ open, onOpenChange, onInvite, teamMem
 
   const displayMembers = teamMembers.length > 0 ? teamMembers : defaultTeamMembers;
 
-  const filteredMembers = displayMembers.filter(
-    (member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()) || member.email.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredMembers = displayMembers.filter((member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()) || member.email.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleInvite = () => {
     if (searchQuery && onInvite) {

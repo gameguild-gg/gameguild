@@ -49,15 +49,12 @@ export default function CoursesBanner() {
           <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent">
             Master the Art of
             <br />
-            <span className="text-6xl md:text-8xl font-extrabold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-              Game Development
-            </span>
+            <span className="text-6xl md:text-8xl font-extrabold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">Game Development</span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-xl md:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Innovative online education for a successful career in the creative industries. Learn from the industry&apos;s best with hands-on projects and
-            expert mentorship.
+            Innovative online education for a successful career in the creative industries. Learn from the industry&apos;s best with hands-on projects and expert mentorship.
           </p>
 
           {/* Stats */}
@@ -87,11 +84,7 @@ export default function CoursesBanner() {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
 
-            <Button
-              variant="outline"
-              size="lg"
-              className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300"
-            >
+            <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300">
               <Play className="mr-2 h-5 w-5" />
               Watch Demo
             </Button>
