@@ -2,31 +2,22 @@ import React, { PropsWithChildren } from 'react';
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/common/ui/dashboard-page';
 
 import { PropsWithSlugParams } from '@/types';
-import { CourseEditorProvider } from '@/components/courses/editor';
-import { SidebarInset } from '@/components/ui/sidebar';
 
 export default async function Layout({ children, params }: PropsWithChildren<PropsWithSlugParams>): Promise<React.JSX.Element> {
   const { slug } = await params;
-  //
+  
+  // TODO: Fetch course data when needed
   // const course = await getCourseBySlug(slug);
-  //
   // if (!course) notFound();
 
   return (
     <>
       <DashboardPage>
         <DashboardPageHeader>
-          <DashboardPageTitle>Course Name</DashboardPageTitle>
-          <DashboardPageDescription></DashboardPageDescription>
+          <DashboardPageTitle>Course: {slug}</DashboardPageTitle>
+          <DashboardPageDescription>Manage course content and settings</DashboardPageDescription>
         </DashboardPageHeader>
-        <DashboardPageContent>
-          {/*<CourseEditorProvider course={course}>*/}
-          {/*<SidebarProvider>*/}
-          {/*  <CourseEditorSidebar />*/}
-          {/*<SidebarInset>{children}</SidebarInset>*/}
-          {/*</SidebarProvider>*/}
-          {/*</CourseEditorProvider>*/}
-        </DashboardPageContent>
+        <DashboardPageContent>{children}</DashboardPageContent>
       </DashboardPage>
     </>
   );

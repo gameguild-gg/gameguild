@@ -104,7 +104,7 @@ const SKILL_LEVELS = [
 const SKILL_CATEGORIES = ['Programming', 'Frontend', 'Backend', 'Data', 'Tools', 'Quality', 'DevOps', 'Design', 'Business'];
 
 export default function Page() {
-  const { state, addRequiredSkill, removeRequiredSkill, addProvidedSkill, removeProvidedSkill, reorderRequiredSkills, reorderProvidedSkills, addCertificate, removeCertificate, updateCertificate } = useCourseEditor();
+  const { state, addRequiredSkill, removeRequiredSkill, addProvidedSkill, removeProvidedSkill, addCertificate, removeCertificate } = useCourseEditor();
 
   const [showSkillSearch, setShowSkillSearch] = useState(false);
   const [skillSearchQuery, setSkillSearchQuery] = useState('');
@@ -212,7 +212,7 @@ export default function Page() {
 
               {state.certificates.skillsRequired.length > 0 ? (
                 <div className="space-y-2">
-                  {state.certificates.skillsRequired.map((skill, index) => (
+                  {state.certificates.skillsRequired.map((skill) => (
                     <div key={skill.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
                       <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
                       <div className="flex-1">
@@ -265,7 +265,7 @@ export default function Page() {
 
               {state.certificates.skillsProvided.length > 0 ? (
                 <div className="space-y-2">
-                  {state.certificates.skillsProvided.map((skill, index) => (
+                  {state.certificates.skillsProvided.map((skill) => (
                     <div key={skill.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border">
                       <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
                       <div className="flex-1">
@@ -368,7 +368,7 @@ export default function Page() {
                     <strong>Prerequisites:</strong> {state.certificates.skillsRequired.length > 0 ? state.certificates.skillsRequired.map((s) => s.name).join(', ') : 'None required'}
                   </div>
                   <div>
-                    <strong>You'll Learn:</strong> {state.certificates.skillsProvided.length > 0 ? state.certificates.skillsProvided.map((s) => s.name).join(', ') : 'Learning outcomes not specified'}
+                    <strong>You&apos;ll Learn:</strong> {state.certificates.skillsProvided.length > 0 ? state.certificates.skillsProvided.map((s) => s.name).join(', ') : 'Learning outcomes not specified'}
                   </div>
                   <div>
                     <strong>Certificates:</strong> {state.certificates.certificates.length > 0 ? `${state.certificates.certificates.length} certificate(s) available` : 'No certificates offered'}
