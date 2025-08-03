@@ -1,25 +1,25 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
+  getApiContentinteractionUserByProgramUserId,
+  getApiContentinteractionUserByProgramUserIdContentByContentId,
+  postApiContentinteractionByInteractionIdComplete,
+  postApiContentinteractionByInteractionIdSubmit,
   postApiContentinteractionStart,
   putApiContentinteractionByInteractionIdProgress,
-  postApiContentinteractionByInteractionIdSubmit,
-  postApiContentinteractionByInteractionIdComplete,
-  getApiContentinteractionUserByProgramUserIdContentByContentId,
-  getApiContentinteractionUserByProgramUserId,
   putApiContentinteractionByInteractionIdTimeSpent,
 } from '@/lib/api/generated/sdk.gen';
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import type {
-  PostApiContentinteractionStartData,
-  PutApiContentinteractionByInteractionIdProgressData,
-  PostApiContentinteractionByInteractionIdSubmitData,
-  PostApiContentinteractionByInteractionIdCompleteData,
   GetApiContentinteractionUserByProgramUserIdContentByContentIdData,
   GetApiContentinteractionUserByProgramUserIdData,
+  PostApiContentinteractionByInteractionIdCompleteData,
+  PostApiContentinteractionByInteractionIdSubmitData,
+  PostApiContentinteractionStartData,
+  PutApiContentinteractionByInteractionIdProgressData,
   PutApiContentinteractionByInteractionIdTimeSpentData,
 } from '@/lib/api/generated/types.gen';
+import { revalidateTag } from 'next/cache';
 
 // =============================================================================
 // CONTENT INTERACTION MANAGEMENT
@@ -30,14 +30,14 @@ import type {
  */
 export async function startContentInteraction(data?: PostApiContentinteractionStartData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiContentinteractionStart({
     body: data?.body,
   });
-  
+
   // Revalidate content interactions cache
   revalidateTag('content-interactions');
-  
+
   return result;
 }
 
@@ -46,15 +46,15 @@ export async function startContentInteraction(data?: PostApiContentinteractionSt
  */
 export async function updateContentInteractionProgress(data: PutApiContentinteractionByInteractionIdProgressData) {
   await configureAuthenticatedClient();
-  
+
   const result = await putApiContentinteractionByInteractionIdProgress({
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate content interactions cache
   revalidateTag('content-interactions');
-  
+
   return result;
 }
 
@@ -63,15 +63,15 @@ export async function updateContentInteractionProgress(data: PutApiContentintera
  */
 export async function submitContentInteraction(data: PostApiContentinteractionByInteractionIdSubmitData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiContentinteractionByInteractionIdSubmit({
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate content interactions cache
   revalidateTag('content-interactions');
-  
+
   return result;
 }
 
@@ -80,15 +80,15 @@ export async function submitContentInteraction(data: PostApiContentinteractionBy
  */
 export async function completeContentInteraction(data: PostApiContentinteractionByInteractionIdCompleteData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiContentinteractionByInteractionIdComplete({
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate content interactions cache
   revalidateTag('content-interactions');
-  
+
   return result;
 }
 
@@ -97,15 +97,15 @@ export async function completeContentInteraction(data: PostApiContentinteraction
  */
 export async function updateContentInteractionTimeSpent(data: PutApiContentinteractionByInteractionIdTimeSpentData) {
   await configureAuthenticatedClient();
-  
+
   const result = await putApiContentinteractionByInteractionIdTimeSpent({
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate content interactions cache
   revalidateTag('content-interactions');
-  
+
   return result;
 }
 
@@ -118,7 +118,7 @@ export async function updateContentInteractionTimeSpent(data: PutApiContentinter
  */
 export async function getContentInteractionByUserAndContent(data: GetApiContentinteractionUserByProgramUserIdContentByContentIdData) {
   await configureAuthenticatedClient();
-  
+
   return getApiContentinteractionUserByProgramUserIdContentByContentId({
     path: data.path,
   });
@@ -129,7 +129,7 @@ export async function getContentInteractionByUserAndContent(data: GetApiContenti
  */
 export async function getContentInteractionsByUser(data: GetApiContentinteractionUserByProgramUserIdData) {
   await configureAuthenticatedClient();
-  
+
   return getApiContentinteractionUserByProgramUserId({
     path: data.path,
   });

@@ -1,30 +1,37 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
-import { getUsersData } from '@/lib/users/users.actions';
 import { getRecentPosts } from '@/lib/posts/posts.actions';
+import { getUsersData } from '@/lib/users/users.actions';
+import { revalidateTag } from 'next/cache';
 
 export interface ActivityItem {
   id: string;
+
   type: 'user_joined' | 'post_created' | 'course_completed' | 'achievement_earned';
+
   title: string;
+
   description: string;
+
   user: {
     id: string;
     name: string;
     avatar?: string;
   };
+
   metadata?: {
     postTitle?: string;
     courseName?: string;
     achievementName?: string;
     timestamp?: string;
   };
+
   timestamp: string;
 }
 
 export interface RecentActivityData {
   activities: ActivityItem[];
+
   total: number;
 }
 
@@ -107,7 +114,7 @@ export async function getRecentActivity(limit: number = 10): Promise<{ success: 
 
 /**
  * Revalidate recent activity cache
-/**
+ /**
  * Note: This function is called from server-side refresh actions only
  * Do not import this directly in client components
  */

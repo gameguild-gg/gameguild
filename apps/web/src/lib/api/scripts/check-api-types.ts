@@ -8,13 +8,17 @@ const execAsync = promisify(exec);
 
 interface SwaggerInfo {
   version?: string;
+
   title?: string;
+
   description?: string;
 }
 
 interface SwaggerSpec {
   info?: SwaggerInfo;
+
   openapi?: string;
+
   swagger?: string;
 
   [key: string]: unknown;
@@ -22,9 +26,13 @@ interface SwaggerSpec {
 
 interface ApiMetadata {
   hash: string | null;
+
   timestamp: string | null;
+
   apiUrl?: string;
+
   apiVersion?: string;
+
   generator?: string;
 }
 

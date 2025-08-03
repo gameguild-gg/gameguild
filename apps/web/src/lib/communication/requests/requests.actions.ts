@@ -1,28 +1,40 @@
-import { revalidateTag } from 'next/cache';
 import { auth } from '@/auth';
+import { revalidateTag } from 'next/cache';
 
 export interface Request {
   id: string;
+
   title: string;
+
   description: string;
+
   status: 'pending' | 'approved' | 'rejected' | 'in_review';
+
   type: 'feature' | 'bug_report' | 'content' | 'partnership' | 'general';
+
   priority: 'low' | 'medium' | 'high' | 'urgent';
+
   submittedBy: {
     id: string;
     name: string;
     email: string;
     avatar?: string;
   };
+
   assignedTo?: {
     id: string;
     name: string;
     email: string;
   };
+
   createdAt: string;
+
   updatedAt: string;
+
   dueDate?: string;
+
   tags?: string[];
+
   attachments?: Array<{
     id: string;
     name: string;
@@ -33,6 +45,7 @@ export interface Request {
 
 export interface RequestData {
   requests: Request[];
+
   pagination?: {
     page: number;
     limit: number;
@@ -43,6 +56,7 @@ export interface RequestData {
 
 export interface ActionState {
   success: boolean;
+
   error?: string;
 }
 
@@ -52,13 +66,21 @@ export interface RequestActionState extends ActionState {
 
 export interface RequestStatistics {
   totalRequests: number;
+
   pendingRequests: number;
+
   approvedRequests: number;
+
   rejectedRequests: number;
+
   inReviewRequests: number;
+
   requestsCreatedToday: number;
+
   requestsCreatedThisWeek: number;
+
   requestsCreatedThisMonth: number;
+
   averageProcessingTime: number;
 }
 
