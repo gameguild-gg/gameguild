@@ -6,7 +6,12 @@ import { CourseAreaFilter } from './course-area-filter';
 import { CourseLevelFilter } from './course-level-filter';
 import { ViewModeToggle } from '@/components/common/filters/view-mode-toggle';
 import { PeriodSelector } from '@/components/common/filters/period-selector';
-import { CourseArea, CourseLevel, CourseStatus } from '@/lib/courses/course-enhanced.types';
+import { ContentStatus, ProgramCategory, ProgramDifficulty } from '@/lib/api/generated/types.gen';
+
+// Type aliases to maintain existing naming
+type CourseStatus = ContentStatus;
+type CourseArea = ProgramCategory;
+type CourseLevel = ProgramDifficulty;
 
 interface CourseFilterControlsProps {
   searchTerm: string;
