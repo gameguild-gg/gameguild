@@ -428,7 +428,7 @@ export default function Page() {
                   </div>
                   <div>
                     <Label className="text-xs">Level</Label>
-                    <Select value={newSkill.level} onValueChange={(value: any) => setNewSkill({ ...newSkill, level: value })}>
+                    <Select value={newSkill.level} onValueChange={(value: 'beginner' | 'intermediate' | 'advanced' | 'expert') => setNewSkill({ ...newSkill, level: value })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
