@@ -1,27 +1,27 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import type { PaymentStatus } from '@/lib/api/generated/types.gen';
 import {
+  getApiPaymentById,
   getApiPaymentMethodsMe,
-  postApiPaymentIntent,
-  getApiPaymentStats,
+  getApiPaymentsById,
   getApiPaymentsMyPayments,
+  getApiPaymentsProductsByProductId,
+  getApiPaymentsRevenueReport,
+  getApiPaymentsStats,
+  getApiPaymentStats,
+  getApiPaymentsUsersByUserId,
+  getApiPaymentUserByUserId,
   postApiPaymentByIdProcess,
   postApiPaymentByIdRefund,
-  getApiPaymentById,
-  getApiPaymentUserByUserId,
+  postApiPaymentIntent,
   postApiPayments,
-  getApiPaymentsById,
-  getApiPaymentsUsersByUserId,
-  getApiPaymentsProductsByProductId,
+  postApiPaymentsByIdCancel,
   postApiPaymentsByIdProcess,
   postApiPaymentsByIdRefund,
-  postApiPaymentsByIdCancel,
-  getApiPaymentsStats,
-  getApiPaymentsRevenueReport,
 } from '@/lib/api/generated/sdk.gen';
+import type { PaymentStatus } from '@/lib/api/generated/types.gen';
+import { revalidateTag } from 'next/cache';
 
 /**
  * Get user's payment methods
@@ -41,13 +41,7 @@ export async function getUserPaymentMethods() {
 /**
  * Create a payment intent
  */
-export async function createPaymentIntent(paymentData: {
-  amount: number;
-  currency: string;
-  productId?: string;
-  subscriptionId?: string;
-  metadata?: Record<string, unknown>;
-}) {
+export async function createPaymentIntent(paymentData: { amount: number; currency: string; productId?: string; subscriptionId?: string; metadata?: Record<string, unknown> }) {
   await configureAuthenticatedClient();
 
   try {
@@ -179,14 +173,7 @@ export async function getPaymentsByUserId(userId: string) {
 /**
  * Create a new payment
  */
-export async function createPayment(paymentData: {
-  amount: number;
-  currency: string;
-  productId?: string;
-  subscriptionId?: string;
-  paymentMethodId?: string;
-  metadata?: Record<string, unknown>;
-}) {
+export async function createPayment(paymentData: { amount: number; currency: string; productId?: string; subscriptionId?: string; paymentMethodId?: string; metadata?: Record<string, unknown> }) {
   await configureAuthenticatedClient();
 
   try {
@@ -267,10 +254,7 @@ export async function getPaymentsByProductId(productId: string, params?: { skip?
 /**
  * Process payment (alternative endpoint)
  */
-export async function processPaymentAlternative(
-  paymentId: string,
-  paymentData: { providerTransactionId?: string; providerMetadata?: Record<string, unknown> },
-) {
+export async function processPaymentAlternative(paymentId: string, paymentData: { providerTransactionId?: string; providerMetadata?: Record<string, unknown> }) {
   await configureAuthenticatedClient();
 
   try {

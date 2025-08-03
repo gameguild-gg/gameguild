@@ -1,45 +1,45 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
-  getApiPaymentMethodsMe,
-  postApiPaymentIntent,
-  postApiPaymentByIdProcess,
-  postApiPaymentByIdRefund,
   getApiPaymentById,
-  getApiPaymentUserByUserId,
-  getApiPaymentStats,
-  postApiPayments,
+  getApiPaymentMethodsMe,
   getApiPaymentsById,
   getApiPaymentsMyPayments,
-  getApiPaymentsUsersByUserId,
   getApiPaymentsProductsByProductId,
+  getApiPaymentsRevenueReport,
+  getApiPaymentsStats,
+  getApiPaymentStats,
+  getApiPaymentsUsersByUserId,
+  getApiPaymentUserByUserId,
+  postApiPaymentByIdProcess,
+  postApiPaymentByIdRefund,
+  postApiPaymentIntent,
+  postApiPayments,
+  postApiPaymentsByIdCancel,
   postApiPaymentsByIdProcess,
   postApiPaymentsByIdRefund,
-  postApiPaymentsByIdCancel,
-  getApiPaymentsStats,
-  getApiPaymentsRevenueReport,
 } from '@/lib/api/generated/sdk.gen';
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import type {
-  GetApiPaymentMethodsMeData,
-  PostApiPaymentIntentData,
-  PostApiPaymentByIdProcessData,
-  PostApiPaymentByIdRefundData,
   GetApiPaymentByIdData,
-  GetApiPaymentUserByUserIdData,
-  GetApiPaymentStatsData,
-  PostApiPaymentsData,
+  GetApiPaymentMethodsMeData,
   GetApiPaymentsByIdData,
   GetApiPaymentsMyPaymentsData,
-  GetApiPaymentsUsersByUserIdData,
   GetApiPaymentsProductsByProductIdData,
+  GetApiPaymentsRevenueReportData,
+  GetApiPaymentsStatsData,
+  GetApiPaymentStatsData,
+  GetApiPaymentsUsersByUserIdData,
+  GetApiPaymentUserByUserIdData,
+  PostApiPaymentByIdProcessData,
+  PostApiPaymentByIdRefundData,
+  PostApiPaymentIntentData,
+  PostApiPaymentsByIdCancelData,
   PostApiPaymentsByIdProcessData,
   PostApiPaymentsByIdRefundData,
-  PostApiPaymentsByIdCancelData,
-  GetApiPaymentsStatsData,
-  GetApiPaymentsRevenueReportData,
+  PostApiPaymentsData,
 } from '@/lib/api/generated/types.gen';
+import { revalidateTag } from 'next/cache';
 
 // =============================================================================
 // PAYMENT METHODS & SETUP
@@ -50,7 +50,7 @@ import type {
  */
 export async function getMyPaymentMethods(data?: GetApiPaymentMethodsMeData) {
   await configureAuthenticatedClient();
-  
+
   return getApiPaymentMethodsMe({
     query: data?.query,
   });
@@ -61,7 +61,7 @@ export async function getMyPaymentMethods(data?: GetApiPaymentMethodsMeData) {
  */
 export async function createPaymentIntent(data?: PostApiPaymentIntentData) {
   await configureAuthenticatedClient();
-  
+
   return postApiPaymentIntent({
     body: data?.body,
   });
@@ -76,15 +76,15 @@ export async function createPaymentIntent(data?: PostApiPaymentIntentData) {
  */
 export async function processPayment(data: PostApiPaymentByIdProcessData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiPaymentByIdProcess({
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate payments cache
   revalidateTag('payments');
-  
+
   return result;
 }
 
@@ -93,15 +93,15 @@ export async function processPayment(data: PostApiPaymentByIdProcessData) {
  */
 export async function refundPayment(data: PostApiPaymentByIdRefundData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiPaymentByIdRefund({
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate payments cache
   revalidateTag('payments');
-  
+
   return result;
 }
 
@@ -110,14 +110,14 @@ export async function refundPayment(data: PostApiPaymentByIdRefundData) {
  */
 export async function createPayment(data?: PostApiPaymentsData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiPayments({
     body: data?.body,
   });
-  
+
   // Revalidate payments cache
   revalidateTag('payments');
-  
+
   return result;
 }
 
@@ -126,15 +126,15 @@ export async function createPayment(data?: PostApiPaymentsData) {
  */
 export async function processPaymentById(data: PostApiPaymentsByIdProcessData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiPaymentsByIdProcess({
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate payments cache
   revalidateTag('payments');
-  
+
   return result;
 }
 
@@ -143,15 +143,15 @@ export async function processPaymentById(data: PostApiPaymentsByIdProcessData) {
  */
 export async function refundPaymentById(data: PostApiPaymentsByIdRefundData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiPaymentsByIdRefund({
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate payments cache
   revalidateTag('payments');
-  
+
   return result;
 }
 
@@ -160,15 +160,15 @@ export async function refundPaymentById(data: PostApiPaymentsByIdRefundData) {
  */
 export async function cancelPayment(data: PostApiPaymentsByIdCancelData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiPaymentsByIdCancel({
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate payments cache
   revalidateTag('payments');
-  
+
   return result;
 }
 
@@ -181,7 +181,7 @@ export async function cancelPayment(data: PostApiPaymentsByIdCancelData) {
  */
 export async function getPaymentById(data: GetApiPaymentByIdData) {
   await configureAuthenticatedClient();
-  
+
   return getApiPaymentById({
     path: data.path,
   });
@@ -192,7 +192,7 @@ export async function getPaymentById(data: GetApiPaymentByIdData) {
  */
 export async function getPaymentsById(data: GetApiPaymentsByIdData) {
   await configureAuthenticatedClient();
-  
+
   return getApiPaymentsById({
     path: data.path,
   });
@@ -203,7 +203,7 @@ export async function getPaymentsById(data: GetApiPaymentsByIdData) {
  */
 export async function getMyPayments(data?: GetApiPaymentsMyPaymentsData) {
   await configureAuthenticatedClient();
-  
+
   return getApiPaymentsMyPayments({
     query: data?.query,
   });
@@ -214,7 +214,7 @@ export async function getMyPayments(data?: GetApiPaymentsMyPaymentsData) {
  */
 export async function getPaymentsByUser(data: GetApiPaymentUserByUserIdData) {
   await configureAuthenticatedClient();
-  
+
   return getApiPaymentUserByUserId({
     path: data.path,
   });
@@ -225,7 +225,7 @@ export async function getPaymentsByUser(data: GetApiPaymentUserByUserIdData) {
  */
 export async function getPaymentsByUserId(data: GetApiPaymentsUsersByUserIdData) {
   await configureAuthenticatedClient();
-  
+
   return getApiPaymentsUsersByUserId({
     path: data.path,
   });
@@ -236,7 +236,7 @@ export async function getPaymentsByUserId(data: GetApiPaymentsUsersByUserIdData)
  */
 export async function getPaymentsByProduct(data: GetApiPaymentsProductsByProductIdData) {
   await configureAuthenticatedClient();
-  
+
   return getApiPaymentsProductsByProductId({
     path: data.path,
   });
@@ -251,7 +251,7 @@ export async function getPaymentsByProduct(data: GetApiPaymentsProductsByProduct
  */
 export async function getPaymentStatistics(data?: GetApiPaymentStatsData) {
   await configureAuthenticatedClient();
-  
+
   return getApiPaymentStats({
     query: data?.query,
   });
@@ -262,7 +262,7 @@ export async function getPaymentStatistics(data?: GetApiPaymentStatsData) {
  */
 export async function getDetailedPaymentStats(data?: GetApiPaymentsStatsData) {
   await configureAuthenticatedClient();
-  
+
   return getApiPaymentsStats({
     query: data?.query,
   });
@@ -273,7 +273,7 @@ export async function getDetailedPaymentStats(data?: GetApiPaymentsStatsData) {
  */
 export async function getRevenueReport(data?: GetApiPaymentsRevenueReportData) {
   await configureAuthenticatedClient();
-  
+
   return getApiPaymentsRevenueReport({
     query: data?.query,
   });

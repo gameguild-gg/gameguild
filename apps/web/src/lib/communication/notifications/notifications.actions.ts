@@ -1,7 +1,7 @@
 'use server';
 
+import type { Notification, NotificationActionState, NotificationFilters, NotificationResponse } from '@/types/notification';
 import { revalidateTag } from 'next/cache';
-import type { Notification, NotificationActionState, NotificationFilters, NotificationResponse } from '@/components/types/notification';
 
 // Mock data for demonstration - in a real app, this would connect to your database
 const mockNotifications: Notification[] = [
@@ -15,10 +15,13 @@ const mockNotifications: Notification[] = [
       name: 'John',
       avatar: 'https://github.com/shadcn.png',
     },
-    projectName: 'Project Alpha',
+    metadata: {
+      projectName: 'Project Alpha',
+    },
     timestamp: new Date('2024-10-11T11:00:00Z'),
     isRead: false,
     isArchived: false,
+    priority: 'medium',
     actionButtons: {
       view: true,
       respond: true,
@@ -34,10 +37,13 @@ const mockNotifications: Notification[] = [
       name: 'John',
       avatar: 'https://github.com/shadcn.png',
     },
-    projectName: 'Project Beta',
+    metadata: {
+      projectName: 'Project Beta',
+    },
     timestamp: new Date('2024-10-10T11:00:00Z'),
     isRead: false,
     isArchived: false,
+    priority: 'high',
     actionButtons: {
       accept: true,
       decline: true,
@@ -56,6 +62,7 @@ const mockNotifications: Notification[] = [
     timestamp: new Date('2024-11-06T20:12:00Z'),
     isRead: false,
     isArchived: false,
+    priority: 'low',
     actionButtons: {
       view: true,
     },
@@ -70,10 +77,13 @@ const mockNotifications: Notification[] = [
       name: 'Eve Monroe',
       avatar: 'https://github.com/shadcn.png',
     },
-    taskId: '#IG-2137',
+    metadata: {
+      taskId: '#IG-2137',
+    },
     timestamp: new Date('2024-11-05T20:56:00Z'),
     isRead: false,
     isArchived: false,
+    priority: 'high',
     actionButtons: {
       view: true,
     },
@@ -91,6 +101,7 @@ const mockNotifications: Notification[] = [
     timestamp: new Date('2024-12-01T14:00:00Z'),
     isRead: false,
     isArchived: false,
+    priority: 'medium',
     actionButtons: {
       respond: true,
     },
@@ -105,10 +116,13 @@ const mockNotifications: Notification[] = [
       name: 'Josh Krajcik',
       avatar: 'https://github.com/shadcn.png',
     },
-    projectName: 'Design Project',
+    metadata: {
+      projectName: 'Design Project',
+    },
     timestamp: new Date('2024-12-01T12:00:00Z'),
     isRead: true,
     isArchived: false,
+    priority: 'low',
     actionButtons: {
       view: true,
     },
@@ -253,7 +267,7 @@ export async function acceptProjectInvite(notificationId: string): Promise<Notif
     // Mark as read and remove action buttons
     notification.isRead = true;
     notification.actionButtons = undefined;
-    notification.message = `You accepted the invitation to ${notification.projectName}`;
+    notification.message = `You accepted the invitation to ${notification.metadata?.projectName || 'the project'}`;
 
     revalidateTag('notifications');
 
@@ -285,7 +299,7 @@ export async function declineProjectInvite(notificationId: string): Promise<Noti
     // Mark as read and remove action buttons
     notification.isRead = true;
     notification.actionButtons = undefined;
-    notification.message = `You declined the invitation to ${notification.projectName}`;
+    notification.message = `You declined the invitation to ${notification.metadata?.projectName || 'the project'}`;
 
     revalidateTag('notifications');
 

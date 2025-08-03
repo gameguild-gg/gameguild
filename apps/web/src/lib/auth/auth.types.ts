@@ -4,10 +4,15 @@ export interface SignInResponse {
     username?: string;
     email?: string;
   };
+
   accessToken: string;
+
   refreshToken: string;
+
   expiresAt: string;
+
   tenantId?: string;
+
   availableTenants?: Array<{
     id: string;
     name: string;
@@ -17,7 +22,10 @@ export interface SignInResponse {
 
 export interface RefreshTokenResponse {
   tenantId?: string;
+
   accessToken: string;
+
   refreshToken: string;
+
   expiresAt: string;
 }

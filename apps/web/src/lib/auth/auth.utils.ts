@@ -1,4 +1,4 @@
-import { User, Session } from 'next-auth';
+import { Session, User } from 'next-auth';
 import { SignInResponse } from './auth.types';
 
 /**

@@ -2,15 +2,15 @@
 
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
-  getApiPaymentStats,
   getApiPaymentsMyPayments,
   getApiPaymentsRevenueReport,
-  getApiSubscription,
+  getApiPaymentStats,
   getApiProduct,
-  getApiUsers,
   getApiProductAnalyticsCount,
-  getApiProductByIdAnalyticsUserCount,
   getApiProductByIdAnalyticsRevenue,
+  getApiProductByIdAnalyticsUserCount,
+  getApiSubscription,
+  getApiUsers,
 } from '@/lib/api/generated/sdk.gen';
 
 /**
