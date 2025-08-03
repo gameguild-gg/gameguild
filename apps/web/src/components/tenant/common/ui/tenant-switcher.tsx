@@ -3,15 +3,7 @@
 import React from 'react';
 import { Building, ChevronsUpDown, Plus } from 'lucide-react';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tenant, useTenant } from '@/components/tenant';
 
 export const TenantSwitcher = (): React.JSX.Element => {
@@ -92,12 +84,7 @@ export const TenantSwitcher = (): React.JSX.Element => {
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-            align="start"
-            side={isMobile ? 'bottom' : 'right'}
-            sideOffset={4}
-          >
+          <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg" align="start" side={isMobile ? 'bottom' : 'right'} sideOffset={4}>
             <DropdownMenuLabel className="text-muted-foreground text-xs">Tenants</DropdownMenuLabel>
             {tenants.map((tenant, index) => (
               <DropdownMenuItem key={tenant.id} onClick={() => handleTenantSwitch(tenant)} className="gap-2 p-2">
