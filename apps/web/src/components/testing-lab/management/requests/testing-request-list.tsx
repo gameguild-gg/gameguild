@@ -68,10 +68,7 @@ export function TestingRequestList({ data }: TestingRequestListProps) {
 
     if (searchTerm) {
       filtered = filtered.filter(
-        (request) =>
-          request.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.createdByUserId?.toLowerCase().includes(searchTerm.toLowerCase()),
+        (request) => request.title?.toLowerCase().includes(searchTerm.toLowerCase()) || request.description?.toLowerCase().includes(searchTerm.toLowerCase()) || request.createdByUserId?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -123,9 +120,7 @@ export function TestingRequestList({ data }: TestingRequestListProps) {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold">{userRole.isStudent ? 'Available Testing Requests' : 'My Testing Requests'}</h1>
-            <p className="text-muted-foreground mt-2">
-              {userRole.isStudent ? 'Find games to test and provide valuable feedback' : 'Manage your submitted testing requests'}
-            </p>
+            <p className="text-muted-foreground mt-2">{userRole.isStudent ? 'Find games to test and provide valuable feedback' : 'Manage your submitted testing requests'}</p>
           </div>
           {!userRole.isStudent && (
             <Button asChild>
@@ -148,10 +143,7 @@ export function TestingRequestList({ data }: TestingRequestListProps) {
         {/* Requests Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredRequests.map((request) => (
-            <Card
-              key={request.id}
-              className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm hover:border-slate-600 transition-colors"
-            >
+            <Card key={request.id} className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm hover:border-slate-600 transition-colors">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -224,11 +216,7 @@ export function TestingRequestList({ data }: TestingRequestListProps) {
               <FileText className="h-12 w-12 text-slate-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">No testing requests found</h3>
               <p className="text-slate-400 mb-4">
-                {searchTerm || statusFilter.length > 0
-                  ? 'Try adjusting your search or filter criteria'
-                  : userRole.isStudent
-                    ? 'There are no testing requests available at the moment'
-                    : 'You have not submitted any testing requests yet'}
+                {searchTerm || statusFilter.length > 0 ? 'Try adjusting your search or filter criteria' : userRole.isStudent ? 'There are no testing requests available at the moment' : 'You have not submitted any testing requests yet'}
               </p>
               {!userRole.isStudent && (
                 <Button asChild className="bg-blue-600 hover:bg-blue-700">
