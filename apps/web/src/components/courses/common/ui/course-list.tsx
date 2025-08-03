@@ -3,18 +3,27 @@
 import React, { useMemo, useState } from 'react';
 import { CourseFilterControls } from '@/components/courses/common';
 import { CourseCard } from './course-card';
-import { Course, CourseArea, CourseLevel, CourseStatus } from '@/lib/courses/course-enhanced.types';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import { Program, ContentStatus, ProgramCategory, ProgramDifficulty } from '@/lib/api/generated/types.gen';
+
+// Type aliases to maintain existing naming
+type Course = Program;
+type CourseStatus = ContentStatus;
+type CourseArea = ProgramCategory;
+type CourseLevel = ProgramDifficulty;
 
 interface CourseListProps {
   courses: Course[];
   onEdit?: (course: Course) => void;
   onView?: (course: Course) => void;
   onEnroll?: (course: Course) => void;
+  onCreate?: () => void;
   initialViewMode?: 'cards' | 'row' | 'table';
   hideViewToggle?: boolean;
 }
 
-export const CourseList = ({ courses, onEdit, onView, onEnroll, initialViewMode = 'cards', hideViewToggle = false }: CourseListProps): React.JSX.Element => {
+export const CourseList = ({ courses, onEdit, onView, onEnroll, onCreate, initialViewMode = 'cards', hideViewToggle = false }: CourseListProps): React.JSX.Element => {
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<CourseStatus[]>([]);
@@ -42,28 +51,23 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, initialViewMode 
       // Search filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
-        if (
-          !course.title.toLowerCase().includes(searchLower) &&
-          !course.description.toLowerCase().includes(searchLower) &&
-          !(course.area && course.area.toLowerCase().includes(searchLower)) &&
-          !(course.tools && course.tools.some((tool: string) => tool.toLowerCase().includes(searchLower)))
-        ) {
+        if (!course.title.toLowerCase().includes(searchLower) && !(course.description && course.description.toLowerCase().includes(searchLower))) {
           return false;
         }
       }
 
       // Status filter
-      if (selectedStatuses.length > 0 && !selectedStatuses.includes(course.status || 'draft')) {
+      if (selectedStatuses.length > 0 && !selectedStatuses.includes(course.status || 0)) {
         return false;
       }
 
-      // Area filter
-      if (selectedAreas.length > 0 && course.area && !selectedAreas.includes(course.area)) {
+      // Area filter (category)
+      if (selectedAreas.length > 0 && course.category && !selectedAreas.includes(course.category)) {
         return false;
       }
 
-      // Level filter
-      if (selectedLevels.length > 0 && !selectedLevels.includes(course.level)) {
+      // Level filter (difficulty)
+      if (selectedLevels.length > 0 && course.difficulty && !selectedLevels.includes(course.difficulty)) {
         return false;
       }
 
@@ -76,11 +80,13 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, initialViewMode 
       return (
         <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
           <div className="text-slate-400 text-lg mb-2">No courses found</div>
-          <div className="text-slate-500 text-sm">
-            {searchTerm || selectedStatuses.length > 0 || selectedAreas.length > 0 || selectedLevels.length > 0
-              ? 'Try adjusting your filters'
-              : 'No courses available at the moment'}
-          </div>
+          <div className="text-slate-500 text-sm mb-4">{searchTerm || selectedStatuses.length > 0 || selectedAreas.length > 0 || selectedLevels.length > 0 ? 'Try adjusting your filters' : 'No courses available at the moment'}</div>
+          {onCreate && courses.length === 0 && (
+            <Button onClick={onCreate} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Create Your First Course
+            </Button>
+          )}
         </div>
       );
     }
@@ -148,20 +154,28 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, initialViewMode 
         <span>
           Showing {filteredCourses.length} of {courses.length} courses
         </span>
-        {(searchTerm || selectedStatuses.length > 0 || selectedAreas.length > 0 || selectedLevels.length > 0) && (
-          <button
-            onClick={() => {
-              setSearchTerm('');
-              setSelectedStatuses([]);
-              setSelectedAreas([]);
-              setSelectedLevels([]);
-              setSelectedPeriod('all');
-            }}
-            className="text-blue-400 hover:text-blue-300 transition-colors"
-          >
-            Clear all filters
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {(searchTerm || selectedStatuses.length > 0 || selectedAreas.length > 0 || selectedLevels.length > 0) && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedStatuses([]);
+                setSelectedAreas([]);
+                setSelectedLevels([]);
+                setSelectedPeriod('all');
+              }}
+              className="text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              Clear all filters
+            </button>
+          )}
+          {onCreate && (
+            <Button onClick={onCreate} size="sm" className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Create Course
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Course Grid */}

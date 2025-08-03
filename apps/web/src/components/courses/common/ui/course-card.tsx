@@ -4,7 +4,10 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, Users, Star, BookOpen, Play, Eye, FileText, Archive } from 'lucide-react';
-import { Course } from '@/lib/courses/course-enhanced.types';
+import { Program } from '@/lib/api/generated/types.gen';
+
+// Type alias to maintain existing naming
+type Course = Program;
 
 interface CourseCardProps {
   course: Course;
@@ -75,9 +78,7 @@ export function CourseCard({ course, onEdit, onView, onEnroll }: CourseCardProps
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-white text-lg leading-tight line-clamp-2 group-hover:text-blue-300 transition-colors">
-              {course.title}
-            </h3>
+            <h3 className="font-semibold text-white text-lg leading-tight line-clamp-2 group-hover:text-blue-300 transition-colors">{course.title}</h3>
             <p className="text-slate-400 text-sm mt-1 capitalize">{course.area}</p>
           </div>
           <div className="flex flex-col gap-2 items-end flex-shrink-0">
