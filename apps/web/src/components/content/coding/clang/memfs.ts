@@ -59,8 +59,8 @@ export class MemFS {
       try {
         const response = await fetch(memfsUrl);
         const buffer = await response.arrayBuffer();
-        const module = await WebAssembly.compile(buffer);
-        const instance = await WebAssembly.instantiate(module, { env });
+        const wasmModule = await WebAssembly.compile(buffer);
+        const instance = await WebAssembly.instantiate(wasmModule, { env });
 
         this.exports = instance.exports as MemFSExports;
         this.mem = new Memory(this.exports.memory);
