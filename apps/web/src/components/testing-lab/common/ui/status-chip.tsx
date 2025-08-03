@@ -21,10 +21,8 @@ export function StatusChip({ status, variant = 'default', className = '' }: Stat
   // Status styles with enhanced visibility - fully rounded and no shadows, more padding
   const statusStyles = {
     open: {
-      default:
-        'px-4 py-2 rounded-full text-sm bg-gradient-to-br from-green-900/40 to-emerald-900/40 backdrop-blur-md border border-green-600/40 text-green-200',
-      compact:
-        'px-3 py-1.5 rounded-full text-xs bg-gradient-to-br from-green-900/35 to-emerald-900/35 backdrop-blur-md border border-green-600/35 text-green-200',
+      default: 'px-4 py-2 rounded-full text-sm bg-gradient-to-br from-green-900/40 to-emerald-900/40 backdrop-blur-md border border-green-600/40 text-green-200',
+      compact: 'px-3 py-1.5 rounded-full text-xs bg-gradient-to-br from-green-900/35 to-emerald-900/35 backdrop-blur-md border border-green-600/35 text-green-200',
       inline: 'px-2 py-1 rounded-full text-xs bg-gradient-to-br from-green-900/30 to-emerald-900/30 backdrop-blur-md border border-green-600/30 text-green-200',
     },
     full: {

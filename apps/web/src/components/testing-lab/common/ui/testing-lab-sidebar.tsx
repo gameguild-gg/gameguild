@@ -69,10 +69,7 @@ export function TestingLabSidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground',
-                    isActive ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground',
-                  )}
+                  className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground', isActive ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground')}
                 >
                   <Icon className="h-4 w-4" />
                   <div className="flex-1">

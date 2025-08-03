@@ -188,12 +188,7 @@ export function FloatingIcons() {
 
       // Helper function to check if position is in center exclusion zone
       const isInCenterZone = (x: number, y: number): boolean => {
-        return (
-          x >= centerExclusionZone.x &&
-          x <= centerExclusionZone.x + centerExclusionZone.width &&
-          y >= centerExclusionZone.y &&
-          y <= centerExclusionZone.y + centerExclusionZone.height
-        );
+        return x >= centerExclusionZone.x && x <= centerExclusionZone.x + centerExclusionZone.width && y >= centerExclusionZone.y && y <= centerExclusionZone.y + centerExclusionZone.height;
       };
 
       // Generate icons with guaranteed distribution across zones
