@@ -57,9 +57,7 @@ export function CourseLevelFilter({ selectedLevels, onToggleLevel }: CourseLevel
         <Button
           variant="ghost"
           className={`${
-            selectedLevels.length === 0
-              ? 'backdrop-blur-md border border-slate-600/30 text-slate-400'
-              : 'backdrop-blur-md border border-orange-400/40 text-white shadow-lg shadow-orange-500/20'
+            selectedLevels.length === 0 ? 'backdrop-blur-md border border-slate-600/30 text-slate-400' : 'backdrop-blur-md border border-orange-400/40 text-white shadow-lg shadow-orange-500/20'
           } rounded-xl px-4 h-10 text-sm focus:outline-none focus:border-orange-400/60 hover:border-orange-400/60 hover:bg-white/5 transition-all duration-200 justify-between min-w-[140px]`}
           style={
             selectedLevels.length === 0
@@ -68,30 +66,20 @@ export function CourseLevelFilter({ selectedLevels, onToggleLevel }: CourseLevel
                   boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                 }
               : {
-                  background:
-                    'radial-gradient(ellipse 80% 60% at center, rgba(251, 146, 60, 0.4) 0%, rgba(245, 101, 37, 0.3) 50%, rgba(234, 88, 12, 0.2) 100%)',
+                  background: 'radial-gradient(ellipse 80% 60% at center, rgba(251, 146, 60, 0.4) 0%, rgba(245, 101, 37, 0.3) 50%, rgba(234, 88, 12, 0.2) 100%)',
                   boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(251, 146, 60, 0.2)',
                 }
           }
         >
           <div className="flex items-center gap-2">
-            {selectedLevels.length === 0 ? (
-              getLevelIcon('all')
-            ) : selectedLevels.length === 1 ? (
-              getLevelIcon(selectedLevels[0]!)
-            ) : (
-              <Star className="h-4 w-4 text-slate-400" />
-            )}
+            {selectedLevels.length === 0 ? getLevelIcon('all') : selectedLevels.length === 1 ? getLevelIcon(selectedLevels[0]!) : <Star className="h-4 w-4 text-slate-400" />}
             <span>{getDisplayText(selectedLevels)}</span>
           </div>
           <ChevronDown className="h-4 w-4 ml-2" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-slate-900/80 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl shadow-black/50">
-        <DropdownMenuItem
-          onClick={() => handleToggleLevel('all')}
-          className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
-        >
+        <DropdownMenuItem onClick={() => handleToggleLevel('all')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
           <div className="flex items-center gap-2">
             <Star className="h-4 w-4 text-slate-400" />
             <span>All Levels</span>
@@ -99,11 +87,7 @@ export function CourseLevelFilter({ selectedLevels, onToggleLevel }: CourseLevel
           </div>
         </DropdownMenuItem>
         {levelItems.map((item) => (
-          <DropdownMenuItem
-            key={item.value}
-            onClick={() => onToggleLevel(item.value)}
-            className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
-          >
+          <DropdownMenuItem key={item.value} onClick={() => onToggleLevel(item.value)} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
             <div className="flex items-center gap-2">
               {getLevelIcon(item.value)}
               <span>{item.label}</span>
