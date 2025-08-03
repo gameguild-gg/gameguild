@@ -246,7 +246,7 @@ export default async function CourseContentPage({ params }: { params: Promise<{ 
                 <Card className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-500/20">
                   <CardContent className="p-6">
                     <h3 className="text-xl font-bold mb-2">Keep Learning!</h3>
-                    <p className="text-gray-300 mb-4">You're {progressPercentage}% through the course. Continue with the next lesson to maintain your momentum.</p>
+                    <p className="text-gray-300 mb-4">You&apos;re {progressPercentage}% through the course. Continue with the next lesson to maintain your momentum.</p>
                     <Button className="bg-blue-600 hover:bg-blue-700">
                       Continue Learning
                       <Play className="ml-2 w-4 h-4" />
@@ -260,7 +260,7 @@ export default async function CourseContentPage({ params }: { params: Promise<{ 
                   <CardContent className="p-6 text-center">
                     <Award className="w-12 h-12 text-green-400 mx-auto mb-4" />
                     <h3 className="text-2xl font-bold mb-2">Congratulations!</h3>
-                    <p className="text-gray-300 mb-4">You've completed the entire course. Download your certificate and continue with advanced topics.</p>
+                    <p className="text-gray-300 mb-4">You&apos;ve completed the entire course. Download your certificate and continue with advanced topics.</p>
                     <div className="flex gap-4 justify-center">
                       <Button className="bg-green-600 hover:bg-green-700">Download Certificate</Button>
                       <Button variant="outline">View Related Courses</Button>
