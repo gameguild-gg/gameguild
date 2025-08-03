@@ -15,14 +15,7 @@ export function EssayQuestion({ question, userAnswer, onAnswerChange, disabled =
   return (
     <div className="space-y-4">
       <div className="font-semibold">{question}</div>
-      <Textarea
-        value={userAnswer}
-        onChange={(e) => onAnswerChange(e.target.value)}
-        disabled={disabled}
-        placeholder="Write your essay answer here..."
-        rows={8}
-        className="min-h-[200px]"
-      />
+      <Textarea value={userAnswer} onChange={(e) => onAnswerChange(e.target.value)} disabled={disabled} placeholder="Write your essay answer here..." rows={8} className="min-h-[200px]" />
     </div>
   );
 }

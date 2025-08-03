@@ -6,14 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
-import {
-  createPaymentIntent,
-  enrollInFreeCourse,
-  type EnrollmentStatus,
-  getCourseEnrollmentStatus,
-  getProductsContainingCourse,
-  type Product,
-} from '@/lib/courses/actions/enrollment.actions';
+import { createPaymentIntent, enrollInFreeCourse, type EnrollmentStatus, getCourseEnrollmentStatus, getProductsContainingCourse, type Product } from '@/lib/courses/actions/enrollment.actions';
 import { BookOpen, CreditCard, Gift, Loader2, Lock, Star, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -316,14 +309,7 @@ export default function CourseAccessCard({ courseSlug }: Pick<CourseAccessCardPr
     <ErrorBoundary>
       <div className="space-y-4">
         {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            onFreeCourseEnroll={handleFreeCourseEnrollment}
-            onPaidCoursePayment={handlePaidCoursePayment}
-            isEnrolling={enrolling}
-            isPaymentLoading={paymentLoading}
-          />
+          <ProductCard key={product.id} product={product} onFreeCourseEnroll={handleFreeCourseEnrollment} onPaidCoursePayment={handlePaidCoursePayment} isEnrolling={enrolling} isPaymentLoading={paymentLoading} />
         ))}
         <CourseStatsCard />
       </div>

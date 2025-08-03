@@ -2,23 +2,7 @@
 
 import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import {
-  ArrowLeft,
-  Award,
-  BookOpen,
-  Calendar,
-  DollarSign,
-  Eye,
-  FileText,
-  HelpCircle,
-  Image,
-  Play,
-  Save,
-  Search,
-  Settings,
-  ChevronDown,
-  ChevronRight,
-} from 'lucide-react';
+import { ArrowLeft, Award, BookOpen, Calendar, DollarSign, Eye, FileText, HelpCircle, Image, Play, Save, Search, Settings, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
@@ -169,19 +153,12 @@ export function CourseEditorSidebar() {
                 : 'bg-slate-800/30 text-slate-300 border-slate-700/30 hover:bg-slate-700/40 hover:text-white hover:border-slate-600/40',
             )}
           >
-            <div
-              className={cn(
-                'p-2 rounded-lg transition-all duration-200',
-                isActive ? 'bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg' : 'bg-slate-700/50 group-hover:bg-slate-600/50',
-              )}
-            >
+            <div className={cn('p-2 rounded-lg transition-all duration-200', isActive ? 'bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg' : 'bg-slate-700/50 group-hover:bg-slate-600/50')}>
               <section.icon className="h-4 w-4 text-white" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-medium text-sm truncate">{section.label}</div>
-              <div className={cn('text-xs truncate transition-colors duration-200', isActive ? 'text-blue-200' : 'text-slate-400 group-hover:text-slate-300')}>
-                {section.description}
-              </div>
+              <div className={cn('text-xs truncate transition-colors duration-200', isActive ? 'text-blue-200' : 'text-slate-400 group-hover:text-slate-300')}>{section.description}</div>
             </div>
             {isActive && <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse flex-shrink-0" />}
           </Link>
@@ -217,23 +194,15 @@ export function CourseEditorSidebar() {
       <SidebarHeader className="border-b border-slate-700/50 bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-800/95 backdrop-blur-xl">
         <div className="p-4">
           <Link href="/dashboard/courses">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mb-4 bg-slate-900/30 backdrop-blur-md border border-slate-700/50 text-slate-200 hover:text-white hover:bg-slate-800/40 hover:border-slate-600/50 transition-all duration-200"
-            >
+            <Button variant="ghost" size="sm" className="mb-4 bg-slate-900/30 backdrop-blur-md border border-slate-700/50 text-slate-200 hover:text-white hover:bg-slate-800/40 hover:border-slate-600/50 transition-all duration-200">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Courses
             </Button>
           </Link>
 
           <div className="space-y-3">
-            <h2 className="font-semibold text-xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent truncate">
-              {state.title || 'Untitled Course'}
-            </h2>
-            {state.slug && (
-              <p className="text-sm text-slate-400 truncate font-mono bg-slate-800/30 px-2 py-1 rounded border border-slate-700/30">/{state.slug}</p>
-            )}
+            <h2 className="font-semibold text-xl bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent truncate">{state.title || 'Untitled Course'}</h2>
+            {state.slug && <p className="text-sm text-slate-400 truncate font-mono bg-slate-800/30 px-2 py-1 rounded border border-slate-700/30">/{state.slug}</p>}
           </div>
 
           {/* Status Badge */}
@@ -241,19 +210,10 @@ export function CourseEditorSidebar() {
             <div
               className={cn(
                 'px-4 py-2 rounded-full text-sm font-medium inline-flex items-center gap-2 backdrop-blur-md border',
-                state.status === 'published'
-                  ? 'bg-green-900/30 text-green-400 border-green-700/50'
-                  : state.status === 'draft'
-                    ? 'bg-amber-900/30 text-amber-400 border-amber-700/50'
-                    : 'bg-slate-900/30 text-slate-400 border-slate-700/50',
+                state.status === 'published' ? 'bg-green-900/30 text-green-400 border-green-700/50' : state.status === 'draft' ? 'bg-amber-900/30 text-amber-400 border-amber-700/50' : 'bg-slate-900/30 text-slate-400 border-slate-700/50',
               )}
             >
-              <div
-                className={cn(
-                  'w-2 h-2 rounded-full',
-                  state.status === 'published' ? 'bg-green-400' : state.status === 'draft' ? 'bg-amber-400 animate-pulse' : 'bg-slate-400',
-                )}
-              />
+              <div className={cn('w-2 h-2 rounded-full', state.status === 'published' ? 'bg-green-400' : state.status === 'draft' ? 'bg-amber-400 animate-pulse' : 'bg-slate-400')} />
               {state.status.charAt(0).toUpperCase() + state.status.slice(1)}
             </div>
           </div>
@@ -273,12 +233,8 @@ export function CourseEditorSidebar() {
               className="px-3 py-2 cursor-pointer hover:bg-slate-800/30 rounded-lg transition-all duration-200 flex items-center justify-between group border border-transparent hover:border-slate-700/30"
               onClick={() => toggleGroup(group.label)}
             >
-              <span className="text-sm font-semibold bg-gradient-to-r from-slate-300 to-slate-400 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-300 transition-all duration-200">
-                {group.label}
-              </span>
-              <div className="text-slate-400 group-hover:text-slate-300 transition-colors duration-200">
-                {collapsedGroups[group.label] ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </div>
+              <span className="text-sm font-semibold bg-gradient-to-r from-slate-300 to-slate-400 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-300 transition-all duration-200">{group.label}</span>
+              <div className="text-slate-400 group-hover:text-slate-300 transition-colors duration-200">{collapsedGroups[group.label] ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</div>
             </div>
 
             {!collapsedGroups[group.label] && (
@@ -305,9 +261,7 @@ export function CourseEditorSidebar() {
                     <span className="truncate">{error}</span>
                   </li>
                 ))}
-              {Object.keys(state.errors).length > 3 && (
-                <li className="text-red-300 font-medium text-xs">+{Object.keys(state.errors).length - 3} more errors</li>
-              )}
+              {Object.keys(state.errors).length > 3 && <li className="text-red-300 font-medium text-xs">+{Object.keys(state.errors).length - 3} more errors</li>}
             </ul>
           </div>
         )}

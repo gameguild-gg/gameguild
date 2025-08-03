@@ -47,9 +47,7 @@ export function InviteCollaboratorsTheme({ open, onOpenChange, onInvite, teamMem
 
   const displayMembers = teamMembers.length > 0 ? teamMembers : defaultTeamMembers;
 
-  const filteredMembers = displayMembers.filter(
-    (member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()) || member.email.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredMembers = displayMembers.filter((member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()) || member.email.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleInvite = () => {
     if (searchQuery && onInvite) {
@@ -146,9 +144,7 @@ export function InviteCollaboratorsTheme({ open, onOpenChange, onInvite, teamMem
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10">
                             <AvatarImage src={member.avatar} alt={member.name} />
-                            <AvatarFallback className={`${avatarColors.bg} ${avatarColors.text} text-sm font-medium border-0`}>
-                              {getInitials(member.name)}
-                            </AvatarFallback>
+                            <AvatarFallback className={`${avatarColors.bg} ${avatarColors.text} text-sm font-medium border-0`}>{getInitials(member.name)}</AvatarFallback>
                           </Avatar>
                           <div>
                             <p className="text-sm font-medium text-foreground">{member.name}</p>

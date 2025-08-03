@@ -284,11 +284,7 @@ export function OpenProjectDialog({
                 </div>
                 <div className="flex items-center gap-2">
                   <Label className="text-sm whitespace-nowrap">Items per page:</Label>
-                  <select
-                    value={itemsPerPage}
-                    onChange={(e) => setItemsPerPage(Number(e.target.value))}
-                    className="px-2 py-1 border rounded text-sm bg-background"
-                  >
+                  <select value={itemsPerPage} onChange={(e) => setItemsPerPage(Number(e.target.value))} className="px-2 py-1 border rounded text-sm bg-background">
                     <option value={5}>5</option>
                     <option value={10}>10</option>
                     <option value={20}>20</option>
@@ -302,11 +298,7 @@ export function OpenProjectDialog({
                   <Label className="text-sm font-medium">Filter by tags:</Label>
                   <div className="flex items-center gap-2">
                     <Label className="text-xs text-gray-500 dark:text-gray-400">Match:</Label>
-                    <select
-                      value={tagFilterMode}
-                      onChange={(e) => setTagFilterMode(e.target.value as 'all' | 'any')}
-                      className="px-2 py-1 border rounded text-xs bg-background"
-                    >
+                    <select value={tagFilterMode} onChange={(e) => setTagFilterMode(e.target.value as 'all' | 'any')} className="px-2 py-1 border rounded text-xs bg-background">
                       <option value="any">Any tags</option>
                       <option value="all">All tags</option>
                     </select>
@@ -325,17 +317,8 @@ export function OpenProjectDialog({
                         onFocus={() => setShowTagDropdown(true)}
                         className="pr-10"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowTagDropdown(!showTagDropdown)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                      >
-                        <svg
-                          className={`w-4 h-4 transition-transform ${showTagDropdown ? 'rotate-180' : ''}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
+                      <button type="button" onClick={() => setShowTagDropdown(!showTagDropdown)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <svg className={`w-4 h-4 transition-transform ${showTagDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
@@ -348,9 +331,7 @@ export function OpenProjectDialog({
                         <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No tags available</div>
                       ) : (
                         (() => {
-                          const filteredTags = tagSearchInput.trim()
-                            ? availableTags.filter((tag) => tag.name.toLowerCase().includes(tagSearchInput.toLowerCase()))
-                            : availableTags;
+                          const filteredTags = tagSearchInput.trim() ? availableTags.filter((tag) => tag.name.toLowerCase().includes(tagSearchInput.toLowerCase())) : availableTags;
 
                           return filteredTags.length === 0 ? (
                             <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No tags found matching "{tagSearchInput}"</div>
@@ -365,11 +346,7 @@ export function OpenProjectDialog({
                                 className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between transition-colors"
                               >
                                 <div className="flex items-center gap-2">
-                                  <div
-                                    className={`w-4 h-4 border rounded flex items-center justify-center ${
-                                      selectedTags.includes(tag.name) ? 'bg-blue-500 border-blue-500' : 'border-gray-300 dark:border-gray-600'
-                                    }`}
-                                  >
+                                  <div className={`w-4 h-4 border rounded flex items-center justify-center ${selectedTags.includes(tag.name) ? 'bg-blue-500 border-blue-500' : 'border-gray-300 dark:border-gray-600'}`}>
                                     {selectedTags.includes(tag.name) && (
                                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -393,16 +370,9 @@ export function OpenProjectDialog({
                   <div className="space-y-2">
                     <div className="flex flex-wrap gap-2">
                       {selectedTags.map((tagName) => (
-                        <span
-                          key={tagName}
-                          className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full"
-                        >
+                        <span key={tagName} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
                           {tagName}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedTags((prev) => prev.filter((t) => t !== tagName))}
-                            className="hover:text-blue-600 dark:hover:text-blue-300"
-                          >
+                          <button type="button" onClick={() => setSelectedTags((prev) => prev.filter((t) => t !== tagName))} className="hover:text-blue-600 dark:hover:text-blue-300">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -421,9 +391,7 @@ export function OpenProjectDialog({
                       >
                         Clear all filters
                       </button>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        Showing projects with {tagFilterMode === 'all' ? 'all' : 'any'} of these tags
-                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Showing projects with {tagFilterMode === 'all' ? 'all' : 'any'} of these tags</span>
                     </div>
                   </div>
                 )}
@@ -442,8 +410,7 @@ export function OpenProjectDialog({
                     <span className="text-sm font-medium text-amber-800 dark:text-amber-200">Armazenamento quase cheio</span>
                   </div>
                   <p className="text-xs text-amber-700 dark:text-amber-300">
-                    Uso: {getStorageUsagePercentage().toFixed(1)}% ({formatStorageSize(totalStorageUsed)} de {storageLimit}MB). Criação de novos projetos
-                    bloqueada para preservar margem de salvamento.
+                    Uso: {getStorageUsagePercentage().toFixed(1)}% ({formatStorageSize(totalStorageUsed)} de {storageLimit}MB). Criação de novos projetos bloqueada para preservar margem de salvamento.
                   </p>
                 </div>
               )}
@@ -453,32 +420,22 @@ export function OpenProjectDialog({
                 {filteredProjects.length === 0 ? (
                   <div className="text-center py-12">
                     <FolderOpen className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {searchTerm || selectedTags.length > 0 ? 'No projects found matching your criteria' : 'No saved projects found'}
-                    </p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                      {searchTerm || selectedTags.length > 0 ? 'Try adjusting your search or filters' : 'Create your first project to get started'}
-                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{searchTerm || selectedTags.length > 0 ? 'No projects found matching your criteria' : 'No saved projects found'}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{searchTerm || selectedTags.length > 0 ? 'Try adjusting your search or filters' : 'Create your first project to get started'}</p>
                   </div>
                 ) : (
                   <>
                     <div className="space-y-2">
                       {filteredProjects.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((project) => {
                         return (
-                          <div
-                            key={project.id}
-                            className="flex items-center justify-between p-3 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                          >
+                          <div key={project.id} className="flex items-center justify-between p-3 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                             <div className="flex flex-col flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{project.name}</span>
                                 {project.tags && project.tags.length > 0 && (
                                   <div className="flex gap-1">
                                     {project.tags.slice(0, 3).map((tag) => (
-                                      <span
-                                        key={tag}
-                                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
-                                      >
+                                      <span key={tag} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                                         {tag}
                                       </span>
                                     ))}
@@ -495,20 +452,10 @@ export function OpenProjectDialog({
                               </div>
                             </div>
                             <div className="flex gap-1 ml-3">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleOpen(project.id)}
-                                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                              >
+                              <Button variant="ghost" size="sm" onClick={() => handleOpen(project.id)} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
                                 Open
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleConfirmDelete(project.id, project.name)}
-                                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                              >
+                              <Button variant="ghost" size="sm" onClick={() => handleConfirmDelete(project.id, project.name)} className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </div>
@@ -524,13 +471,7 @@ export function OpenProjectDialog({
                           Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalProjects)} of {totalProjects} projects
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                            disabled={currentPage === 1}
-                            className="bg-transparent"
-                          >
+                          <Button variant="outline" size="sm" onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1} className="bg-transparent">
                             Previous
                           </Button>
                           <div className="flex items-center gap-1">
@@ -545,12 +486,7 @@ export function OpenProjectDialog({
                               .map((page, index, array) => (
                                 <div key={page} className="flex items-center">
                                   {index > 0 && array[index - 1] !== page - 1 && <span className="px-2 text-gray-400">...</span>}
-                                  <Button
-                                    variant={currentPage === page ? 'default' : 'ghost'}
-                                    size="sm"
-                                    onClick={() => setCurrentPage(page)}
-                                    className={currentPage === page ? '' : 'bg-transparent'}
-                                  >
+                                  <Button variant={currentPage === page ? 'default' : 'ghost'} size="sm" onClick={() => setCurrentPage(page)} className={currentPage === page ? '' : 'bg-transparent'}>
                                     {page}
                                   </Button>
                                 </div>

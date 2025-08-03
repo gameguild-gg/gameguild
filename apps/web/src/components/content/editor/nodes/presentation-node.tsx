@@ -688,10 +688,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                     {slides.map((slide, index) => (
                       <button
                         key={slide.id}
-                        className={cn(
-                          'flex-shrink-0 w-16 h-10 rounded overflow-hidden border-2',
-                          index === currentSlideIndex ? 'border-primary' : 'border-transparent hover:border-gray-300',
-                        )}
+                        className={cn('flex-shrink-0 w-16 h-10 rounded overflow-hidden border-2', index === currentSlideIndex ? 'border-primary' : 'border-transparent hover:border-gray-300')}
                         onClick={() => setCurrentSlideIndex(index)}
                       >
                         <div className="w-full h-full relative" style={getBackgroundStyle(slide.theme, slide.backgroundImage)}>
@@ -746,13 +743,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                     {currentSlideIndex + 1} / {slides.length}
                   </span>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white h-8 w-8"
-                    onClick={handleNextSlide}
-                    disabled={currentSlideIndex === slides.length - 1}
-                  >
+                  <Button variant="ghost" size="icon" className="text-white h-8 w-8" onClick={handleNextSlide} disabled={currentSlideIndex === slides.length - 1}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
 
@@ -805,13 +796,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                   Presentation Title
                 </Label>
                 <div className="md:col-span-3">
-                  <Input
-                    id="presentation-title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter presentation title"
-                    className="w-full"
-                  />
+                  <Input id="presentation-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Enter presentation title" className="w-full" />
                 </div>
               </div>
 
@@ -900,19 +885,8 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                           Custom Color:
                         </Label>
                         <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            id="custom-color"
-                            value={customThemeColor || '#3b82f6'}
-                            onChange={(e) => setCustomThemeColor(e.target.value)}
-                            className="w-10 h-10 rounded-lg cursor-pointer border"
-                          />
-                          <Input
-                            value={customThemeColor || '#3b82f6'}
-                            onChange={(e) => setCustomThemeColor(e.target.value)}
-                            className="w-28 h-10 text-sm font-mono"
-                            placeholder="#3b82f6"
-                          />
+                          <input type="color" id="custom-color" value={customThemeColor || '#3b82f6'} onChange={(e) => setCustomThemeColor(e.target.value)} className="w-10 h-10 rounded-lg cursor-pointer border" />
+                          <Input value={customThemeColor || '#3b82f6'} onChange={(e) => setCustomThemeColor(e.target.value)} className="w-28 h-10 text-sm font-mono" placeholder="#3b82f6" />
                         </div>
                       </div>
                     )}
@@ -950,15 +924,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                       <Label htmlFor="auto-advance-delay" className="text-sm">
                         Delay:
                       </Label>
-                      <Input
-                        id="auto-advance-delay"
-                        type="number"
-                        min="1"
-                        max="60"
-                        value={autoAdvanceDelay}
-                        onChange={(e) => setAutoAdvanceDelay(Number.parseInt(e.target.value) || 5)}
-                        className="w-20"
-                      />
+                      <Input id="auto-advance-delay" type="number" min="1" max="60" value={autoAdvanceDelay} onChange={(e) => setAutoAdvanceDelay(Number.parseInt(e.target.value) || 5)} className="w-20" />
                       <span className="text-sm text-muted-foreground">seconds</span>
                     </div>
                   )}
@@ -989,9 +955,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                 </div>
 
                 <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                  <div className="aspect-video rounded-lg overflow-hidden border bg-white dark:bg-gray-900 shadow-sm">
-                    {renderSlide(slides[currentSlideIndex] || slides[0])}
-                  </div>
+                  <div className="aspect-video rounded-lg overflow-hidden border bg-white dark:bg-gray-900 shadow-sm">{renderSlide(slides[currentSlideIndex] || slides[0])}</div>
 
                   <div className="mt-4">
                     <div className="flex items-center justify-between mb-3">
@@ -1006,9 +970,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
                           key={slide.id}
                           className={cn(
                             'flex-shrink-0 w-20 h-12 rounded-lg overflow-hidden border-2 transition-all',
-                            index === currentSlideIndex
-                              ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800'
-                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600',
+                            index === currentSlideIndex ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600',
                           )}
                           onClick={() => setCurrentSlideIndex(index)}
                         >

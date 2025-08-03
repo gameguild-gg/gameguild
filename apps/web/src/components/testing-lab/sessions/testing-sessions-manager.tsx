@@ -407,9 +407,7 @@ export function TestingSessionsManager() {
                           <Badge className={getRegistrationTypeColor(registration.registrationType)}>{registration.registrationType}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge className={registration.status === 'confirmed' ? 'bg-green-600/20 text-green-400' : 'bg-yellow-600/20 text-yellow-400'}>
-                            {registration.status}
-                          </Badge>
+                          <Badge className={registration.status === 'confirmed' ? 'bg-green-600/20 text-green-400' : 'bg-yellow-600/20 text-yellow-400'}>{registration.status}</Badge>
                         </TableCell>
                         <TableCell className="text-slate-400">{new Date(registration.registeredAt).toLocaleDateString()}</TableCell>
                         <TableCell>

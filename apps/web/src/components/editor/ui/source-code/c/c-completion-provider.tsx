@@ -72,26 +72,7 @@ export function CCompletionProvider({ monaco, editor }: CCompletionProviderProps
         ];
 
         // C types
-        const types = [
-          'bool',
-          'complex',
-          'imaginary',
-          'FILE',
-          'size_t',
-          'time_t',
-          'wchar_t',
-          'int8_t',
-          'int16_t',
-          'int32_t',
-          'int64_t',
-          'uint8_t',
-          'uint16_t',
-          'uint32_t',
-          'uint64_t',
-          'intptr_t',
-          'uintptr_t',
-          'ptrdiff_t',
-        ];
+        const types = ['bool', 'complex', 'imaginary', 'FILE', 'size_t', 'time_t', 'wchar_t', 'int8_t', 'int16_t', 'int32_t', 'int64_t', 'uint8_t', 'uint16_t', 'uint32_t', 'uint64_t', 'intptr_t', 'uintptr_t', 'ptrdiff_t'];
 
         // C standard library functions
         const stdlibFunctions = [
@@ -265,23 +246,7 @@ export function CCompletionProvider({ monaco, editor }: CCompletionProviderProps
           }
           // After #include we suggest common headers
           else if (/^\s*#\s*include\s+$/.test(textUntilPosition)) {
-            const headers = [
-              '<stdio.h>',
-              '<stdlib.h>',
-              '<string.h>',
-              '<math.h>',
-              '<time.h>',
-              '<ctype.h>',
-              '<stdbool.h>',
-              '<stdint.h>',
-              '<assert.h>',
-              '<limits.h>',
-              '<float.h>',
-              '<errno.h>',
-              '<signal.h>',
-              '<setjmp.h>',
-              '<stdarg.h>',
-            ];
+            const headers = ['<stdio.h>', '<stdlib.h>', '<string.h>', '<math.h>', '<time.h>', '<ctype.h>', '<stdbool.h>', '<stdint.h>', '<assert.h>', '<limits.h>', '<float.h>', '<errno.h>', '<signal.h>', '<setjmp.h>', '<stdarg.h>'];
 
             suggestions = headers.map((header) => ({
               label: header,
@@ -387,8 +352,7 @@ export function CCompletionProvider({ monaco, editor }: CCompletionProviderProps
             {
               label: 'switch',
               kind: monaco.languages.CompletionItemKind.Snippet,
-              insertText:
-                'switch (${1:expression}) {\n\tcase ${2:value1}:\n\t\t${3:// Your code here}\n\t\tbreak;\n\tcase ${4:value2}:\n\t\t${5:// Your code here}\n\t\tbreak;\n\tdefault:\n\t\t${6:// Default code}\n\t\tbreak;\n}',
+              insertText: 'switch (${1:expression}) {\n\tcase ${2:value1}:\n\t\t${3:// Your code here}\n\t\tbreak;\n\tcase ${4:value2}:\n\t\t${5:// Your code here}\n\t\tbreak;\n\tdefault:\n\t\t${6:// Default code}\n\t\tbreak;\n}',
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
               range,
             },
@@ -409,8 +373,7 @@ export function CCompletionProvider({ monaco, editor }: CCompletionProviderProps
             {
               label: 'malloc',
               kind: monaco.languages.CompletionItemKind.Snippet,
-              insertText:
-                '${1:type} *${2:ptr} = (${1:type} *)malloc(${3:size} * sizeof(${1:type}));\nif (${2:ptr} == NULL) {\n\t${4:// Handle allocation failure}\n}',
+              insertText: '${1:type} *${2:ptr} = (${1:type} *)malloc(${3:size} * sizeof(${1:type}));\nif (${2:ptr} == NULL) {\n\t${4:// Handle allocation failure}\n}',
               insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
               range,
             },

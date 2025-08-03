@@ -38,21 +38,7 @@ export class API {
     }
 
     this.hostWrite = options.hostWrite;
-    this.clangCommonArgs = [
-      '-cc1',
-      '-emit-obj',
-      '-disable-free',
-      '-isysroot',
-      '/',
-      '-internal-isystem',
-      '/include/c++/v1',
-      '-internal-isystem',
-      '/include',
-      '-internal-isystem',
-      '/lib/clang/8.0.1/include',
-      '-Wall',
-      '-O2',
-    ];
+    this.clangCommonArgs = ['-cc1', '-emit-obj', '-disable-free', '-isysroot', '/', '-internal-isystem', '/include/c++/v1', '-internal-isystem', '/include', '-internal-isystem', '/lib/clang/8.0.1/include', '-Wall', '-O2'];
 
     this.memfs = new MemFS({
       hostWrite: this.hostWrite,
@@ -107,21 +93,7 @@ export class API {
     await this.ready;
     const lld = await this.getModule(lldUrl);
 
-    const args = [
-      'wasm-ld',
-      '--no-threads',
-      '--export-dynamic',
-      '-z',
-      `stack-size=${stackSize}`,
-      `-L${libdir}`,
-      crt1,
-      obj,
-      '-lc',
-      '-lc++',
-      '-lc++abi',
-      '-o',
-      wasm,
-    ];
+    const args = ['wasm-ld', '--no-threads', '--export-dynamic', '-z', `stack-size=${stackSize}`, `-L${libdir}`, crt1, obj, '-lc', '-lc++', '-lc++abi', '-o', wasm];
 
     this.hostWrite('Running linker...\n');
     this.hostWrite(`${args.join(' ')}\n`);

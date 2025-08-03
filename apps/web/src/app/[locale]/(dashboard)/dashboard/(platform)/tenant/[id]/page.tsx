@@ -13,11 +13,11 @@ interface TenantDetailPageProps {
 
 export default async function TenantDetailPage({ params }: TenantDetailPageProps): Promise<React.JSX.Element> {
   const { id } = params;
-  
+
   // For now, we'll simulate admin permissions
   // In production, implement proper permission checking
   const isAdmin = true;
-  
+
   // Load tenant data
   let tenant: Tenant | null = null;
   try {
@@ -25,14 +25,14 @@ export default async function TenantDetailPage({ params }: TenantDetailPageProps
       path: { id },
       url: '/api/tenants/{id}',
     });
-    
+
     if (result.data) {
       tenant = result.data as Tenant;
     }
   } catch (error) {
     console.error('Failed to load tenant:', error);
   }
-  
+
   if (!tenant) {
     notFound();
   }

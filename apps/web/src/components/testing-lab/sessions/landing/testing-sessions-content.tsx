@@ -23,11 +23,7 @@ export function TestingSessionsContent(): React.JSX.Element {
       </div>
 
       {/* Sessions Display */}
-      {filteredSessions.length > 0 ? (
-        <SessionContent sessions={filteredSessions} viewMode={state.viewMode} />
-      ) : (
-        <SessionEmptyState hasFilters={hasActiveFilters()} hasSessions={filteredSessions.length > 0} />
-      )}
+      {filteredSessions.length > 0 ? <SessionContent sessions={filteredSessions} viewMode={state.viewMode} /> : <SessionEmptyState hasFilters={hasActiveFilters()} hasSessions={filteredSessions.length > 0} />}
     </>
   );
 }

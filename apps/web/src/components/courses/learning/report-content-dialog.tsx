@@ -81,9 +81,7 @@ export function ReportContentDialog({ open, onOpenChange, contentId, contentTitl
             <Flag className="h-5 w-5 text-red-500" />
             Report Content
           </DialogTitle>
-          <DialogDescription className="text-gray-300">
-            Report "{contentTitle}" for review. Please select a reason and provide additional details.
-          </DialogDescription>
+          <DialogDescription className="text-gray-300">Report "{contentTitle}" for review. Please select a reason and provide additional details.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">

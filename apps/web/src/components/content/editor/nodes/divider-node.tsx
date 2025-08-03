@@ -162,12 +162,7 @@ function DividerComponent({ data, nodeKey }: DividerComponentProps) {
     return (
       <div className="relative group">
         {renderDivider()}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-1/2 right-2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={() => setIsEditing(true)}
-        >
+        <Button variant="ghost" size="icon" className="absolute top-1/2 right-2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setIsEditing(true)}>
           <Pencil className="h-4 w-4" />
         </Button>
       </div>

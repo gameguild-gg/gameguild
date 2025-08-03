@@ -41,13 +41,7 @@ export function RefreshButton({ className }: RefreshButtonProps) {
 
   return (
     <div className={`flex flex-col items-end gap-2 ${className}`}>
-      <Button
-        onClick={handleRefresh}
-        disabled={isPending}
-        variant="outline"
-        size="sm"
-        className="border-slate-600 text-white hover:bg-slate-800/50 hover:border-slate-500"
-      >
+      <Button onClick={handleRefresh} disabled={isPending} variant="outline" size="sm" className="border-slate-600 text-white hover:bg-slate-800/50 hover:border-slate-500">
         <RefreshCw className={`mr-2 h-4 w-4 ${isPending ? 'animate-spin' : ''}`} />
         {isPending ? 'Refreshing...' : 'Refresh Data'}
       </Button>

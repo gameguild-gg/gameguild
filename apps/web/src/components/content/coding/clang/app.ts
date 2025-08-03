@@ -30,16 +30,7 @@ export class App {
 
     const env = getImportObject(this);
 
-    const wasi_unstable = getImportObject(this, [
-      'proc_exit',
-      'environ_sizes_get',
-      'environ_get',
-      'args_sizes_get',
-      'args_get',
-      'random_get',
-      'clock_time_get',
-      'poll_oneoff',
-    ]);
+    const wasi_unstable = getImportObject(this, ['proc_exit', 'environ_sizes_get', 'environ_get', 'args_sizes_get', 'args_get', 'random_get', 'clock_time_get', 'poll_oneoff']);
 
     // Fill in some WASI implementations from memfs.
     Object.assign(wasi_unstable, this.memfs.wasmExports);

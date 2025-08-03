@@ -33,14 +33,7 @@ import type { TestingSession, SessionStatus, SessionRegistration, SessionWaitlis
 /**
  * Get all testing sessions with optional filtering
  */
-export async function getTestingSessionsData(params?: {
-  testingRequestId?: string;
-  locationId?: string;
-  managerId?: string;
-  status?: string;
-  skip?: number;
-  take?: number;
-}) {
+export async function getTestingSessionsData(params?: { testingRequestId?: string; locationId?: string; managerId?: string; status?: string; skip?: number; take?: number }) {
   await configureAuthenticatedClient();
 
   try {
@@ -68,16 +61,7 @@ export async function getTestingSessionsData(params?: {
 /**
  * Create a new testing session
  */
-export async function createTestingSession(sessionData: {
-  testingRequestId: string;
-  locationId?: string;
-  sessionName: string;
-  sessionDate: string;
-  startTime: string;
-  endTime: string;
-  maxTesters: number;
-  managerId?: string;
-}) {
+export async function createTestingSession(sessionData: { testingRequestId: string; locationId?: string; sessionName: string; sessionDate: string; startTime: string; endTime: string; maxTesters: number; managerId?: string }) {
   await configureAuthenticatedClient();
 
   try {

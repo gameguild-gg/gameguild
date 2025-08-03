@@ -3,12 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Edit, Trash2, Award, Users } from 'lucide-react';
 import type { AchievementDto } from '@/lib/core/api/generated/types.gen';
 import { deleteAchievement } from '@/lib/achievements/achievements.actions';
@@ -26,7 +21,7 @@ export function AchievementCard({ achievement, onUpdate }: AchievementCardProps)
 
   const handleDelete = async () => {
     if (!achievement.id) return;
-    
+
     if (!confirm('Are you sure you want to delete this achievement? This action cannot be undone.')) {
       return;
     }
@@ -57,27 +52,13 @@ export function AchievementCard({ achievement, onUpdate }: AchievementCardProps)
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <CardTitle className="text-lg flex items-center gap-2">
-                {achievement.iconUrl ? (
-                  <img
-                    src={achievement.iconUrl}
-                    alt={achievement.name || 'Achievement'}
-                    className="w-6 h-6 rounded"
-                  />
-                ) : (
-                  <Award className="w-5 h-5" />
-                )}
+                {achievement.iconUrl ? <img src={achievement.iconUrl} alt={achievement.name || 'Achievement'} className="w-6 h-6 rounded" /> : <Award className="w-5 h-5" />}
                 {achievement.name}
               </CardTitle>
               <div className="flex items-center gap-2 mt-2">
-                <Badge variant={achievement.isActive ? 'default' : 'secondary'}>
-                  {achievement.isActive ? 'Active' : 'Inactive'}
-                </Badge>
-                {achievement.isSecret && (
-                  <Badge variant="outline">Secret</Badge>
-                )}
-                {achievement.isRepeatable && (
-                  <Badge variant="outline">Repeatable</Badge>
-                )}
+                <Badge variant={achievement.isActive ? 'default' : 'secondary'}>{achievement.isActive ? 'Active' : 'Inactive'}</Badge>
+                {achievement.isSecret && <Badge variant="outline">Secret</Badge>}
+                {achievement.isRepeatable && <Badge variant="outline">Repeatable</Badge>}
               </div>
             </div>
             <DropdownMenu>
@@ -91,11 +72,7 @@ export function AchievementCard({ achievement, onUpdate }: AchievementCardProps)
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="text-destructive"
-                >
+                <DropdownMenuItem onClick={handleDelete} disabled={isDeleting} className="text-destructive">
                   <Trash2 className="h-4 w-4 mr-2" />
                   {isDeleting ? 'Deleting...' : 'Delete'}
                 </DropdownMenuItem>
@@ -104,10 +81,8 @@ export function AchievementCard({ achievement, onUpdate }: AchievementCardProps)
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-            {achievement.description || 'No description provided.'}
-          </p>
-          
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{achievement.description || 'No description provided.'}</p>
+
           <div className="space-y-2">
             {achievement.category && (
               <div className="flex items-center justify-between text-sm">
@@ -115,19 +90,19 @@ export function AchievementCard({ achievement, onUpdate }: AchievementCardProps)
                 <Badge variant="outline">{achievement.category}</Badge>
               </div>
             )}
-            
+
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Points:</span>
               <span className="font-medium">{achievement.points || 0}</span>
             </div>
-            
+
             {achievement.type && (
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Type:</span>
                 <Badge variant="outline">{achievement.type}</Badge>
               </div>
             )}
-            
+
             {achievement.levels && achievement.levels.length > 0 && (
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Levels:</span>
@@ -138,12 +113,7 @@ export function AchievementCard({ achievement, onUpdate }: AchievementCardProps)
         </CardContent>
       </Card>
 
-      <EditAchievementDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        achievement={achievement}
-        onSuccess={handleEditSuccess}
-      />
+      <EditAchievementDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} achievement={achievement} onSuccess={handleEditSuccess} />
     </>
   );
 }

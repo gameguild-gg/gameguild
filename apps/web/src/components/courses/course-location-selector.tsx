@@ -25,10 +25,10 @@ export function CourseLocationSelector({ onLocationSelected }: CourseLocationSel
         setIsLoading(true);
         setError(null);
         const testingLocations = await getTestingLocations(0, 50);
-        
+
         // Filter to active locations only
         const activeLocations = testingLocations.filter((location) => location.status === 1); // Active status
-        
+
         setLocations(activeLocations);
       } catch (err) {
         console.error('Failed to load testing locations:', err);
@@ -168,7 +168,7 @@ export function CourseLocationSelector({ onLocationSelected }: CourseLocationSel
                   </div>
                   <p className="text-xs text-blue-300 mt-1">Max Testers</p>
                 </div>
-                
+
                 <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-green-400">
                     <FolderOpen className="h-4 w-4" />

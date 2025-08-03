@@ -12,11 +12,11 @@ export async function getProgramBySlugService(slug: string) {
       path: { slug },
       url: '/api/program/slug/{slug}',
     });
-    
+
     if (response.data) {
       return { success: true, data: response.data };
     }
-    
+
     return { success: false, error: 'Program not found' };
   } catch (error) {
     console.error('Error fetching program by slug:', error);
@@ -33,11 +33,11 @@ export async function getProgramWithContentService(id: string) {
       path: { id },
       url: '/api/program/{id}/with-content',
     });
-    
+
     if (response.data) {
       return { success: true, data: response.data };
     }
-    
+
     return { success: false, error: 'Program not found' };
   } catch (error) {
     console.error('Error fetching program with content:', error);
@@ -54,11 +54,11 @@ export async function getProgramByIdService(id: string) {
       path: { id },
       url: '/api/program/{id}',
     });
-    
+
     if (response.data) {
       return { success: true, data: response.data };
     }
-    
+
     return { success: false, error: 'Program not found' };
   } catch (error) {
     console.error('Error fetching program by ID:', error);
@@ -72,7 +72,7 @@ export async function getProgramByIdService(id: string) {
 export async function getAllProgramsService() {
   try {
     const response = await getPrograms();
-    
+
     return {
       success: true,
       data: response.data || [],
@@ -89,7 +89,7 @@ export async function getAllProgramsService() {
 export async function getPublishedProgramsService() {
   try {
     const response = await getPublishedPrograms();
-    
+
     return {
       success: true,
       data: response.data || [],
@@ -103,7 +103,7 @@ export async function getPublishedProgramsService() {
 /**
  * Get program level configuration
  */
-export function getProgramLevelConfig(level: number) {
+export async function getProgramLevelConfig(level: number) {
   switch (level) {
     case 1:
       return {
@@ -151,7 +151,7 @@ export function getProgramLevelConfig(level: number) {
 /**
  * Transform program data for compatibility
  */
-export function transformProgramData(program: Program) {
+export async function transformProgramData(program: Program) {
   return {
     ...program,
     // Ensure backward compatibility with course interface

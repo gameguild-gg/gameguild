@@ -43,16 +43,11 @@ export function ImportFileDialog({
           <div className="grid gap-2">
             <Label htmlFor="file-upload">Select file(s)</Label>
             <div
-              className={cn(
-                'border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50',
-                importFileNames.length > 0 ? 'border-primary/50' : 'border-muted-foreground/50',
-              )}
+              className={cn('border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50', importFileNames.length > 0 ? 'border-primary/50' : 'border-muted-foreground/50')}
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground mb-1">
-                {importFileNames.length === 0 ? 'Click to select files or drag and drop' : `${importFileNames.length} file(s) selected`}
-              </p>
+              <p className="text-sm text-muted-foreground mb-1">{importFileNames.length === 0 ? 'Click to select files or drag and drop' : `${importFileNames.length} file(s) selected`}</p>
               {importFileNames.length > 0 && (
                 <div className="w-full mt-2 max-h-32 overflow-y-auto">
                   <ul className="text-xs space-y-1">

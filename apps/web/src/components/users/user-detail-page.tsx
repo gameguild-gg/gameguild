@@ -140,7 +140,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { currentTenant } = useTenant();
-  
+
   // State management
   const [user, setUser] = useState<UserDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -153,7 +153,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
   const [transferOwnershipDialog, setTransferOwnershipDialog] = useState<string | null>(null);
   const [revokeGrantDialog, setRevokeGrantDialog] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('profile');
-  
+
   // Form states
   const [profileForm, setProfileForm] = useState({
     name: '',
@@ -162,13 +162,13 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
     website: '',
     organization: '',
   });
-  
+
   const [contactForm, setContactForm] = useState({
     email: '',
     phone: '',
     location: '',
   });
-  
+
   const [messageForm, setMessageForm] = useState({
     subject: '',
     message: '',
@@ -310,7 +310,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
           subscriptionType: 'pro',
           activeSubscription: null,
         };
-        
+
         setUser(mockUser);
         setProfileForm({
           name: mockUser.name || '',
@@ -342,14 +342,14 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
         params.set(key, value);
       }
     });
-    
+
     const queryString = params.toString();
     router.push(`/dashboard/users${queryString ? `?${queryString}` : ''}`);
   };
 
   const handleStatusToggle = async (newStatus: boolean) => {
     if (!user) return;
-    
+
     try {
       setUser({ ...user, isActive: newStatus });
       toast.success(`User ${newStatus ? 'activated' : 'suspended'} successfully`);
@@ -360,7 +360,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
 
   const handleImpersonate = async () => {
     if (!user) return;
-    
+
     try {
       setImpersonating(true);
       toast.success('Impersonation started', {
@@ -483,7 +483,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
     const date = new Date(dateString);
     const now = new Date();
     const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (diffInDays === 0) return 'Today';
     if (diffInDays === 1) return 'Yesterday';
     if (diffInDays < 7) return `${diffInDays} days ago`;
@@ -555,16 +555,9 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
           <CardContent className="flex items-center justify-between p-4">
             <div className="flex items-center gap-2">
               <Crown className="h-5 w-5 text-orange-600" />
-              <span className="font-medium text-orange-800 dark:text-orange-200">
-                Impersonating: {user.name}
-              </span>
+              <span className="font-medium text-orange-800 dark:text-orange-200">Impersonating: {user.name}</span>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setImpersonating(false)}
-              className="border-orange-300 text-orange-700 hover:bg-orange-100"
-            >
+            <Button variant="outline" size="sm" onClick={() => setImpersonating(false)} className="border-orange-300 text-orange-700 hover:bg-orange-100">
               Stop Impersonation
             </Button>
           </CardContent>
@@ -588,11 +581,9 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
             <div className="flex items-center gap-6">
               <Avatar className="h-20 w-20">
                 <AvatarImage src={user.avatar} />
-                <AvatarFallback className="text-lg">
-                  {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
-                </AvatarFallback>
+                <AvatarFallback className="text-lg">{user.name?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
-              
+
               <div className="space-y-2">
                 <div>
                   <h1 className="text-2xl font-bold">{user.name || 'Unknown User'}</h1>
@@ -602,17 +593,12 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                   </p>
                   <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 font-mono">
                     ID: {user.id}
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-auto p-1"
-                      onClick={() => navigator.clipboard.writeText(user.id!)}
-                    >
+                    <Button variant="ghost" size="sm" className="h-auto p-1" onClick={() => navigator.clipboard.writeText(user.id!)}>
                       <Copy className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="flex flex-wrap gap-2">
                   {user.tenantMemberships && user.tenantMemberships.length > 0 ? (
                     user.tenantMemberships.map((membership, index) => (
@@ -624,18 +610,16 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                   ) : (
                     <Badge variant="secondary">Game Guild Only</Badge>
                   )}
-                  
-                  <Badge variant={user.isActive ? "default" : "destructive"}>
-                    {user.isActive ? 'Active' : 'Suspended'}
-                  </Badge>
-                  
+
+                  <Badge variant={user.isActive ? 'default' : 'destructive'}>{user.isActive ? 'Active' : 'Suspended'}</Badge>
+
                   {user.emailVerified && (
                     <Badge variant="outline" className="text-green-600 border-green-600">
                       <Verified className="h-3 w-3 mr-1" />
                       Verified
                     </Badge>
                   )}
-                  
+
                   {user.mfaEnabled && (
                     <Badge variant="outline" className="text-blue-600 border-blue-600">
                       <Smartphone className="h-3 w-3 mr-1" />
@@ -645,7 +629,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <div className="text-right space-y-1">
                 <div className="text-sm text-gray-600">Owned Objects</div>
@@ -657,25 +641,19 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
               </div>
             </div>
           </div>
-          
+
           <Separator className="my-4" />
-          
+
           {/* Status and Primary Actions */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Label htmlFor="status-toggle">Status:</Label>
-                <Switch
-                  id="status-toggle"
-                  checked={user.isActive}
-                  onCheckedChange={handleStatusToggle}
-                />
-                <span className="text-sm text-gray-600">
-                  {user.isActive ? 'Active' : 'Suspended'}
-                </span>
+                <Switch id="status-toggle" checked={user.isActive} onCheckedChange={handleStatusToggle} />
+                <span className="text-sm text-gray-600">{user.isActive ? 'Active' : 'Suspended'}</span>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={handleImpersonate}>
                 <Shield className="h-4 w-4 mr-2" />
@@ -689,12 +667,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                 <Key className="h-4 w-4 mr-2" />
                 Reset Password
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmDialog('deactivate')}
-                className="text-red-600 hover:text-red-700"
-              >
+              <Button variant="outline" size="sm" onClick={() => setConfirmDialog('deactivate')} className="text-red-600 hover:text-red-700">
                 <UserX className="h-4 w-4 mr-2" />
                 Disable
               </Button>
@@ -742,62 +715,27 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Full Name</Label>
-                  {editingProfile ? (
-                    <Input
-                      id="name"
-                      value={profileForm.name}
-                      onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                    />
-                  ) : (
-                    <div className="mt-1 text-sm">{user.name || 'Not provided'}</div>
-                  )}
+                  {editingProfile ? <Input id="name" value={profileForm.name} onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })} /> : <div className="mt-1 text-sm">{user.name || 'Not provided'}</div>}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="username">Username</Label>
-                  {editingProfile ? (
-                    <Input
-                      id="username"
-                      value={profileForm.username}
-                      onChange={(e) => setProfileForm({ ...profileForm, username: e.target.value })}
-                    />
-                  ) : (
-                    <div className="mt-1 text-sm">@{user.username || 'Not set'}</div>
-                  )}
+                  {editingProfile ? <Input id="username" value={profileForm.username} onChange={(e) => setProfileForm({ ...profileForm, username: e.target.value })} /> : <div className="mt-1 text-sm">@{user.username || 'Not set'}</div>}
                 </div>
-                
+
                 <div className="md:col-span-2">
                   <Label htmlFor="bio">Bio</Label>
-                  {editingProfile ? (
-                    <Textarea
-                      id="bio"
-                      value={profileForm.bio}
-                      onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
-                      rows={3}
-                    />
-                  ) : (
-                    <div className="mt-1 text-sm">{user.bio || 'No bio provided'}</div>
-                  )}
+                  {editingProfile ? <Textarea id="bio" value={profileForm.bio} onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })} rows={3} /> : <div className="mt-1 text-sm">{user.bio || 'No bio provided'}</div>}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="website">Website</Label>
                   {editingProfile ? (
-                    <Input
-                      id="website"
-                      type="url"
-                      value={profileForm.website}
-                      onChange={(e) => setProfileForm({ ...profileForm, website: e.target.value })}
-                    />
+                    <Input id="website" type="url" value={profileForm.website} onChange={(e) => setProfileForm({ ...profileForm, website: e.target.value })} />
                   ) : (
                     <div className="mt-1 text-sm">
                       {user.website ? (
-                        <a 
-                          href={user.website} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline flex items-center gap-1"
-                        >
+                        <a href={user.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline flex items-center gap-1">
                           {user.website}
                           <ExternalLink className="h-3 w-3" />
                         </a>
@@ -807,15 +745,11 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                     </div>
                   )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="organization">Organization</Label>
                   {editingProfile ? (
-                    <Input
-                      id="organization"
-                      value={profileForm.organization}
-                      onChange={(e) => setProfileForm({ ...profileForm, organization: e.target.value })}
-                    />
+                    <Input id="organization" value={profileForm.organization} onChange={(e) => setProfileForm({ ...profileForm, organization: e.target.value })} />
                   ) : (
                     <div className="mt-1 text-sm">{user.organization || 'Not provided'}</div>
                   )}
@@ -851,12 +785,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                 <div>
                   <Label htmlFor="email">Email</Label>
                   {editingContact ? (
-                    <Input
-                      id="email"
-                      type="email"
-                      value={contactForm.email}
-                      onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                    />
+                    <Input id="email" type="email" value={contactForm.email} onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })} />
                   ) : (
                     <div className="mt-1 text-sm flex items-center gap-2">
                       <Mail className="h-4 w-4" />
@@ -865,16 +794,11 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                     </div>
                   )}
                 </div>
-                
+
                 <div>
                   <Label htmlFor="phone">Phone</Label>
                   {editingContact ? (
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={contactForm.phone}
-                      onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                    />
+                    <Input id="phone" type="tel" value={contactForm.phone} onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })} />
                   ) : (
                     <div className="mt-1 text-sm flex items-center gap-2">
                       <Phone className="h-4 w-4" />
@@ -882,15 +806,11 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="md:col-span-2">
                   <Label htmlFor="location">Location</Label>
                   {editingContact ? (
-                    <Input
-                      id="location"
-                      value={contactForm.location}
-                      onChange={(e) => setContactForm({ ...contactForm, location: e.target.value })}
-                    />
+                    <Input id="location" value={contactForm.location} onChange={(e) => setContactForm({ ...contactForm, location: e.target.value })} />
                   ) : (
                     <div className="mt-1 text-sm flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
@@ -916,7 +836,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                     {formatDate(user.createdAt!)}
                   </div>
                 </div>
-                
+
                 <div>
                   <Label>Last Login</Label>
                   <div className="mt-1 text-sm flex items-center gap-2">
@@ -924,7 +844,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                     {user.lastLogin ? formatDateRelative(user.lastLogin) : 'Never'}
                   </div>
                 </div>
-                
+
                 <div>
                   <Label>Last Active</Label>
                   <div className="mt-1 text-sm flex items-center gap-2">
@@ -933,42 +853,28 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                   </div>
                 </div>
               </div>
-              
+
               <Separator />
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>Verification Status</Label>
                   <div className="mt-2 space-y-2">
                     <div className="flex items-center gap-2">
-                      {user.emailVerified ? (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-600" />
-                      )}
-                      <span className="text-sm">
-                        Email {user.emailVerified ? 'Verified' : 'Not Verified'}
-                      </span>
+                      {user.emailVerified ? <CheckCircle className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-600" />}
+                      <span className="text-sm">Email {user.emailVerified ? 'Verified' : 'Not Verified'}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      {user.mfaEnabled ? (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-600" />
-                      )}
-                      <span className="text-sm">
-                        MFA {user.mfaEnabled ? 'Enabled' : 'Disabled'}
-                      </span>
+                      {user.mfaEnabled ? <CheckCircle className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-600" />}
+                      <span className="text-sm">MFA {user.mfaEnabled ? 'Enabled' : 'Disabled'}</span>
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <Label>Subscription</Label>
                   <div className="mt-2 space-y-2">
-                    <Badge variant={user.activeSubscription ? "default" : "secondary"}>
-                      {user.subscriptionType || 'Free'}
-                    </Badge>
+                    <Badge variant={user.activeSubscription ? 'default' : 'secondary'}>{user.subscriptionType || 'Free'}</Badge>
                     <div className="text-sm text-gray-600">
                       Balance: ${user.balance} (Available: ${user.availableBalance})
                     </div>
@@ -991,9 +897,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
             </CardHeader>
             <CardContent>
               {ownedObjects.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No owned objects found
-                </div>
+                <div className="text-center py-8 text-gray-500">No owned objects found</div>
               ) : (
                 <div className="space-y-4">
                   {ownedObjects.map((object) => (
@@ -1008,17 +912,13 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                           <div className="flex items-center gap-4 text-xs text-gray-500">
                             <span>Created {formatDateRelative(object.createdAt)}</span>
                             <span>{object.collaborators} collaborators</span>
-                            <Badge variant={object.isPublic ? "default" : "secondary"} className="text-xs">
+                            <Badge variant={object.isPublic ? 'default' : 'secondary'} className="text-xs">
                               {object.sharingPolicy}
                             </Badge>
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setTransferOwnershipDialog(object.id)}
-                          >
+                          <Button variant="outline" size="sm" onClick={() => setTransferOwnershipDialog(object.id)}>
                             <ArrowRightLeft className="h-4 w-4 mr-2" />
                             Transfer
                           </Button>
@@ -1045,9 +945,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
             </CardHeader>
             <CardContent>
               {grants.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No grants received
-                </div>
+                <div className="text-center py-8 text-gray-500">No grants received</div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -1092,18 +990,11 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm">
-                            {grant.expiresAt ? formatDate(grant.expiresAt) : 'Never'}
-                          </div>
+                          <div className="text-sm">{grant.expiresAt ? formatDate(grant.expiresAt) : 'Never'}</div>
                         </TableCell>
                         <TableCell>
                           {grant.canRevoke && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setRevokeGrantDialog(grant.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
+                            <Button variant="outline" size="sm" onClick={() => setRevokeGrantDialog(grant.id)} className="text-red-600 hover:text-red-700">
                               Revoke
                             </Button>
                           )}
@@ -1133,35 +1024,24 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                   <div key={session.id} className="border rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="p-2 bg-gray-100 rounded-lg">
-                          {session.device === 'Desktop' ? (
-                            <Monitor className="h-5 w-5" />
-                          ) : (
-                            <Smartphone className="h-5 w-5" />
-                          )}
-                        </div>
+                        <div className="p-2 bg-gray-100 rounded-lg">{session.device === 'Desktop' ? <Monitor className="h-5 w-5" /> : <Smartphone className="h-5 w-5" />}</div>
                         <div>
                           <div className="font-medium flex items-center gap-2">
                             {session.device} - {session.browser}
                             {session.isCurrent && (
-                              <Badge variant="default" className="text-xs">Current</Badge>
+                              <Badge variant="default" className="text-xs">
+                                Current
+                              </Badge>
                             )}
                           </div>
                           <div className="text-sm text-gray-600">
                             {session.ip} • {session.location}
                           </div>
-                          <div className="text-xs text-gray-500">
-                            Last active: {formatDateRelative(session.lastActive)}
-                          </div>
+                          <div className="text-xs text-gray-500">Last active: {formatDateRelative(session.lastActive)}</div>
                         </div>
                       </div>
                       {!session.isCurrent && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleForceLogout}
-                          className="text-red-600 hover:text-red-700"
-                        >
+                        <Button variant="outline" size="sm" onClick={handleForceLogout} className="text-red-600 hover:text-red-700">
                           <LogOut className="h-4 w-4 mr-2" />
                           Force Logout
                         </Button>
@@ -1185,24 +1065,20 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                   <div className="mt-2 flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center gap-2">
                       <Smartphone className="h-4 w-4" />
-                      <span className="text-sm">
-                        {user.mfaEnabled ? 'Enabled' : 'Disabled'}
-                      </span>
+                      <span className="text-sm">{user.mfaEnabled ? 'Enabled' : 'Disabled'}</span>
                     </div>
                     <Button variant="outline" size="sm">
                       {user.mfaEnabled ? 'Disable' : 'Enable'} MFA
                     </Button>
                   </div>
                 </div>
-                
+
                 <div>
                   <Label className="text-base font-medium">Email Verification</Label>
                   <div className="mt-2 flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
-                      <span className="text-sm">
-                        {user.emailVerified ? 'Verified' : 'Not Verified'}
-                      </span>
+                      <span className="text-sm">{user.emailVerified ? 'Verified' : 'Not Verified'}</span>
                     </div>
                     {!user.emailVerified && (
                       <Button variant="outline" size="sm">
@@ -1227,24 +1103,16 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
             </CardHeader>
             <CardContent>
               {activities.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No recent activity
-                </div>
+                <div className="text-center py-8 text-gray-500">No recent activity</div>
               ) : (
                 <div className="space-y-4">
                   {activities.map((activity) => (
                     <div key={activity.id} className="flex items-start gap-3 pb-4 border-b last:border-b-0">
-                      <div className="p-2 bg-gray-100 rounded-lg">
-                        {getActivityIcon(activity.type)}
-                      </div>
+                      <div className="p-2 bg-gray-100 rounded-lg">{getActivityIcon(activity.type)}</div>
                       <div className="flex-1">
                         <div className="font-medium">{activity.description}</div>
-                        {activity.details && (
-                          <div className="text-sm text-gray-600">{activity.details}</div>
-                        )}
-                        <div className="text-xs text-gray-500 mt-1">
-                          {formatDateRelative(activity.timestamp)}
-                        </div>
+                        {activity.details && <div className="text-sm text-gray-600">{activity.details}</div>}
+                        <div className="text-xs text-gray-500 mt-1">{formatDateRelative(activity.timestamp)}</div>
                       </div>
                     </div>
                   ))}
@@ -1266,33 +1134,17 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="subject">Subject</Label>
-                <Input
-                  id="subject"
-                  value={messageForm.subject}
-                  onChange={(e) => setMessageForm({ ...messageForm, subject: e.target.value })}
-                  placeholder="Enter message subject"
-                />
+                <Input id="subject" value={messageForm.subject} onChange={(e) => setMessageForm({ ...messageForm, subject: e.target.value })} placeholder="Enter message subject" />
               </div>
-              
+
               <div>
                 <Label htmlFor="message">Message</Label>
-                <Textarea
-                  id="message"
-                  value={messageForm.message}
-                  onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
-                  placeholder="Enter your message"
-                  rows={5}
-                />
+                <Textarea id="message" value={messageForm.message} onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })} placeholder="Enter your message" rows={5} />
               </div>
-              
+
               <div>
                 <Label htmlFor="priority">Priority</Label>
-                <Select
-                  value={messageForm.priority}
-                  onValueChange={(value: 'low' | 'normal' | 'high') => 
-                    setMessageForm({ ...messageForm, priority: value })
-                  }
-                >
+                <Select value={messageForm.priority} onValueChange={(value: 'low' | 'normal' | 'high') => setMessageForm({ ...messageForm, priority: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -1303,7 +1155,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <Button onClick={handleSendMessage}>
                 <Send className="h-4 w-4 mr-2" />
                 Send Message
@@ -1323,16 +1175,12 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
             </CardHeader>
             <CardContent>
               {auditLog.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No audit records found
-                </div>
+                <div className="text-center py-8 text-gray-500">No audit records found</div>
               ) : (
                 <div className="space-y-4">
                   {auditLog.map((audit) => (
                     <div key={audit.id} className="flex items-start gap-3 pb-4 border-b last:border-b-0">
-                      <div className="p-2 bg-gray-100 rounded-lg">
-                        {getAuditIcon(audit.type)}
-                      </div>
+                      <div className="p-2 bg-gray-100 rounded-lg">{getAuditIcon(audit.type)}</div>
                       <div className="flex-1">
                         <div className="font-medium">{audit.action}</div>
                         <div className="text-sm text-gray-600">{audit.details}</div>
@@ -1353,26 +1201,20 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
       </Tabs>
 
       {/* Dialogs */}
-      
+
       {/* Confirmation Dialog */}
       <Dialog open={!!confirmDialog} onOpenChange={() => setConfirmDialog(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {confirmDialog === 'deactivate' && 'Deactivate User'}
-            </DialogTitle>
-            <DialogDescription>
-              {confirmDialog === 'deactivate' && 
-                'Are you sure you want to deactivate this user? They will no longer be able to access the platform.'
-              }
-            </DialogDescription>
+            <DialogTitle>{confirmDialog === 'deactivate' && 'Deactivate User'}</DialogTitle>
+            <DialogDescription>{confirmDialog === 'deactivate' && 'Are you sure you want to deactivate this user? They will no longer be able to access the platform.'}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmDialog(null)}>
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={() => {
                 if (confirmDialog === 'deactivate') handleDeactivate();
               }}
@@ -1388,36 +1230,20 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Send Message to {user.name}</DialogTitle>
-            <DialogDescription>
-              Send a direct message to this user.
-            </DialogDescription>
+            <DialogDescription>Send a direct message to this user.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label htmlFor="msg-subject">Subject</Label>
-              <Input
-                id="msg-subject"
-                value={messageForm.subject}
-                onChange={(e) => setMessageForm({ ...messageForm, subject: e.target.value })}
-              />
+              <Input id="msg-subject" value={messageForm.subject} onChange={(e) => setMessageForm({ ...messageForm, subject: e.target.value })} />
             </div>
             <div>
               <Label htmlFor="msg-content">Message</Label>
-              <Textarea
-                id="msg-content"
-                value={messageForm.message}
-                onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })}
-                rows={4}
-              />
+              <Textarea id="msg-content" value={messageForm.message} onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })} rows={4} />
             </div>
             <div>
               <Label htmlFor="msg-priority">Priority</Label>
-              <Select
-                value={messageForm.priority}
-                onValueChange={(value: 'low' | 'normal' | 'high') => 
-                  setMessageForm({ ...messageForm, priority: value })
-                }
-              >
+              <Select value={messageForm.priority} onValueChange={(value: 'low' | 'normal' | 'high') => setMessageForm({ ...messageForm, priority: value })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -1433,9 +1259,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
             <Button variant="outline" onClick={() => setMessageDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSendMessage}>
-              Send Message
-            </Button>
+            <Button onClick={handleSendMessage}>Send Message</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1445,17 +1269,13 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reset Password</DialogTitle>
-            <DialogDescription>
-              Send a password reset email to {user.email}?
-            </DialogDescription>
+            <DialogDescription>Send a password reset email to {user.email}?</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setResetPasswordDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleResetPassword}>
-              Send Reset Email
-            </Button>
+            <Button onClick={handleResetPassword}>Send Reset Email</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1465,26 +1285,19 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Transfer Ownership</DialogTitle>
-            <DialogDescription>
-              Transfer ownership of this object to another user.
-            </DialogDescription>
+            <DialogDescription>Transfer ownership of this object to another user.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
               <Label htmlFor="new-owner">New Owner</Label>
-              <Input
-                id="new-owner"
-                placeholder="Enter user email or ID"
-              />
+              <Input id="new-owner" placeholder="Enter user email or ID" />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setTransferOwnershipDialog(null)}>
               Cancel
             </Button>
-            <Button onClick={handleTransferOwnership}>
-              Transfer Ownership
-            </Button>
+            <Button onClick={handleTransferOwnership}>Transfer Ownership</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1494,18 +1307,13 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Revoke Grant</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to revoke this grant? This action cannot be undone.
-            </DialogDescription>
+            <DialogDescription>Are you sure you want to revoke this grant? This action cannot be undone.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRevokeGrantDialog(null)}>
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
-              onClick={handleRevokeGrant}
-            >
+            <Button variant="destructive" onClick={handleRevokeGrant}>
               Revoke Grant
             </Button>
           </DialogFooter>

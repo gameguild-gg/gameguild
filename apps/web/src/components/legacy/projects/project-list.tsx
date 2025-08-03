@@ -96,14 +96,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 auto-rows-fr gap-4">
         {paginatedProjects.map((project) => (
           <div key={project.id} className="h-full">
-            <ProjectCard
-              id={project.id}
-              name={project.name}
-              slug={project.slug}
-              status={project.status}
-              createdAt={project.createdAt}
-              updatedAt={project.updatedAt}
-            />
+            <ProjectCard id={project.id} name={project.name} slug={project.slug} status={project.status} createdAt={project.createdAt} updatedAt={project.updatedAt} />
           </div>
         ))}
         {paginatedProjects.length === 0 && (
@@ -113,9 +106,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
                 <Inbox className="size-12 text-muted-foreground" />
               </div>
               <h2 className="text-2xl font-bold mb-2">No projects yet</h2>
-              <p className="text-muted-foreground max-w-md mb-6">
-                Create your first project to get started. You can track progress, manage files, and collaborate with your team.
-              </p>
+              <p className="text-muted-foreground max-w-md mb-6">Create your first project to get started. You can track progress, manage files, and collaborate with your team.</p>
             </div>
             <Button className="flex gap-4 px-4 py-2 align-center items-center justify-center bg-primary rounded-lg">
               <PlusIcon className="size-4" />
@@ -147,12 +138,7 @@ export function ProjectList({ initialProjects }: ProjectListProps) {
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages}
-            className={`w-10 h-10 bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white`}
-          >
+          <Button variant="outline" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className={`w-10 h-10 bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white`}>
             <ChevronLast className="h-4 w-4" />
           </Button>
         </div>

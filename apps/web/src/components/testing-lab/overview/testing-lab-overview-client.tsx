@@ -164,19 +164,11 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
                 Submit New Version
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-              onClick={() => window.open('/dashboard/testing-lab/requests', '_self')}
-            >
+            <Button variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50" onClick={() => window.open('/dashboard/testing-lab/requests', '_self')}>
               <Download className="mr-2 h-4 w-4" />
               View Testing Assignments
             </Button>
-            <Button
-              variant="outline"
-              className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-              onClick={() => window.open('/dashboard/testing-lab/feedback', '_self')}
-            >
+            <Button variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50" onClick={() => window.open('/dashboard/testing-lab/feedback', '_self')}>
               <MessageSquare className="mr-2 h-4 w-4" />
               Complete Feedback
             </Button>
@@ -197,19 +189,11 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
                 Create Testing Session
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-              onClick={() => window.open('/dashboard/testing-lab/attendance', '_self')}
-            >
+            <Button variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50" onClick={() => window.open('/dashboard/testing-lab/attendance', '_self')}>
               <Users className="mr-2 h-4 w-4" />
               View Attendance Reports
             </Button>
-            <Button
-              variant="outline"
-              className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-              onClick={() => window.open('/dashboard/testing-lab/feedback', '_self')}
-            >
+            <Button variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50" onClick={() => window.open('/dashboard/testing-lab/feedback', '_self')}>
               <BarChart3 className="mr-2 h-4 w-4" />
               Review Feedback
             </Button>
@@ -226,9 +210,7 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Testing Lab</h1>
-            <p className="text-slate-400 mt-2">
-              {userRoleObj.isStudent ? 'Submit your games and participate in testing sessions' : 'Manage testing sessions and review feedback'}
-            </p>
+            <p className="text-slate-400 mt-2">{userRoleObj.isStudent ? 'Submit your games and participate in testing sessions' : 'Manage testing sessions and review feedback'}</p>
           </div>
           <Badge variant="outline" className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20 text-blue-300">
             {userRoleObj.type.charAt(0).toUpperCase() + userRoleObj.type.slice(1)} Dashboard
@@ -263,12 +245,8 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
               {/* Testing Requests Overview */}
               <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm lg:col-span-2">
                 <CardHeader>
-                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    Testing Requests
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    {userRoleObj.isStudent ? 'Track your game submissions and their status' : 'Manage all student testing requests'}
-                  </CardDescription>
+                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Testing Requests</CardTitle>
+                  <CardDescription className="text-slate-400">{userRoleObj.isStudent ? 'Track your game submissions and their status' : 'Manage all student testing requests'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -294,12 +272,8 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
               {/* Testing Sessions Overview */}
               <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    Testing Sessions
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    {userRoleObj.isStudent ? 'View your scheduled testing sessions' : 'Manage and create testing sessions'}
-                  </CardDescription>
+                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Testing Sessions</CardTitle>
+                  <CardDescription className="text-slate-400">{userRoleObj.isStudent ? 'View your scheduled testing sessions' : 'Manage and create testing sessions'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -323,12 +297,8 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
               {/* Feedback Overview */}
               <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    Feedback System
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    {userRoleObj.isStudent ? 'Complete feedback for games you tested' : 'Review and approve feedback responses'}
-                  </CardDescription>
+                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Feedback System</CardTitle>
+                  <CardDescription className="text-slate-400">{userRoleObj.isStudent ? 'Complete feedback for games you tested' : 'Review and approve feedback responses'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">

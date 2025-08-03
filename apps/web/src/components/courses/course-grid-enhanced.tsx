@@ -23,14 +23,7 @@ export function CourseGridEnhanced() {
     title: course.title,
     description: course.description,
     category: course.area,
-    level:
-      course.level === 1
-        ? ('Beginner' as const)
-        : course.level === 2
-          ? ('Intermediate' as const)
-          : course.level === 3
-            ? ('Advanced' as const)
-            : ('Advanced' as const),
+    level: course.level === 1 ? ('Beginner' as const) : course.level === 2 ? ('Intermediate' as const) : course.level === 3 ? ('Advanced' as const) : ('Advanced' as const),
     duration: `${course.estimatedHours || 0}h`,
     enrolledStudents: course.enrollmentCount || 0,
     rating: course.analytics?.averageRating || 0,

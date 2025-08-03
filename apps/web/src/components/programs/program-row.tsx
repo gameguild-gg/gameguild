@@ -63,12 +63,7 @@ export function ProgramRow({ program }: ProgramRowProps) {
             {/* Thumbnail */}
             <div className="relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-slate-700/50">
               {program.imageUrl || program.thumbnail ? (
-                <Image
-                  src={program.imageUrl || program.thumbnail || ''}
-                  alt={program.title}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
+                <Image src={program.imageUrl || program.thumbnail || ''} alt={program.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <BookOpen className="h-5 w-5 text-slate-400" />

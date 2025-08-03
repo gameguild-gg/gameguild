@@ -124,27 +124,13 @@ export function VersionSubmissionForm() {
                 <Label htmlFor="title" className="text-slate-300">
                   Game Title *
                 </Label>
-                <Input
-                  id="title"
-                  value={form.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
-                  placeholder="e.g., Space Adventure"
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                  required
-                />
+                <Input id="title" value={form.title} onChange={(e) => handleInputChange('title', e.target.value)} placeholder="e.g., Space Adventure" className="bg-slate-700/50 border-slate-600 text-white" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="versionNumber" className="text-slate-300">
                   Version Number *
                 </Label>
-                <Input
-                  id="versionNumber"
-                  value={form.versionNumber}
-                  onChange={(e) => handleInputChange('versionNumber', e.target.value)}
-                  placeholder="e.g., 1.2.0"
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                  required
-                />
+                <Input id="versionNumber" value={form.versionNumber} onChange={(e) => handleInputChange('versionNumber', e.target.value)} placeholder="e.g., 1.2.0" className="bg-slate-700/50 border-slate-600 text-white" required />
               </div>
             </div>
 
@@ -177,11 +163,7 @@ export function VersionSubmissionForm() {
                 </Select>
                 <Input placeholder="Year (2024)" className="bg-slate-700/50 border-slate-600 text-white" defaultValue="2024" />
                 <Input placeholder="Team # (01-15)" className="bg-slate-700/50 border-slate-600 text-white" defaultValue="03" />
-                <Input
-                  value={form.teamIdentifier || 'fa24-capstone-2024-03'}
-                  onChange={(e) => handleInputChange('teamIdentifier', e.target.value)}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                />
+                <Input value={form.teamIdentifier || 'fa24-capstone-2024-03'} onChange={(e) => handleInputChange('teamIdentifier', e.target.value)} className="bg-slate-700/50 border-slate-600 text-white" />
               </div>
               <p className="text-xs text-slate-500">Auto-generated team identifier following the required pattern</p>
             </div>
@@ -212,9 +194,7 @@ export function VersionSubmissionForm() {
               />
               <Alert className="bg-blue-900/20 border-blue-600/30">
                 <AlertCircle className="h-4 w-4 text-blue-400" />
-                <AlertDescription className="text-blue-300">
-                  Make sure your download link is accessible to anyone with the link. Google Drive, Dropbox, or OneDrive shared links work well.
-                </AlertDescription>
+                <AlertDescription className="text-blue-300">Make sure your download link is accessible to anyone with the link. Google Drive, Dropbox, or OneDrive shared links work well.</AlertDescription>
               </Alert>
             </div>
 
@@ -249,11 +229,7 @@ export function VersionSubmissionForm() {
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <Label className="text-slate-300">Instruction Type</Label>
-              <RadioGroup
-                value={form.instructionsType}
-                onValueChange={(value: 'inline' | 'file' | 'url') => handleInputChange('instructionsType', value)}
-                className="flex space-x-6"
-              >
+              <RadioGroup value={form.instructionsType} onValueChange={(value: 'inline' | 'file' | 'url') => handleInputChange('instructionsType', value)} className="flex space-x-6">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="inline" id="inline" />
                   <Label htmlFor="inline" className="text-slate-300">
@@ -347,25 +323,13 @@ export function VersionSubmissionForm() {
                 <Label htmlFor="startDate" className="text-slate-300">
                   Start Date
                 </Label>
-                <Input
-                  id="startDate"
-                  type="datetime-local"
-                  value={form.startDate}
-                  onChange={(e) => handleInputChange('startDate', e.target.value)}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                />
+                <Input id="startDate" type="datetime-local" value={form.startDate} onChange={(e) => handleInputChange('startDate', e.target.value)} className="bg-slate-700/50 border-slate-600 text-white" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="endDate" className="text-slate-300">
                   End Date
                 </Label>
-                <Input
-                  id="endDate"
-                  type="datetime-local"
-                  value={form.endDate}
-                  onChange={(e) => handleInputChange('endDate', e.target.value)}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                />
+                <Input id="endDate" type="datetime-local" value={form.endDate} onChange={(e) => handleInputChange('endDate', e.target.value)} className="bg-slate-700/50 border-slate-600 text-white" />
               </div>
             </div>
             <p className="text-xs text-slate-500">Leave dates blank to make testing available immediately with no end date</p>
@@ -374,22 +338,11 @@ export function VersionSubmissionForm() {
 
         {/* Submit Actions */}
         <div className="flex gap-4 justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleSubmit(true)}
-            disabled={isSubmitting}
-            className="border-slate-600 text-slate-300 hover:bg-slate-700"
-          >
+          <Button type="button" variant="outline" onClick={() => handleSubmit(true)} disabled={isSubmitting} className="border-slate-600 text-slate-300 hover:bg-slate-700">
             <Save className="h-4 w-4 mr-2" />
             {isDraft ? 'Saving Draft...' : 'Save as Draft'}
           </Button>
-          <Button
-            type="button"
-            onClick={() => handleSubmit(false)}
-            disabled={isSubmitting || !form.title || !form.versionNumber || !form.downloadUrl}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
+          <Button type="button" onClick={() => handleSubmit(false)} disabled={isSubmitting || !form.title || !form.versionNumber || !form.downloadUrl} className="bg-blue-600 hover:bg-blue-700">
             <Send className="h-4 w-4 mr-2" />
             {isSubmitting && !isDraft ? 'Submitting...' : 'Submit for Testing'}
           </Button>

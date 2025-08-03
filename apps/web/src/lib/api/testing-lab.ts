@@ -75,7 +75,7 @@ export interface UpdateTestingLabManagerRequest {
 export async function getTestingLocations(skip = 0, take = 50): Promise<TestingLocation[]> {
   // Mock implementation - replace with actual API call when backend supports it
   await configureAuthenticatedClient();
-  
+
   // Return mock data for now
   return [
     {
@@ -296,7 +296,7 @@ export interface CreateTestingSessionRequest {
 export async function getTestingSessions(): Promise<TestingSession[]> {
   // Mock implementation - replace with actual API call
   await configureAuthenticatedClient();
-  
+
   // Return mock data for now
   return [
     {
@@ -335,7 +335,7 @@ export async function getTestingSessions(): Promise<TestingSession[]> {
 export async function createTestingSession(sessionData: CreateTestingSessionRequest): Promise<TestingSession> {
   // Mock implementation - replace with actual API call
   await configureAuthenticatedClient();
-  
+
   const newSession: TestingSession = {
     id: Date.now().toString(),
     sessionName: sessionData.sessionName,

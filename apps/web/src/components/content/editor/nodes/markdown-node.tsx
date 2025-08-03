@@ -178,17 +178,10 @@ function example() {
                 Done
               </Button>
             </div>
-            <Textarea
-              value={content}
-              onChange={(e) => handleContentChange(e.target.value)}
-              placeholder={placeholder}
-              className="min-h-[200px] resize-y font-mono text-sm"
-            />
+            <Textarea value={content} onChange={(e) => handleContentChange(e.target.value)} placeholder={placeholder} className="min-h-[200px] resize-y font-mono text-sm" />
           </div>
         ) : (
-          <div className={cn('prose prose-stone dark:prose-invert max-w-none', !content && 'min-h-[2.5rem] text-sm text-muted-foreground')}>
-            {content ? <ReactMarkdown>{content}</ReactMarkdown> : 'Click to edit markdown...'}
-          </div>
+          <div className={cn('prose prose-stone dark:prose-invert max-w-none', !content && 'min-h-[2.5rem] text-sm text-muted-foreground')}>{content ? <ReactMarkdown>{content}</ReactMarkdown> : 'Click to edit markdown...'}</div>
         )}
       </div>
     </div>

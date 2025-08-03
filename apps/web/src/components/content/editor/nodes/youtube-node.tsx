@@ -175,10 +175,7 @@ function YouTubeComponent({ data, nodeKey }: YouTubeComponentProps) {
 
   // Render error message
   const renderErrorMessage = () => (
-    <div
-      className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-lg p-4 flex flex-col items-center justify-center min-h-[200px]"
-      style={{ width: `${size}%` }}
-    >
+    <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-lg p-4 flex flex-col items-center justify-center min-h-[200px]" style={{ width: `${size}%` }}>
       <Play className="h-6 w-6 mb-2" />
       <p className="text-center">Could not load the YouTube video</p>
     </div>
@@ -222,11 +219,7 @@ function YouTubeComponent({ data, nodeKey }: YouTubeComponentProps) {
 
       {/* Size control */}
       {showSizeControls && !hasError && (
-        <div
-          ref={sizeControlsRef}
-          className="absolute -top-16 left-2 right-2 rounded-lg bg-background/80 p-2 backdrop-blur z-20"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div ref={sizeControlsRef} className="absolute -top-16 left-2 right-2 rounded-lg bg-background/80 p-2 backdrop-blur z-20" onClick={(e) => e.stopPropagation()}>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm font-medium">Adjust size</span>
@@ -249,11 +242,7 @@ function YouTubeComponent({ data, nodeKey }: YouTubeComponentProps) {
 
       {/* Caption editor */}
       {isEditing && !hasError && (
-        <div
-          ref={captionControlsRef}
-          className="absolute -bottom-16 left-2 right-2 rounded-lg bg-background/80 p-2 backdrop-blur z-20"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div ref={captionControlsRef} className="absolute -bottom-16 left-2 right-2 rounded-lg bg-background/80 p-2 backdrop-blur z-20" onClick={(e) => e.stopPropagation()}>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm font-medium">Add caption</span>

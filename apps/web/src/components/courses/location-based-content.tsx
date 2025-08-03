@@ -144,7 +144,7 @@ export function LocationBasedContent({ selectedLocation, maxTests, maxProjects }
     const loadContent = setTimeout(() => {
       // Filter and limit content based on location capacity
       const availableTests = mockTestingContent.filter((content) => content.type === 'test').slice(0, maxTests);
-      
+
       const availableProjects = mockTestingContent.filter((content) => content.type === 'project').slice(0, maxProjects);
 
       setDisplayedContent([...availableTests, ...availableProjects]);
@@ -243,7 +243,7 @@ export function LocationBasedContent({ selectedLocation, maxTests, maxProjects }
               </div>
               <p className="text-xs text-blue-300 mt-1">Testing Sessions</p>
             </div>
-            
+
             <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
               <div className="flex items-center gap-2 text-purple-400">
                 <FolderOpen className="h-4 w-4" />
@@ -271,7 +271,7 @@ export function LocationBasedContent({ selectedLocation, maxTests, maxProjects }
               {tests.map((test) => (
                 <div key={test.id} className="flex items-center gap-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors">
                   <div className={`p-2 rounded-lg ${getTypeColor(test.type)}`}>{getTypeIcon(test.type)}</div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-medium text-white truncate">{test.title}</h4>
@@ -318,7 +318,7 @@ export function LocationBasedContent({ selectedLocation, maxTests, maxProjects }
               {projects.map((project) => (
                 <div key={project.id} className="flex items-center gap-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors">
                   <div className={`p-2 rounded-lg ${getTypeColor(project.type)}`}>{getTypeIcon(project.type)}</div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-medium text-white truncate">{project.title}</h4>

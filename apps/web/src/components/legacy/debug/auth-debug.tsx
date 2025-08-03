@@ -60,11 +60,7 @@ export function AuthDebug() {
   const hasError = !!sessionError;
 
   return (
-    <div
-      className={`fixed bottom-4 right-4 border rounded p-4 max-w-sm ${
-        hasError ? 'bg-red-100 border-red-400' : session ? 'bg-green-100 border-green-400' : 'bg-gray-100 border-gray-400'
-      }`}
-    >
+    <div className={`fixed bottom-4 right-4 border rounded p-4 max-w-sm ${hasError ? 'bg-red-100 border-red-400' : session ? 'bg-green-100 border-green-400' : 'bg-gray-100 border-gray-400'}`}>
       <h3 className={`font-bold ${hasError ? 'text-red-800' : session ? 'text-green-800' : 'text-gray-800'}`}>Auth Debug ({status})</h3>
 
       <div className="text-sm mt-2 space-y-1">

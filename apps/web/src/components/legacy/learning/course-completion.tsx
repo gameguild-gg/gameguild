@@ -145,13 +145,7 @@ export function CourseCompletion({ courseId, onCertificateRequest, onContinueLea
   return (
     <div className="space-y-6">
       {/* Completion Status Header */}
-      <Card
-        className={`${
-          completionData.isComplete
-            ? 'border-green-300 bg-gradient-to-r from-green-50 to-emerald-50'
-            : 'border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50'
-        }`}
-      >
+      <Card className={`${completionData.isComplete ? 'border-green-300 bg-gradient-to-r from-green-50 to-emerald-50' : 'border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50'}`}>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-3">
@@ -165,17 +159,13 @@ export function CourseCompletion({ courseId, onCertificateRequest, onContinueLea
                 </div>
               )}
               <div>
-                <h2 className={`text-xl font-bold ${completionData.isComplete ? 'text-green-800' : 'text-blue-800'}`}>
-                  {completionData.isComplete ? 'Course Completed!' : 'Course Progress'}
-                </h2>
+                <h2 className={`text-xl font-bold ${completionData.isComplete ? 'text-green-800' : 'text-blue-800'}`}>{completionData.isComplete ? 'Course Completed!' : 'Course Progress'}</h2>
                 <p className={`text-sm ${completionData.isComplete ? 'text-green-600' : 'text-blue-600'}`}>{completionData.courseTitle}</p>
               </div>
             </CardTitle>
 
             <div className="text-right">
-              <Badge className={`${completionData.isComplete ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'} mb-2`}>
-                {completionData.overallProgress}% Complete
-              </Badge>
+              <Badge className={`${completionData.isComplete ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'} mb-2`}>{completionData.overallProgress}% Complete</Badge>
               {completionData.finalGrade && (
                 <div className="text-sm font-medium">
                   Final Grade: <span className="text-lg">{completionData.finalGrade}%</span>
@@ -200,9 +190,7 @@ export function CourseCompletion({ courseId, onCertificateRequest, onContinueLea
               <div className="text-sm text-gray-600">Required Items</div>
             </div>
             <div className="text-center">
-              <div className={`text-2xl font-bold ${completionData.certificateEligible ? 'text-green-600' : 'text-gray-400'}`}>
-                {completionData.certificateEligible ? '✓' : '○'}
-              </div>
+              <div className={`text-2xl font-bold ${completionData.certificateEligible ? 'text-green-600' : 'text-gray-400'}`}>{completionData.certificateEligible ? '✓' : '○'}</div>
               <div className="text-sm text-gray-600">Certificate Ready</div>
             </div>
           </div>
@@ -228,13 +216,7 @@ export function CourseCompletion({ courseId, onCertificateRequest, onContinueLea
             {completionData.requirements.map((requirement) => (
               <div
                 key={requirement.id}
-                className={`flex items-center gap-4 p-4 rounded-lg border ${
-                  requirement.completed
-                    ? 'bg-green-50 border-green-200'
-                    : requirement.required
-                      ? 'bg-orange-50 border-orange-200'
-                      : 'bg-gray-50 border-gray-200'
-                }`}
+                className={`flex items-center gap-4 p-4 rounded-lg border ${requirement.completed ? 'bg-green-50 border-green-200' : requirement.required ? 'bg-orange-50 border-orange-200' : 'bg-gray-50 border-gray-200'}`}
               >
                 <div className="flex-shrink-0">{getRequirementIcon(requirement)}</div>
 
@@ -308,15 +290,7 @@ export function CourseCompletion({ courseId, onCertificateRequest, onContinueLea
 }
 
 /* Completion badge for course cards */
-export function CompletionBadge({
-  isComplete,
-  progress,
-  certificateAvailable,
-}: {
-  readonly isComplete: boolean;
-  readonly progress: number;
-  readonly certificateAvailable?: boolean;
-}) {
+export function CompletionBadge({ isComplete, progress, certificateAvailable }: { readonly isComplete: boolean; readonly progress: number; readonly certificateAvailable?: boolean }) {
   if (isComplete) {
     return (
       <Badge className="bg-green-500 text-white">

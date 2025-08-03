@@ -153,11 +153,7 @@ function SessionsDataDisplay() {
       key: 'status',
       label: 'Status',
       sortable: true,
-      render: (value) => (
-        <Badge variant={value === 'open' ? 'default' : value === 'in-progress' ? 'secondary' : value === 'full' ? 'destructive' : 'outline'}>
-          {String(value)}
-        </Badge>
-      ),
+      render: (value) => <Badge variant={value === 'open' ? 'default' : value === 'in-progress' ? 'secondary' : value === 'full' ? 'destructive' : 'outline'}>{String(value)}</Badge>,
     },
     {
       key: 'category',
@@ -204,14 +200,7 @@ function SessionsDataDisplay() {
   // Render based on view mode
   switch (state.viewMode) {
     case 'cards':
-      return (
-        <GenericCardView
-          items={filteredSessions}
-          config={cardConfig}
-          onItemClick={handleItemClick}
-          emptyMessage="No testing lab sessions found matching your filters."
-        />
-      );
+      return <GenericCardView items={filteredSessions} config={cardConfig} onItemClick={handleItemClick} emptyMessage="No testing lab sessions found matching your filters." />;
 
     case 'table':
       return (
@@ -228,24 +217,10 @@ function SessionsDataDisplay() {
       );
 
     case 'row':
-      return (
-        <GenericRowView
-          items={filteredSessions}
-          config={cardConfig}
-          onItemClick={handleItemClick}
-          emptyMessage="No testing lab sessions found matching your filters."
-        />
-      );
+      return <GenericRowView items={filteredSessions} config={cardConfig} onItemClick={handleItemClick} emptyMessage="No testing lab sessions found matching your filters." />;
 
     default:
-      return (
-        <GenericCardView
-          items={filteredSessions}
-          config={cardConfig}
-          onItemClick={handleItemClick}
-          emptyMessage="No testing lab sessions found matching your filters."
-        />
-      );
+      return <GenericCardView items={filteredSessions} config={cardConfig} onItemClick={handleItemClick} emptyMessage="No testing lab sessions found matching your filters." />;
   }
 }
 

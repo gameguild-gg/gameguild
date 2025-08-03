@@ -87,8 +87,7 @@ const mockReviews: PeerReview[] = [
     reviewerId: 'reviewer-1',
     reviewerName: 'Sarah Johnson',
     rating: 4,
-    feedback:
-      'Excellent documentation structure and clear writing. The character progression system is well thought out. Consider adding more detail about the combat mechanics.',
+    feedback: 'Excellent documentation structure and clear writing. The character progression system is well thought out. Consider adding more detail about the combat mechanics.',
     createdAt: '2024-01-21T11:00:00Z',
     criteria: {
       clarity: 5,
@@ -188,11 +187,7 @@ export function PeerReviewInterface() {
     return (
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`h-4 w-4 cursor-pointer ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`}
-            onClick={() => onRate && onRate(star)}
-          />
+          <Star key={star} className={`h-4 w-4 cursor-pointer ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`} onClick={() => onRate && onRate(star)} />
         ))}
       </div>
     );
@@ -428,10 +423,7 @@ export function PeerReviewInterface() {
                   <Button variant="outline" onClick={() => setShowReviewDialog(false)}>
                     Cancel
                   </Button>
-                  <Button
-                    onClick={handleSubmitReview}
-                    disabled={!currentReview.feedback.trim() || reviewCriteria.some((criterion) => !currentReview.criteria[criterion.name])}
-                  >
+                  <Button onClick={handleSubmitReview} disabled={!currentReview.feedback.trim() || reviewCriteria.some((criterion) => !currentReview.criteria[criterion.name])}>
                     <Send className="h-4 w-4 mr-2" />
                     Submit Review
                   </Button>

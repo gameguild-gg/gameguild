@@ -70,8 +70,7 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
   // Filter sessions based on search and filters
   const filteredSessions = testSessions
     .filter((session) => {
-      const matchesSearch =
-        session.title.toLowerCase().includes(searchTerm.toLowerCase()) || session.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = session.title.toLowerCase().includes(searchTerm.toLowerCase()) || session.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(session.status);
       const matchesType = selectedSessionTypes.length === 0 || selectedSessionTypes.includes(session.sessionType);
 
@@ -130,16 +129,12 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                 </div>
               </div>
             )}
-            <h1
-              className="text-5xl md:text-6xl font-bold text-white my-8"
-              style={{ textShadow: '0 0 8px rgba(59, 130, 246, 0.25), 0 0 16px rgba(147, 51, 234, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15)' }}
-            >
+            <h1 className="text-5xl md:text-6xl font-bold text-white my-8" style={{ textShadow: '0 0 8px rgba(59, 130, 246, 0.25), 0 0 16px rgba(147, 51, 234, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15)' }}>
               Test. Play. Earn.
             </h1>
           </div>
           <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-            Join exclusive game testing sessions and shape the future of gaming. Get early access, provide valuable feedback, and earn amazing rewards while
-            playing the latest titles before anyone else.
+            Join exclusive game testing sessions and shape the future of gaming. Get early access, provide valuable feedback, and earn amazing rewards while playing the latest titles before anyone else.
           </p>
         </div>
 
@@ -156,41 +151,32 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`w-full pl-12 pr-12 h-10 backdrop-blur-md border rounded-xl transition-all duration-200 ${
-                  searchTerm
-                    ? 'border-blue-400/40 text-white placeholder:text-white/70 shadow-lg shadow-blue-500/20'
-                    : 'border-slate-600/30 text-slate-400 placeholder:text-slate-400 hover:text-slate-200'
+                  searchTerm ? 'border-blue-400/40 text-white placeholder:text-white/70 shadow-lg shadow-blue-500/20' : 'border-slate-600/30 text-slate-400 placeholder:text-slate-400 hover:text-slate-200'
                 } focus:text-white focus:placeholder:text-white focus:outline-none focus:border-blue-400/40 focus-visible:border-blue-400/40 focus:ring-2 focus:ring-blue-500/20 focus-visible:ring-blue-500/20 selection:bg-blue-500/30 selection:text-white`}
                 style={
                   searchTerm
                     ? {
-                        background:
-                          'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                        background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                         boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                       }
                     : {
-                        background:
-                          'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                        background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                         boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                       }
                 }
                 onFocus={(e) => {
-                  e.target.style.background =
-                    'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)';
+                  e.target.style.background = 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)';
                   e.target.style.boxShadow = 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)';
                 }}
                 onBlur={(e) => {
                   if (!searchTerm) {
-                    e.target.style.background =
-                      'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)';
+                    e.target.style.background = 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)';
                     e.target.style.boxShadow = 'inset 0 1px 2px rgba(0, 0, 0, 0.05)';
                   }
                 }}
               />
               {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors duration-200 z-10"
-                >
+                <button onClick={() => setSearchTerm('')} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors duration-200 z-10">
                   <X className="h-4 w-4" />
                 </button>
               )}
@@ -204,32 +190,22 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                   <Button
                     variant="ghost"
                     className={`${
-                      selectedStatuses.length === 0
-                        ? 'backdrop-blur-md border border-slate-600/30 text-slate-400'
-                        : 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
+                      selectedStatuses.length === 0 ? 'backdrop-blur-md border border-slate-600/30 text-slate-400' : 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
                     } rounded-xl px-4 h-10 text-sm focus:outline-none focus:border-blue-400/60 hover:border-blue-400/60 hover:bg-white/5 transition-all duration-200 justify-between min-w-[140px]`}
                     style={
                       selectedStatuses.length === 0
                         ? {
-                            background:
-                              'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                            background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                             boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                           }
                         : {
-                            background:
-                              'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                            background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                             boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                           }
                     }
                   >
                     <div className="flex items-center gap-2">
-                      {selectedStatuses.length === 0 ? (
-                        getStatusIcon('all')
-                      ) : selectedStatuses.length === 1 ? (
-                        getStatusIcon(selectedStatuses[0])
-                      ) : (
-                        <Shield className="h-4 w-4 text-slate-400" />
-                      )}
+                      {selectedStatuses.length === 0 ? getStatusIcon('all') : selectedStatuses.length === 1 ? getStatusIcon(selectedStatuses[0]) : <Shield className="h-4 w-4 text-slate-400" />}
                       <span>
                         {getDisplayText(selectedStatuses, 'All Status', [
                           { value: 'open', label: 'Open' },
@@ -242,40 +218,28 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-slate-900/80 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl shadow-black/50">
-                  <DropdownMenuItem
-                    onClick={() => toggleStatus('all')}
-                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
-                  >
+                  <DropdownMenuItem onClick={() => toggleStatus('all')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
                     <div className="flex items-center gap-2">
                       <Shield className="h-4 w-4 text-slate-400" />
                       <span>All Status</span>
                       {selectedStatuses.length === 0 && <span className="ml-auto text-blue-400">✓</span>}
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => toggleStatus('open')}
-                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
-                  >
+                  <DropdownMenuItem onClick={() => toggleStatus('open')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
                     <div className="flex items-center gap-2">
                       <Shield className="h-4 w-4 text-green-400" />
                       <span>Open</span>
                       {selectedStatuses.includes('open') && <span className="ml-auto text-blue-400">✓</span>}
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => toggleStatus('full')}
-                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
-                  >
+                  <DropdownMenuItem onClick={() => toggleStatus('full')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-red-400" />
                       <span>Full</span>
                       {selectedStatuses.includes('full') && <span className="ml-auto text-blue-400">✓</span>}
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => toggleStatus('in-progress')}
-                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
-                  >
+                  <DropdownMenuItem onClick={() => toggleStatus('in-progress')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-blue-400" />
                       <span>In Progress</span>
@@ -291,32 +255,22 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                   <Button
                     variant="ghost"
                     className={`${
-                      selectedSessionTypes.length === 0
-                        ? 'backdrop-blur-md border border-slate-600/30 text-slate-400'
-                        : 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
+                      selectedSessionTypes.length === 0 ? 'backdrop-blur-md border border-slate-600/30 text-slate-400' : 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
                     } rounded-xl px-4 h-10 text-sm focus:outline-none focus:border-blue-400/60 hover:border-blue-400/60 hover:bg-white/5 transition-all duration-200 justify-between min-w-[140px]`}
                     style={
                       selectedSessionTypes.length === 0
                         ? {
-                            background:
-                              'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                            background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                             boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                           }
                         : {
-                            background:
-                              'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                            background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                             boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                           }
                     }
                   >
                     <div className="flex items-center gap-2">
-                      {selectedSessionTypes.length === 0 ? (
-                        getSessionTypeIcon('all')
-                      ) : selectedSessionTypes.length === 1 ? (
-                        getSessionTypeIcon(selectedSessionTypes[0])
-                      ) : (
-                        <Trophy className="h-4 w-4 text-slate-400" />
-                      )}
+                      {selectedSessionTypes.length === 0 ? getSessionTypeIcon('all') : selectedSessionTypes.length === 1 ? getSessionTypeIcon(selectedSessionTypes[0]) : <Trophy className="h-4 w-4 text-slate-400" />}
                       <span>
                         {getDisplayText(selectedSessionTypes, 'All Types', [
                           { value: 'gameplay', label: 'Gameplay' },
@@ -329,40 +283,28 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="bg-slate-900/80 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl shadow-black/50">
-                  <DropdownMenuItem
-                    onClick={() => toggleSessionType('all')}
-                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
-                  >
+                  <DropdownMenuItem onClick={() => toggleSessionType('all')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
                     <div className="flex items-center gap-2">
                       <Trophy className="h-4 w-4 text-slate-400" />
                       <span>All Types</span>
                       {selectedSessionTypes.length === 0 && <span className="ml-auto text-blue-400">✓</span>}
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => toggleSessionType('gameplay')}
-                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
-                  >
+                  <DropdownMenuItem onClick={() => toggleSessionType('gameplay')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
                     <div className="flex items-center gap-2">
                       <Monitor className="h-4 w-4 text-blue-400" />
                       <span>Gameplay</span>
                       {selectedSessionTypes.includes('gameplay') && <span className="ml-auto text-blue-400">✓</span>}
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => toggleSessionType('usability')}
-                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
-                  >
+                  <DropdownMenuItem onClick={() => toggleSessionType('usability')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-purple-400" />
                       <span>Usability</span>
                       {selectedSessionTypes.includes('usability') && <span className="ml-auto text-blue-400">✓</span>}
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => toggleSessionType('bug-testing')}
-                    className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5"
-                  >
+                  <DropdownMenuItem onClick={() => toggleSessionType('bug-testing')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
                     <div className="flex items-center gap-2">
                       <Star className="h-4 w-4 text-orange-400" />
                       <span>Bug Testing</span>
@@ -397,13 +339,11 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                         style={
                           viewMode === 'cards'
                             ? {
-                                background:
-                                  'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                                background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                               }
                             : {
-                                background:
-                                  'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                                background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                               }
                         }
@@ -429,13 +369,11 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                         style={
                           viewMode === 'row'
                             ? {
-                                background:
-                                  'radial-gradient(ellipse 80% 60% at center, rgba(147, 51, 234, 0.4) 0%, rgba(126, 34, 206, 0.3) 50%, rgba(107, 33, 168, 0.2) 100%)',
+                                background: 'radial-gradient(ellipse 80% 60% at center, rgba(147, 51, 234, 0.4) 0%, rgba(126, 34, 206, 0.3) 50%, rgba(107, 33, 168, 0.2) 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(147, 51, 234, 0.2)',
                               }
                             : {
-                                background:
-                                  'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                                background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                               }
                         }
@@ -461,13 +399,11 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                         style={
                           viewMode === 'table'
                             ? {
-                                background:
-                                  'radial-gradient(ellipse 80% 60% at center, rgba(34, 197, 94, 0.4) 0%, rgba(22, 163, 74, 0.3) 50%, rgba(21, 128, 61, 0.2) 100%)',
+                                background: 'radial-gradient(ellipse 80% 60% at center, rgba(34, 197, 94, 0.4) 0%, rgba(22, 163, 74, 0.3) 50%, rgba(21, 128, 61, 0.2) 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(34, 197, 94, 0.2)',
                               }
                             : {
-                                background:
-                                  'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                                background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
                                 boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
                               }
                         }
@@ -545,8 +481,7 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                   <div
                     className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center"
                     style={{
-                      background:
-                        'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 50%, rgba(29, 78, 216, 0.1) 100%)',
+                      background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.2) 50%, rgba(29, 78, 216, 0.1) 100%)',
                       boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                     }}
                   >
@@ -560,8 +495,7 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                   onClick={clearFilters}
                   className="backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20 hover:border-blue-400/60 transition-all duration-200 rounded-xl px-6 py-3"
                   style={{
-                    background:
-                      'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                    background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
                     boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
                   }}
                 >
