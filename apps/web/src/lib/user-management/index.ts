@@ -3,12 +3,15 @@
 
 // Users Module - Core user management operations
 export * from './users/users.actions';
+export { createUserAction, updateUserAction, deleteUserAction, toggleUserStatusAction, revalidateUsersDataAction } from './users/users';
+
+// Users Context - React context for user management state
+export * from './users/users.context';
 
 // Profiles Module - User profile management and customization
 export * from './profiles/profiles.actions';
 
-// Achievements Module - Achievement tracking and progress management
-export * from './achievements/achievements.actions';
+// Note: Achievement functions are exported from ./users/users.actions to avoid conflicts
 
 /**
  * User Management Modules Overview:

@@ -1,8 +1,11 @@
+'use server';
+
+import type { UpdateUserDto, UserResponseDto, UserResponseDtoPagedResult } from '@/lib/api/generated/types.gen';
 import { revalidateTag, unstable_cache } from 'next/cache';
-import { PagedResult, UpdateUserRequest, User } from '@/components/legacy/types/user';
 
 export interface UserData {
-  users: User[];
+  users: UserResponseDto[];
+
   pagination?: {
     page: number;
     limit: number;
@@ -13,11 +16,12 @@ export interface UserData {
 
 export interface ActionState {
   success: boolean;
+
   error?: string;
 }
 
 export interface UserActionState extends ActionState {
-  user?: User;
+  user?: UserResponseDto;
 }
 
 // Cache configuration
@@ -60,14 +64,14 @@ const getCachedUsersData = unstable_cache(
           throw new Error(`Failed to search users: ${response.status} ${response.statusText}`);
         }
 
-        const data: PagedResult<User> = await response.json();
+        const data: UserResponseDtoPagedResult = await response.json();
         return {
-          users: data.items,
+          users: data.items || [],
           pagination: {
             page,
             limit,
-            total: data.totalCount,
-            totalPages: Math.ceil(data.totalCount / limit),
+            total: data.totalCount || 0,
+            totalPages: Math.ceil((data.totalCount || 0) / limit),
           },
         };
       }
@@ -93,7 +97,7 @@ const getCachedUsersData = unstable_cache(
         throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
       }
 
-      const users: User[] = await response.json();
+      const users: UserResponseDto[] = await response.json();
 
       return {
         users,
@@ -135,7 +139,7 @@ export async function getUsersData(page: number = 1, limit: number = 20, search?
 /**
  * Get user by ID with caching
  */
-export async function getUserById(id: string): Promise<User | null> {
+export async function getUserById(id: string): Promise<UserResponseDto | null> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -313,7 +317,7 @@ export async function toggleUserStatus(
 ): Promise<{
   success: boolean;
   error?: string;
-  user?: User;
+  user?: UserResponseDto;
 }> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -360,10 +364,7 @@ export async function revalidateUsersData(): Promise<void> {
 /**
  * Bulk user operations
  */
-export async function bulkUpdateUsers(
-  userIds: string[],
-  updates: Partial<UpdateUserRequest>,
-): Promise<{ success: boolean; error?: string; updatedCount?: number }> {
+export async function bulkUpdateUsers(userIds: string[], updates: Partial<UpdateUserDto>): Promise<{ success: boolean; error?: string; updatedCount?: number }> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -402,7 +403,7 @@ export async function bulkUpdateUsers(
 /**
  * Search users
  */
-export async function searchUsers(query: string, limit: number = 10): Promise<User[]> {
+export async function searchUsers(query: string, limit: number = 10): Promise<UserResponseDto[]> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -431,11 +432,7 @@ export async function searchUsers(query: string, limit: number = 10): Promise<Us
 /**
  * Get user statistics (Server Action)
  */
-export async function getUserStatistics(
-  fromDate?: string,
-  toDate?: string,
-  includeDeleted: boolean = false,
-): Promise<{ success: boolean; error?: string; statistics?: unknown }> {
+export async function getUserStatistics(fromDate?: string, toDate?: string, includeDeleted: boolean = false): Promise<{ success: boolean; error?: string; statistics?: unknown }> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const params = new URLSearchParams({
@@ -556,3 +553,13 @@ export async function bulkDeactivateUsers(
     };
   }
 }
+
+// =============================================================================
+// SERVER ACTION ALIASES FOR COMPONENT COMPATIBILITY
+// =============================================================================
+
+export const createUserAction = createUser;
+export const updateUserAction = updateUser;
+export const deleteUserAction = deleteUser;
+export const toggleUserStatusAction = toggleUserStatus;
+export const revalidateUsersDataAction = revalidateUsersData;
