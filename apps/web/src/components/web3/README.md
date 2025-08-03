@@ -6,7 +6,7 @@ This document explains the refactored Web3Provider implementation using React's 
 
 The Web3 system now consists of:
 
-1. **Types** (`types.ts`) - All TypeScript interfaces and types
+1. **Types** (`auth.types.ts`) - All TypeScript interfaces and types
 2. **Reducer** (`web3-reducer.ts`) - State management logic with helper functions
 3. **Provider** (`web3-context.tsx`) - Context provider with reducer for state management
 4. **Hooks** - Custom hooks for accessing and manipulating Web3 state
@@ -130,10 +130,7 @@ function NetworkSwitcher() {
   return (
     <div>
       <p>Current Network: {network?.name}</p>
-      <select
-        value={network?.chainId || ''}
-        onChange={(e) => switchNetwork(e.target.value)}
-      >
+      <select value={network?.chainId || ''} onChange={(e) => switchNetwork(e.target.value)}>
         {supportedNetworks.map((net) => (
           <option key={net.chainId} value={net.chainId}>
             {net.name}
@@ -184,18 +181,18 @@ interface Web3State {
   isConnected: boolean;
   isProviderAvailable: boolean;
   isProviderChecked: boolean;
-  
+
   // Network state
   network: NetworkInfo | undefined;
   supportedNetworks: NetworkInfo[];
-  
+
   // Error and status
   error: string | undefined;
   connectionStatus: 'idle' | 'connecting' | 'connected' | 'disconnected' | 'error';
-  
+
   // Configuration
   config: Web3Config;
-  
+
   // Persistence
   persistedConnection: boolean;
   lastConnected: number | undefined;
@@ -212,12 +209,8 @@ import { Web3Context } from '@/components/web3/web3-context';
 
 function MyComponent() {
   const { state, connect, disconnect } = useContext(Web3Context);
-  
-  return (
-    <button onClick={connect}>
-      {state.isConnecting ? 'Connecting...' : 'Connect'}
-    </button>
-  );
+
+  return <button onClick={connect}>{state.isConnecting ? 'Connecting...' : 'Connect'}</button>;
 }
 ```
 
@@ -229,12 +222,8 @@ import { useWeb3Connection } from '@/components/web3/web3-context';
 
 function MyComponent() {
   const { isConnecting, connect } = useWeb3Connection();
-  
-  return (
-    <button onClick={connect}>
-      {isConnecting ? 'Connecting...' : 'Connect'}
-    </button>
-  );
+
+  return <button onClick={connect}>{isConnecting ? 'Connecting...' : 'Connect'}</button>;
 }
 ```
 

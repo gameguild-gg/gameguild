@@ -67,13 +67,7 @@ export function DashboardFilters() {
             <Label htmlFor="fromDate" className="text-sm text-slate-300">
               From Date
             </Label>
-            <Input
-              id="fromDate"
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="bg-slate-700/50 border-slate-600 text-white"
-            />
+            <Input id="fromDate" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="bg-slate-700/50 border-slate-600 text-white" />
           </div>
 
           <div className="space-y-2">
@@ -85,12 +79,7 @@ export function DashboardFilters() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <Checkbox
-            id="includeDeleted"
-            checked={includeDeleted}
-            onCheckedChange={(checked) => setIncludeDeleted(checked === true)}
-            className="border-slate-600"
-          />
+          <Checkbox id="includeDeleted" checked={includeDeleted} onCheckedChange={(checked) => setIncludeDeleted(checked === true)} className="border-slate-600" />
           <Label htmlFor="includeDeleted" className="text-sm text-slate-300 cursor-pointer">
             Include deleted users in statistics
           </Label>

@@ -11,15 +11,4 @@ export type { Web3State, Web3Config, Web3ContextValue, Web3ProviderProps, Networ
 export { Web3ActionTypes, defaultWeb3State, defaultWeb3Config, defaultSupportedNetworks } from './types';
 
 // Reducer and utilities
-export {
-  web3Reducer,
-  createInitialWeb3State,
-  isNetworkSupported,
-  getNetworkInfo,
-  formatChainId,
-  persistWeb3State,
-  clearPersistedWeb3State,
-} from './context/web3-reducer';
-
-// Legacy hook for backward compatibility
-export { useWeb3 } from './hooks/use-web3';
+export { web3Reducer, createInitialWeb3State, isNetworkSupported, getNetworkInfo, formatChainId, persistWeb3State, clearPersistedWeb3State } from './context/web3-reducer';

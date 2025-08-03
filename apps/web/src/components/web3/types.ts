@@ -58,18 +58,18 @@ export interface Web3State {
   isConnected: boolean;
   isProviderAvailable: boolean;
   isProviderChecked: boolean;
-  
+
   // Network state
   network: NetworkInfo | undefined;
   supportedNetworks: NetworkInfo[];
-  
+
   // Error and status
   error: string | undefined;
   connectionStatus: 'idle' | 'connecting' | 'connected' | 'disconnected' | 'error';
-  
+
   // Configuration
   config: Web3Config;
-  
+
   // Persistence
   persistedConnection: boolean;
   lastConnected: number | undefined;
@@ -103,19 +103,19 @@ export type Web3Reducer = (state: Web3State, action: Web3Action) => Web3State;
 export interface Web3ContextValue {
   state: Web3State;
   dispatch: React.Dispatch<Web3Action>;
-  
+
   // Connection methods
   connect: () => Promise<void>;
   disconnect: () => void;
   reconnect: () => Promise<void>;
-  
+
   // Network methods
   switchNetwork: (chainId: string) => Promise<void>;
   addNetwork: (network: NetworkInfo) => Promise<void>;
-  
+
   // Configuration methods
   updateConfig: (config: Partial<Web3Config>) => void;
-  
+
   // Utility methods
   isNetworkSupported: (chainId: string) => boolean;
   getNetworkInfo: (chainId: string) => NetworkInfo | undefined;
