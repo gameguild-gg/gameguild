@@ -1,4 +1,4 @@
-import { googleIdTokenSignIn, localSign, refreshAccessToken } from '@/lib/auth/auth.actions.backup';
+import { googleIdTokenSignIn, localSign, refreshAccessToken } from '@/lib/auth/auth.actions';
 import { SignInResponse } from '@/lib/auth/auth.types';
 import { isUserWithAuthData } from '@/lib/auth/auth.utils';
 import { Account, DefaultSession, NextAuthConfig, Profile, Session, User } from 'next-auth';
@@ -24,7 +24,7 @@ const providers: Provider[] = [
           password: credentials.password as string,
         });
 
-        if (!response.user) throw new Error('Invalid credentials');
+        if (!response?.user) throw new Error('Invalid credentials');
 
         // Return user with additional auth data
         return {
@@ -34,6 +34,7 @@ const providers: Provider[] = [
           // Store auth tokens in the user object for JWT callback
           accessToken: response.accessToken,
           refreshToken: response.refreshToken,
+          expiresAt: response.expiresAt,
           tenantId: response.tenantId,
           availableTenants: response.availableTenants,
         } as User & SignInResponse;
@@ -57,7 +58,16 @@ export const authConfig: NextAuthConfig = {
     strategy: 'jwt',
   },
   callbacks: {
-    signIn: async ({ user, account }: { user: User; account?: Account | null; profile?: Profile; email?: { verificationRequest?: boolean }; credentials?: Record<string, CredentialInput> }): Promise<boolean> => {
+    signIn: async ({  
+      user,
+      account,
+    }: {
+      user: User;
+      account?: Account | null;
+      profile?: Profile;
+      email?: { verificationRequest?: boolean };
+      credentials?: Record<string, CredentialInput>;
+    }): Promise<boolean> => {
       if (account?.provider === 'google') {
         if (!account?.id_token) return false;
         try {
@@ -65,10 +75,11 @@ export const authConfig: NextAuthConfig = {
 
           // Safely extend the user object with auth data.
           Object.assign(user, {
-            tenantId: response.tenantId,
-            accessToken: response.accessToken,
-            refreshToken: response.refreshToken,
-            availableTenants: response.availableTenants,
+            tenantId: response?.tenantId,
+            accessToken: response?.accessToken,
+            refreshToken: response?.refreshToken,
+            expiresAt: response?.expiresAt,
+            availableTenants: response?.availableTenants,
           });
 
           return true;
@@ -80,7 +91,20 @@ export const authConfig: NextAuthConfig = {
       // Allow local authentication.
       return account?.provider === 'local';
     },
-    jwt: async ({ token, user, trigger, session }: { token: JWT; user: User; account?: Account | null; profile?: Profile; trigger?: 'update' | 'signIn' | 'signUp'; isNewUser?: boolean; session?: Session }): Promise<JWT | null> => {
+    jwt: async ({
+      token,
+      user,
+      trigger,
+      session,
+    }: {
+      token: JWT;
+      user: User;
+      account?: Account | null;
+      profile?: Profile;
+      trigger?: 'update' | 'signIn' | 'signUp';
+      isNewUser?: boolean;
+      session?: Session;
+    }): Promise<JWT | null> => {
       // This is called when a user signing-in or signing-up.
       if (trigger === 'signIn' || trigger === 'signUp') {
         // We must have auth data from our API, otherwise the session is corrupted.
@@ -100,6 +124,10 @@ export const authConfig: NextAuthConfig = {
           refreshToken: user.refreshToken || '',
         };
         token.availableTenants = user.availableTenants;
+        // Set token expiration from the initial sign-in response
+        if ((user as User & SignInResponse).expiresAt) {
+          token.expiresAt = (user as User & SignInResponse).expiresAt;
+        }
 
         // Set the current tenant from availableTenants (it must exist in the list)
         if (user.tenantId) {
@@ -114,37 +142,49 @@ export const authConfig: NextAuthConfig = {
           // Set the current tenant in the token
           token.currentTenant = tenantFromList;
         }
-      } else if (trigger === 'update') {
-        // Check token expiration and refresh if needed (only on updates, not fresh sign-ins)
-        if (token?.api?.refreshToken && (!token?.expiresAt || Date.now() >= new Date(token.expiresAt).getTime())) {
-          // Token expired or no expiration set, try to refresh it
-          try {
-            const response = await refreshAccessToken(token.api.refreshToken);
 
-            // Update token with new values
+        return token;
+      }
+
+      // Check token expiration and refresh if needed (for all requests, not just updates)
+      if (token?.api?.refreshToken && (!token?.expiresAt || Date.now() >= new Date(token.expiresAt).getTime())) {
+        // Token expired or no expiration set, try to refresh it
+        console.log('Token expired or missing expiration, attempting refresh...');
+        try {
+          const response = await refreshAccessToken(token.api.refreshToken);
+
+          // Update token with new values
+          if (response?.accessToken) {
             token.api.accessToken = response.accessToken;
-            token.api.refreshToken = response.refreshToken;
-            token.expiresAt = response.expiresAt;
-
-            // Update tenant ID if present in refresh response
-            if (response.tenantId) {
-              // Tenant must exist in the available tenants list. Otherwise, the session is corrupted
-              const tenantFromList = token.availableTenants?.find((tenant) => tenant.id === response.tenantId);
-              if (!tenantFromList) {
-                // Tenant not in an available list means that the session is corrupted.
-                console.error('Session corrupted: refreshed tenantId not found in availableTenants');
-                return null;
-              }
-
-              token.currentTenant = tenantFromList;
-            }
-          } catch (error) {
-            console.error('Error refreshing api access token', error);
-            // If we fail to refresh the token, return null to force the sign-out.
-            return null;
+            console.log('Access token refreshed successfully');
           }
-        }
+          if (response?.refreshToken) {
+            token.api.refreshToken = response.refreshToken;
+          }
+          if (response?.expiresAt) {
+            token.expiresAt = response.expiresAt;
+          }
 
+          // Update tenant ID if present in refresh response
+          if (response?.tenantId) {
+            // Tenant must exist in the available tenants list. Otherwise, the session is corrupted
+            const tenantFromList = token.availableTenants?.find((tenant) => tenant.id === response?.tenantId);
+            if (!tenantFromList) {
+              // Tenant not in an available list means that the session is corrupted.
+              console.error('Session corrupted: refreshed tenantId not found in availableTenants');
+              return null;
+            }
+
+            token.currentTenant = tenantFromList;
+          }
+        } catch (error) {
+          console.error('Error refreshing api access token', error);
+          // If we fail to refresh the token, return null to force the sign-out.
+          return null;
+        }
+      }
+
+      if (trigger === 'update') {
         // This is called when the user updates their profile or switches tenants.
         // Handle session updates with new user data
         if (session) {
@@ -199,7 +239,16 @@ export const authConfig: NextAuthConfig = {
 
       return token;
     },
-    session: async ({ session, token, trigger }: { session: Session; token: JWT | null; newSession?: Session; trigger?: 'update' }): Promise<Session | DefaultSession> => {
+    session: async ({
+      session,
+      token,
+      trigger,
+    }: {
+      session: Session;
+      token: JWT | null;
+      newSession?: Session;
+      trigger?: 'update';
+    }): Promise<Session | DefaultSession> => {
       // Check if the token is null (JWT callback returned null due to corruption)
       if (!token) {
         session.error = 'CorruptedSessionError';
