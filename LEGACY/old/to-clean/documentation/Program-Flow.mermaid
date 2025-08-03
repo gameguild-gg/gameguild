@@ -1,0 +1,122 @@
+flowchart TD
+    %% UI Pages/Screens (Blue rectangles)
+    UserAuth["🔐 User Login/Register Page"]:::page
+    BrowseCatalog["📚 Browse Catalog Page"]:::page  
+    BrowseOwned["📖 My Programs Page"]:::page
+    ViewProgram["📋 Program Details Page"]:::page
+    ViewProduct["🛒 Product Details Page"]:::page
+    ViewIncluded["📄 Included Programs Page"]:::page
+    PaymentProcess["💳 Payment Page"]:::page
+    SelectProgram["🎯 Program Selection Page"]:::page
+    AccessContent["📖 Program Content Page"]:::page
+    ViewContentItem["📝 Content Item Page"]:::page
+    StartActivity["✏️ Activity Page"]:::page
+    WaitPeerReviews["⏳ Waiting for Reviews Page"]:::page
+    ReviewPeerFeedback["👥 Peer Review Page"]:::page
+    WaitInstructor["⏳ Waiting for Instructor Page"]:::page
+    CertificateNotification["🏆 Certificate Available Page"]:::page
+    GenerateCertificate["📜 Certificate Generation Page"]:::page
+
+    %% Business Logic (Orange diamonds/circles)
+    SelectType{"Select Program or Product?"}:::logic
+    CheckPrice{"Free or Paid Program?"}:::logic
+    PaymentCheck{"Payment Successful?"}:::logic
+    CheckActivity{"Is Activity?"}:::logic
+    CheckGraded{"Graded Activity?"}:::logic
+    GradingMethod{"Grading Method"}:::logic
+    AcceptReview{"Accept Review?"}:::logic
+    CheckMoreContent{"More Content?"}:::logic
+    CheckCompletion{"Check Program Completion"}:::logic
+    RequirementsMet{"Requirements Met?"}:::logic
+
+    %% Backend Processing (Green rounded rectangles)
+    AutoBuyFree["🔄 Auto-purchase Free Product"]:::process
+    AutoEnroll["🔄 Auto-Enroll in Programs"]:::process
+    SubmitActivity["🔄 Submit Activity"]:::process
+    SubmitForGrading["🔄 Submit for Grading"]:::process
+    AIGrading["🤖 AI Grading Process"]:::process
+    AutoGrading["⚙️ Automated Grading"]:::process
+    PeerReview["👥 Peer Review Process"]:::process
+    InstructorReview["👨‍🏫 Instructor Review Process"]:::process
+    ReceiveGrade["📊 Grade Processing"]:::process
+    CompleteContent["✅ Mark Content Complete"]:::process
+    UpdateProgress["📈 Update Progress"]:::process
+    ContinueLearning["🔄 Continue Learning Process"]:::process
+    CertificateIssued["📜 Certificate Issued"]:::process
+    ProgramCompleted["🎉 Program Completion Process"]:::process
+    ReturnToCatalog["🔄 Return to Catalog"]:::process
+    ReturnToProduct["🔄 Return to Product"]:::process
+    SubmitReport["⚠️ Submit Report Process"]:::process
+    GetNewPeerReview["🔄 Get New Peer Review"]:::process
+
+    %% User Actions (Purple rounded rectangles)
+    ReportProgram["⚠️ Report Program"]:::action
+    ReportContent["⚠️ Report Content"]:::action
+    ViewProducts["👀 View Products"]:::action
+    PurchaseProduct["💰 Purchase Product"]:::action
+
+    %% Flow connections
+    UserAuth --> BrowseCatalog & BrowseOwned
+    BrowseCatalog --> SelectType
+    SelectType -- Program --> ViewProgram
+    SelectType -- Product --> ViewProduct
+    ViewProgram --> ReportProgram & CheckPrice
+    CheckPrice -- Free --> AutoBuyFree
+    CheckPrice -- Paid --> ViewProducts
+    ViewProduct --> ViewIncluded & PurchaseProduct
+    ViewIncluded --> ViewProgram
+    PurchaseProduct --> PaymentProcess
+    PaymentProcess --> PaymentCheck
+    PaymentCheck -- Yes --> AutoEnroll
+    PaymentCheck -- No --> ReturnToProduct
+    AutoBuyFree --> AutoEnroll
+    AutoEnroll --> SelectProgram
+    SelectProgram --> AccessContent
+    AccessContent --> ViewContentItem
+    ViewContentItem --> ReportContent & CheckActivity
+    CheckActivity -- No --> CompleteContent
+    CheckActivity -- Yes --> StartActivity
+    StartActivity --> CheckGraded
+    CheckGraded -- No --> SubmitActivity
+    CheckGraded -- Yes --> SubmitForGrading
+    SubmitForGrading --> GradingMethod
+    GradingMethod -- AI --> AIGrading
+    GradingMethod -- Automation --> AutoGrading
+    GradingMethod -- Peer Review --> PeerReview
+    GradingMethod -- Instructor --> InstructorReview
+    AIGrading --> ReceiveGrade
+    AutoGrading --> ReceiveGrade
+    PeerReview --> WaitPeerReviews
+    WaitPeerReviews --> ReviewPeerFeedback
+    ReviewPeerFeedback --> AcceptReview
+    AcceptReview -- Accept --> ReceiveGrade
+    AcceptReview -- Report Bad Behavior --> SubmitReport
+    SubmitReport --> GetNewPeerReview
+    GetNewPeerReview --> ReviewPeerFeedback
+    InstructorReview --> WaitInstructor
+    WaitInstructor --> ReceiveGrade
+    SubmitActivity --> CompleteContent
+    ReceiveGrade --> CompleteContent
+    CompleteContent --> UpdateProgress
+    UpdateProgress --> CheckMoreContent
+    CheckMoreContent -- Yes --> AccessContent
+    CheckMoreContent -- No --> CheckCompletion
+    CheckCompletion --> RequirementsMet
+    RequirementsMet -- Yes --> CertificateNotification
+    RequirementsMet -- No --> ContinueLearning
+    CertificateNotification --> GenerateCertificate
+    ContinueLearning --> AccessContent
+    GenerateCertificate --> CertificateIssued
+    CertificateIssued --> ProgramCompleted
+    ProgramCompleted --> ReturnToCatalog
+    ReturnToCatalog --> BrowseCatalog
+    ViewProducts --> ViewProduct
+    ReturnToProduct --> ViewProduct
+    BrowseOwned --> SelectProgram
+    AcceptReview -- Reject --> GetNewPeerReview
+
+    %% Styling
+    classDef page fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    classDef logic fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000
+    classDef process fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef action fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
