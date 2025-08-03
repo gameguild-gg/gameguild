@@ -29,7 +29,7 @@ namespace GameGuild.Tests.Helpers
             {
                 try
                 {
-                    var token = authHeader.Substring("Bearer ".Length).Trim();
+                    var token = authHeader["Bearer ".Length..].Trim();
                     var jwtService = Context.RequestServices.GetRequiredService<IJwtTokenService>();
                     var tokenPrincipal = jwtService.ValidateToken(token);
                     

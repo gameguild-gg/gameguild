@@ -89,7 +89,7 @@ public class RefreshTokenHandlerTests
         Assert.NotNull(result);
         Assert.Equal("new-access-token", result.AccessToken);
         Assert.Equal("new-refresh-token", result.RefreshToken);
-        Assert.Equal(refreshResponse.ExpiresAt, result.Expires);
+        Assert.Equal(refreshResponse.ExpiresAt, result.ExpiresAt);
         Assert.Equal(tenantId, result.TenantId);
 
         _mockAuthService.Verify(x => x.RefreshTokenAsync(It.IsAny<RefreshTokenRequestDto>()), Times.Once);
