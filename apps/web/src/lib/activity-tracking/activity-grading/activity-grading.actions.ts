@@ -1,20 +1,19 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import type { ActivityGradeDto } from '@/lib/api/generated/types.gen';
 import {
-  // Activity Grading Management
-  postApiProgramsByProgramIdActivityGrades,
-  getApiProgramsByProgramIdActivityGradesInteractionByContentInteractionId,
-  getApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserId,
-  getApiProgramsByProgramIdActivityGradesStudentByProgramUserId,
   deleteApiProgramsByProgramIdActivityGradesByGradeId,
-  putApiProgramsByProgramIdActivityGradesByGradeId,
+  getApiProgramsByProgramIdActivityGradesContentByContentId,
+  getApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserId,
+  getApiProgramsByProgramIdActivityGradesInteractionByContentInteractionId,
   getApiProgramsByProgramIdActivityGradesPending,
   getApiProgramsByProgramIdActivityGradesStatistics,
-  getApiProgramsByProgramIdActivityGradesContentByContentId,
+  getApiProgramsByProgramIdActivityGradesStudentByProgramUserId,
+  postApiProgramsByProgramIdActivityGrades,
+  putApiProgramsByProgramIdActivityGradesByGradeId,
 } from '@/lib/api/generated/sdk.gen';
+import type { ActivityGradeDto } from '@/lib/api/generated/types.gen';
+import { revalidateTag } from 'next/cache';
 
 // =============================================================================
 // ACTIVITY GRADING MANAGEMENT
@@ -293,8 +292,7 @@ export async function getGraderAnalytics(programId: string, graderProgramUserId:
       },
       feedbackMetrics: {
         totalWithFeedback: grades.filter((grade: ActivityGradeDto) => grade.feedback && grade.feedback.trim().length > 0).length,
-        averageFeedbackLength:
-          grades.length > 0 ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.feedback?.length || 0), 0) / grades.length : 0,
+        averageFeedbackLength: grades.length > 0 ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.feedback?.length || 0), 0) / grades.length : 0,
       },
     };
 
@@ -383,12 +381,7 @@ export async function getContentGradingAnalytics(programId: string, contentId: s
         satisfactory: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) >= 70 && (grade.grade || 0) < 80).length,
         needsImprovement: grades.filter((grade: ActivityGradeDto) => (grade.grade || 0) < 70).length,
       },
-      difficulty:
-        grades.length > 0
-          ? grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length < 75
-            ? 'High'
-            : 'Moderate'
-          : 'Unknown',
+      difficulty: grades.length > 0 ? (grades.reduce((sum: number, grade: ActivityGradeDto) => sum + (grade.grade || 0), 0) / grades.length < 75 ? 'High' : 'Moderate') : 'Unknown',
     };
 
     return {
@@ -418,9 +411,7 @@ export async function getContentGradingAnalytics(programId: string, contentId: s
 function calculateImprovementTrend(grades: ActivityGradeDto[]): 'improving' | 'declining' | 'stable' {
   if (grades.length < 2) return 'stable';
 
-  const sortedGrades = grades
-    .filter((grade) => grade.createdAt && grade.grade !== null)
-    .sort((a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime());
+  const sortedGrades = grades.filter((grade) => grade.createdAt && grade.grade !== null).sort((a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime());
 
   if (sortedGrades.length < 2) return 'stable';
 

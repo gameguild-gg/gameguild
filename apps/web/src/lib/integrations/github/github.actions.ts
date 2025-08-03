@@ -1,8 +1,8 @@
 'use server';
 
+import type { RestEndpointMethodTypes } from '@octokit/rest';
 import { unstable_cache } from 'next/cache';
 import { Octokit } from 'octokit';
-import type { RestEndpointMethodTypes } from '@octokit/rest';
 
 // GitHub repository constants
 const GITHUB_OWNER = 'gameguild-gg';
@@ -51,13 +51,7 @@ const fetchGitHubContributors = unstable_cache(
       });
 
       // Filter out bots and unwanted contributors
-      return contributors.filter(
-        (contributor) =>
-          contributor.login !== 'semantic-release-bot' &&
-          contributor.login !== 'dependabot[bot]' &&
-          contributor.login !== 'github-actions[bot]' &&
-          contributor.login !== 'LMD9977',
-      ) as Contributor[];
+      return contributors.filter((contributor) => contributor.login !== 'semantic-release-bot' && contributor.login !== 'dependabot[bot]' && contributor.login !== 'github-actions[bot]' && contributor.login !== 'LMD9977') as Contributor[];
     } catch (error) {
       console.error('Error fetching GitHub contributors:', error);
       return [];
@@ -115,123 +109,171 @@ const fetchContributorStats = unstable_cache(
   { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-stats'] },
 );
 
-const fetchGitHubRepositoryData = unstable_cache(
+// Cache repository basic info (small data)
+const getCachedRepoInfo = unstable_cache(
   async () => {
-    let allIssues: Issue[] = [];
-    let allPulls: PullRequest[] = [];
-    let page = 1;
-    let hasNextPage = true;
+    try {
+      const { data: repo } = await octokit.repos.get({
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+      });
 
-    while (hasNextPage) {
-      const [issuesResponse, pullsResponse] = await Promise.all([
-        octokit.issues.listForRepo({
-          owner: GITHUB_OWNER,
-          repo: GITHUB_REPO,
-          state: 'all',
-          per_page: 100,
-          page: page,
-        }),
-        octokit.pulls.list({
-          owner: GITHUB_OWNER,
-          repo: GITHUB_REPO,
-          state: 'all',
-          per_page: 100,
-          page: page,
-        }),
-      ]);
-
-      // Process issues with review data for pull requests
-      const issuesWithReviews = await Promise.all(
-        issuesResponse.data.map(async (issue) => {
-          if (issue.pull_request) {
-            const [requestedReviewers, reviews] = await Promise.all([
-              octokit.pulls.listRequestedReviewers({
-                owner: GITHUB_OWNER,
-                repo: GITHUB_REPO,
-                pull_number: issue.number,
-              }),
-              octokit.pulls.listReviews({
-                owner: GITHUB_OWNER,
-                repo: GITHUB_REPO,
-                pull_number: issue.number,
-              }),
-            ]);
-
-            return {
-              ...issue,
-              requestedReviewers: requestedReviewers.data,
-              reviews: reviews.data,
-            };
-          }
-          return issue;
-        }),
-      );
-
-      // Process pulls with additional data
-      const pullsWithDetails = await Promise.all(
-        pullsResponse.data.map(async (pull) => {
-          const [commits, files] = await Promise.all([
-            octokit.pulls.listCommits({
-              owner: GITHUB_OWNER,
-              repo: GITHUB_REPO,
-              pull_number: pull.number,
-            }),
-            octokit.pulls.listFiles({
-              owner: GITHUB_OWNER,
-              repo: GITHUB_REPO,
-              pull_number: pull.number,
-            }),
-          ]);
-
-          return {
-            ...pull,
-            commits: commits.data,
-            files: files.data,
-          };
-        }),
-      );
-
-      allIssues = allIssues.concat(issuesWithReviews);
-      allPulls = allPulls.concat(pullsWithDetails);
-
-      hasNextPage = Math.max(issuesResponse.data.length, pullsResponse.data.length) === 100;
-      page++;
+      return {
+        name: repo.name,
+        description: repo.description,
+        stars: repo.stargazers_count,
+        forks: repo.forks_count,
+        watchers: repo.watchers_count,
+        openIssues: repo.open_issues_count,
+        language: repo.language,
+        createdAt: repo.created_at,
+        updatedAt: repo.updated_at,
+        defaultBranch: repo.default_branch,
+        homepage: repo.homepage,
+      };
+    } catch (error) {
+      console.error('Error fetching repo info:', error);
+      throw error;
     }
-
-    // Fetch other repo data
-    const [releases, branches, contributors, license] = await Promise.all([
-      octokit.repos.listReleases({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        per_page: 50,
-      }),
-      octokit.repos.listBranches({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        per_page: 50,
-      }),
-      octokit.repos.listContributors({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        per_page: 50,
-      }),
-      octokit.licenses.getForRepo({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-      }),
-    ]);
-
-    return {
-      issues: allIssues,
-      pulls: allPulls,
-      releases: releases.data,
-      branches: branches.data,
-      contributors: contributors.data,
-      license: license.data,
-    };
   },
-  ['github-repo-data'],
-  { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-repo'] },
+  ['repo-info'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-repo-info'] },
+);
+
+// Cache contributors in batches (paginated)
+const getCachedContributorsBatch = unstable_cache(
+  async (page: number = 1, perPage: number = 100) => {
+    try {
+      const { data: contributors } = await octokit.repos.listContributors({
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+        page: page,
+        per_page: perPage,
+      });
+
+      // Return only essential data to minimize size
+      return contributors.map((contributor: Contributor) => ({
+        login: contributor.login,
+        id: contributor.id,
+        avatar_url: contributor.avatar_url,
+        contributions: contributor.contributions,
+        type: contributor.type,
+      }));
+    } catch (error) {
+      console.error(`Error fetching contributors page ${page}:`, error);
+      return [];
+    }
+  },
+  ['contributors-batch'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-contributors-batch'] },
+);
+
+// Cache releases info (small data)
+const getCachedReleases = unstable_cache(
+  async () => {
+    try {
+      const { data: releases } = await octokit.repos.listReleases({
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+        per_page: 10,
+      });
+
+      return releases.map((release: RestEndpointMethodTypes['repos']['listReleases']['response']['data'][0]) => ({
+        id: release.id,
+        name: release.name,
+        tag_name: release.tag_name,
+        published_at: release.published_at,
+        download_count: release.assets?.reduce((sum: number, asset: RestEndpointMethodTypes['repos']['listReleases']['response']['data'][0]['assets'][0]) => sum + asset.download_count, 0) || 0,
+      }));
+    } catch (error) {
+      console.error('Error fetching releases:', error);
+      return [];
+    }
+  },
+  ['releases'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-releases'] },
+);
+
+// Cache languages (small data)
+const getCachedLanguages = unstable_cache(
+  async () => {
+    try {
+      const { data: languages } = await octokit.repos.listLanguages({
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+      });
+
+      return languages;
+    } catch (error) {
+      console.error('Error fetching languages:', error);
+      return {};
+    }
+  },
+  ['languages'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-languages'] },
+);
+
+// Cache issues count (small data)
+const getCachedIssuesCount = unstable_cache(
+  async () => {
+    try {
+      // Get total count from response headers if available
+      const response = await octokit.issues.listForRepo({
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+        state: 'all',
+        per_page: 100,
+      });
+
+      return response.data.length;
+    } catch (error) {
+      console.error('Error fetching issues count:', error);
+      return 0;
+    }
+  },
+  ['issues-count'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-issues'] },
+);
+
+// Cache pulls count (small data)
+const getCachedPullsCount = unstable_cache(
+  async () => {
+    try {
+      const response = await octokit.pulls.list({
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+        state: 'all',
+        per_page: 100,
+      });
+
+      return response.data.length;
+    } catch (error) {
+      console.error('Error fetching pulls count:', error);
+      return 0;
+    }
+  },
+  ['pulls-count'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-pulls'] },
+);
+
+// Cache branches count (small data)
+const getCachedBranchesCount = unstable_cache(
+  async () => {
+    try {
+      const { data: branches } = await octokit.repos.listBranches({
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+        per_page: 100,
+      });
+
+      return branches.length;
+    } catch (error) {
+      console.error('Error fetching branches count:', error);
+      return 0;
+    }
+  },
+  ['branches-count'],
+  { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-branches'] },
 );
 
 /**
@@ -337,16 +379,88 @@ export async function getRepositoryStats(repo: string = 'website'): Promise<Repo
   return getRepositoryStatsCache(repo);
 }
 
+// Main function that aggregates all cached parts
+export async function getCachedContributors() {
+  try {
+    // Get all the cached parts in parallel
+    const [repoInfo, releases, languages, issuesCount, pullsCount, branchesCount] = await Promise.all([
+      getCachedRepoInfo(),
+      getCachedReleases(),
+      getCachedLanguages(),
+      getCachedIssuesCount(),
+      getCachedPullsCount(),
+      getCachedBranchesCount(),
+    ]);
+
+    // Get contributors in batches
+    const allContributors = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore && page <= 10) {
+      // Limit to first 1000 contributors (10 pages * 100)
+      try {
+        const batch = await getCachedContributorsBatch(page, 100);
+
+        if (batch.length === 0) {
+          hasMore = false;
+        } else {
+          allContributors.push(...batch);
+          page++;
+
+          // If we got less than 100, we've reached the end
+          if (batch.length < 100) {
+            hasMore = false;
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching contributors page ${page}:`, error);
+        hasMore = false;
+      }
+    }
+
+    // Aggregate the data
+    return {
+      repository: repoInfo,
+      contributors: allContributors,
+      stats: {
+        totalContributors: allContributors.length,
+        totalIssues: issuesCount,
+        totalPulls: pullsCount,
+        totalBranches: branchesCount,
+        totalReleases: releases.length,
+      },
+      releases: releases,
+      languages: languages,
+      meta: {
+        lastUpdated: new Date().toISOString(),
+        contributorsLimit: 1000, // We're limiting to first 1000 contributors
+        actualContributorsCount: allContributors.length,
+      },
+    };
+  } catch (error) {
+    console.error('Error in getCachedContributors:', error);
+    throw error;
+  }
+}
+
 export const getGitHubRepositoryData = async () => {
   try {
-    const repoData = await fetchGitHubRepositoryData();
+    const repoData = await getCachedContributors();
     return {
-      totalIssues: repoData.issues.length,
-      totalPulls: repoData.pulls.length,
-      totalReleases: repoData.releases.length,
-      totalBranches: repoData.branches.length,
-      totalContributors: repoData.contributors.length,
-      data: repoData,
+      totalIssues: repoData.stats.totalIssues,
+      totalPulls: repoData.stats.totalPulls,
+      totalReleases: repoData.stats.totalReleases,
+      totalBranches: repoData.stats.totalBranches,
+      totalContributors: repoData.stats.totalContributors,
+      data: {
+        issues: [], // Empty array to avoid cache issues
+        pulls: [], // Empty array to avoid cache issues
+        releases: repoData.releases,
+        branches: [], // Empty array to avoid cache issues
+        contributors: repoData.contributors,
+        license: null, // Simplified for now
+      },
     };
   } catch (error) {
     console.error('Error fetching GitHub repo data:', error);
