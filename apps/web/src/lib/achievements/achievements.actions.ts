@@ -3,7 +3,6 @@
 import { revalidateTag } from 'next/cache';
 import type { 
   Achievement, 
-  AchievementDto,
   AchievementsPageDto,
   CreateAchievementCommand, 
   UpdateAchievementCommand,
