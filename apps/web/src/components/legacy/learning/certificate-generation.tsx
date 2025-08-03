@@ -19,16 +19,7 @@ interface CertificateProps {
   readonly certificateId?: string;
 }
 
-export function CertificateGeneration({
-  courseId,
-  courseTitle,
-  completionDate,
-  studentName,
-  instructorName = 'Game Guild Academy',
-  skillsLearned = [],
-  finalGrade,
-  certificateId,
-}: CertificateProps) {
+export function CertificateGeneration({ courseId, courseTitle, completionDate, studentName, instructorName = 'Game Guild Academy', skillsLearned = [], finalGrade, certificateId }: CertificateProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
@@ -207,10 +198,7 @@ export function CertificateGeneration({
             )}
           </div>
 
-          <div className="text-center text-xs text-gray-500">
-            This certificate verifies that you have successfully completed all requirements for the course and demonstrates your achievement in game development
-            skills.
-          </div>
+          <div className="text-center text-xs text-gray-500">This certificate verifies that you have successfully completed all requirements for the course and demonstrates your achievement in game development skills.</div>
         </CardContent>
       </Card>
 

@@ -14,16 +14,7 @@ interface PostsListProps {
   emptyMessage?: string;
 }
 
-export function PostsList({
-  posts,
-  loading = false,
-  hasMore = false,
-  onLoadMore,
-  onLike,
-  onComment,
-  onShare,
-  emptyMessage = 'No posts found. Be the first to share something!',
-}: PostsListProps) {
+export function PostsList({ posts, loading = false, hasMore = false, onLoadMore, onLike, onComment, onShare, emptyMessage = 'No posts found. Be the first to share something!' }: PostsListProps) {
   if (!loading && posts.length === 0) {
     return (
       <div className="text-center py-12">

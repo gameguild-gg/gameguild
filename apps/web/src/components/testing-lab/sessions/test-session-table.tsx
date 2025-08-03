@@ -69,11 +69,7 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
               const sessionDate = new Date(session.sessionDate);
 
               return (
-                <tr
-                  key={session.id}
-                  className="border-b border-slate-700/50 hover:bg-slate-800/30 cursor-pointer transition-colors"
-                  onClick={() => handleRowClick(session.slug)}
-                >
+                <tr key={session.id} className="border-b border-slate-700/50 hover:bg-slate-800/30 cursor-pointer transition-colors" onClick={() => handleRowClick(session.slug)}>
                   <td className="p-4">
                     <div>
                       <div className="font-medium text-white text-sm">{session.title}</div>
@@ -134,9 +130,7 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
                       )}
                     </div>
                   </td>
-                  <td className="p-4">
-                    {session.rewards ? <RewardChip value={session.rewards.value} variant="inline" /> : <span className="text-slate-500 text-xs">-</span>}
-                  </td>
+                  <td className="p-4">{session.rewards ? <RewardChip value={session.rewards.value} variant="inline" /> : <span className="text-slate-500 text-xs">-</span>}</td>
                   <td className="p-4 text-center">
                     <div className="flex justify-center">
                       <Badge variant="outline" className={`${getStatusColor(session.status)} text-xs w-20 justify-center`}>

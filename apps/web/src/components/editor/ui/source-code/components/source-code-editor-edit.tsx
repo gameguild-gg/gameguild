@@ -328,10 +328,7 @@ export function SourceCodeEditorEdit({
         )}
         {/* Drag handle para redimensionar o editor */}
         <div
-          className={cn(
-            'h-2 w-full cursor-ns-resize flex items-center justify-center border-t',
-            isDarkTheme ? 'border-gray-800 hover:bg-gray-800 bg-gray-900' : 'border-gray-200 hover:bg-gray-200',
-          )}
+          className={cn('h-2 w-full cursor-ns-resize flex items-center justify-center border-t', isDarkTheme ? 'border-gray-800 hover:bg-gray-800 bg-gray-900' : 'border-gray-200 hover:bg-gray-200')}
           onMouseDown={(e) => handleCodeEditorResize(e, e.clientY)}
         >
           <div className={cn('w-8 h-1 rounded-full', isDarkTheme ? 'bg-gray-600' : 'bg-gray-400')} />
@@ -376,10 +373,7 @@ export function SourceCodeEditorEdit({
           />
           {/* Drag handle para redimensionar o terminal */}
           <div
-            className={cn(
-              'h-2 w-full cursor-ns-resize flex items-center justify-center border-t',
-              isDarkTheme ? 'border-gray-800 hover:bg-gray-800 bg-gray-900' : 'border-gray-200 hover:bg-gray-200',
-            )}
+            className={cn('h-2 w-full cursor-ns-resize flex items-center justify-center border-t', isDarkTheme ? 'border-gray-800 hover:bg-gray-800 bg-gray-900' : 'border-gray-200 hover:bg-gray-200')}
             onMouseDown={(e) => handleTerminalResize(e, e.clientY)}
           >
             <div className={cn('w-8 h-1 rounded-full', isDarkTheme ? 'bg-gray-600' : 'bg-gray-400')} />

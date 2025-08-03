@@ -5,34 +5,10 @@ import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { $getSelection, $isRangeSelection, FORMAT_TEXT_COMMAND, SELECTION_CHANGE_COMMAND, FORMAT_ELEMENT_COMMAND } from 'lexical';
-import {
-  Bold,
-  Italic,
-  Quote,
-  LinkIcon,
-  Subscript,
-  Superscript,
-  Code,
-  Palette,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  TextCursorInput,
-  Check,
-  Underline,
-} from 'lucide-react';
+import { Bold, Italic, Quote, LinkIcon, Subscript, Superscript, Code, Palette, AlignLeft, AlignCenter, AlignRight, AlignJustify, TextCursorInput, Check, Underline } from 'lucide-react';
 import { $createHeadingNode, $isHeadingNode, type HeadingTagType, $createQuoteNode } from '@lexical/rich-text';
 import { $setBlocksType } from '@lexical/selection';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from '@/components/ui/dropdown-menu';
 import { TOGGLE_LINK_COMMAND } from '@lexical/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -446,11 +422,7 @@ export function FloatingTextFormatToolbarPlugin() {
 
               <TextColorMenuComponent editor={editor} currentTextColor={currentTextColor} setCurrentTextColor={setCurrentTextColor} />
 
-              <BackgroundColorMenuComponent
-                editor={editor}
-                currentBackgroundColor={currentBackgroundColor}
-                setCurrentBackgroundColor={setCurrentBackgroundColor}
-              />
+              <BackgroundColorMenuComponent editor={editor} currentBackgroundColor={currentBackgroundColor} setCurrentBackgroundColor={setCurrentBackgroundColor} />
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -607,19 +579,7 @@ export function FloatingTextFormatToolbarPlugin() {
                   {currentAlignment === 'right' && <AlignRight className="mr-2 h-5 w-5" />}
                   {currentAlignment === 'justify' && <AlignJustify className="mr-2 h-5 w-5" />}
                   {currentAlignment === '' && <AlignLeft className="mr-2 h-5 w-5" />}
-                  <span>
-                    Alignment (
-                    {currentAlignment === 'left'
-                      ? 'Left'
-                      : currentAlignment === 'center'
-                        ? 'Center'
-                        : currentAlignment === 'right'
-                          ? 'Right'
-                          : currentAlignment === 'justify'
-                            ? 'Justify'
-                            : 'Left'}
-                    )
-                  </span>
+                  <span>Alignment ({currentAlignment === 'left' ? 'Left' : currentAlignment === 'center' ? 'Center' : currentAlignment === 'right' ? 'Right' : currentAlignment === 'justify' ? 'Justify' : 'Left'})</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent side="right" align="start">
                   <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Text Alignment</div>

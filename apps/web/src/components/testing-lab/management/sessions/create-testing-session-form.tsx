@@ -56,7 +56,7 @@ export function CreateTestingSessionForm({ testingRequests }: CreateTestingSessi
         console.error('Failed to load testing locations:', error);
         // Set empty array so form still works without locations
         setLocations([]);
-        
+
         // Check if it's a network error and we haven't exceeded retry limit
         if (retryAttempt < 2 && error instanceof Error && (error.message.includes('fetch') || error.message.includes('500'))) {
           console.log(`Retrying location load, attempt ${retryAttempt + 1}`);
@@ -65,7 +65,7 @@ export function CreateTestingSessionForm({ testingRequests }: CreateTestingSessi
           setWarning(`Retrying to load testing locations... (attempt ${retryAttempt + 1})`);
           return;
         }
-        
+
         // Check if it's an authentication error
         if (error instanceof Error) {
           const errorMsg = error.message.toLowerCase();
@@ -102,7 +102,7 @@ export function CreateTestingSessionForm({ testingRequests }: CreateTestingSessi
       } catch (error) {
         console.error('Failed to load testing locations:', error);
         setLocations([]);
-        
+
         if (error instanceof Error) {
           const errorMsg = error.message.toLowerCase();
           if (errorMsg.includes('401') || errorMsg.includes('unauthorized') || errorMsg.includes('authentication') || errorMsg.includes('token') || errorMsg.includes('expired')) {
@@ -250,7 +250,7 @@ export function CreateTestingSessionForm({ testingRequests }: CreateTestingSessi
       }
     } catch (err) {
       let errorMessage = 'An unexpected error occurred';
-      
+
       if (err instanceof Error) {
         const errorMsg = err.message.toLowerCase();
         if (errorMsg.includes('401') || errorMsg.includes('unauthorized') || errorMsg.includes('authentication') || errorMsg.includes('token') || errorMsg.includes('expired')) {
@@ -264,7 +264,7 @@ export function CreateTestingSessionForm({ testingRequests }: CreateTestingSessi
           errorMessage = err.message;
         }
       }
-      
+
       setError(errorMessage);
       console.error('Form submission error:', err);
     } finally {

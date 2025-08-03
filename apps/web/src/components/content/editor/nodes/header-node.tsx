@@ -169,20 +169,9 @@ function HeaderComponent({ data, nodeKey }: HeaderComponentProps) {
     return (
       <div className="group relative my-4">
         {renderHeader()}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsEditing(true)}
-          className="absolute right-0 top-0 opacity-0 transition-opacity group-hover:opacity-100 h-8 w-8 p-0"
-          title="Edit header"
-        >
+        <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)} className="absolute right-0 top-0 opacity-0 transition-opacity group-hover:opacity-100 h-8 w-8 p-0" title="Edit header">
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
         </Button>
       </div>
@@ -196,11 +185,7 @@ function HeaderComponent({ data, nodeKey }: HeaderComponentProps) {
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
               <svg className="h-4 w-4 text-primary" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                  clipRule="evenodd"
-                />
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
               </svg>
             </div>
             <div>
@@ -295,15 +280,7 @@ function HeaderComponent({ data, nodeKey }: HeaderComponentProps) {
                                   : 'border-l-2 border-primary bg-transparent'
                         }`}
                       />
-                      {style === 'default'
-                        ? 'Default'
-                        : style === 'underlined'
-                          ? 'Underlined'
-                          : style === 'bordered'
-                            ? 'Bordered'
-                            : style === 'gradient'
-                              ? 'Gradient'
-                              : 'Side Accent'}
+                      {style === 'default' ? 'Default' : style === 'underlined' ? 'Underlined' : style === 'bordered' ? 'Bordered' : style === 'gradient' ? 'Gradient' : 'Side Accent'}
                     </span>
                     <ChevronDown className="h-4 w-4 opacity-50" />
                   </Button>
@@ -336,39 +313,21 @@ function HeaderComponent({ data, nodeKey }: HeaderComponentProps) {
             <div className="space-y-2">
               <label className="text-sm font-medium">Alignment</label>
               <div className="flex rounded-md border overflow-hidden">
-                <Button
-                  variant={alignment === 'left' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setAlignment('left')}
-                  title="Align left"
-                  className="flex-1 rounded-none border-0 px-2"
-                >
+                <Button variant={alignment === 'left' ? 'secondary' : 'ghost'} size="sm" onClick={() => setAlignment('left')} title="Align left" className="flex-1 rounded-none border-0 px-2">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <line x1="21" x2="3" y1="6" y2="6" />
                     <line x1="15" x2="3" y1="12" y2="12" />
                     <line x1="17" x2="3" y1="18" y2="18" />
                   </svg>
                 </Button>
-                <Button
-                  variant={alignment === 'center' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setAlignment('center')}
-                  title="Align center"
-                  className="flex-1 rounded-none border-0 border-l px-2"
-                >
+                <Button variant={alignment === 'center' ? 'secondary' : 'ghost'} size="sm" onClick={() => setAlignment('center')} title="Align center" className="flex-1 rounded-none border-0 border-l px-2">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <line x1="21" x2="3" y1="6" y2="6" />
                     <line x1="18" x2="6" y1="12" y2="12" />
                     <line x1="21" x2="3" y1="18" y2="18" />
                   </svg>
                 </Button>
-                <Button
-                  variant={alignment === 'right' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  onClick={() => setAlignment('right')}
-                  title="Align right"
-                  className="flex-1 rounded-none border-0 border-l px-2"
-                >
+                <Button variant={alignment === 'right' ? 'secondary' : 'ghost'} size="sm" onClick={() => setAlignment('right')} title="Align right" className="flex-1 rounded-none border-0 border-l px-2">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <line x1="21" x2="3" y1="6" y2="6" />
                     <line x1="21" x2="9" y1="12" y2="12" />
@@ -389,8 +348,7 @@ function HeaderComponent({ data, nodeKey }: HeaderComponentProps) {
                 placeholder="Type your header text..."
                 className="w-full border-none bg-transparent p-0 placeholder:text-muted-foreground/50 focus:outline-none focus:ring-0"
                 style={{
-                  fontSize:
-                    level === 1 ? '2.25rem' : level === 2 ? '1.875rem' : level === 3 ? '1.5rem' : level === 4 ? '1.25rem' : level === 5 ? '1.125rem' : '1rem',
+                  fontSize: level === 1 ? '2.25rem' : level === 2 ? '1.875rem' : level === 3 ? '1.5rem' : level === 4 ? '1.25rem' : level === 5 ? '1.125rem' : '1rem',
                   fontWeight: 'bold',
                 }}
               />

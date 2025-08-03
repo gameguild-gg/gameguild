@@ -47,9 +47,7 @@ export function InviteCollaborators({ open, onOpenChange, onInvite, teamMembers 
 
   const displayMembers = teamMembers.length > 0 ? teamMembers : defaultTeamMembers;
 
-  const filteredMembers = displayMembers.filter(
-    (member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()) || member.email.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredMembers = displayMembers.filter((member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()) || member.email.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleInvite = () => {
     if (searchQuery && onInvite) {
@@ -99,17 +97,11 @@ export function InviteCollaborators({ open, onOpenChange, onInvite, teamMembers 
           <Tabs defaultValue="team-members" className="w-full">
             {/* Tab Navigation */}
             <TabsList className="grid w-full grid-cols-2 bg-[#2a2a2a] p-1 rounded-lg h-auto">
-              <TabsTrigger
-                value="team-members"
-                className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-md data-[state=active]:bg-[#3a3a3a] data-[state=active]:text-white text-gray-400 transition-all"
-              >
+              <TabsTrigger value="team-members" className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-md data-[state=active]:bg-[#3a3a3a] data-[state=active]:text-white text-gray-400 transition-all">
                 <Users className="h-4 w-4" />
                 Team members
               </TabsTrigger>
-              <TabsTrigger
-                value="organisations"
-                className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-md data-[state=active]:bg-[#3a3a3a] data-[state=active]:text-white text-gray-500 transition-all"
-              >
+              <TabsTrigger value="organisations" className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-md data-[state=active]:bg-[#3a3a3a] data-[state=active]:text-white text-gray-500 transition-all">
                 <Building className="h-4 w-4" />
                 Organisations
               </TabsTrigger>
@@ -138,9 +130,7 @@ export function InviteCollaborators({ open, onOpenChange, onInvite, teamMembers 
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={member.avatar} alt={member.name} />
-                          <AvatarFallback className={`${getAvatarBg(member.name)} text-white text-sm font-medium border-0`}>
-                            {getInitials(member.name)}
-                          </AvatarFallback>
+                          <AvatarFallback className={`${getAvatarBg(member.name)} text-white text-sm font-medium border-0`}>{getInitials(member.name)}</AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="text-sm font-medium text-white">{member.name}</p>

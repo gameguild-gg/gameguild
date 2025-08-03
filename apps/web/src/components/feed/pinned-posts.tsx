@@ -21,14 +21,7 @@ export function PinnedPosts({ posts, onLike, onComment, onShare }: PinnedPostsPr
       </div>
       <div className="space-y-4">
         {posts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            onLike={onLike}
-            onComment={onComment}
-            onShare={onShare}
-            className="border-yellow-500/20 bg-gradient-to-br from-yellow-500/5 to-amber-500/5"
-          />
+          <PostCard key={post.id} post={post} onLike={onLike} onComment={onComment} onShare={onShare} className="border-yellow-500/20 bg-gradient-to-br from-yellow-500/5 to-amber-500/5" />
         ))}
       </div>
     </div>

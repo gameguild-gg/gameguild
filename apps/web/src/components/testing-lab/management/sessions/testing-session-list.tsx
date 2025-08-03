@@ -223,9 +223,7 @@ export function TestingSessionList({ data }: TestingSessionListProps) {
             <CardContent className="text-center py-12">
               <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">No testing sessions found</h3>
-              <p className="text-slate-400 mb-4">
-                {searchTerm || statusFilter.length > 0 ? 'Try adjusting your search or filter criteria' : 'There are no testing sessions available at the moment'}
-              </p>
+              <p className="text-slate-400 mb-4">{searchTerm || statusFilter.length > 0 ? 'Try adjusting your search or filter criteria' : 'There are no testing sessions available at the moment'}</p>
               <Button asChild className="bg-blue-600 hover:bg-blue-700">
                 <Link href="/dashboard/testing-lab/sessions/create">Create Your First Session</Link>
               </Button>

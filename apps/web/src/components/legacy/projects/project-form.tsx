@@ -411,9 +411,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
                     </label>
                   )}
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  Upload up to 5 screenshots. They will appear on your game&apos;s page. Optional but highly recommended.
-                </p>
+                <p className="text-sm text-gray-500 mt-1">Upload up to 5 screenshots. They will appear on your game&apos;s page. Optional but highly recommended.</p>
               </div>
               {/*<div>*/}
               {/*  <Label htmlFor="gameplay-video">*/}

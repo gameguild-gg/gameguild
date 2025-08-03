@@ -66,13 +66,7 @@ export function LuaTypeChecker({ monaco, editor, code }: LuaTypeCheckerProps) {
                   message: `Type mismatch: expected number, got ${value}`,
                   severity: 'warning',
                 });
-              } else if (
-                typeName.toLowerCase() === 'string' &&
-                !value.startsWith('"') &&
-                !value.startsWith("'") &&
-                !value.startsWith('[[') &&
-                !value.startsWith('tostring(')
-              ) {
+              } else if (typeName.toLowerCase() === 'string' && !value.startsWith('"') && !value.startsWith("'") && !value.startsWith('[[') && !value.startsWith('tostring(')) {
                 errors.push({
                   line: lineIndex + 2,
                   column: nextLine.indexOf(value),
@@ -163,8 +157,7 @@ export function LuaTypeChecker({ monaco, editor, code }: LuaTypeCheckerProps) {
       endLineNumber: error.line,
       endColumn: error.column + 1,
       message: error.message,
-      severity:
-        error.severity === 'error' ? monaco.MarkerSeverity.Error : error.severity === 'warning' ? monaco.MarkerSeverity.Warning : monaco.MarkerSeverity.Info,
+      severity: error.severity === 'error' ? monaco.MarkerSeverity.Error : error.severity === 'warning' ? monaco.MarkerSeverity.Warning : monaco.MarkerSeverity.Info,
     }));
 
     monaco.editor.setModelMarkers(model, 'lua-type-checker', markers);

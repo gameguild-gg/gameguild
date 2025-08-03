@@ -134,16 +134,7 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
   useEditorStyles();
 
   // Use language settings hook
-  const {
-    selectedLanguage,
-    setSelectedLanguage,
-    allowedLanguages,
-    setAllowedLanguages,
-    showLanguagesDialog,
-    setShowLanguagesDialog,
-    getAllowedLanguageTypes,
-    getAllowedProgrammingLanguages,
-  } = useLanguageSettings({
+  const { selectedLanguage, setSelectedLanguage, allowedLanguages, setAllowedLanguages, showLanguagesDialog, setShowLanguagesDialog, getAllowedLanguageTypes, getAllowedProgrammingLanguages } = useLanguageSettings({
     initialAllowedLanguages: data.allowedLanguages,
     initialSelectedLanguage: data.selectedLanguage,
   });
@@ -344,11 +335,7 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
             ...fileCases,
             {
               type: testType,
-              ...(testType === 'simple'
-                ? { expectedOutput: '' }
-                : testType === 'predicate'
-                  ? { args: [], predicate: "result => typeof result === 'number'" }
-                  : { args: [], expectedReturn: [] }),
+              ...(testType === 'simple' ? { expectedOutput: '' } : testType === 'predicate' ? { args: [], predicate: "result => typeof result === 'number'" } : { args: [], expectedReturn: [] }),
             },
           ],
         };

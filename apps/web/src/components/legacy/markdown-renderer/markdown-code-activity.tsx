@@ -121,9 +121,7 @@ export function MarkdownCodeActivity(params: MarkdownCodeActivityProps) {
           />
         </Card>
 
-        {isCorrect === true && (
-          <div className="p-3 rounded-md bg-green-100 border border-green-300 text-green-800 font-semibold text-center">Correct output!</div>
-        )}
+        {isCorrect === true && <div className="p-3 rounded-md bg-green-100 border border-green-300 text-green-800 font-semibold text-center">Correct output!</div>}
 
         {/* Área de saída */}
         {status !== RunnerStatus.UNINITIALIZED && !(status === RunnerStatus.READY && isCorrect) && (
@@ -155,12 +153,7 @@ export function MarkdownCodeActivity(params: MarkdownCodeActivityProps) {
         {/* Botões */}
         {(isCorrect === false || isCorrect === null) && (
           <div className="flex justify-between">
-            <Button
-              variant="secondary"
-              className="bg-[#2d2d2d] text-white hover:bg-[#3d3d3d]"
-              onClick={handleRunCode}
-              disabled={status === RunnerStatus.RUNNING || status === RunnerStatus.LOADING || status === RunnerStatus.FAILED_LOADING}
-            >
+            <Button variant="secondary" className="bg-[#2d2d2d] text-white hover:bg-[#3d3d3d]" onClick={handleRunCode} disabled={status === RunnerStatus.RUNNING || status === RunnerStatus.LOADING || status === RunnerStatus.FAILED_LOADING}>
               <Play className="w-4 h-4 mr-2" />
               {status === RunnerStatus.RUNNING ? 'Running...' : 'Run'}
             </Button>

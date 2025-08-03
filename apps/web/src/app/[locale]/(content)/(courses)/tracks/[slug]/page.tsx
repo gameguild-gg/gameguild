@@ -6,23 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import {
-  ArrowLeft,
-  Award,
-  BookOpen,
-  CheckCircle,
-  Clock,
-  Code,
-  ExternalLink,
-  Gamepad2,
-  Lightbulb,
-  Palette,
-  Play,
-  Star,
-  Target,
-  Trophy,
-  Users,
-} from 'lucide-react';
+import { ArrowLeft, Award, BookOpen, CheckCircle, Clock, Code, ExternalLink, Gamepad2, Lightbulb, Palette, Play, Star, Target, Trophy, Users } from 'lucide-react';
 import { Track, TRACK_LEVEL_COLORS, TRACK_LEVELS } from '@/components/legacy/types/tracks';
 
 // Type definitions for real course data
@@ -250,12 +234,7 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
     rating: 4.8,
     reviewCount: 324,
     trackBlocks,
-    prerequisites: [
-      'Basic understanding of computer fundamentals',
-      'Passion for game development',
-      'Willingness to learn and practice regularly',
-      'Access to a computer capable of running development tools',
-    ],
+    prerequisites: ['Basic understanding of computer fundamentals', 'Passion for game development', 'Willingness to learn and practice regularly', 'Access to a computer capable of running development tools'],
     learningObjectives: [
       'Master the fundamentals of game development and design principles',
       'Build complete games from concept to deployment',
@@ -276,24 +255,9 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
         'Debug and troubleshoot technical issues',
         'Participate in code reviews and maintain code quality',
       ],
-      skills: [
-        'Programming in C# or C++',
-        'Game engine proficiency (Unity/Unreal)',
-        'Problem-solving and debugging',
-        'Team collaboration and communication',
-        'Understanding of game design principles',
-      ],
+      skills: ['Programming in C# or C++', 'Game engine proficiency (Unity/Unreal)', 'Problem-solving and debugging', 'Team collaboration and communication', 'Understanding of game design principles'],
     },
-    tools: [
-      'Unity 3D',
-      'Visual Studio / VS Code',
-      'Git Version Control',
-      'Blender (3D Modeling)',
-      'Photoshop / GIMP',
-      'Perforce',
-      'Jira / Trello',
-      'Discord / Slack',
-    ],
+    tools: ['Unity 3D', 'Visual Studio / VS Code', 'Git Version Control', 'Blender (3D Modeling)', 'Photoshop / GIMP', 'Perforce', 'Jira / Trello', 'Discord / Slack'],
     instructor: {
       name: 'Alex Richardson',
       title: 'Senior Game Developer',
@@ -302,22 +266,15 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
       bio: 'Former Lead Developer at Epic Games with 12+ years of industry experience. Alex has shipped multiple AAA titles and indie games, bringing real-world expertise to guide students through their game development journey.',
       experience: '12+ years',
       students: '2,500+',
-      credentials: [
-        'Lead Developer - Fortnite (Epic Games)',
-        'Senior Programmer - Gears of War series',
-        '15+ shipped game titles',
-        'Industry mentor and speaker',
-      ],
+      credentials: ['Lead Developer - Fortnite (Epic Games)', 'Senior Programmer - Gears of War series', '15+ shipped game titles', 'Industry mentor and speaker'],
     },
     testimonials: [
       {
         name: 'Sarah Chen',
         role: 'Game Developer',
         company: 'Ubisoft',
-        content:
-          'This track completely transformed my understanding of game development. The structured approach and hands-on projects gave me the confidence to land my dream job.',
-        comment:
-          'This track completely transformed my understanding of game development. The structured approach and hands-on projects gave me the confidence to land my dream job.',
+        content: 'This track completely transformed my understanding of game development. The structured approach and hands-on projects gave me the confidence to land my dream job.',
+        comment: 'This track completely transformed my understanding of game development. The structured approach and hands-on projects gave me the confidence to land my dream job.',
         rating: 5,
         image: '/placeholder.svg',
         avatar: '/placeholder.svg',
@@ -349,12 +306,7 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
       roleDescription:
         'Game developers work in collaborative teams to design, develop, and ship interactive entertainment products. This multidisciplinary field requires both technical programming skills and creative problem-solving abilities, making it one of the most rewarding career paths in the entertainment industry.',
       careerPaths: ['Gameplay Programmer', 'Engine Programmer', 'Technical Artist', 'Game Designer', 'Level Designer', 'Independent Game Developer'],
-      industryStats: [
-        'Global games market worth $321 billion (2024)',
-        '3.3 billion gamers worldwide',
-        'Average salary: $85,000 - $160,000',
-        '250,000+ jobs in game development globally',
-      ],
+      industryStats: ['Global games market worth $321 billion (2024)', '3.3 billion gamers worldwide', 'Average salary: $85,000 - $160,000', '250,000+ jobs in game development globally'],
     },
   };
 };
@@ -559,12 +511,7 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ sl
 
                       <div className="grid gap-6">
                         {block.courses.map((course: Course) => (
-                          <Card
-                            key={course.id}
-                            className={`bg-gray-800/50 border-gray-700 hover:bg-gray-800 transition-all duration-200 group ${
-                              course.isReal ? 'cursor-pointer' : 'cursor-default'
-                            }`}
-                          >
+                          <Card key={course.id} className={`bg-gray-800/50 border-gray-700 hover:bg-gray-800 transition-all duration-200 group ${course.isReal ? 'cursor-pointer' : 'cursor-default'}`}>
                             <CardContent className="p-6">
                               {course.isReal && course.slug ? (
                                 <Link href={`/courses/${course.slug}`} className="block">

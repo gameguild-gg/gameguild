@@ -539,13 +539,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                 </Card>
 
                 {/* Report Content Dialog */}
-                <ReportContentDialog
-                  open={showReportDialog}
-                  onOpenChange={setShowReportDialog}
-                  contentId={currentItem.id}
-                  contentTitle={currentItem.title}
-                  onSubmit={handleReportContent}
-                />
+                <ReportContentDialog open={showReportDialog} onOpenChange={setShowReportDialog} contentId={currentItem.id} contentTitle={currentItem.title} onSubmit={handleReportContent} />
               </>
             )}
           </div>

@@ -11,19 +11,7 @@ import { Calendar, DollarSign, Plus, Tag, Users, X } from 'lucide-react';
 import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 
 export function SalesShowcaseSection() {
-  const {
-    state,
-    addProduct,
-    removeProduct,
-    updateProduct,
-    setEnrollmentStatus,
-    setMaxEnrollments,
-    setEnrollmentDeadline,
-    setEstimatedHours,
-    addTag,
-    removeTag,
-    setStatus,
-  } = useCourseEditor();
+  const { state, addProduct, removeProduct, updateProduct, setEnrollmentStatus, setMaxEnrollments, setEnrollmentDeadline, setEstimatedHours, addTag, removeTag, setStatus } = useCourseEditor();
 
   const [newTag, setNewTag] = React.useState('');
   const [newProductName, setNewProductName] = React.useState('');
@@ -123,13 +111,7 @@ export function SalesShowcaseSection() {
             <Label htmlFor="maxEnrollments" className="text-sm">
               Maximum Enrollments (Optional)
             </Label>
-            <Input
-              id="maxEnrollments"
-              type="number"
-              placeholder="Leave empty for unlimited"
-              value={state.enrollment.maxEnrollments || ''}
-              onChange={(e) => setMaxEnrollments(e.target.value ? parseInt(e.target.value) : undefined)}
-            />
+            <Input id="maxEnrollments" type="number" placeholder="Leave empty for unlimited" value={state.enrollment.maxEnrollments || ''} onChange={(e) => setMaxEnrollments(e.target.value ? parseInt(e.target.value) : undefined)} />
           </div>
 
           {/* Current Enrollments Display */}
@@ -154,14 +136,7 @@ export function SalesShowcaseSection() {
           <Label htmlFor="estimatedHours" className="text-sm">
             Estimated Hours to Complete
           </Label>
-          <Input
-            id="estimatedHours"
-            type="number"
-            min="1"
-            max="200"
-            value={state.estimatedHours}
-            onChange={(e) => setEstimatedHours(parseInt(e.target.value) || 1)}
-          />
+          <Input id="estimatedHours" type="number" min="1" max="200" value={state.estimatedHours} onChange={(e) => setEstimatedHours(parseInt(e.target.value) || 1)} />
         </div>
 
         {/* Publishing Status */}

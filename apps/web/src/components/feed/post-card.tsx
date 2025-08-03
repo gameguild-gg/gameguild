@@ -86,9 +86,7 @@ export function PostCard({ post, showActions = true, className, onLike, onCommen
               </div>
             </div>
           </div>
-          <div className={cn('px-3 py-1 rounded-full text-xs font-medium border', getPostTypeColor(safePost.postType))}>
-            {formatPostType(safePost.postType)}
-          </div>
+          <div className={cn('px-3 py-1 rounded-full text-xs font-medium border', getPostTypeColor(safePost.postType))}>{formatPostType(safePost.postType)}</div>
         </div>
 
         {/* Title */}
@@ -114,11 +112,7 @@ export function PostCard({ post, showActions = true, className, onLike, onCommen
                   <span className="text-white ml-1">{ref.resourceTitle}</span>
                 </div>
               ))}
-              {safePost.contentReferences.length > 3 && (
-                <div className="bg-slate-800/30 border border-slate-600/30 rounded-lg px-3 py-2 text-sm text-slate-400">
-                  +{safePost.contentReferences.length - 3} more
-                </div>
-              )}
+              {safePost.contentReferences.length > 3 && <div className="bg-slate-800/30 border border-slate-600/30 rounded-lg px-3 py-2 text-sm text-slate-400">+{safePost.contentReferences.length - 3} more</div>}
             </div>
           </div>
         )}
@@ -142,9 +136,7 @@ export function PostCard({ post, showActions = true, className, onLike, onCommen
                 <span className="text-sm">{safePost.sharesCount}</span>
               </button>
             </div>
-            <div className="text-xs text-slate-500">
-              {typeof post.status === 'string' && post.status === 'Published' ? '📅 Published' : `📝 ${post.status || 'Draft'}`}
-            </div>
+            <div className="text-xs text-slate-500">{typeof post.status === 'string' && post.status === 'Published' ? '📅 Published' : `📝 ${post.status || 'Draft'}`}</div>
           </div>
         </div>
       )}

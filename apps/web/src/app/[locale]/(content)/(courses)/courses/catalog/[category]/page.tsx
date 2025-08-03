@@ -19,10 +19,7 @@ export default async function CategoryCatalogPage({ params }: { params: Promise<
         <ul className="space-y-2">
           {categories.map((cat) => (
             <li key={cat}>
-              <Link
-                href={`/courses/${encodeURIComponent(cat)}`}
-                className={`block px-3 py-2 rounded hover:bg-accent transition ${cat.toLowerCase() === category.toLowerCase() ? 'bg-primary text-primary-foreground font-bold' : ''}`}
-              >
+              <Link href={`/courses/${encodeURIComponent(cat)}`} className={`block px-3 py-2 rounded hover:bg-accent transition ${cat.toLowerCase() === category.toLowerCase() ? 'bg-primary text-primary-foreground font-bold' : ''}`}>
                 {cat}
               </Link>
             </li>

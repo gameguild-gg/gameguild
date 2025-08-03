@@ -4,14 +4,7 @@ import { useState } from 'react';
 import { LogOut, Moon, Search, Settings, Sun, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTheme } from 'next-themes';
 import { signOut, useSession } from 'next-auth/react';
@@ -84,12 +77,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
         {/* Actions */}
         <div className="flex items-center gap-2">
           {/* Theme Toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800/50"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800/50">
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
@@ -108,13 +96,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-slate-800/50">
-                <Avatar className="h-8 w-8">
-                  {userImage ? (
-                    <AvatarImage src={userImage} alt={userDisplayName} />
-                  ) : (
-                    <AvatarFallback className="bg-slate-700 text-white">{userInitials}</AvatarFallback>
-                  )}
-                </Avatar>
+                <Avatar className="h-8 w-8">{userImage ? <AvatarImage src={userImage} alt={userDisplayName} /> : <AvatarFallback className="bg-slate-700 text-white">{userInitials}</AvatarFallback>}</Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56 bg-slate-800 border-slate-700" align="end" forceMount>

@@ -136,8 +136,7 @@ export function PythonTypeChecker({ monaco, editor, code }: PythonTypeCheckerPro
       endLineNumber: error.line,
       endColumn: error.column + 1,
       message: error.message,
-      severity:
-        error.severity === 'error' ? monaco.MarkerSeverity.Error : error.severity === 'warning' ? monaco.MarkerSeverity.Warning : monaco.MarkerSeverity.Info,
+      severity: error.severity === 'error' ? monaco.MarkerSeverity.Error : error.severity === 'warning' ? monaco.MarkerSeverity.Warning : monaco.MarkerSeverity.Info,
     }));
 
     monaco.editor.setModelMarkers(model, 'python-type-checker', markers);

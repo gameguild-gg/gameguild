@@ -69,9 +69,7 @@ export function NotificationBarExample() {
           <CardTitle>Global Notification Bar Demo</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Click the buttons below to trigger different types of global notifications that appear at the top of the screen.
-          </p>
+          <p className="text-muted-foreground">Click the buttons below to trigger different types of global notifications that appear at the top of the screen.</p>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Button onClick={showSuccessNotification} variant="default" className="bg-green-600 hover:bg-green-700">

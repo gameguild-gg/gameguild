@@ -166,11 +166,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="rating">Overall Rating</Label>
-                    <RadioGroup
-                      value={feedbackForm.rating.toString()}
-                      onValueChange={(value) => setFeedbackForm({ ...feedbackForm, rating: parseInt(value) })}
-                      className="flex gap-4 mt-2"
-                    >
+                    <RadioGroup value={feedbackForm.rating.toString()} onValueChange={(value) => setFeedbackForm({ ...feedbackForm, rating: parseInt(value) })} className="flex gap-4 mt-2">
                       {[1, 2, 3, 4, 5].map((rating) => (
                         <div key={rating} className="flex items-center space-x-2">
                           <RadioGroupItem value={rating.toString()} id={`rating-${rating}`} />
@@ -183,22 +179,11 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
                   </div>
                   <div>
                     <Label htmlFor="comments">Comments</Label>
-                    <Textarea
-                      id="comments"
-                      placeholder="Share your thoughts about the game..."
-                      value={feedbackForm.comments}
-                      onChange={(e) => setFeedbackForm({ ...feedbackForm, comments: e.target.value })}
-                      className="mt-2"
-                      rows={4}
-                    />
+                    <Textarea id="comments" placeholder="Share your thoughts about the game..." value={feedbackForm.comments} onChange={(e) => setFeedbackForm({ ...feedbackForm, comments: e.target.value })} className="mt-2" rows={4} />
                   </div>
                   <div>
                     <Label>Would you recommend this game?</Label>
-                    <RadioGroup
-                      value={feedbackForm.wouldRecommend.toString()}
-                      onValueChange={(value) => setFeedbackForm({ ...feedbackForm, wouldRecommend: value === 'true' })}
-                      className="flex gap-4 mt-2"
-                    >
+                    <RadioGroup value={feedbackForm.wouldRecommend.toString()} onValueChange={(value) => setFeedbackForm({ ...feedbackForm, wouldRecommend: value === 'true' })} className="flex gap-4 mt-2">
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="true" id="recommend-yes" />
                         <Label htmlFor="recommend-yes">Yes</Label>
@@ -370,9 +355,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
                 <div className="space-y-2">
                   {participants.slice(0, 5).map((participant: any) => (
                     <div key={participant.id} className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
-                        {participant.name?.charAt(0) || 'U'}
-                      </div>
+                      <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">{participant.name?.charAt(0) || 'U'}</div>
                       <div>
                         <p className="text-sm font-medium">{participant.name}</p>
                         <p className="text-xs text-gray-500">{participant.email}</p>

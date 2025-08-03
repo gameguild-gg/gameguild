@@ -99,11 +99,7 @@ export function CourseEditor({ slug, isCreating = false }: CourseEditorProps) {
                 Preview
               </Button>
 
-              <Button
-                onClick={handleSave}
-                disabled={!state.isValid}
-                className="bg-gradient-to-r from-primary to-chart-2 hover:from-primary/90 hover:to-chart-2/90"
-              >
+              <Button onClick={handleSave} disabled={!state.isValid} className="bg-gradient-to-r from-primary to-chart-2 hover:from-primary/90 hover:to-chart-2/90">
                 <Save className="h-4 w-4 mr-2" />
                 {isCreating ? 'Create Course' : 'Save Changes'}
               </Button>
@@ -168,11 +164,7 @@ export function CourseEditor({ slug, isCreating = false }: CourseEditorProps) {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                    {state.media.thumbnail?.url ? (
-                      <img src={state.media.thumbnail.url} alt={state.media.thumbnail.alt} className="w-full h-full object-cover rounded-lg" />
-                    ) : (
-                      <div className="text-muted-foreground text-sm">No thumbnail</div>
-                    )}
+                    {state.media.thumbnail?.url ? <img src={state.media.thumbnail.url} alt={state.media.thumbnail.alt} className="w-full h-full object-cover rounded-lg" /> : <div className="text-muted-foreground text-sm">No thumbnail</div>}
                   </div>
 
                   <div>

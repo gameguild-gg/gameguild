@@ -26,15 +26,7 @@ interface SubmissionData {
   answers?: Record<string, any>;
 }
 
-export function ActivitySubmission({
-  activityId,
-  activityTitle,
-  activityType,
-  isGraded,
-  maxAttempts = 3,
-  currentAttempts = 0,
-  onSubmissionComplete,
-}: ActivitySubmissionProps) {
+export function ActivitySubmission({ activityId, activityTitle, activityType, isGraded, maxAttempts = 3, currentAttempts = 0, onSubmissionComplete }: ActivitySubmissionProps) {
   const [submissionData, setSubmissionData] = useState<SubmissionData>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -104,13 +96,7 @@ export function ActivitySubmission({
         return (
           <div className="space-y-4">
             <label className="text-sm font-medium">Your Response</label>
-            <Textarea
-              placeholder="Enter your response here..."
-              value={submissionData.textResponse || ''}
-              onChange={(e) => setSubmissionData((prev) => ({ ...prev, textResponse: e.target.value }))}
-              rows={8}
-              className="resize-y"
-            />
+            <Textarea placeholder="Enter your response here..." value={submissionData.textResponse || ''} onChange={(e) => setSubmissionData((prev) => ({ ...prev, textResponse: e.target.value }))} rows={8} className="resize-y" />
           </div>
         );
 

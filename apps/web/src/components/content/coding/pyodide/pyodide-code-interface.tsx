@@ -52,12 +52,7 @@ export default function PyodideCodeInterface({ initialCode }: CodeInterfaceProps
       </Card>
 
       <div className="flex justify-between">
-        <Button
-          variant="secondary"
-          className="bg-[#2d2d2d] text-white hover:bg-[#3d3d3d]"
-          onClick={handleRunCode}
-          disabled={status === RunnerStatus.LOADING || status === RunnerStatus.RUNNING}
-        >
+        <Button variant="secondary" className="bg-[#2d2d2d] text-white hover:bg-[#3d3d3d]" onClick={handleRunCode} disabled={status === RunnerStatus.LOADING || status === RunnerStatus.RUNNING}>
           <Play className="w-4 h-4 mr-2" />
           Run
         </Button>

@@ -55,12 +55,12 @@ export function EditAchievementDialog({ open, onOpenChange, achievement, onSucce
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!achievement.id) return;
-    
+
     try {
       setLoading(true);
-      
+
       const response = await updateAchievement({
         path: { achievementId: achievement.id },
         body: {
@@ -106,7 +106,7 @@ export function EditAchievementDialog({ open, onOpenChange, achievement, onSucce
               <Label htmlFor="name">Name *</Label>
               <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Achievement name" required />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Input id="category" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} placeholder="e.g., Learning, Social, Gaming" />
@@ -123,7 +123,7 @@ export function EditAchievementDialog({ open, onOpenChange, achievement, onSucce
               <Label htmlFor="type">Type</Label>
               <Input id="type" value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })} placeholder="e.g., milestone, progress, social" />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="points">Points</Label>
               <Input id="points" type="number" value={formData.points} onChange={(e) => setFormData({ ...formData, points: parseInt(e.target.value) || 0 })} placeholder="Points awarded" min="0" />
@@ -135,7 +135,7 @@ export function EditAchievementDialog({ open, onOpenChange, achievement, onSucce
               <Label htmlFor="iconUrl">Icon URL</Label>
               <Input id="iconUrl" value={formData.iconUrl} onChange={(e) => setFormData({ ...formData, iconUrl: e.target.value })} placeholder="https://example.com/icon.png" />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="color">Color</Label>
               <Input id="color" type="color" value={formData.color} onChange={(e) => setFormData({ ...formData, color: e.target.value })} />
@@ -152,12 +152,12 @@ export function EditAchievementDialog({ open, onOpenChange, achievement, onSucce
               <Switch id="isActive" checked={formData.isActive} onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })} />
               <Label htmlFor="isActive">Active</Label>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <Switch id="isSecret" checked={formData.isSecret} onCheckedChange={(checked) => setFormData({ ...formData, isSecret: checked })} />
               <Label htmlFor="isSecret">Secret Achievement</Label>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <Switch id="isRepeatable" checked={formData.isRepeatable} onCheckedChange={(checked) => setFormData({ ...formData, isRepeatable: checked })} />
               <Label htmlFor="isRepeatable">Repeatable</Label>
@@ -165,8 +165,12 @@ export function EditAchievementDialog({ open, onOpenChange, achievement, onSucce
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={loading || !formData.name.trim()}>{loading ? 'Updating...' : 'Update Achievement'}</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading || !formData.name.trim()}>
+              {loading ? 'Updating...' : 'Update Achievement'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

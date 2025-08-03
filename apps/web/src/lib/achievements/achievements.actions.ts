@@ -1,15 +1,7 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
-import type { 
-  Achievement, 
-  AchievementsPageDto,
-  CreateAchievementCommand, 
-  UpdateAchievementCommand,
-  AwardAchievementRequest,
-  BulkAwardAchievementRequest,
-  AchievementStatisticsDto 
-} from '@/lib/core/api/generated/types.gen';
+import type { Achievement, AchievementsPageDto, CreateAchievementCommand, UpdateAchievementCommand, AwardAchievementRequest, BulkAwardAchievementRequest, AchievementStatisticsDto } from '@/lib/core/api/generated/types.gen';
 import {
   getApiAchievements,
   postApiAchievements,
@@ -38,27 +30,27 @@ export interface AchievementActionResult<T = unknown> {
 
 function validateAchievementData(data: CreateAchievementCommand | UpdateAchievementCommand): string[] {
   const errors: string[] = [];
-  
+
   if (!data.name || data.name.trim().length === 0) {
     errors.push('Achievement name is required');
   }
-  
+
   if (data.name && data.name.length > 100) {
     errors.push('Achievement name must be less than 100 characters');
   }
-  
+
   if (data.description && data.description.length > 500) {
     errors.push('Achievement description must be less than 500 characters');
   }
-  
+
   if (data.points !== undefined && data.points !== null && data.points < 0) {
     errors.push('Achievement points must be a positive number');
   }
-  
+
   if (data.displayOrder !== undefined && data.displayOrder !== null && data.displayOrder < 0) {
     errors.push('Display order must be a positive number');
   }
-  
+
   return errors;
 }
 
@@ -68,14 +60,14 @@ function validateAchievementData(data: CreateAchievementCommand | UpdateAchievem
 
 function handleApiError<T = unknown>(error: unknown, operation: string): AchievementActionResult<T> {
   console.error(`Error in ${operation}:`, error);
-  
+
   if (error instanceof Error) {
     return {
       success: false,
       error: error.message,
     };
   }
-  
+
   return {
     success: false,
     error: `Failed to ${operation}`,
@@ -126,10 +118,10 @@ export async function getAchievements(params?: {
     };
 
     const result = await getApiAchievements({ query });
-    
+
     if (!result.data) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'No data received from server',
       };
     }
@@ -149,10 +141,10 @@ export async function getAchievements(params?: {
 export async function getAchievementsStatistics(): Promise<AchievementActionResult<AchievementStatisticsDto>> {
   try {
     const result = await getApiAchievementsStatistics();
-    
+
     if (!result.data) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'No data received from server',
       };
     }
@@ -181,7 +173,7 @@ export async function createAchievement(data: CreateAchievementCommand): Promise
     }
 
     const result = await postApiAchievements({ body: data });
-    
+
     if (!result.data) {
       return {
         success: false,
@@ -231,10 +223,7 @@ export async function deleteAchievement(achievementId: string): Promise<Achievem
 /**
  * Retrieves a single achievement by ID
  */
-export async function getAchievementById(
-  achievementId: string,
-  options?: { includeLevels?: boolean; includePrerequisites?: boolean }
-): Promise<AchievementActionResult<Achievement>> {
+export async function getAchievementById(achievementId: string, options?: { includeLevels?: boolean; includePrerequisites?: boolean }): Promise<AchievementActionResult<Achievement>> {
   try {
     if (!achievementId || achievementId.trim().length === 0) {
       return {
@@ -250,7 +239,7 @@ export async function getAchievementById(
         includePrerequisites: options?.includePrerequisites,
       },
     });
-    
+
     if (!result.data) {
       return {
         success: false,
@@ -270,10 +259,7 @@ export async function getAchievementById(
 /**
  * Updates an existing achievement
  */
-export async function updateAchievement(
-  achievementId: string,
-  data: UpdateAchievementCommand
-): Promise<AchievementActionResult<Achievement>> {
+export async function updateAchievement(achievementId: string, data: UpdateAchievementCommand): Promise<AchievementActionResult<Achievement>> {
   try {
     if (!achievementId || achievementId.trim().length === 0) {
       return {
@@ -295,7 +281,7 @@ export async function updateAchievement(
       path: { achievementId },
       body: data,
     });
-    
+
     if (!result.data) {
       return {
         success: false,
@@ -327,7 +313,7 @@ export async function awardAchievement(
     maxProgress?: number;
     context?: string;
     notifyUser?: boolean;
-  }
+  },
 ): Promise<AchievementActionResult<unknown>> {
   try {
     if (!achievementId || !userId) {
@@ -373,7 +359,7 @@ export async function bulkAwardAchievement(
     maxProgress?: number;
     context?: string;
     notifyUsers?: boolean;
-  }
+  },
 ): Promise<AchievementActionResult<unknown>> {
   try {
     if (!achievementId || !userIds || userIds.length === 0) {
@@ -420,7 +406,7 @@ export async function getAchievementStatistics(achievementId: string): Promise<A
     const result = await getApiAchievementsByAchievementIdStatistics({
       path: { achievementId },
     });
-    
+
     if (!result.data) {
       return {
         success: false,

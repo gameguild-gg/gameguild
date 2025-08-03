@@ -58,16 +58,7 @@ export const authConfig: NextAuthConfig = {
     strategy: 'jwt',
   },
   callbacks: {
-    signIn: async ({  
-      user,
-      account,
-    }: {
-      user: User;
-      account?: Account | null;
-      profile?: Profile;
-      email?: { verificationRequest?: boolean };
-      credentials?: Record<string, CredentialInput>;
-    }): Promise<boolean> => {
+    signIn: async ({ user, account }: { user: User; account?: Account | null; profile?: Profile; email?: { verificationRequest?: boolean }; credentials?: Record<string, CredentialInput> }): Promise<boolean> => {
       if (account?.provider === 'google') {
         if (!account?.id_token) return false;
         try {
@@ -91,20 +82,7 @@ export const authConfig: NextAuthConfig = {
       // Allow local authentication.
       return account?.provider === 'local';
     },
-    jwt: async ({
-      token,
-      user,
-      trigger,
-      session,
-    }: {
-      token: JWT;
-      user: User;
-      account?: Account | null;
-      profile?: Profile;
-      trigger?: 'update' | 'signIn' | 'signUp';
-      isNewUser?: boolean;
-      session?: Session;
-    }): Promise<JWT | null> => {
+    jwt: async ({ token, user, trigger, session }: { token: JWT; user: User; account?: Account | null; profile?: Profile; trigger?: 'update' | 'signIn' | 'signUp'; isNewUser?: boolean; session?: Session }): Promise<JWT | null> => {
       // This is called when a user signing-in or signing-up.
       if (trigger === 'signIn' || trigger === 'signUp') {
         // We must have auth data from our API, otherwise the session is corrupted.
@@ -239,16 +217,7 @@ export const authConfig: NextAuthConfig = {
 
       return token;
     },
-    session: async ({
-      session,
-      token,
-      trigger,
-    }: {
-      session: Session;
-      token: JWT | null;
-      newSession?: Session;
-      trigger?: 'update';
-    }): Promise<Session | DefaultSession> => {
+    session: async ({ session, token, trigger }: { session: Session; token: JWT | null; newSession?: Session; trigger?: 'update' }): Promise<Session | DefaultSession> => {
       // Check if the token is null (JWT callback returned null due to corruption)
       if (!token) {
         session.error = 'CorruptedSessionError';

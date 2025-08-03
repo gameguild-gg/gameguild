@@ -138,17 +138,7 @@ export function Leaderboard() {
     },
   ];
 
-  const StatCard = ({
-    icon,
-    value,
-    label,
-    color = 'text-muted-foreground',
-  }: {
-    icon: React.ReactNode;
-    value: string | number;
-    label: string;
-    color?: string;
-  }) => (
+  const StatCard = ({ icon, value, label, color = 'text-muted-foreground' }: { icon: React.ReactNode; value: string | number; label: string; color?: string }) => (
     <Card className="bg-card border-border">
       <CardContent className="p-6">
         <div className="flex items-center gap-3">
@@ -165,9 +155,7 @@ export function Leaderboard() {
   );
 
   const TopPlayerCard = ({ player }: { player: LeaderboardUser }) => (
-    <Card
-      className={`relative overflow-hidden ${player.isTopPlayer ? 'ring-2 ring-yellow-500 bg-gradient-to-br from-yellow-500/5 to-orange-500/5' : 'bg-card'} border-border`}
-    >
+    <Card className={`relative overflow-hidden ${player.isTopPlayer ? 'ring-2 ring-yellow-500 bg-gradient-to-br from-yellow-500/5 to-orange-500/5' : 'bg-card'} border-border`}>
       <CardContent className="p-6">
         {player.isTopPlayer && (
           <div className="absolute top-4 right-4">
@@ -243,8 +231,7 @@ export function Leaderboard() {
                   <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
                 </div>
                 <div className="text-2xl font-bold text-foreground">
-                  {stats.remainingTime.days} : {stats.remainingTime.hours.toString().padStart(2, '0')} :{' '}
-                  {stats.remainingTime.minutes.toString().padStart(2, '0')}
+                  {stats.remainingTime.days} : {stats.remainingTime.hours.toString().padStart(2, '0')} : {stats.remainingTime.minutes.toString().padStart(2, '0')}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">DAYS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; HRS &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; MINS</div>
                 <div className="text-xs text-muted-foreground mt-2">Only the first three positions will be awarded prizes</div>
@@ -285,24 +272,14 @@ export function Leaderboard() {
                     <tr key={player.id} className={`border-b border-border last:border-b-0 hover:bg-muted/20 ${index === 0 ? 'bg-yellow-500/5' : ''}`}>
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          <div
-                            className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold ${
-                              index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-orange-600'
-                            }`}
-                          >
-                            {player.rank}
-                          </div>
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm font-bold ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : 'bg-orange-600'}`}>{player.rank}</div>
                         </div>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <Avatar className="w-8 h-8">
                             <AvatarImage src={player.avatar} alt={player.name} />
-                            <AvatarFallback
-                              className={`text-white text-xs font-bold ${index === 0 ? 'bg-red-500' : index === 1 ? 'bg-green-500' : 'bg-red-500'}`}
-                            >
-                              {player.initials}
-                            </AvatarFallback>
+                            <AvatarFallback className={`text-white text-xs font-bold ${index === 0 ? 'bg-red-500' : index === 1 ? 'bg-green-500' : 'bg-red-500'}`}>{player.initials}</AvatarFallback>
                           </Avatar>
                           <div>
                             <div className="font-medium text-foreground">{player.name}</div>

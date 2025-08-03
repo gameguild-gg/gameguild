@@ -34,35 +34,9 @@ interface GameSubmission {
 
 const PLATFORMS = ['PC/Windows', 'Mac', 'PlayStation 5', 'PlayStation 4', 'Xbox Series X/S', 'Xbox One', 'Nintendo Switch', 'iOS', 'Android', 'Web Browser'];
 
-const GENRES = [
-  'Action',
-  'Adventure',
-  'RPG',
-  'Strategy',
-  'Simulation',
-  'Sports',
-  'Racing',
-  'Puzzle',
-  'Platformer',
-  'Fighting',
-  'Shooter',
-  'Horror',
-  'Indie',
-  'Casual',
-  'Educational',
-  'Multiplayer',
-];
+const GENRES = ['Action', 'Adventure', 'RPG', 'Strategy', 'Simulation', 'Sports', 'Racing', 'Puzzle', 'Platformer', 'Fighting', 'Shooter', 'Horror', 'Indie', 'Casual', 'Educational', 'Multiplayer'];
 
-const TESTING_TYPES = [
-  'Alpha Testing',
-  'Beta Testing',
-  'Gameplay Testing',
-  'UI/UX Testing',
-  'Bug Testing',
-  'Performance Testing',
-  'Accessibility Testing',
-  'Multiplayer Testing',
-];
+const TESTING_TYPES = ['Alpha Testing', 'Beta Testing', 'Gameplay Testing', 'UI/UX Testing', 'Bug Testing', 'Performance Testing', 'Accessibility Testing', 'Multiplayer Testing'];
 
 export function SubmitGame({ onBack, onSuccess }: SubmitGameProps) {
   const [submission, setSubmission] = useState<GameSubmission>({
@@ -139,25 +113,13 @@ export function SubmitGame({ onBack, onSuccess }: SubmitGameProps) {
                   <Label htmlFor="gameTitle" className="text-slate-200">
                     Game Title *
                   </Label>
-                  <Input
-                    id="gameTitle"
-                    value={submission.gameTitle}
-                    onChange={(e) => setSubmission((prev) => ({ ...prev, gameTitle: e.target.value }))}
-                    required
-                    className="bg-slate-800/50 border-slate-600 text-white"
-                  />
+                  <Input id="gameTitle" value={submission.gameTitle} onChange={(e) => setSubmission((prev) => ({ ...prev, gameTitle: e.target.value }))} required className="bg-slate-800/50 border-slate-600 text-white" />
                 </div>
                 <div>
                   <Label htmlFor="studioName" className="text-slate-200">
                     Studio/Developer Name *
                   </Label>
-                  <Input
-                    id="studioName"
-                    value={submission.studioName}
-                    onChange={(e) => setSubmission((prev) => ({ ...prev, studioName: e.target.value }))}
-                    required
-                    className="bg-slate-800/50 border-slate-600 text-white"
-                  />
+                  <Input id="studioName" value={submission.studioName} onChange={(e) => setSubmission((prev) => ({ ...prev, studioName: e.target.value }))} required className="bg-slate-800/50 border-slate-600 text-white" />
                 </div>
               </div>
 
@@ -165,14 +127,7 @@ export function SubmitGame({ onBack, onSuccess }: SubmitGameProps) {
                 <Label htmlFor="contactEmail" className="text-slate-200">
                   Contact Email *
                 </Label>
-                <Input
-                  id="contactEmail"
-                  type="email"
-                  value={submission.contactEmail}
-                  onChange={(e) => setSubmission((prev) => ({ ...prev, contactEmail: e.target.value }))}
-                  required
-                  className="bg-slate-800/50 border-slate-600 text-white"
-                />
+                <Input id="contactEmail" type="email" value={submission.contactEmail} onChange={(e) => setSubmission((prev) => ({ ...prev, contactEmail: e.target.value }))} required className="bg-slate-800/50 border-slate-600 text-white" />
               </div>
 
               <div>
@@ -230,9 +185,7 @@ export function SubmitGame({ onBack, onSuccess }: SubmitGameProps) {
           {/* Platform & Testing Details */}
           <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                Platform & Testing Details
-              </CardTitle>
+              <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Platform & Testing Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
@@ -246,11 +199,7 @@ export function SubmitGame({ onBack, onSuccess }: SubmitGameProps) {
                         key={platform}
                         type="button"
                         onClick={() => handlePlatformToggle(platform)}
-                        className={`p-3 rounded-lg border transition-colors text-left ${
-                          isSelected
-                            ? 'border-purple-500 bg-purple-900/20 text-purple-300'
-                            : 'border-slate-600 bg-slate-800/30 text-slate-400 hover:border-slate-500'
-                        }`}
+                        className={`p-3 rounded-lg border transition-colors text-left ${isSelected ? 'border-purple-500 bg-purple-900/20 text-purple-300' : 'border-slate-600 bg-slate-800/30 text-slate-400 hover:border-slate-500'}`}
                       >
                         <div className="text-sm font-medium">{platform}</div>
                       </button>
@@ -400,25 +349,14 @@ export function SubmitGame({ onBack, onSuccess }: SubmitGameProps) {
             <CardContent className="pt-6">
               <div className="space-y-6">
                 <div className="flex items-start gap-3">
-                  <Checkbox
-                    id="terms"
-                    checked={submission.agreeToTerms}
-                    onCheckedChange={(checked) => setSubmission((prev) => ({ ...prev, agreeToTerms: !!checked }))}
-                    className="mt-1"
-                  />
+                  <Checkbox id="terms" checked={submission.agreeToTerms} onCheckedChange={(checked) => setSubmission((prev) => ({ ...prev, agreeToTerms: !!checked }))} className="mt-1" />
                   <Label htmlFor="terms" className="text-slate-200 text-sm leading-relaxed">
-                    I agree to the <span className="text-purple-400 hover:underline cursor-pointer">Developer Terms of Service</span> and{' '}
-                    <span className="text-purple-400 hover:underline cursor-pointer">Testing Lab Guidelines</span>. I understand that my game will be reviewed
-                    before testing sessions are scheduled.
+                    I agree to the <span className="text-purple-400 hover:underline cursor-pointer">Developer Terms of Service</span> and <span className="text-purple-400 hover:underline cursor-pointer">Testing Lab Guidelines</span>. I
+                    understand that my game will be reviewed before testing sessions are scheduled.
                   </Label>
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || !submission.agreeToTerms}
-                  className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0"
-                  size="lg"
-                >
+                <Button type="submit" disabled={isSubmitting || !submission.agreeToTerms} className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0" size="lg">
                   {isSubmitting ? 'Submitting Game...' : 'Submit Game for Review'}
                 </Button>
               </div>
