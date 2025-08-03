@@ -4,17 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronRight, TestTube, type LucideIcon } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import {
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-  useSidebar,
-} from '@/components/ui/sidebar';
+import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, useSidebar } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export function ContentManagementSidebarContent({
@@ -64,11 +54,7 @@ export function ContentManagementSidebarContent({
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  tooltip="Testing Lab"
-                  isActive={testingLabItems.some((item) => pathname === item.url || pathname.startsWith(item.url + '/'))}
-                  size="lg"
-                >
+                <SidebarMenuButton tooltip="Testing Lab" isActive={testingLabItems.some((item) => pathname === item.url || pathname.startsWith(item.url + '/'))} size="lg">
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
                     <TestTube className="size-4" />
                   </div>
@@ -104,11 +90,7 @@ export function ContentManagementSidebarContent({
           <Collapsible asChild className="group/collapsible">
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton
-                  tooltip="Testing Lab"
-                  isActive={testingLabItems.some((item) => pathname === item.url || pathname.startsWith(item.url + '/'))}
-                  size="lg"
-                >
+                <SidebarMenuButton tooltip="Testing Lab" isActive={testingLabItems.some((item) => pathname === item.url || pathname.startsWith(item.url + '/'))} size="lg">
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-accent-foreground">
                     <TestTube className="size-4" />
                   </div>

@@ -5,9 +5,11 @@ This document outlines the changes made to refactor the dashboard overview pages
 ## Changes Made
 
 ### 1. Component Structure
+
 Created a new directory structure under `src/components/dashboard/overview/` with the following components:
 
 #### Server-Side Components
+
 - **`DashboardHeroSection`** - The main hero section with gradient background and statistics
 - **`DashboardOverviewContent`** - Main content component that fetches user statistics
 - **`DashboardEnhancedContent`** - Enhanced version with comprehensive metrics
@@ -16,23 +18,27 @@ Created a new directory structure under `src/components/dashboard/overview/` wit
 - **`DashboardRecentActivitySummary`** - Displays recent activity summary
 
 #### UI Components
+
 - **`DashboardQuickActions`** - Simple quick actions component
 - **`DashboardEnhancedQuickActions`** - Enhanced quick actions with more links
 - **`DashboardOverviewHeader`** - Header with title and action buttons
 
 #### Loading Components
+
 - **`DashboardOverviewLoading`** - Loading state for main overview
 - **`DashboardEnhancedLoading`** - Loading state for enhanced overview with metric cards
 
 ### 2. Page Components Refactored
 
 #### `page.tsx`
+
 - Cleaned up all commented code
 - Now uses modular components through imports
 - Implements server-side rendering with proper Suspense boundaries
 - Uses `DashboardOverviewContent` for core functionality
 
 #### `enhanced-page.tsx`
+
 - Cleaned up all commented code
 - Provides an enhanced dashboard view with comprehensive metrics
 - Uses `DashboardEnhancedContent` with mock data for demonstration
@@ -41,21 +47,25 @@ Created a new directory structure under `src/components/dashboard/overview/` wit
 ### 3. Key Features
 
 #### Server-Side Rendering
+
 - All data fetching happens on the server
 - Proper error handling with user-friendly error states
 - Uses React Suspense for loading states
 
 #### Type Safety
+
 - Proper TypeScript interfaces for all component props
 - Uses existing `UserStatistics` type from `@/lib/users/users.actions`
 - Consistent prop typing across all components
 
 #### Modularity
+
 - Each component has a single responsibility
 - Components are easily reusable across different dashboard pages
 - Clear separation between data fetching and presentation
 
 #### Performance
+
 - Server-side data fetching reduces client-side JavaScript
 - Loading states provide a better user experience
 - Components are optimized for minimal re-renders
@@ -82,6 +92,7 @@ export { DashboardEnhancedContent } from './overview/dashboard-enhanced-content'
 ### 5. Usage Examples
 
 #### Basic Overview Page
+
 ```tsx
 import { DashboardOverviewContent, DashboardOverviewLoading } from '@/components/dashboard';
 
@@ -102,6 +113,7 @@ export default async function Page({ searchParams }) {
 ```
 
 #### Enhanced Overview Page
+
 ```tsx
 import { DashboardEnhancedContent, DashboardEnhancedLoading } from '@/components/dashboard';
 
