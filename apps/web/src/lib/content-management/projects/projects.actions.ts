@@ -1,43 +1,43 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
   deleteApiProjectsById,
   getApiProjects,
   getApiProjectsById,
+  getApiProjectsByIdStatistics,
+  getApiProjectsCategoryByCategoryId,
+  getApiProjectsCreatorByCreatorId,
   getApiProjectsFeatured,
   getApiProjectsPopular,
   getApiProjectsRecent,
   getApiProjectsSearch,
   getApiProjectsSlugBySlug,
-  getApiProjectsByIdStatistics,
-  getApiProjectsCategoryByCategoryId,
-  getApiProjectsCreatorByCreatorId,
   postApiProjects,
   postApiProjectsByIdArchive,
   postApiProjectsByIdPublish,
   postApiProjectsByIdUnpublish,
   putApiProjectsById,
 } from '@/lib/api/generated/sdk.gen';
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import type {
-  PostApiProjectsData,
-  PutApiProjectsByIdData,
-  GetApiProjectsData,
   DeleteApiProjectsByIdData,
   GetApiProjectsByIdData,
-  GetApiProjectsSlugBySlugData,
-  PostApiProjectsByIdPublishData,
-  PostApiProjectsByIdUnpublishData,
-  PostApiProjectsByIdArchiveData,
-  GetApiProjectsSearchData,
-  GetApiProjectsPopularData,
-  GetApiProjectsRecentData,
-  GetApiProjectsFeaturedData,
   GetApiProjectsByIdStatisticsData,
   GetApiProjectsCategoryByCategoryIdData,
   GetApiProjectsCreatorByCreatorIdData,
+  GetApiProjectsData,
+  GetApiProjectsFeaturedData,
+  GetApiProjectsPopularData,
+  GetApiProjectsRecentData,
+  GetApiProjectsSearchData,
+  GetApiProjectsSlugBySlugData,
+  PostApiProjectsByIdArchiveData,
+  PostApiProjectsByIdPublishData,
+  PostApiProjectsByIdUnpublishData,
+  PostApiProjectsData,
+  PutApiProjectsByIdData,
 } from '@/lib/api/generated/types.gen';
+import { revalidateTag } from 'next/cache';
 
 // =============================================================================
 // PROJECT CRUD OPERATIONS
@@ -48,7 +48,7 @@ import type {
  */
 export async function getProjects(data?: GetApiProjectsData) {
   await configureAuthenticatedClient();
-  
+
   return getApiProjects({
     query: data?.query,
   });
@@ -59,14 +59,14 @@ export async function getProjects(data?: GetApiProjectsData) {
  */
 export async function createProject(data?: PostApiProjectsData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiProjects({
     body: data?.body,
   });
-  
+
   // Revalidate projects cache
   revalidateTag('projects');
-  
+
   return result;
 }
 
@@ -75,14 +75,14 @@ export async function createProject(data?: PostApiProjectsData) {
  */
 export async function deleteProject(data: DeleteApiProjectsByIdData) {
   await configureAuthenticatedClient();
-  
+
   const result = await deleteApiProjectsById({
     path: data.path,
   });
-  
+
   // Revalidate projects cache
   revalidateTag('projects');
-  
+
   return result;
 }
 
@@ -91,7 +91,7 @@ export async function deleteProject(data: DeleteApiProjectsByIdData) {
  */
 export async function getProjectById(data: GetApiProjectsByIdData) {
   await configureAuthenticatedClient();
-  
+
   return getApiProjectsById({
     path: data.path,
   });
@@ -102,15 +102,15 @@ export async function getProjectById(data: GetApiProjectsByIdData) {
  */
 export async function updateProject(data: PutApiProjectsByIdData) {
   await configureAuthenticatedClient();
-  
+
   const result = await putApiProjectsById({
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate projects cache
   revalidateTag('projects');
-  
+
   return result;
 }
 
@@ -119,7 +119,7 @@ export async function updateProject(data: PutApiProjectsByIdData) {
  */
 export async function getProjectBySlug(data: GetApiProjectsSlugBySlugData) {
   await configureAuthenticatedClient();
-  
+
   return getApiProjectsSlugBySlug({
     path: data.path,
   });
@@ -134,14 +134,14 @@ export async function getProjectBySlug(data: GetApiProjectsSlugBySlugData) {
  */
 export async function publishProject(data: PostApiProjectsByIdPublishData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiProjectsByIdPublish({
     path: data.path,
   });
-  
+
   // Revalidate projects cache
   revalidateTag('projects');
-  
+
   return result;
 }
 
@@ -150,14 +150,14 @@ export async function publishProject(data: PostApiProjectsByIdPublishData) {
  */
 export async function unpublishProject(data: PostApiProjectsByIdUnpublishData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiProjectsByIdUnpublish({
     path: data.path,
   });
-  
+
   // Revalidate projects cache
   revalidateTag('projects');
-  
+
   return result;
 }
 
@@ -166,14 +166,14 @@ export async function unpublishProject(data: PostApiProjectsByIdUnpublishData) {
  */
 export async function archiveProject(data: PostApiProjectsByIdArchiveData) {
   await configureAuthenticatedClient();
-  
+
   const result = await postApiProjectsByIdArchive({
     path: data.path,
   });
-  
+
   // Revalidate projects cache
   revalidateTag('projects');
-  
+
   return result;
 }
 
@@ -186,7 +186,7 @@ export async function archiveProject(data: PostApiProjectsByIdArchiveData) {
  */
 export async function searchProjects(data?: GetApiProjectsSearchData) {
   await configureAuthenticatedClient();
-  
+
   return getApiProjectsSearch({
     query: data?.query,
   });
@@ -197,7 +197,7 @@ export async function searchProjects(data?: GetApiProjectsSearchData) {
  */
 export async function getPopularProjects(data?: GetApiProjectsPopularData) {
   await configureAuthenticatedClient();
-  
+
   return getApiProjectsPopular({
     query: data?.query,
   });
@@ -208,7 +208,7 @@ export async function getPopularProjects(data?: GetApiProjectsPopularData) {
  */
 export async function getRecentProjects(data?: GetApiProjectsRecentData) {
   await configureAuthenticatedClient();
-  
+
   return getApiProjectsRecent({
     query: data?.query,
   });
@@ -219,7 +219,7 @@ export async function getRecentProjects(data?: GetApiProjectsRecentData) {
  */
 export async function getFeaturedProjects(data?: GetApiProjectsFeaturedData) {
   await configureAuthenticatedClient();
-  
+
   return getApiProjectsFeatured({
     query: data?.query,
   });
@@ -230,7 +230,7 @@ export async function getFeaturedProjects(data?: GetApiProjectsFeaturedData) {
  */
 export async function getProjectsByCategory(data: GetApiProjectsCategoryByCategoryIdData) {
   await configureAuthenticatedClient();
-  
+
   return getApiProjectsCategoryByCategoryId({
     path: data.path,
     query: data.query,
@@ -242,7 +242,7 @@ export async function getProjectsByCategory(data: GetApiProjectsCategoryByCatego
  */
 export async function getProjectsByCreator(data: GetApiProjectsCreatorByCreatorIdData) {
   await configureAuthenticatedClient();
-  
+
   return getApiProjectsCreatorByCreatorId({
     path: data.path,
     query: data.query,
@@ -258,7 +258,7 @@ export async function getProjectsByCreator(data: GetApiProjectsCreatorByCreatorI
  */
 export async function getProjectStatistics(data: GetApiProjectsByIdStatisticsData) {
   await configureAuthenticatedClient();
-  
+
   return getApiProjectsByIdStatistics({
     path: data.path,
   });

@@ -1,12 +1,11 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
+  getApiSubscription,
+  getApiSubscriptionById,
   getApiSubscriptionMe,
   getApiSubscriptionMeActive,
-  getApiSubscriptionById,
-  getApiSubscription,
   postApiSubscription,
   postApiSubscriptionByIdCancel,
   postApiSubscriptionByIdResume,
@@ -14,15 +13,16 @@ import {
 } from '@/lib/api/generated/sdk.gen';
 
 import type {
-  GetApiSubscriptionMeData,
-  GetApiSubscriptionMeActiveData,
   GetApiSubscriptionByIdData,
   GetApiSubscriptionData,
-  PostApiSubscriptionData,
+  GetApiSubscriptionMeActiveData,
+  GetApiSubscriptionMeData,
   PostApiSubscriptionByIdCancelData,
   PostApiSubscriptionByIdResumeData,
+  PostApiSubscriptionData,
   PutApiSubscriptionByIdPaymentMethodData,
 } from '@/lib/api/generated/types.gen';
+import { revalidateTag } from 'next/cache';
 
 /**
  * Get current user's subscriptions

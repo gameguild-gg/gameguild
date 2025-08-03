@@ -1,21 +1,21 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import type { SubscriptionStatus } from '@/lib/api/generated/types.gen';
 import {
+  getApiProductByIdSubscriptionPlans,
+  getApiProductSubscriptionPlansByPlanId,
+  getApiSubscription,
+  getApiSubscriptionById,
   getApiSubscriptionMe,
   getApiSubscriptionMeActive,
-  getApiSubscriptionById,
-  getApiSubscription,
+  postApiProductByIdSubscriptionPlans,
   postApiSubscription,
   postApiSubscriptionByIdCancel,
   postApiSubscriptionByIdResume,
   putApiSubscriptionByIdPaymentMethod,
-  getApiProductByIdSubscriptionPlans,
-  postApiProductByIdSubscriptionPlans,
-  getApiProductSubscriptionPlansByPlanId,
 } from '@/lib/api/generated/sdk.gen';
+import type { SubscriptionStatus } from '@/lib/api/generated/types.gen';
+import { revalidateTag } from 'next/cache';
 
 /**
  * Get current user's subscriptions
@@ -86,13 +86,7 @@ export async function getAllSubscriptions(params?: { skip?: number; take?: numbe
 /**
  * Create a new subscription
  */
-export async function createSubscription(subscriptionData: {
-  planId: string;
-  userId?: string;
-  paymentMethodId?: string;
-  startDate?: string;
-  metadata?: Record<string, unknown>;
-}) {
+export async function createSubscription(subscriptionData: { planId: string; userId?: string; paymentMethodId?: string; startDate?: string; metadata?: Record<string, unknown> }) {
   await configureAuthenticatedClient();
 
   try {
