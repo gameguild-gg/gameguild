@@ -15,7 +15,7 @@ export class App {
   private environ: { [key: string]: string };
   private memfs: MemFS;
   private allowRequestAnimationFrame: boolean;
-  private handles: Map<number, any>;
+  private handles: Map<number, unknown>;
   private nextHandle: number;
   private exports!: AppExports;
   private mem!: Memory;
@@ -134,10 +134,12 @@ export class App {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   clock_time_get(clock_id: number, precision: number, time_out: number): never {
     throw new NotImplemented('wasi_unstable', 'clock_time_get');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   poll_oneoff(in_ptr: number, out_ptr: number, nsubscriptions: number, nevents_out: number): never {
     throw new NotImplemented('wasi_unstable', 'poll_oneoff');
   }

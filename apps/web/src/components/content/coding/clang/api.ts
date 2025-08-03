@@ -12,10 +12,6 @@ const clangUrl = clangWasmUrl;
 const lldUrl = lldWasmUrl;
 const sysrootUrl = sysrootTarUrl;
 
-interface APIOptions {
-  hostWrite: (message: string) => void;
-}
-
 interface CompileOptions {
   input: string;
   contents: string;
