@@ -26,9 +26,9 @@ public class Product : Content {
   public bool IsBundle { get; set; }
 
   // Creator relationship
-  public Guid CreatorId { get; set; }
+  public Guid? CreatorId { get; set; }
 
-  public virtual User Creator { get; set; } = null!;
+  public virtual User? Creator { get; set; }
 
   /// <summary>
   /// JSON array of product IDs included in the bundle

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using GameGuild.Modules.Programs;
 
 
 namespace GameGuild.Modules.Products;
@@ -16,7 +17,11 @@ public class ProductProgramConfiguration : IEntityTypeConfiguration<ProductProgr
            .OnDelete(DeleteBehavior.Cascade);
 
     // Configure relationship with Program (can't be done with annotations)
-    builder.HasOne(pp => pp.Program).WithMany().HasForeignKey(pp => pp.ProgramId).OnDelete(DeleteBehavior.Cascade);
+    // This explicitly maps to the ProductPrograms collection on Program
+    builder.HasOne(pp => pp.Program)
+           .WithMany(p => p.ProductPrograms)
+           .HasForeignKey(pp => pp.ProgramId)
+           .OnDelete(DeleteBehavior.Cascade);
 
     // Filtered unique constraint (can't be done with annotations)
     builder.HasIndex(pp => new { pp.ProductId, pp.ProgramId }).IsUnique().HasFilter("\"DeletedAt\" IS NULL");

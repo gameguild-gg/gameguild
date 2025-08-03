@@ -165,5 +165,5 @@ public enum PermissionSource
     ContentTypeUser = 5,
     ResourceDefault = 6,
     ResourceUser = 7,
-    SystemOverride = 8
+    SystemOverride = 8,
 }
