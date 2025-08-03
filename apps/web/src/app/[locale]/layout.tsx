@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { WebVitals } from '@/components/analytics';
+import { ConditionalAnalytics, InitializeGoogleConsent } from '@/components/analytics/conditional-analytics';
 import { ErrorBoundaryProvider } from '@/components/common/errors/error-boundary-provider';
 import { TenantProvider } from '@/components/tenant';
 import { ThemeProvider } from '@/components/theme';
@@ -44,7 +45,13 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
     <html lang={locale} suppressHydrationWarning>
       <body>
         <WebVitals />
+
+        {/* Initialize Google Consent Mode early */}
+        <InitializeGoogleConsent />
+
         <NextIntlClientProvider>
+          {/* Conditional Analytics - only loads when user consents */}
+          <ConditionalAnalytics />
           <GoogleAnalytics gaId={environment.googleAnalyticsMeasurementId} />
           <GoogleTagManager gtmId={environment.googleTagManagerId} />
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
