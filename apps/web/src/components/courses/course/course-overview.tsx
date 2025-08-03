@@ -7,12 +7,7 @@ interface CourseOverviewProps {
   readonly course: Course;
 }
 
-const LEARNING_OBJECTIVES = [
-  'Master the fundamentals',
-  'Build practical projects to reinforce learning',
-  'Apply industry best practices and workflows',
-  'Prepare for real-world development challenges',
-] as const;
+const LEARNING_OBJECTIVES = ['Master the fundamentals', 'Build practical projects to reinforce learning', 'Apply industry best practices and workflows', 'Prepare for real-world development challenges'] as const;
 
 export function CourseOverview({ course }: CourseOverviewProps) {
   const { name: levelName, color: levelColor } = getCourseLevelConfig(course.level);

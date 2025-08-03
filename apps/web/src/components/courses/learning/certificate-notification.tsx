@@ -17,15 +17,7 @@ interface CertificateNotificationProps {
   readonly onViewCertificate?: () => void;
 }
 
-export function CertificateNotification({
-  courseId,
-  courseTitle,
-  completionDate,
-  studentName,
-  finalGrade,
-  onGenerateCertificate,
-  onViewCertificate,
-}: CertificateNotificationProps) {
+export function CertificateNotification({ courseId, courseTitle, completionDate, studentName, finalGrade, onGenerateCertificate, onViewCertificate }: CertificateNotificationProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 

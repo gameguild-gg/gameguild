@@ -5,14 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import {
-  createPaymentIntent,
-  enrollInFreeCourse,
-  EnrollmentStatus,
-  getCourseEnrollmentStatus,
-  getProductsContainingCourse,
-  Product,
-} from '@/lib/courses/actions/enrollment.actions';
+import { createPaymentIntent, enrollInFreeCourse, EnrollmentStatus, getCourseEnrollmentStatus, getProductsContainingCourse, Product } from '@/lib/courses/actions/enrollment.actions';
 import { BookOpen, CreditCard, Gift, Lock, Star, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';

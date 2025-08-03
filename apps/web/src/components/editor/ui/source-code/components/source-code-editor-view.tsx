@@ -231,10 +231,7 @@ export function SourceCodeEditorView({
         />
         {/* Drag handle para redimensionar o editor */}
         <div
-          className={cn(
-            'h-2 w-full cursor-ns-resize flex items-center justify-center border-t',
-            isDarkTheme ? 'border-gray-800 hover:bg-gray-800 bg-gray-900' : 'border-gray-200 hover:bg-gray-200',
-          )}
+          className={cn('h-2 w-full cursor-ns-resize flex items-center justify-center border-t', isDarkTheme ? 'border-gray-800 hover:bg-gray-800 bg-gray-900' : 'border-gray-200 hover:bg-gray-200')}
           onMouseDown={(e) => handleCodeEditorResize(e, e.clientY)}
         >
           <div className={cn('w-8 h-1 rounded-full', isDarkTheme ? 'bg-gray-600' : 'bg-gray-400')} />
@@ -281,10 +278,7 @@ export function SourceCodeEditorView({
             addCustomTestFiles={addCustomTestFiles}
           />
           {/* Add drag handle for resizing */}
-          <div
-            className={cn('h-1 cursor-ns-resize flex items-center justify-center', isDarkTheme ? 'bg-gray-800' : 'bg-gray-200')}
-            onMouseDown={(e) => handleTerminalResize(e, e.clientY)}
-          >
+          <div className={cn('h-1 cursor-ns-resize flex items-center justify-center', isDarkTheme ? 'bg-gray-800' : 'bg-gray-200')} onMouseDown={(e) => handleTerminalResize(e, e.clientY)}>
             <GripVertical className={cn('h-3 w-3', isDarkTheme ? 'text-gray-600' : 'text-gray-400')} />
           </div>
         </>

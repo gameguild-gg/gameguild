@@ -93,9 +93,7 @@ export function ColorPalette({ selectedColor = '', onColorChange, showCustomInpu
         {COLOR_PALETTE.map((color) => (
           <button
             key={color}
-            className={`w-6 h-6 rounded border-2 hover:scale-110 transition-transform ${
-              selectedColor === color ? 'border-gray-800 ring-2 ring-blue-500' : 'border-gray-300'
-            }`}
+            className={`w-6 h-6 rounded border-2 hover:scale-110 transition-transform ${selectedColor === color ? 'border-gray-800 ring-2 ring-blue-500' : 'border-gray-300'}`}
             style={{ backgroundColor: color }}
             onClick={() => onColorChange(color)}
             title={color}

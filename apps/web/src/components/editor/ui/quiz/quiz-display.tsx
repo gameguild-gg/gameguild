@@ -66,11 +66,7 @@ export function QuizDisplay({
                 >
                   {selectedAnswers.includes(answer.id) && (
                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   )}
                 </div>
@@ -86,33 +82,21 @@ export function QuizDisplay({
             <button
               className={`
               flex items-center justify-center px-6 py-3 rounded-lg border-2 font-medium transition-all duration-200 min-w-[120px]
-              ${
-                selectedAnswers.includes('true')
-                  ? 'border-green-500 bg-green-50 text-green-700 shadow-sm'
-                  : 'border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50'
-              }
+              ${selectedAnswers.includes('true') ? 'border-green-500 bg-green-50 text-green-700 shadow-sm' : 'border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50'}
               ${showFeedback && !allowRetry ? 'cursor-not-allowed opacity-75' : 'hover:shadow-sm cursor-pointer'}
             `}
               onClick={() => (!(showFeedback && !allowRetry) ? setSelectedAnswers(['true']) : undefined)}
               disabled={showFeedback && !allowRetry}
             >
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
               True
             </button>
             <button
               className={`
               flex items-center justify-center px-6 py-3 rounded-lg border-2 font-medium transition-all duration-200 min-w-[120px]
-              ${
-                selectedAnswers.includes('false')
-                  ? 'border-red-500 bg-red-50 text-red-700 shadow-sm'
-                  : 'border-gray-200 text-gray-700 hover:border-red-300 hover:bg-red-50'
-              }
+              ${selectedAnswers.includes('false') ? 'border-red-500 bg-red-50 text-red-700 shadow-sm' : 'border-gray-200 text-gray-700 hover:border-red-300 hover:bg-red-50'}
               ${showFeedback && !allowRetry ? 'cursor-not-allowed opacity-75' : 'hover:shadow-sm cursor-pointer'}
             `}
               onClick={() => (!(showFeedback && !allowRetry) ? setSelectedAnswers(['false']) : undefined)}
@@ -236,11 +220,7 @@ export function QuizDisplay({
                   key={value}
                   className={`
                     w-12 h-12 rounded-lg border-2 font-bold text-lg transition-all duration-200
-                    ${
-                      selectedAnswers.includes(value.toString())
-                        ? 'border-blue-500 bg-blue-500 text-white shadow-lg scale-110'
-                        : 'border-gray-300 text-gray-700 hover:border-blue-300 hover:bg-blue-50'
-                    }
+                    ${selectedAnswers.includes(value.toString()) ? 'border-blue-500 bg-blue-500 text-white shadow-lg scale-110' : 'border-gray-300 text-gray-700 hover:border-blue-300 hover:bg-blue-50'}
                     ${showFeedback && !allowRetry ? 'cursor-not-allowed opacity-75' : 'hover:shadow-md cursor-pointer'}
                   `}
                   onClick={() => (!(showFeedback && !allowRetry) ? setSelectedAnswers([value.toString()]) : undefined)}
@@ -265,10 +245,7 @@ export function QuizDisplay({
       {renderQuestionContent()}
 
       {!showFeedback && (
-        <button
-          onClick={checkAnswers}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-        >
+        <button onClick={checkAnswers} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md">
           Submit Answer
         </button>
       )}

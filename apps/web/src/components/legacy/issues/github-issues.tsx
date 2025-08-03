@@ -349,10 +349,7 @@ export default function GitHubIssues() {
                       <TooltipProvider key={`${issue.number}-${user.login}`}>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <button
-                              onClick={() => handleUserClick(user.login)}
-                              className={`relative ${selectedUser === user.login ? 'ring-2 ring-blue-500 rounded-full' : ''}`}
-                            >
+                            <button onClick={() => handleUserClick(user.login)} className={`relative ${selectedUser === user.login ? 'ring-2 ring-blue-500 rounded-full' : ''}`}>
                               <Avatar className="h-6 w-6 cursor-pointer">
                                 <AvatarImage src={user.avatar_url} alt={user.login} />
                                 <AvatarFallback>{user.login.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -375,9 +372,7 @@ export default function GitHubIssues() {
                     <button
                       key={`${issue.number}-${label.name}`}
                       onClick={() => handleLabelClick(label.name)}
-                      className={`px-2 py-1 rounded-full text-xs font-semibold cursor-pointer ${
-                        selectedLabels.includes(label.name) ? 'ring-2 ring-offset-2 ring-blue-500' : ''
-                      }`}
+                      className={`px-2 py-1 rounded-full text-xs font-semibold cursor-pointer ${selectedLabels.includes(label.name) ? 'ring-2 ring-offset-2 ring-blue-500' : ''}`}
                       style={{
                         backgroundColor: `#${label.color}`,
                         color: parseInt(label.color, 16) > 0xffffff / 2 ? '#000' : '#fff',

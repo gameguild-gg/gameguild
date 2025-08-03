@@ -13,13 +13,7 @@ interface ErrorBoundaryProps {
   showDetails?: boolean;
 }
 
-export default function ErrorBoundary({
-  error,
-  reset,
-  title = 'Something went wrong',
-  description = 'An error occurred while loading this section.',
-  showDetails = false,
-}: ErrorBoundaryProps) {
+export default function ErrorBoundary({ error, reset, title = 'Something went wrong', description = 'An error occurred while loading this section.', showDetails = false }: ErrorBoundaryProps) {
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   return (

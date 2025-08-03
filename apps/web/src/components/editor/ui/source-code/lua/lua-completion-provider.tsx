@@ -24,30 +24,7 @@ export function LuaCompletionProvider({ monaco, editor }: LuaCompletionProviderP
         };
 
         // Lua keywords
-        const keywords = [
-          'and',
-          'break',
-          'do',
-          'else',
-          'elseif',
-          'end',
-          'false',
-          'for',
-          'function',
-          'goto',
-          'if',
-          'in',
-          'local',
-          'nil',
-          'not',
-          'or',
-          'repeat',
-          'return',
-          'then',
-          'true',
-          'until',
-          'while',
-        ];
+        const keywords = ['and', 'break', 'do', 'else', 'elseif', 'end', 'false', 'for', 'function', 'goto', 'if', 'in', 'local', 'nil', 'not', 'or', 'repeat', 'return', 'then', 'true', 'until', 'while'];
 
         // Lua built-in functions
         const builtins = [
@@ -122,19 +99,7 @@ export function LuaCompletionProvider({ monaco, editor }: LuaCompletionProviderP
 
         const ioLib = ['io.close', 'io.flush', 'io.input', 'io.lines', 'io.open', 'io.output', 'io.popen', 'io.read', 'io.tmpfile', 'io.type', 'io.write'];
 
-        const osLib = [
-          'os.clock',
-          'os.date',
-          'os.difftime',
-          'os.execute',
-          'os.exit',
-          'os.getenv',
-          'os.remove',
-          'os.rename',
-          'os.setlocale',
-          'os.time',
-          'os.tmpname',
-        ];
+        const osLib = ['os.clock', 'os.date', 'os.difftime', 'os.execute', 'os.exit', 'os.getenv', 'os.remove', 'os.rename', 'os.setlocale', 'os.time', 'os.tmpname'];
 
         // Get the line text before the cursor
         const textUntilPosition = model.getValueInRange({

@@ -24,18 +24,7 @@ const statusOptions: FilterOption[] = [
   { value: 'rejected', label: 'Rejected' },
 ];
 
-export function FeedbackFilterControls({
-  searchTerm,
-  onSearchChange,
-  statusFilter,
-  onStatusFilterChange,
-  viewMode,
-  onViewModeChange,
-  hideViewToggle = false,
-  onRefresh,
-  onExport,
-  showExportButton = false,
-}: FeedbackFilterControlsProps) {
+export function FeedbackFilterControls({ searchTerm, onSearchChange, statusFilter, onStatusFilterChange, viewMode, onViewModeChange, hideViewToggle = false, onRefresh, onExport, showExportButton = false }: FeedbackFilterControlsProps) {
   // Convert view mode to match ViewModeToggle expectations
   const mappedViewMode = viewMode === 'grid' ? 'cards' : viewMode === 'list' ? 'row' : 'table';
 

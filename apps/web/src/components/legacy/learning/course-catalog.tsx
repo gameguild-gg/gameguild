@@ -291,12 +291,7 @@ export function CourseCatalog({ initialCourses }: CourseCatalogProps) {
             {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search courses, instructors, or topics..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-gray-900 border-gray-800"
-              />
+              <Input placeholder="Search courses, instructors, or topics..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 bg-gray-900 border-gray-800" />
             </div>
 
             {/* Filters */}

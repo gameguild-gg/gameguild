@@ -12,24 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import {
-  Calendar,
-  Clock,
-  Users,
-  TestTube,
-  Plus,
-  Search,
-  Filter,
-  Download,
-  Upload,
-  MessageSquare,
-  BarChart3,
-  Star,
-  CheckCircle,
-  XCircle,
-  PlayCircle,
-  PauseCircle,
-} from 'lucide-react';
+import { Calendar, Clock, Users, TestTube, Plus, Search, Filter, Download, Upload, MessageSquare, BarChart3, Star, CheckCircle, XCircle, PlayCircle, PauseCircle } from 'lucide-react';
 import Link from 'next/link';
 import type { TestingRequest, TestingSession } from '@/lib/api/generated/types.gen';
 import {
@@ -99,11 +82,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
     let filtered = requests;
 
     if (searchTerm) {
-      filtered = filtered.filter(
-        (request) =>
-          (request.title && request.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (request.description && request.description.toLowerCase().includes(searchTerm.toLowerCase())),
-      );
+      filtered = filtered.filter((request) => (request.title && request.title.toLowerCase().includes(searchTerm.toLowerCase())) || (request.description && request.description.toLowerCase().includes(searchTerm.toLowerCase())));
     }
 
     if (statusFilter !== 'all') {
@@ -259,12 +238,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="flex gap-2">
-                <Input
-                  placeholder="Search testing requests..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
+                <Input placeholder="Search testing requests..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSearch()} />
                 <Button onClick={handleSearch} disabled={loading}>
                   <Search className="h-4 w-4" />
                 </Button>

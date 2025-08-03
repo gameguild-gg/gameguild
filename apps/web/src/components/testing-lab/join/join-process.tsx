@@ -29,11 +29,7 @@ export function JoinProcess({ sessionSlug }: JoinProcessProps) {
             <CardContent className="p-8">
               <div className="text-center space-y-6">
                 <h2 className="text-xl font-semibold text-white">Complete Your {selectedRole === 'tester' ? 'Tester' : 'Developer'} Registration</h2>
-                <p className="text-slate-400">
-                  {selectedRole === 'tester'
-                    ? 'Fill out your profile to join testing sessions and start earning rewards'
-                    : 'Set up your developer profile to submit games for testing'}
-                </p>
+                <p className="text-slate-400">{selectedRole === 'tester' ? 'Fill out your profile to join testing sessions and start earning rewards' : 'Set up your developer profile to submit games for testing'}</p>
 
                 {/* Registration form would go here */}
                 <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-6">
@@ -41,14 +37,8 @@ export function JoinProcess({ sessionSlug }: JoinProcessProps) {
                 </div>
 
                 <div className="flex gap-4">
-                  <Button className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0">
-                    Complete Registration
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-                    onClick={() => setSelectedRole(null)}
-                  >
+                  <Button className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0">Complete Registration</Button>
+                  <Button variant="outline" className="border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50" onClick={() => setSelectedRole(null)}>
                     Cancel
                   </Button>
                 </div>
@@ -75,9 +65,7 @@ export function JoinProcess({ sessionSlug }: JoinProcessProps) {
         <section className="py-16">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
-                Ready to Get Started?
-              </h2>
+              <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">Ready to Get Started?</h2>
               <p className="text-xl text-slate-300 max-w-2xl mx-auto">Join our community of testers and developers to shape the future of gaming</p>
             </div>
 
@@ -102,11 +90,7 @@ export function JoinProcess({ sessionSlug }: JoinProcessProps) {
                     </ul>
                   </div>
 
-                  <Button
-                    size="lg"
-                    onClick={() => setSelectedRole('tester')}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0"
-                  >
+                  <Button size="lg" onClick={() => setSelectedRole('tester')} className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0">
                     Sign Up as Tester
                   </Button>
                 </CardContent>
@@ -132,12 +116,7 @@ export function JoinProcess({ sessionSlug }: JoinProcessProps) {
                     </ul>
                   </div>
 
-                  <Button
-                    size="lg"
-                    onClick={() => setSelectedRole('developer')}
-                    variant="outline"
-                    className="w-full border-purple-600 bg-purple-800/20 text-purple-300 hover:bg-purple-700/30"
-                  >
+                  <Button size="lg" onClick={() => setSelectedRole('developer')} variant="outline" className="w-full border-purple-600 bg-purple-800/20 text-purple-300 hover:bg-purple-700/30">
                     Submit Game for Testing
                   </Button>
                 </CardContent>

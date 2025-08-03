@@ -166,11 +166,7 @@ export default async function CourseContentPage({ params }: { params: Promise<{ 
                     <div className="space-y-2">
                       {mockCourseContent.modules.map((module) => (
                         <div key={module.id} className="flex items-center gap-2 text-sm">
-                          {module.completed ? (
-                            <CheckCircle className="w-4 h-4 text-green-400" />
-                          ) : (
-                            <div className="w-4 h-4 rounded-full border-2 border-gray-600" />
-                          )}
+                          {module.completed ? <CheckCircle className="w-4 h-4 text-green-400" /> : <div className="w-4 h-4 rounded-full border-2 border-gray-600" />}
                           <span className={module.completed ? 'text-green-400' : 'text-gray-400'}>{module.title}</span>
                         </div>
                       ))}
@@ -221,9 +217,7 @@ export default async function CourseContentPage({ params }: { params: Promise<{ 
                         return (
                           <div
                             key={lesson.id}
-                            className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                              lesson.completed ? 'bg-green-500/5 border-green-500/20' : 'bg-gray-700/30 border-gray-600 hover:bg-gray-700/50'
-                            }`}
+                            className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${lesson.completed ? 'bg-green-500/5 border-green-500/20' : 'bg-gray-700/30 border-gray-600 hover:bg-gray-700/50'}`}
                           >
                             <div className="flex items-center gap-3">
                               {lesson.completed ? <CheckCircle className="w-5 h-5 text-green-400" /> : <IconComponent className="w-5 h-5 text-gray-400" />}
@@ -235,11 +229,7 @@ export default async function CourseContentPage({ params }: { params: Promise<{ 
                                 </div>
                               </div>
                             </div>
-                            <Button
-                              variant={lesson.completed ? 'outline' : 'default'}
-                              size="sm"
-                              className={lesson.completed ? 'border-green-500 text-green-400' : ''}
-                            >
+                            <Button variant={lesson.completed ? 'outline' : 'default'} size="sm" className={lesson.completed ? 'border-green-500 text-green-400' : ''}>
                               {lesson.completed ? 'Review' : 'Start'}
                               <Play className="ml-2 w-4 h-4" />
                             </Button>
@@ -256,9 +246,7 @@ export default async function CourseContentPage({ params }: { params: Promise<{ 
                 <Card className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-500/20">
                   <CardContent className="p-6">
                     <h3 className="text-xl font-bold mb-2">Keep Learning!</h3>
-                    <p className="text-gray-300 mb-4">
-                      You're {progressPercentage}% through the course. Continue with the next lesson to maintain your momentum.
-                    </p>
+                    <p className="text-gray-300 mb-4">You're {progressPercentage}% through the course. Continue with the next lesson to maintain your momentum.</p>
                     <Button className="bg-blue-600 hover:bg-blue-700">
                       Continue Learning
                       <Play className="ml-2 w-4 h-4" />
