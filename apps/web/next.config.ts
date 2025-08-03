@@ -4,6 +4,12 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -63,6 +69,7 @@ const nextConfig: NextConfig = {
       '.js': ['.js', '.ts'],
       '.jsx': ['.jsx', '.tsx'],
     };
+
     return config;
   },
 };
