@@ -2,7 +2,9 @@
 
 import { useActionState, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tenant } from '@/lib/tenants/types';
+import Link from 'next/link';
+import { Tenant } from '@/lib/api/generated/types.gen';
+import { createTenantClient, updateTenantClient, deleteTenantClient } from '@/lib/admin/tenants/tenant-client-actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -168,12 +170,16 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
               <TableBody>
                 {tenants.map((tenant) => (
                   <TableRow key={tenant.id}>
-                    <TableCell className="font-medium">{tenant.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link href={`/dashboard/tenant/${tenant.id}`} className="text-blue-600 hover:text-blue-800 hover:underline">
+                        {tenant.name}
+                      </Link>
+                    </TableCell>
                     <TableCell className="max-w-xs truncate">{tenant.description || <span className="text-gray-400">No description</span>}</TableCell>
                     <TableCell>
                       <Badge variant={tenant.isActive ? 'default' : 'secondary'}>{tenant.isActive ? 'Active' : 'Inactive'}</Badge>
                     </TableCell>
-                    <TableCell>{formatDate(tenant.createdAt)}</TableCell>
+                    <TableCell>{tenant.createdAt ? formatDate(tenant.createdAt) : '-'}</TableCell>
                     <TableCell>{tenant.updatedAt ? formatDate(tenant.updatedAt) : '-'}</TableCell>
                     {isAdmin && (
                       <TableCell>
@@ -190,8 +196,10 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
-                                setTenantToDelete(tenant.id);
-                                setIsDeleteDialogOpen(true);
+                                if (tenant.id) {
+                                  setTenantToDelete(tenant.id);
+                                  setIsDeleteDialogOpen(true);
+                                }
                               }}
                               className="text-red-600"
                             >
@@ -253,9 +261,7 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Tenant</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this tenant? This action cannot be undone and will affect all users and resources associated with this tenant.
-            </DialogDescription>
+            <DialogDescription>Are you sure you want to delete this tenant? This action cannot be undone and will affect all users and resources associated with this tenant.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
