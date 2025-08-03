@@ -55,7 +55,7 @@ const DELIVERY_MODES = [
 const TIMEZONES = ['UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'Europe/London', 'Europe/Paris', 'Asia/Tokyo', 'Asia/Shanghai', 'Australia/Sydney'];
 
 export default function CourseDeliveryPage() {
-  const { state, setDeliveryMode, setAccessWindow, setEnrollmentWindow, addSession, updateSession, removeSession, setTimezone } = useCourseEditor();
+  const { state, setDeliveryMode, setAccessWindow, setEnrollmentWindow, addSession, removeSession, setTimezone } = useCourseEditor();
 
   const [showAddSession, setShowAddSession] = useState(false);
   const [newSession, setNewSession] = useState({
