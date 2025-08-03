@@ -1,21 +1,28 @@
 'use client';
 
-import React, { ComponentPropsWithoutRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-
-import { useAuthError } from '@/lib/hooks/useAuthError';
+import { Label } from '@/components/ui/label';
 import { Link } from '@/i18n/navigation';
-import { googleSignInAction } from '@/lib/auth/auth-actions';
+import { signInWithGoogle } from '@/lib/auth/auth.actions';
+import { signInWithEmailAndPassword } from '@/lib/auth/auth.actions';
+import { cn } from '@/lib/utils';
+import { useSearchParams } from 'next/navigation';
+import React, { ComponentPropsWithoutRef, useState } from 'react';
+
+// import { useAuthError } from '@/lib/hooks/useAuthError';
+
+// import { googleSignInAction } from '@/lib/auth/auth-actions';
 
 export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'div'>) => {
-  const { hasError, error } = useAuthError();
+  // const { hasError, error } = useAuthError();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const [emailPasswordLoading, setEmailPasswordLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   // Check for authentication errors from URL params
   const authError = searchParams.get('error');
@@ -23,11 +30,27 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await googleSignInAction();
+      await signInWithGoogle();
     } catch (error) {
       console.error('Sign-in error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEmailPasswordSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailPasswordLoading(true);
+    setError(null);
+
+    try {
+      await signInWithEmailAndPassword(email, password);
+      // Successful sign-in will redirect automatically
+    } catch (error) {
+      console.error('Email/password sign-in error:', error);
+      setError(error instanceof Error ? error.message : 'Sign-in failed. Please check your credentials.');
+    } finally {
+      setEmailPasswordLoading(false);
     }
   };
 
@@ -47,17 +70,16 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
           <CardContent className="relative z-10">
             <div className="grid gap-6">
               {/* Show authentication errors */}
-              {(hasError || authError) && (
+              {(error || authError) && (
                 <div className="bg-red-500/15 text-red-400 text-sm p-3 rounded-lg border border-red-500/30 backdrop-blur-sm">
-                  {error === 'RefreshTokenError' && 'Your session has expired. Please sign in again.'}
-                  {authError === 'OAuthAccountNotLinked' && 'Email already in use with different provider.'}
-                  {authError === 'AccessDenied' && 'Access denied. You may not have permission to sign in.'}
-                  {authError && !['OAuthAccountNotLinked', 'AccessDenied'].includes(authError) && 'An authentication error occurred.'}
-                  {hasError && !authError && 'An authentication error occurred. Please try again.'}
+                  {error ||
+                    (authError === 'OAuthAccountNotLinked' && 'Email already in use with different provider.') ||
+                    (authError === 'AccessDenied' && 'Access denied. You may not have permission to sign in.') ||
+                    (authError && 'An authentication error occurred.')}
                 </div>
               )}
 
-              <form>
+              <form onSubmit={handleEmailPasswordSignIn}>
                 <div className="grid gap-6">
                   <div className="grid gap-2">
                     <Label htmlFor="email" className="text-slate-300">
@@ -66,7 +88,9 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                     <Input
                       id="email"
                       type="email"
-                      placeholder="email@example.com"
+                      placeholder="admin@gameguild.local"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                       className="bg-slate-800/50 border-slate-600 text-white placeholder-slate-400 focus:border-blue-400 transition-colors"
                     />
@@ -83,6 +107,9 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                     <Input
                       id="password"
                       type="password"
+                      placeholder="admin123"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       required
                       className="bg-slate-800/50 border-slate-600 text-white placeholder-slate-400 focus:border-purple-400 transition-colors"
                     />
@@ -90,10 +117,16 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                   <Button
                     type="submit"
                     className="w-full bg-slate-700 hover:bg-slate-600 text-white border-slate-600 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
-                    disabled
+                    disabled={emailPasswordLoading}
                   >
-                    Sign in
-                    <span className="ml-2 text-xs text-slate-300">(Coming Soon)</span>
+                    {emailPasswordLoading ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        Signing in...
+                      </>
+                    ) : (
+                      'Sign in'
+                    )}
                   </Button>
                 </div>
               </form>

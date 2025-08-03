@@ -59,14 +59,7 @@ interface GenericCardViewProps<T extends DataItem> {
   onItemClick?: (item: T) => void;
 }
 
-export function GenericCardView<T extends DataItem>({
-  items,
-  config,
-  className,
-  emptyMessage = 'No items to display',
-  loading = false,
-  onItemClick,
-}: GenericCardViewProps<T>) {
+export function GenericCardView<T extends DataItem>({ items, config, className, emptyMessage = 'No items to display', loading = false, onItemClick }: GenericCardViewProps<T>) {
   if (loading) {
     return (
       <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4', className)}>
@@ -99,11 +92,7 @@ export function GenericCardView<T extends DataItem>({
   return (
     <div className={cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4', className)}>
       {items.map((item) => (
-        <Card
-          key={item.id}
-          className={cn('transition-all duration-200 hover:shadow-md', onItemClick && 'cursor-pointer hover:border-primary/50', config.className)}
-          onClick={() => onItemClick?.(item)}
-        >
+        <Card key={item.id} className={cn('transition-all duration-200 hover:shadow-md', onItemClick && 'cursor-pointer hover:border-primary/50', config.className)} onClick={() => onItemClick?.(item)}>
           <CardHeader>
             <CardTitle className="flex items-start justify-between">
               <span>{String(item[config.titleKey])}</span>
@@ -165,18 +154,7 @@ interface GenericTableViewProps<T extends DataItem> {
   onSort?: (key: keyof T) => void;
 }
 
-export function GenericTableView<T extends DataItem>({
-  items,
-  columns,
-  actions,
-  className,
-  emptyMessage = 'No items to display',
-  loading = false,
-  onItemClick,
-  sortKey,
-  sortDirection,
-  onSort,
-}: GenericTableViewProps<T>) {
+export function GenericTableView<T extends DataItem>({ items, columns, actions, className, emptyMessage = 'No items to display', loading = false, onItemClick, sortKey, sortDirection, onSort }: GenericTableViewProps<T>) {
   const sortedItems = useMemo(() => {
     if (!sortKey || !sortDirection) return items;
 
@@ -239,12 +217,7 @@ export function GenericTableView<T extends DataItem>({
         <TableHeader>
           <TableRow>
             {columns.map((column) => (
-              <TableHead
-                key={String(column.key)}
-                className={cn(column.className, column.sortable && onSort && 'cursor-pointer hover:bg-muted/50')}
-                style={{ width: column.width }}
-                onClick={() => column.sortable && onSort?.(column.key)}
-              >
+              <TableHead key={String(column.key)} className={cn(column.className, column.sortable && onSort && 'cursor-pointer hover:bg-muted/50')} style={{ width: column.width }} onClick={() => column.sortable && onSort?.(column.key)}>
                 <div className="flex items-center gap-2">
                   {column.label}
                   {column.sortable && sortKey === column.key && <span className="text-xs">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
@@ -304,14 +277,7 @@ interface GenericRowViewProps<T extends DataItem> {
   onItemClick?: (item: T) => void;
 }
 
-export function GenericRowView<T extends DataItem>({
-  items,
-  config,
-  className,
-  emptyMessage = 'No items to display',
-  loading = false,
-  onItemClick,
-}: GenericRowViewProps<T>) {
+export function GenericRowView<T extends DataItem>({ items, config, className, emptyMessage = 'No items to display', loading = false, onItemClick }: GenericRowViewProps<T>) {
   if (loading) {
     return (
       <div className={cn('space-y-2', className)}>
@@ -341,15 +307,7 @@ export function GenericRowView<T extends DataItem>({
   return (
     <div className={cn('space-y-2', className)}>
       {items.map((item) => (
-        <div
-          key={item.id}
-          className={cn(
-            'border rounded-lg p-4 transition-all duration-200 hover:shadow-md',
-            onItemClick && 'cursor-pointer hover:border-primary/50',
-            config.className,
-          )}
-          onClick={() => onItemClick?.(item)}
-        >
+        <div key={item.id} className={cn('border rounded-lg p-4 transition-all duration-200 hover:shadow-md', onItemClick && 'cursor-pointer hover:border-primary/50', config.className)} onClick={() => onItemClick?.(item)}>
           <div className="flex justify-between items-start">
             <div className="flex-1 space-y-1">
               <div className="flex items-center gap-2">

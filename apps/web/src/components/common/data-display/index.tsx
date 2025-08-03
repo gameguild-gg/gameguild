@@ -4,16 +4,7 @@ import { TableDisplay } from './table-display';
 import { CardDisplay } from './card-display';
 import { RowDisplay } from './row-display';
 
-export function DataDisplay<T extends Record<string, unknown>>({
-  data,
-  columns,
-  viewMode,
-  loading = false,
-  emptyMessage = 'No data available',
-  sortConfig,
-  onSort,
-  className = '',
-}: DataDisplayProps<T>) {
+export function DataDisplay<T extends Record<string, unknown>>({ data, columns, viewMode, loading = false, emptyMessage = 'No data available', sortConfig, onSort, className = '' }: DataDisplayProps<T>) {
   // Default card renderer when no custom render function is provided
   const defaultCardRenderer = (item: T) => (
     <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
@@ -52,28 +43,10 @@ export function DataDisplay<T extends Record<string, unknown>>({
 
   switch (viewMode) {
     case 'table':
-      return (
-        <TableDisplay
-          data={data}
-          columns={columns}
-          loading={loading}
-          emptyMessage={emptyMessage}
-          sortConfig={sortConfig}
-          onSort={onSort}
-          className={className}
-        />
-      );
+      return <TableDisplay data={data} columns={columns} loading={loading} emptyMessage={emptyMessage} sortConfig={sortConfig} onSort={onSort} className={className} />;
 
     case 'cards':
-      return (
-        <CardDisplay
-          data={data}
-          renderCard={defaultCardRenderer}
-          loading={loading}
-          emptyMessage={emptyMessage}
-          className={`grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 ${className}`}
-        />
-      );
+      return <CardDisplay data={data} renderCard={defaultCardRenderer} loading={loading} emptyMessage={emptyMessage} className={`grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 ${className}`} />;
 
     case 'row':
       return <RowDisplay data={data} renderRow={defaultRowRenderer} loading={loading} emptyMessage={emptyMessage} className={className} />;

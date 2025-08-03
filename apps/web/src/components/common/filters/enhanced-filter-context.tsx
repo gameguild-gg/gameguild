@@ -44,10 +44,7 @@ export type EnhancedFilterAction<T extends Record<string, unknown> = Record<stri
   | { type: 'RESET_STATE'; payload: Partial<EnhancedFilterState<T>> };
 
 // Enhanced filter reducer with optimized performance
-export function enhancedFilterReducer<T extends Record<string, unknown>>(
-  state: EnhancedFilterState<T>,
-  action: EnhancedFilterAction<T>,
-): EnhancedFilterState<T> {
+export function enhancedFilterReducer<T extends Record<string, unknown>>(state: EnhancedFilterState<T>, action: EnhancedFilterAction<T>): EnhancedFilterState<T> {
   switch (action.type) {
     case 'SET_SEARCH_TERM':
       return { ...state, searchTerm: action.payload };
@@ -159,10 +156,7 @@ const defaultEnhancedState: EnhancedFilterState = {
 };
 
 // Enhanced Provider component with optimized performance
-export function EnhancedFilterProvider<T extends Record<string, unknown> = Record<string, unknown>>({
-  children,
-  initialState = {},
-}: EnhancedFilterProviderProps<T>) {
+export function EnhancedFilterProvider<T extends Record<string, unknown> = Record<string, unknown>>({ children, initialState = {} }: EnhancedFilterProviderProps<T>) {
   const [state, dispatch] = useReducer(enhancedFilterReducer<T>, { ...defaultEnhancedState, ...initialState } as EnhancedFilterState<T>);
 
   // Use Map for O(1) lookup performance

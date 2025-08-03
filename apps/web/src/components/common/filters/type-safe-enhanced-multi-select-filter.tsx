@@ -45,9 +45,7 @@ export function TypeSafeEnhancedMultiSelectFilter<T extends Record<string, unkno
   // Memoized filtered options for performance
   const filteredOptions = useMemo(() => {
     if (!searchValue) return config.options;
-    return config.options.filter(
-      (option) => option.label.toLowerCase().includes(searchValue.toLowerCase()) || option.value.toLowerCase().includes(searchValue.toLowerCase()),
-    );
+    return config.options.filter((option) => option.label.toLowerCase().includes(searchValue.toLowerCase()) || option.value.toLowerCase().includes(searchValue.toLowerCase()));
   }, [config.options, searchValue]);
 
   // Memoized selected option labels for display
@@ -79,12 +77,7 @@ export function TypeSafeEnhancedMultiSelectFilter<T extends Record<string, unkno
     <div className={cn('relative', className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className={cn('justify-between text-left font-normal', hasSelection && 'bg-accent/50 border-primary/20', 'min-w-[200px] max-w-[300px]')}
-          >
+          <Button variant="outline" role="combobox" aria-expanded={open} className={cn('justify-between text-left font-normal', hasSelection && 'bg-accent/50 border-primary/20', 'min-w-[200px] max-w-[300px]')}>
             <span className="truncate flex-1">{displayText}</span>
             <div className="flex items-center gap-2 ml-2 flex-shrink-0">
               {hasSelection && showClearAll && (
@@ -105,12 +98,7 @@ export function TypeSafeEnhancedMultiSelectFilter<T extends Record<string, unkno
                 {filteredOptions.map((option) => {
                   const isSelected = selectedValues.includes(option.value);
                   return (
-                    <CommandItem
-                      key={option.value}
-                      value={option.value}
-                      onSelect={() => handleSelect(option.value)}
-                      className="flex items-center justify-between"
-                    >
+                    <CommandItem key={option.value} value={option.value} onSelect={() => handleSelect(option.value)} className="flex items-center justify-between">
                       <div className="flex items-center">
                         <Check className={cn('mr-2 h-4 w-4', isSelected ? 'opacity-100' : 'opacity-0')} />
                         <span>{option.label}</span>

@@ -89,8 +89,8 @@ function MyComponent() {
 
   return (
     <div>
-      <button onClick={ handleClick }>Trigger Error</button>
-      <button onClick={ handleAsyncOperation }>Async Operation</button>
+      <button onClick={handleClick}>Trigger Error</button>
+      <button onClick={handleAsyncOperation}>Async Operation</button>
     </div>
   );
 }

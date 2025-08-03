@@ -119,10 +119,7 @@ const DefaultRetryableFallback: React.FC<RetryableErrorFallbackProps> = ({ error
               Reset
             </button>
             {isClient && (
-              <button
-                onClick={() => window.location.reload()}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg px-4 py-2 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-gray-200"
-              >
+              <button onClick={() => window.location.reload()} className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg px-4 py-2 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-gray-200">
                 Reload
               </button>
             )}
@@ -244,17 +241,7 @@ export class RetryableErrorBoundary extends Component<RetryableErrorBoundaryProp
     if (hasError && error) {
       const canRetry = retryCount < maxRetries;
 
-      return (
-        <Fallback
-          error={error}
-          resetError={this.resetErrorBoundary}
-          retry={this.retry}
-          retryCount={retryCount}
-          maxRetries={maxRetries}
-          isRetrying={isRetrying}
-          canRetry={canRetry}
-        />
-      );
+      return <Fallback error={error} resetError={this.resetErrorBoundary} retry={this.retry} retryCount={retryCount} maxRetries={maxRetries} isRetrying={isRetrying} canRetry={canRetry} />;
     }
 
     return children;
