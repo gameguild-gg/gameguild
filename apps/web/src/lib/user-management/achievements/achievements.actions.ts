@@ -1,17 +1,17 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
+  deleteApiUsersByUserIdAchievementsByUserAchievementId,
   getApiUsersByUserIdAchievements,
+  getApiUsersByUserIdAchievementsAvailable,
+  getApiUsersByUserIdAchievementsByAchievementIdPrerequisites,
   getApiUsersByUserIdAchievementsProgress,
   getApiUsersByUserIdAchievementsSummary,
-  getApiUsersByUserIdAchievementsAvailable,
   postApiUsersByUserIdAchievementsByAchievementIdProgress,
-  getApiUsersByUserIdAchievementsByAchievementIdPrerequisites,
   postApiUsersByUserIdAchievementsByUserAchievementIdMarkNotified,
-  deleteApiUsersByUserIdAchievementsByUserAchievementId,
 } from '@/lib/api/generated/sdk.gen';
+import { revalidateTag } from 'next/cache';
 
 // =============================================================================
 // USER ACHIEVEMENT OPERATIONS
@@ -269,21 +269,13 @@ export async function removeUserAchievement(userId: string, userAchievementId: s
  * Get comprehensive achievement data for a user (summary + progress + available)
  */
 export async function getComprehensiveUserAchievements(userId: string) {
-  const [summary, progress, available] = await Promise.all([
-    getUserAchievementSummary(userId),
-    getUserAchievementProgress(userId),
-    getUserAvailableAchievements(userId),
-  ]);
+  const [summary, progress, available] = await Promise.all([getUserAchievementSummary(userId), getUserAchievementProgress(userId), getUserAvailableAchievements(userId)]);
 
   return {
     summary: summary.data || null,
     progress: progress.data || null,
     available: available.data || null,
-    errors: [
-      summary.error && { type: 'summary', error: summary.error },
-      progress.error && { type: 'progress', error: progress.error },
-      available.error && { type: 'available', error: available.error },
-    ].filter(Boolean),
+    errors: [summary.error && { type: 'summary', error: summary.error }, progress.error && { type: 'progress', error: progress.error }, available.error && { type: 'available', error: available.error }].filter(Boolean),
   };
 }
 
@@ -299,9 +291,7 @@ export async function canUserPursueAchievement(userId: string, achievementId: st
 
   // Assuming the API returns prerequisite status
   // This logic may need adjustment based on actual API response structure
-  const unmetPrerequisites = prerequisites.data
-    ? Object.values(prerequisites.data).filter((prereq: unknown) => typeof prereq === 'object' && prereq !== null && 'isMet' in prereq && !prereq.isMet)
-    : [];
+  const unmetPrerequisites = prerequisites.data ? Object.values(prerequisites.data).filter((prereq: unknown) => typeof prereq === 'object' && prereq !== null && 'isMet' in prereq && !prereq.isMet) : [];
 
   return {
     canPursue: unmetPrerequisites.length === 0,
