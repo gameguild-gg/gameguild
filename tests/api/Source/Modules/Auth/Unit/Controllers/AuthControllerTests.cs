@@ -62,7 +62,7 @@ public class AuthControllerTests
         {
             AccessToken = "access-token",
             RefreshToken = "refresh-token",
-            Expires = DateTime.UtcNow.AddHours(1),
+            ExpiresAt = DateTime.UtcNow.AddHours(1),
         };
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<LocalSignUpCommand>(), default))
@@ -111,7 +111,7 @@ public class AuthControllerTests
         {
             AccessToken = "access-token",
             RefreshToken = "refresh-token",
-            Expires = DateTime.UtcNow.AddHours(1),
+            ExpiresAt = DateTime.UtcNow.AddHours(1),
         };
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<LocalSignInCommand>(), default))
@@ -162,7 +162,7 @@ public class AuthControllerTests
         {
             AccessToken = "new-access-token",
             RefreshToken = "new-refresh-token",
-            Expires = DateTime.UtcNow.AddHours(1),
+            ExpiresAt = DateTime.UtcNow.AddHours(1),
         };
 
         _mediatorMock.Setup(m => m.Send(It.IsAny<RefreshTokenCommand>(), default))

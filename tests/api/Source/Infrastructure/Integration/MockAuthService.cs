@@ -15,7 +15,7 @@ public class MockAuthService : IAuthService
         {
             AccessToken = "mock-access-token",
             RefreshToken = "mock-refresh-token",
-            Expires = DateTime.UtcNow.AddMinutes(15),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(15),
             User = new UserDto { Id = Guid.NewGuid(), Email = request.Email ?? "test@example.com" },
             TenantId = Guid.NewGuid(),
         });
@@ -27,7 +27,7 @@ public class MockAuthService : IAuthService
         {
             AccessToken = "mock-access-token",
             RefreshToken = "mock-refresh-token",
-            Expires = DateTime.UtcNow.AddMinutes(15),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(15),
             User = new UserDto { Id = Guid.NewGuid(), Email = request.Email ?? "test@example.com" },
             TenantId = Guid.NewGuid(),
         });
@@ -54,7 +54,7 @@ public class MockAuthService : IAuthService
         {
             AccessToken = "mock-github-token",
             RefreshToken = "mock-github-refresh-token",
-            Expires = DateTime.UtcNow.AddMinutes(15),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(15),
             User = new UserDto { Id = Guid.NewGuid(), Email = "github@example.com" },
             TenantId = Guid.NewGuid(),
         });
@@ -66,7 +66,7 @@ public class MockAuthService : IAuthService
         {
             AccessToken = "mock-google-token",
             RefreshToken = "mock-google-refresh-token", 
-            Expires = DateTime.UtcNow.AddMinutes(15),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(15),
             User = new UserDto { Id = Guid.NewGuid(), Email = "google@example.com" },
             TenantId = Guid.NewGuid(),
         });
@@ -78,7 +78,7 @@ public class MockAuthService : IAuthService
         {
             AccessToken = "mock-google-id-token",
             RefreshToken = "mock-google-id-refresh-token",
-            Expires = DateTime.UtcNow.AddMinutes(15),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(15),
             User = new UserDto { Id = Guid.NewGuid(), Email = "google-id@example.com" },
             TenantId = Guid.NewGuid(),
         });
@@ -110,7 +110,7 @@ public class MockAuthService : IAuthService
         {
             AccessToken = "mock-web3-token",
             RefreshToken = "mock-web3-refresh-token",
-            Expires = DateTime.UtcNow.AddMinutes(15),
+            ExpiresAt = DateTime.UtcNow.AddMinutes(15),
             User = new UserDto { Id = Guid.NewGuid(), Email = "web3@example.com" },
             TenantId = Guid.NewGuid(),
         });
