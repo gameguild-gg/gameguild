@@ -3,15 +3,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useReducer } from 'react';
 import { BrowserProvider } from 'ethers';
 import { Web3ActionTypes, Web3ContextValue, Web3ProviderProps, Web3State, Web3Config, defaultWeb3State, defaultSupportedNetworks, NetworkInfo } from '../types';
-import {
-  web3Reducer,
-  createInitialWeb3State,
-  isNetworkSupported,
-  getNetworkInfo,
-  formatChainId,
-  persistWeb3State,
-  clearPersistedWeb3State,
-} from './web3-reducer';
+import { web3Reducer, createInitialWeb3State, isNetworkSupported, getNetworkInfo, formatChainId, persistWeb3State, clearPersistedWeb3State } from './web3-reducer';
 
 /**
  * Default context to handle errors when context is used outside the provider
