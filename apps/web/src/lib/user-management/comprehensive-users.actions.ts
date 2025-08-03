@@ -1,36 +1,28 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import type {
-  CreateUserDto,
-  UpdateUserDto,
-  UpdateUserBalanceDto,
-  UpdateAchievementProgressRequest,
-} from '@/lib/api/generated/types.gen';
 import {
-  // Core User CRUD
+  deleteApiUsersById,
+  deleteApiUsersByUserIdAchievementsByUserAchievementId,
   getApiUsers,
   getApiUsersById,
-  postApiUsers,
-  putApiUsersById,
-  deleteApiUsersById,
-  postApiUsersByIdRestore,
-  // User Management
-  putApiUsersByIdBalance,
-  getApiUsersSearch,
-  getApiUsersStatistics,
-  postApiUsersBulk,
-  // User Achievements
   getApiUsersByUserIdAchievements,
+  getApiUsersByUserIdAchievementsAvailable,
+  getApiUsersByUserIdAchievementsByAchievementIdPrerequisites,
   getApiUsersByUserIdAchievementsProgress,
   getApiUsersByUserIdAchievementsSummary,
-  getApiUsersByUserIdAchievementsAvailable,
+  getApiUsersSearch,
+  getApiUsersStatistics,
+  postApiUsers,
+  postApiUsersBulk,
+  postApiUsersByIdRestore,
   postApiUsersByUserIdAchievementsByAchievementIdProgress,
-  getApiUsersByUserIdAchievementsByAchievementIdPrerequisites,
   postApiUsersByUserIdAchievementsByUserAchievementIdMarkNotified,
-  deleteApiUsersByUserIdAchievementsByUserAchievementId,
+  putApiUsersById,
+  putApiUsersByIdBalance,
 } from '@/lib/api/generated/sdk.gen';
+import type { CreateUserDto, UpdateAchievementProgressRequest, UpdateUserBalanceDto, UpdateUserDto } from '@/lib/api/generated/types.gen';
+import { revalidateTag } from 'next/cache';
 
 // =============================================================================
 // CORE USER CRUD OPERATIONS
@@ -39,14 +31,7 @@ import {
 /**
  * Get all users with advanced filtering and pagination
  */
-export async function getUsers(params?: {
-  skip?: number;
-  take?: number;
-  includeDeleted?: boolean;
-  isActive?: boolean;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}) {
+export async function getUsers(params?: { skip?: number; take?: number; includeDeleted?: boolean; isActive?: boolean; sortBy?: string; sortOrder?: 'asc' | 'desc' }) {
   await configureAuthenticatedClient();
 
   try {
@@ -225,17 +210,7 @@ export async function updateUserBalance(id: string, balanceData: UpdateUserBalan
 /**
  * Search users with advanced filters
  */
-export async function searchUsers(params: {
-  searchTerm: string;
-  skip?: number;
-  take?: number;
-  isActive?: boolean;
-  minBalance?: number;
-  maxBalance?: number;
-  createdAfter?: string;
-  createdBefore?: string;
-  includeDeleted?: boolean;
-}) {
+export async function searchUsers(params: { searchTerm: string; skip?: number; take?: number; isActive?: boolean; minBalance?: number; maxBalance?: number; createdAfter?: string; createdBefore?: string; includeDeleted?: boolean }) {
   await configureAuthenticatedClient();
 
   try {
@@ -257,11 +232,7 @@ export async function searchUsers(params: {
 /**
  * Get comprehensive user statistics
  */
-export async function getUserStatistics(params?: {
-  fromDate?: string;
-  toDate?: string;
-  includeDeleted?: boolean;
-}) {
+export async function getUserStatistics(params?: { fromDate?: string; toDate?: string; includeDeleted?: boolean }) {
   await configureAuthenticatedClient();
 
   try {
@@ -283,12 +254,7 @@ export async function getUserStatistics(params?: {
 /**
  * Bulk user operations (create, update, delete)
  */
-export async function bulkUserOperations(operations: {
-  create?: CreateUserDto[];
-  update?: Array<{ id: string; data: UpdateUserDto }>;
-  delete?: string[];
-  restore?: string[];
-}) {
+export async function bulkUserOperations(operations: { create?: CreateUserDto[]; update?: Array<{ id: string; data: UpdateUserDto }>; delete?: string[]; restore?: string[] }) {
   await configureAuthenticatedClient();
 
   try {
@@ -311,9 +277,7 @@ export async function bulkUserOperations(operations: {
           results.created = Array.isArray(response.data) ? response.data : [response.data];
         }
       } catch (error) {
-        results.errors.push(
-          `Bulk create failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        );
+        results.errors.push(`Bulk create failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
 
@@ -324,9 +288,7 @@ export async function bulkUserOperations(operations: {
           const response = await updateUser(updateOp.id, updateOp.data);
           results.updated.push(response);
         } catch (error) {
-          results.errors.push(
-            `Update user ${updateOp.id} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          );
+          results.errors.push(`Update user ${updateOp.id} failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
     }
@@ -338,9 +300,7 @@ export async function bulkUserOperations(operations: {
           await deleteUser(userId);
           results.deleted.push(userId);
         } catch (error) {
-          results.errors.push(
-            `Delete user ${userId} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          );
+          results.errors.push(`Delete user ${userId} failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
     }
@@ -352,9 +312,7 @@ export async function bulkUserOperations(operations: {
           const response = await restoreUser(userId);
           results.restored.push(response);
         } catch (error) {
-          results.errors.push(
-            `Restore user ${userId} failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          );
+          results.errors.push(`Restore user ${userId} failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
     }
@@ -364,9 +322,7 @@ export async function bulkUserOperations(operations: {
     return results;
   } catch (error) {
     console.error('Error in bulk user operations:', error);
-    throw new Error(
-      error instanceof Error ? error.message : 'Failed to execute bulk user operations',
-    );
+    throw new Error(error instanceof Error ? error.message : 'Failed to execute bulk user operations');
   }
 }
 
@@ -428,9 +384,7 @@ export async function getUserAchievementProgress(userId: string) {
     return response.data;
   } catch (error) {
     console.error('Error fetching user achievement progress:', error);
-    throw new Error(
-      error instanceof Error ? error.message : 'Failed to fetch user achievement progress',
-    );
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch user achievement progress');
   }
 }
 
@@ -452,9 +406,7 @@ export async function getUserAchievementSummary(userId: string) {
     return response.data;
   } catch (error) {
     console.error('Error fetching user achievement summary:', error);
-    throw new Error(
-      error instanceof Error ? error.message : 'Failed to fetch user achievement summary',
-    );
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch user achievement summary');
   }
 }
 
@@ -483,11 +435,7 @@ export async function getUserAvailableAchievements(userId: string) {
 /**
  * Update user achievement progress
  */
-export async function updateUserAchievementProgress(
-  userId: string,
-  achievementId: string,
-  progressData: UpdateAchievementProgressRequest,
-) {
+export async function updateUserAchievementProgress(userId: string, achievementId: string, progressData: UpdateAchievementProgressRequest) {
   await configureAuthenticatedClient();
 
   try {
@@ -527,9 +475,7 @@ export async function getUserAchievementPrerequisites(userId: string, achievemen
     return response.data;
   } catch (error) {
     console.error('Error fetching achievement prerequisites:', error);
-    throw new Error(
-      error instanceof Error ? error.message : 'Failed to fetch achievement prerequisites',
-    );
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch achievement prerequisites');
   }
 }
 
@@ -552,9 +498,7 @@ export async function markUserAchievementNotified(userId: string, userAchievemen
     return { success: true };
   } catch (error) {
     console.error('Error marking achievement as notified:', error);
-    throw new Error(
-      error instanceof Error ? error.message : 'Failed to mark achievement as notified',
-    );
+    throw new Error(error instanceof Error ? error.message : 'Failed to mark achievement as notified');
   }
 }
 
@@ -593,12 +537,7 @@ export async function getUserDashboardData(userId: string) {
   await configureAuthenticatedClient();
 
   try {
-    const [user, achievements, achievementSummary, achievementProgress] = await Promise.all([
-      getUserById(userId),
-      getUserAchievements(userId, { pageSize: 10 }),
-      getUserAchievementSummary(userId),
-      getUserAchievementProgress(userId),
-    ]);
+    const [user, achievements, achievementSummary, achievementProgress] = await Promise.all([getUserById(userId), getUserAchievements(userId, { pageSize: 10 }), getUserAchievementSummary(userId), getUserAchievementProgress(userId)]);
 
     return {
       user,
@@ -609,9 +548,7 @@ export async function getUserDashboardData(userId: string) {
     };
   } catch (error) {
     console.error('Error generating user dashboard data:', error);
-    throw new Error(
-      error instanceof Error ? error.message : 'Failed to generate user dashboard data',
-    );
+    throw new Error(error instanceof Error ? error.message : 'Failed to generate user dashboard data');
   }
 }
 
@@ -636,12 +573,7 @@ export async function deactivateUsers(userIds: string[]) {
 /**
  * Generate user activity report
  */
-export async function generateUserActivityReport(params?: {
-  fromDate?: string;
-  toDate?: string;
-  includeInactive?: boolean;
-  includeDeleted?: boolean;
-}) {
+export async function generateUserActivityReport(params?: { fromDate?: string; toDate?: string; includeInactive?: boolean; includeDeleted?: boolean }) {
   await configureAuthenticatedClient();
 
   try {
@@ -671,8 +603,6 @@ export async function generateUserActivityReport(params?: {
     };
   } catch (error) {
     console.error('Error generating user activity report:', error);
-    throw new Error(
-      error instanceof Error ? error.message : 'Failed to generate user activity report',
-    );
+    throw new Error(error instanceof Error ? error.message : 'Failed to generate user activity report');
   }
 }

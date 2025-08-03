@@ -1,16 +1,8 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import {
-  getApiUserprofiles,
-  postApiUserprofiles,
-  deleteApiUserprofilesById,
-  getApiUserprofilesById,
-  putApiUserprofilesById,
-  getApiUserprofilesUserByUserId,
-  postApiUserprofilesByIdRestore,
-} from '@/lib/api/generated/sdk.gen';
+import { deleteApiUserprofilesById, getApiUserprofiles, getApiUserprofilesById, getApiUserprofilesUserByUserId, postApiUserprofiles, postApiUserprofilesByIdRestore, putApiUserprofilesById } from '@/lib/api/generated/sdk.gen';
+import { revalidateTag } from 'next/cache';
 
 // =============================================================================
 // USER PROFILE CRUD OPERATIONS
@@ -96,15 +88,7 @@ export async function getUserProfileByUserId(userId: string, includeDeleted = fa
 /**
  * Create a new user profile
  */
-export async function createUserProfile(profileData: {
-  givenName: string;
-  familyName: string;
-  displayName: string;
-  title?: string | null;
-  description?: string | null;
-  userId: string;
-  tenantId?: string | null;
-}) {
+export async function createUserProfile(profileData: { givenName: string; familyName: string; displayName: string; title?: string | null; description?: string | null; userId: string; tenantId?: string | null }) {
   await configureAuthenticatedClient();
 
   try {
