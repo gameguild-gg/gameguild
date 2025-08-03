@@ -11,9 +11,7 @@ export function CommunityInfo() {
         <span className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Game Guild</span>
       </div>
 
-      <p className="text-slate-400 mb-6 max-w-sm leading-relaxed">
-        A thriving gaming community dedicated to education, collaboration, and innovation. Join us as we grow together and shape the future of gaming.
-      </p>
+      <p className="text-slate-400 mb-6 max-w-sm leading-relaxed">A thriving gaming community dedicated to education, collaboration, and innovation. Join us as we grow together and shape the future of gaming.</p>
 
       <div className="space-y-3 text-sm">
         <div className="flex items-center gap-3 text-slate-400 hover:text-blue-400 transition-colors group">

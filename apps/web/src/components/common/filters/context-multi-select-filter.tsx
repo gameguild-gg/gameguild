@@ -62,11 +62,7 @@ export function ContextMultiSelectFilter({ filterKey, options, placeholder = 'Se
         <div className="space-y-2">
           {options.map((option) => (
             <div key={option.value} className="flex items-center space-x-2 rounded p-2 hover:bg-gray-50">
-              <Checkbox
-                id={`${filterKey}-${option.value}`}
-                checked={selectedValues.includes(option.value)}
-                onCheckedChange={() => handleToggleOption(option.value)}
-              />
+              <Checkbox id={`${filterKey}-${option.value}`} checked={selectedValues.includes(option.value)} onCheckedChange={() => handleToggleOption(option.value)} />
               <label htmlFor={`${filterKey}-${option.value}`} className="flex-1 cursor-pointer text-sm">
                 <span>{option.label}</span>
                 {option.count !== undefined && <span className="ml-1 text-gray-500">({option.count})</span>}
