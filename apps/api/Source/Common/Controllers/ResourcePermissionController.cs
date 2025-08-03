@@ -277,7 +277,7 @@ public class ResourcePermissionController : ControllerBase
                 userId, tenantId, permission, resourceId, "Product"),
             "resources" => await _permissionResolver.ResolvePermissionAsync<Entity>(
                 userId, tenantId, permission, resourceId, "Resource"),
-            _ => throw new ArgumentException($"Unknown resource type: {resourceType}")
+            _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
         };
     }
 
@@ -296,7 +296,7 @@ public class ResourcePermissionController : ControllerBase
                 userId, tenantId, resourceId, "Product"),
             "resources" => await _permissionResolver.GetEffectivePermissionsAsync<Entity>(
                 userId, tenantId, resourceId, "Resource"),
-            _ => throw new ArgumentException($"Unknown resource type: {resourceType}")
+            _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
         };
     }
 
@@ -315,7 +315,7 @@ public class ResourcePermissionController : ControllerBase
                 userId, tenantId, permission, resourceId, "Product"),
             "resources" => await _permissionResolver.GetPermissionHierarchyAsync<Entity>(
                 userId, tenantId, permission, resourceId, "Resource"),
-            _ => throw new ArgumentException($"Unknown resource type: {resourceType}")
+            _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
         };
     }
 

@@ -13,7 +13,11 @@ public class UserProductConfiguration : IEntityTypeConfiguration<UserProduct> {
     builder.HasOne(up => up.User).WithMany().HasForeignKey(up => up.UserId).OnDelete(DeleteBehavior.Restrict);
 
     // Configure relationship with Product (can't be done with annotations)
-    builder.HasOne(up => up.Product).WithMany().HasForeignKey(up => up.ProductId).OnDelete(DeleteBehavior.Restrict);
+    // This explicitly maps to the UserProducts collection on Product
+    builder.HasOne(up => up.Product)
+           .WithMany(p => p.UserProducts)
+           .HasForeignKey(up => up.ProductId)
+           .OnDelete(DeleteBehavior.Restrict);
 
     // Configure relationship with Subscription (can't be done with annotations)
     builder.HasOne(up => up.Subscription)

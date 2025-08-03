@@ -33,7 +33,7 @@ public class ProjectFollower : Resource {
   /// <summary>
   /// Navigation property to user
   /// </summary>
-  public virtual User User { get; set; } = null!;
+  public virtual User? User { get; set; }
 
   /// <summary>
   /// Date when the user started following

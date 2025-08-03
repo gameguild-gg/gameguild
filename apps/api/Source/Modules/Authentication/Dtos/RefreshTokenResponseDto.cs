@@ -7,20 +7,20 @@ public class RefreshTokenResponseDto {
   /// <summary>
   /// New JWT access token
   /// </summary>
-  public string AccessToken { get; set; } = string.Empty;
+  public string AccessToken { get; init; } = string.Empty;
 
   /// <summary>
   /// New refresh token
   /// </summary>
-  public string RefreshToken { get; set; } = string.Empty;
+  public string RefreshToken { get; init; } = string.Empty;
 
   /// <summary>
   /// When the refresh token expires
   /// </summary>
-  public DateTime ExpiresAt { get; set; }
+  public DateTime ExpiresAt { get; init; }
 
   /// <summary>
   /// Tenant ID associated with this token (if any)
   /// </summary>
-  public Guid? TenantId { get; set; }
+  public Guid? TenantId { get; init; }
 }

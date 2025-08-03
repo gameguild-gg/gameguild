@@ -26,14 +26,11 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User> {
 
     // Optimistic concurrency
     builder.Property(user => user.Version).IsRowVersion();
-    // Soft delete query filter
-    builder.HasQueryFilter(user => user.DeletedAt == null);
+    
+    // Note: Soft delete query filter is configured globally in ModelBuilderExtensions.ConfigureSoftDelete()
+    // Removing duplicate filter to avoid conflicts with related entities
 
     // Relationships
     builder.HasMany(user => user.Credentials).WithOne(c => c.User).HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade);
-
-    builder.HasMany(user => user.TenantPermissions).WithOne().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade);
-
-    builder.HasMany(user => user.ContentTypePermissions).WithOne().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade);
   }
 }

@@ -77,7 +77,7 @@ public class AchievementLevelDataLoader : GroupedDataLoader<Guid, AchievementLev
     IDbContextFactory<ApplicationDbContext> dbContextFactory,
     IBatchScheduler batchScheduler,
     DataLoaderOptions? options = null)
-    : base(batchScheduler, options) {
+    : base(batchScheduler, options ?? new DataLoaderOptions()) {
     _dbContextFactory = dbContextFactory;
   }
 
@@ -107,7 +107,7 @@ public class AchievementPrerequisiteDataLoader : GroupedDataLoader<Guid, Achieve
     IDbContextFactory<ApplicationDbContext> dbContextFactory,
     IBatchScheduler batchScheduler,
     DataLoaderOptions? options = null)
-    : base(batchScheduler, options) {
+    : base(batchScheduler, options ?? new DataLoaderOptions()) {
     _dbContextFactory = dbContextFactory;
   }
 

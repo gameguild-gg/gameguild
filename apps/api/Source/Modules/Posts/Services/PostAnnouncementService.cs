@@ -106,7 +106,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
       await _eventPublisher.PublishAsync(
         new PostCreatedEvent(
           announcementPost.Id,
-          announcementPost.AuthorId,
+          announcementPost.AuthorId ?? Guid.Empty,
           announcementPost.Description ?? "",
           announcementPost.PostType,
           announcementPost.IsSystemGenerated,
@@ -178,7 +178,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
       await _eventPublisher.PublishAsync(
         new PostCreatedEvent(
           celebrationPost.Id,
-          celebrationPost.AuthorId,
+          celebrationPost.AuthorId ?? Guid.Empty,
           celebrationPost.Description ?? "",
           celebrationPost.PostType,
           celebrationPost.IsSystemGenerated,
@@ -251,7 +251,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
       await _eventPublisher.PublishAsync(
         new PostCreatedEvent(
           updatePost.Id,
-          updatePost.AuthorId,
+          updatePost.AuthorId ?? Guid.Empty,
           updatePost.Description ?? "",
           updatePost.PostType,
           updatePost.IsSystemGenerated,

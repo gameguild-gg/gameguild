@@ -7,9 +7,15 @@ namespace GameGuild.Modules.Products;
 /// <summary>
 /// Entity Framework configuration for Product entity
 /// </summary>
-public class ProductConfiguration : IEntityTypeConfiguration<Product> {
+internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product> {
   public void Configure(EntityTypeBuilder<Product> builder) {
-    // Configure relationship with Creator (can't be done with annotations)
-    builder.HasOne(p => p.Creator).WithMany().HasForeignKey(p => p.CreatorId).OnDelete(DeleteBehavior.Restrict);
+    ArgumentNullException.ThrowIfNull(builder);
+    
+    // Configure the relationship with User as optional to avoid query filter warnings
+    builder.HasOne(p => p.Creator)
+           .WithMany()
+           .HasForeignKey(p => p.CreatorId)
+           .IsRequired(false) // Make the relationship optional
+           .OnDelete(DeleteBehavior.SetNull);
   }
 }

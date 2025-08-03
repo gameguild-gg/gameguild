@@ -13,7 +13,7 @@ namespace GameGuild.Modules.Permissions;
 
 // this is a base permission model that can be used to store permissions for any entity
 [ObjectType]
-public class WithPermissions : Entity {
+public abstract class WithPermissions : Entity {
   [GraphQLType(typeof(NonNullType<LongType>))]
   [GraphQLDescription("Permission flags for bits 0-63")]
   [Column(TypeName = "bigint")]
@@ -35,7 +35,6 @@ public class WithPermissions : Entity {
   /// Navigation property to the User entity
   /// </summary>
   [GraphQLIgnore]
-  [ForeignKey(nameof(UserId))]
   public virtual User? User { get; set; }
 
   /// <summary>
@@ -49,7 +48,6 @@ public class WithPermissions : Entity {
   /// Navigation property to the Tenant entity
   /// </summary>
   [GraphQLIgnore]
-  [ForeignKey(nameof(TenantId))]
   public new virtual Tenant? Tenant { get; set; }
 
   /// <summary>
