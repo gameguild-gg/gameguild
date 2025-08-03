@@ -1,31 +1,31 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
+  deleteApiAchievementsByAchievementId,
   getApiAchievements,
+  getApiAchievementsByAchievementId,
+  getApiAchievementsByAchievementIdStatistics,
   getApiAchievementsLeaderboard,
   getApiAchievementsStatistics,
   postApiAchievements,
-  deleteApiAchievementsByAchievementId,
-  getApiAchievementsByAchievementId,
-  putApiAchievementsByAchievementId,
   postApiAchievementsByAchievementIdAward,
   postApiAchievementsByAchievementIdBulkAward,
-  getApiAchievementsByAchievementIdStatistics,
+  putApiAchievementsByAchievementId,
 } from '@/lib/api/generated/sdk.gen';
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import type {
-  GetApiAchievementsData,
-  PostApiAchievementsData,
   DeleteApiAchievementsByAchievementIdData,
   GetApiAchievementsByAchievementIdData,
-  PutApiAchievementsByAchievementIdData,
-  PostApiAchievementsByAchievementIdAwardData,
-  PostApiAchievementsByAchievementIdBulkAwardData,
   GetApiAchievementsByAchievementIdStatisticsData,
+  GetApiAchievementsData,
   GetApiAchievementsLeaderboardData,
   GetApiAchievementsStatisticsData,
+  PostApiAchievementsByAchievementIdAwardData,
+  PostApiAchievementsByAchievementIdBulkAwardData,
+  PostApiAchievementsData,
+  PutApiAchievementsByAchievementIdData,
 } from '@/lib/api/generated/types.gen';
+import { revalidateTag } from 'next/cache';
 
 /**
  * Get all achievements with optional filtering
@@ -65,10 +65,10 @@ export async function createAchievement(data?: PostApiAchievementsData) {
   const result = await postApiAchievements({
     body: data?.body,
   });
-  
+
   // Revalidate achievements cache
   revalidateTag('achievements');
-  
+
   return result;
 }
 
@@ -80,10 +80,10 @@ export async function deleteAchievement(data: DeleteApiAchievementsByAchievement
   const result = await deleteApiAchievementsByAchievementId({
     path: data.path,
   });
-  
+
   // Revalidate achievements cache
   revalidateTag('achievements');
-  
+
   return result;
 }
 
@@ -106,10 +106,10 @@ export async function updateAchievement(data: PutApiAchievementsByAchievementIdD
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate achievements cache
   revalidateTag('achievements');
-  
+
   return result;
 }
 
@@ -122,11 +122,11 @@ export async function awardAchievement(data: PostApiAchievementsByAchievementIdA
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate achievements and user achievements cache
   revalidateTag('achievements');
   revalidateTag('user-achievements');
-  
+
   return result;
 }
 
@@ -139,11 +139,11 @@ export async function bulkAwardAchievement(data: PostApiAchievementsByAchievemen
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate achievements and user achievements cache
   revalidateTag('achievements');
   revalidateTag('user-achievements');
-  
+
   return result;
 }
 

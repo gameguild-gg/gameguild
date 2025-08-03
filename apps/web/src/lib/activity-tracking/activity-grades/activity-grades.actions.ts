@@ -1,29 +1,29 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
-  postApiProgramsByProgramIdActivityGrades,
-  getApiProgramsByProgramIdActivityGradesInteractionByContentInteractionId,
-  getApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserId,
-  getApiProgramsByProgramIdActivityGradesStudentByProgramUserId,
   deleteApiProgramsByProgramIdActivityGradesByGradeId,
-  putApiProgramsByProgramIdActivityGradesByGradeId,
+  getApiProgramsByProgramIdActivityGradesContentByContentId,
+  getApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserId,
+  getApiProgramsByProgramIdActivityGradesInteractionByContentInteractionId,
   getApiProgramsByProgramIdActivityGradesPending,
   getApiProgramsByProgramIdActivityGradesStatistics,
-  getApiProgramsByProgramIdActivityGradesContentByContentId,
+  getApiProgramsByProgramIdActivityGradesStudentByProgramUserId,
+  postApiProgramsByProgramIdActivityGrades,
+  putApiProgramsByProgramIdActivityGradesByGradeId,
 } from '@/lib/api/generated/sdk.gen';
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import type {
-  PostApiProgramsByProgramIdActivityGradesData,
-  GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData,
-  GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdData,
-  GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdData,
   DeleteApiProgramsByProgramIdActivityGradesByGradeIdData,
-  PutApiProgramsByProgramIdActivityGradesByGradeIdData,
+  GetApiProgramsByProgramIdActivityGradesContentByContentIdData,
+  GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdData,
+  GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData,
   GetApiProgramsByProgramIdActivityGradesPendingData,
   GetApiProgramsByProgramIdActivityGradesStatisticsData,
-  GetApiProgramsByProgramIdActivityGradesContentByContentIdData,
+  GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdData,
+  PostApiProgramsByProgramIdActivityGradesData,
+  PutApiProgramsByProgramIdActivityGradesByGradeIdData,
 } from '@/lib/api/generated/types.gen';
+import { revalidateTag } from 'next/cache';
 
 /**
  * Create a new activity grade for a program
@@ -34,11 +34,11 @@ export async function createActivityGrade(data: PostApiProgramsByProgramIdActivi
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate activity grades cache
   revalidateTag('activity-grades');
   revalidateTag(`program-${data.path.programId}-grades`);
-  
+
   return result;
 }
 
@@ -80,11 +80,11 @@ export async function deleteActivityGrade(data: DeleteApiProgramsByProgramIdActi
   const result = await deleteApiProgramsByProgramIdActivityGradesByGradeId({
     path: data.path,
   });
-  
+
   // Revalidate activity grades cache
   revalidateTag('activity-grades');
   revalidateTag(`program-${data.path.programId}-grades`);
-  
+
   return result;
 }
 
@@ -97,11 +97,11 @@ export async function updateActivityGrade(data: PutApiProgramsByProgramIdActivit
     path: data.path,
     body: data.body,
   });
-  
+
   // Revalidate activity grades cache
   revalidateTag('activity-grades');
   revalidateTag(`program-${data.path.programId}-grades`);
-  
+
   return result;
 }
 
