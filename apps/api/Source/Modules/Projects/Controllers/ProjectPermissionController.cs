@@ -57,13 +57,13 @@ public class ProjectPermissionController : ControllerBase
     /// </summary>
     [HttpGet("collaborators")]
     [RequireProjectPermission(PermissionType.Read)]
-    public async Task<ActionResult<IEnumerable<ProjectCollaborator>>> GetProjectCollaborators(Guid projectId)
+    public async Task<ActionResult<IEnumerable<ProjectCollaboratorDto>>> GetProjectCollaborators(Guid projectId)
     {
         var userId = GetCurrentUserId();
 
         var users = await _resourcePermissionService.GetResourceUsersAsync("projects", projectId, userId);
         
-        var collaborators = users.Select(u => new ProjectCollaborator
+        var collaborators = users.Select(u => new ProjectCollaboratorDto
         {
             UserId = u.UserId,
             UserName = u.UserName,
@@ -74,7 +74,7 @@ public class ProjectPermissionController : ControllerBase
             JoinedAt = u.GrantedAt,
             InvitedBy = u.GrantedByUserName,
             IsOwner = u.IsOwner,
-            ExpiresAt = u.ExpiresAt
+            ExpiresAt = u.ExpiresAt,
         });
 
         return Ok(collaborators);
@@ -104,7 +104,7 @@ public class ProjectPermissionController : ControllerBase
             Permissions = request.Permissions,
             ExpiresAt = request.ExpiresAt,
             Message = request.Message,
-            RequireAcceptance = request.RequireAcceptance
+            RequireAcceptance = request.RequireAcceptance,
         };
 
         var result = await _resourcePermissionService.InviteUserToResourceAsync(
@@ -177,7 +177,7 @@ public class ProjectPermissionController : ControllerBase
             {
                 Name = "Viewer",
                 Description = "Can view project content",
-                Permissions = new[] { PermissionType.Read, PermissionType.Comment }
+                Permissions = new[] { PermissionType.Read, PermissionType.Comment },
             },
             new ProjectRoleTemplate
             {
@@ -186,8 +186,8 @@ public class ProjectPermissionController : ControllerBase
                 Permissions = new[] 
                 { 
                     PermissionType.Read, PermissionType.Edit, PermissionType.Comment, 
-                    PermissionType.Reply, PermissionType.Share, PermissionType.Create 
-                }
+                    PermissionType.Reply, PermissionType.Share, PermissionType.Create,
+                },
             },
             new ProjectRoleTemplate
             {
@@ -197,8 +197,8 @@ public class ProjectPermissionController : ControllerBase
                 { 
                     PermissionType.Read, PermissionType.Edit, PermissionType.Create,
                     PermissionType.Comment, PermissionType.Reply, PermissionType.Share,
-                    PermissionType.Review, PermissionType.Approve, PermissionType.Publish
-                }
+                    PermissionType.Review, PermissionType.Approve, PermissionType.Publish,
+                },
             },
             new ProjectRoleTemplate
             {
@@ -209,9 +209,9 @@ public class ProjectPermissionController : ControllerBase
                     PermissionType.Read, PermissionType.Edit, PermissionType.Create, PermissionType.Delete,
                     PermissionType.Comment, PermissionType.Reply, PermissionType.Share,
                     PermissionType.Review, PermissionType.Approve, PermissionType.Publish,
-                    PermissionType.Archive, PermissionType.Restore
-                }
-            }
+                    PermissionType.Archive, PermissionType.Restore,
+                },
+            },
         };
 
         return Ok(templates);
@@ -248,7 +248,7 @@ public class ProjectPermissionController : ControllerBase
             ExpiresAt = request.ExpiresAt,
             Message = request.Message ?? $"You've been invited to collaborate on this project as a {request.RoleName}",
             RequireAcceptance = request.RequireAcceptance,
-            NotifyUsers = request.NotifyUsers
+            NotifyUsers = request.NotifyUsers,
         };
 
         var result = await _resourcePermissionService.ShareResourceAsync(
@@ -301,7 +301,7 @@ public class ProjectPermissionController : ControllerBase
             {
                 Name = "Viewer",
                 Description = "Can view project content",
-                Permissions = new[] { PermissionType.Read, PermissionType.Comment }
+                Permissions = new[] { PermissionType.Read, PermissionType.Comment },
             },
             "collaborator" => new ProjectRoleTemplate
             {
@@ -310,8 +310,8 @@ public class ProjectPermissionController : ControllerBase
                 Permissions = new[] 
                 { 
                     PermissionType.Read, PermissionType.Edit, PermissionType.Comment, 
-                    PermissionType.Reply, PermissionType.Share, PermissionType.Create 
-                }
+                    PermissionType.Reply, PermissionType.Share, PermissionType.Create,
+                },
             },
             "editor" => new ProjectRoleTemplate
             {
@@ -321,8 +321,8 @@ public class ProjectPermissionController : ControllerBase
                 { 
                     PermissionType.Read, PermissionType.Edit, PermissionType.Create,
                     PermissionType.Comment, PermissionType.Reply, PermissionType.Share,
-                    PermissionType.Review, PermissionType.Approve, PermissionType.Publish
-                }
+                    PermissionType.Review, PermissionType.Approve, PermissionType.Publish,
+                },
             },
             "admin" => new ProjectRoleTemplate
             {
@@ -333,10 +333,10 @@ public class ProjectPermissionController : ControllerBase
                     PermissionType.Read, PermissionType.Edit, PermissionType.Create, PermissionType.Delete,
                     PermissionType.Comment, PermissionType.Reply, PermissionType.Share,
                     PermissionType.Review, PermissionType.Approve, PermissionType.Publish,
-                    PermissionType.Archive, PermissionType.Restore
-                }
+                    PermissionType.Archive, PermissionType.Restore,
+                },
             },
-            _ => null
+            _ => null,
         };
     }
 
@@ -344,9 +344,9 @@ public class ProjectPermissionController : ControllerBase
 }
 
 /// <summary>
-/// Project collaborator information
+/// Project collaborator information for API responses
 /// </summary>
-public class ProjectCollaborator
+public class ProjectCollaboratorDto
 {
     public Guid UserId { get; set; }
     public string UserName { get; set; } = string.Empty;

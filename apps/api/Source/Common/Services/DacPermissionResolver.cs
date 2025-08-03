@@ -63,7 +63,7 @@ public class DacPermissionResolver : IDacPermissionResolver
                     ExpiresAt = result.ExpiresAt,
                     IsInherited = result.IsInherited,
                     IsExplicit = !result.IsInherited,
-                    Priority = result.Priority
+                    Priority = result.Priority,
                 });
             }
         }
@@ -114,7 +114,7 @@ public class DacPermissionResolver : IDacPermissionResolver
             UserId = userId,
             TenantId = tenantId,
             ResourceId = resourceId,
-            ContentTypeName = contentTypeName
+            ContentTypeName = contentTypeName,
         };
 
         var layers = new List<PermissionLayer>();
@@ -129,7 +129,7 @@ public class DacPermissionResolver : IDacPermissionResolver
                 IsGranted = true,
                 IsDefault = true,
                 Priority = 1,
-                Description = "Global default permission"
+                Description = "Global default permission",
             });
         }
 
@@ -145,7 +145,7 @@ public class DacPermissionResolver : IDacPermissionResolver
                     IsGranted = true,
                     IsDefault = true,
                     Priority = 2,
-                    Description = $"Tenant {tenantId} default permission"
+                    Description = $"Tenant {tenantId} default permission",
                 });
             }
         }
@@ -163,7 +163,7 @@ public class DacPermissionResolver : IDacPermissionResolver
                     IsGranted = true,
                     IsDefault = true,
                     Priority = 3,
-                    Description = $"Content type {contentTypeName} default permission"
+                    Description = $"Content type {contentTypeName} default permission",
                 });
             }
         }
@@ -180,7 +180,7 @@ public class DacPermissionResolver : IDacPermissionResolver
                     IsGranted = true,
                     IsDefault = false,
                     Priority = 4,
-                    Description = $"User {userId} tenant {tenantId} permission"
+                    Description = $"User {userId} tenant {tenantId} permission",
                 });
             }
         }
@@ -198,7 +198,7 @@ public class DacPermissionResolver : IDacPermissionResolver
                     IsGranted = true,
                     IsDefault = false,
                     Priority = 5,
-                    Description = $"User {userId} content type {contentTypeName} permission"
+                    Description = $"User {userId} content type {contentTypeName} permission",
                 });
             }
         }
@@ -216,7 +216,7 @@ public class DacPermissionResolver : IDacPermissionResolver
                     IsGranted = true,
                     IsDefault = true,
                     Priority = 6,
-                    Description = $"Resource {resourceId} default permission"
+                    Description = $"Resource {resourceId} default permission",
                 });
             }
         }
@@ -234,7 +234,7 @@ public class DacPermissionResolver : IDacPermissionResolver
                     IsGranted = true,
                     IsDefault = false,
                     Priority = 7,
-                    Description = $"User {userId} resource {resourceId} permission"
+                    Description = $"User {userId} resource {resourceId} permission",
                 });
             }
         }
@@ -256,7 +256,7 @@ public class DacPermissionResolver : IDacPermissionResolver
             ExpiresAt = highestPriorityLayer?.ExpiresAt,
             Priority = highestPriorityLayer?.Priority ?? 0,
             IsInherited = highestPriorityLayer?.IsDefault == true,
-            Reason = highestPriorityLayer?.Description ?? "No permission found"
+            Reason = highestPriorityLayer?.Description ?? "No permission found",
         };
 
         return hierarchy;
@@ -299,7 +299,7 @@ public class DacPermissionResolver : IDacPermissionResolver
             PermissionSource.ResourceDefault => "Resource default permissions",
             PermissionSource.ResourceUser => "User resource permissions",
             PermissionSource.SystemOverride => "System override",
-            _ => "Unknown source"
+            _ => "Unknown source",
         };
     }
 }

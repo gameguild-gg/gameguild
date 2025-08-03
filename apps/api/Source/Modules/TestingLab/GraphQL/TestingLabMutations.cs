@@ -132,7 +132,7 @@ public class TestingLabMutations {
       MaxTestersCapacity = input.MaxTestersCapacity,
       MaxProjectsCapacity = input.MaxProjectsCapacity,
       EquipmentAvailable = input.EquipmentAvailable,
-      Status = input.Status
+      Status = input.Status,
     };
 
     return await testService.CreateTestingLocationAsync(location);
