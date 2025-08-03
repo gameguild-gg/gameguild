@@ -132,7 +132,7 @@ public class PermissionQueries
             "content" or "contents" => await resolver.GetEffectivePermissionsAsync<Entity>(userId, tenantId, resourceId, "Content"),
             "product" or "products" => await resolver.GetEffectivePermissionsAsync<Entity>(userId, tenantId, resourceId, "Product"),
             "resource" or "resources" => await resolver.GetEffectivePermissionsAsync<Entity>(userId, tenantId, resourceId, "Resource"),
-            _ => throw new ArgumentException($"Unknown resource type: {resourceType}")
+            _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
         };
     }
 
@@ -146,7 +146,7 @@ public class PermissionQueries
             "content" or "contents" => await resolver.GetPermissionHierarchyAsync<Entity>(userId, tenantId, permission, resourceId, "Content"),
             "product" or "products" => await resolver.GetPermissionHierarchyAsync<Entity>(userId, tenantId, permission, resourceId, "Product"),
             "resource" or "resources" => await resolver.GetPermissionHierarchyAsync<Entity>(userId, tenantId, permission, resourceId, "Resource"),
-            _ => throw new ArgumentException($"Unknown resource type: {resourceType}")
+            _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
         };
     }
 
@@ -160,7 +160,7 @@ public class PermissionQueries
             "content" or "contents" => await resolver.ResolvePermissionAsync<Entity>(userId, tenantId, permission, resourceId, "Content"),
             "product" or "products" => await resolver.ResolvePermissionAsync<Entity>(userId, tenantId, permission, resourceId, "Product"),
             "resource" or "resources" => await resolver.ResolvePermissionAsync<Entity>(userId, tenantId, permission, resourceId, "Resource"),
-            _ => throw new ArgumentException($"Unknown resource type: {resourceType}")
+            _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
         };
     }
 
@@ -174,7 +174,7 @@ public class PermissionQueries
             "content" or "contents" => await resolver.BulkResolvePermissionsAsync<Entity>(userId, tenantId, resourceIds, permissions),
             "product" or "products" => await resolver.BulkResolvePermissionsAsync<Entity>(userId, tenantId, resourceIds, permissions),
             "resource" or "resources" => await resolver.BulkResolvePermissionsAsync<Entity>(userId, tenantId, resourceIds, permissions),
-            _ => throw new ArgumentException($"Unknown resource type: {resourceType}")
+            _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
         };
     }
 
@@ -223,7 +223,7 @@ public class PermissionMutations
             ExpiresAt = input.ExpiresAt,
             Message = input.Message,
             RequireAcceptance = input.RequireAcceptance,
-            NotifyUsers = input.NotifyUsers
+            NotifyUsers = input.NotifyUsers,
         };
 
         return await service.ShareResourceAsync(input.ResourceType, input.ResourceId, shareRequest, userId);

@@ -39,16 +39,6 @@ public sealed class User : Entity {
   public ICollection<Credential> Credentials { get; set; } = new List<Credential>();
 
   /// <summary>
-  /// Navigation property to tenant permissions and memberships
-  /// </summary>
-  public ICollection<TenantPermission> TenantPermissions { get; set; } = new List<TenantPermission>();
-
-  /// <summary>
-  /// Navigation property to global content type permissions (Layer 2a of permission system)
-  /// </summary>
-  public ICollection<ContentTypePermission> ContentTypePermissions { get; set; } = new List<ContentTypePermission>();
-
-  /// <summary>
   /// Default constructor
   /// </summary>
   public User() { }

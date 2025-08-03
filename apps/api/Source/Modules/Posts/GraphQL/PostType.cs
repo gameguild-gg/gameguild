@@ -113,7 +113,8 @@ public class PostResolvers {
     [Service] IUserDataLoader userDataLoader,
     CancellationToken cancellationToken
   ) {
-    return await userDataLoader.LoadAsync(post.AuthorId, cancellationToken);
+    if (post.AuthorId == null) return null;
+    return await userDataLoader.LoadAsync(post.AuthorId.Value, cancellationToken);
   }
 
   /// <summary>

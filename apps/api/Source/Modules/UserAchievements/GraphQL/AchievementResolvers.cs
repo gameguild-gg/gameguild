@@ -62,7 +62,8 @@ public class UserAchievementResolvers {
     [Parent] UserAchievement userAchievement,
     [Service] IUserDataLoader userLoader,
     CancellationToken cancellationToken) {
-    return await userLoader.LoadAsync(userAchievement.UserId, cancellationToken);
+    if (userAchievement.UserId == null) return null;
+    return await userLoader.LoadAsync(userAchievement.UserId.Value, cancellationToken);
   }
 
   public double GetProgressPercentageAsync([Parent] UserAchievement userAchievement) {
@@ -97,7 +98,8 @@ public class AchievementProgressResolvers {
     [Parent] AchievementProgress achievementProgress,
     [Service] IUserDataLoader userLoader,
     CancellationToken cancellationToken) {
-    return await userLoader.LoadAsync(achievementProgress.UserId, cancellationToken);
+    if (achievementProgress.UserId == null) return null;
+    return await userLoader.LoadAsync(achievementProgress.UserId.Value, cancellationToken);
   }
 
   public double GetProgressPercentageAsync([Parent] AchievementProgress achievementProgress) {

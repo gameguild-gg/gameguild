@@ -38,7 +38,7 @@ public class ModulePermissionService : IModulePermissionService
             Constraints = constraints ?? new List<PermissionConstraint>(),
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = expiresAt,
-            IsActive = true
+            IsActive = true,
         };
         
         _userRoleAssignments.Add(assignment);
@@ -192,7 +192,7 @@ public class ModulePermissionService : IModulePermissionService
             CanExportData = await CanExportTestingDataAsync(userId, tenantId),
             CanAdminister = await HasModulePermissionAsync(userId, tenantId, ModuleType.TestingLab, ModuleAction.Administer),
             AssignedRoles = userRoles.Select(r => r.RoleName).ToList(),
-            Constraints = userRoles.SelectMany(r => r.Constraints).ToList()
+            Constraints = userRoles.SelectMany(r => r.Constraints).ToList(),
         };
     }
     
@@ -213,7 +213,7 @@ public class ModulePermissionService : IModulePermissionService
             Description = description,
             Permissions = permissions,
             Priority = priority,
-            IsSystemRole = false
+            IsSystemRole = false,
         };
         
         _moduleRoles.Add(role);
@@ -297,7 +297,7 @@ public class ModulePermissionService : IModulePermissionService
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.DeleteSession, IsGranted = true },
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.ManageTesters, IsGranted = true },
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.ViewReports, IsGranted = true },
-            new() { Module = ModuleType.TestingLab, Action = ModuleAction.ExportData, IsGranted = true }
+            new() { Module = ModuleType.TestingLab, Action = ModuleAction.ExportData, IsGranted = true },
         };
         
         var testingLabManagerPermissions = new List<ModulePermission>
@@ -307,7 +307,7 @@ public class ModulePermissionService : IModulePermissionService
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.Edit, IsGranted = true },
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.CreateSession, IsGranted = true },
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.ManageTesters, IsGranted = true },
-            new() { Module = ModuleType.TestingLab, Action = ModuleAction.ViewReports, IsGranted = true }
+            new() { Module = ModuleType.TestingLab, Action = ModuleAction.ViewReports, IsGranted = true },
         };
         
         var testingLabCoordinatorPermissions = new List<ModulePermission>
@@ -315,12 +315,12 @@ public class ModulePermissionService : IModulePermissionService
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.Read, IsGranted = true },
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.CreateSession, IsGranted = true },
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.ManageTesters, IsGranted = true },
-            new() { Module = ModuleType.TestingLab, Action = ModuleAction.ViewReports, IsGranted = true }
+            new() { Module = ModuleType.TestingLab, Action = ModuleAction.ViewReports, IsGranted = true },
         };
         
         var testingLabTesterPermissions = new List<ModulePermission>
         {
-            new() { Module = ModuleType.TestingLab, Action = ModuleAction.Read, IsGranted = true }
+            new() { Module = ModuleType.TestingLab, Action = ModuleAction.Read, IsGranted = true },
         };
         
         _moduleRoles.AddRange(new[]
@@ -332,7 +332,7 @@ public class ModulePermissionService : IModulePermissionService
                 Description = "Full administrative access to Testing Lab",
                 Permissions = testingLabAdminPermissions,
                 Priority = 100,
-                IsSystemRole = true
+                IsSystemRole = true,
             },
             new ModuleRole
             {
@@ -341,7 +341,7 @@ public class ModulePermissionService : IModulePermissionService
                 Description = "Can create and edit sessions, manage testers, but cannot delete sessions",
                 Permissions = testingLabManagerPermissions,
                 Priority = 80,
-                IsSystemRole = true
+                IsSystemRole = true,
             },
             new ModuleRole
             {
@@ -350,7 +350,7 @@ public class ModulePermissionService : IModulePermissionService
                 Description = "Can create sessions and manage testers",
                 Permissions = testingLabCoordinatorPermissions,
                 Priority = 60,
-                IsSystemRole = true
+                IsSystemRole = true,
             },
             new ModuleRole
             {
@@ -359,8 +359,8 @@ public class ModulePermissionService : IModulePermissionService
                 Description = "Can only participate in testing sessions",
                 Permissions = testingLabTesterPermissions,
                 Priority = 40,
-                IsSystemRole = true
-            }
+                IsSystemRole = true,
+            },
         });
         
         _logger.LogInformation("Initialized default module roles");

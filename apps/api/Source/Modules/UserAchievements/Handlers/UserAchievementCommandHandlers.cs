@@ -278,7 +278,7 @@ public class RevokeAchievementCommandHandler : IRequestHandler<RevokeAchievement
       // Publish event
       await _publisher.Publish(new AchievementRevokedEvent(userAchievement.Id) {
         UserAchievementId = userAchievement.Id,
-        UserId = userAchievement.UserId,
+        UserId = userAchievement.UserId ?? Guid.Empty,
         AchievementId = userAchievement.AchievementId,
         AchievementName = achievement.Name,
         PointsLost = pointsLost,

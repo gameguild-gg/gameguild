@@ -225,7 +225,7 @@ public enum InvitationStatus
     Accepted = 1,
     Declined = 2,
     Expired = 3,
-    Cancelled = 4
+    Cancelled = 4,
 }
 
 /// <summary>

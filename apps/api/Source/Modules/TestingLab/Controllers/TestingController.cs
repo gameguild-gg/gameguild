@@ -750,7 +750,7 @@ public class TestingController(ITestService testService) : ControllerBase {
       CanDeleteSessions = await modulePermissionService.CanDeleteTestingSessionsAsync(userId, tenantId),
       CanManageTesters = await modulePermissionService.CanManageTestersAsync(userId, tenantId),
       CanViewReports = await modulePermissionService.CanViewTestingReportsAsync(userId, tenantId),
-      CanExportData = await modulePermissionService.CanExportTestingDataAsync(userId, tenantId)
+      CanExportData = await modulePermissionService.CanExportTestingDataAsync(userId, tenantId),
     };
     
     return Ok(permissions);
@@ -902,7 +902,7 @@ public class CreateTestingLocationDto {
       MaxTestersCapacity = MaxTestersCapacity,
       MaxProjectsCapacity = MaxProjectsCapacity,
       EquipmentAvailable = EquipmentAvailable,
-      Status = Status
+      Status = Status,
     };
   }
 }

@@ -168,6 +168,9 @@ public static class InfrastructureConfiguration {
   /// Configures Entity Framework DbContext with the specified options.
   /// </summary>
   public static void ConfigureDbContext(DbContextOptionsBuilder options, DatabaseOptions dbOptions) {
+    ArgumentNullException.ThrowIfNull(options);
+    ArgumentNullException.ThrowIfNull(dbOptions);
+    
     if (dbOptions.UseInMemoryDatabase) {
       ConfigureInMemoryDatabase(options);
     }
@@ -203,7 +206,10 @@ public static class InfrastructureConfiguration {
   /// Configures database logging based on options.
   /// </summary>
   private static void ConfigureDatabaseLogging(DbContextOptionsBuilder options, DatabaseOptions dbOptions) {
-    if (dbOptions.EnableSensitiveDataLogging) { options.EnableSensitiveDataLogging(); }
+    // Only enable sensitive data logging in development if explicitly configured
+    if (dbOptions.EnableSensitiveDataLogging && IsEnvironment("Development")) { 
+      options.EnableSensitiveDataLogging(); 
+    }
 
     if (dbOptions.EnableDetailedErrors) { options.EnableDetailedErrors(); }
 

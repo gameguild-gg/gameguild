@@ -14,7 +14,7 @@ public enum ModuleType
     TenantManagement = 7,
     ContentManagement = 8,
     ApiManagement = 9,
-    SystemAdministration = 10
+    SystemAdministration = 10,
 }
 
 /// <summary>
@@ -56,7 +56,7 @@ public enum ModuleAction
     ManageUsers = 40,
     ManageRoles = 41,
     ViewAuditLogs = 42,
-    SystemConfiguration = 43
+    SystemConfiguration = 43,
 }
 
 /// <summary>
@@ -67,7 +67,7 @@ public enum TestingLabRole
     Admin = 1,      // Full access to everything
     Manager = 2,    // Can create/edit but not delete sessions, manage testers
     Coordinator = 3, // Can create sessions and manage testers 
-    Tester = 4      // Can only participate in sessions
+    Tester = 4, // Can only participate in sessions
 }
 
 /// <summary>

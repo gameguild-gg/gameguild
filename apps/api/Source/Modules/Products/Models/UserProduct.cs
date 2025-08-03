@@ -30,7 +30,6 @@ public class UserProduct : Entity {
   /// <summary>
   /// Navigation property to the User entity
   /// </summary>
-  [ForeignKey(nameof(UserId))]
   public virtual User User { get; set; } = null!;
 
   /// <summary>
@@ -42,7 +41,6 @@ public class UserProduct : Entity {
   /// <summary>
   /// Navigation property to the Product entity
   /// </summary>
-  [ForeignKey(nameof(ProductId))]
   public virtual Product Product { get; set; } = null!;
 
   /// <summary>
@@ -53,7 +51,6 @@ public class UserProduct : Entity {
   /// <summary>
   /// Navigation property to the Subscription entity
   /// </summary>
-  [ForeignKey(nameof(SubscriptionId))]
   public virtual UserSubscription? Subscription { get; set; }
 
   /// <summary>
@@ -96,7 +93,6 @@ public class UserProduct : Entity {
   /// <summary>
   /// Navigation property to the user who gifted this product
   /// </summary>
-  [ForeignKey(nameof(GiftedByUserId))]
   public virtual User? GiftedByUser { get; set; }
 
   /// <summary>

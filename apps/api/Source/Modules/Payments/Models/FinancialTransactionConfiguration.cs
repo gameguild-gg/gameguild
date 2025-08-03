@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using GameGuild.Modules.Products;
 
 
 namespace GameGuild.Modules.Payments;
@@ -19,6 +20,10 @@ public class FinancialTransactionConfiguration : IEntityTypeConfiguration<Financ
            .OnDelete(DeleteBehavior.SetNull);
 
     // Configure relationship with PromoCode (can't be done with annotations)
-    builder.HasOne(ft => ft.PromoCode).WithMany().HasForeignKey(ft => ft.PromoCodeId).OnDelete(DeleteBehavior.SetNull);
+    // This explicitly maps to the FinancialTransactions collection on PromoCode
+    builder.HasOne(ft => ft.PromoCode)
+           .WithMany(pc => pc.FinancialTransactions)
+           .HasForeignKey(ft => ft.PromoCodeId)
+           .OnDelete(DeleteBehavior.SetNull);
   }
 }

@@ -29,12 +29,12 @@ public sealed class ProjectJamSubmission : Resource {
   /// <summary>
   /// Jam the project is submitted to
   /// </summary>
-  public Guid JamId { get; set; }
+  public Guid? JamId { get; set; }
 
   /// <summary>
   /// Navigation property to jam
   /// </summary>
-  public Jam Jam { get; set; } = null!;
+  public Jam? Jam { get; set; }
 
   /// <summary>
   /// Date when the project was submitted to the jam
