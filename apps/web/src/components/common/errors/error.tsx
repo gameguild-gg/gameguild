@@ -60,9 +60,7 @@ export const Error = ({ error, reset, children }: PropsWithChildren<ErrorProps>)
     reset();
   };
 
-  const canRetry =
-    state.globalConfig.enableRetry &&
-    state.errors.filter((e) => e.boundaryId === 'error-page').reduce((max, e) => Math.max(max, e.retryCount), 0) < (state.globalConfig.maxRetries || 3);
+  const canRetry = state.globalConfig.enableRetry && state.errors.filter((e) => e.boundaryId === 'error-page').reduce((max, e) => Math.max(max, e.retryCount), 0) < (state.globalConfig.maxRetries || 3);
 
   return (
     <div className="flex flex-col flex-1 relative items-center justify-center">
@@ -70,12 +68,7 @@ export const Error = ({ error, reset, children }: PropsWithChildren<ErrorProps>)
       <div className="max-w-md w-full bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-red-200 dark:border-red-800 p-8">
         <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 bg-red-100 dark:bg-red-900 rounded-full">
           <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
         </div>
 
@@ -108,10 +101,7 @@ export const Error = ({ error, reset, children }: PropsWithChildren<ErrorProps>)
 
         <div className="space-y-3">
           {canRetry && (
-            <button
-              onClick={handleRetry}
-              className="w-full bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-200 dark:focus:ring-red-800 text-white font-medium rounded-lg px-6 py-3 transition-all duration-200 focus:outline-none"
-            >
+            <button onClick={handleRetry} className="w-full bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-200 dark:focus:ring-red-800 text-white font-medium rounded-lg px-6 py-3 transition-all duration-200 focus:outline-none">
               Try Again
             </button>
           )}

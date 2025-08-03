@@ -10,11 +10,7 @@ interface ForbiddenProps {
   showLoginButton?: boolean;
 }
 
-export default function Forbidden({
-  title = 'Access Forbidden',
-  message = "You don't have permission to access this resource.",
-  showLoginButton = true,
-}: ForbiddenProps) {
+export default function Forbidden({ title = 'Access Forbidden', message = "You don't have permission to access this resource.", showLoginButton = true }: ForbiddenProps) {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl">

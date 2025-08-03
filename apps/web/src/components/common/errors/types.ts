@@ -167,15 +167,7 @@ export interface ResetStatsAction {
 /**
  * Union type of all possible error boundary actions
  */
-export type ErrorBoundaryAction =
-  | ReportErrorAction
-  | ClearErrorAction
-  | ClearAllErrorsAction
-  | IncrementRetryAction
-  | UpdateConfigAction
-  | DisableGloballyAction
-  | EnableGloballyAction
-  | ResetStatsAction;
+export type ErrorBoundaryAction = ReportErrorAction | ClearErrorAction | ClearAllErrorsAction | IncrementRetryAction | UpdateConfigAction | DisableGloballyAction | EnableGloballyAction | ResetStatsAction;
 
 /**
  * Error boundary reducer function type

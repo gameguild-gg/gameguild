@@ -27,14 +27,5 @@ export function ContextPeriodSelector({ className, showNavigation = true, maxVis
     setPeriod(value.type);
   };
 
-  return (
-    <SmartPeriodSelector
-      selectedPeriod={state.selectedPeriod}
-      onPeriodChange={handlePeriodChange}
-      onPeriodValueChange={handlePeriodValueChange}
-      className={className}
-      showNavigation={showNavigation}
-      maxVisible={maxVisible}
-    />
-  );
+  return <SmartPeriodSelector selectedPeriod={state.selectedPeriod} onPeriodChange={handlePeriodChange} onPeriodValueChange={handlePeriodValueChange} className={className} showNavigation={showNavigation} maxVisible={maxVisible} />;
 }

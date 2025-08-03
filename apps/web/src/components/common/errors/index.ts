@@ -27,10 +27,10 @@ export {
 } from './types';
 
 // Re-export the hook for convenience (using relative path)
-export { useErrorBoundary } from '../../../lib/useErrorBoundary';
+export { useErrorBoundary } from './useErrorBoundary';
 
 // Re-export error reporting utilities (using relative path)
-export { errorReporter, ErrorReporter, type ErrorReport } from '../../../lib/errorReporting';
+export { errorReporter, ErrorReporter, type ErrorReport } from './errorReporting';
 
 // Default export for convenience - use ErrorBoundaryProvider for most cases
 export { ErrorBoundaryProvider as default } from './error-boundary-provider';

@@ -240,12 +240,7 @@ export function FilterProvider<T extends Record<string, unknown> = Record<string
   };
 
   const hasActiveFilters = () => {
-    return (
-      state.searchTerm !== '' ||
-      state.selectedStatuses.length > 0 ||
-      state.selectedTypes.length > 0 ||
-      Object.values(state.selectedFilters).some((values) => values && values.length > 0)
-    );
+    return state.searchTerm !== '' || state.selectedStatuses.length > 0 || state.selectedTypes.length > 0 || Object.values(state.selectedFilters).some((values) => values && values.length > 0);
   };
 
   const value: FilterContextType<T> = {

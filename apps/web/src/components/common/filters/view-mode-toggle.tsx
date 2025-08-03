@@ -13,8 +13,7 @@ interface ViewModeToggleProps {
 export function ViewModeToggle({ viewMode, onViewModeChange, className = '' }: ViewModeToggleProps) {
   const getButtonStyle = (mode: 'cards' | 'row' | 'table', isActive: boolean) => {
     const baseClasses = 'transition-all duration-200 h-10 px-3';
-    const borderClasses =
-      mode === 'cards' ? 'rounded-l-xl rounded-r-none border-r-0' : mode === 'row' ? 'rounded-none border-x-0' : 'rounded-r-xl rounded-l-none border-l-0';
+    const borderClasses = mode === 'cards' ? 'rounded-l-xl rounded-r-none border-r-0' : mode === 'row' ? 'rounded-none border-x-0' : 'rounded-r-xl rounded-l-none border-l-0';
 
     const stateClasses = isActive
       ? mode === 'row'
@@ -49,13 +48,7 @@ export function ViewModeToggle({ viewMode, onViewModeChange, className = '' }: V
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewModeChange('cards')}
-              className={getButtonStyle('cards', viewMode === 'cards')}
-              style={getButtonBackgroundStyle('cards', viewMode === 'cards')}
-            >
+            <Button variant="ghost" size="sm" onClick={() => onViewModeChange('cards')} className={getButtonStyle('cards', viewMode === 'cards')} style={getButtonBackgroundStyle('cards', viewMode === 'cards')}>
               <LayoutGrid className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -66,13 +59,7 @@ export function ViewModeToggle({ viewMode, onViewModeChange, className = '' }: V
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewModeChange('row')}
-              className={getButtonStyle('row', viewMode === 'row')}
-              style={getButtonBackgroundStyle('row', viewMode === 'row')}
-            >
+            <Button variant="ghost" size="sm" onClick={() => onViewModeChange('row')} className={getButtonStyle('row', viewMode === 'row')} style={getButtonBackgroundStyle('row', viewMode === 'row')}>
               <Rows className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
@@ -83,13 +70,7 @@ export function ViewModeToggle({ viewMode, onViewModeChange, className = '' }: V
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewModeChange('table')}
-              className={getButtonStyle('table', viewMode === 'table')}
-              style={getButtonBackgroundStyle('table', viewMode === 'table')}
-            >
+            <Button variant="ghost" size="sm" onClick={() => onViewModeChange('table')} className={getButtonStyle('table', viewMode === 'table')} style={getButtonBackgroundStyle('table', viewMode === 'table')}>
               <List className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
