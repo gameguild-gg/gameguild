@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,13 +8,6 @@ import { Calendar, Clock, MapPin, Users, Edit, Eye, Play } from 'lucide-react';
 import Link from 'next/link';
 import type { TestingSession } from '@/lib/api/generated/types.gen';
 import { SessionFilterControls } from './session-filter-controls';
-
-interface UserRole {
-  type: 'student' | 'professor' | 'admin';
-  isStudent: boolean;
-  isProfessor: boolean;
-  isAdmin: boolean;
-}
 
 interface TestingSessionListProps {
   data: {
@@ -25,36 +17,12 @@ interface TestingSessionListProps {
 }
 
 export function TestingSessionList({ data }: TestingSessionListProps) {
-  const { data: session } = useSession();
   const [sessions, setSessions] = useState<TestingSession[]>(data.testingSessions);
   const [filteredSessions, setFilteredSessions] = useState<TestingSession[]>(data.testingSessions);
   const [loading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>('grid');
-  const [userRole, setUserRole] = useState<UserRole>({
-    type: 'student',
-    isStudent: true,
-    isProfessor: false,
-    isAdmin: false,
-  });
-
-  // Determine user role based on email domain
-  useEffect(() => {
-    if (session?.user?.email) {
-      const email = session.user.email.toLowerCase();
-      const isStudent = email.endsWith('@mymail.champlain.edu');
-      const isProfessor = email.endsWith('@champlain.edu') && !email.endsWith('@mymail.champlain.edu');
-      const isAdmin = isProfessor;
-
-      setUserRole({
-        type: isAdmin ? 'admin' : isProfessor ? 'professor' : 'student',
-        isStudent,
-        isProfessor,
-        isAdmin,
-      });
-    }
-  }, [session]);
 
   // Update sessions when data prop changes
   useEffect(() => {
@@ -69,9 +37,7 @@ export function TestingSessionList({ data }: TestingSessionListProps) {
     if (searchTerm) {
       filtered = filtered.filter(
         (session) =>
-          session.sessionName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          session.location?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          session.testingRequest?.title?.toLowerCase().includes(searchTerm.toLowerCase()),
+          session.sessionName?.toLowerCase().includes(searchTerm.toLowerCase()) || session.location?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || session.testingRequest?.title?.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -163,16 +129,12 @@ export function TestingSessionList({ data }: TestingSessionListProps) {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">{userRole.isStudent ? 'Available Testing Sessions' : 'My Testing Sessions'}</h1>
-            <p className="text-muted-foreground mt-2">
-              {userRole.isStudent ? 'Join testing sessions and help improve games' : 'Manage your scheduled testing sessions'}
-            </p>
+            <h1 className="text-3xl font-bold">Testing Sessions</h1>
+            <p className="text-muted-foreground mt-2">Manage and join testing sessions</p>
           </div>
-          {!userRole.isStudent && (
-            <Button asChild>
-              <Link href="/dashboard/testing-lab/sessions/create">Create New Session</Link>
-            </Button>
-          )}
+          <Button asChild>
+            <Link href="/dashboard/testing-lab/sessions/create">Create New Session</Link>
+          </Button>
         </div>
 
         {/* Filter Controls */}
@@ -189,17 +151,12 @@ export function TestingSessionList({ data }: TestingSessionListProps) {
         {/* Sessions Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredSessions.map((session) => (
-            <Card
-              key={session.id}
-              className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm hover:border-slate-600 transition-colors"
-            >
+            <Card key={session.id} className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm hover:border-slate-600 transition-colors">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-lg text-white line-clamp-2">{session.sessionName}</CardTitle>
-                    <CardDescription className="text-slate-400 mt-1">
-                      {session.testingRequest?.title && `Testing: ${session.testingRequest.title}`}
-                    </CardDescription>
+                    <CardDescription className="text-slate-400 mt-1">{session.testingRequest?.title && `Testing: ${session.testingRequest.title}`}</CardDescription>
                   </div>
                   <Badge variant="outline" className={getStatusColor(session.status)}>
                     {getStatusLabel(session.status)}
@@ -233,7 +190,7 @@ export function TestingSessionList({ data }: TestingSessionListProps) {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  {userRole.isStudent && session.status === 0 && (
+                  {session.status === 0 && (
                     <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
                       <Link href={`/dashboard/testing-lab/sessions/${session.id}/register`}>
                         <Play className="h-4 w-4 mr-1" />
@@ -241,23 +198,19 @@ export function TestingSessionList({ data }: TestingSessionListProps) {
                       </Link>
                     </Button>
                   )}
-                  {!userRole.isStudent && (
-                    <>
-                      <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700" asChild>
-                        <Link href={`/dashboard/testing-lab/sessions/${session.id}`}>
-                          <Eye className="h-4 w-4 mr-1" />
-                          View Details
-                        </Link>
-                      </Button>
-                      {session.status === 0 && (
-                        <Button size="sm" variant="outline" className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white" asChild>
-                          <Link href={`/dashboard/testing-lab/sessions/${session.id}/edit`}>
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
-                          </Link>
-                        </Button>
-                      )}
-                    </>
+                  <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700" asChild>
+                    <Link href={`/dashboard/testing-lab/sessions/${session.id}`}>
+                      <Eye className="h-4 w-4 mr-1" />
+                      View Details
+                    </Link>
+                  </Button>
+                  {session.status === 0 && (
+                    <Button size="sm" variant="outline" className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white" asChild>
+                      <Link href={`/dashboard/testing-lab/sessions/${session.id}/edit`}>
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Link>
+                    </Button>
                   )}
                 </div>
               </CardContent>
@@ -271,17 +224,11 @@ export function TestingSessionList({ data }: TestingSessionListProps) {
               <Calendar className="h-12 w-12 text-slate-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">No testing sessions found</h3>
               <p className="text-slate-400 mb-4">
-                {searchTerm || statusFilter.length > 0
-                  ? 'Try adjusting your search or filter criteria'
-                  : userRole.isStudent
-                    ? 'There are no testing sessions available at the moment'
-                    : 'You have not created any testing sessions yet'}
+                {searchTerm || statusFilter.length > 0 ? 'Try adjusting your search or filter criteria' : 'There are no testing sessions available at the moment'}
               </p>
-              {!userRole.isStudent && (
-                <Button asChild className="bg-blue-600 hover:bg-blue-700">
-                  <Link href="/dashboard/testing-lab/sessions/create">Create Your First Session</Link>
-                </Button>
-              )}
+              <Button asChild className="bg-blue-600 hover:bg-blue-700">
+                <Link href="/dashboard/testing-lab/sessions/create">Create Your First Session</Link>
+              </Button>
             </CardContent>
           </Card>
         )}

@@ -71,10 +71,7 @@ export function TestingFeedbackList({ data }: TestingFeedbackListProps) {
   const filteredFeedback = feedback.filter((item) => {
     if (searchTerm) {
       const lowerSearchTerm = searchTerm.toLowerCase();
-      const matchesSearch =
-        item.testingRequest?.title?.toLowerCase().includes(lowerSearchTerm) ||
-        item.additionalNotes?.toLowerCase().includes(lowerSearchTerm) ||
-        item.id?.toString().includes(lowerSearchTerm);
+      const matchesSearch = item.testingRequest?.title?.toLowerCase().includes(lowerSearchTerm) || item.additionalNotes?.toLowerCase().includes(lowerSearchTerm) || item.id?.toString().includes(lowerSearchTerm);
 
       if (!matchesSearch) {
         return false;
@@ -221,9 +218,7 @@ export function TestingFeedbackList({ data }: TestingFeedbackListProps) {
             <>
               <DialogHeader>
                 <DialogTitle>Feedback Details - {selectedFeedback.testingRequest?.title || 'Unknown Request'}</DialogTitle>
-                <DialogDescription>
-                  Submitted on {selectedFeedback.createdAt ? new Date(selectedFeedback.createdAt).toLocaleDateString() : 'Unknown date'}
-                </DialogDescription>
+                <DialogDescription>Submitted on {selectedFeedback.createdAt ? new Date(selectedFeedback.createdAt).toLocaleDateString() : 'Unknown date'}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
