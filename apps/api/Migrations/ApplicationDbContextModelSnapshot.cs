@@ -17,7 +17,7 @@ namespace GameGuild.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "9.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -1069,9 +1069,6 @@ namespace GameGuild.Migrations
                     b.Property<Guid?>("PromoCodeId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("PromoCodeId1")
-                        .HasColumnType("uuid");
-
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
@@ -1112,8 +1109,6 @@ namespace GameGuild.Migrations
                     b.HasIndex("ProcessedAt");
 
                     b.HasIndex("PromoCodeId");
-
-                    b.HasIndex("PromoCodeId1");
 
                     b.HasIndex("Status");
 
@@ -1369,18 +1364,12 @@ namespace GameGuild.Migrations
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantPermissionId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("UserId1")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Version")
@@ -1394,10 +1383,6 @@ namespace GameGuild.Migrations
                     b.HasIndex("CreatedAt");
 
                     b.HasIndex("DeletedAt");
-
-                    b.HasIndex("TenantPermissionId");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex(new[] { "ContentType", "TenantId" }, "IX_ContentTypePermissions_ContentType_Tenant");
 
@@ -2086,9 +2071,6 @@ namespace GameGuild.Migrations
                     b.Property<Guid>("ProgramId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProgramId1")
-                        .HasColumnType("uuid");
-
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
@@ -2113,8 +2095,6 @@ namespace GameGuild.Migrations
                     b.HasIndex("DeletedAt");
 
                     b.HasIndex("ProgramId");
-
-                    b.HasIndex("ProgramId1");
 
                     b.HasIndex("TenantId");
 
@@ -2425,9 +2405,6 @@ namespace GameGuild.Migrations
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProductId1")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid?>("SubscriptionId")
                         .HasColumnType("uuid");
 
@@ -2466,8 +2443,6 @@ namespace GameGuild.Migrations
                     b.HasIndex("GiftedByUserId");
 
                     b.HasIndex("ProductId");
-
-                    b.HasIndex("ProductId1");
 
                     b.HasIndex("SubscriptionId");
 
@@ -4304,9 +4279,6 @@ namespace GameGuild.Migrations
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("UserId1")
-                        .HasColumnType("uuid");
-
                     b.Property<int>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
@@ -4318,8 +4290,6 @@ namespace GameGuild.Migrations
                     b.HasIndex("CreatedAt");
 
                     b.HasIndex("DeletedAt");
-
-                    b.HasIndex("UserId1");
 
                     b.HasIndex(new[] { "ExpiresAt" }, "IX_TenantPermissions_ExpiresAt");
 
@@ -4449,6 +4419,75 @@ namespace GameGuild.Migrations
                         .IsUnique();
 
                     b.ToTable("TenantUserGroupMemberships");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionProject", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ProjectVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("RegisteredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RegisteredById")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("ProjectVersionId");
+
+                    b.HasIndex("RegisteredById");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("SessionProjects");
                 });
 
             modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionRegistration", b =>
@@ -5146,6 +5185,9 @@ namespace GameGuild.Migrations
                     b.Property<Guid>("ManagerUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("MaxProjects")
+                        .HasColumnType("integer");
+
                     b.Property<int>("MaxTesters")
                         .HasColumnType("integer");
 
@@ -5507,7 +5549,7 @@ namespace GameGuild.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -5581,7 +5623,7 @@ namespace GameGuild.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -5763,6 +5805,13 @@ namespace GameGuild.Migrations
 
                     b.HasIndex("DeletedAt");
 
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_ProjectCollaborators_User");
+
+                    b.HasIndex("ProjectId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProjectCollaborators_Project_User");
+
                     b.HasIndex(new[] { "ProjectId", "UserId" }, "IX_ProjectCollaborators_Project_User")
                         .IsUnique();
 
@@ -5815,9 +5864,20 @@ namespace GameGuild.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
-                    b.HasIndex("CreatedAt");
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_ProjectFeedbacks_Date");
 
                     b.HasIndex("DeletedAt");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_ProjectFeedbacks_User");
+
+                    b.HasIndex("ProjectId", "Rating")
+                        .HasDatabaseName("IX_ProjectFeedbacks_Project_Rating");
+
+                    b.HasIndex("ProjectId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProjectFeedbacks_Project_User");
 
                     b.HasIndex(new[] { "CreatedAt" }, "IX_ProjectFeedbacks_Date");
 
@@ -5858,6 +5918,16 @@ namespace GameGuild.Migrations
 
                     b.HasIndex("DeletedAt");
 
+                    b.HasIndex("FollowedAt")
+                        .HasDatabaseName("IX_ProjectFollowers_Date");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_ProjectFollowers_User");
+
+                    b.HasIndex("ProjectId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProjectFollowers_Project_User");
+
                     b.HasIndex(new[] { "FollowedAt" }, "IX_ProjectFollowers_Date");
 
                     b.HasIndex(new[] { "ProjectId", "UserId" }, "IX_ProjectFollowers_Project_User")
@@ -5883,9 +5953,11 @@ namespace GameGuild.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsEligible")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
 
-                    b.Property<Guid>("JamId")
+                    b.Property<Guid?>("JamId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ProjectId")
@@ -5904,6 +5976,19 @@ namespace GameGuild.Migrations
                     b.HasIndex("CreatedAt");
 
                     b.HasIndex("DeletedAt");
+
+                    b.HasIndex("FinalScore")
+                        .HasDatabaseName("IX_ProjectJamSubmissions_Score");
+
+                    b.HasIndex("JamId")
+                        .HasDatabaseName("IX_ProjectJamSubmissions_Jam");
+
+                    b.HasIndex("SubmittedAt")
+                        .HasDatabaseName("IX_ProjectJamSubmissions_Date");
+
+                    b.HasIndex("ProjectId", "JamId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ProjectJamSubmissions_Project_Jam");
 
                     b.HasIndex(new[] { "SubmittedAt" }, "IX_ProjectJamSubmissions_Date");
 
@@ -6161,7 +6246,7 @@ namespace GameGuild.Migrations
                     b.Property<int>("Score")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasIndex("CreatedAt");
@@ -6282,7 +6367,7 @@ namespace GameGuild.Migrations
                     b.Property<int>("Score")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("TenantPermissionId")
+                    b.Property<Guid?>("TenantPermissionId")
                         .HasColumnType("uuid");
 
                     b.HasIndex("CreatedAt");
@@ -6353,7 +6438,7 @@ namespace GameGuild.Migrations
                 {
                     b.HasBaseType("GameGuild.Modules.Contents.Content");
 
-                    b.Property<Guid>("AuthorId")
+                    b.Property<Guid?>("AuthorId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("CommentsCount")
@@ -6404,7 +6489,7 @@ namespace GameGuild.Migrations
                     b.Property<string>("BundleItems")
                         .HasColumnType("jsonb");
 
-                    b.Property<Guid>("CreatorId")
+                    b.Property<Guid?>("CreatorId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("ImageUrl")
@@ -6845,13 +6930,9 @@ namespace GameGuild.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("GameGuild.Modules.Products.PromoCode", "PromoCode")
-                        .WithMany()
+                        .WithMany("FinancialTransactions")
                         .HasForeignKey("PromoCodeId")
                         .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("GameGuild.Modules.Products.PromoCode", null)
-                        .WithMany("FinancialTransactions")
-                        .HasForeignKey("PromoCodeId1");
 
                     b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
                         .WithMany()
@@ -6907,18 +6988,9 @@ namespace GameGuild.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.TenantPermission", null)
-                        .WithMany("ContentTypePermissions")
-                        .HasForeignKey("TenantPermissionId");
-
                     b.HasOne("GameGuild.Modules.Users.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("GameGuild.Modules.Users.User", null)
-                        .WithMany("ContentTypePermissions")
-                        .HasForeignKey("UserId1");
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Tenant");
 
@@ -7154,14 +7226,10 @@ namespace GameGuild.Migrations
                         .IsRequired();
 
                     b.HasOne("GameGuild.Modules.Programs.Program", "Program")
-                        .WithMany()
+                        .WithMany("ProductPrograms")
                         .HasForeignKey("ProgramId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Programs.Program", null)
-                        .WithMany("ProductPrograms")
-                        .HasForeignKey("ProgramId1");
 
                     b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
                         .WithMany()
@@ -7256,14 +7324,10 @@ namespace GameGuild.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("GameGuild.Modules.Products.Product", "Product")
-                        .WithMany()
+                        .WithMany("UserProducts")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Products.Product", null)
-                        .WithMany("UserProducts")
-                        .HasForeignKey("ProductId1");
 
                     b.HasOne("GameGuild.Modules.Subscriptions.Models.UserSubscription", "Subscription")
                         .WithMany()
@@ -7878,12 +7942,7 @@ namespace GameGuild.Migrations
 
                     b.HasOne("GameGuild.Modules.Users.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("GameGuild.Modules.Users.User", null)
-                        .WithMany("TenantPermissions")
-                        .HasForeignKey("UserId1");
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Tenant");
 
@@ -7932,10 +7991,49 @@ namespace GameGuild.Migrations
                     b.Navigation("UserGroup");
                 });
 
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionProject", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Projects.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Projects.ProjectVersion", "ProjectVersion")
+                        .WithMany()
+                        .HasForeignKey("ProjectVersionId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "RegisteredBy")
+                        .WithMany()
+                        .HasForeignKey("RegisteredById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.TestingLab.TestingSession", "Session")
+                        .WithMany("SessionProjects")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.Navigation("Project");
+
+                    b.Navigation("ProjectVersion");
+
+                    b.Navigation("RegisteredBy");
+
+                    b.Navigation("Session");
+
+                    b.Navigation("Tenant");
+                });
+
             modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionRegistration", b =>
                 {
                     b.HasOne("GameGuild.Modules.TestingLab.TestingSession", "Session")
-                        .WithMany()
+                        .WithMany("Registrations")
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -8269,8 +8367,7 @@ namespace GameGuild.Migrations
                     b.HasOne("GameGuild.Modules.Users.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Achievement");
 
@@ -8288,8 +8385,7 @@ namespace GameGuild.Migrations
                     b.HasOne("GameGuild.Modules.Users.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Achievement");
 
@@ -8316,8 +8412,7 @@ namespace GameGuild.Migrations
                     b.HasOne("GameGuild.Modules.Users.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Project");
 
@@ -8335,8 +8430,7 @@ namespace GameGuild.Migrations
                     b.HasOne("GameGuild.Modules.Users.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Project");
 
@@ -8354,8 +8448,7 @@ namespace GameGuild.Migrations
                     b.HasOne("GameGuild.Modules.Users.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Project");
 
@@ -8367,8 +8460,7 @@ namespace GameGuild.Migrations
                     b.HasOne("GameGuild.Modules.GameJams.Models.Jam", "Jam")
                         .WithMany()
                         .HasForeignKey("JamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("GameGuild.Modules.Projects.Project", "Project")
                         .WithMany("JamSubmissions")
@@ -8433,8 +8525,7 @@ namespace GameGuild.Migrations
                     b.HasOne("GameGuild.Modules.Users.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("CurrentLevel");
 
@@ -8517,8 +8608,7 @@ namespace GameGuild.Migrations
                     b.HasOne("GameGuild.Modules.Tenants.TenantPermission", "TenantPermission")
                         .WithMany()
                         .HasForeignKey("TenantPermissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("CurrentLevel");
 
@@ -8530,8 +8620,7 @@ namespace GameGuild.Migrations
                     b.HasOne("GameGuild.Modules.Users.User", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Author");
                 });
@@ -8541,8 +8630,7 @@ namespace GameGuild.Migrations
                     b.HasOne("GameGuild.Modules.Users.User", "Creator")
                         .WithMany()
                         .HasForeignKey("CreatorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Creator");
                 });
@@ -8666,11 +8754,6 @@ namespace GameGuild.Migrations
                     b.Navigation("Members");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantPermission", b =>
-                {
-                    b.Navigation("ContentTypePermissions");
-                });
-
             modelBuilder.Entity("GameGuild.Modules.Tenants.TenantUserGroup", b =>
                 {
                     b.Navigation("Domains");
@@ -8678,6 +8761,13 @@ namespace GameGuild.Migrations
                     b.Navigation("Memberships");
 
                     b.Navigation("SubGroups");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingSession", b =>
+                {
+                    b.Navigation("Registrations");
+
+                    b.Navigation("SessionProjects");
                 });
 
             modelBuilder.Entity("GameGuild.Modules.UserAchievements.Achievement", b =>
@@ -8691,11 +8781,7 @@ namespace GameGuild.Migrations
 
             modelBuilder.Entity("GameGuild.Modules.Users.User", b =>
                 {
-                    b.Navigation("ContentTypePermissions");
-
                     b.Navigation("Credentials");
-
-                    b.Navigation("TenantPermissions");
                 });
 
             modelBuilder.Entity("GameGuild.Modules.Comments.Comment", b =>

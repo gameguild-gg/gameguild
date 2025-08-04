@@ -41,3 +41,5 @@ tmp/
 # IDE files
 .idea/
 .vscode/
+# ignore all env files
+.env*
