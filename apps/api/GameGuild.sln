@@ -7,9 +7,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.API", "apps\api\GameGuild.API.csproj", "{CE2E3AB1-0E9D-46F2-8F0B-25C2F0BBE9DD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.API", "GameGuild.csproj", "{CE2E3AB1-0E9D-46F2-8F0B-25C2F0BBE9DD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.API.Tests", "tests\api\GameGuild.API.Tests.csproj", "{AF0DEE48-029D-4C9C-A443-8B75FF0BEC03}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.API.Tests", "tests\GameGuild.API.Tests.csproj", "{AF0DEE48-029D-4C9C-A443-8B75FF0BEC03}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Apps", "Apps", "{B149968F-A20D-4A42-91E3-FA7BFA63D1FB}"
 EndProject
@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Packages", "Packages", "{53
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7794BC93-9C81-44C1-9120-333F92E72F71}"
 	ProjectSection(SolutionItems) = preProject
-		.gitignore = .gitignore
+		..\.gitignore = ..\.gitignore
 	EndProjectSection
 EndProject
 
@@ -38,6 +38,6 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{CE2E3AB1-0E9D-46F2-8F0B-25C2F0BBE9DD} = {B149968F-A20D-4A42-91E3-FA7BFA63D1FB}
-		{AF0DEE48-029D-4C9C-A443-8B75FF0BEC03} = {7794BC93-9C81-44C1-9120-333F92E72F71}
+		{AF0DEE48-029D-4C9C-A443-8B75FF0BEC03} = {B149968F-A20D-4A42-91E3-FA7BFA63D1FB}
 	EndGlobalSection
 EndGlobal

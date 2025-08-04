@@ -1,25 +1,14 @@
 'use client';
 
-import { useParams } from 'next/navigation';
-import React, { PropsWithChildren, useEffect, useState } from 'react';
 import { CourseEditorProvider, useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { CourseEditorSidebar } from '@/components/courses/editor/ui/course-editor-sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { useParams } from 'next/navigation';
+import React, { PropsWithChildren, useEffect, useState } from 'react';
 
 // Inner component that has access to the course editor context
-function Courseimport React, { PropsWithChildren } from 'react';
-import { CourseManagementProvider } from '@/lib/courses/context/course-management.context';
-import { ErrorBoundary } from '@/components/legacy/custom/error-boundary';
-
-export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
-  return (
-    <ErrorBoundary fallback={<div className="text-red-500">Failed to load courses interface</div>}>
-      <CourseManagementProvider>{children}</CourseManagementProvider>
-    </ErrorBoundary>
-  );
-}
-LayoutContent({ children, slug }: PropsWithChildren & { slug: string }) {
+function CourseLayoutContent({ children, slug }: PropsWithChildren & { slug: string }) {
   const { loadCourseFromAPI, state } = useCourseEditor();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

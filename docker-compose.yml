@@ -15,44 +15,59 @@ services:
     ports:
       - '${API_PORT:-5000}:5000'
     environment:
-      # Database Configuration (PostgreSQL connection string format)
-      - DB_CONNECTION_STRING=Host=postgres;Port=5432;Database=gameguild;Username=postgres;Password=postgres123;
-      
+      # Database Configuration
+      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING:-Host=postgres;Port=5432;Database=gameguild;Username=gameguild;Password=password123;}
       # Application Environment
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
       - ASPNETCORE_URLS=http://+:5000
-      
-      # JWT Configuration (ASP.NET Core format with double underscores)
-      - Jwt__SecretKey=game-guild-production-jwt-secret-key-must-be-at-least-32-characters-long-and-secure
-      - Jwt__Issuer=GameGuild.API
-      - Jwt__Audience=GameGuild.Users
-      - Jwt__ExpirationMinutes=15
-      - Jwt__RefreshTokenExpirationDays=7
-      
-      # OAuth Configuration (set these for production)
-      - GITHUB_CLIENT_ID=
-      - GITHUB_CLIENT_SECRET=
-      - GOOGLE_CLIENT_ID=
-      - GOOGLE_CLIENT_SECRET=
-      
-      # CORS Configuration (ASP.NET Core format with double underscores)
-      - Cors__AllowedOrigins__0=http://localhost:3000
-      - Cors__AllowedOrigins__1=http://localhost:5173
-      - Cors__AllowedOrigins__2=https://yourdomain.com
-      - Cors__AllowCredentials=true
-      
-      # Logging Configuration
-      - LOGGING_LEVEL=Information
-      
-      # Additional API Configuration
-      - DOCUMENTATION_ENABLED=true
+      # JWT Configuration
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-game-guild-production-jwt-secret-key-must-be-at-least-32-characters-long-and-secure}
+      - JWT_ISSUER=${JWT_ISSUER:-GameGuild.API}
+      - JWT_AUDIENCE=${JWT_AUDIENCE:-GameGuild.Users}
+      # OAuth Configuration
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      # Documentation
+      - DOCUMENTATION_ENABLED=${DOCUMENTATION_ENABLED:-true}
+      # Cloudflare Dynamic DNS Configuration
+      - CLOUDFLARE_DYNAMIC_DNS__ENABLED=${CLOUDFLARE_DYNAMIC_DNS__ENABLED:-false}
+      - CLOUDFLARE_DYNAMIC_DNS__API_TOKEN=${CLOUDFLARE_DYNAMIC_DNS__API_TOKEN:-}
+      - CLOUDFLARE_DYNAMIC_DNS__ZONE_ID=${CLOUDFLARE_DYNAMIC_DNS__ZONE_ID:-}
+      - CLOUDFLARE_DYNAMIC_DNS__INTERVAL_MINUTES=${CLOUDFLARE_DYNAMIC_DNS__INTERVAL_MINUTES:-5}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__TYPE:-A}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__NAME:-coolify}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__TTL:-300}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__PROXIED:-true}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__TYPE:-A}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__NAME:-dev}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__TTL:-300}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__PROXIED:-true}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__TYPE:-A}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__NAME:-dev-api}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__TTL:-300}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__PROXIED:-true}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__TYPE:-A}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__NAME:-minio}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__TTL:-300}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__PROXIED:-true}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TYPE:-A}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__NAME:-console-minio}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TTL:-300}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__PROXIED:-true}
+      # CORS Configuration
+      - CORS__ALLOWED_ORIGINS__0=${CORS__ALLOWED_ORIGINS__0:-https://web.gameguild.gg}
+      - CORS__ALLOWED_ORIGINS__1=${CORS__ALLOWED_ORIGINS__1:-https://www.gameguild.gg}
+      - CORS__ALLOWED_ORIGINS__2=${CORS__ALLOWED_ORIGINS__2:-https://gameguild.gg}
+      - CORS__ALLOW_CREDENTIALS=${CORS__ALLOW_CREDENTIALS:-true}
     depends_on:
       postgres:
         condition: service_healthy
+    links:
+      - postgres
     networks:
       - game-guild-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://$(hostname):5000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -60,48 +75,28 @@ services:
 
   web:
     build:
-      context: .
-      dockerfile: apps/web/Dockerfile
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        # Build-time variables (bundled into client-side code)
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
+        - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL:-http://localhost:3000}
     image: game-guild-web
     container_name: game-guild-web
     restart: always
     ports:
       - '${WEB_PORT:-3000}:3000'
     environment:
-      # Next.js API Configuration (NEXT_PUBLIC_ vars are used by browser, others by server)
-      - NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
-      - API_URL=http://api:5000
-      - BACKEND_URL=http://api:5000
-      - NEXT_PUBLIC_API_URL=http://localhost:5000
-      - NEXT_PUBLIC_WEB_URL=http://localhost:3000
-      - WEB_URL=http://localhost:3000
-      
+      # Next.js Configuration
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
+      - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
       # NextAuth Configuration
-      - NEXTAUTH_SECRET=nextauth-production-secret-key-change-this-for-production-use
-      - NEXTAUTH_URL=http://localhost:3000
-      - AUTH_TRUST_HOST=true
-      - NEXTAUTH_URL_INTERNAL=http://localhost:3000
-      
-      # Ghost CMS Configuration (optional)
-      - GHOST_ADMIN_DOMAIN=gameguild.gg
-      - GHOST_CONTENT_API_KEY=08d94ec90b24258a9cf39bbd0f
-      
-      # Google Services (set these for production)
-      - GOOGLE_ANALYTICS_MEASUREMENT_ID=
-      - GOOGLE_CLIENT_ID=
-      - GOOGLE_CLIENT_SECRET=
-      - GOOGLE_TAG_MANAGER_ID=
-      
-      # IPFS Configuration (optional)
-      - IPFS_KEY=
-      
-      # Development Tools
-      - REACT_EDITOR=vscode
-      - GITHUB_TOKEN=
-      
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-nextauth-production-secret-key-change-this-for-production-use}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - AUTH_TRUST_HOST=${AUTH_TRUST_HOST:-true}
       # Node.js Environment
-      - NODE_ENV=production
-      - NODE_OPTIONS=--dns-result-order=ipv4first
+      - NODE_ENV=${NODE_ENV:-production}
     depends_on:
       api:
         condition: service_healthy
@@ -110,42 +105,30 @@ services:
         aliases:
           - web
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://$(hostname):3000 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s  
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres
     container_name: game-guild-postgres
     restart: always
     ports:
-      - '5432:5432'
+      - '${DB_PORT:-5432}:5432'
     environment:
-      # PostgreSQL Configuration
-      POSTGRES_DB: gameguild
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
-      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
-      
-      # Timezone Configuration
-      TZ: UTC
-      PGTZ: UTC
-      
-      # Performance Tuning
-      POSTGRES_SHARED_PRELOAD_LIBRARIES: ""
-      POSTGRES_MAX_CONNECTIONS: 100
-      POSTGRES_SHARED_BUFFERS: 128MB
-      POSTGRES_WORK_MEM: 4MB
-      POSTGRES_MAINTENANCE_WORK_MEM: 64MB
+      # PostgreSQL Configuration - Let Coolify manage these
+      POSTGRES_DB: ${POSTGRES_DB:-gameguild}
+      POSTGRES_USER: ${POSTGRES_USER:-gameguild}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password123}
+      TZ: ${TZ:-UTC}
+      PGTZ: ${PGTZ:-UTC}
     volumes:
       # Database persistence
-      - postgres_data:/var/lib/postgresql/data
-      # Optional: Custom initialization scripts
-      # - ./scripts/database:/docker-entrypoint-initdb.d
+      - postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d gameguild"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gameguild} -d ${POSTGRES_DB:-gameguild}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -187,16 +170,6 @@ services:
 #    #      start_interval: 1s
 #    security_opt: [ 'no-new-privileges:true' ]
 
-#  adminer:
-#    image: adminer
-#    restart: always
-#    ports:
-#      - 8081:8080
-#    depends_on:
-#      - postgres
-#    networks:
-#      - game-guild-network
-
   # Database Administration (optional - uncomment to enable)
   # adminer:
   #   image: adminer:4.8.1
@@ -213,6 +186,8 @@ services:
   #     - game-guild-network
 
 volumes:
-  postgres_data:
-    name: game-guild-postgres-data
+  #  minio-data:
+  #    driver: local
+  postgres:
+    name: game-guild-postgres
     driver: local
