@@ -17,7 +17,7 @@ import {
   PROJECT_ROLE_TEMPLATES,
 } from '@/types/permissions';
 
-import { ModuleType, ModuleAction, RoleLevel, ModuleRole, ModulePermission, UserRoleAssignment, ALL_PREDEFINED_ROLES, TESTING_LAB_ROLES, GLOBAL_ROLES, MODULE_RESOURCES } from '@/types/modulePermissions';
+import { ModuleType, ModuleAction, RoleLevel, ModuleRole, UserRoleAssignment, ALL_PREDEFINED_ROLES, TESTING_LAB_ROLES, GLOBAL_ROLES, MODULE_RESOURCES } from '@/types/modulePermissions';
 
 /**
  * Service for managing permissions and resource sharing

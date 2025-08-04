@@ -136,7 +136,6 @@ export function useUserDetail(userId: string): UseUserDetailResult {
       let achievementStats: UserDetail['achievementStats'] = undefined;
 
       if (achievementsResponse.status === 'fulfilled' && achievementsResponse.value?.data) {
-        const achievementsData = achievementsResponse.value.data;
         // Note: Using basic structure since exact API response structure is unclear
         // This will need to be adjusted based on actual API response format
         achievements = [];

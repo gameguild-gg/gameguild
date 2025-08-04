@@ -51,7 +51,7 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
   try {
     // Mock implementation - replace with actual API call
     console.log(`Getting course by slug: ${slug}`);
-    
+
     // Mock course data
     const mockCourse: Course = {
       id: 1,
@@ -146,7 +146,7 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
         },
       ],
     };
-    
+
     return mockCourse;
   } catch (error) {
     console.error('Error getting course by slug:', error);
@@ -161,7 +161,7 @@ export async function getCourses(): Promise<Course[]> {
   try {
     // Mock implementation - replace with actual API call
     console.log('Getting all courses');
-    
+
     const mockCourses: Course[] = [
       {
         id: 1,
@@ -188,7 +188,7 @@ export async function getCourses(): Promise<Course[]> {
         analytics: { averageRating: 4.8, totalReviews: 87 },
       },
     ];
-    
+
     return mockCourses;
   } catch (error) {
     console.error('Error getting courses:', error);

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,7 +18,6 @@ interface TestingSessionDetailsProps {
 
 export function TestingSessionDetails({ data: session }: TestingSessionDetailsProps) {
   const { data: userSession } = useSession();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const getStatusBadge = (status: number) => {
@@ -62,7 +60,7 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
     try {
       // Implement join session logic here
       toast.success('Successfully joined the testing session!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to join session. Please try again.');
     } finally {
       setLoading(false);

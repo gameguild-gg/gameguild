@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Award, Users } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Award } from 'lucide-react';
 import type { AchievementDto } from '@/lib/core/api/generated/types.gen';
 import { deleteAchievement } from '@/lib/achievements/achievements.actions';
 import { useState } from 'react';

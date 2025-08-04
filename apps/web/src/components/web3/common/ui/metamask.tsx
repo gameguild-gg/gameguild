@@ -4,22 +4,17 @@ import { ethers } from 'ethers';
 import React, { useState } from 'react';
 
 function MetamaskSignIn() {
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [account, setAccount] = useState<string | null>(null);
   const connectToMetamask = async () => {
     try {
-      // @ts-ignore
       if (window.ethereum) {
-        // @ts-ignore
         const ethereum = window.ethereum;
 
         await ethereum.request({ method: 'eth_requestAccounts' });
-        // @ts-ignore
-        const provider = new ethers.BrowserProvider(window.ethereum);
+        const provider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
         const signer = await provider.getSigner();
         const account = await signer.getAddress();
 
-        setProvider(provider);
         setAccount(account);
       } else {
         console.error('Metamask not detected.');

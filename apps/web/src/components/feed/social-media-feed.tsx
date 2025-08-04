@@ -174,7 +174,6 @@ const mockPosts: SocialPost[] = [
 
 export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
   const [posts, setPosts] = useState<SocialPost[]>(mockPosts);
-  const [loading, setLoading] = useState(false);
 
   const handleLike = useCallback((postId: string) => {
     setPosts((prev) =>
