@@ -63,6 +63,8 @@ export const authConfig: NextAuthConfig = {
   secret: process.env.NEXTAUTH_SECRET,
   // Use internal URL for callbacks
   // basePath: '',
+  // Use internal URL for all server-side operations
+  url: process.env.NEXTAUTH_URL_INTERNAL || 'http://localhost:3000',
   // Custom callback to prevent URL verification
   callbacks: {
     // async redirect({ url, baseUrl }) {
