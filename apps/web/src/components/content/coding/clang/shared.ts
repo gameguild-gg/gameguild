@@ -18,10 +18,13 @@ export function getInstance(module: WebAssembly.Module, imports: WebAssembly.Imp
   return WebAssembly.instantiate(module, imports);
 }
 
-export function getImportObject(obj: any, names: string[] = []): { [key: string]: Function } {
-  const result: { [key: string]: Function } = {};
+export function getImportObject(obj: Record<string, unknown>, names: string[] = []): { [key: string]: (...args: unknown[]) => unknown } {
+  const result: { [key: string]: (...args: unknown[]) => unknown } = {};
   for (const name of names) {
-    result[name] = obj[name].bind(obj);
+    const fn = obj[name];
+    if (typeof fn === 'function') {
+      result[name] = fn.bind(obj);
+    }
   }
   return result;
 }

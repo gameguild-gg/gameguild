@@ -11,6 +11,6 @@ interface UserManagementContentProps {
   };
 }
 
-export function UserManagementContent({ initialPagination }: UserManagementContentProps) {
+export function UserManagementContent(_props: UserManagementContentProps) {
   return <EnhancedUserList />;
 }
