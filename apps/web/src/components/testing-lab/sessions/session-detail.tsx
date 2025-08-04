@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarInset } from '@/components/ui/sidebar';
 import { ArrowLeft, Calendar, Clock, GamepadIcon, Monitor, Target, Trophy, Users, Zap, Star, Info, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useState, useEffect, useCallback } from 'react';
 import Autoplay from 'embla-carousel-autoplay';
 import { JoinProcess } from '../join/join-process';
