@@ -65,10 +65,6 @@ ENV NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED=10k
 # NextAuth configuration - set via Coolify environment variables
 # These should be configured in Coolify's runtime environment variables
 
-# Accept runtime arguments for domain configuration
-ARG DOMAIN_NAME
-ENV DOMAIN_NAME=$DOMAIN_NAME
-
 # Switch to non-root user
 USER nextjs
 
@@ -79,5 +75,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD echo "healthy" || exit 1
 
-# Start the application with domain patching if needed
-CMD if [ -n "$DOMAIN_NAME" ]; then echo "127.0.0.1 $DOMAIN_NAME" >> /etc/hosts; fi && node server.js
+# Start the application
+CMD ["node", "server.js"]
