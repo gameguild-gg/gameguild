@@ -49,7 +49,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
 # Entry point
-ENTRYPOINT ["dotnet", "GameGuild.API.dll"]
+ENTRYPOINT ["dotnet", "GameGuild.dll"]
 
 #
 #FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
