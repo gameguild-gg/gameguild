@@ -1,16 +1,10 @@
-FROM node:lts AS base
+FROM node:lts-alpine AS base
 # Update system image and install dependencies in a single layer
-RUN apt-get update && apt-get install -y \
+RUN apk update && apk add --no-cache \
+    libc6-compat \
     curl \
     wget \
-    && rm -rf /var/lib/apt/lists/*
-
-# Accept runtime arguments for domain configuration
-ARG DOMAIN_NAME
-ENV DOMAIN_NAME=$DOMAIN_NAME
-
-# Patch /etc/hosts if DOMAIN_NAME is provided (done as root in base stage)
-RUN if [ -n "$DOMAIN_NAME" ]; then echo "127.0.0.1 $DOMAIN_NAME" >> /etc/hosts; fi
+    && rm -rf /var/cache/apk/*
 
 # Build Stage
 FROM base AS builder
