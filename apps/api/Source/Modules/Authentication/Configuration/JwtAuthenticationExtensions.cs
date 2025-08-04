@@ -16,22 +16,25 @@ public static class JwtAuthenticationExtensions {
   /// <param name="configuration">Application configuration</param>
   /// <returns>The configured service collection</returns>
   public static IServiceCollection AddAuthJwtConfiguration(this IServiceCollection services, IConfiguration configuration) {
-    var jwtOptions = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? throw new InvalidOperationException("JWT configuration is required");
+    var jwtOptions = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+
+    // Apply fallback values with warnings if configuration is missing
+    jwtOptions.ApplyFallbacksWithWarnings(configuration);
 
     jwtOptions.Validate();
 
     services.AddAuthentication(options => {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-              }
+      options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+      options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+      options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    }
             )
             .AddJwtBearer(options => {
-                options.SaveToken = true;
-                options.RequireHttpsMetadata = true; // Enforce HTTPS in production
-                options.TokenValidationParameters = CreateTokenValidationParameters(jwtOptions);
-                options.Events = CreateJwtBearerEvents();
-              }
+              options.SaveToken = true;
+              options.RequireHttpsMetadata = true; // Enforce HTTPS in production
+              options.TokenValidationParameters = CreateTokenValidationParameters(jwtOptions);
+              options.Events = CreateJwtBearerEvents();
+            }
             );
 
     return services;
@@ -135,38 +138,38 @@ public static class JwtAuthenticationExtensions {
   /// </summary>
   public static IServiceCollection AddAuthorizationPolicies(this IServiceCollection services) {
     services.AddAuthorization(options => {
-        // Default policy requires authentication
-        options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-                                .RequireAuthenticatedUser()
-                                .Build();
+      // Default policy requires authentication
+      options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+                              .RequireAuthenticatedUser()
+                              .Build();
 
-        // Policy for public endpoints
-        options.AddPolicy("Public", policy => policy.RequireAssertion(_ => true));
+      // Policy for public endpoints
+      options.AddPolicy("Public", policy => policy.RequireAssertion(_ => true));
 
-        // Policy for tenant-specific access
-        options.AddPolicy(
-          "TenantAccess",
-          policy =>
-            policy.RequireAuthenticatedUser()
-                  .RequireClaim("tenant_id")
-        );
+      // Policy for tenant-specific access
+      options.AddPolicy(
+        "TenantAccess",
+        policy =>
+          policy.RequireAuthenticatedUser()
+                .RequireClaim("tenant_id")
+      );
 
-        // Policy for administrative access
-        options.AddPolicy(
-          "AdminAccess",
-          policy =>
-            policy.RequireAuthenticatedUser()
-                  .RequireClaim("role", "Admin")
-        );
+      // Policy for administrative access
+      options.AddPolicy(
+        "AdminAccess",
+        policy =>
+          policy.RequireAuthenticatedUser()
+                .RequireClaim("role", "Admin")
+      );
 
-        // Policy for Web3 authenticated users
-        options.AddPolicy(
-          "Web3Access",
-          policy =>
-            policy.RequireAuthenticatedUser()
-                  .RequireClaim("auth_method", "web3")
-        );
-      }
+      // Policy for Web3 authenticated users
+      options.AddPolicy(
+        "Web3Access",
+        policy =>
+          policy.RequireAuthenticatedUser()
+                .RequireClaim("auth_method", "web3")
+      );
+    }
     );
 
     return services;

@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>GameGuild.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Test Framework - Using xUnit instead of NUnit to match main project -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+    <PackageReference Include="coverlet.collector"/>
+    <PackageReference Include="xunit"/>
+    <PackageReference Include="xunit.runner.visualstudio"/>
+
+
+    <!-- Entity Framework for testing -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory"/>
+
+    <!-- Testing utilities -->
+    <PackageReference Include="Moq"/>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing"/>
+
+    <!-- Authentication testing -->
+    <PackageReference Include="BCrypt.Net-Next"/>
+
+    <!-- ASP.NET Core dependencies for test helpers -->
+    <PackageReference Include="Microsoft.Extensions.Configuration"/>
+    <PackageReference Include="Microsoft.Extensions.Logging"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GameGuild.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Source\Tests\"/>
+  </ItemGroup>
+
+</Project>
