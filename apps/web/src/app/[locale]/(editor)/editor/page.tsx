@@ -3,9 +3,9 @@
 import { Editor } from "@/components/editor/lexical-editor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Save, SaveAll, HardDrive } from "lucide-react"
+import { Save, HardDrive } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import { Sun, Moon } from "lucide-react"
@@ -14,6 +14,7 @@ import { OpenProjectDialog } from "@/components/editor/ui/editor/open-project-di
 import { CreateProjectDialog } from "@/components/editor/ui/editor/create-project-dialog"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
+import { SaveAsDialog } from "@/components/editor/ui/editor/save-as-dialog"
 
 interface ProjectData {
   id: string
@@ -1028,44 +1029,17 @@ export default function Page() {
                     Save
                   </Button>
 
-                  <Dialog open={saveAsDialogOpen} onOpenChange={setSaveAsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-2 bg-transparent" disabled={!isDbInitialized}>
-                        <SaveAll className="w-4 h-4" />
-                        Save As
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Save Project As</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="project-name">Project Name</Label>
-                          <Input
-                            id="project-name"
-                            value={newProjectName}
-                            onChange={(e) => setNewProjectName(e.target.value)}
-                            placeholder="Enter project name..."
-                            onKeyDown={(e) => e.key === "Enter" && handleSaveAs()}
-                            className="mt-1"
-                          />
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <span className="text-sm text-gray-600">Project size:</span>
-                          <span className={`text-sm font-medium ${getSizeIndicatorColor()}`}>
-                            {formatSize(currentProjectSize)}
-                          </span>
-                        </div>
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setSaveAsDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={handleSaveAs}>Save Project</Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <SaveAsDialog
+                    open={saveAsDialogOpen}
+                    onOpenChange={setSaveAsDialogOpen}
+                    projectName={newProjectName}
+                    onProjectNameChange={setNewProjectName}
+                    onSave={handleSaveAs}
+                    currentProjectSize={currentProjectSize}
+                    getSizeIndicatorColor={getSizeIndicatorColor}
+                    formatSize={formatSize}
+                    isDbInitialized={isDbInitialized}
+                  />
 
                   <OpenProjectDialog
                     open={openDialogOpen}
