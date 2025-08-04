@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AlertTriangle, Archive, Calendar, ChevronDown, ChevronRight, Copy, ExternalLink, Settings, Shield, Trash2, Users } from 'lucide-react';
-import { useCourseEditor } from '@/lib/courses/course-editor.context';
+import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { useState } from 'react';
 
 export default function CourseSettingsPage() {

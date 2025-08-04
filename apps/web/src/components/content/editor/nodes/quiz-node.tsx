@@ -411,12 +411,7 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                       {alternative.words.map((word, wordIndex) => (
                         <div key={wordIndex} className="flex items-center space-x-2">
                           <Label className="w-20">Blank {wordIndex + 1}:</Label>
-                          <Input
-                            placeholder={`Word for blank ${wordIndex + 1}`}
-                            value={word}
-                            onChange={(e) => updateFillBlankAlternative(alternative.id, wordIndex, e.target.value)}
-                            className="flex-1"
-                          />
+                          <Input placeholder={`Word for blank ${wordIndex + 1}`} value={word} onChange={(e) => updateFillBlankAlternative(alternative.id, wordIndex, e.target.value)} className="flex-1" />
                         </div>
                       ))}
                     </div>
@@ -486,13 +481,7 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
               <>
                 {answers.map((answer) => (
                   <QuizAnswerItem key={answer.id}>
-                    <Input
-                      type="checkbox"
-                      id={answer.id}
-                      checked={answer.isCorrect}
-                      onChange={() => toggleCorrect(answer.id)}
-                      className="h-5 w-5 rounded-full"
-                    />
+                    <Input type="checkbox" id={answer.id} checked={answer.isCorrect} onChange={() => toggleCorrect(answer.id)} className="h-5 w-5 rounded-full" />
                     <Input placeholder="Enter answer" value={answer.text} onChange={(e) => updateAnswer(answer.id, e.target.value)} className="flex-1" />
                     <Button variant="ghost" size="icon" onClick={() => removeAnswer(answer.id)}>
                       <Trash2 className="h-4 w-4" />
@@ -528,12 +517,7 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
     <>
       <div className="relative group">
         {!isEditing && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="absolute -right-2 top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-white shadow-sm"
-            onClick={() => setIsEditing(true)}
-          >
+          <Button variant="outline" size="sm" className="absolute -right-2 top-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-white shadow-sm" onClick={() => setIsEditing(true)}>
             <Pencil className="h-4 w-4" />
           </Button>
         )}
@@ -552,12 +536,7 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
           )}
           {!isEditing && showFeedback && !allowRetry && (
             <div className="flex justify-end mt-4 pt-3 border-t border-border/50">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetQuiz}
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
+              <Button variant="outline" size="sm" onClick={resetQuiz} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
                 <RotateCcw className="h-4 w-4" />
                 Try Again
               </Button>

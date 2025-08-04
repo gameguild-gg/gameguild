@@ -43,13 +43,7 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
         </div>
 
         <div className="relative w-full h-48 mb-4">
-          <Image
-            src={course.image || '/placeholder.svg'}
-            alt={course.title}
-            fill
-            className="object-cover rounded-md"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
+          <Image src={course.image || '/placeholder.svg'} alt={course.title} fill className="object-cover rounded-md" sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" />
         </div>
 
         <CardTitle className="text-lg font-semibold line-clamp-2">{course.title}</CardTitle>

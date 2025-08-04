@@ -1,12 +1,12 @@
-import React from 'react';
-import { Metadata } from 'next';
-import { getContributors } from '@/lib/contributors';
 import { ContributorsHeader } from '@/components/contributors/contributors-header';
-import { TopContributorsSection } from '@/components/contributors/top-contributors-section';
+import { GitHubProjectStats } from '@/components/contributors/git-hub-project-stats';
 import { GlobalRankingTable } from '@/components/contributors/global-ranking-table';
-import { ProjectStats } from '@/components/contributors/project-stats';
 import { HorizontalRoadmap } from '@/components/contributors/horizontal-roadmap';
 import { HowToContribute } from '@/components/contributors/how-to-contribute';
+import { TopContributorsSection } from '@/components/contributors/top-contributors-section';
+import { getContributors, getGitHubRepositoryData } from '@/lib/integrations/github';
+import { Metadata } from 'next';
+import React from 'react';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -24,16 +24,16 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page(): Promise<React.JSX.Element> {
-  const contributors = await getContributors();
+  const [contributors, repositoryData] = await Promise.all([getContributors(), getGitHubRepositoryData()]);
 
-  // Mock data for demo - in real app this would come from your API
+  // Calculate real stats from contributors data
   const totalContributors = contributors.length;
-  const totalParticipated = contributors.filter((c) => (c.total_commits || 0) > 0).length;
+  const totalParticipated = contributors.filter((contributor) => (contributor.total_commits || 0) > 0).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+    <div className="flex flex-col flex-1 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
       {/* Project Stats Overview - Full Width */}
-      <ProjectStats />
+      <GitHubProjectStats repositoryData={repositoryData} />
 
       {/* Other sections with centered content */}
       <div className="max-w-7xl mx-auto px-6">

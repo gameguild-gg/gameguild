@@ -6,20 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarHeader,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarInset,
-} from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarInset } from '@/components/ui/sidebar';
 import { ArrowLeft, Calendar, Clock, GamepadIcon, Monitor, Target, Trophy, Users, Zap, Star, Info, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link, useRouter } from '@/i18n/navigation';
@@ -229,10 +216,7 @@ export function SessionDetail({ session }: SessionDetailProps) {
                       </span>
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-2">
-                      <div
-                        className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${fillPercentage}%` }}
-                      />
+                      <div className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: `${fillPercentage}%` }} />
                     </div>
                   </div>
 
@@ -245,20 +229,13 @@ export function SessionDetail({ session }: SessionDetailProps) {
                       </span>
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-2">
-                      <div
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${(session.currentGames / session.maxGames) * 100}%` }}
-                      />
+                      <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300" style={{ width: `${(session.currentGames / session.maxGames) * 100}%` }} />
                     </div>
                   </div>
 
                   {/* Join Session Button */}
                   <div className="pt-3">
-                    <Button
-                      asChild
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 h-10 group-data-[collapsible=icon]:px-2"
-                      disabled={session.status !== 'open'}
-                    >
+                    <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 h-10 group-data-[collapsible=icon]:px-2" disabled={session.status !== 'open'}>
                       <Link href={`/testing-lab/sessions/${session.slug}/join`}>
                         <Zap className="mr-2 h-4 w-4 group-data-[collapsible=icon]:mr-0" />
                         <span className="group-data-[collapsible=icon]:hidden">{session.status === 'open' ? 'Join Session' : 'Session Full'}</span>
@@ -281,11 +258,7 @@ export function SessionDetail({ session }: SessionDetailProps) {
               <SidebarMenu className="space-y-4 px-2">
                 {allGames.map((game, index) => (
                   <SidebarMenuItem key={game.id}>
-                    <SidebarMenuButton
-                      isActive={currentGameIndex === index}
-                      className="group-data-[collapsible=icon]:justify-center h-auto py-4 cursor-pointer"
-                      onClick={() => selectGame(index)}
-                    >
+                    <SidebarMenuButton isActive={currentGameIndex === index} className="group-data-[collapsible=icon]:justify-center h-auto py-4 cursor-pointer" onClick={() => selectGame(index)}>
                       <div className="flex items-center gap-3 w-full">
                         <div className={`p-2 rounded-lg ${currentGameIndex === index ? 'bg-gradient-to-r from-blue-600 to-purple-600' : 'bg-slate-700'}`}>
                           <GamepadIcon className="h-4 w-4 text-white" />
@@ -403,19 +376,11 @@ export function SessionDetail({ session }: SessionDetailProps) {
 
                             {/* Action buttons for details and requirements */}
                             <div className="flex gap-3 mb-6">
-                              <Button
-                                variant="outline"
-                                onClick={() => setShowGameDetails(true)}
-                                className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500"
-                              >
+                              <Button variant="outline" onClick={() => setShowGameDetails(true)} className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
                                 <Info className="h-4 w-4 mr-2" />
                                 Game Details
                               </Button>
-                              <Button
-                                variant="outline"
-                                onClick={() => setShowRequirements(true)}
-                                className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500"
-                              >
+                              <Button variant="outline" onClick={() => setShowRequirements(true)} className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
                                 <FileText className="h-4 w-4 mr-2" />
                                 Requirements
                               </Button>
@@ -429,11 +394,7 @@ export function SessionDetail({ session }: SessionDetailProps) {
                               <h4 className="text-white font-semibold mb-2 text-sm">Genre</h4>
                               <div className="flex flex-wrap gap-2">
                                 {game.genre?.map((genre) => (
-                                  <Badge
-                                    key={genre}
-                                    variant="outline"
-                                    className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 text-purple-300 border-purple-600/50 text-sm px-3 py-1"
-                                  >
+                                  <Badge key={genre} variant="outline" className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 text-purple-300 border-purple-600/50 text-sm px-3 py-1">
                                     {genre}
                                   </Badge>
                                 ))}
@@ -462,17 +423,11 @@ export function SessionDetail({ session }: SessionDetailProps) {
                                 Platforms
                               </h4>
                               <div className="flex flex-wrap gap-2">
-                                {(('platforms' in game ? game.platforms : 'platform' in game ? game.platform : session.platform) as string[]).map(
-                                  (platform: string) => (
-                                    <Badge
-                                      key={platform}
-                                      variant="outline"
-                                      className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 text-green-300 border-green-600/50 text-sm px-3 py-1"
-                                    >
-                                      {platform}
-                                    </Badge>
-                                  ),
-                                )}
+                                {(('platforms' in game ? game.platforms : 'platform' in game ? game.platform : session.platform) as string[]).map((platform: string) => (
+                                  <Badge key={platform} variant="outline" className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 text-green-300 border-green-600/50 text-sm px-3 py-1">
+                                    {platform}
+                                  </Badge>
+                                ))}
                               </div>
                             </div>
                           </div>
@@ -493,12 +448,7 @@ export function SessionDetail({ session }: SessionDetailProps) {
                           {/* Carousel Navigation - Centered at bottom */}
                           {allGames.length > 1 && (
                             <div className="flex items-center justify-center gap-4 pt-6 mt-6 border-t border-slate-700/30">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={prevGame}
-                                className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500"
-                              >
+                              <Button variant="outline" size="sm" onClick={prevGame} className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
                                 <ChevronLeft className="h-4 w-4" />
                               </Button>
                               <div className="flex gap-3">
@@ -506,18 +456,11 @@ export function SessionDetail({ session }: SessionDetailProps) {
                                   <button
                                     key={dotIndex}
                                     onClick={() => selectGame(dotIndex)}
-                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                                      index === dotIndex ? 'bg-blue-400 scale-125' : 'bg-slate-600 hover:bg-slate-400'
-                                    }`}
+                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${index === dotIndex ? 'bg-blue-400 scale-125' : 'bg-slate-600 hover:bg-slate-400'}`}
                                   />
                                 ))}
                               </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={nextGame}
-                                className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500"
-                              >
+                              <Button variant="outline" size="sm" onClick={nextGame} className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
                                 <ChevronRight className="h-4 w-4" />
                               </Button>
                             </div>
@@ -564,17 +507,13 @@ export function SessionDetail({ session }: SessionDetailProps) {
                     <div className="bg-slate-800/30 rounded-lg p-5 border border-slate-700/30">
                       <h4 className="text-white font-semibold mb-4 text-lg">Platforms</h4>
                       <div className="space-y-2">
-                        {(
-                          ('platforms' in allGames[currentGameIndex]
-                            ? allGames[currentGameIndex].platforms
-                            : 'platform' in allGames[currentGameIndex]
-                              ? allGames[currentGameIndex].platform
-                              : session.platform) as string[]
-                        ).map((platform: string) => (
-                          <span key={platform} className="block text-sm text-green-300 bg-green-900/30 px-3 py-2 rounded-md border border-green-700/30">
-                            {platform}
-                          </span>
-                        ))}
+                        {(('platforms' in allGames[currentGameIndex] ? allGames[currentGameIndex].platforms : 'platform' in allGames[currentGameIndex] ? allGames[currentGameIndex].platform : session.platform) as string[]).map(
+                          (platform: string) => (
+                            <span key={platform} className="block text-sm text-green-300 bg-green-900/30 px-3 py-2 rounded-md border border-green-700/30">
+                              {platform}
+                            </span>
+                          ),
+                        )}
                       </div>
                     </div>
                   </div>
@@ -583,10 +522,7 @@ export function SessionDetail({ session }: SessionDetailProps) {
                     <h4 className="text-white font-semibold mb-4 text-lg">Testing Focus Areas</h4>
                     <div className="space-y-3">
                       {allGames[currentGameIndex]?.testingFocus?.map((focus) => (
-                        <div
-                          key={focus}
-                          className="flex items-center gap-3 text-sm text-blue-300 bg-blue-900/30 px-4 py-3 rounded-md border border-blue-700/30"
-                        >
+                        <div key={focus} className="flex items-center gap-3 text-sm text-blue-300 bg-blue-900/30 px-4 py-3 rounded-md border border-blue-700/30">
                           <Target className="h-5 w-5 flex-shrink-0" />
                           <span className="font-medium">{focus}</span>
                         </div>
@@ -685,9 +621,7 @@ export function SessionDetail({ session }: SessionDetailProps) {
                 <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-6">
                   <h4 className="text-blue-300 font-semibold mb-4 text-lg">Session Status</h4>
                   <div className="flex items-center gap-3">
-                    <Badge className={getStatusColor(session.status) + ' text-base px-4 py-2'}>
-                      {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-                    </Badge>
+                    <Badge className={getStatusColor(session.status) + ' text-base px-4 py-2'}>{session.status.charAt(0).toUpperCase() + session.status.slice(1)}</Badge>
                     <span className="text-slate-400 text-base">{spotsLeft > 0 ? `${spotsLeft} spots remaining` : 'Session is full'}</span>
                   </div>
                 </div>

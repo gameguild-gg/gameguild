@@ -13,13 +13,7 @@ export interface LanguageSettingsDialogProps {
   selectedLanguage: string;
   setSelectedLanguage: (lang: string) => void;
   getLanguageLabel: (lang: string) => string;
-  updateSourceCode: (data: {
-    allowedLanguages: Record<string, boolean>;
-    isAutocompleteEnabled: boolean;
-    activeEnvironments: Record<string, boolean>;
-    initialFileLanguage?: string;
-    selectedLanguage?: string;
-  }) => void;
+  updateSourceCode: (data: { allowedLanguages: Record<string, boolean>; isAutocompleteEnabled: boolean; activeEnvironments: Record<string, boolean>; initialFileLanguage?: string; selectedLanguage?: string }) => void;
   isAutocompleteEnabled: boolean;
   setIsAutocompleteEnabled: (enabled: boolean) => void;
   isPreview?: boolean;
@@ -239,11 +233,7 @@ export function LanguageSettingsDialog({
     <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center" onClick={() => setShowLanguagesDialog(false)}>
       <div className="bg-background border rounded-lg shadow-lg p-3 w-[450px] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-lg font-medium mb-2">{isInitialSetup ? 'Initial Language Configuration' : 'Update Language Settings'}</h3>
-        {isInitialSetup && (
-          <p className="text-sm text-muted-foreground mb-3">
-            Configure the available languages for this code environment. This configuration can be changed later.
-          </p>
-        )}
+        {isInitialSetup && <p className="text-sm text-muted-foreground mb-3">Configure the available languages for this code environment. This configuration can be changed later.</p>}
         {!isInitialSetup && <p className="text-sm text-muted-foreground mb-3">Update language settings for this code environment.</p>}
 
         {/* Tabs */}
@@ -252,21 +242,11 @@ export function LanguageSettingsDialog({
             {/* Tab buttons with step indicators */}
             <button
               className={`relative z-10 px-4 py-2 font-medium text-sm flex items-center ${
-                activeTab === 'environment'
-                  ? 'text-primary'
-                  : activeTab === 'files' || activeTab === 'settings'
-                    ? 'text-muted-foreground'
-                    : 'text-muted-foreground'
+                activeTab === 'environment' ? 'text-primary' : activeTab === 'files' || activeTab === 'settings' ? 'text-muted-foreground' : 'text-muted-foreground'
               }`}
               onClick={() => setActiveTab('environment')}
             >
-              <div
-                className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${
-                  activeTab === 'environment' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
-                }`}
-              >
-                1
-              </div>
+              <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${activeTab === 'environment' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'}`}>1</div>
               Environment
             </button>
 
@@ -274,35 +254,18 @@ export function LanguageSettingsDialog({
             <div className="flex items-center text-gray-400 mx-1">→</div>
 
             <button
-              className={`relative z-10 px-4 py-2 font-medium text-sm flex items-center ${
-                activeTab === 'files' ? 'text-primary' : activeTab === 'settings' ? 'text-muted-foreground' : 'text-muted-foreground'
-              }`}
+              className={`relative z-10 px-4 py-2 font-medium text-sm flex items-center ${activeTab === 'files' ? 'text-primary' : activeTab === 'settings' ? 'text-muted-foreground' : 'text-muted-foreground'}`}
               onClick={() => setActiveTab('files')}
             >
-              <div
-                className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${
-                  activeTab === 'files' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
-                }`}
-              >
-                2
-              </div>
+              <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${activeTab === 'files' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'}`}>2</div>
               Files
             </button>
 
             {/* Arrow connector */}
             <div className="flex items-center text-gray-400 mx-1">→</div>
 
-            <button
-              className={`relative z-10 px-4 py-2 font-medium text-sm flex items-center ${activeTab === 'settings' ? 'text-primary' : 'text-muted-foreground'}`}
-              onClick={() => setActiveTab('settings')}
-            >
-              <div
-                className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${
-                  activeTab === 'settings' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
-                }`}
-              >
-                3
-              </div>
+            <button className={`relative z-10 px-4 py-2 font-medium text-sm flex items-center ${activeTab === 'settings' ? 'text-primary' : 'text-muted-foreground'}`} onClick={() => setActiveTab('settings')}>
+              <div className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${activeTab === 'settings' ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'}`}>3</div>
               Settings
             </button>
           </div>
@@ -816,9 +779,7 @@ export function LanguageSettingsDialog({
             <div className="grid grid-cols-1 gap-2">
               {/* Individual Languages Section */}
               <div className="border rounded-md p-2">
-                {isInitialSetup && (
-                  <p className="text-xs text-muted-foreground mb-2">Individual file types are disabled by default. Enable the ones you need.</p>
-                )}
+                {isInitialSetup && <p className="text-xs text-muted-foreground mb-2">Individual file types are disabled by default. Enable the ones you need.</p>}
                 <div className="grid grid-cols-2 gap-1">
                   {Object.keys(allowedLanguages)
                     .filter((lang) => lang !== 'bash' && lang !== 'sh')
@@ -911,12 +872,7 @@ export function LanguageSettingsDialog({
 
         <div className="flex justify-between mt-auto">
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setIsResetConfirmOpen(true)}
-              className="text-destructive border-destructive hover:bg-destructive/10"
-            >
+            <Button size="sm" variant="outline" onClick={() => setIsResetConfirmOpen(true)} className="text-destructive border-destructive hover:bg-destructive/10">
               Reset {activeTab === 'environment' ? 'Environments' : activeTab === 'files' ? 'Files' : 'Settings'}
             </Button>
           </div>

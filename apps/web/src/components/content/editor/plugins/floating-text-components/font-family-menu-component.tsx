@@ -591,11 +591,7 @@ export function FontFamilyMenuComponent({ editor, currentFontFamily }: FontFamil
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent side="right" align="start">
                     {fontFamily.variations.map((variation) => (
-                      <DropdownMenuItem
-                        key={`${fontFamily.name}-${variation.name}`}
-                        onClick={() => handleFontChange(fontFamily.family, variation.weight, variation.style)}
-                        onSelect={(e) => e.preventDefault()}
-                      >
+                      <DropdownMenuItem key={`${fontFamily.name}-${variation.name}`} onClick={() => handleFontChange(fontFamily.family, variation.weight, variation.style)} onSelect={(e) => e.preventDefault()}>
                         <span
                           style={{
                             fontFamily: fontFamily.family,

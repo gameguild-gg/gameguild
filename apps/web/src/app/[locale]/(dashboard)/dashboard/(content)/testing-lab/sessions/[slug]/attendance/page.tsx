@@ -1,15 +1,9 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { AttendanceTracker } from '@/components/testing-lab/attendance-tracker/attendance-tracker';
-import { getTestingAttendanceBySession, getTestingSessionBySlug } from '@/lib/testing-lab/testing-lab.actions';
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
+import { AttendanceTracker } from '@/components/testing-lab';
+import { getTestingAttendanceBySession, getTestingSessionBySlug } from '@/lib/admin';
 import { PropsWithSlugParams } from '@/types';
-import {
-  DashboardPage,
-  DashboardPageContent,
-  DashboardPageDescription,
-  DashboardPageHeader,
-  DashboardPageTitle,
-} from '@/components/dashboard/common/ui/dashboard-page';
 
 export default async function AttendancePage({ params }: PropsWithSlugParams): Promise<React.JSX.Element> {
   const { slug } = await params;

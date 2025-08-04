@@ -43,15 +43,12 @@ export default function ContributorCard(contributor: Contributor) {
         <Link href={`https://github.com/gameguild-gg/website/commits/main?author=${contributor.login}`}>
           <p className="text-gray-600 text-center">Contributions: {contributionsToString(contributor.contributions)}</p>
           <p className="text-gray-600 text-center">
-            LoC: <span className="text-blue-500 font-bold">{contributionsToString(contributor.additions + contributor.deletions)}</span>(
-            <span className="text-green-500">+{contributionsToString(contributor.additions)}</span>/
+            LoC: <span className="text-blue-500 font-bold">{contributionsToString(contributor.additions + contributor.deletions)}</span>(<span className="text-green-500">+{contributionsToString(contributor.additions)}</span>/
             <span className="text-red-500">-{contributionsToString(contributor.deletions)}</span>)
           </p>
           <p className="text-gray-600 text-center">
             {'LoC/Contribs: '}
-            <span className="text-blue-500 font-bold">
-              {contributionsToString((contributor.additions + contributor.deletions) / contributor.contributions)}
-            </span>
+            <span className="text-blue-500 font-bold">{contributionsToString((contributor.additions + contributor.deletions) / contributor.contributions)}</span>
           </p>
         </Link>
       </div>

@@ -24,7 +24,6 @@ public class ProductProgram : Entity {
   /// <summary>
   /// Navigation property to the Product entity
   /// </summary>
-  [ForeignKey(nameof(ProductId))]
   public virtual Product Product { get; set; } = null!;
 
   /// <summary>
@@ -36,7 +35,6 @@ public class ProductProgram : Entity {
   /// <summary>
   /// Navigation property to the Program entity
   /// </summary>
-  [ForeignKey(nameof(ProgramId))]
   public virtual Programs.Program Program { get; set; } = null!;
 
   /// <summary>

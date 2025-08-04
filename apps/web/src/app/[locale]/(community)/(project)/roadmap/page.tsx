@@ -1,6 +1,7 @@
-import React from 'react';
-import { Metadata } from 'next';
 import { ProjectRoadmap } from '@/components/contributors/project-roadmap';
+import { Metadata } from 'next';
+import Link from 'next/link';
+import React from 'react';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -25,8 +26,7 @@ export default function RoadmapPage(): React.JSX.Element {
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-foreground mb-4">Development Roadmap</h1>
           <p className="text-muted-foreground text-xl max-w-4xl mx-auto leading-relaxed">
-            Follow our journey from initial concept to the premier gaming community platform. Each milestone represents months of hard work, community feedback,
-            and innovative features.
+            Follow our journey from initial concept to the premier gaming community platform. Each milestone represents months of hard work, community feedback, and innovative features.
           </p>
         </div>
 
@@ -37,18 +37,13 @@ export default function RoadmapPage(): React.JSX.Element {
         <div className="mt-16 text-center">
           <div className="bg-card rounded-lg border border-border p-8">
             <h2 className="text-2xl font-bold text-foreground mb-4">Want to Contribute?</h2>
-            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Help us build the future of gaming communities. Every contribution, whether code, feedback, or ideas, helps shape our roadmap.
-            </p>
+            <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">Help us build the future of gaming communities. Every contribution, whether code, feedback, or ideas, helps shape our roadmap.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href="/contributors"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
-              >
+              <Link href="/contributors" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors">
                 <span>👥</span>
                 View Contributors
-              </a>
-              <a
+              </Link>
+              <Link
                 href="https://github.com/gameguild-gg/website"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -56,7 +51,7 @@ export default function RoadmapPage(): React.JSX.Element {
               >
                 <span>🌟</span>
                 Star on GitHub
-              </a>
+              </Link>
             </div>
           </div>
         </div>

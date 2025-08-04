@@ -66,14 +66,7 @@ export function CTypeChecker({ monaco, editor, code }: CTypeCheckerProps) {
           !inPreprocessorIf
         ) {
           // Check if it's not a function declaration or control structure
-          if (
-            !line.includes('if') &&
-            !line.includes('for') &&
-            !line.includes('while') &&
-            !line.includes('switch') &&
-            !line.includes('else') &&
-            !line.includes('do')
-          ) {
+          if (!line.includes('if') && !line.includes('for') && !line.includes('while') && !line.includes('switch') && !line.includes('else') && !line.includes('do')) {
             errors.push({
               line: lineIndex + 1,
               column: line.length,
@@ -117,8 +110,7 @@ export function CTypeChecker({ monaco, editor, code }: CTypeCheckerProps) {
         braceCount += openBraces - closeBraces;
 
         // Check for variable declarations
-        const varDeclarationRegex =
-          /\b(int|char|float|double|void|long|short|unsigned|signed|struct|enum|union|bool)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*(\[\s*[a-zA-Z0-9_]*\s*\])?\s*(=|;|\(|,)/;
+        const varDeclarationRegex = /\b(int|char|float|double|void|long|short|unsigned|signed|struct|enum|union|bool)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*(\[\s*[a-zA-Z0-9_]*\s*\])?\s*(=|;|\(|,)/;
         const varMatch = line.match(varDeclarationRegex);
 
         if (varMatch && !line.includes('(')) {
@@ -265,8 +257,7 @@ export function CTypeChecker({ monaco, editor, code }: CTypeCheckerProps) {
       endLineNumber: error.line,
       endColumn: error.column + 1,
       message: error.message,
-      severity:
-        error.severity === 'error' ? monaco.MarkerSeverity.Error : error.severity === 'warning' ? monaco.MarkerSeverity.Warning : monaco.MarkerSeverity.Info,
+      severity: error.severity === 'error' ? monaco.MarkerSeverity.Error : error.severity === 'warning' ? monaco.MarkerSeverity.Warning : monaco.MarkerSeverity.Info,
     }));
 
     monaco.editor.setModelMarkers(model, 'c-type-checker', markers);

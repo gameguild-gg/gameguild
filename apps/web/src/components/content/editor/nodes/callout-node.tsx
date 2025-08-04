@@ -205,12 +205,7 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
               <label htmlFor="callout-calloutTitle" className="text-sm font-medium">
                 calloutTitle (optional)
               </label>
-              <Input
-                id="callout-calloutTitle"
-                value={calloutTitle}
-                onChange={(e) => handlecalloutTitleChange(e.target.value)}
-                placeholder="Callout calloutTitle"
-              />
+              <Input id="callout-calloutTitle" value={calloutTitle} onChange={(e) => handlecalloutTitleChange(e.target.value)} placeholder="Callout calloutTitle" />
             </div>
 
             <div className="grid gap-2">

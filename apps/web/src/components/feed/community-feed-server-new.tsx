@@ -19,21 +19,7 @@ interface CommunityFeedServerProps {
   };
 }
 
-const POST_TYPES = [
-  'general',
-  'announcement',
-  'user_registration',
-  'user_signup',
-  'project_completion',
-  'achievement_unlocked',
-  'milestone',
-  'news',
-  'discussion',
-  'question',
-  'showcase',
-  'tutorial',
-  'event',
-];
+const POST_TYPES = ['general', 'announcement', 'user_registration', 'user_signup', 'project_completion', 'achievement_unlocked', 'milestone', 'news', 'discussion', 'question', 'showcase', 'tutorial', 'event'];
 
 export async function CommunityFeedServer({ searchParams }: CommunityFeedServerProps) {
   // Parse search parameters

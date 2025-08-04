@@ -69,13 +69,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row gap-6 items-start">
               <div className="flex-shrink-0">
-                <Image
-                  src={userData.avatar}
-                  alt={userData.name}
-                  width={128}
-                  height={128}
-                  className="w-32 h-32 rounded-full object-cover border-4 border-green-500"
-                />
+                <Image src={userData.avatar} alt={userData.name} width={128} height={128} className="w-32 h-32 rounded-full object-cover border-4 border-green-500" />
               </div>
 
               <div className="flex-1">

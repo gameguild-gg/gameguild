@@ -1,11 +1,5 @@
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
 import React from 'react';
-import {
-  DashboardPage,
-  DashboardPageContent,
-  DashboardPageDescription,
-  DashboardPageHeader,
-  DashboardPageTitle,
-} from '@/components/dashboard/common/ui/dashboard-page';
 
 export default async function Page(): Promise<React.JSX.Element> {
   return (

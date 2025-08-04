@@ -18,11 +18,9 @@ public class UserReputation : Resource, IReputation {
   /// <summary>
   /// The user this reputation belongs to
   /// </summary>
-  [Required]
-  [ForeignKey(nameof(UserId))]
-  public required User User { get; set; }
+  public User? User { get; set; }
 
-  [Required] public Guid UserId { get; set; }
+  public Guid? UserId { get; set; }
 
   /// <summary>
   /// Current reputation score
@@ -32,7 +30,6 @@ public class UserReputation : Resource, IReputation {
   /// <summary>
   /// Current reputation tier (linked to configurable tier)
   /// </summary>
-  [ForeignKey(nameof(CurrentLevelId))]
   public ReputationTier? CurrentLevel { get; set; }
 
   public Guid? CurrentLevelId { get; set; }

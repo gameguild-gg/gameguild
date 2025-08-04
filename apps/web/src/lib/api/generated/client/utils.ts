@@ -208,19 +208,7 @@ export const buildUrl: Client['buildUrl'] = (options) => {
   return url;
 };
 
-export const getUrl = ({
-  baseUrl,
-  path,
-  query,
-  querySerializer,
-  url: _url,
-}: {
-  baseUrl?: string;
-  path?: Record<string, unknown>;
-  query?: Record<string, unknown>;
-  querySerializer: QuerySerializer;
-  url: string;
-}) => {
+export const getUrl = ({ baseUrl, path, query, querySerializer, url: _url }: { baseUrl?: string; path?: Record<string, unknown>; query?: Record<string, unknown>; querySerializer: QuerySerializer; url: string }) => {
   const pathUrl = _url.startsWith('/') ? _url : `/${_url}`;
   let url = (baseUrl ?? '') + pathUrl;
   if (path) {
@@ -354,9 +342,7 @@ const defaultHeaders = {
   'Content-Type': 'application/json',
 };
 
-export const createConfig = <T extends ClientOptions = ClientOptions>(
-  override: Config<Omit<ClientOptions, keyof T> & T> = {},
-): Config<Omit<ClientOptions, keyof T> & T> => ({
+export const createConfig = <T extends ClientOptions = ClientOptions>(override: Config<Omit<ClientOptions, keyof T> & T> = {}): Config<Omit<ClientOptions, keyof T> & T> => ({
   ...jsonBodySerializer,
   headers: defaultHeaders,
   parseAs: 'auto',

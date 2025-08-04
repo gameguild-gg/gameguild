@@ -18,13 +18,7 @@ export function RatingQuestion({ question, maxScore = 5, userRating, onRatingCha
       <div className="font-semibold">{question}</div>
       <div className="flex gap-2">
         {Array.from({ length: maxScore }, (_, i) => i + 1).map((rating) => (
-          <Button
-            key={rating}
-            variant={userRating === rating ? 'default' : 'outline'}
-            onClick={() => onRatingChange(rating)}
-            disabled={disabled}
-            className="w-12 h-12"
-          >
+          <Button key={rating} variant={userRating === rating ? 'default' : 'outline'} onClick={() => onRatingChange(rating)} disabled={disabled} className="w-12 h-12">
             {rating}
           </Button>
         ))}

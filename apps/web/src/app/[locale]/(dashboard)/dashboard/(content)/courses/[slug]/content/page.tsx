@@ -10,27 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
-import {
-  ArrowDown,
-  ArrowUp,
-  BookOpen,
-  ChevronDown,
-  ChevronRight,
-  Clock,
-  Copy,
-  Edit,
-  Eye,
-  EyeOff,
-  FileText,
-  GripVertical,
-  MoreHorizontal,
-  Move,
-  PlayCircle,
-  Plus,
-  Trash2,
-  Video,
-} from 'lucide-react';
-import { useCourseEditor } from '@/lib/courses/course-editor.context';
+import { ArrowDown, ArrowUp, BookOpen, ChevronDown, ChevronRight, Clock, Copy, Edit, Eye, EyeOff, FileText, GripVertical, MoreHorizontal, Move, PlayCircle, Plus, Trash2, Video } from 'lucide-react';
+import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { useState } from 'react';
 
 // Mock data types for content structure
@@ -207,15 +188,11 @@ export default function CourseContentPage() {
                   <div className="text-sm text-muted-foreground">Lessons</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {modules.reduce((total, moduleItem) => total + moduleItem.lessons.reduce((lessonTotal, lesson) => lessonTotal + lesson.duration, 0), 0)}m
-                  </div>
+                  <div className="text-2xl font-bold text-primary">{modules.reduce((total, moduleItem) => total + moduleItem.lessons.reduce((lessonTotal, lesson) => lessonTotal + lesson.duration, 0), 0)}m</div>
                   <div className="text-sm text-muted-foreground">Total Duration</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {modules.reduce((total, moduleItem) => total + moduleItem.lessons.filter((lesson) => lesson.status === 'published').length, 0)}
-                  </div>
+                  <div className="text-2xl font-bold text-primary">{modules.reduce((total, moduleItem) => total + moduleItem.lessons.filter((lesson) => lesson.status === 'published').length, 0)}</div>
                   <div className="text-sm text-muted-foreground">Published</div>
                 </div>
               </div>
@@ -229,9 +206,7 @@ export default function CourseContentPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      {bulkEditMode && (
-                        <input type="checkbox" checked={selectedItems.has(moduleItem.id)} onChange={() => toggleSelection(moduleItem.id)} className="rounded" />
-                      )}
+                      {bulkEditMode && <input type="checkbox" checked={selectedItems.has(moduleItem.id)} onChange={() => toggleSelection(moduleItem.id)} className="rounded" />}
                       <Button variant="ghost" size="sm" onClick={() => toggleModule(moduleItem.id)} className="p-0 h-auto">
                         {expandedModules.has(moduleItem.id) ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                       </Button>
@@ -289,9 +264,7 @@ export default function CourseContentPage() {
                         {moduleItem.lessons.map((lesson, index) => (
                           <div key={lesson.id} className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50">
                             <div className="flex items-center gap-3">
-                              {bulkEditMode && (
-                                <input type="checkbox" checked={selectedItems.has(lesson.id)} onChange={() => toggleSelection(lesson.id)} className="rounded" />
-                              )}
+                              {bulkEditMode && <input type="checkbox" checked={selectedItems.has(lesson.id)} onChange={() => toggleSelection(lesson.id)} className="rounded" />}
                               <div className="flex items-center gap-2">
                                 <GripVertical className="h-4 w-4 text-muted-foreground" />
                                 <span className="text-sm text-muted-foreground font-mono">{index + 1}</span>

@@ -1,820 +1,320 @@
+'use server';
+
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
+import {
+  deleteApiUsersById,
+  getApiUsers,
+  getApiUsersById,
+  getApiUsersByUserIdAchievements,
+  getApiUsersByUserIdAchievementsAvailable,
+  getApiUsersByUserIdAchievementsByAchievementIdPrerequisites,
+  getApiUsersByUserIdAchievementsProgress,
+  getApiUsersByUserIdAchievementsSummary,
+  getApiUsersSearch,
+  getApiUsersStatistics,
+  patchApiUsersBulkActivate,
+  patchApiUsersBulkDeactivate,
+  postApiUsers,
+  postApiUsersBulk,
+  postApiUsersByIdRestore,
+  postApiUsersByUserIdAchievementsByAchievementIdProgress,
+  putApiUsersById,
+  putApiUsersByIdBalance,
+} from '@/lib/api/generated/sdk.gen';
+import type {
+  DeleteApiUsersByIdData,
+  GetApiUsersByIdData,
+  GetApiUsersByUserIdAchievementsAvailableData,
+  GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData,
+  GetApiUsersByUserIdAchievementsData,
+  GetApiUsersByUserIdAchievementsProgressData,
+  GetApiUsersByUserIdAchievementsSummaryData,
+  GetApiUsersData,
+  GetApiUsersSearchData,
+  GetApiUsersStatisticsData,
+  PatchApiUsersBulkActivateData,
+  PatchApiUsersBulkDeactivateData,
+  PostApiUsersBulkData,
+  PostApiUsersByIdRestoreData,
+  PostApiUsersByUserIdAchievementsByAchievementIdProgressData,
+  PostApiUsersData,
+  PutApiUsersByIdBalanceData,
+  PutApiUsersByIdData,
+} from '@/lib/api/generated/types.gen';
 import { revalidateTag } from 'next/cache';
-import { auth } from '@/auth';
-import { PagedResult, UpdateUserRequest, User } from '@/components/legacy/types/user';
 
-export interface UserData {
-  users: User[];
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-export interface ActionState {
-  success: boolean;
-  error?: string;
-}
-
-export interface UserActionState extends ActionState {
-  user?: User;
-}
-
-export interface UserStatistics {
-  totalUsers: number;
-  activeUsers: number;
-  inactiveUsers: number;
-  deletedUsers: number;
-  totalBalance: number;
-  averageBalance: number;
-  usersCreatedToday: number;
-  usersCreatedThisWeek: number;
-  usersCreatedThisMonth: number;
-}
-
-// Cache configuration
-const CACHE_TAGS = {
-  USERS: 'users',
-  USER_DETAIL: 'user-detail',
-  USER_STATISTICS: 'user-statistics',
-} as const;
-
-const REVALIDATION_TIME = 300; // 5 minutes
+// =============================================================================
+// USER MANAGEMENT
+// =============================================================================
 
 /**
- * Get users data with authentication
+ * Get all users with optional filtering
  */
-export async function getUsersData(page: number = 1, limit: number = 20, search?: string): Promise<UserData> {
-  try {
-    // Get authenticated session
-    const session = await auth();
+export async function getUsers(data?: GetApiUsersData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      return {
-        users: [],
-        pagination: { page, limit, total: 0, totalPages: 0 },
-      };
-    }
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    const skip = (page - 1) * limit;
-
-    if (search) {
-      // Use search endpoint for text search
-      const params = new URLSearchParams({
-        searchTerm: search,
-        skip: skip.toString(),
-        take: limit.toString(),
-        includeDeleted: 'false',
-      });
-
-      const response = await fetch(`${apiUrl}/api/users/search?${params}`, {
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        next: {
-          revalidate: REVALIDATION_TIME,
-          tags: [CACHE_TAGS.USERS],
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to search users: ${response.status} ${response.statusText}`);
-      }
-
-      const data: PagedResult<User> = await response.json();
-      return {
-        users: data.items,
-        pagination: {
-          page,
-          limit,
-          total: data.totalCount,
-          totalPages: Math.ceil(data.totalCount / limit),
-        },
-      };
-    }
-
-    // Use regular users endpoint
-    const params = new URLSearchParams({
-      skip: skip.toString(),
-      take: limit.toString(),
-      includeDeleted: 'false',
-    });
-
-    const response = await fetch(`${apiUrl}/api/users?${params}`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      next: {
-        revalidate: REVALIDATION_TIME,
-        tags: [CACHE_TAGS.USERS],
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
-    }
-
-    const users: User[] = await response.json();
-
-    return {
-      users,
-      pagination: {
-        page,
-        limit,
-        total: users.length, // Note: This is the current page count, not total
-        totalPages: Math.ceil(users.length / limit),
-      },
-    };
-  } catch (error) {
-    console.error('Error fetching users:', error);
-
-    // Return empty data for network errors
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      return {
-        users: [],
-        pagination: { page, limit, total: 0, totalPages: 0 },
-      };
-    }
-
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch users');
-  }
+  return getApiUsers({
+    query: data?.query,
+  });
 }
 
 /**
- * Get user by ID with authentication
+ * Create a new user
  */
-export async function getUserById(id: string): Promise<User | null> {
-  try {
-    // Get authenticated session
-    const session = await auth();
+export async function createUser(data?: PostApiUsersData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      return null;
-    }
+  const result = await postApiUsers({
+    body: data?.body,
+  });
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  // Revalidate users cache
+  revalidateTag('users');
 
-    const response = await fetch(`${apiUrl}/api/users/${id}`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      next: {
-        revalidate: REVALIDATION_TIME,
-        tags: [CACHE_TAGS.USER_DETAIL, `user-${id}`],
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error(`Failed to fetch user: ${response.status} ${response.statusText}`);
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching user:', error);
-
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      return null;
-    }
-
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch user');
-  }
+  return result;
 }
 
 /**
- * Create a new user (Server Action)
+ * Delete a user by ID
  */
-export async function createUser(prevState: ActionState, formData: FormData): Promise<UserActionState> {
-  try {
-    // Get authenticated session
-    const session = await auth();
+export async function deleteUser(data: DeleteApiUsersByIdData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
+  const result = await deleteApiUsersById({
+    path: data.path,
+  });
 
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-    const isActive = formData.get('isActive') === 'true';
+  // Revalidate users cache
+  revalidateTag('users');
 
-    // Validation
-    if (!name || name.trim().length < 2) {
-      return { success: false, error: 'Name must be at least 2 characters long' };
-    }
-
-    if (!email || !email.includes('@')) {
-      return { success: false, error: 'Please provide a valid email address' };
-    }
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-
-    const response = await fetch(`${apiUrl}/api/users`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        isActive,
-        initialBalance: 0, // Default initial balance
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || `Failed to create user: ${response.status} ${response.statusText}`);
-    }
-
-    const user = await response.json();
-
-    // Revalidate caches
-    await revalidateUsersData();
-
-    return { success: true, user };
-  } catch (error) {
-    console.error('Error creating user:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to create user',
-    };
-  }
+  return result;
 }
 
 /**
- * Update user (Server Action)
+ * Get a specific user by ID
  */
-export async function updateUser(id: string, prevState: ActionState, formData: FormData): Promise<UserActionState> {
-  try {
-    // Get authenticated session
-    const session = await auth();
+export async function getUserById(data: GetApiUsersByIdData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
-
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
-    const isActive = formData.get('isActive') === 'true';
-
-    // Validation
-    if (!name || name.trim().length < 2) {
-      return { success: false, error: 'Name must be at least 2 characters long' };
-    }
-
-    if (!email || !email.includes('@')) {
-      return { success: false, error: 'Please provide a valid email address' };
-    }
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-
-    const response = await fetch(`${apiUrl}/api/users/${id}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: name.trim(),
-        email: email.trim().toLowerCase(),
-        isActive,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || `Failed to update user: ${response.status} ${response.statusText}`);
-    }
-
-    const user = await response.json();
-
-    // Revalidate caches
-    await revalidateUsersData();
-    revalidateTag(`user-${id}`);
-
-    return { success: true, user };
-  } catch (error) {
-    console.error('Error updating user:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to update user',
-    };
-  }
+  return getApiUsersById({
+    path: data.path,
+  });
 }
 
 /**
- * Delete user (Server Action)
+ * Update a user by ID
  */
-export async function deleteUser(id: string): Promise<{ success: boolean; error?: string }> {
-  try {
-    // Get authenticated session
-    const session = await auth();
+export async function updateUser(data: PutApiUsersByIdData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
+  const result = await putApiUsersById({
+    path: data.path,
+    body: data.body,
+  });
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  // Revalidate users cache
+  revalidateTag('users');
 
-    const response = await fetch(`${apiUrl}/api/users/${id}?softDelete=true`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || `Failed to delete user: ${response.status} ${response.statusText}`);
-    }
-
-    // Revalidate caches
-    await revalidateUsersData();
-    revalidateTag(`user-${id}`);
-
-    return { success: true };
-  } catch (error) {
-    console.error('Error deleting user:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete user',
-    };
-  }
+  return result;
 }
 
 /**
- * Toggle user active status (Server Action)
+ * Restore a deleted user
  */
-export async function toggleUserStatus(
-  id: string,
-  currentStatus: boolean,
-): Promise<{
-  success: boolean;
-  error?: string;
-  user?: User;
-}> {
-  try {
-    // Get authenticated session
-    const session = await auth();
+export async function restoreUser(data: PostApiUsersByIdRestoreData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
+  const result = await postApiUsersByIdRestore({
+    path: data.path,
+  });
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  // Revalidate users cache
+  revalidateTag('users');
 
-    const response = await fetch(`${apiUrl}/api/users/${id}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        isActive: !currentStatus,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || `Failed to toggle user status: ${response.status} ${response.statusText}`);
-    }
-
-    const user = await response.json();
-
-    // Revalidate caches
-    await revalidateUsersData();
-    revalidateTag(`user-${id}`);
-
-    return { success: true, user };
-  } catch (error) {
-    console.error('Error toggling user status:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to toggle user status',
-    };
-  }
+  return result;
 }
 
 /**
- * Revalidate users data cache
+ * Update user balance
  */
-export async function revalidateUsersData(): Promise<void> {
-  revalidateTag(CACHE_TAGS.USERS);
-  revalidateTag(CACHE_TAGS.USER_DETAIL);
+export async function updateUserBalance(data: PutApiUsersByIdBalanceData) {
+  await configureAuthenticatedClient();
+
+  const result = await putApiUsersByIdBalance({
+    path: data.path,
+    body: data.body,
+  });
+
+  // Revalidate users cache
+  revalidateTag('users');
+
+  return result;
+}
+
+// =============================================================================
+// USER ANALYTICS & SEARCH
+// =============================================================================
+
+/**
+ * Get user statistics
+ */
+export async function getUserStatistics(data?: GetApiUsersStatisticsData) {
+  await configureAuthenticatedClient();
+
+  return getApiUsersStatistics({
+    query: data?.query,
+  });
 }
 
 /**
- * Bulk user operations
+ * Search users
  */
-export async function bulkUpdateUsers(
-  userIds: string[],
-  updates: Partial<UpdateUserRequest>,
-): Promise<{ success: boolean; error?: string; updatedCount?: number }> {
-  try {
-    // Get authenticated session
-    const session = await auth();
+export async function searchUsers(data?: GetApiUsersSearchData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
+  return getApiUsersSearch({
+    query: data?.query,
+  });
+}
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// =============================================================================
+// BULK USER OPERATIONS
+// =============================================================================
 
-    const response = await fetch(`${apiUrl}/users/bulk`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userIds,
-        updates,
-      }),
-    });
+/**
+ * Create users in bulk
+ */
+export async function createUsersBulk(data?: PostApiUsersBulkData) {
+  await configureAuthenticatedClient();
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || `Failed to bulk update users: ${response.status} ${response.statusText}`);
-    }
+  const result = await postApiUsersBulk({
+    body: data?.body,
+  });
 
-    const result = await response.json();
+  // Revalidate users cache
+  revalidateTag('users');
 
-    // Revalidate caches
-    await revalidateUsersData();
-    userIds.forEach((id) => revalidateTag(`user-${id}`));
-
-    return { success: true, updatedCount: result.updatedCount || userIds.length };
-  } catch (error) {
-    console.error('Error bulk updating users:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to bulk update users',
-    };
-  }
+  return result;
 }
 
 /**
- * Search users using the backend UserProfiles API
+ * Activate users in bulk
  */
-export async function searchUsers(query: string, limit: number = 10): Promise<User[]> {
-  try {
-    // Get authenticated session
-    const session = await auth();
+export async function activateUsersBulk(data?: PatchApiUsersBulkActivateData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      console.warn('Authentication required for user search');
-      return [];
-    }
+  const result = await patchApiUsersBulkActivate({
+    body: data?.body,
+  });
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  // Revalidate users cache
+  revalidateTag('users');
 
-    // Use the UserProfiles endpoint with searchTerm parameter
-    const response = await fetch(`${apiUrl}/api/userprofiles?searchTerm=${encodeURIComponent(query)}&take=${limit}&includeDeleted=false`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      next: {
-        revalidate: 60, // Cache search results for 1 minute
-        tags: ['user-search'],
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to search users: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    console.log('🔍 [SEARCH DEBUG] Raw API response:', data);
-
-    // Transform UserProfile data to User format
-    if (Array.isArray(data)) {
-      const users = data.map(
-        (profile: {
-          id: string;
-          version: number;
-          displayName?: string;
-          givenName?: string;
-          familyName?: string;
-          email?: string;
-          isDeleted?: boolean;
-          createdAt: string;
-          updatedAt: string;
-        }) => ({
-          id: profile.id,
-          version: profile.version,
-          name: profile.displayName || profile.givenName + ' ' + profile.familyName,
-          email: profile.email || `${profile.displayName}@unknown.com`, // UserProfile doesn't have email
-          isActive: !profile.isDeleted,
-          balance: 0, // UserProfile doesn't have balance
-          availableBalance: 0,
-          createdAt: profile.createdAt,
-          updatedAt: profile.updatedAt,
-          deletedAt: profile.deletedAt,
-          isDeleted: profile.isDeleted,
-        }),
-      );
-
-      console.log('✅ [SEARCH DEBUG] Transformed users:', users.length);
-      return users;
-    }
-
-    return [];
-  } catch (error) {
-    console.error('❌ [SEARCH DEBUG] Error searching users:', error);
-    return [];
-  }
+  return result;
 }
 
 /**
- * Bulk activate users (Server Action)
+ * Deactivate users in bulk
  */
-export async function bulkActivateUsers(
-  userIds: string[],
-  reason?: string,
-): Promise<{
-  success: boolean;
-  error?: string;
-  result?: unknown;
-}> {
-  try {
-    // Get authenticated session
-    const session = await auth();
+export async function deactivateUsersBulk(data?: PatchApiUsersBulkDeactivateData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
+  const result = await patchApiUsersBulkDeactivate({
+    body: data?.body,
+  });
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    const params = new URLSearchParams();
-    if (reason) params.append('reason', reason);
+  // Revalidate users cache
+  revalidateTag('users');
 
-    const response = await fetch(`${apiUrl}/api/users/bulk/activate?${params}`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userIds),
-    });
+  return result;
+}
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || `Failed to activate users: ${response.status} ${response.statusText}`);
-    }
+// =============================================================================
+// USER ACHIEVEMENTS INTEGRATION
+// =============================================================================
 
-    const result = await response.json();
+/**
+ * Get user achievements
+ */
+export async function getUserAchievements(data: GetApiUsersByUserIdAchievementsData) {
+  await configureAuthenticatedClient();
 
-    // Revalidate caches
-    await revalidateUsersData();
-
-    return { success: true, result };
-  } catch (error) {
-    console.error('Error activating users:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to activate users',
-    };
-  }
+  return getApiUsersByUserIdAchievements({
+    path: data.path,
+  });
 }
 
 /**
- * Bulk deactivate users (Server Action)
+ * Get user achievement progress
  */
-export async function bulkDeactivateUsers(
-  userIds: string[],
-  reason?: string,
-): Promise<{
-  success: boolean;
-  error?: string;
-  result?: unknown;
-}> {
-  try {
-    // Get authenticated session
-    const session = await auth();
+export async function getUserAchievementProgress(data: GetApiUsersByUserIdAchievementsProgressData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      return { success: false, error: 'Authentication required' };
-    }
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    const params = new URLSearchParams();
-    if (reason) params.append('reason', reason);
-
-    const response = await fetch(`${apiUrl}/api/users/bulk/deactivate?${params}`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userIds),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      throw new Error(errorData?.message || `Failed to deactivate users: ${response.status} ${response.statusText}`);
-    }
-
-    const result = await response.json();
-
-    // Revalidate caches
-    await revalidateUsersData();
-
-    return { success: true, result };
-  } catch (error) {
-    console.error('Error deactivating users:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to deactivate users',
-    };
-  }
+  return getApiUsersByUserIdAchievementsProgress({
+    path: data.path,
+  });
 }
 
 /**
- * Get user by username/displayName search
+ * Get user achievement summary
  */
-export async function getUserByUsername(username: string): Promise<User | null> {
-  try {
-    console.log('🔍 [USER DEBUG] Searching for user:', username);
+export async function getUserAchievementSummary(data: GetApiUsersByUserIdAchievementsSummaryData) {
+  await configureAuthenticatedClient();
 
-    // Search for users with matching name or email
-    const users = await searchUsers(username, 50);
-
-    if (!users || users.length === 0) {
-      console.log('❌ [USER DEBUG] No users found in UserProfiles, creating mock user for demonstration');
-
-      // For demonstration purposes, create a mock user based on the username
-      // In a real app, you would either:
-      // 1. Automatically create a UserProfile when a user registers
-      // 2. Use the authentication user data directly
-      const mockUser: User = {
-        id: `mock-${username}`,
-        version: 1,
-        name: username,
-        email: `${username}@example.com`,
-        isActive: true,
-        balance: 100,
-        availableBalance: 100,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isDeleted: false,
-      };
-
-      console.log('✅ [USER DEBUG] Created mock user for demonstration:', mockUser.name);
-      return mockUser;
-    }
-
-    console.log('📊 [USER DEBUG] Search found users:', users.length);
-
-    // Look for exact match first (case insensitive)
-    const exactMatch = users.find((user: User) => user.name?.toLowerCase() === username.toLowerCase() || user.email?.toLowerCase() === username.toLowerCase());
-
-    if (exactMatch) {
-      console.log('✅ [USER DEBUG] Exact match found:', exactMatch.name || exactMatch.email);
-      return exactMatch;
-    }
-
-    // If no exact match, look for partial matches
-    const partialMatch = users.find(
-      (user: User) => user.name?.toLowerCase().includes(username.toLowerCase()) || user.email?.toLowerCase().includes(username.toLowerCase()),
-    );
-
-    if (partialMatch) {
-      console.log('✅ [USER DEBUG] Partial match found:', partialMatch.name || partialMatch.email);
-      return partialMatch;
-    }
-
-    console.log('❌ [USER DEBUG] No close matches found for:', username);
-    return null;
-  } catch (error) {
-    console.error('❌ [USER DEBUG] Error searching for user:', {
-      username,
-      error: error instanceof Error ? error.message : error,
-      stack: error instanceof Error ? error.stack : 'No stack trace',
-    });
-    return null;
-  }
+  return getApiUsersByUserIdAchievementsSummary({
+    path: data.path,
+  });
 }
 
 /**
- * Check if a user exists by username
+ * Get available achievements for user
  */
-export async function userExists(username: string): Promise<boolean> {
-  try {
-    const user = await getUserByUsername(username);
-    const exists = user !== null;
-    console.log('🔍 [USER DEBUG] User exists check:', { username, exists });
-    return exists;
-  } catch (error) {
-    console.error('❌ [USER DEBUG] Error checking if user exists:', error);
-    return false;
-  }
+export async function getUserAvailableAchievements(data: GetApiUsersByUserIdAchievementsAvailableData) {
+  await configureAuthenticatedClient();
+
+  return getApiUsersByUserIdAchievementsAvailable({
+    path: data.path,
+  });
 }
 
 /**
- * Get current authenticated user
+ * Update user achievement progress
  */
-export async function getCurrentUser(): Promise<User | null> {
-  try {
-    const result = await getUsersData();
-    if (!result.users || result.users.length === 0) {
-      return null;
-    }
+export async function updateUserAchievementProgress(data: PostApiUsersByUserIdAchievementsByAchievementIdProgressData) {
+  await configureAuthenticatedClient();
 
-    // For now, return the first user as current user
-    // In a real app, this would get the current session user
-    return result.users[0];
-  } catch (error) {
-    console.error('❌ [USER DEBUG] Error getting current user:', error);
-    return null;
-  }
+  const result = await postApiUsersByUserIdAchievementsByAchievementIdProgress({
+    path: data.path,
+    body: data.body,
+  });
+
+  // Revalidate user achievements cache
+  revalidateTag('user-achievements');
+
+  return result;
 }
 
 /**
- * Server action to fetch user statistics with caching
- * Uses Next.js 15+ caching and revalidation features
+ * Get achievement prerequisites for user
  */
-export async function getUserStatistics(
-  fromDate?: string,
-  toDate?: string,
-  includeDeleted: boolean = false,
-): Promise<{ success: boolean; data?: UserStatistics; error?: string }> {
-  try {
-    // Get authenticated session
-    const session = await auth();
+export async function getUserAchievementPrerequisites(data: GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      return {
-        success: false,
-        error: 'Authentication required',
-      };
-    }
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    const params = new URLSearchParams();
-
-    if (fromDate) params.append('fromDate', fromDate);
-    if (toDate) params.append('toDate', toDate);
-    if (includeDeleted) params.append('includeDeleted', 'true');
-
-    const response = await fetch(`${apiUrl}/api/users/statistics?${params.toString()}`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      next: {
-        revalidate: 60, // Cache for 1 minute
-        tags: [CACHE_TAGS.USER_STATISTICS],
-      },
-    });
-
-    if (!response.ok) {
-      return {
-        success: false,
-        error: `Failed to fetch user statistics: ${response.statusText}`,
-      };
-    }
-
-    const userStatistics = await response.json();
-
-    return {
-      success: true,
-      data: userStatistics,
-    };
-  } catch (error) {
-    console.error('Error fetching user statistics:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-    };
-  }
+  return getApiUsersByUserIdAchievementsByAchievementIdPrerequisites({
+    path: data.path,
+  });
 }
+
+// =============================================================================
+// BULK OPERATION ALIASES
+// =============================================================================
 
 /**
- * Note: This function is called from server-side refresh actions only
- * Do not import this directly in client components
+ * Alias for activateUsersBulk to match component naming
  */
-export async function refreshUserStatistics(): Promise<{ success: boolean; error?: string }> {
-  try {
-    revalidateTag(CACHE_TAGS.USER_STATISTICS);
+export const bulkActivateUsers = activateUsersBulk;
 
-    return {
-      success: true,
-    };
-  } catch (error) {
-    console.error('Error refreshing user statistics:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to refresh statistics',
-    };
-  }
-}
+/**
+ * Alias for deactivateUsersBulk to match component naming
+ */
+export const bulkDeactivateUsers = deactivateUsersBulk;

@@ -33,17 +33,7 @@ interface SettingsPanelProps {
   updateSourceCode: (updates: Partial<{ readonly: boolean; showExecution: boolean; showTests: boolean }>) => void;
 }
 
-export function SettingsPanel({
-  isDarkTheme,
-  readonly,
-  setReadonly,
-  showExecution,
-  setShowExecution,
-  showTests,
-  setShowTests,
-  setShowSettings,
-  updateSourceCode,
-}: SettingsPanelProps) {
+export function SettingsPanel({ isDarkTheme, readonly, setReadonly, showExecution, setShowExecution, showTests, setShowTests, setShowSettings, updateSourceCode }: SettingsPanelProps) {
   return (
     <div className="border-t p-3 bg-muted/50">
       <div className="flex items-center justify-between">

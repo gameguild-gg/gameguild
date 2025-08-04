@@ -18,12 +18,7 @@ interface TypeSafeMultiSelectFilterProps<T extends Record<string, unknown>> {
  * Type-safe MultiSelectFilter component that automatically connects to the filter context
  * The filterKey is constrained to actual properties of T, preventing typos and runtime errors
  */
-export function TypeSafeMultiSelectFilter<T extends Record<string, unknown>>({
-  filterKey,
-  options,
-  placeholder = 'Select options',
-  className = '',
-}: TypeSafeMultiSelectFilterProps<T>) {
+export function TypeSafeMultiSelectFilter<T extends Record<string, unknown>>({ filterKey, options, placeholder = 'Select options', className = '' }: TypeSafeMultiSelectFilterProps<T>) {
   const { getFilterValues, toggleFilter, clearFilter } = useFilterContext<T>();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -67,11 +62,7 @@ export function TypeSafeMultiSelectFilter<T extends Record<string, unknown>>({
         <div className="space-y-2">
           {options.map((option) => (
             <div key={option.value} className="flex items-center space-x-2 rounded p-2 hover:bg-gray-50">
-              <Checkbox
-                id={`${String(filterKey)}-${option.value}`}
-                checked={selectedValues.includes(option.value)}
-                onCheckedChange={() => handleToggleOption(option.value)}
-              />
+              <Checkbox id={`${String(filterKey)}-${option.value}`} checked={selectedValues.includes(option.value)} onCheckedChange={() => handleToggleOption(option.value)} />
               <label htmlFor={`${String(filterKey)}-${option.value}`} className="flex-1 cursor-pointer text-sm">
                 <span>{option.label}</span>
                 {option.count !== undefined && <span className="ml-1 text-gray-500">({option.count})</span>}

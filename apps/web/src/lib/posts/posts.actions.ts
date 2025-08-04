@@ -1,183 +1,44 @@
 'use server';
 
 import { revalidateTag } from 'next/cache';
-import { auth } from '@/auth';
-
-export interface Post {
-  id: string;
-  title: string;
-  content: string;
-  authorId: string;
-  authorName: string;
-  authorAvatar?: string;
-  createdAt: string;
-  updatedAt: string;
-  isPublished: boolean;
-  tags?: string[];
-  viewCount: number;
-  likeCount: number;
-}
-
-export interface PostsData {
-  posts: Post[];
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-// Cache configuration
-const CACHE_TAGS = {
-  POSTS: 'posts',
-  POST_DETAIL: 'post-detail',
-} as const;
-
-const REVALIDATION_TIME = 120; // 2 minutes for posts
+import { getApiPosts, postApiPosts, getApiPostsByPostId } from '@/lib/api/generated/sdk.gen';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
+import type { GetApiPostsData, PostApiPostsData, GetApiPostsByPostIdData } from '@/lib/api/generated/types.gen';
 
 /**
- * Server action to fetch recent posts with caching
+ * Get all posts with optional filtering
  */
-export async function getRecentPosts(limit: number = 10, includeUnpublished: boolean = false): Promise<{ success: boolean; data?: Post[]; error?: string }> {
-  try {
-    const session = await auth();
+export async function getPosts(data?: GetApiPostsData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      return {
-        success: false,
-        error: 'Authentication required',
-      };
-    }
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    const params = new URLSearchParams({
-      skip: '0',
-      take: limit.toString(),
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-    });
-
-    if (includeUnpublished) {
-      params.append('includeUnpublished', 'true');
-    }
-
-    const response = await fetch(`${apiUrl}/api/posts?${params.toString()}`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      next: {
-        revalidate: REVALIDATION_TIME,
-        tags: [CACHE_TAGS.POSTS],
-      },
-    });
-
-    if (!response.ok) {
-      return {
-        success: false,
-        error: `Failed to fetch posts: ${response.statusText}`,
-      };
-    }
-
-    const postsData = await response.json();
-
-    return {
-      success: true,
-      data: Array.isArray(postsData) ? postsData : postsData.items || [],
-    };
-  } catch (error) {
-    console.error('Error fetching recent posts:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-    };
-  }
+  return getApiPosts({
+    query: data?.query,
+  });
 }
 
 /**
- * Server action to fetch all posts with pagination
+ * Create a new post
  */
-export async function getPosts(page: number = 1, limit: number = 20, search?: string): Promise<{ success: boolean; data?: PostsData; error?: string }> {
-  try {
-    const session = await auth();
+export async function createPost(data?: PostApiPostsData) {
+  await configureAuthenticatedClient();
 
-    if (!session?.accessToken) {
-      return {
-        success: false,
-        error: 'Authentication required',
-      };
-    }
+  const result = await postApiPosts({
+    body: data?.body,
+  });
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    const skip = (page - 1) * limit;
-    const params = new URLSearchParams({
-      skip: skip.toString(),
-      take: limit.toString(),
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-    });
+  // Revalidate posts cache
+  revalidateTag('posts');
 
-    if (search) {
-      params.append('search', search);
-    }
-
-    const response = await fetch(`${apiUrl}/api/posts?${params.toString()}`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      next: {
-        revalidate: REVALIDATION_TIME,
-        tags: [CACHE_TAGS.POSTS],
-      },
-    });
-
-    if (!response.ok) {
-      return {
-        success: false,
-        error: `Failed to fetch posts: ${response.statusText}`,
-      };
-    }
-
-    const result = await response.json();
-
-    return {
-      success: true,
-      data: {
-        posts: Array.isArray(result) ? result : result.items || [],
-        pagination: result.pagination || {
-          page,
-          limit,
-          total: result.length || 0,
-          totalPages: Math.ceil((result.length || 0) / limit),
-        },
-      },
-    };
-  } catch (error) {
-    console.error('Error fetching posts:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
-    };
-  }
+  return result;
 }
 
 /**
- * Revalidate posts cache
+ * Get a specific post by ID
  */
-export async function refreshPosts(): Promise<{ success: boolean; error?: string }> {
-  try {
-    revalidateTag(CACHE_TAGS.POSTS);
+export async function getPostById(data: GetApiPostsByPostIdData) {
+  await configureAuthenticatedClient();
 
-    return {
-      success: true,
-    };
-  } catch (error) {
-    console.error('Error refreshing posts:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to refresh posts',
-    };
-  }
+  return getApiPostsByPostId({
+    path: data.path,
+  });
 }

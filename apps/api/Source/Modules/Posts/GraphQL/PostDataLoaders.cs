@@ -49,7 +49,7 @@ public class PostContentReferenceDataLoader : GroupedDataLoader<Guid, PostConten
     IDbContextFactory<ApplicationDbContext> contextFactory,
     DataLoaderOptions? options = null
   )
-    : base(batchScheduler, options) {
+    : base(batchScheduler, options ?? new DataLoaderOptions()) {
     _contextFactory = contextFactory;
   }
 
@@ -80,7 +80,7 @@ public class PostCommentDataLoader : GroupedDataLoader<Guid, PostComment>, IPost
     IDbContextFactory<ApplicationDbContext> contextFactory,
     DataLoaderOptions? options = null
   )
-    : base(batchScheduler, options) {
+    : base(batchScheduler, options ?? new DataLoaderOptions()) {
     _contextFactory = contextFactory;
   }
 
@@ -112,7 +112,7 @@ public class PostLikeDataLoader : GroupedDataLoader<Guid, PostLike>, IPostLikeDa
     IDbContextFactory<ApplicationDbContext> contextFactory,
     DataLoaderOptions? options = null
   )
-    : base(batchScheduler, options) {
+    : base(batchScheduler, options ?? new DataLoaderOptions()) {
     _contextFactory = contextFactory;
   }
 

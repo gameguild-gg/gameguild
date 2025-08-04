@@ -106,11 +106,7 @@ export function HorizontalRoadmap() {
               {/* Milestone markers */}
               <div className="relative flex justify-between">
                 {milestones.map((milestone) => (
-                  <button
-                    key={milestone.id}
-                    onClick={() => setSelectedMilestone(milestone.id)}
-                    className={`relative flex flex-col items-center group transition-all duration-300 ${selectedMilestone === milestone.id ? 'z-10' : 'z-0'}`}
-                  >
+                  <button key={milestone.id} onClick={() => setSelectedMilestone(milestone.id)} className={`relative flex flex-col items-center group transition-all duration-300 ${selectedMilestone === milestone.id ? 'z-10' : 'z-0'}`}>
                     {/* Milestone dot */}
                     <div
                       className={`w-8 h-8 rounded-full border-4 flex items-center justify-center text-xs font-bold transition-all duration-300 ${
@@ -125,13 +121,7 @@ export function HorizontalRoadmap() {
                     </div>
 
                     {/* Version label */}
-                    <span
-                      className={`mt-2 text-xs font-medium transition-colors ${
-                        selectedMilestone === milestone.id ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'
-                      }`}
-                    >
-                      v{milestone.version}
-                    </span>
+                    <span className={`mt-2 text-xs font-medium transition-colors ${selectedMilestone === milestone.id ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'}`}>v{milestone.version}</span>
                   </button>
                 ))}
               </div>
@@ -141,15 +131,11 @@ export function HorizontalRoadmap() {
             <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-lg p-6 shadow-lg">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-                    {currentMilestone.title}
-                  </h3>
+                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">{currentMilestone.title}</h3>
                   <p className="text-slate-300">{currentMilestone.description}</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-1">
-                    {currentMilestone.progress}%
-                  </div>
+                  <div className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent mb-1">{currentMilestone.progress}%</div>
                   <div className="text-xs text-slate-400 uppercase tracking-wide">Complete</div>
                 </div>
               </div>
@@ -175,15 +161,8 @@ export function HorizontalRoadmap() {
                 <h4 className="text-sm font-medium text-slate-300 mb-3">Key Features</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {currentMilestone.features.map((feature, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center text-sm text-slate-300 bg-slate-800/50 rounded-lg p-3 hover:bg-slate-700/50 transition-colors"
-                    >
-                      <div
-                        className={`w-2 h-2 rounded-full mr-3 ${
-                          currentMilestone.status === 'completed' ? 'bg-green-400' : currentMilestone.status === 'current' ? 'bg-blue-400' : 'bg-slate-400'
-                        }`}
-                      ></div>
+                    <div key={index} className="flex items-center text-sm text-slate-300 bg-slate-800/50 rounded-lg p-3 hover:bg-slate-700/50 transition-colors">
+                      <div className={`w-2 h-2 rounded-full mr-3 ${currentMilestone.status === 'completed' ? 'bg-green-400' : currentMilestone.status === 'current' ? 'bg-blue-400' : 'bg-slate-400'}`}></div>
                       {feature}
                     </div>
                   ))}

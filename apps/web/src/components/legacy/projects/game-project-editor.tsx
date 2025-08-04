@@ -106,12 +106,7 @@ export function GameProjectEditor({ project, onSave, onPreview }: ProjectEditorP
               <Label htmlFor="projectUrl" className="text-sm font-medium">
                 Project URL
               </Label>
-              <Input
-                id="projectUrl"
-                value={formData.projectUrl}
-                onChange={(e) => handleInputChange('projectUrl', e.target.value)}
-                className="bg-background border-border"
-              />
+              <Input id="projectUrl" value={formData.projectUrl} onChange={(e) => handleInputChange('projectUrl', e.target.value)} className="bg-background border-border" />
             </div>
 
             {/* Short Description */}
@@ -120,13 +115,7 @@ export function GameProjectEditor({ project, onSave, onPreview }: ProjectEditorP
                 Short description or tagline
               </Label>
               <div className="text-xs text-muted-foreground mb-2">Shown when someone shares a link to your project's page</div>
-              <Textarea
-                id="description"
-                value={formData.shortDescription}
-                onChange={(e) => handleInputChange('shortDescription', e.target.value)}
-                rows={3}
-                className="bg-background border-border resize-none"
-              />
+              <Textarea id="description" value={formData.shortDescription} onChange={(e) => handleInputChange('shortDescription', e.target.value)} rows={3} className="bg-background border-border resize-none" />
             </div>
 
             {/* Classification */}
@@ -204,20 +193,13 @@ export function GameProjectEditor({ project, onSave, onPreview }: ProjectEditorP
                 </div>
 
                 <CardContent className="p-4">
-                  <div className="text-sm text-muted-foreground mb-4">
-                    The cover image is used whenever Nik wants to link to your project. Recommended dimensions: 630x500
-                  </div>
+                  <div className="text-sm text-muted-foreground mb-4">The cover image is used whenever Nik wants to link to your project. Recommended dimensions: 630x500</div>
 
                   {/* Gameplay Video */}
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Gameplay video or trailer</Label>
                     <div className="text-xs text-muted-foreground">Provide a link to YouTube or Vimeo</div>
-                    <Input
-                      placeholder="eg: https://www.youtube.com/watch?v=s6Aa5pP"
-                      value={formData.gameplayVideo}
-                      onChange={(e) => handleInputChange('gameplayVideo', e.target.value)}
-                      className="bg-background border-border text-xs"
-                    />
+                    <Input placeholder="eg: https://www.youtube.com/watch?v=s6Aa5pP" value={formData.gameplayVideo} onChange={(e) => handleInputChange('gameplayVideo', e.target.value)} className="bg-background border-border text-xs" />
                   </div>
 
                   {/* Screenshots */}

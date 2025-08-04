@@ -336,27 +336,13 @@ function ButtonComponent({ data, nodeKey }: ButtonComponentProps) {
 
             <div className="space-y-2">
               <Label htmlFor="button-url" className="text-sm font-medium">
-                {actionType === 'url'
-                  ? 'URL da página'
-                  : actionType === 'download'
-                    ? 'URL do arquivo'
-                    : actionType === 'copy'
-                      ? 'Texto a ser copiado'
-                      : 'Endereço de email'}
+                {actionType === 'url' ? 'URL da página' : actionType === 'download' ? 'URL do arquivo' : actionType === 'copy' ? 'Texto a ser copiado' : 'Endereço de email'}
               </Label>
               <Input
                 id="button-url"
                 value={url}
                 onChange={(e) => handleUrlChange(e.target.value)}
-                placeholder={
-                  actionType === 'url'
-                    ? 'https://exemplo.com'
-                    : actionType === 'download'
-                      ? 'https://exemplo.com/arquivo.pdf'
-                      : actionType === 'copy'
-                        ? 'Texto a ser copiado'
-                        : 'email@exemplo.com'
-                }
+                placeholder={actionType === 'url' ? 'https://exemplo.com' : actionType === 'download' ? 'https://exemplo.com/arquivo.pdf' : actionType === 'copy' ? 'Texto a ser copiado' : 'email@exemplo.com'}
                 className="w-full"
               />
             </div>

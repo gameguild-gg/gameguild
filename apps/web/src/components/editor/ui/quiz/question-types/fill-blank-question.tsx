@@ -29,15 +29,7 @@ export function FillBlankQuestion({ question, userAnswer, onAnswerChange, disabl
         {parts.map((part, index) => (
           <span key={index}>
             {part}
-            {index < parts.length - 1 && (
-              <Input
-                className="inline-block w-32 mx-2"
-                value={userAnswer}
-                onChange={(e) => onAnswerChange(e.target.value)}
-                disabled={disabled}
-                placeholder="___"
-              />
-            )}
+            {index < parts.length - 1 && <Input className="inline-block w-32 mx-2" value={userAnswer} onChange={(e) => onAnswerChange(e.target.value)} disabled={disabled} placeholder="___" />}
           </span>
         ))}
       </div>

@@ -51,7 +51,7 @@ public class PostDto {
 
   public string PostType { get; set; } = string.Empty;
 
-  public Guid AuthorId { get; set; }
+  public Guid? AuthorId { get; set; }
 
   public string AuthorName { get; set; } = string.Empty;
 

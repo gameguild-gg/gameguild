@@ -12,14 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Notification as AppNotification, NotificationFilters } from '@/components/legacy/types/notification';
-import {
-  acceptProjectInvite,
-  archiveNotification,
-  declineProjectInvite,
-  getNotifications,
-  markAllNotificationsAsRead,
-  markNotificationAsRead,
-} from '@/lib/notifications/notifications.actions';
+import { acceptProjectInvite, archiveNotification, declineProjectInvite, getNotifications, markAllNotificationsAsRead, markNotificationAsRead } from '@/lib/notifications/notifications.actions';
 import { useToast } from '@/lib/old/hooks/use-toast';
 
 interface NotificationDropdownProps {
@@ -144,12 +137,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onMar
         {notification.actionButtons && (
           <div className="flex gap-2 mt-3">
             {notification.actionButtons.accept && onAccept && (
-              <Button
-                size="sm"
-                disabled={isLoading}
-                onClick={() => handleAction(() => onAccept(notification.id))}
-                className="bg-green-500 hover:bg-green-600 text-white border-0 shadow-sm disabled:opacity-50"
-              >
+              <Button size="sm" disabled={isLoading} onClick={() => handleAction(() => onAccept(notification.id))} className="bg-green-500 hover:bg-green-600 text-white border-0 shadow-sm disabled:opacity-50">
                 Accept
               </Button>
             )}
@@ -165,12 +153,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onMar
               </Button>
             )}
             {notification.actionButtons.respond && (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isLoading}
-                className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950/50 disabled:opacity-50"
-              >
+              <Button variant="outline" size="sm" disabled={isLoading} className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950/50 disabled:opacity-50">
                 Respond
               </Button>
             )}
@@ -322,10 +305,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
         <Button variant="ghost" size="icon" className={cn('relative', className)} aria-label="Notifications">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 h-4 w-auto min-w-[16px] px-1 flex items-center justify-center text-[10px] leading-none font-medium"
-            >
+            <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-auto min-w-[16px] px-1 flex items-center justify-center text-[10px] leading-none font-medium">
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
           )}
@@ -336,16 +316,9 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
         <div className="h-px bg-gradient-to-r from-transparent via-slate-400 dark:via-slate-500 to-transparent"></div>
 
         <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
-          <h3 className="font-semibold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-            Notifications
-          </h3>
+          <h3 className="font-semibold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">Notifications</h3>
           {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleMarkAllAsRead}
-              className="text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200"
-            >
+            <Button variant="ghost" size="sm" onClick={handleMarkAllAsRead} className="text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200">
               Mark all as read
             </Button>
           )}
@@ -366,10 +339,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
               <span className="flex items-center gap-1">
                 Unread
                 {unreadTabCount > 0 && (
-                  <Badge
-                    variant="secondary"
-                    className="h-4 w-auto min-w-[16px] px-1 text-[10px] leading-none bg-purple-200 text-purple-800 dark:bg-purple-800 dark:text-purple-200"
-                  >
+                  <Badge variant="secondary" className="h-4 w-auto min-w-[16px] px-1 text-[10px] leading-none bg-purple-200 text-purple-800 dark:bg-purple-800 dark:text-purple-200">
                     {unreadTabCount > 99 ? '99+' : unreadTabCount}
                   </Badge>
                 )}
@@ -382,10 +352,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
               <span className="flex items-center gap-1">
                 Archived
                 {archivedCount > 0 && (
-                  <Badge
-                    variant="secondary"
-                    className="h-4 w-auto min-w-[16px] px-1 text-[10px] leading-none bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200"
-                  >
+                  <Badge variant="secondary" className="h-4 w-auto min-w-[16px] px-1 text-[10px] leading-none bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200">
                     {archivedCount > 99 ? '99+' : archivedCount}
                   </Badge>
                 )}
@@ -407,14 +374,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
               ) : (
                 <div className="divide-y">
                   {filteredNotifications.map((notification) => (
-                    <NotificationItem
-                      key={notification.id}
-                      notification={notification}
-                      onMarkAsRead={handleMarkAsRead}
-                      onArchive={handleArchive}
-                      onAccept={handleAccept}
-                      onDecline={handleDecline}
-                    />
+                    <NotificationItem key={notification.id} notification={notification} onMarkAsRead={handleMarkAsRead} onArchive={handleArchive} onAccept={handleAccept} onDecline={handleDecline} />
                   ))}
                 </div>
               )}

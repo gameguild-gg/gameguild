@@ -19,11 +19,9 @@ public class UserTenantReputation : Resource, IReputation {
   /// <summary>
   /// The user-tenant relationship this reputation belongs to
   /// </summary>
-  [Required]
-  [ForeignKey(nameof(TenantPermissionId))]
-  public required TenantPermission TenantPermission { get; set; }
+  public TenantPermission? TenantPermission { get; set; }
 
-  [Required] public Guid TenantPermissionId { get; set; }
+  public Guid? TenantPermissionId { get; set; }
 
   /// <summary>
   /// Current reputation score
@@ -33,7 +31,6 @@ public class UserTenantReputation : Resource, IReputation {
   /// <summary>
   /// Current reputation tier (linked to configurable tier)
   /// </summary>
-  [ForeignKey(nameof(CurrentLevelId))]
   public ReputationTier? CurrentLevel { get; set; }
 
   public Guid? CurrentLevelId { get; set; }

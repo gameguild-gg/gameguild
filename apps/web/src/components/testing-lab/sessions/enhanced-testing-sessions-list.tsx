@@ -13,26 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import {
-  BarChart3,
-  Calendar,
-  CalendarDays,
-  CheckCircle,
-  Clock,
-  Download,
-  Edit,
-  ExternalLink,
-  Eye,
-  Gamepad2,
-  MapPin,
-  MoreHorizontal,
-  Plus,
-  RefreshCw,
-  Timer,
-  TrendingUp,
-  Users,
-  XCircle,
-} from 'lucide-react';
+import { BarChart3, Calendar, CalendarDays, CheckCircle, Clock, Download, Edit, ExternalLink, Eye, Gamepad2, MapPin, MoreHorizontal, Plus, RefreshCw, Timer, TrendingUp, Users, XCircle } from 'lucide-react';
 import { SessionFilterControls } from '../session-filter-controls';
 
 interface TestingSession {
@@ -199,18 +180,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
           registeredTesterCount: session.registeredTesterCount || 0,
           registeredProjectMemberCount: session.registeredProjectMemberCount || 0,
           registeredProjectCount: session.registeredProjectCount || 0,
-          status:
-            typeof session.status === 'string'
-              ? session.status
-              : session.status === 0
-                ? 'scheduled'
-                : session.status === 1
-                  ? 'active'
-                  : session.status === 2
-                    ? 'completed'
-                    : session.status === 3
-                      ? 'cancelled'
-                      : 'scheduled',
+          status: typeof session.status === 'string' ? session.status : session.status === 0 ? 'scheduled' : session.status === 1 ? 'active' : session.status === 2 ? 'completed' : session.status === 3 ? 'cancelled' : 'scheduled',
           manager: session.manager
             ? {
                 id: session.manager.id || '',
@@ -290,9 +260,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
   const filteredSessions = Array.isArray(sessions)
     ? sessions.filter((session) => {
         const matchesSearch =
-          session.sessionName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          session.location?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          session.manager?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+          session.sessionName.toLowerCase().includes(searchTerm.toLowerCase()) || session.location?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || session.manager?.name?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter.length === 0 || (session.status && statusFilter.includes(session.status));
         return matchesSearch && matchesStatus;
       })
@@ -395,9 +363,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div>
             <h1 className="text-4xl font-bold">Testing Sessions</h1>
-            <p className="text-muted-foreground mt-2 text-lg">
-              {userRole.isStudent ? 'Find and join testing sessions for peer game projects' : 'Manage testing sessions and track participation'}
-            </p>
+            <p className="text-muted-foreground mt-2 text-lg">{userRole.isStudent ? 'Find and join testing sessions for peer game projects' : 'Manage testing sessions and track participation'}</p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4">
@@ -472,9 +438,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
                 </div>
                 <Calendar className="h-8 w-8 text-muted-foreground" />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {Array.isArray(sessions) ? sessions.filter((s) => s.status === 'scheduled').length : 0} scheduled
-              </p>
+              <p className="text-xs text-muted-foreground mt-2">{Array.isArray(sessions) ? sessions.filter((s) => s.status === 'scheduled').length : 0} scheduled</p>
             </CardContent>
           </Card>
 
@@ -509,12 +473,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Avg Attendance</p>
-                  <p className="text-3xl font-bold">
-                    {Array.isArray(sessions) && sessions.length > 0
-                      ? Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length)
-                      : 0}
-                    %
-                  </p>
+                  <p className="text-3xl font-bold">{Array.isArray(sessions) && sessions.length > 0 ? Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length) : 0}%</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-muted-foreground" />
               </div>
@@ -542,9 +501,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
             <CardContent className="p-12 text-center">
               <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">No sessions found</h3>
-              <p className="text-muted-foreground">
-                {searchTerm || statusFilter.length > 0 ? 'Try adjusting your search or filters' : 'No testing sessions have been scheduled yet'}
-              </p>
+              <p className="text-muted-foreground">{searchTerm || statusFilter.length > 0 ? 'Try adjusting your search or filters' : 'No testing sessions have been scheduled yet'}</p>
             </CardContent>
           </Card>
         ) : viewMode === 'table' ? (
@@ -721,19 +678,7 @@ interface SessionCardProps {
   isUpcoming: (session: TestingSession) => boolean;
 }
 
-function SessionCard({
-  session,
-  viewMode,
-  userRole,
-  onViewDetails,
-  onEdit,
-  getStatusColor,
-  formatDate,
-  formatTime,
-  getSessionProgress,
-  isSessionFull,
-  isUpcoming,
-}: SessionCardProps) {
+function SessionCard({ session, viewMode, userRole, onViewDetails, onEdit, getStatusColor, formatDate, formatTime, getSessionProgress, isSessionFull, isUpcoming }: SessionCardProps) {
   if (viewMode === 'list') {
     return (
       <Card className="hover:bg-muted/50 transition-all duration-300">
@@ -885,10 +830,7 @@ function SessionCard({
             </span>
           </div>
           <div className="w-full bg-muted rounded-full h-2">
-            <div
-              className={`h-2 rounded-full ${isSessionFull(session) ? 'bg-destructive' : 'bg-primary'}`}
-              style={{ width: `${getSessionProgress(session)}%` }}
-            />
+            <div className={`h-2 rounded-full ${isSessionFull(session) ? 'bg-destructive' : 'bg-primary'}`} style={{ width: `${getSessionProgress(session)}%` }} />
           </div>
           {isSessionFull(session) && <p className="text-xs text-destructive">Session is full</p>}
         </div>
@@ -1063,12 +1005,7 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
               <Label htmlFor="sessionName">
                 Session Name <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="sessionName"
-                placeholder="e.g., Block 3 Final Testing"
-                value={formData.sessionName}
-                onChange={(e) => setFormData({ ...formData, sessionName: e.target.value })}
-              />
+              <Input id="sessionName" placeholder="e.g., Block 3 Final Testing" value={formData.sessionName} onChange={(e) => setFormData({ ...formData, sessionName: e.target.value })} />
               {errors.sessionName && <p className="text-destructive text-sm">{errors.sessionName}</p>}
             </div>
             <div className="space-y-2">
@@ -1138,13 +1075,7 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              placeholder="Provide details about this testing session..."
-              rows={3}
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
+            <Textarea id="description" placeholder="Provide details about this testing session..." rows={3} value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -1215,15 +1146,7 @@ interface SessionDetailDialogProps {
   getRegistrationStatusColor: (status: string) => string;
 }
 
-function SessionDetailDialog({
-  session,
-  registrations,
-  open,
-  onClose,
-  userRole,
-  getRegistrationTypeColor,
-  getRegistrationStatusColor,
-}: SessionDetailDialogProps) {
+function SessionDetailDialog({ session, registrations, open, onClose, userRole, getRegistrationTypeColor, getRegistrationStatusColor }: SessionDetailDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
@@ -1378,9 +1301,7 @@ function SessionDetailDialog({
                         <TableRow key={registration.id}>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
-                                {registration.user.avatar || registration.user.name.charAt(0)}
-                              </div>
+                              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">{registration.user.avatar || registration.user.name.charAt(0)}</div>
                               <span>{registration.user.name}</span>
                             </div>
                           </TableCell>

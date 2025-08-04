@@ -218,7 +218,7 @@ public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievements
 
       var userAchievementDtos = userAchievements.Select(ua => new UserAchievementDto {
         Id = ua.Id,
-        UserId = ua.UserId,
+        UserId = ua.UserId ?? Guid.Empty,
         AchievementId = ua.AchievementId,
         Achievement = ua.Achievement != null ? new AchievementDto {
           Id = ua.Achievement.Id,
@@ -300,7 +300,7 @@ public class GetUserAchievementProgressQueryHandler : IQueryHandler<GetUserAchie
 
       var progressDtos = progressRecords.Select(ap => new AchievementProgressDto {
         Id = ap.Id,
-        UserId = ap.UserId,
+        UserId = ap.UserId ?? Guid.Empty,
         AchievementId = ap.AchievementId,
         Achievement = ap.Achievement != null ? new AchievementDto {
           Id = ap.Achievement.Id,
@@ -371,7 +371,7 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
         .Take(request.RecentLimit)
         .Select(ua => new UserAchievementDto {
           Id = ua.Id,
-          UserId = ua.UserId,
+          UserId = ua.UserId ?? Guid.Empty,
           AchievementId = ua.AchievementId,
           Achievement = ua.Achievement != null ? new AchievementDto {
             Id = ua.Achievement.Id,
@@ -407,7 +407,7 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
         .Where(ap => (double)ap.CurrentProgress / ap.TargetProgress * 100 >= request.NearCompletionThreshold && !ap.IsCompleted)
         .Select(ap => new AchievementProgressDto {
           Id = ap.Id,
-          UserId = ap.UserId,
+          UserId = ap.UserId ?? Guid.Empty,
           AchievementId = ap.AchievementId,
           Achievement = ap.Achievement != null ? new AchievementDto {
             Id = ap.Achievement.Id,
@@ -569,7 +569,7 @@ public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievemen
 
       var leaderboard = userStats.Select((stats, index) => new UserAchievementLeaderboardDto {
         Rank = index + 1,
-        UserId = stats.UserId,
+        UserId = stats.UserId ?? Guid.Empty,
         UserDisplayName = stats.User?.Name ?? "Unknown User",
         TotalAchievements = stats.TotalAchievements,
         TotalPoints = stats.TotalPoints,

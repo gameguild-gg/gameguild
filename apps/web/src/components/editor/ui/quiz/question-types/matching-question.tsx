@@ -42,13 +42,7 @@ export function MatchingQuestion({ question, pairs, userMatches, onMatchChange, 
         <div className="space-y-2">
           <div className="font-medium text-sm text-gray-600">Match these items:</div>
           {leftItems.map((item) => (
-            <Button
-              key={item}
-              variant={selectedLeft === item ? 'default' : 'outline'}
-              onClick={() => handleLeftClick(item)}
-              disabled={disabled}
-              className="w-full justify-start"
-            >
+            <Button key={item} variant={selectedLeft === item ? 'default' : 'outline'} onClick={() => handleLeftClick(item)} disabled={disabled} className="w-full justify-start">
               {item}
               {userMatches[item] && <span className="ml-2 text-xs bg-blue-100 px-2 py-1 rounded">→ {userMatches[item]}</span>}
             </Button>

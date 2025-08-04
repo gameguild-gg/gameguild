@@ -1,25 +1,33 @@
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
 import { TenantManagementContent } from '@/components/tenant/management/tenant-management-content';
-import { Tenant } from '@/components/tenant/types';
+import { getTenantsAction } from '@/lib/admin/tenants/tenants.actions';
+import type { Tenant } from '@/lib/api/generated/types.gen';
 import React from 'react';
-import {
-  DashboardPage,
-  DashboardPageContent,
-  DashboardPageDescription,
-  DashboardPageHeader,
-  DashboardPageTitle,
-} from '@/components/dashboard/common/ui/dashboard-page';
 
 export default async function Page(): Promise<React.JSX.Element> {
-  const tenants: Tenant[] = [];
+  // For now, we'll simulate admin permissions
+  // In production, implement proper permission checking
+  const isAdmin = true;
+
+  // Load tenants data
+  let tenants: Tenant[] = [];
+  try {
+    const result = await getTenantsAction();
+    if (result.data) {
+      tenants = Array.isArray(result.data) ? result.data : [];
+    }
+  } catch (error) {
+    console.error('Failed to load tenants:', error);
+  }
 
   return (
     <DashboardPage>
       <DashboardPageHeader>
-        <DashboardPageTitle>Reports</DashboardPageTitle>
-        <DashboardPageDescription></DashboardPageDescription>
+        <DashboardPageTitle>Tenant Management</DashboardPageTitle>
+        <DashboardPageDescription>Manage tenants and organizations in the system</DashboardPageDescription>
       </DashboardPageHeader>
       <DashboardPageContent>
-        <TenantManagementContent initialTenants={tenants} />
+        <TenantManagementContent initialTenants={tenants} isAdmin={isAdmin} />
       </DashboardPageContent>
     </DashboardPage>
   );

@@ -6,17 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
@@ -197,11 +187,7 @@ export default function EnhancedHeader() {
                     <NavigationMenuContent>
                       <div className="grid w-[600px] gap-3 p-6 md:grid-cols-2">
                         {section.items.map((item) => (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            className="group grid grid-cols-[auto_1fr] gap-3 rounded-md p-3 hover:bg-accent transition-colors"
-                          >
+                          <Link key={item.href} href={item.href} className="group grid grid-cols-[auto_1fr] gap-3 rounded-md p-3 hover:bg-accent transition-colors">
                             <div className="bg-primary/10 rounded-md p-2 group-hover:bg-primary/20 transition-colors">
                               <item.icon className="h-4 w-4 text-primary" />
                             </div>
@@ -223,13 +209,7 @@ export default function EnhancedHeader() {
           <div className={`hidden md:flex flex-1 max-w-lg mx-8 transition-all duration-200 ${isSearchFocused ? 'scale-105' : ''}`}>
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search courses, tracks, or topics..."
-                className="pl-9 pr-4 w-full"
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-              />
+              <Input type="text" placeholder="Search courses, tracks, or topics..." className="pl-9 pr-4 w-full" onFocus={() => setIsSearchFocused(true)} onBlur={() => setIsSearchFocused(false)} />
             </div>
           </div>
 

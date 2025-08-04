@@ -18,53 +18,52 @@ public static class ModelBuilderExtensions {
     var entityTypes = modelBuilder.Model.GetEntityTypes().Where(t => t.ClrType != null && IsBaseEntity(t.ClrType));
 
     foreach (var entityType in entityTypes) {
+      // Skip abstract types entirely - they should not be included in the model configuration
+      var isAbstractType = entityType.ClrType.IsAbstract;
+      if (isAbstractType) continue;
+
       // Configure common properties
       modelBuilder.Entity(
         entityType.ClrType,
         builder => {
           // In TPC inheritance, each concrete type gets its own complete table
           // We need to configure base properties for all concrete types, not just root types
-          var isAbstractType = entityType.ClrType.IsAbstract;
           var isTpcInheritanceType = IsTpcInheritanceEntity(entityType.ClrType);
 
-          if (!isAbstractType) {
-            // Skip key configuration for TPC inheritance entities - EF handles it automatically
-            if (!isTpcInheritanceType) {
-              // Id configuration (UUID) - for entities not using TPC inheritance
-              builder.HasKey(nameof(Entity.Id));
+          // Skip key configuration for TPC inheritance entities - EF handles it automatically
+          if (!isTpcInheritanceType) {
+            // Id configuration (UUID) - for entities not using TPC inheritance
+            builder.HasKey(nameof(Entity.Id));
 
-              builder.Property(nameof(Entity.Id))
-                     .HasDefaultValueSql("gen_random_uuid()") // PostgreSQL UUID generation
-                     .ValueGeneratedOnAdd();
-            }
-
-            // Version configuration for optimistic concurrency
-            // Use ConcurrencyCheck instead of IsRowVersion for cross-database compatibility
-            // Database default ensures new entities start with Version = 1
-            builder.Property(nameof(Entity.Version))
-                   .IsConcurrencyToken()
-                   .HasDefaultValue(1)
+            builder.Property(nameof(Entity.Id))
+                   .HasDefaultValueSql("gen_random_uuid()") // PostgreSQL UUID generation
                    .ValueGeneratedOnAdd();
-
-            // Timestamp and soft delete configuration - for all concrete types in TPC
-            builder.Property(nameof(Entity.CreatedAt))
-                   .IsRequired()
-                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                   .ValueGeneratedOnAdd();
-
-            builder.Property(nameof(Entity.UpdatedAt))
-                   .IsRequired()
-                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                   .ValueGeneratedOnAddOrUpdate();
-
-            builder.Property(nameof(Entity.DeletedAt)).IsRequired(false);
-
-            // Add indexes for performance - for all concrete types in TPC
-            builder.HasIndex(nameof(Entity.CreatedAt));
-            builder.HasIndex(nameof(Entity.DeletedAt));
           }
-          // Abstract types in TPC inheritance don't get their own tables
-          // Each concrete type gets a complete table with all inherited properties
+
+          // Version configuration for optimistic concurrency
+          // Use ConcurrencyCheck instead of IsRowVersion for cross-database compatibility
+          // Database default ensures new entities start with Version = 1
+          builder.Property(nameof(Entity.Version))
+                 .IsConcurrencyToken()
+                 .HasDefaultValue(1)
+                 .ValueGeneratedOnAdd();
+
+          // Timestamp and soft delete configuration - for all concrete types in TPC
+          builder.Property(nameof(Entity.CreatedAt))
+                 .IsRequired()
+                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                 .ValueGeneratedOnAdd();
+
+          builder.Property(nameof(Entity.UpdatedAt))
+                 .IsRequired()
+                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                 .ValueGeneratedOnAddOrUpdate();
+
+          builder.Property(nameof(Entity.DeletedAt)).IsRequired(false);
+
+          // Add indexes for performance - for all concrete types in TPC
+          builder.HasIndex(nameof(Entity.CreatedAt));
+          builder.HasIndex(nameof(Entity.DeletedAt));
         }
       );
     }

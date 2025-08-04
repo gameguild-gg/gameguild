@@ -3,15 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useClang } from '@/components/content/coding/clang/use-clang';
 import { usePyodide } from '@/components/content/coding/pyodide/use-pyodide';
-import {
-  CodingTestEnum,
-  CodingTestParamsWithLanguage,
-  CompileAndRunParams,
-  FileMap,
-  RunnerStatus,
-  RunResult,
-  SimpleCodingTests,
-} from '@/components/content/coding/types';
+import { CodingTestEnum, CodingTestParamsWithLanguage, CompileAndRunParams, FileMap, RunnerStatus, RunResult, SimpleCodingTests } from '@/components/content/coding/types';
 
 // Define structure for output stages to better organize output from different engines
 export type StageOutput = {

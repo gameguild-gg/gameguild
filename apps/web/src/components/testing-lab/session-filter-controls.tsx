@@ -24,18 +24,7 @@ const statusOptions: FilterOption[] = [
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
-export function SessionFilterControls({
-  searchTerm,
-  onSearchChange,
-  statusFilter,
-  onStatusFilterChange,
-  viewMode,
-  onViewModeChange,
-  hideViewToggle = false,
-  onRefresh,
-  onAddSession,
-  showAddButton = false,
-}: SessionFilterControlsProps) {
+export function SessionFilterControls({ searchTerm, onSearchChange, statusFilter, onStatusFilterChange, viewMode, onViewModeChange, hideViewToggle = false, onRefresh, onAddSession, showAddButton = false }: SessionFilterControlsProps) {
   // Convert view mode to match ViewModeToggle expectations
   const mappedViewMode = viewMode === 'grid' ? 'cards' : viewMode === 'list' ? 'row' : 'table';
 

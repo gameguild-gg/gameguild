@@ -35,18 +35,7 @@ interface CreateProjectDialogProps {
   generateProjectId: () => string;
 }
 
-export function CreateProjectDialog({
-  open,
-  onOpenChange,
-  isDbInitialized,
-  storageAdapter,
-  availableTags,
-  onProjectCreate,
-  onProjectsListUpdate,
-  onAvailableTagsUpdate,
-  isStorageAtLimit,
-  generateProjectId,
-}: CreateProjectDialogProps) {
+export function CreateProjectDialog({ open, onOpenChange, isDbInitialized, storageAdapter, availableTags, onProjectCreate, onProjectsListUpdate, onAvailableTagsUpdate, isStorageAtLimit, generateProjectId }: CreateProjectDialogProps) {
   const [newCreateProjectName, setNewCreateProjectName] = useState('');
   const [projectTags, setProjectTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
@@ -118,8 +107,7 @@ export function CreateProjectDialog({
     }
 
     // Create empty project
-    const emptyState =
-      '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
+    const emptyState = '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
 
     try {
       const newProjectId = generateProjectId();
@@ -217,17 +205,8 @@ export function CreateProjectDialog({
                     onFocus={() => setShowTagDropdown(true)}
                     className="pr-10"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowTagDropdown(!showTagDropdown)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  >
-                    <svg
-                      className={`w-4 h-4 transition-transform ${showTagDropdown ? 'rotate-180' : ''}`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                  <button type="button" onClick={() => setShowTagDropdown(!showTagDropdown)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg className={`w-4 h-4 transition-transform ${showTagDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
@@ -263,60 +242,47 @@ export function CreateProjectDialog({
                               </button>
                             ))}
                             {/* Show separator if there are existing tags and we can create new */}
-                            {tagInput.trim() &&
-                              !availableTags.some((tag) => tag.name.toLowerCase() === tagInput.toLowerCase()) &&
-                              !projectTags.includes(tagInput.trim()) && <div className="border-t dark:border-gray-700 my-1"></div>}
+                            {tagInput.trim() && !availableTags.some((tag) => tag.name.toLowerCase() === tagInput.toLowerCase()) && !projectTags.includes(tagInput.trim()) && <div className="border-t dark:border-gray-700 my-1"></div>}
                           </>
                         )}
 
                         {/* Create new tag option */}
-                        {tagInput.trim() &&
-                          !availableTags.some((tag) => tag.name.toLowerCase() === tagInput.toLowerCase()) &&
-                          !projectTags.includes(tagInput.trim()) && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newTag = tagInput.trim();
-                                setProjectTags((prev) => [...prev, newTag]);
-                                setTagInput('');
-                                setShowTagDropdown(false);
-                              }}
-                              className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
-                            >
-                              <div className="flex items-center gap-2">
-                                <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                </svg>
-                                <span className="text-sm">
-                                  Create "<strong>{tagInput.trim()}</strong>"
-                                </span>
-                              </div>
-                            </button>
-                          )}
+                        {tagInput.trim() && !availableTags.some((tag) => tag.name.toLowerCase() === tagInput.toLowerCase()) && !projectTags.includes(tagInput.trim()) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newTag = tagInput.trim();
+                              setProjectTags((prev) => [...prev, newTag]);
+                              setTagInput('');
+                              setShowTagDropdown(false);
+                            }}
+                            className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <div className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                              </svg>
+                              <span className="text-sm">
+                                Create "<strong>{tagInput.trim()}</strong>"
+                              </span>
+                            </div>
+                          </button>
+                        )}
 
                         {/* No results message */}
                         {filteredTags.length === 0 && !tagInput.trim() && (
                           <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                            {availableTags.length === 0
-                              ? 'No tags available yet. Start typing to create your first tag.'
-                              : 'Start typing to search existing tags or create new ones...'}
+                            {availableTags.length === 0 ? 'No tags available yet. Start typing to create your first tag.' : 'Start typing to search existing tags or create new ones...'}
                           </div>
                         )}
 
                         {/* No search results */}
-                        {filteredTags.length === 0 &&
-                          tagInput.trim() &&
-                          !availableTags.some((tag) => tag.name.toLowerCase() === tagInput.toLowerCase()) &&
-                          !projectTags.includes(tagInput.trim()) && (
-                            <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                              No existing tags found. Press Enter or click above to create "{tagInput.trim()}"
-                            </div>
-                          )}
+                        {filteredTags.length === 0 && tagInput.trim() && !availableTags.some((tag) => tag.name.toLowerCase() === tagInput.toLowerCase()) && !projectTags.includes(tagInput.trim()) && (
+                          <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">No existing tags found. Press Enter or click above to create "{tagInput.trim()}"</div>
+                        )}
 
                         {/* Tag already selected message */}
-                        {tagInput.trim() && projectTags.includes(tagInput.trim()) && (
-                          <div className="px-3 py-2 text-sm text-amber-600 dark:text-amber-400">Tag "{tagInput.trim()}" is already selected</div>
-                        )}
+                        {tagInput.trim() && projectTags.includes(tagInput.trim()) && <div className="px-3 py-2 text-sm text-amber-600 dark:text-amber-400">Tag "{tagInput.trim()}" is already selected</div>}
                       </>
                     );
                   })()}
@@ -330,16 +296,9 @@ export function CreateProjectDialog({
                 <Label className="text-sm text-gray-600 dark:text-gray-400">Selected tags:</Label>
                 <div className="flex flex-wrap gap-2">
                   {projectTags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-full"
-                    >
+                    <span key={index} className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm rounded-full">
                       {tag}
-                      <button
-                        type="button"
-                        onClick={() => setProjectTags((prev) => prev.filter((_, i) => i !== index))}
-                        className="hover:text-blue-600 dark:hover:text-blue-300 ml-1"
-                      >
+                      <button type="button" onClick={() => setProjectTags((prev) => prev.filter((_, i) => i !== index))} className="hover:text-blue-600 dark:hover:text-blue-300 ml-1">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -377,9 +336,7 @@ export function CreateProjectDialog({
               </svg>
               <span className="text-sm font-medium text-blue-800 dark:text-blue-200">New Project</span>
             </div>
-            <p className="text-xs text-blue-700 dark:text-blue-300">
-              This will create a new empty project and clear the current editor content. At least one tag is required.
-            </p>
+            <p className="text-xs text-blue-700 dark:text-blue-300">This will create a new empty project and clear the current editor content. At least one tag is required.</p>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={handleCancel}>

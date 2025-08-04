@@ -114,13 +114,7 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                       <Label htmlFor="projectUrl" className="text-zinc-400">
                         Project URL
                       </Label>
-                      <Input
-                        id="projectUrl"
-                        value={formData.projectUrl}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, projectUrl: e.target.value }))}
-                        className="mt-1.5 bg-zinc-900 border-zinc-800"
-                        placeholder="https://"
-                      />
+                      <Input id="projectUrl" value={formData.projectUrl} onChange={(e) => setFormData((prev) => ({ ...prev, projectUrl: e.target.value }))} className="mt-1.5 bg-zinc-900 border-zinc-800" placeholder="https://" />
                     </div>
 
                     <div>
@@ -128,13 +122,7 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                         Short description or tagline
                         <span className="block text-sm text-zinc-500">Shown when we link to your project. Avoid duplicating your project&apos;s title</span>
                       </Label>
-                      <Input
-                        id="tagline"
-                        value={formData.tagline}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, tagline: e.target.value }))}
-                        className="mt-1.5 bg-zinc-900 border-zinc-800"
-                        placeholder="Optional"
-                      />
+                      <Input id="tagline" value={formData.tagline} onChange={(e) => setFormData((prev) => ({ ...prev, tagline: e.target.value }))} className="mt-1.5 bg-zinc-900 border-zinc-800" placeholder="Optional" />
                     </div>
 
                     <div>
@@ -313,15 +301,8 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                           Learn more <ExternalLink className="h-3 w-3 ml-1 inline" />
                         </Button>
                       </div>
-                      <p className="text-sm text-zinc-500 mt-1">
-                        Please disclose if this project contains content produced by generative AI tools such as LLMs, ChatGPT, Midjourney, Stable Diffusion,
-                        etc., even if you hand-edited it.
-                      </p>
-                      <RadioGroup
-                        value={formData.aiDisclosure}
-                        onValueChange={(value) => setFormData((prev) => ({ ...prev, aiDisclosure: value }))}
-                        className="mt-3 space-y-3"
-                      >
+                      <p className="text-sm text-zinc-500 mt-1">Please disclose if this project contains content produced by generative AI tools such as LLMs, ChatGPT, Midjourney, Stable Diffusion, etc., even if you hand-edited it.</p>
+                      <RadioGroup value={formData.aiDisclosure} onValueChange={(value) => setFormData((prev) => ({ ...prev, aiDisclosure: value }))} className="mt-3 space-y-3">
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="yes" id="ai-yes" className="border-zinc-800" />
                           <Label htmlFor="ai-yes" className="text-zinc-400">
@@ -377,12 +358,7 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                         </Tooltip>
                       </div>
                       <p className="text-sm text-zinc-500 mt-1">Leave blank to default to: &apos;mod&apos;</p>
-                      <Input
-                        placeholder="Optional"
-                        className="mt-2 bg-zinc-900 border-zinc-800"
-                        value={formData.customNoun}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, customNoun: e.target.value }))}
-                      />
+                      <Input placeholder="Optional" className="mt-2 bg-zinc-900 border-zinc-800" value={formData.customNoun} onChange={(e) => setFormData((prev) => ({ ...prev, customNoun: e.target.value }))} />
                     </div>
                   </TabsContent>
                   <TabsContent value="details" className="space-y-6">
@@ -427,11 +403,7 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                     <div>
                       <Label className="text-zinc-400">Community</Label>
                       <p className="text-sm text-zinc-500 mt-1">Build a community for your project by letting people post to your page.</p>
-                      <RadioGroup
-                        value={formData.community}
-                        onValueChange={(value) => setFormData((prev) => ({ ...prev, community: value }))}
-                        className="mt-3 space-y-3"
-                      >
+                      <RadioGroup value={formData.community} onValueChange={(value) => setFormData((prev) => ({ ...prev, community: value }))} className="mt-3 space-y-3">
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="disabled" id="community-disabled" className="border-zinc-800" />
                           <Label htmlFor="community-disabled" className="text-zinc-400">
@@ -463,11 +435,7 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
                           Learn more about access modes
                         </Button>
                       </p>
-                      <RadioGroup
-                        value={formData.visibility}
-                        onValueChange={(value) => setFormData((prev) => ({ ...prev, visibility: value }))}
-                        className="mt-3 space-y-3"
-                      >
+                      <RadioGroup value={formData.visibility} onValueChange={(value) => setFormData((prev) => ({ ...prev, visibility: value }))} className="mt-3 space-y-3">
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="draft" id="visibility-draft" className="border-zinc-800" />
                           <Label htmlFor="visibility-draft" className="text-zinc-400">
