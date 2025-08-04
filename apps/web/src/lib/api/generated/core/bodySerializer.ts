@@ -1,4 +1,4 @@
-import type { ArrayStyle, ObjectStyle, SerializerOptions } from './pathSerializer.js';
+import type { ArrayStyle, ObjectStyle, SerializerOptions } from './pathSerializer';
 
 export type QuerySerializer = (query: Record<string, unknown>) => string;
 
