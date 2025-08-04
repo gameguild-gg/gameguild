@@ -12,13 +12,19 @@ export function middleware(request: NextRequest) {
     url: request.url,
     pathname: request.nextUrl.pathname,
     method: request.method,
-    headers: Object.fromEntries(request.headers.entries())
+    hostname: hostname,
+    locale: locale
   });
+  
+  // Check if this is a subdomain (has more than one dot, excluding localhost/127.0.0.1)
+  // Examples: dev.gameguild.gg (subdomain), gameguild.gg (main domain), localhost:3000 (not subdomain)
+  const isSubdomain = hostname.split('.').length > 2 && !hostname.startsWith('localhost') && !hostname.startsWith('127.0.0.1');
   
   // Get tenant ID from auth session and create request with tenant headers
   const tenantId = request.auth?.tenantId || request.auth?.currentTenant?.id;
-  // Subdomain handling for dev.gameguild.gg
-  if (hostname.startsWith('dev.')) {
+  
+  // Subdomain handling for any subdomain (dev, staging, prod, etc.)
+  if (isSubdomain) {
     const url = request.nextUrl.clone();
 
     // For subdomain, handle locale routing differently
