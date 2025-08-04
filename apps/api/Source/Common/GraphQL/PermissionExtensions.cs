@@ -3,6 +3,7 @@ using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Projects;
 using HotChocolate.Authorization;
 using System.Security.Claims;
+using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 
 namespace GameGuild.Common.GraphQL;
 

@@ -1,6 +1,7 @@
 using GameGuild.Common;
 using HotChocolate.Authorization;
 using MediatR;
+using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 
 
 namespace GameGuild.Modules.UserAchievements;

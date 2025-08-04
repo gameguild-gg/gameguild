@@ -4,19 +4,19 @@ WORKDIR /src
 
 # Copy solution and project files
 COPY ["GameGuild.sln", "."]
-COPY ["GameGuild.API.csproj", "."]
+COPY ["GameGuild.csproj", "."]
 
 # Restore dependencies
-RUN dotnet restore "GameGuild.API.csproj"
+RUN dotnet restore "GameGuild.csproj"
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN dotnet build "GameGuild.API.csproj" -c Release -o /app/build
+RUN dotnet build "GameGuild.csproj" -c Release -o /app/build
 
 # Publish the application
-RUN dotnet publish "GameGuild.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "GameGuild.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 2: Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
