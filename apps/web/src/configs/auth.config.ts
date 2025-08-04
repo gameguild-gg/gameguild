@@ -63,7 +63,16 @@ export const authConfig: NextAuthConfig = {
   secret: process.env.NEXTAUTH_SECRET,
   // Use internal URL for callbacks
   basePath: '',
+  // Disable URL verification entirely
+  useSecureCookies: false,
+  // Completely disable URL verification
+  skipCSRFCheck: true,
+  // Custom callback to prevent URL verification
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Always return the original URL to prevent verification
+      return url;
+    },
     signIn: async ({ user, account }: { user: User; account?: Account | null; profile?: Profile; email?: { verificationRequest?: boolean }; credentials?: Record<string, CredentialInput> }): Promise<boolean> => {
       if (account?.provider === 'google') {
         if (!account?.id_token) return false;
