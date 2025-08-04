@@ -1,63 +1,75 @@
-FROM node:18-alpine AS base
-# Update system image.
-RUN apk update
-# Install system image dependencies.
-RUN apk add --no-cache libc6-compat curl
+FROM node:lts-alpine AS base
+# Update system image and install dependencies in a single layer
+RUN apk update && apk add --no-cache \
+    libc6-compat \
+    curl \
+    && rm -rf /var/cache/apk/*
 
-# Build Stage.
+# Build Stage
 FROM base AS builder
-# Create app directory.
 WORKDIR /app
-# Copy root package.json and package-lock.json first for better caching
-COPY package*.json ./
-# Copy packages directory (contains local workspace dependencies)
-COPY packages/ ./packages/
-# Copy web app package.json
-COPY apps/web/package*.json ./apps/web/
-# Generate package-lock.json from root
-RUN npm install --package-lock-only
-# Install all dependencies (including workspace dependencies)
-RUN npm ci
-# Clean npm cache.
-RUN npm cache clean --force
-# Copy web app source code
-COPY apps/web/ ./apps/web/
-# Set working directory to web app
-WORKDIR /app/apps/web
-# Build app.
-RUN npm run build 
-# Prune dev dependencies from the web app.
-RUN npm prune --production
 
-# Production Stage.
-FROM base AS runner
-# Create app directory.
-WORKDIR /app
-# Set environment variables.
+# Accept build arguments for Next.js public environment variables
+ARG NEXT_PUBLIC_API_URL  
+ARG NEXT_PUBLIC_WEB_URL
+ARG NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+
+# Set environment variables from build args
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_WEB_URL=$NEXT_PUBLIC_WEB_URL
+ENV NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID=$NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 ENV NODE_ENV=production
-# Disable telemetry to prevent Next.js from collecting anonymous usage data.
-ENV NEXT_TELEMETRY_DISABLED=1
-# Change ownership to node user.
-RUN chown -R node:node /app
-# Automatically leverage output traces to reduce image size.
-# https://nextjs.org/docs/advanced-features/output-file-tracing.
-# Copy application build files to the container image.
-COPY --from=builder --chown=node:node /app/apps/web/.next/standalone ./
-# Copy static files generated during the build to the .next/static directory in the container image.
-COPY --from=builder --chown=node:node /app/apps/web/.next/static ./.next/static
-# Copy files from the "public" directory to the corresponding "public" directory in the container image.
-COPY --from=builder --chown=node:node /app/apps/web/public ./public
-# Set the user to run the application.
-# This ensures that the application runs with non-root privileges, enhancing security.
-USER node
-# Define an argument for the port with a default value of 3000.
-ARG PORT=3000
-# Expose the port to inform Docker that the container will listen on the specified port.
-EXPOSE ${PORT}
-# Set an environment variable for the port using the ARG value.
-ENV PORT=${PORT}
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
-ENV HOSTNAME="0.0.0.0"
-# Run the web service on container startup.
+
+# Copy package files first for better layer caching
+COPY package*.json ./
+
+# Install ALL dependencies including dev dependencies needed for build
+RUN npm install --include=dev && \
+    npm cache clean --force
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN npm run build:prod
+
+# Production Stage
+FROM base AS runner
+WORKDIR /app
+
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Copy built application from builder stage
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Set environment variables for Next.js to listen on all addresses
+ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+
+# New Relic environment variables
+ENV NEW_RELIC_NO_CONFIG_FILE=true
+ENV NEW_RELIC_DISTRIBUTED_TRACING_ENABLED=true
+ENV NEW_RELIC_LOG=stdout
+ENV NEW_RELIC_AI_MONITORING_ENABLED=true
+ENV NEW_RELIC_CUSTOM_INSIGHTS_EVENTS_MAX_SAMPLES_STORED=100k
+ENV NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED=10k
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Health check - use 0.0.0.0 to listen on all addresses
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://0.0.0.0:3000/ || exit 1
+
+# Start the application
 CMD ["node", "server.js"]

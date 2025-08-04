@@ -2,6 +2,7 @@ using GameGuild.Common;
 using HotChocolate.Authorization;
 using MediatR;
 using ValidationException = FluentValidation.ValidationException;
+using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 
 
 namespace GameGuild.Modules.Authentication;
