@@ -7,14 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
-import { BarChart3, Calendar, Download, MessageSquare, Plus, TestTube, Upload, Users, Search, Star, PlayCircle, MoreHorizontal } from 'lucide-react';
+import { BarChart3, Calendar, Download, MessageSquare, Plus, TestTube, Upload, Users, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
-import { getTestingRequestsData, getTestingSessionsData, createTestingRequest, createTestingSession, joinTestingRequest, leaveTestingRequest } from '@/lib/testing-lab/testing-lab.actions';
+// import { getTestingRequestsData, getTestingSessionsData, createTestingRequest, createTestingSession, joinTestingRequest, leaveTestingRequest } from '@/lib/testing-lab/testing-lab.actions';
 import type { TestingRequest, TestingSession } from '@/lib/api/generated/types.gen';
 
 interface TestingLabStats {
