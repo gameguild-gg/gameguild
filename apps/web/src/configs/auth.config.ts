@@ -52,6 +52,7 @@ export const authConfig: NextAuthConfig = {
   debug: !!process.env.AUTH_DEBUG,
   pages: {
     signIn: '/sign-in',
+    error: '/auth/error',
   },
   providers: providers,
   session: {
@@ -65,21 +66,23 @@ export const authConfig: NextAuthConfig = {
   // basePath: '',
   // Custom callback to prevent URL verification
   callbacks: {
-    // async redirect({ url, baseUrl }) {
-    //   // Always redirect to the external URL, not the internal one
-    //   const externalBaseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    //  
-    //   // If the URL is relative, make it absolute using the external baseUrl
-    //   if (url.startsWith('/')) {
-    //     return `${externalBaseUrl}${url}`;
-    //   }
-    //   // If the URL is already absolute and matches our external domain, allow it
-    //   else if (url.startsWith(externalBaseUrl)) {
-    //     return url;
-    //   }
-    //   // For external URLs, redirect to the external base URL
-    //   return externalBaseUrl;
-    // },
+    async redirect({ url, baseUrl }) {
+      // Get the configured URL from environment, fallback to localhost
+      const configuredUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+      
+      // If the URL is relative, make it absolute using the configured URL
+      if (url.startsWith('/')) {
+        return `${configuredUrl}${url}`;
+      }
+      
+      // If the URL already starts with our configured URL, allow it
+      if (url.startsWith(configuredUrl)) {
+        return url;
+      }
+      
+      // For any other case, redirect to the configured base URL
+      return configuredUrl;
+    },
     signIn: async ({ user, account }: { user: User; account?: Account | null; profile?: Profile; email?: { verificationRequest?: boolean }; credentials?: Record<string, CredentialInput> }): Promise<boolean> => {
       if (account?.provider === 'google') {
         if (!account?.id_token) return false;
