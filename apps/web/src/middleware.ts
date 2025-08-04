@@ -8,6 +8,20 @@ const intlMiddleware = createMiddleware(routing);
 
 // Chain auth middleware first, then intl middleware
 export default auth((request) => {
+  // Get the hostname from the request
+  const hostname = request.nextUrl.hostname;
+  
+  // If we're in development and getting requests for external domains, reject them
+  if (process.env.NODE_ENV !== 'production' && 
+      hostname !== 'localhost' && 
+      hostname !== '127.0.0.1' && 
+      !hostname.startsWith('192.168.') && 
+      !hostname.startsWith('10.') &&
+      hostname !== request.nextUrl.hostname) {
+    console.warn(`Rejecting request to external hostname: ${hostname}`);
+    return new Response('External requests not allowed in development', { status: 403 });
+  }
+
   // Get tenant ID from auth session and create request with tenant headers
   const tenantId = request.auth?.tenantId || request.auth?.currentTenant?.id;
 
