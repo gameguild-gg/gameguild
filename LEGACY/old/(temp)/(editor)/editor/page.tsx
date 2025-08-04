@@ -2,18 +2,16 @@
 
 import { Editor } from '@/components/content/editor/lexical-editor';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Save, SaveAll, HardDrive, Settings } from 'lucide-react';
-import { useState, useEffect, useRef } from 'react';
-import { toast } from 'sonner';
-import { Sun, Moon } from 'lucide-react';
 import type { LexicalEditor } from 'lexical';
+import { HardDrive, Moon, Save, SaveAll, Settings, Sun } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
-import { syncConfig } from '@/lib/sync/sync-config';
-import { OpenProjectDialog } from '@/components/content/editor/ui/editor/open-project-dialog';
 import { CreateProjectDialog } from '@/components/content/editor/ui/editor/create-project-dialog';
+import { OpenProjectDialog } from '@/components/content/editor/ui/editor/open-project-dialog';
 import { SyncSettingsDialog } from '@/components/content/editor/ui/editor/sync-settings-dialog';
 import { EnhancedStorageAdapter } from '../../../../../../../../old/quick-fix/storage/enhanced-storage-adapter';
 
@@ -1185,9 +1183,8 @@ export default function Page() {
                         className={`w-3 h-3 rounded-full ${autoSaveEnabled && isDbInitialized ? 'bg-green-500 animate-pulse' : 'bg-gray-400 dark:bg-gray-600'}`}
                       ></div>
                       <span
-                        className={`text-sm font-medium ${
-                          autoSaveEnabled && isDbInitialized ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-300'
-                        }`}
+                        className={`text-sm font-medium ${autoSaveEnabled && isDbInitialized ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-300'
+                          }`}
                       >
                         {autoSaveEnabled && isDbInitialized ? 'Auto-save' : 'Manual'}
                       </span>
@@ -1230,9 +1227,8 @@ export default function Page() {
                     <>
                       <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
                       <span
-                        className={`text-xs font-medium ${
-                          getStorageUsagePercentage() >= 90 ? 'text-red-600' : getStorageUsagePercentage() >= 70 ? 'text-amber-600' : 'text-green-600'
-                        }`}
+                        className={`text-xs font-medium ${getStorageUsagePercentage() >= 90 ? 'text-red-600' : getStorageUsagePercentage() >= 70 ? 'text-amber-600' : 'text-green-600'
+                          }`}
                       >
                         {getStorageUsagePercentage().toFixed(1)}%
                       </span>
@@ -1247,15 +1243,14 @@ export default function Page() {
                       className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                       <div
-                        className={`w-2 h-2 rounded-full ${
-                          syncStats.isOnline
-                            ? syncStats.isSyncing
-                              ? 'bg-blue-500 animate-pulse'
-                              : 'bg-green-500'
-                            : syncConfig.isEnabled()
-                              ? 'bg-red-500'
-                              : 'bg-gray-400'
-                        }`}
+                        className={`w-2 h-2 rounded-full ${syncStats.isOnline
+                          ? syncStats.isSyncing
+                            ? 'bg-blue-500 animate-pulse'
+                            : 'bg-green-500'
+                          : syncConfig.isEnabled()
+                            ? 'bg-red-500'
+                            : 'bg-gray-400'
+                          }`}
                       ></div>
                       <span className="text-xs text-gray-500 dark:text-gray-300">
                         {!syncConfig.isEnabled() ? 'Sync Off' : syncStats.isOnline ? (syncStats.isSyncing ? 'Syncing...' : 'Online') : 'Offline'}
@@ -1376,9 +1371,8 @@ export default function Page() {
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Use:</span>
                             <span
-                              className={`font-medium ${
-                                getStorageUsagePercentage() >= 90 ? 'text-red-600' : getStorageUsagePercentage() >= 70 ? 'text-amber-600' : 'text-green-600'
-                              }`}
+                              className={`font-medium ${getStorageUsagePercentage() >= 90 ? 'text-red-600' : getStorageUsagePercentage() >= 70 ? 'text-amber-600' : 'text-green-600'
+                                }`}
                             >
                               {getStorageUsagePercentage().toFixed(1)}%
                             </span>

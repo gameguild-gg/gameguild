@@ -59,4 +59,21 @@
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests/**/*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="HotChocolate.Types" />
+    <Using Include="HotChocolate.Types.Descriptors" />
+    <Using Include="HotChocolate.Data" />
+
+    <Using Include="MediatR" />
+    <Using Include="Microsoft.AspNetCore.Authorization" />
+    <Using Include="Microsoft.EntityFrameworkCore" />
+    <Using Include="Microsoft.EntityFrameworkCore.Metadata.Builders" />
+    <Using Include="System.ComponentModel.DataAnnotations" />
+    <Using Include="System.ComponentModel.DataAnnotations.Schema" />
+  </ItemGroup>
 </Project>
