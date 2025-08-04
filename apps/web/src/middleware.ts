@@ -8,6 +8,14 @@ const intlMiddleware = createMiddleware(routing);
 
 // Chain auth middleware first, then intl middleware
 export default auth((request) => {
+  // Debug logging
+  console.log('Middleware processing:', {
+    url: request.url,
+    pathname: request.nextUrl.pathname,
+    method: request.method,
+    headers: Object.fromEntries(request.headers.entries())
+  });
+  
   // Get tenant ID from auth session and create request with tenant headers
   const tenantId = request.auth?.tenantId || request.auth?.currentTenant?.id;
 
