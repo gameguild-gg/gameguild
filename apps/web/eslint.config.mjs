@@ -1,7 +1,4 @@
 import { FlatCompat } from '@eslint/eslintrc';
-import baseConfig from '@game-guild/eslint-config';
-
-// import nextConfig from 'eslint-config-next';
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
@@ -9,7 +6,6 @@ const compat = new FlatCompat({
 
 /** @type {import('eslint').Linter.Config[]} */
 const config = [
-  ...baseConfig,
   ...compat.config({
     extends: ['next', 'next/core-web-vitals'],
     settings: {
@@ -18,7 +14,6 @@ const config = [
       },
     },
   }),
-  // ...nextConfig,
   // Override rules for generated API code
   {
     files: ['src/lib/api/generated/**/*.{ts,js}'],
