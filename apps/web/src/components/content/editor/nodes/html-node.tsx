@@ -1,16 +1,13 @@
 'use client';
 
-import type React from 'react'; // Import React
-import { useContext, useEffect, useRef, useState } from 'react';
-import { $getNodeByKey, DecoratorNode, type JSX, type SerializedLexicalNode } from 'lexical';
-import { Code2, CornerDownLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import DOMPurify from 'dompurify';
-import { cn } from '@/lib/utils';
-
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { $getNodeByKey, DecoratorNode, SerializedLexicalNode } from 'lexical';
+import { Code2, CornerDownLeft } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { EditorLoadingContext } from '../lexical-editor';
 
 export interface HTMLData {
@@ -23,7 +20,7 @@ export interface SerializedHTMLNode extends SerializedLexicalNode {
   version: 1;
 }
 
-export class HTMLNode extends DecoratorNode<JSX.Element> {
+export class HTMLNode extends DecoratorNode<React.JSX.Element> {
   __data: HTMLData;
 
   constructor(data: HTMLData, key?: string) {
@@ -52,19 +49,19 @@ export class HTMLNode extends DecoratorNode<JSX.Element> {
   }
 
   setData(data: HTMLData): void {
-    const writable = this.getWritable();
-    writable.__data = data;
+    this.__data = data;
   }
 
   exportJSON(): SerializedHTMLNode {
     return {
+      ...super.exportJSON(),
       type: 'html',
       data: this.__data,
       version: 1,
     };
   }
 
-  decorate(): JSX.Element {
+  decorate(): React.JSX.Element {
     return <HTMLComponent data={this.__data} nodeKey={this.__key} />;
   }
 }
@@ -74,53 +71,45 @@ interface HTMLComponentProps {
   nodeKey: string;
 }
 
-const selfClosingTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
-
 function autoCloseTag(content: string, position: number): { text: string; newPosition: number } | null {
   const beforeCursor = content.slice(0, position);
-  const match = beforeCursor.match(/<([a-zA-Z][a-zA-Z0-9]*)[^>]*>(?![^<]*<\/\1>)[^<]*$/);
+  const match = beforeCursor.match(/<(\w+)[^>]*$/);
 
-  if (!match) return null;
+  if (match) {
+    const tagName = match[1];
+    if (tagName && !['img', 'br', 'hr', 'input', 'meta', 'link'].includes(tagName.toLowerCase())) {
+      const closingTag = `</${tagName}>`;
+      return {
+        text: closingTag,
+        newPosition: position + closingTag.length,
+      };
+    }
+  }
 
-  const tagName = match[1];
-  if (selfClosingTags.has(tagName.toLowerCase())) return null;
-
-  const closingTag = `</${tagName}>`;
-  return {
-    text: content.slice(0, position) + closingTag + content.slice(position),
-    newPosition: position + closingTag.length,
-  };
+  return null;
 }
 
 function HTMLComponent({ data, nodeKey }: HTMLComponentProps) {
   const [editor] = useLexicalComposerContext();
-  const isLoading = useContext(EditorLoadingContext);
+  const isLoading = React.useContext(EditorLoadingContext);
   const [isEditing, setIsEditing] = useState(!data.content && !isLoading);
   const [content, setContent] = useState(data.content);
   const [autoClose, setAutoClose] = useState(true);
   const htmlRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const isClickInsideHtml = htmlRef.current && htmlRef.current.contains(e.target as Node);
-
-      if (!isClickInsideHtml) {
-        setIsEditing(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isLoading) {
+  const handleClickOutside = (e: MouseEvent) => {
+    if (htmlRef.current && !htmlRef.current.contains(e.target as Node)) {
       setIsEditing(false);
     }
-  }, [isLoading]);
+  };
+
+  useEffect(() => {
+    if (isEditing) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isEditing]);
 
   const updateHTML = (newContent: string) => {
     editor.update(() => {
@@ -132,22 +121,20 @@ function HTMLComponent({ data, nodeKey }: HTMLComponentProps) {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (!autoClose) return;
-
-    if (e.key === 'Enter') {
-      const textarea = e.currentTarget;
-      const cursorPosition = textarea.selectionStart;
-      const result = autoCloseTag(content, cursorPosition);
-
+    if (e.key === 'Enter' && autoClose) {
+      const result = autoCloseTag(content, e.currentTarget.selectionStart);
       if (result) {
         e.preventDefault();
-        setContent(result.text);
-        updateHTML(result.text);
+        const newContent = content.slice(0, e.currentTarget.selectionStart) + result.text + content.slice(e.currentTarget.selectionStart);
+        setContent(newContent);
+        updateHTML(newContent);
 
-        // Set cursor position after the next tick
+        // Set cursor position after the closing tag
         setTimeout(() => {
-          textarea.selectionStart = result.newPosition;
-          textarea.selectionEnd = result.newPosition;
+          if (textareaRef.current) {
+            textareaRef.current.selectionStart = result.newPosition;
+            textareaRef.current.selectionEnd = result.newPosition;
+          }
         }, 0);
       }
     }
@@ -155,19 +142,24 @@ function HTMLComponent({ data, nodeKey }: HTMLComponentProps) {
 
   const getPreviewContent = () => {
     const sanitizedHtml = DOMPurify.sanitize(content);
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <base target="_blank">
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-        </head>
-        <body>
-          ${sanitizedHtml}
-        </body>
-      </html>
-    `;
+    // Only create full HTML document in client-side preview
+    if (typeof window !== 'undefined') {
+      return `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <base target="_blank">
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+          </head>
+          <body>
+            ${sanitizedHtml}
+          </body>
+        </html>
+      `;
+    }
+    // Return just the content for server-side rendering
+    return sanitizedHtml;
   };
 
   const placeholder = `<!DOCTYPE html>
