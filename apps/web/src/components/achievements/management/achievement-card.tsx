@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Edit, Trash2, Award } from 'lucide-react';
+import Image from 'next/image';
 import type { AchievementDto } from '@/lib/core/api/generated/types.gen';
 import { deleteAchievement } from '@/lib/achievements/achievements.actions';
 import { useState } from 'react';
@@ -52,7 +53,7 @@ export function AchievementCard({ achievement, onUpdate }: AchievementCardProps)
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <CardTitle className="text-lg flex items-center gap-2">
-                {achievement.iconUrl ? <img src={achievement.iconUrl} alt={achievement.name || 'Achievement'} className="w-6 h-6 rounded" /> : <Award className="w-5 h-5" />}
+                {achievement.iconUrl ? <Image src={achievement.iconUrl} alt={achievement.name || 'Achievement'} width={24} height={24} className="rounded" /> : <Award className="w-5 h-5" />}
                 {achievement.name}
               </CardTitle>
               <div className="flex items-center gap-2 mt-2">
