@@ -1,8 +1,8 @@
-import { getAuthToken } from '../core/auth.js';
-import type { QuerySerializer, QuerySerializerOptions } from '../core/bodySerializer.js';
-import { jsonBodySerializer } from '../core/bodySerializer.js';
-import { serializeArrayParam, serializeObjectParam, serializePrimitiveParam } from '../core/pathSerializer.js';
-import type { Client, ClientOptions, Config, RequestOptions } from './types.js';
+import { getAuthToken } from '../core/auth';
+import type { QuerySerializer, QuerySerializerOptions } from '../core/bodySerializer';
+import { jsonBodySerializer } from '../core/bodySerializer';
+import { serializeArrayParam, serializeObjectParam, serializePrimitiveParam } from '../core/pathSerializer';
+import type { Client, ClientOptions, Config, RequestOptions } from './types';
 
 interface PathSerializer {
   path: Record<string, unknown>;
@@ -208,7 +208,19 @@ export const buildUrl: Client['buildUrl'] = (options) => {
   return url;
 };
 
-export const getUrl = ({ baseUrl, path, query, querySerializer, url: _url }: { baseUrl?: string; path?: Record<string, unknown>; query?: Record<string, unknown>; querySerializer: QuerySerializer; url: string }) => {
+export const getUrl = ({
+  baseUrl,
+  path,
+  query,
+  querySerializer,
+  url: _url,
+}: {
+  baseUrl?: string;
+  path?: Record<string, unknown>;
+  query?: Record<string, unknown>;
+  querySerializer: QuerySerializer;
+  url: string;
+}) => {
   const pathUrl = _url.startsWith('/') ? _url : `/${_url}`;
   let url = (baseUrl ?? '') + pathUrl;
   if (path) {
@@ -342,7 +354,9 @@ const defaultHeaders = {
   'Content-Type': 'application/json',
 };
 
-export const createConfig = <T extends ClientOptions = ClientOptions>(override: Config<Omit<ClientOptions, keyof T> & T> = {}): Config<Omit<ClientOptions, keyof T> & T> => ({
+export const createConfig = <T extends ClientOptions = ClientOptions>(
+  override: Config<Omit<ClientOptions, keyof T> & T> = {},
+): Config<Omit<ClientOptions, keyof T> & T> => ({
   ...jsonBodySerializer,
   headers: defaultHeaders,
   parseAs: 'auto',

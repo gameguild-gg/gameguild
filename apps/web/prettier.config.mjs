@@ -8,22 +8,8 @@ const config = {
   tabWidth: 2,
   trailingComma: 'all',
   useTabs: false,
-  // Ignore patterns for directories and files that shouldn't be formatted
-  ignoreFiles: [
-    '**/node_modules/**',
-    '**/dist/**',
-    '**/build/**',
-    '**/.next/**',
-    '**/coverage/**',
-    '**/.nuxt/**',
-    '**/public/**',
-    '**/static/**',
-    '**/*.min.js',
-    '**/*.min.css',
-    '**/package-lock.json',
-    '**/yarn.lock',
-    '**/pnpm-lock.yaml',
-  ],
+  // Note: File ignoring is handled by .prettierignore
+  // We intentionally don't ignore generated files so they get formatted
 };
 
 export default config;
