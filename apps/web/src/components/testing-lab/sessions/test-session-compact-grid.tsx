@@ -48,6 +48,7 @@ export function TestSessionCompactGrid({ sessions }: TestSessionCompactGridProps
     <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
       {sessions.map((session) => {
         const sessionDate = new Date(session.sessionDate);
+        const spotsLeft = session.maxTesters - session.currentTesters;
 
         return (
           <div

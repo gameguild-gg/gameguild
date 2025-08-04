@@ -1,7 +1,6 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import Image from 'next/image';
 import React from 'react';
 
 export default function TorusSignInButton() {
@@ -21,7 +20,7 @@ export default function TorusSignInButton() {
       }}
       className="flex-1"
     >
-      <Image alt="Torus" src="/assets/images/torus-icon.svg" width={20} height={20} className="m-2" />
+      <img alt="Torus" src="/assets/images/torus-icon.svg" loading="lazy" className="w-[20px] h-[20px] m-2" />
       Torus
     </Button>
   );
