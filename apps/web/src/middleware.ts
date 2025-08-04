@@ -7,6 +7,16 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const locale = request.cookies.get('NEXT_LOCALE')?.value || 'en';
 
+  // Debug logging
+  console.log('Middleware processing:', {
+    url: request.url,
+    pathname: request.nextUrl.pathname,
+    method: request.method,
+    headers: Object.fromEntries(request.headers.entries())
+  });
+  
+  // Get tenant ID from auth session and create request with tenant headers
+  const tenantId = request.auth?.tenantId || request.auth?.currentTenant?.id;
   // Subdomain handling for dev.gameguild.gg
   if (hostname.startsWith('dev.')) {
     const url = request.nextUrl.clone();
