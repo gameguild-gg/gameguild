@@ -36,12 +36,20 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
       connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};";
     }
 
+    // Final fallback for development
     if (string.IsNullOrEmpty(connectionString)) {
-      throw new InvalidOperationException(
-        "PostgreSQL database connection string not found. Please set DB_CONNECTION_STRING environment variable " +
-        "or configure individual DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD environment variables. " +
-        "SQLite is not supported - PostgreSQL only."
-      );
+      var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+      if (environment.Equals("Development", StringComparison.OrdinalIgnoreCase)) {
+        connectionString = "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres;";
+        Console.WriteLine("⚠️  No database connection string found. Using default development connection string with postgres/postgres/postgres.");
+        Console.WriteLine("   To customize, set DB_CONNECTION_STRING environment variable or configure in appsettings.Development.json");
+      } else {
+        throw new InvalidOperationException(
+          "PostgreSQL database connection string not found. Please set DB_CONNECTION_STRING environment variable " +
+          "or configure individual DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD environment variables. " +
+          "SQLite is not supported - PostgreSQL only."
+        );
+      }
     }
 
     return connectionString;
