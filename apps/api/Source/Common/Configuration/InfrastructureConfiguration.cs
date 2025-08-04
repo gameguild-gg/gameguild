@@ -135,11 +135,11 @@ public static class InfrastructureConfiguration {
 
     // If not found, try to build PostgreSQL connection string from individual components (for Docker)
     if (string.IsNullOrEmpty(connectionString)) {
-      var host = Environment.GetEnvironmentVariable("DB_HOST") ?? configuration["DB_HOST"];
-      var port = Environment.GetEnvironmentVariable("DB_PORT") ?? configuration["DB_PORT"] ?? "5432";
-      var database = Environment.GetEnvironmentVariable("DB_DATABASE") ?? configuration["DB_DATABASE"];
-      var username = Environment.GetEnvironmentVariable("DB_USERNAME") ?? configuration["DB_USERNAME"];
-      var password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? configuration["DB_PASSWORD"];
+      var host = Environment.GetEnvironmentVariable("DB_HOST") ?? configuration["DB_HOST"] ?? configuration["Database:Host"];
+      var port = Environment.GetEnvironmentVariable("DB_PORT") ?? configuration["DB_PORT"] ?? configuration["Database:Port"] ?? "5432";
+      var database = Environment.GetEnvironmentVariable("DB_DATABASE") ?? configuration["DB_DATABASE"] ?? configuration["Database:Database"];
+      var username = Environment.GetEnvironmentVariable("DB_USERNAME") ?? configuration["DB_USERNAME"] ?? configuration["Database:Username"];
+      var password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? configuration["DB_PASSWORD"] ?? configuration["Database:Password"];
 
       if (!string.IsNullOrEmpty(host) && !string.IsNullOrEmpty(database) &&
           !string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password)) {
@@ -151,13 +151,21 @@ public static class InfrastructureConfiguration {
     connectionString ??= configuration.GetConnectionString("DB_CONNECTION_STRING");
     connectionString ??= configuration.GetConnectionString("DefaultConnection");
 
+    // Final fallback for development - use default local PostgreSQL
     if (string.IsNullOrEmpty(connectionString)) {
-      throw new InvalidOperationException(
-        "PostgreSQL database connection string not found. Please set DB_CONNECTION_STRING environment variable " +
-        "or configure individual DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD environment variables " +
-        "or configure 'ConnectionStrings:DB_CONNECTION_STRING' in appSettings.json. " +
-        "SQLite is not supported - PostgreSQL only."
-      );
+      var isDevelopment = IsEnvironment("Development");
+      if (isDevelopment) {
+        connectionString = "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres;";
+        Console.WriteLine("⚠️  No database connection string found. Using default development connection string with postgres/postgres/postgres.");
+        Console.WriteLine("   To customize, set DB_CONNECTION_STRING environment variable or configure in appsettings.Development.json");
+      } else {
+        throw new InvalidOperationException(
+          "PostgreSQL database connection string not found. Please set DB_CONNECTION_STRING environment variable " +
+          "or configure individual DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD environment variables " +
+          "or configure 'ConnectionStrings:DB_CONNECTION_STRING' in appSettings.json. " +
+          "SQLite is not supported - PostgreSQL only."
+        );
+      }
     }
 
     return connectionString;

@@ -1,5 +1,5 @@
-import type { Auth, AuthToken } from './auth.js';
-import type { BodySerializer, QuerySerializer, QuerySerializerOptions } from './bodySerializer.js';
+import type { Auth, AuthToken } from './auth';
+import type { BodySerializer, QuerySerializer, QuerySerializerOptions } from './bodySerializer';
 
 export interface Client<RequestFn = never, Config = unknown, MethodFn = never, BuildUrlFn = never> {
   /**
