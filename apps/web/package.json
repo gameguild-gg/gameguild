@@ -90,6 +90,7 @@
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
     "reveal.js": "^5.2.1",
+    "server-only": "^0.0.1",
     "slugify": "^1.6.6",
     "sonner": "^2.0.6",
     "tailwind-merge": "^3.3.1",
