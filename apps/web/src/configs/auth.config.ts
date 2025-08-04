@@ -49,7 +49,7 @@ const providers: Provider[] = [
 ];
 
 export const authConfig: NextAuthConfig = {
-  debug: !!process.env.AUTH_DEBUG,
+  debug: true, // Enable debug logging to see what's happening
   pages: {
     signIn: '/sign-in',
   },
@@ -65,6 +65,14 @@ export const authConfig: NextAuthConfig = {
   // basePath: '',
   // Use internal URL for all server-side operations
   url: process.env.NEXTAUTH_URL_INTERNAL || 'http://localhost:3000',
+  
+  // Override the base URL to use internal URL for all operations
+  basePath: '',
+  
+  // Debug logging for URL configuration
+  onError: (error) => {
+    console.error('NextAuth error:', error);
+  },
   // Custom callback to prevent URL verification
   callbacks: {
     // async redirect({ url, baseUrl }) {
