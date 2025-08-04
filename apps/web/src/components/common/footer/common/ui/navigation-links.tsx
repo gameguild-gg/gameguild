@@ -63,13 +63,13 @@ const colorClasses = {
 
 export function NavigationLinks() {
   return (
-    <>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       {navSections.map((section) => (
         <div key={section.title}>
           <h3 className={`font-semibold mb-4 ${colorClasses[section.color].header}`}>{section.title}</h3>
-          <ul className="space-y-2 text-sm text-slate-400">
+          <ul className="space-y-2 text-sm text-slate-400 list-disc list-inside">
             {section.links.map((link) => (
-              <li key={link.href}>
+              <li key={link.href} className="marker:text-slate-500">
                 <Link href={link.href} className={`${colorClasses[section.color].hover} transition-colors duration-300 block py-1`}>
                   {link.label}
                 </Link>
@@ -78,6 +78,6 @@ export function NavigationLinks() {
           </ul>
         </div>
       ))}
-    </>
+    </div>
   );
 }

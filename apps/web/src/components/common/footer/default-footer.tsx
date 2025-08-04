@@ -53,10 +53,14 @@ const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children,
       <div className="container mx-auto max-w-6xl px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Community Info */}
-          <CommunityInfo />
+          <div className="lg:col-span-2">
+            <CommunityInfo />
+          </div>
 
           {/* Navigation Links */}
-          <NavigationLinks />
+          <div className="lg:col-span-3">
+            <NavigationLinks />
+          </div>
         </div>
 
         {/* Social Media & Bottom Links */}

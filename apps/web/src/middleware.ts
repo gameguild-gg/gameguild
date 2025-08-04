@@ -1,5 +1,9 @@
 import { auth } from '@/auth';
-import { NextRequest, NextResponse } from 'next/server';
+import { routing } from '@/i18n/routing';
+import createMiddleware from 'next-intl/middleware';
+import { NextRequest } from 'next/server';
+
+const intlMiddleware = createMiddleware(routing);
 
 export default auth((request) => {
   // Get tenant ID from auth session
@@ -10,18 +14,17 @@ export default auth((request) => {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set('x-tenant-id', tenantId);
 
-    // Create a response that continues to the next middleware/handler
-    const response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
+    // Create a new request with tenant headers
+    const requestWithTenant = new NextRequest(request.url, {
+      headers: requestHeaders,
     });
 
-    return response;
+    // Handle internationalization with a tenant-aware request
+    return intlMiddleware(requestWithTenant);
   }
 
-  // Continue normally if no tenant
-  return NextResponse.next();
+  // Handle internationalization normally if no tenant
+  return intlMiddleware(request as NextRequest);
 });
 
 export const config = {
