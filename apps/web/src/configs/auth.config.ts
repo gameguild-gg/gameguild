@@ -59,6 +59,10 @@ export const authConfig: NextAuthConfig = {
   },
   // Disable automatic URL verification to prevent DNS resolution loops
   trustHost: true,
+  // Disable URL verification to prevent DNS resolution loops
+  secret: process.env.NEXTAUTH_SECRET,
+  // Use internal URL for callbacks
+  basePath: '',
   callbacks: {
     signIn: async ({ user, account }: { user: User; account?: Account | null; profile?: Profile; email?: { verificationRequest?: boolean }; credentials?: Record<string, CredentialInput> }): Promise<boolean> => {
       if (account?.provider === 'google') {
