@@ -6,4 +6,10 @@ export const routing = defineRouting({
   localePrefix: 'always',
   // Used when no locale matches
   defaultLocale: 'en',
+  // Disable automatic redirects to prevent DNS resolution issues
+  pathnames: {
+    '/': '/',
+    '/en': '/en',
+    '/pt-BR': '/pt-BR',
+  },
 });
