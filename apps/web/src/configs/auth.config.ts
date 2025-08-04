@@ -63,7 +63,23 @@ export const authConfig: NextAuthConfig = {
   secret: process.env.NEXTAUTH_SECRET,
   // Use internal URL for callbacks
   basePath: '',
+  // Custom callback to prevent URL verification
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Always redirect to the external URL, not the internal one
+      const externalBaseUrl = process.env.NEXTAUTH_URL || 'https://dev.gameguild.gg';
+      
+      // If the URL is relative, make it absolute using the external baseUrl
+      if (url.startsWith('/')) {
+        return `${externalBaseUrl}${url}`;
+      }
+      // If the URL is already absolute and matches our external domain, allow it
+      else if (url.startsWith(externalBaseUrl)) {
+        return url;
+      }
+      // For external URLs, redirect to the external base URL
+      return externalBaseUrl;
+    },
     signIn: async ({ user, account }: { user: User; account?: Account | null; profile?: Profile; email?: { verificationRequest?: boolean }; credentials?: Record<string, CredentialInput> }): Promise<boolean> => {
       if (account?.provider === 'google') {
         if (!account?.id_token) return false;
