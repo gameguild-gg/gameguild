@@ -112,7 +112,7 @@ const mockEnrolledCourses: EnrolledCourse[] = [
 ];
 
 export function BrowseOwnedCoursesPage() {
-  const [courses, setCourses] = useState<EnrolledCourse[]>(mockEnrolledCourses);
+  const [courses] = useState<EnrolledCourse[]>(mockEnrolledCourses);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('recent');

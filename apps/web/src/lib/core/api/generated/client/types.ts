@@ -130,8 +130,10 @@ type OmitKeys<T, K> = Pick<T, Exclude<keyof T, K>>;
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = OmitKeys<RequestOptions<ThrowOnError>, 'body' | 'path' | 'query' | 'url'> & Omit<TData, 'url'>;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type OptionsLegacyParser<TData = unknown, ThrowOnError extends boolean = boolean> = TData extends { body?: any }
-  ? TData extends { headers?: any }
+  ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    TData extends { headers?: any }
     ? OmitKeys<RequestOptions<ThrowOnError>, 'body' | 'headers' | 'url'> & TData
     : OmitKeys<RequestOptions<ThrowOnError>, 'body' | 'url'> & TData & Pick<RequestOptions<ThrowOnError>, 'headers'>
   : TData extends { headers?: any }

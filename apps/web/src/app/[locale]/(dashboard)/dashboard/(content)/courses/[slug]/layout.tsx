@@ -5,7 +5,7 @@ import { PropsWithSlugParams } from '@/types';
 
 export default async function Layout({ children, params }: PropsWithChildren<PropsWithSlugParams>): Promise<React.JSX.Element> {
   const { slug } = await params;
-  
+
   // TODO: Fetch course data when needed
   // const course = await getCourseBySlug(slug);
   // if (!course) notFound();

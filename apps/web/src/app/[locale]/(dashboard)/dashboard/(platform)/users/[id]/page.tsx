@@ -43,14 +43,12 @@ import {
   CheckCircle,
   AlertCircle,
   Users,
-  Settings,
   Send,
 } from 'lucide-react';
 
 // Admin functionality imports
 import { updateUser } from '@/lib/api/users';
 import { makeUserGlobalAdmin, removeUserGlobalAdmin, getUserPermissions } from '@/lib/api/permissions';
-import { updateUserBalance } from '@/lib/api/users';
 
 interface UserDetailPageProps {
   userId: string;
@@ -114,10 +112,8 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
     balance: 0,
   });
   const [isAdmin, setIsAdmin] = useState(false);
-  const [userPermissions, setUserPermissions] = useState<any>(null);
 
   // Current user permissions (who is viewing this page)
-  const [currentUserPermissions, setCurrentUserPermissions] = useState<any>(null);
   const [canEditUsers, setCanEditUsers] = useState(false);
   const [canManageRoles, setCanManageRoles] = useState(false);
   const [canViewAdminControls, setCanViewAdminControls] = useState(false);
@@ -166,11 +162,9 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
       try {
         // Check if the user being viewed has admin permissions
         const permissions = await getUserPermissions(userId);
-        setUserPermissions(permissions);
 
-        // Check if the user is a global admin (simplified check)
-        const hasAdminRole = permissions?.roles?.some((role: any) => role.name === 'GlobalAdmin' || role.permissions?.includes('admin'));
-        setIsAdmin(hasAdminRole || false);
+        // Check if the user is a global admin
+        setIsAdmin(permissions?.isGlobalAdmin || false);
       } catch (error) {
         console.error('Failed to check admin status:', error);
       }
@@ -704,7 +698,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
                     <span className="font-mono font-medium">${user.balance || 0}</span>
                   </div>
 
-                  {!canEditUsers && !canManageRoles && <div className="text-center py-4 text-gray-500 text-sm">You don't have permission to edit this user or manage roles.</div>}
+                  {!canEditUsers && !canManageRoles && <div className="text-center py-4 text-gray-500 text-sm">You don&apos;t have permission to edit this user or manage roles.</div>}
                 </div>
               )}
             </div>

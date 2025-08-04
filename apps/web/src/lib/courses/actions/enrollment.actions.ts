@@ -1,8 +1,8 @@
 'use server';
 
-import { EnrollmentStatus } from '@/lib/api/generated';
+import { EnrollmentStatus } from '@/lib/core/api/generated/types.gen';
 
-export type { EnrollmentStatus } from '@/lib/api/generated';
+export type { EnrollmentStatus } from '@/lib/core/api/generated/types.gen';
 
 export interface Product {
   id: string;
@@ -30,7 +30,7 @@ export async function getCourseEnrollmentStatus(courseSlug: string): Promise<Enr
   try {
     // Mock implementation - replace with actual API call
     console.log(`Getting enrollment status for course: ${courseSlug}`);
-    
+
     // For now, return a mock status
     // In real implementation, this would call your API
     return 0; // Not enrolled
@@ -47,7 +47,7 @@ export async function getProductsContainingCourse(courseSlug: string): Promise<P
   try {
     // Mock implementation - replace with actual API call
     console.log(`Getting products for course: ${courseSlug}`);
-    
+
     // Mock products
     const mockProducts: Product[] = [
       {
@@ -65,7 +65,7 @@ export async function getProductsContainingCourse(courseSlug: string): Promise<P
         description: 'Access to this course and 5 related courses',
       },
     ];
-    
+
     return mockProducts;
   } catch (error) {
     console.error('Error getting products for course:', error);
@@ -80,10 +80,10 @@ export async function enrollInFreeCourse(courseSlug: string): Promise<Enrollment
   try {
     // Mock implementation - replace with actual API call
     console.log(`Enrolling in free course: ${courseSlug}`);
-    
+
     // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    
+
     // Mock successful enrollment
     return {
       success: true,
@@ -106,10 +106,10 @@ export async function createPaymentIntent(productId: string): Promise<PaymentInt
   try {
     // Mock implementation - replace with actual payment processing
     console.log(`Creating payment intent for product: ${productId}`);
-    
+
     // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    
+
     // Mock payment intent
     return {
       clientSecret: `pi_mock_${Date.now()}_secret`,

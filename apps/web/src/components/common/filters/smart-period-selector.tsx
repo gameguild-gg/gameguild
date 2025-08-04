@@ -41,17 +41,12 @@ const DEFAULT_PERIODS: PeriodConfig[] = [
 ];
 
 export function SmartPeriodSelector({ selectedPeriod, onPeriodChange, onPeriodValueChange, className, showNavigation = true, maxVisible = 3 }: SmartPeriodSelectorProps) {
-  const currentDate = new Date();
   const [currentOffset, setCurrentOffset] = React.useState(0);
 
   // Generate period values based on current selection and offset
   const periodValues = React.useMemo(() => {
-    const selectedConfig = DEFAULT_PERIODS.find((p) => p.type === selectedPeriod) || DEFAULT_PERIODS[2]; // Default to month
-
-    return generatePeriodValues(selectedConfig.type, currentOffset, maxVisible);
+    return generatePeriodValues(selectedPeriod, currentOffset, maxVisible);
   }, [selectedPeriod, currentOffset, maxVisible]);
-
-  const selectedConfig = DEFAULT_PERIODS.find((p) => p.type === selectedPeriod) || DEFAULT_PERIODS[2];
 
   const handleNext = () => {
     setCurrentOffset((prev) => prev + 1);

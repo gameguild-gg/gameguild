@@ -102,7 +102,7 @@ export function UserManagement() {
       const permissionsResults = await Promise.allSettled(permissionsPromises);
       const permissionsMap: Record<string, UserPermissions> = {};
 
-      permissionsResults.forEach((result, index) => {
+      permissionsResults.forEach((result) => {
         if (result.status === 'fulfilled' && result.value.permissions) {
           permissionsMap[result.value.userId] = result.value.permissions;
         }
