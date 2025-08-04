@@ -2,6 +2,16 @@
 
 import { useState } from 'react';
 import { TestSession } from '@/lib/api/testing-lab/test-sessions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { PeriodSelector } from '@/components/filters/period-selector';
+import { TestSessionGrid } from './test-session-grid';
+import { TestSessionRow } from './test-session-row';
+import { TestSessionTable } from './test-session-table';
+import { Shield, Users, Clock, Monitor, Star, Trophy, ArrowLeft, Search, X, ChevronDown, LayoutGrid, Rows, List } from 'lucide-react';
+import Link from 'next/link';
 
 interface TestingLabSessionsProps {
   testSessions: TestSession[];

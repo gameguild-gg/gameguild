@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Trash2, Plus, Shield, Users, Settings, Eye } from 'lucide-react';
 import { useModulePermissions } from '@/hooks/useModulePermissions';
-import { ModuleRole, UserRoleAssignment, ModuleType, RoleLevel } from '@/types/modulePermissions';
+import { ModuleType, RoleLevel } from '@/types/modulePermissions';
 
 interface UserRoleManagerProps {
   userId: string;
@@ -18,7 +18,7 @@ interface UserRoleManagerProps {
 }
 
 export function UserRoleManager({ userId, tenantId, onRoleChanged }: UserRoleManagerProps) {
-  const { userRoles, availableRoles, testingLabRoles, assignRole, revokeRole, loading, rolesLoading } = useModulePermissions(userId, tenantId);
+  const { userRoles, availableRoles, testingLabRoles, assignRole, revokeRole, loading } = useModulePermissions(userId, tenantId);
 
   const [selectedRoleId, setSelectedRoleId] = useState<string>('');
   const [isAssigning, setIsAssigning] = useState(false);
