@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
-import { Bookmark, Heart, MessageCircle, MoreHorizontal, Share2, User, Verified } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
+import { Bookmark, Heart, MessageCircle, MoreHorizontal, Share2, User, Verified } from 'lucide-react';
 import Image from 'next/image';
+import { useCallback, useState } from 'react';
 import './feed.css';
 
 interface SocialPost {
