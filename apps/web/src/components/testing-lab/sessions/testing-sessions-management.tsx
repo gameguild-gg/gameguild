@@ -51,8 +51,7 @@ interface TestingSessionsManagementProps {
 }
 
 export function TestingSessionsManagement({ initialSessions = [] }: TestingSessionsManagementProps) {
-  const { data: session } = useSession();
-  const [sessions, setSessions] = useState<TestingSession[]>(Array.isArray(initialSessions) ? initialSessions : []);
+  const [sessions] = useState<TestingSession[]>(Array.isArray(initialSessions) ? initialSessions : []);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>('grid');
@@ -71,41 +70,42 @@ export function TestingSessionsManagement({ initialSessions = [] }: TestingSessi
     return matchesSearch && matchesStatus;
   });
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
+  // Utility functions (currently unused, keeping for future use)
+  // const formatDate = (dateString: string) => {
+  //   const date = new Date(dateString);
+  //   return date.toLocaleDateString('en-US', {
+  //     weekday: 'short',
+  //     month: 'short',
+  //     day: 'numeric',
+  //     year: 'numeric',
+  //   });
+  // };
 
-  const formatTime = (timeString: string) => {
-    const [hours, minutes] = timeString.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
+  // const formatTime = (timeString: string) => {
+  //   const [hours, minutes] = timeString.split(':');
+  //   const date = new Date();
+  //   date.setHours(parseInt(hours), parseInt(minutes));
+  //   return date.toLocaleTimeString('en-US', {
+  //     hour: 'numeric',
+  //     minute: '2-digit',
+  //     hour12: true,
+  //   });
+  // };
 
-  const getStatusColor = (status: string | null | undefined) => {
-    switch (status) {
-      case 'scheduled':
-        return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-500/30';
-      case 'active':
-        return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-500/30';
-      case 'completed':
-        return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/30 dark:text-gray-300 dark:border-gray-500/30';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-500/30';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/30 dark:text-gray-300 dark:border-gray-500/30';
-    }
-  };
+  // const getStatusColor = (status: string | null | undefined) => {
+  //   switch (status) {
+  //     case 'scheduled':
+  //       return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-500/30';
+  //     case 'active':
+  //       return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-500/30';
+  //     case 'completed':
+  //       return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/30 dark:text-gray-300 dark:border-gray-500/30';
+  //     case 'cancelled':
+  //       return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-500/30';
+  //     default:
+  //       return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/30 dark:text-gray-300 dark:border-gray-500/30';
+  //   }
+  // };
 
   const refreshSessions = async () => {
     setLoading(true);

@@ -136,7 +136,7 @@ export function TestingSessionsManager() {
     }
   };
 
-  const fetchSessionRegistrations = async (sessionId: string) => {
+  const fetchSessionRegistrations = async () => {
     try {
       // Mock data - replace with actual API call
       setRegistrations([
