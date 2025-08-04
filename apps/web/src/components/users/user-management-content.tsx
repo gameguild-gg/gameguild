@@ -12,5 +12,6 @@ interface UserManagementContentProps {
 }
 
 export function UserManagementContent({ initialPagination }: UserManagementContentProps) {
+  console.log('initialPagination:', initialPagination); // Use parameter to avoid unused warning
   return <EnhancedUserList />;
 }

@@ -28,7 +28,7 @@ export const getCourses = courseService.getCourses;
 
 export function getCourseLevelConfig(level: number | string): CourseLevelConfig {
   const levelNum = typeof level === 'string' ? parseInt(level) : level;
-  
+
   const configs: Record<number, CourseLevelConfig> = {
     1: {
       name: 'Beginner',
@@ -51,6 +51,6 @@ export function getCourseLevelConfig(level: number | string): CourseLevelConfig 
       bgColor: 'bg-red-500/10 border-red-500',
     },
   };
-  
+
   return configs[levelNum] || configs[1]!;
 }

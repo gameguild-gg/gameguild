@@ -344,7 +344,7 @@ function AudioComponent({ data, nodeKey }: AudioComponentProps) {
       editor.update(() => {
         const node = $getNodeByKey(nodeKey);
         if (node instanceof AudioNode) {
-          const { isNew, ...rest } = data;
+          const { isNew: _isNew, ...rest } = data;
           node.setData(rest);
           setHasBeenNew(false);
         }

@@ -2,6 +2,7 @@ import type { Client, Config, RequestOptions } from './types.js';
 import { buildUrl, createConfig, createInterceptors, getParseAs, mergeConfigs, mergeHeaders, setAuthParams } from './utils.js';
 
 type ReqInit = Omit<RequestInit, 'body' | 'headers'> & {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   body?: any;
   headers: ReturnType<typeof mergeHeaders>;
 };
@@ -18,7 +19,7 @@ export const createClient = (config: Config = {}): Client => {
 
   const interceptors = createInterceptors<Response, unknown, RequestOptions>();
 
-  // @ts-expect-error
+  // @ts-expect-error - Generated code requires type assertion for request method compatibility
   const request: Client['request'] = async (options) => {
     const opts = {
       ..._config,
@@ -82,6 +83,7 @@ export const createClient = (config: Config = {}): Client => {
 
       const parseAs = (opts.parseAs === 'auto' ? getParseAs(response.headers.get('Content-Type')) : opts.parseAs) ?? 'json';
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let data: any;
       switch (parseAs) {
         case 'arrayBuffer':

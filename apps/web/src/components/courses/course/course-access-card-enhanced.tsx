@@ -24,7 +24,9 @@ function LoadingCard() {
         <CardTitle className="text-xl text-center">Loading...</CardTitle>
       </CardHeader>
       <CardContent>
-        <Loading size="sm" />
+        <div className="flex justify-center">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
       </CardContent>
     </Card>
   );
@@ -306,13 +308,11 @@ export default function CourseAccessCard({ courseSlug }: Pick<CourseAccessCardPr
   }
 
   return (
-    <ErrorBoundary>
-      <div className="space-y-4">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} onFreeCourseEnroll={handleFreeCourseEnrollment} onPaidCoursePayment={handlePaidCoursePayment} isEnrolling={enrolling} isPaymentLoading={paymentLoading} />
-        ))}
-        <CourseStatsCard />
-      </div>
-    </ErrorBoundary>
+    <div className="space-y-4">
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} onFreeCourseEnroll={handleFreeCourseEnrollment} onPaidCoursePayment={handlePaidCoursePayment} isEnrolling={enrolling} isPaymentLoading={paymentLoading} />
+      ))}
+      <CourseStatsCard />
+    </div>
   );
 }
