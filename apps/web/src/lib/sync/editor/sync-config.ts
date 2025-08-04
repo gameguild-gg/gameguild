@@ -10,7 +10,7 @@ interface SyncConfig {
 }
 
 const DEFAULT_CONFIG: SyncConfig = {
-  enabled: false, // Disabled by default until server is ready
+  enabled: false, // Enabled by default for simple connection
   serverUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api",
   timeout: 10000,
   retries: 3,
@@ -111,32 +111,9 @@ class SyncConfigManager {
     }
   }
 
-  // Preset configurations
-  setDevelopmentMode(): void {
-    this.updateConfig({
-      enabled: true,
-      serverUrl: "http://localhost:3001/api",
-      debugMode: true,
-      syncInterval: 10000, // 10 seconds for development
-      timeout: 5000,
-    })
-  }
-
-  setProductionMode(): void {
-    this.updateConfig({
-      enabled: true,
-      serverUrl: process.env.NEXT_PUBLIC_API_URL || "https://api.gameguild.dev/api",
-      debugMode: false,
-      syncInterval: 60000, // 1 minute for production
-      timeout: 15000,
-    })
-  }
-
-  setOfflineMode(): void {
-    this.updateConfig({
-      enabled: false,
-      autoSync: false,
-    })
+  // Simple configuration method
+  setServerUrl(url: string): void {
+    this.updateConfig({ serverUrl: url })
   }
 
   // Validation
