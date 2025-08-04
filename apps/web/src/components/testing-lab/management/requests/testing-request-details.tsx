@@ -19,9 +19,9 @@ import { joinTestingRequest, leaveTestingRequest, submitTestingRequestFeedback }
 
 interface TestingRequestDetailsProps {
   data: TestingRequest;
-  participants?: any[];
-  feedback?: any[];
-  statistics?: any;
+  participants?: unknown[];
+  feedback?: unknown[];
+  statistics?: unknown;
 }
 
 interface FeedbackForm {
@@ -79,7 +79,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
       toast.success('Successfully joined testing request');
       setHasJoined(true);
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error('Failed to join testing request');
     } finally {
       setLoading(false);
@@ -95,7 +95,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
       toast.success('Successfully left testing request');
       setHasJoined(false);
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error('Failed to leave testing request');
     } finally {
       setLoading(false);
@@ -111,7 +111,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
       toast.success('Feedback submitted successfully');
       setShowFeedbackDialog(false);
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error('Failed to submit feedback');
     } finally {
       setLoading(false);
@@ -361,15 +361,18 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {participants.slice(0, 5).map((participant: any) => (
-                    <div key={participant.id} className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">{participant.name?.charAt(0) || 'U'}</div>
-                      <div>
-                        <p className="text-sm font-medium">{participant.name}</p>
-                        <p className="text-xs text-gray-500">{participant.email}</p>
+                  {participants.slice(0, 5).map((participant: unknown) => {
+                    const p = participant as { id: string; name?: string; email?: string };
+                    return (
+                      <div key={p.id} className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">{p.name?.charAt(0) || 'U'}</div>
+                        <div>
+                          <p className="text-sm font-medium">{p.name}</p>
+                          <p className="text-xs text-gray-500">{p.email}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {participants.length > 5 && <p className="text-sm text-gray-500">+{participants.length - 5} more</p>}
                 </div>
               </CardContent>
@@ -384,17 +387,20 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {feedback.slice(0, 3).map((item: any) => (
-                    <div key={item.id} className="border-l-2 border-blue-500 pl-3">
-                      <div className="flex items-center gap-1 mb-1">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className={`h-3 w-3 ${i < (item.rating || 0) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} />
-                        ))}
+                  {feedback.slice(0, 3).map((item: unknown) => {
+                    const f = item as { id: string; rating?: number; comments?: string; user?: { name?: string } };
+                    return (
+                      <div key={f.id} className="border-l-2 border-blue-500 pl-3">
+                        <div className="flex items-center gap-1 mb-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} className={`h-3 w-3 ${i < (f.rating || 0) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} />
+                          ))}
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2">{f.comments}</p>
+                        <p className="text-xs text-gray-500 mt-1">by {f.user?.name || 'Anonymous'}</p>
                       </div>
-                      <p className="text-sm text-gray-600 line-clamp-2">{item.comments}</p>
-                      <p className="text-xs text-gray-500 mt-1">by {item.user?.name || 'Anonymous'}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
