@@ -1,0 +1,395 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeRaw from 'rehype-raw';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Admonition } from './Admonition';
+import Mermaid from './Mermaid';
+import RevealJS from './RevealJS';
+import { MarkdownQuizActivity } from './MarkdownQuizActivity';
+import { MarkdownCodeActivity } from './MarkdownCodeActivity';
+import { MarkdownErrorBoundary } from './MarkdownErrorBoundary';
+
+export type RendererType = 'markdown' | 'reveal';
+
+export interface MarkdownRendererProps {
+  content: string;
+  renderer?: RendererType;
+}
+
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer = 'markdown' }) => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (renderer === 'reveal') {
+    return (
+      <div className="gameguild-revealjs-wrapper">
+        <RevealJS content={content} />
+      </div>
+    );
+  }
+
+  const processedContent = content
+    .replace(
+      /:::\s*(note|abstract|info|tip|success|question|warning|failure|danger|bug|example|quote)(?:\s+"([^"]*)")?\n([\s\S]*?):::/g,
+      (_, type, title, body) => `<div class="admonition admonition-${type}"${title ? ` data-title="${title}"` : ''}>\n\n${body}\n\n</div>`,
+    )
+    .replace(/!!!\s*(quiz|code)\n([\s\S]*?)\n!!!/g, (_, type, content) => {
+      // HTML escape angle brackets in the content if it's a code block
+      if (type === 'code') {
+        content = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+      return `<div class="markdown-activity" data-type="${type}">${content}</div>`;
+    });
+
+  const components: Record<string, React.FC<any>> = {
+    h1: (props) => <h1 className="text-4xl font-bold mt-6 mb-4" {...props} />,
+    h2: (props) => <h2 className="text-3xl font-semibold mt-5 mb-3" {...props} />,
+    h3: (props) => <h3 className="text-2xl font-semibold mt-4 mb-2" {...props} />,
+    h4: (props) => <h4 className="text-xl font-semibold mt-3 mb-2" {...props} />,
+    h5: (props) => <h5 className="text-lg font-semibold mt-2 mb-1" {...props} />,
+    h6: (props) => <h6 className="text-base font-semibold mt-2 mb-1" {...props} />,
+    p: (props) => <p className="mb-4" {...props} />,
+    ul: (props) => <ul className="list-disc pl-5 mb-4" {...props} />,
+    ol: (props) => <ol className="list-decimal pl-5 mb-4" {...props} />,
+    li: (props) => <li className="mb-1" {...props} />,
+    a: (props) => <a className="text-blue-600 hover:underline" {...props} />,
+    blockquote: (props) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4" {...props} />,
+    code: ({ node, className, children, ...props }) => {
+      const match = /language-(\w+)/.exec(className || '');
+      const lang = match && match[1] ? match[1] : '';
+
+              if (lang === 'mermaid') {
+          return <Mermaid chart={String(children).replace(/\n$/, '')} />;
+        }
+
+      const codeContent = String(children).replace(/\n$/, '');
+      const inline = !codeContent.includes('\n');
+
+      if (!inline) {
+        return (
+          <SyntaxHighlighter
+            style={vscDarkPlus}
+            language={lang}
+            PreTag="div"
+            customStyle={{
+              padding: '1rem',
+              borderRadius: '0.5rem',
+              marginBottom: '1rem',
+              backgroundColor: '#1e1e1e',
+              border: '1px solid #2d2d2d',
+            }}
+            codeTagProps={{
+              style: {
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'keep-all',
+                overflowWrap: 'break-word',
+                fontSize: '0.875rem',
+                lineHeight: '1.6',
+                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+              },
+            }}
+            wrapLines={true}
+            className="syntax-highlighter"
+          >
+            {String(children).replace(/\n$/, '')}
+          </SyntaxHighlighter>
+        );
+      }
+
+      return (
+        <code className="bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 font-mono text-sm inline whitespace-nowrap text-gray-800 font-medium" {...props}>
+          {children}
+        </code>
+      );
+    },
+    pre: ({ children }) => <>{children}</>,
+    div: ({ className, children, ...props }) => {
+      if (className?.includes('admonition')) {
+        const type = className.split('-')[1] as
+          | 'note'
+          | 'abstract'
+          | 'info'
+          | 'tip'
+          | 'success'
+          | 'question'
+          | 'warning'
+          | 'failure'
+          | 'danger'
+          | 'bug'
+          | 'example'
+          | 'quote';
+        const title = props['data-title'] as string | undefined;
+        return (
+          <Admonition type={type} title={title}>
+            {children}
+          </Admonition>
+        );
+      }
+      if (className === 'markdown-activity') {
+        const type = props['data-type'];
+        if (type === 'quiz' || type === 'code') {
+          try {
+            // remove new lines if it is code
+            const jsonString = children as string;
+            const processedString = type === 'code' ? jsonString.replace(/\n/g, '') : jsonString;
+            const data = JSON.parse(processedString);
+            if (type === 'quiz') {
+              return <MarkdownQuizActivity {...data} />;
+            } else if (type === 'code') {
+              return <MarkdownCodeActivity {...data} />;
+            }
+          } catch (error) {
+            console.error('Error parsing custom block:', error);
+            // Create a proper error object if the caught error is not an Error instance
+            const errorObj = error instanceof Error ? error : new Error(String(error));
+            return (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-red-800 font-medium">Error rendering custom block</p>
+                <p className="text-red-600 text-sm mt-1">{errorObj.message}</p>
+              </div>
+            );
+          }
+        }
+      }
+      return (
+        <div className={className} {...props}>
+          {children}
+        </div>
+      );
+    },
+  };
+
+  if (!isClient) {
+    return <div className="markdown-content">Loading content...</div>;
+  }
+
+  return (
+    <MarkdownErrorBoundary>
+      <div className="markdown-content">
+        <ReactMarkdown 
+          remarkPlugins={[remarkGfm, remarkMath]} 
+          rehypePlugins={[rehypeRaw, rehypeKatex]}
+          components={components}
+        >
+          {processedContent}
+        </ReactMarkdown>
+      <style jsx global>{`
+        .markdown-content {
+          line-height: 1.7;
+          color: #374151;
+          width: 100% !important;
+          max-width: none !important;
+          min-width: 100% !important;
+        }
+
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4,
+        .markdown-content h5,
+        .markdown-content h6 {
+          color: #111827;
+          font-weight: 600;
+          line-height: 1.25;
+        }
+
+        .markdown-content h1 {
+          font-size: 2.25rem;
+          margin-top: 2rem;
+          margin-bottom: 1rem;
+        }
+
+        .markdown-content h2 {
+          font-size: 1.875rem;
+          margin-top: 1.75rem;
+          margin-bottom: 0.75rem;
+        }
+
+        .markdown-content h3 {
+          font-size: 1.5rem;
+          margin-top: 1.5rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .markdown-content p {
+          margin-bottom: 1rem;
+          line-height: 1.7;
+        }
+
+        .markdown-content ul,
+        .markdown-content ol {
+          margin-bottom: 1rem;
+          padding-left: 1.5rem;
+        }
+
+        .markdown-content li {
+          margin-bottom: 0.25rem;
+        }
+
+        .markdown-content blockquote {
+          border-left: 4px solid #e5e7eb;
+          padding-left: 1rem;
+          margin: 1rem 0;
+          font-style: italic;
+          color: #6b7280;
+        }
+
+        .markdown-content a {
+          color: #2563eb;
+          text-decoration: underline;
+        }
+
+        .markdown-content a:hover {
+          color: #1d4ed8;
+        }
+
+        .syntax-highlighter {
+          overflow-x: auto;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .syntax-highlighter pre {
+          white-space: pre-wrap !important;
+          word-break: keep-all !important;
+          overflow-wrap: break-word !important;
+          margin: 0 !important;
+        }
+
+        .syntax-highlighter code {
+          font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace !important;
+        }
+
+        .katex-display {
+          overflow-x: auto;
+          overflow-y: hidden;
+          padding: 0.5rem 0;
+        }
+
+        .markdown-content table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 1rem 0;
+        }
+
+        .markdown-content th,
+        .markdown-content td {
+          border: 1px solid #e5e7eb;
+          padding: 0.5rem;
+          text-align: left;
+        }
+
+        .markdown-content th {
+          background-color: #f9fafb;
+          font-weight: 600;
+        }
+
+        /* Ensure RevealJS doesn't interfere with page layout */
+        .reveal-container {
+          position: relative !important;
+          z-index: 1;
+        }
+
+        .reveal-container .reveal {
+          position: relative !important;
+          height: 100% !important;
+        }
+
+        .reveal-container .slides {
+          position: relative !important;
+          height: 100% !important;
+        }
+
+        /* Override any global RevealJS styles that might affect layout */
+        .reveal {
+          position: relative !important;
+          height: 100% !important;
+          width: 100% !important;
+          background: white !important;
+        }
+        
+        .reveal .slides {
+          position: relative !important;
+          height: 100% !important;
+          width: 100% !important;
+          background: white !important;
+        }
+        
+        .reveal .slides section {
+          background: white !important;
+        }
+
+        /* Prevent any black backgrounds from affecting the page */
+        body {
+          background-color: #f9fafb !important;
+          width: 100% !important;
+          max-width: none !important;
+        }
+        
+        html {
+          background-color: #f9fafb !important;
+          width: 100% !important;
+          max-width: none !important;
+        }
+
+        /* Force full width on all containers */
+        div {
+          max-width: none !important;
+        }
+
+        /* Override any potential layout constraints */
+        .min-h-screen {
+          width: 100vw !important;
+          max-width: none !important;
+        }
+
+        /* Ensure full width usage */
+        .markdown-content * {
+          max-width: none !important;
+        }
+
+        .markdown-content pre,
+        .markdown-content code {
+          width: 100% !important;
+          max-width: none !important;
+        }
+
+        .syntax-highlighter {
+          width: 100% !important;
+          max-width: none !important;
+        }
+
+        /* Mermaid diagram sizing - fixed width */
+        .mermaid-container {
+          width: auto !important;
+          margin: 1rem auto !important;
+          overflow: visible !important;
+          display: inline-block !important;
+        }
+
+        .mermaid-container svg {
+          width: auto !important;
+          height: auto !important;
+          max-width: none !important;
+        }
+
+        /* Let Mermaid handle text sizing and positioning naturally */
+        .mermaid-container {
+          font-family: inherit !important;
+        }
+      `}</style>
+      </div>
+    </MarkdownErrorBoundary>
+  );
+};
+
+export default MarkdownRenderer; 
