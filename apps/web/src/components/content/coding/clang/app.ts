@@ -15,7 +15,7 @@ export class App {
   private environ: { [key: string]: string };
   private memfs: MemFS;
   private allowRequestAnimationFrame: boolean;
-  private handles: Map<number, any>;
+  private handles: Map<number, unknown>;
   private nextHandle: number;
   private exports!: AppExports;
   private mem!: Memory;
@@ -30,16 +30,7 @@ export class App {
 
     const env = getImportObject(this);
 
-    const wasi_unstable = getImportObject(this, [
-      'proc_exit',
-      'environ_sizes_get',
-      'environ_get',
-      'args_sizes_get',
-      'args_get',
-      'random_get',
-      'clock_time_get',
-      'poll_oneoff',
-    ]);
+    const wasi_unstable = getImportObject(this, ['proc_exit', 'environ_sizes_get', 'environ_get', 'args_sizes_get', 'args_get', 'random_get', 'clock_time_get', 'poll_oneoff']);
 
     // Fill in some WASI implementations from memfs.
     Object.assign(wasi_unstable, this.memfs.wasmExports);
@@ -143,10 +134,12 @@ export class App {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   clock_time_get(clock_id: number, precision: number, time_out: number): never {
     throw new NotImplemented('wasi_unstable', 'clock_time_get');
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   poll_oneoff(in_ptr: number, out_ptr: number, nsubscriptions: number, nevents_out: number): never {
     throw new NotImplemented('wasi_unstable', 'poll_oneoff');
   }

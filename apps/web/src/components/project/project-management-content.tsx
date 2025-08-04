@@ -13,15 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import {
-  getProjectsData,
-  createProject,
-  updateProject,
-  deleteProject,
-  publishProject,
-  unpublishProject,
-  archiveProject,
-} from '@/lib/projects/projects.actions';
+import { getProjectsData, createProject, updateProject, deleteProject, publishProject, unpublishProject, archiveProject } from '@/lib/projects/projects.actions';
 import type { Project } from '@/lib/api/generated/types.gen';
 
 interface ProjectManagementContentProps {
@@ -209,8 +201,7 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
   };
 
   const filteredProjects = projects.filter((project) => {
-    const matchesSearch =
-      !searchTerm || project.title?.toLowerCase().includes(searchTerm.toLowerCase()) || project.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = !searchTerm || project.title?.toLowerCase().includes(searchTerm.toLowerCase()) || project.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || project.status?.toString() === statusFilter;
 
@@ -265,65 +256,34 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                    placeholder="Project title"
-                  />
+                  <Input id="title" value={formData.title} onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))} placeholder="Project title" />
                 </div>
 
                 <div className="grid gap-2">
                   <Label htmlFor="shortDescription">Short Description</Label>
-                  <Input
-                    id="shortDescription"
-                    value={formData.shortDescription}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, shortDescription: e.target.value }))}
-                    placeholder="Brief description"
-                  />
+                  <Input id="shortDescription" value={formData.shortDescription} onChange={(e) => setFormData((prev) => ({ ...prev, shortDescription: e.target.value }))} placeholder="Brief description" />
                 </div>
 
                 <div className="grid gap-2">
                   <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                    placeholder="Detailed description"
-                    rows={4}
-                  />
+                  <Textarea id="description" value={formData.description} onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))} placeholder="Detailed description" rows={4} />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="websiteUrl">Website URL</Label>
-                    <Input
-                      id="websiteUrl"
-                      value={formData.websiteUrl}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, websiteUrl: e.target.value }))}
-                      placeholder="https://example.com"
-                    />
+                    <Input id="websiteUrl" value={formData.websiteUrl} onChange={(e) => setFormData((prev) => ({ ...prev, websiteUrl: e.target.value }))} placeholder="https://example.com" />
                   </div>
 
                   <div className="grid gap-2">
                     <Label htmlFor="repositoryUrl">Repository URL</Label>
-                    <Input
-                      id="repositoryUrl"
-                      value={formData.repositoryUrl}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, repositoryUrl: e.target.value }))}
-                      placeholder="https://github.com/user/repo"
-                    />
+                    <Input id="repositoryUrl" value={formData.repositoryUrl} onChange={(e) => setFormData((prev) => ({ ...prev, repositoryUrl: e.target.value }))} placeholder="https://github.com/user/repo" />
                   </div>
                 </div>
 
                 <div className="grid gap-2">
                   <Label htmlFor="tags">Tags (comma-separated)</Label>
-                  <Input
-                    id="tags"
-                    value={formData.tags}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, tags: e.target.value }))}
-                    placeholder="game, unity, indie"
-                  />
+                  <Input id="tags" value={formData.tags} onChange={(e) => setFormData((prev) => ({ ...prev, tags: e.target.value }))} placeholder="game, unity, indie" />
                 </div>
               </div>
 
@@ -463,65 +423,34 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="edit-title">Title *</Label>
-              <Input
-                id="edit-title"
-                value={formData.title}
-                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                placeholder="Project title"
-              />
+              <Input id="edit-title" value={formData.title} onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))} placeholder="Project title" />
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="edit-shortDescription">Short Description</Label>
-              <Input
-                id="edit-shortDescription"
-                value={formData.shortDescription}
-                onChange={(e) => setFormData((prev) => ({ ...prev, shortDescription: e.target.value }))}
-                placeholder="Brief description"
-              />
+              <Input id="edit-shortDescription" value={formData.shortDescription} onChange={(e) => setFormData((prev) => ({ ...prev, shortDescription: e.target.value }))} placeholder="Brief description" />
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={formData.description}
-                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                placeholder="Detailed description"
-                rows={4}
-              />
+              <Textarea id="edit-description" value={formData.description} onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))} placeholder="Detailed description" rows={4} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-websiteUrl">Website URL</Label>
-                <Input
-                  id="edit-websiteUrl"
-                  value={formData.websiteUrl}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, websiteUrl: e.target.value }))}
-                  placeholder="https://example.com"
-                />
+                <Input id="edit-websiteUrl" value={formData.websiteUrl} onChange={(e) => setFormData((prev) => ({ ...prev, websiteUrl: e.target.value }))} placeholder="https://example.com" />
               </div>
 
               <div className="grid gap-2">
                 <Label htmlFor="edit-repositoryUrl">Repository URL</Label>
-                <Input
-                  id="edit-repositoryUrl"
-                  value={formData.repositoryUrl}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, repositoryUrl: e.target.value }))}
-                  placeholder="https://github.com/user/repo"
-                />
+                <Input id="edit-repositoryUrl" value={formData.repositoryUrl} onChange={(e) => setFormData((prev) => ({ ...prev, repositoryUrl: e.target.value }))} placeholder="https://github.com/user/repo" />
               </div>
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="edit-tags">Tags (comma-separated)</Label>
-              <Input
-                id="edit-tags"
-                value={formData.tags}
-                onChange={(e) => setFormData((prev) => ({ ...prev, tags: e.target.value }))}
-                placeholder="game, unity, indie"
-              />
+              <Input id="edit-tags" value={formData.tags} onChange={(e) => setFormData((prev) => ({ ...prev, tags: e.target.value }))} placeholder="game, unity, indie" />
             </div>
           </div>
 

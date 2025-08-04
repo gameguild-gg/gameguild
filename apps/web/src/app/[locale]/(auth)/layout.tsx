@@ -1,7 +1,7 @@
-import React, { PropsWithChildren } from 'react';
-import { redirect } from 'next/navigation';
-import { GalleryVerticalEnd } from 'lucide-react';
 import { auth } from '@/auth';
+import { GalleryVerticalEnd } from 'lucide-react';
+import { redirect } from 'next/navigation';
+import React, { PropsWithChildren } from 'react';
 
 export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
   const session = await auth();

@@ -9,8 +9,7 @@ export interface SessionFilters {
 export function filterAndSortSessions(sessions: TestSession[], filters: SessionFilters): TestSession[] {
   return sessions
     .filter((session) => {
-      const matchesSearch =
-        session.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) || session.description.toLowerCase().includes(filters.searchTerm.toLowerCase());
+      const matchesSearch = session.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) || session.description.toLowerCase().includes(filters.searchTerm.toLowerCase());
       const matchesStatus = filters.selectedStatuses.length === 0 || filters.selectedStatuses.includes(session.status);
       const matchesType = filters.selectedSessionTypes.length === 0 || filters.selectedSessionTypes.includes(session.sessionType);
 

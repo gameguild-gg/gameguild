@@ -1,35 +1,17 @@
-'use client';
+import React from 'react';
+import { CreateCourseForm } from '@/components/courses/forms/create-course-form';
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
 
-import { CourseEditorProvider } from '@/lib/courses/course-editor.context';
-import { CourseEditor } from '@/components/courses/course-editor/course-editor';
-
-export default function CreateCoursePage() {
-  // Initial data for a new course
-  const initialCourseData = {
-    title: '',
-    slug: '',
-    description: '',
-    summary: '',
-    category: 'programming' as const,
-    difficulty: 1 as const,
-    estimatedHours: 1,
-    status: 'draft' as const,
-    media: {
-      thumbnail: undefined,
-      showcaseVideo: undefined,
-    },
-    products: [],
-    enrollment: {
-      isOpen: true,
-      currentEnrollments: 0,
-    },
-    tags: [],
-    manualSlugEdit: false,
-  };
-
+export default function CreateCoursePage(): React.JSX.Element {
   return (
-    <CourseEditorProvider initialCourse={initialCourseData}>
-      <CourseEditor isCreating={true} />
-    </CourseEditorProvider>
+    <DashboardPage>
+      <DashboardPageHeader>
+        <DashboardPageTitle>Create New Course</DashboardPageTitle>
+        <DashboardPageDescription>Create a new course to share your knowledge and skills with the community</DashboardPageDescription>
+      </DashboardPageHeader>
+      <DashboardPageContent>
+        <CreateCourseForm />
+      </DashboardPageContent>
+    </DashboardPage>
   );
 }

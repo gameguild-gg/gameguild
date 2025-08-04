@@ -232,9 +232,7 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
                     <User className="w-6 h-6 text-white" />
                   </div>
                 </div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                  +
-                </div>
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">+</div>
               </div>
               <span className="text-xs text-slate-400 text-center">Your Story</span>
             </div>
@@ -254,10 +252,7 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
         {/* Feed Posts */}
         <div className="space-y-6">
           {posts.map((post) => (
-            <article
-              key={post.id}
-              className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 overflow-hidden"
-            >
+            <article key={post.id} className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 overflow-hidden">
               {/* Post Header */}
               <div className="p-4 pb-3">
                 <div className="flex items-center justify-between">
@@ -326,13 +321,7 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => handleLike(post.id)}
-                      className={cn(
-                        'flex items-center gap-2 transition-colors',
-                        post.interactions.isLiked ? 'text-red-500' : 'text-slate-400 hover:text-red-400',
-                      )}
-                    >
+                    <button onClick={() => handleLike(post.id)} className={cn('flex items-center gap-2 transition-colors', post.interactions.isLiked ? 'text-red-500' : 'text-slate-400 hover:text-red-400')}>
                       <Heart className={cn('w-6 h-6 transition-transform', post.interactions.isLiked && 'fill-current like-animation')} />
                       <span className="text-sm font-medium">{formatNumber(post.interactions.likes)}</span>
                     </button>
@@ -345,10 +334,7 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
                       <span className="text-sm font-medium">{formatNumber(post.interactions.shares)}</span>
                     </button>
                   </div>
-                  <button
-                    onClick={() => handleSave(post.id)}
-                    className={cn('transition-colors', post.interactions.isSaved ? 'text-yellow-500' : 'text-slate-400 hover:text-yellow-400')}
-                  >
+                  <button onClick={() => handleSave(post.id)} className={cn('transition-colors', post.interactions.isSaved ? 'text-yellow-500' : 'text-slate-400 hover:text-yellow-400')}>
                     <Bookmark className={cn('w-6 h-6', post.interactions.isSaved && 'fill-current')} />
                   </button>
                 </div>

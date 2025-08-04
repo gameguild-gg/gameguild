@@ -35,7 +35,7 @@ public class ProjectFeedback : Resource {
   /// <summary>
   /// Navigation property to user
   /// </summary>
-  public virtual User User { get; set; } = null!;
+  public virtual User? User { get; set; }
 
   /// <summary>
   /// Rating (1-5 stars)

@@ -180,11 +180,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
               <div
                 key={item.id}
                 className={`flex items-center gap-4 p-3 rounded-lg border transition-colors ${onItemClick ? 'cursor-pointer hover:bg-gray-700' : ''} ${
-                  item.status === 'completed' || item.status === 'graded'
-                    ? 'bg-green-900/20 border-green-800'
-                    : item.status === 'in-progress'
-                      ? 'bg-blue-900/20 border-blue-800'
-                      : 'bg-gray-900/50 border-gray-700'
+                  item.status === 'completed' || item.status === 'graded' ? 'bg-green-900/20 border-green-800' : item.status === 'in-progress' ? 'bg-blue-900/20 border-blue-800' : 'bg-gray-900/50 border-gray-700'
                 }`}
                 onClick={() => onItemClick?.(item)}
               >
@@ -262,15 +258,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
 }
 
 /* Compact progress component for course cards */
-export function CompactProgress({
-  progressPercentage,
-  completedItems,
-  totalItems,
-}: {
-  readonly progressPercentage: number;
-  readonly completedItems: number;
-  readonly totalItems: number;
-}) {
+export function CompactProgress({ progressPercentage, completedItems, totalItems }: { readonly progressPercentage: number; readonly completedItems: number; readonly totalItems: number }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">

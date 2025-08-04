@@ -1,23 +1,6 @@
 import type React from 'react';
 
-export type LanguageType =
-  | 'javascript'
-  | 'typescript'
-  | 'python'
-  | 'lua'
-  | 'c'
-  | 'cpp'
-  | 'h'
-  | 'hpp'
-  | 'cheader'
-  | 'cppheader'
-  | 'xml'
-  | 'yaml'
-  | 'json'
-  | 'html'
-  | 'css'
-  | 'markdown'
-  | 'text';
+export type LanguageType = 'javascript' | 'typescript' | 'python' | 'lua' | 'c' | 'cpp' | 'h' | 'hpp' | 'cheader' | 'cppheader' | 'xml' | 'yaml' | 'json' | 'html' | 'css' | 'markdown' | 'text';
 
 export type ProgrammingLanguage = 'javascript' | 'typescript' | 'python' | 'lua' | 'c' | 'cpp' | 'h' | 'hpp';
 

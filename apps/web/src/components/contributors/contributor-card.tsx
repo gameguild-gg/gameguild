@@ -3,11 +3,11 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Contributor } from '@/lib/contributors';
 
-type Props = {
+interface ContributorCardProps {
   contributor: Contributor;
-};
+}
 
-export const ContributorCard = async ({ contributor }: Props): Promise<React.JSX.Element> => {
+export const ContributorCard = async ({ contributor }: ContributorCardProps): Promise<React.JSX.Element> => {
   return (
     <article>
       <Card className="bg-gray-800 border-gray-700">

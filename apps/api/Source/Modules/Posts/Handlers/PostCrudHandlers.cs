@@ -154,7 +154,7 @@ public class UpdatePostHandler(
       await eventPublisher.PublishAsync(
         new PostUpdatedEvent(
           post.Id,
-          post.AuthorId,
+          post.AuthorId ?? Guid.Empty,
           changes,
           post.UpdatedAt,
           post.Tenant?.Id ?? Guid.Empty
@@ -229,7 +229,7 @@ public class DeletePostHandler(
       await eventPublisher.PublishAsync(
         new PostDeletedEvent(
           post.Id,
-          post.AuthorId,
+          post.AuthorId ?? Guid.Empty,
           post.PostType,
           true, // Soft delete
           DateTime.UtcNow,
@@ -314,7 +314,7 @@ public class TogglePostLikeHandler(
         await eventPublisher.PublishAsync(
           new PostLikedEvent(
             post.Id,
-            post.AuthorId,
+            post.AuthorId ?? Guid.Empty,
             request.UserId,
             post.LikesCount,
             DateTime.UtcNow,

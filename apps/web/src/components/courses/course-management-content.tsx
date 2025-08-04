@@ -21,25 +21,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  BarChart3,
-  BookOpen,
-  Calendar,
-  Copy,
-  Edit,
-  Eye,
-  Filter,
-  Grid,
-  List,
-  Loader2,
-  MoreHorizontal,
-  Play,
-  Plus,
-  RefreshCw,
-  Search,
-  Trash2,
-  Users,
-} from 'lucide-react';
+import { BarChart3, BookOpen, Calendar, Copy, Edit, Eye, Filter, Grid, List, Loader2, MoreHorizontal, Play, Plus, RefreshCw, Search, Trash2, Users } from 'lucide-react';
 
 interface CourseManagementContentProps {
   initialPagination?: {
@@ -548,8 +530,7 @@ export function CourseManagementContent({ initialPagination }: CourseManagementC
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-600">
-          Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}{' '}
-          courses
+          Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} courses
         </div>
 
         <div className="flex items-center gap-2">
@@ -651,9 +632,7 @@ export function CourseManagementContent({ initialPagination }: CourseManagementC
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Course</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this course? This action cannot be undone and will remove all associated content.
-            </DialogDescription>
+            <DialogDescription>Are you sure you want to delete this course? This action cannot be undone and will remove all associated content.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>

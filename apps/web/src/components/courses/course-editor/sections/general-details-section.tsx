@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCourseEditor } from '@/lib/courses/course-editor.context';
+import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { RichTextEditor } from '../rich-text-editor';
 import { CourseLevel } from '@/components/legacy/types/courses';
 
@@ -49,13 +49,7 @@ export function GeneralDetailsSection() {
         <Label htmlFor="title" className="text-sm font-medium">
           Course Title *
         </Label>
-        <Input
-          id="title"
-          value={state.title}
-          onChange={(e) => handleTitleChange(e.target.value)}
-          placeholder="Enter a compelling course title..."
-          className={state.errors.title ? 'border-red-500' : ''}
-        />
+        <Input id="title" value={state.title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Enter a compelling course title..." className={state.errors.title ? 'border-red-500' : ''} />
         {state.errors.title && <p className="text-sm text-red-600">{state.errors.title}</p>}
       </div>
 
@@ -66,13 +60,7 @@ export function GeneralDetailsSection() {
         </Label>
         <div className="flex items-center space-x-2">
           <span className="text-sm text-muted-foreground">/courses/</span>
-          <Input
-            id="slug"
-            value={state.slug}
-            onChange={(e) => handleSlugChange(e.target.value)}
-            placeholder="course-url-slug"
-            className={`flex-1 ${state.errors.slug ? 'border-red-500' : ''}`}
-          />
+          <Input id="slug" value={state.slug} onChange={(e) => handleSlugChange(e.target.value)} placeholder="course-url-slug" className={`flex-1 ${state.errors.slug ? 'border-red-500' : ''}`} />
         </div>
         {state.errors.slug && <p className="text-sm text-red-600">{state.errors.slug}</p>}
         <p className="text-xs text-muted-foreground">This will be the URL for your course. Use lowercase letters, numbers, and hyphens only.</p>
@@ -148,16 +136,10 @@ export function GeneralDetailsSection() {
       <div className="space-y-2">
         <Label className="text-sm font-medium">Detailed Description</Label>
         <div className={`border rounded-md ${state.errors.description ? 'border-red-500' : 'border-input'}`}>
-          <RichTextEditor
-            content={state.description}
-            onChange={updateDescription}
-            placeholder="Write a detailed description of your course, including what students will learn, prerequisites, and outcomes..."
-          />
+          <RichTextEditor content={state.description} onChange={updateDescription} placeholder="Write a detailed description of your course, including what students will learn, prerequisites, and outcomes..." />
         </div>
         {state.errors.description && <p className="text-sm text-red-600">{state.errors.description}</p>}
-        <p className="text-xs text-muted-foreground">
-          Use this space to provide comprehensive information about your course content, learning objectives, and what makes it valuable.
-        </p>
+        <p className="text-xs text-muted-foreground">Use this space to provide comprehensive information about your course content, learning objectives, and what makes it valuable.</p>
       </div>
     </div>
   );

@@ -5,6 +5,29 @@ using GameGuild.Common;
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary>
+/// GraphQL input types for testing location operations
+/// </summary>
+public class CreateTestingLocationInput {
+  public string Name { get; set; } = string.Empty;
+  public string? Description { get; set; }
+  public string? Address { get; set; }
+  public int MaxTestersCapacity { get; set; }
+  public int MaxProjectsCapacity { get; set; }
+  public string? EquipmentAvailable { get; set; }
+  public LocationStatus Status { get; set; } = LocationStatus.Active;
+}
+
+public class UpdateTestingLocationInput {
+  public string? Name { get; set; }
+  public string? Description { get; set; }
+  public string? Address { get; set; }
+  public int? MaxTestersCapacity { get; set; }
+  public int? MaxProjectsCapacity { get; set; }
+  public string? EquipmentAvailable { get; set; }
+  public LocationStatus? Status { get; set; }
+}
+
+/// <summary>
 /// GraphQL mutations for TestingLab module using CQRS pattern
 /// </summary>
 [ExtendObjectType<Mutation>]
@@ -94,4 +117,52 @@ public class TestingLabMutations {
   /// Delete a testing session
   /// </summary>
   public async Task<bool> DeleteTestingSession([Service] ITestService testService, Guid id) { return await testService.DeleteTestingSessionAsync(id); }
+
+  /// <summary>
+  /// Create a new testing location
+  /// </summary>
+  public async Task<TestingLocation> CreateTestingLocation(
+    [Service] ITestService testService,
+    CreateTestingLocationInput input
+  ) {
+    var location = new TestingLocation {
+      Name = input.Name,
+      Description = input.Description,
+      Address = input.Address,
+      MaxTestersCapacity = input.MaxTestersCapacity,
+      MaxProjectsCapacity = input.MaxProjectsCapacity,
+      EquipmentAvailable = input.EquipmentAvailable,
+      Status = input.Status,
+    };
+
+    return await testService.CreateTestingLocationAsync(location);
+  }
+
+  /// <summary>
+  /// Update an existing testing location
+  /// </summary>
+  public async Task<TestingLocation> UpdateTestingLocation(
+    [Service] ITestService testService, Guid id,
+    UpdateTestingLocationInput input
+  ) {
+    var existingLocation = await testService.GetTestingLocationByIdAsync(id);
+
+    if (existingLocation == null) throw new ArgumentException($"Testing location with ID {id} not found");
+
+    // Update properties
+    if (!string.IsNullOrEmpty(input.Name)) existingLocation.Name = input.Name;
+    if (input.Description != null) existingLocation.Description = input.Description;
+    if (input.Address != null) existingLocation.Address = input.Address;
+    if (input.MaxTestersCapacity.HasValue) existingLocation.MaxTestersCapacity = input.MaxTestersCapacity.Value;
+    if (input.MaxProjectsCapacity.HasValue) existingLocation.MaxProjectsCapacity = input.MaxProjectsCapacity.Value;
+    if (input.EquipmentAvailable != null) existingLocation.EquipmentAvailable = input.EquipmentAvailable;
+    if (input.Status.HasValue) existingLocation.Status = input.Status.Value;
+
+    return await testService.UpdateTestingLocationAsync(existingLocation);
+  }
+
+  /// <summary>
+  /// Delete a testing location
+  /// </summary>
+  public async Task<bool> DeleteTestingLocation([Service] ITestService testService, Guid id) { return await testService.DeleteTestingLocationAsync(id); }
 }

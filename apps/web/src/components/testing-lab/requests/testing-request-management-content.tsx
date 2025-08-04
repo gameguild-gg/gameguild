@@ -34,11 +34,7 @@ export function TestingRequestManagementContent() {
   const filteredRequests = state.requests.filter((request) => {
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
-      if (
-        !request.title.toLowerCase().includes(searchLower) &&
-        !request.gameTitle.toLowerCase().includes(searchLower) &&
-        !request.submittedBy.name.toLowerCase().includes(searchLower)
-      ) {
+      if (!request.title.toLowerCase().includes(searchLower) && !request.gameTitle.toLowerCase().includes(searchLower) && !request.submittedBy.name.toLowerCase().includes(searchLower)) {
         return false;
       }
     }
@@ -455,12 +451,7 @@ export function TestingRequestManagementContent() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="approval-notes">Approval Notes (Optional)</Label>
-              <Textarea
-                id="approval-notes"
-                placeholder="Add any notes or instructions for the testing session..."
-                value={approvalNotes}
-                onChange={(e) => setApprovalNotes(e.target.value)}
-              />
+              <Textarea id="approval-notes" placeholder="Add any notes or instructions for the testing session..." value={approvalNotes} onChange={(e) => setApprovalNotes(e.target.value)} />
             </div>
           </div>
           <DialogFooter>
@@ -491,13 +482,7 @@ export function TestingRequestManagementContent() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="rejection-reason">Rejection Reason *</Label>
-              <Textarea
-                id="rejection-reason"
-                placeholder="Please provide a reason for rejection..."
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                required
-              />
+              <Textarea id="rejection-reason" placeholder="Please provide a reason for rejection..." value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} required />
             </div>
           </div>
           <DialogFooter>

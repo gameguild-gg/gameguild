@@ -3,12 +3,11 @@ import { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
-  trailingSlash: false,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
   images: {
     remotePatterns: [
@@ -69,6 +68,7 @@ const nextConfig: NextConfig = {
       '.js': ['.js', '.ts'],
       '.jsx': ['.jsx', '.tsx'],
     };
+
     return config;
   },
 };

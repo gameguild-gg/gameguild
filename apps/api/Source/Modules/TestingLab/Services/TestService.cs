@@ -828,4 +828,92 @@ public class TestService(ApplicationDbContext context) : ITestService {
   }
 
   #endregion
+
+  #region Testing Location Management
+
+  public async Task<IEnumerable<TestingLocation>> GetAllTestingLocationsAsync() {
+    return await context.TestingLocations.Where(tl => tl.DeletedAt == null)
+                        .OrderBy(tl => tl.Name)
+                        .ToListAsync();
+  }
+
+  public async Task<IEnumerable<TestingLocation>> GetTestingLocationsAsync(int skip = 0, int take = 50) {
+    return await context.TestingLocations.Where(tl => tl.DeletedAt == null)
+                        .OrderBy(tl => tl.Name)
+                        .Skip(skip)
+                        .Take(take)
+                        .ToListAsync();
+  }
+
+  public async Task<TestingLocation?> GetTestingLocationByIdAsync(Guid id) {
+    return await context.TestingLocations.Where(tl => tl.Id == id && tl.DeletedAt == null)
+                        .FirstOrDefaultAsync();
+  }
+
+  public async Task<TestingLocation> CreateTestingLocationAsync(TestingLocation location) {
+    location.Id = Guid.NewGuid();
+    location.CreatedAt = DateTime.UtcNow;
+    location.UpdatedAt = DateTime.UtcNow;
+
+    context.TestingLocations.Add(location);
+    await context.SaveChangesAsync();
+
+    return location;
+  }
+
+  public async Task<TestingLocation> UpdateTestingLocationAsync(TestingLocation location) {
+    var existingLocation = await context.TestingLocations
+        .FirstOrDefaultAsync(tl => tl.Id == location.Id && tl.DeletedAt == null);
+
+    if (existingLocation == null) {
+      throw new InvalidOperationException($"Testing location with ID {location.Id} not found");
+    }
+
+    // Update properties
+    existingLocation.Name = location.Name;
+    existingLocation.Description = location.Description;
+    existingLocation.Address = location.Address;
+    existingLocation.MaxTestersCapacity = location.MaxTestersCapacity;
+    existingLocation.MaxProjectsCapacity = location.MaxProjectsCapacity;
+    existingLocation.EquipmentAvailable = location.EquipmentAvailable;
+    existingLocation.Status = location.Status;
+    existingLocation.UpdatedAt = DateTime.UtcNow;
+
+    await context.SaveChangesAsync();
+
+    return existingLocation;
+  }
+
+  public async Task<bool> DeleteTestingLocationAsync(Guid id) {
+    var location = await context.TestingLocations
+        .FirstOrDefaultAsync(tl => tl.Id == id && tl.DeletedAt == null);
+
+    if (location == null) {
+      return false;
+    }
+
+    // Soft delete
+    location.DeletedAt = DateTime.UtcNow;
+    await context.SaveChangesAsync();
+
+    return true;
+  }
+
+  public async Task<bool> RestoreTestingLocationAsync(Guid id) {
+    var location = await context.TestingLocations
+        .FirstOrDefaultAsync(tl => tl.Id == id && tl.DeletedAt != null);
+
+    if (location == null) {
+      return false;
+    }
+
+    // Restore
+    location.DeletedAt = null;
+    location.UpdatedAt = DateTime.UtcNow;
+    await context.SaveChangesAsync();
+
+    return true;
+  }
+
+  #endregion
 }

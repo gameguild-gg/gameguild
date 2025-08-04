@@ -13,10 +13,8 @@ export function RewardChip({ value, variant = 'default', className = '' }: Rewar
 
   // Variant styles - more subtle styling
   const variantStyles = {
-    default:
-      'px-3 py-1.5 rounded-lg text-sm bg-gradient-to-br from-yellow-900/20 to-amber-900/20 backdrop-blur-md border border-yellow-600/25 text-yellow-300 hover:from-yellow-900/30 hover:to-amber-900/30 hover:border-yellow-600/40',
-    compact:
-      'px-2 py-1 rounded-md text-xs bg-gradient-to-br from-yellow-900/18 to-amber-900/18 backdrop-blur-md border border-yellow-600/20 text-yellow-300 hover:from-yellow-900/25 hover:to-amber-900/25',
+    default: 'px-3 py-1.5 rounded-lg text-sm bg-gradient-to-br from-yellow-900/20 to-amber-900/20 backdrop-blur-md border border-yellow-600/25 text-yellow-300 hover:from-yellow-900/30 hover:to-amber-900/30 hover:border-yellow-600/40',
+    compact: 'px-2 py-1 rounded-md text-xs bg-gradient-to-br from-yellow-900/18 to-amber-900/18 backdrop-blur-md border border-yellow-600/20 text-yellow-300 hover:from-yellow-900/25 hover:to-amber-900/25',
     inline: 'px-1.5 py-0.5 rounded text-xs bg-gradient-to-br from-yellow-900/15 to-amber-900/15 backdrop-blur-md border border-yellow-600/15 text-yellow-300',
   };
 

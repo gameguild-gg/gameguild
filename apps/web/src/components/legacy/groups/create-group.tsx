@@ -268,9 +268,7 @@ export function CreateGroup({ groups = [], onCreateGroup, showFeatures = false }
       {/* Main Content */}
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold text-foreground">Create a Group</h2>
-        <p className="text-muted-foreground max-w-lg mx-auto">
-          A group easily allows you to share Content, Inputs and Templates with the right people quicker.
-        </p>
+        <p className="text-muted-foreground max-w-lg mx-auto">A group easily allows you to share Content, Inputs and Templates with the right people quicker.</p>
       </div>
 
       {/* Create Button */}

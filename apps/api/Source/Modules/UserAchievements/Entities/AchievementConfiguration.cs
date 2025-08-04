@@ -42,27 +42,3 @@ public class AchievementLevelConfiguration : IEntityTypeConfiguration<Achievemen
            .OnDelete(DeleteBehavior.Cascade);
   }
 }
-
-/// <summary>
-/// Entity configuration for UserAchievement
-/// </summary>
-public class UserAchievementConfiguration : IEntityTypeConfiguration<UserAchievement> {
-  public void Configure(EntityTypeBuilder<UserAchievement> builder) {
-    // Configure the Achievement relationship
-    builder.HasOne(ua => ua.Achievement)
-           .WithMany(a => a.UserAchievements)
-           .HasForeignKey(ua => ua.AchievementId)
-           .OnDelete(DeleteBehavior.Cascade);
-  }
-}
-
-/// <summary>
-/// Entity configuration for AchievementProgress
-/// </summary>
-public class AchievementProgressConfiguration : IEntityTypeConfiguration<AchievementProgress> {
-  public void Configure(EntityTypeBuilder<AchievementProgress> builder) {
-    // Configure unique constraint for user and achievement combination
-    builder.HasIndex(ap => new { ap.UserId, ap.AchievementId })
-           .IsUnique();
-  }
-}

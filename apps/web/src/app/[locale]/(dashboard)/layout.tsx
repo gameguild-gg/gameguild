@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import { ErrorBoundaryProvider } from '@/components/common/error/error-boundary-provider';
+import { ErrorBoundaryProvider } from '@/components/common/errors/error-boundary-provider';
 import { redirect } from 'next/navigation';
 import React, { PropsWithChildren } from 'react';
 
@@ -9,16 +9,9 @@ export default async function Layout({ children }: PropsWithChildren): Promise<R
   // Check if the user is authenticated (either regular users or administrators)
   if (!session) redirect('/sign-in');
 
-  // TODO: FIX IT later.
-  if (session.error === 'RefreshTokenError') redirect('/');
-
   return (
     <>
-      <ErrorBoundaryProvider config={{ level: 'page', enableRetry: true, maxRetries: 3, reportToAnalytics: true, isolate: false }}>
-        {/* <SyncProvider> */}
-        {children}
-        {/* </SyncProvider> */}
-      </ErrorBoundaryProvider>
+      <ErrorBoundaryProvider config={{ level: 'page', enableRetry: true, maxRetries: 3, reportToAnalytics: true, isolate: true }}>{children}</ErrorBoundaryProvider>
     </>
   );
 }

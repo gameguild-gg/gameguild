@@ -11,13 +11,7 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import {
-  DEFAULT_FIRST_CODE_TEMPLATES,
-  DEFAULT_SECOND_CODE_TEMPLATES,
-  FUNCTION_FIRST_CODE_TEMPLATES,
-  FUNCTION_SECOND_CODE_TEMPLATES,
-  getExtensionForSelectedLanguage,
-} from './templates/code-templates';
+import { DEFAULT_FIRST_CODE_TEMPLATES, DEFAULT_SECOND_CODE_TEMPLATES, FUNCTION_FIRST_CODE_TEMPLATES, FUNCTION_SECOND_CODE_TEMPLATES, getExtensionForSelectedLanguage } from './templates/code-templates';
 
 // Declare global types for our custom window properties
 declare global {
@@ -487,9 +481,7 @@ function TestTypeDialog({
             disabled={hasCustomTest}
           >
             <div className="text-base font-medium mb-3 text-center">Custom Test</div>
-            <p className="text-sm text-muted-foreground text-center leading-relaxed">
-              {hasCustomTest ? 'Only one custom test allowed per file' : "Add custom code that runs before and after the student's code"}
-            </p>
+            <p className="text-sm text-muted-foreground text-center leading-relaxed">{hasCustomTest ? 'Only one custom test allowed per file' : "Add custom code that runs before and after the student's code"}</p>
           </button>
           <button
             type="button"
@@ -502,9 +494,7 @@ function TestTypeDialog({
             disabled={hasFunctionTest}
           >
             <div className="text-base font-medium mb-3 text-center">Function Test</div>
-            <p className="text-sm text-muted-foreground text-center leading-relaxed">
-              {hasFunctionTest ? 'Only one function test allowed per file' : 'Test functions with assertion helpers and structured validation'}
-            </p>
+            <p className="text-sm text-muted-foreground text-center leading-relaxed">{hasFunctionTest ? 'Only one function test allowed per file' : 'Test functions with assertion helpers and structured validation'}</p>
           </button>
           <button
             type="button"
@@ -517,9 +507,7 @@ function TestTypeDialog({
             disabled={hasConsoleTest}
           >
             <div className="text-base font-medium mb-3 text-center">Console Test</div>
-            <p className="text-sm text-muted-foreground text-center leading-relaxed">
-              {hasConsoleTest ? 'Only one console test allowed per file' : 'Test console interactions with custom validation logic'}
-            </p>
+            <p className="text-sm text-muted-foreground text-center leading-relaxed">{hasConsoleTest ? 'Only one console test allowed per file' : 'Test console interactions with custom validation logic'}</p>
           </button>
         </div>
         <DialogFooter>
@@ -586,10 +574,7 @@ function CustomTestUI({
               // Create custom test files in the main editor
               addCustomTestFiles?.(index);
             }}
-            className={cn(
-              'p-1 rounded text-xs flex items-center',
-              isDarkTheme ? 'bg-blue-900 hover:bg-blue-800 text-white' : 'bg-blue-100 hover:bg-blue-200 text-blue-800',
-            )}
+            className={cn('p-1 rounded text-xs flex items-center', isDarkTheme ? 'bg-blue-900 hover:bg-blue-800 text-white' : 'bg-blue-100 hover:bg-blue-200 text-blue-800')}
           >
             <Plus className="h-3 w-3 mr-1" />
             Create Test Files
@@ -605,11 +590,7 @@ function CustomTestUI({
           onChange={(e) => {
             updateTestCase(activeFileId, index, { testInfo: e.target.value });
           }}
-          className={cn(
-            'w-full p-2 text-xs border rounded resize-none',
-            isDarkTheme ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300',
-            !isEditing && 'opacity-90',
-          )}
+          className={cn('w-full p-2 text-xs border rounded resize-none', isDarkTheme ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300', !isEditing && 'opacity-90')}
           rows={3}
           placeholder={`Add description, instructions, or notes about this ${testType} test...`}
           readOnly={!isEditing}
@@ -751,18 +732,7 @@ export function Terminal({
         clearTimeout(timer);
       }
     };
-  }, [
-    isTestMode,
-    window.__awaitingPromptInput,
-    activeFileId,
-    selectedTestIndex,
-    testCases,
-    setInput,
-    handleTerminalInput,
-    terminalInputRef,
-    lastRespondedPrompt,
-    window.__currentTestIndex,
-  ]);
+  }, [isTestMode, window.__awaitingPromptInput, activeFileId, selectedTestIndex, testCases, setInput, handleTerminalInput, terminalInputRef, lastRespondedPrompt, window.__currentTestIndex]);
 
   // Reset lastRespondedPrompt when starting a new test run
   useEffect(() => {
@@ -863,12 +833,7 @@ export function Terminal({
     isDarkTheme ? 'bg-gray-800 text-gray-200 hover:bg-gray-700 border border-gray-700' : 'bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-300',
   );
 
-  const runButtonClass = cn(
-    buttonBaseClass,
-    'mr-1',
-    isDarkTheme ? 'bg-blue-900 hover:bg-blue-800 border-blue-800' : 'bg-blue-100 hover:bg-blue-200 border-blue-200',
-    isExecuting && 'opacity-50 cursor-not-allowed',
-  );
+  const runButtonClass = cn(buttonBaseClass, 'mr-1', isDarkTheme ? 'bg-blue-900 hover:bg-blue-800 border-blue-800' : 'bg-blue-100 hover:bg-blue-200 border-blue-200', isExecuting && 'opacity-50 cursor-not-allowed');
 
   const runTestButtonClass = cn(
     buttonBaseClass,
@@ -877,11 +842,7 @@ export function Terminal({
     (isExecuting || !(showTests && testCases[activeFileId]?.length > 0)) && 'opacity-50 cursor-not-allowed',
   );
 
-  const stopButtonClass = cn(
-    buttonBaseClass,
-    'ml-1',
-    isDarkTheme ? 'bg-red-900 hover:bg-red-800 border-red-800' : 'bg-red-100 hover:bg-red-200 border-red-200',
-  );
+  const stopButtonClass = cn(buttonBaseClass, 'ml-1', isDarkTheme ? 'bg-red-900 hover:bg-red-800 border-red-800' : 'bg-red-100 hover:bg-red-200 border-red-200');
 
   // Helper function to get custom code for a specific language
   const getCustomCode = (testCase: any, codeType: 'customCodeFirst' | 'customCodeSecond', language: ProgrammingLanguage, index = 0): string => {
@@ -978,13 +939,7 @@ export function Terminal({
   };
 
   // Helper function to update test-specific code for a specific language
-  const updateTestSpecificCode = (
-    fileId: string,
-    index: number,
-    codeType: 'testSpecificFirst' | 'testSpecificSecond',
-    language: ProgrammingLanguage,
-    code: string,
-  ) => {
+  const updateTestSpecificCode = (fileId: string, index: number, codeType: 'testSpecificFirst' | 'testSpecificSecond', language: ProgrammingLanguage, code: string) => {
     const testCase = testCases[activeFileId]?.[index];
     if (!testCase) return;
 
@@ -1051,9 +1006,7 @@ export function Terminal({
           <button
             className={cn(
               'px-4 py-2 text-xs font-medium flex items-center transition-colors',
-              activeTab === 'terminal'
-                ? cn('border-b-2 border-blue-500', isDarkTheme ? 'text-white' : 'text-black')
-                : cn(isDarkTheme ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'),
+              activeTab === 'terminal' ? cn('border-b-2 border-blue-500', isDarkTheme ? 'text-white' : 'text-black') : cn(isDarkTheme ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'),
             )}
             onClick={() => setActiveTab('terminal')}
           >
@@ -1064,9 +1017,7 @@ export function Terminal({
             <button
               className={cn(
                 'px-4 py-2 text-xs font-medium flex items-center transition-colors',
-                activeTab === 'tests'
-                  ? cn('border-b-2 border-blue-500', isDarkTheme ? 'text-white' : 'text-black')
-                  : cn(isDarkTheme ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'),
+                activeTab === 'tests' ? cn('border-b-2 border-blue-500', isDarkTheme ? 'text-white' : 'text-black') : cn(isDarkTheme ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'),
               )}
               onClick={() => setActiveTab('tests')}
             >
@@ -1138,18 +1089,11 @@ export function Terminal({
                 </Tooltip>
               </div>
             </div>
-            <div
-              ref={terminalRef}
-              className={cn('h-40 overflow-y-auto p-2 font-mono text-xs', isDarkTheme ? 'bg-black text-white' : 'bg-white text-black')}
-              style={{ height: `${terminalHeight}px` }}
-              onClick={focusInput}
-            >
+            <div ref={terminalRef} className={cn('h-40 overflow-y-auto p-2 font-mono text-xs', isDarkTheme ? 'bg-black text-white' : 'bg-white text-black')} style={{ height: `${terminalHeight}px` }} onClick={focusInput}>
               {terminalOutput.map((output) => (
                 <div key={output.id} className="whitespace-pre-wrap mb-1">
                   {output.type === 'input' && <span className="text-green-500">$ {output.content}</span>}
-                  {output.type === 'output' && (
-                    <span>{Array.isArray(output.content) ? output.content.map((line, i) => <div key={i}>{String(line)}</div>) : String(output.content)}</span>
-                  )}
+                  {output.type === 'output' && <span>{Array.isArray(output.content) ? output.content.map((line, i) => <div key={i}>{String(line)}</div>) : String(output.content)}</span>}
                   {output.type === 'error' && <span className="text-red-500">{String(output.content)}</span>}
                   {output.type === 'system' && <span className="text-blue-400">{String(output.content)}</span>}
                   {output.type === 'alert' && (
@@ -1173,18 +1117,7 @@ export function Terminal({
                 </div>
               ))}
               <div className="flex items-center">
-                <span
-                  className={cn(
-                    'mr-2',
-                    window.__awaitingAlertAck
-                      ? 'text-yellow-500'
-                      : window.__awaitingPromptInput
-                        ? 'text-blue-500'
-                        : window.__awaitingConfirmInput
-                          ? 'text-green-500'
-                          : 'text-green-500',
-                  )}
-                >
+                <span className={cn('mr-2', window.__awaitingAlertAck ? 'text-yellow-500' : window.__awaitingPromptInput ? 'text-blue-500' : window.__awaitingConfirmInput ? 'text-green-500' : 'text-green-500')}>
                   {window.__awaitingAlertAck ? '!' : window.__awaitingPromptInput ? '>' : window.__awaitingConfirmInput ? '?' : '$'}
                 </span>
                 <input
@@ -1246,9 +1179,7 @@ export function Terminal({
                         className={cn(
                           buttonBaseClass,
                           // Add opacity if a custom or function test exists
-                          testCases[activeFileId]?.some((test) => test.type === 'custom' || test.type === 'function' || test.type === 'console')
-                            ? 'opacity-50 cursor-not-allowed'
-                            : '',
+                          testCases[activeFileId]?.some((test) => test.type === 'custom' || test.type === 'function' || test.type === 'console') ? 'opacity-50 cursor-not-allowed' : '',
                         )}
                         aria-label="Add test case"
                         disabled={testCases[activeFileId]?.some((test) => test.type === 'custom' || test.type === 'function' || test.type === 'console')}
@@ -1259,9 +1190,7 @@ export function Terminal({
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="text-xs">
-                        {testCases[activeFileId]?.some((test) => test.type === 'custom' || test.type === 'function' || test.type === 'console')
-                          ? 'Only one custom/function/console test allowed per file'
-                          : 'Add test case'}
+                        {testCases[activeFileId]?.some((test) => test.type === 'custom' || test.type === 'function' || test.type === 'console') ? 'Only one custom/function/console test allowed per file' : 'Add test case'}
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -1301,9 +1230,7 @@ export function Terminal({
                               <span
                                 className={cn(
                                   'px-1.5 py-0.5 text-xs rounded-full',
-                                  testResults[activeFileId][index].passed
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+                                  testResults[activeFileId][index].passed ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
                                 )}
                               >
                                 {testResults[activeFileId][index].passed ? 'Passed' : 'Failed'}
@@ -1345,10 +1272,7 @@ export function Terminal({
                                     const currentArgs = Array.isArray(testCase.args) ? testCase.args : [];
                                     updateTestCase(activeFileId, index, { args: [...currentArgs, ''] });
                                   }}
-                                  className={cn(
-                                    'p-1 rounded text-xs flex items-center',
-                                    isDarkTheme ? 'bg-blue-900 hover:bg-blue-800 text-white' : 'bg-blue-100 hover:bg-blue-200 text-blue-800',
-                                  )}
+                                  className={cn('p-1 rounded text-xs flex items-center', isDarkTheme ? 'bg-blue-900 hover:bg-blue-800 text-white' : 'bg-blue-100 hover:bg-blue-200 text-blue-800')}
                                 >
                                   <Plus className="h-3 w-3 mr-1" />
                                   Add Argument
@@ -1388,11 +1312,7 @@ export function Terminal({
                                           console.error('Error updating argument:', err);
                                         }
                                       }}
-                                      className={cn(
-                                        'flex-grow p-1 text-xs font-mono border rounded',
-                                        isDarkTheme ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300',
-                                        !isEditing && 'opacity-90',
-                                      )}
+                                      className={cn('flex-grow p-1 text-xs font-mono border rounded', isDarkTheme ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300', !isEditing && 'opacity-90')}
                                       placeholder={`Argument ${argIndex + 1}`}
                                       readOnly={!isEditing}
                                     />
@@ -1403,10 +1323,7 @@ export function Terminal({
                                           newArgs.splice(argIndex, 1);
                                           updateTestCase(activeFileId, index, { args: newArgs });
                                         }}
-                                        className={cn(
-                                          'p-1 rounded',
-                                          isDarkTheme ? 'bg-red-900 hover:bg-red-800 text-white' : 'bg-red-100 hover:bg-red-200 text-red-800',
-                                        )}
+                                        className={cn('p-1 rounded', isDarkTheme ? 'bg-red-900 hover:bg-red-800 text-white' : 'bg-red-100 hover:bg-red-200 text-red-800')}
                                       >
                                         <X className="h-3 w-3" />
                                       </button>
@@ -1448,11 +1365,7 @@ export function Terminal({
                                     console.error('Error updating return value:', err);
                                   }
                                 }}
-                                className={cn(
-                                  'w-full p-1 text-xs font-mono border rounded',
-                                  isDarkTheme ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300',
-                                  !isEditing && 'opacity-90',
-                                )}
+                                className={cn('w-full p-1 text-xs font-mono border rounded', isDarkTheme ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-300', !isEditing && 'opacity-90')}
                                 placeholder="Expected return value"
                                 readOnly={!isEditing}
                               />
@@ -1466,9 +1379,7 @@ export function Terminal({
                             <div
                               className={cn(
                                 'p-2 rounded text-xs font-mono whitespace-pre-wrap',
-                                testResults[activeFileId][index].passed
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                  : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+                                testResults[activeFileId][index].passed ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
                               )}
                             >
                               <div className="font-semibold">{testResults[activeFileId][index].passed ? '✓ Test Passed' : '✗ Test Failed'}</div>
@@ -1476,15 +1387,11 @@ export function Terminal({
                                 <>
                                   <div className="mt-1">
                                     <span className="font-semibold">Expected:</span>
-                                    <pre className="mt-1 p-1 bg-white/50 dark:bg-black/50 rounded overflow-x-auto">
-                                      {testResults[activeFileId][index].expected}
-                                    </pre>
+                                    <pre className="mt-1 p-1 bg-white/50 dark:bg-black/50 rounded overflow-x-auto">{testResults[activeFileId][index].expected}</pre>
                                   </div>
                                   <div className="mt-1">
                                     <span className="font-semibold">Actual:</span>
-                                    <pre className="mt-1 p-1 bg-white/50 dark:bg-black/50 rounded overflow-x-auto">
-                                      {testResults[activeFileId][index].actual}
-                                    </pre>
+                                    <pre className="mt-1 p-1 bg-white/50 dark:bg-black/50 rounded overflow-x-auto">{testResults[activeFileId][index].actual}</pre>
                                   </div>
                                 </>
                               )}

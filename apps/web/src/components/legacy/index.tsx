@@ -69,9 +69,7 @@ export default function Header() {
             </button>
           ))}
           <DropdownMenu open={isMoreOpen} onOpenChange={setIsMoreOpen}>
-            <DropdownMenuTrigger className="flex px-2 items-center hover:text-gray-400 transition-colors">
-              Institutional {isMoreOpen ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />}
-            </DropdownMenuTrigger>
+            <DropdownMenuTrigger className="flex px-2 items-center hover:text-gray-400 transition-colors">Institutional {isMoreOpen ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />}</DropdownMenuTrigger>
             <DropdownMenuContent className="bg-neutral-900 text-white border-0">
               {moreItems.map((item) => (
                 <Link key={item} href={`/` + item.toLowerCase().replace(/\s/g, '')}>
@@ -81,9 +79,7 @@ export default function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
           <DropdownMenu open={isComplexOpen} onOpenChange={setIsComplexOpen}>
-            <DropdownMenuTrigger className="flex px-2 items-center hover:text-gray-400 transition-colors">
-              Learn {isMoreOpen ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />}
-            </DropdownMenuTrigger>
+            <DropdownMenuTrigger className="flex px-2 items-center hover:text-gray-400 transition-colors">Learn {isMoreOpen ? <ChevronUp className="ml-1 h-4 w-4" /> : <ChevronDown className="ml-1 h-4 w-4" />}</DropdownMenuTrigger>
             <DropdownMenuContent className="bg-neutral-900 text-white border-0">
               {complexItems.map((item) => (
                 <DropdownMenuItem key={item.name}>
@@ -155,11 +151,7 @@ export default function Header() {
             </DropdownMenu>
           </div>
         ) : (
-          <Button
-            onClick={() => router.push('/connect')}
-            variant="outline"
-            className="bg-white text-black font-semibold text-base rounded-md hover:bg-gray-200"
-          >
+          <Button onClick={() => router.push('/connect')} variant="outline" className="bg-white text-black font-semibold text-base rounded-md hover:bg-gray-200">
             Connect
           </Button>
         )}
@@ -209,11 +201,7 @@ export default function Header() {
                 </DropdownMenu>
               </>
             ) : (
-              <Button
-                onClick={() => router.push('/connect')}
-                variant="outline"
-                className="bg-white text-black font-semibold rounded-md hover:bg-gray-200 w-full"
-              >
+              <Button onClick={() => router.push('/connect')} variant="outline" className="bg-white text-black font-semibold rounded-md hover:bg-gray-200 w-full">
                 Connect
               </Button>
             )}

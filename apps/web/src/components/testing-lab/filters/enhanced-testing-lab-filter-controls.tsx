@@ -185,13 +185,7 @@ export function EnhancedTestingLabFilters({ children, sessions = [], onFilteredS
 }
 
 // Component to handle filtered sessions and notify parent
-function FilteredSessionsHandler({
-  sessions,
-  onFilteredSessionsChange,
-}: {
-  sessions: TestingLabSession[];
-  onFilteredSessionsChange?: (sessions: TestingLabSession[]) => void;
-}) {
+function FilteredSessionsHandler({ sessions, onFilteredSessionsChange }: { sessions: TestingLabSession[]; onFilteredSessionsChange?: (sessions: TestingLabSession[]) => void }) {
   const { filterItems, state } = useEnhancedFilterContext<TestingLabSession>();
 
   useEffect(() => {

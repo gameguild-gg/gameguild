@@ -31,9 +31,7 @@ export function CourseSidebar({ courseSlug }: CourseSidebarProps) {
                 <p className="text-sm text-gray-400">Complete learning track</p>
               </div>
             </div>
-            <p className="text-sm text-gray-300">
-              This course is part of a comprehensive learning track designed to take you from beginner to professional game developer.
-            </p>
+            <p className="text-sm text-gray-300">This course is part of a comprehensive learning track designed to take you from beginner to professional game developer.</p>
             <Button asChild variant="outline" className="w-full border-gray-600 hover:bg-gray-700">
               <Link href="/tracks/game-development-fundamentals">View Full Track</Link>
             </Button>

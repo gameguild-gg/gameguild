@@ -35,6 +35,8 @@ namespace GameGuild.Modules.TestingLab {
 
     [Required] public int MaxTesters { get; set; }
 
+    [Required] public int MaxProjects { get; set; } = 1;
+
     public int RegisteredTesterCount { get; set; } = 0;
 
     public int RegisteredProjectMemberCount { get; set; } = 0;
@@ -67,5 +69,15 @@ namespace GameGuild.Modules.TestingLab {
     /// Navigation property to the user who created this session
     /// </summary>
     public virtual User CreatedBy { get; set; } = null!;
+
+    /// <summary>
+    /// Navigation property to session registrations (users registered for this session)
+    /// </summary>
+    public virtual ICollection<SessionRegistration> Registrations { get; set; } = new List<SessionRegistration>();
+
+    /// <summary>
+    /// Navigation property to session projects (projects registered to be tested in this session)
+    /// </summary>
+    public virtual ICollection<SessionProject> SessionProjects { get; set; } = new List<SessionProject>();
   }
 }

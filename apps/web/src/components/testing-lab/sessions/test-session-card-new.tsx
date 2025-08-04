@@ -75,9 +75,7 @@ export function TestSessionCard({ session }: TestSessionCardProps) {
             </Badge>
           </div>
 
-          <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-300 transition-all duration-200">
-            {session.title}
-          </CardTitle>
+          <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent group-hover:from-blue-300 group-hover:to-purple-300 transition-all duration-200">{session.title}</CardTitle>
 
           <CardDescription className="text-slate-400">
             <div className="space-y-1">

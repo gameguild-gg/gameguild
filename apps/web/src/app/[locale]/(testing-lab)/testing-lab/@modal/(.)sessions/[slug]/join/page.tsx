@@ -1,9 +1,8 @@
 'use client';
 
 import { JoinProcessModal } from '@/components/testing-lab/join/join-process-modal';
-import type { TestingSession } from '@/lib/api/generated/types.gen';
-import { getTestingSessionBySlug } from '@/lib/testing-lab/testing-lab.actions';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/navigation';
+import { getTestSessionBySlug, TestSession } from '@/lib/admin';
 import { use, useCallback, useEffect, useState } from 'react';
 
 interface JoinModalProps {
@@ -15,7 +14,7 @@ interface JoinModalProps {
 export default function JoinModal({ params }: JoinModalProps) {
   const router = useRouter();
   const resolvedParams = use(params);
-  const [session, setSession] = useState<TestingSession | null>(null);
+  const [session, setSession] = useState<TestSession | null>(null);
   const [loading, setLoading] = useState(true);
 
   const handleClose = useCallback(() => {
@@ -28,7 +27,7 @@ export default function JoinModal({ params }: JoinModalProps) {
 
     const fetchSession = async () => {
       try {
-        const sessionData = await getTestingSessionBySlug(resolvedParams.slug);
+        const sessionData = await getTestSessionBySlug(resolvedParams.slug);
         setSession(sessionData);
       } catch (error) {
         console.error('Failed to fetch session:', error);
