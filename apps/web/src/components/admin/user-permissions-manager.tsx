@@ -361,7 +361,6 @@ export function UserPermissionsManager({ userId, userName }: UserPermissionsMana
               const groupPermissions = group.permissions;
               const selectedCount = groupPermissions.filter((perm) => selectedPermissions.has(perm)).length;
               const allSelected = selectedCount === groupPermissions.length;
-              const someSelected = selectedCount > 0 && selectedCount < groupPermissions.length;
 
               return (
                 <div key={group.name} className="space-y-3">

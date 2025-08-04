@@ -16,7 +16,7 @@ export interface Track {
 export async function getTrackBySlug(slug: string): Promise<Track | null> {
   // Mock implementation - replace with actual API call
   console.log(`Getting track by slug: ${slug}`);
-  
+
   const mockTrack: Track = {
     id: 1,
     title: 'Sample Track',
@@ -28,7 +28,7 @@ export async function getTrackBySlug(slug: string): Promise<Track | null> {
     estimatedHours: 40,
     coursesCount: 5,
   };
-  
+
   return mockTrack;
 }
 

@@ -13,6 +13,8 @@ import type { SerializedVideoNode } from '../nodes/video-node';
 import type { SerializedAudioNode } from '../nodes/audio-node';
 import DOMPurify from 'dompurify';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 // Adicione o import para o SerializedHeaderNode
 import type { SerializedHeaderNode } from '../nodes/header-node';
