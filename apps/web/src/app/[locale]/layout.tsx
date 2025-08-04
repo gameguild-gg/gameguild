@@ -13,7 +13,7 @@ import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
 import { Metadata } from 'next';
 import { SessionProvider } from 'next-auth/react';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
-import { setRequestLocale } from 'next-intl/server';
+import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import React, { PropsWithChildren } from 'react';
 
@@ -40,6 +40,9 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
 
   // Enable static rendering (cache) based on the locale.
   setRequestLocale(locale);
+  
+  // Get messages for client-side
+  const messages = await getMessages();
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -49,7 +52,7 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
         {/* Initialize Google Consent Mode early */}
         <InitializeGoogleConsent />
 
-        <NextIntlClientProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
           {/* Conditional Analytics - only loads when user consents */}
           <ConditionalAnalytics />
           <GoogleAnalytics gaId={environment.googleAnalyticsMeasurementId} />
