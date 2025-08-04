@@ -62,11 +62,8 @@ ENV NEW_RELIC_AI_MONITORING_ENABLED=true
 ENV NEW_RELIC_CUSTOM_INSIGHTS_EVENTS_MAX_SAMPLES_STORED=100k
 ENV NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED=10k
 
-# Fix NextAuth URL to prevent DNS resolution loops
-ENV NEXTAUTH_URL_INTERNAL=http://web:3000
-ENV NEXTAUTH_URL=http://web:3000
-ENV AUTH_TRUST_HOST=true
-ENV NEXTAUTH_SECRET=your-nextauth-secret-here
+# NextAuth configuration - set via Coolify environment variables
+# These should be configured in Coolify's runtime environment variables
 
 # Switch to non-root user
 USER nextjs
