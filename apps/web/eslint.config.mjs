@@ -1,5 +1,5 @@
-import baseConfig from '@game-guild/eslint-config';
 import { FlatCompat } from '@eslint/eslintrc';
+import baseConfig from '@game-guild/eslint-config';
 
 // import nextConfig from 'eslint-config-next';
 
