@@ -74,7 +74,6 @@ export async function fetchUserStatistics(fromDate?: string, toDate?: string, in
 export async function fetchProgramStatistics(): Promise<{
   success: boolean;
   error?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   statistics?: any;
 }> {
   // Mock implementation for now

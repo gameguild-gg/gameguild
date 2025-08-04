@@ -3,51 +3,26 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Calendar, Download, FileText, Send, Users, Star, MessageSquare, BarChart3, TestTube } from 'lucide-react';
+import { Calendar, Clock, Download, FileText, Send, Users, Star, MessageSquare, BarChart3, CheckCircle, XCircle, AlertTriangle, TestTube } from 'lucide-react';
 import Link from 'next/link';
 import type { TestingRequest } from '@/lib/api/generated/types.gen';
-import { joinTestingRequest, leaveTestingRequest, submitTestingRequestFeedback } from '@/lib/testing-lab/testing-lab.actions';
-
-interface Participant {
-  id: string;
-  name: string;
-  email?: string;
-  avatar?: string;
-}
-
-interface FeedbackItem {
-  id: string;
-  rating: number;
-  comments: string;
-  user: {
-    name: string;
-    avatar?: string;
-  };
-  createdAt: string;
-}
-
-interface Statistics {
-  totalParticipants?: number;
-  averageRating?: number;
-  completionRate?: number;
-  totalFeedback?: number;
-  recommendationRate?: number;
-}
+import { joinTestingRequest, leaveTestingRequest, checkTestingRequestParticipation, submitTestingRequestFeedback } from '@/lib/testing-lab/testing-lab.actions';
 
 interface TestingRequestDetailsProps {
   data: TestingRequest;
-  participants?: Participant[];
-  feedback?: FeedbackItem[];
-  statistics?: Statistics;
+  participants?: any[];
+  feedback?: any[];
+  statistics?: any;
 }
 
 interface FeedbackForm {
@@ -85,9 +60,8 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
     }
   };
 
-  const getInstructionsIcon = (type: number | string) => {
-    const typeStr = type.toString();
-    switch (typeStr) {
+  const getInstructionsIcon = (type: string) => {
+    switch (type) {
       case 'file':
         return <FileText className="h-4 w-4" />;
       case 'url':
@@ -106,7 +80,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
       toast.success('Successfully joined testing request');
       setHasJoined(true);
       router.refresh();
-    } catch {
+    } catch (error) {
       toast.error('Failed to join testing request');
     } finally {
       setLoading(false);
@@ -122,7 +96,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
       toast.success('Successfully left testing request');
       setHasJoined(false);
       router.refresh();
-    } catch {
+    } catch (error) {
       toast.error('Failed to leave testing request');
     } finally {
       setLoading(false);
@@ -138,7 +112,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
       toast.success('Feedback submitted successfully');
       setShowFeedbackDialog(false);
       router.refresh();
-    } catch {
+    } catch (error) {
       toast.error('Failed to submit feedback');
     } finally {
       setLoading(false);
@@ -270,12 +244,12 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {request.instructionsType?.toString() === 'inline' && request.instructionsContent && (
+              {request.instructionsType === 'inline' && request.instructionsContent && (
                 <div className="prose dark:prose-invert max-w-none">
                   <p>{request.instructionsContent}</p>
                 </div>
               )}
-              {request.instructionsType?.toString() === 'url' && request.instructionsUrl && (
+              {request.instructionsType === 'url' && request.instructionsUrl && (
                 <Button variant="outline" asChild>
                   <Link href={request.instructionsUrl} target="_blank">
                     <FileText className="h-4 w-4 mr-2" />
@@ -379,7 +353,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {participants.slice(0, 5).map((participant: Participant) => (
+                  {participants.slice(0, 5).map((participant: any) => (
                     <div key={participant.id} className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">{participant.name?.charAt(0) || 'U'}</div>
                       <div>
@@ -402,7 +376,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {feedback.slice(0, 3).map((item: FeedbackItem) => (
+                  {feedback.slice(0, 3).map((item: any) => (
                     <div key={item.id} className="border-l-2 border-blue-500 pl-3">
                       <div className="flex items-center gap-1 mb-1">
                         {Array.from({ length: 5 }).map((_, i) => (
