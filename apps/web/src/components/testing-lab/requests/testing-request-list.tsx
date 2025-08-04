@@ -28,7 +28,7 @@ export function TestingRequestList({ data }: TestingRequestListProps) {
   const { data: session } = useSession();
   const [requests, setRequests] = useState<TestingRequest[]>(data.testingRequests);
   const [filteredRequests, setFilteredRequests] = useState<TestingRequest[]>(data.testingRequests);
-  const [loading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>('grid');
