@@ -16,7 +16,7 @@ interface CourseAccessCardProps {
   courseSlug: string;
 }
 
-export default function CourseAccessCard({ courseId, courseTitle, courseSlug }: CourseAccessCardProps) {
+export default function CourseAccessCard({ courseId, courseSlug }: CourseAccessCardProps) {
   const [enrollment, setEnrollment] = useState<EnrollmentStatus | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
