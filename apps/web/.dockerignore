@@ -62,9 +62,6 @@ pids/
 *.pid.lock
 
 # Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
 # ESLint cache
 .eslintcache
 
@@ -84,5 +81,3 @@ temp/
 *.tar.gz
 
 # ignore env files
-.env
-.env.*
