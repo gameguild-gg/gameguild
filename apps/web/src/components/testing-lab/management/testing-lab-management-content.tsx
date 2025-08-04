@@ -12,16 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import {
-  getTestingRequestsData,
-  createTestingRequest,
-  updateTestingRequest,
-  deleteTestingRequest,
-  getTestingSessionsData,
-  createTestingSession,
-  updateTestingSession,
-  deleteTestingSession,
-} from '@/lib/testing-lab/testing-lab.actions';
+import { getTestingRequestsData, createTestingRequest, updateTestingRequest, deleteTestingRequest, getTestingSessionsData, createTestingSession, updateTestingSession, deleteTestingSession } from '@/lib/testing-lab/testing-lab.actions';
 import type { TestingRequest, TestingSession } from '@/lib/api/generated/types.gen';
 
 interface TestingLabManagementContentProps {
@@ -187,8 +178,7 @@ export function TestingLabManagementContent({ initialTestingRequests, initialTes
   };
 
   const filteredRequests = testingRequests.filter((request) => {
-    const matchesSearch =
-      !searchTerm || request.title?.toLowerCase().includes(searchTerm.toLowerCase()) || request.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = !searchTerm || request.title?.toLowerCase().includes(searchTerm.toLowerCase()) || request.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || request.status?.toString() === statusFilter;
 
@@ -196,10 +186,7 @@ export function TestingLabManagementContent({ initialTestingRequests, initialTes
   });
 
   const filteredSessions = testingSessions.filter((session) => {
-    const matchesSearch =
-      !searchTerm ||
-      session.sessionName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.testingRequest?.title?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = !searchTerm || session.sessionName?.toLowerCase().includes(searchTerm.toLowerCase()) || session.testingRequest?.title?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || session.status?.toString() === statusFilter;
 
@@ -241,66 +228,35 @@ export function TestingLabManagementContent({ initialTestingRequests, initialTes
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="title">Title *</Label>
-                    <Input
-                      id="title"
-                      value={requestFormData.title}
-                      onChange={(e) => setRequestFormData((prev) => ({ ...prev, title: e.target.value }))}
-                      placeholder="Testing request title"
-                    />
+                    <Input id="title" value={requestFormData.title} onChange={(e) => setRequestFormData((prev) => ({ ...prev, title: e.target.value }))} placeholder="Testing request title" />
                   </div>
 
                   <div className="grid gap-2">
                     <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={requestFormData.description}
-                      onChange={(e) => setRequestFormData((prev) => ({ ...prev, description: e.target.value }))}
-                      placeholder="Describe what needs to be tested"
-                      rows={3}
-                    />
+                    <Textarea id="description" value={requestFormData.description} onChange={(e) => setRequestFormData((prev) => ({ ...prev, description: e.target.value }))} placeholder="Describe what needs to be tested" rows={3} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="projectVersionId">Project Version ID *</Label>
-                      <Input
-                        id="projectVersionId"
-                        value={requestFormData.projectVersionId}
-                        onChange={(e) => setRequestFormData((prev) => ({ ...prev, projectVersionId: e.target.value }))}
-                        placeholder="Project version identifier"
-                      />
+                      <Input id="projectVersionId" value={requestFormData.projectVersionId} onChange={(e) => setRequestFormData((prev) => ({ ...prev, projectVersionId: e.target.value }))} placeholder="Project version identifier" />
                     </div>
 
                     <div className="grid gap-2">
                       <Label htmlFor="maxTesters">Max Testers</Label>
-                      <Input
-                        id="maxTesters"
-                        type="number"
-                        value={requestFormData.maxTesters}
-                        onChange={(e) => setRequestFormData((prev) => ({ ...prev, maxTesters: parseInt(e.target.value) || 10 }))}
-                      />
+                      <Input id="maxTesters" type="number" value={requestFormData.maxTesters} onChange={(e) => setRequestFormData((prev) => ({ ...prev, maxTesters: parseInt(e.target.value) || 10 }))} />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="startDate">Start Date *</Label>
-                      <Input
-                        id="startDate"
-                        type="datetime-local"
-                        value={requestFormData.startDate}
-                        onChange={(e) => setRequestFormData((prev) => ({ ...prev, startDate: e.target.value }))}
-                      />
+                      <Input id="startDate" type="datetime-local" value={requestFormData.startDate} onChange={(e) => setRequestFormData((prev) => ({ ...prev, startDate: e.target.value }))} />
                     </div>
 
                     <div className="grid gap-2">
                       <Label htmlFor="endDate">End Date *</Label>
-                      <Input
-                        id="endDate"
-                        type="datetime-local"
-                        value={requestFormData.endDate}
-                        onChange={(e) => setRequestFormData((prev) => ({ ...prev, endDate: e.target.value }))}
-                      />
+                      <Input id="endDate" type="datetime-local" value={requestFormData.endDate} onChange={(e) => setRequestFormData((prev) => ({ ...prev, endDate: e.target.value }))} />
                     </div>
                   </div>
                 </div>
@@ -338,64 +294,34 @@ export function TestingLabManagementContent({ initialTestingRequests, initialTes
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
                     <Label htmlFor="sessionName">Session Name *</Label>
-                    <Input
-                      id="sessionName"
-                      value={sessionFormData.sessionName}
-                      onChange={(e) => setSessionFormData((prev) => ({ ...prev, sessionName: e.target.value }))}
-                      placeholder="Testing session name"
-                    />
+                    <Input id="sessionName" value={sessionFormData.sessionName} onChange={(e) => setSessionFormData((prev) => ({ ...prev, sessionName: e.target.value }))} placeholder="Testing session name" />
                   </div>
 
                   <div className="grid gap-2">
                     <Label htmlFor="testingRequestId">Testing Request ID *</Label>
-                    <Input
-                      id="testingRequestId"
-                      value={sessionFormData.testingRequestId}
-                      onChange={(e) => setSessionFormData((prev) => ({ ...prev, testingRequestId: e.target.value }))}
-                      placeholder="Associated testing request ID"
-                    />
+                    <Input id="testingRequestId" value={sessionFormData.testingRequestId} onChange={(e) => setSessionFormData((prev) => ({ ...prev, testingRequestId: e.target.value }))} placeholder="Associated testing request ID" />
                   </div>
 
                   <div className="grid grid-cols-3 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="sessionDate">Session Date *</Label>
-                      <Input
-                        id="sessionDate"
-                        type="date"
-                        value={sessionFormData.sessionDate}
-                        onChange={(e) => setSessionFormData((prev) => ({ ...prev, sessionDate: e.target.value }))}
-                      />
+                      <Input id="sessionDate" type="date" value={sessionFormData.sessionDate} onChange={(e) => setSessionFormData((prev) => ({ ...prev, sessionDate: e.target.value }))} />
                     </div>
 
                     <div className="grid gap-2">
                       <Label htmlFor="startTime">Start Time *</Label>
-                      <Input
-                        id="startTime"
-                        type="time"
-                        value={sessionFormData.startTime}
-                        onChange={(e) => setSessionFormData((prev) => ({ ...prev, startTime: e.target.value }))}
-                      />
+                      <Input id="startTime" type="time" value={sessionFormData.startTime} onChange={(e) => setSessionFormData((prev) => ({ ...prev, startTime: e.target.value }))} />
                     </div>
 
                     <div className="grid gap-2">
                       <Label htmlFor="endTime">End Time *</Label>
-                      <Input
-                        id="endTime"
-                        type="time"
-                        value={sessionFormData.endTime}
-                        onChange={(e) => setSessionFormData((prev) => ({ ...prev, endTime: e.target.value }))}
-                      />
+                      <Input id="endTime" type="time" value={sessionFormData.endTime} onChange={(e) => setSessionFormData((prev) => ({ ...prev, endTime: e.target.value }))} />
                     </div>
                   </div>
 
                   <div className="grid gap-2">
                     <Label htmlFor="sessionMaxTesters">Max Testers</Label>
-                    <Input
-                      id="sessionMaxTesters"
-                      type="number"
-                      value={sessionFormData.maxTesters}
-                      onChange={(e) => setSessionFormData((prev) => ({ ...prev, maxTesters: parseInt(e.target.value) || 5 }))}
-                    />
+                    <Input id="sessionMaxTesters" type="number" value={sessionFormData.maxTesters} onChange={(e) => setSessionFormData((prev) => ({ ...prev, maxTesters: parseInt(e.target.value) || 5 }))} />
                   </div>
                 </div>
 
@@ -409,10 +335,7 @@ export function TestingLabManagementContent({ initialTestingRequests, initialTes
                   >
                     Cancel
                   </Button>
-                  <Button
-                    onClick={handleCreateSession}
-                    disabled={loading || !sessionFormData.sessionName || !sessionFormData.testingRequestId || !sessionFormData.sessionDate}
-                  >
+                  <Button onClick={handleCreateSession} disabled={loading || !sessionFormData.sessionName || !sessionFormData.testingRequestId || !sessionFormData.sessionDate}>
                     {loading ? 'Creating...' : 'Create Session'}
                   </Button>
                 </div>

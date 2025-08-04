@@ -1,8 +1,9 @@
-import { revalidateTag, unstable_cache } from 'next/cache';
 import { PagedResult, UpdateUserRequest, User } from '@/components/legacy/types/user';
+import { revalidateTag, unstable_cache } from 'next/cache';
 
 export interface UserData {
   users: User[];
+
   pagination?: {
     page: number;
     limit: number;
@@ -13,6 +14,7 @@ export interface UserData {
 
 export interface ActionState {
   success: boolean;
+
   error?: string;
 }
 
@@ -360,10 +362,7 @@ export async function revalidateUsersData(): Promise<void> {
 /**
  * Bulk user operations
  */
-export async function bulkUpdateUsers(
-  userIds: string[],
-  updates: Partial<UpdateUserRequest>,
-): Promise<{ success: boolean; error?: string; updatedCount?: number }> {
+export async function bulkUpdateUsers(userIds: string[], updates: Partial<UpdateUserRequest>): Promise<{ success: boolean; error?: string; updatedCount?: number }> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -431,11 +430,7 @@ export async function searchUsers(query: string, limit: number = 10): Promise<Us
 /**
  * Get user statistics (Server Action)
  */
-export async function getUserStatistics(
-  fromDate?: string,
-  toDate?: string,
-  includeDeleted: boolean = false,
-): Promise<{ success: boolean; error?: string; statistics?: unknown }> {
+export async function getUserStatistics(fromDate?: string, toDate?: string, includeDeleted: boolean = false): Promise<{ success: boolean; error?: string; statistics?: unknown }> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const params = new URLSearchParams({

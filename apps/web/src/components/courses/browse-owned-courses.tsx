@@ -118,10 +118,7 @@ export function BrowseOwnedCoursesPage() {
   const [sortBy, setSortBy] = useState<string>('recent');
 
   const filteredCourses = courses.filter((course) => {
-    const matchesSearch =
-      course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.instructor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) || course.instructor.toLowerCase().includes(searchQuery.toLowerCase()) || course.category.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus = statusFilter === 'all' || course.status === statusFilter;
 
@@ -244,12 +241,7 @@ export function BrowseOwnedCoursesPage() {
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search courses, instructors, or categories..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-gray-900 border-gray-700"
-              />
+              <Input placeholder="Search courses, instructors, or categories..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-gray-900 border-gray-700" />
             </div>
           </div>
           <div className="flex gap-2">
@@ -398,9 +390,7 @@ export function BrowseOwnedCoursesPage() {
           <div className="text-center py-12">
             <BookOpen className="h-16 w-16 text-gray-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">No courses found</h3>
-            <p className="text-gray-400 mb-4">
-              {searchQuery || statusFilter !== 'all' ? 'Try adjusting your search or filters' : "You haven't enrolled in any courses yet"}
-            </p>
+            <p className="text-gray-400 mb-4">{searchQuery || statusFilter !== 'all' ? 'Try adjusting your search or filters' : "You haven't enrolled in any courses yet"}</p>
             {!searchQuery && statusFilter === 'all' && <Button>Browse Course Catalog</Button>}
           </div>
         )}

@@ -257,12 +257,12 @@ export function useAuthenticatedApi() {
 
   const makeRequest = useCallback(
     async (endpoint: string, options: RequestInit = {}) => {
-      if (!session?.accessToken) {
+      if (!session?.api.accessToken) {
         throw new Error('No authentication token available');
       }
 
       const headers = {
-        Authorization: `Bearer ${session.accessToken}`,
+        Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
         ...(currentTenant ? { 'X-Tenant-Id': currentTenant.id } : {}),
         ...options.headers,
@@ -282,7 +282,7 @@ export function useAuthenticatedApi() {
     [session, currentTenant],
   );
 
-  const isAuthenticated = !!session?.accessToken;
+  const isAuthenticated = !!session?.api.accessToken;
   const tenantId = currentTenant?.id;
 
   return { makeRequest, isAuthenticated, tenantId, currentTenant };

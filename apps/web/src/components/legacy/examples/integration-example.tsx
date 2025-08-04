@@ -96,10 +96,7 @@ export function ExampleIntegrationComponent() {
               <div className="text-sm text-muted-foreground space-y-1">
                 <p>ID: {typeof currentTenant === 'object' && currentTenant && 'id' in currentTenant ? String(currentTenant.id) : 'N/A'}</p>
                 <p>Name: {typeof currentTenant === 'object' && currentTenant && 'name' in currentTenant ? String(currentTenant.name) : 'N/A'}</p>
-                <p>
-                  Status:{' '}
-                  {typeof currentTenant === 'object' && currentTenant && 'isActive' in currentTenant ? (currentTenant.isActive ? 'Active' : 'Inactive') : 'N/A'}
-                </p>
+                <p>Status: {typeof currentTenant === 'object' && currentTenant && 'isActive' in currentTenant ? (currentTenant.isActive ? 'Active' : 'Inactive') : 'N/A'}</p>
               </div>
             </div>
           )}

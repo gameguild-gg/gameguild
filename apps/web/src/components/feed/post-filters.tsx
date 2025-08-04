@@ -77,11 +77,7 @@ export function PostFilters({ filters, onFiltersChange, postTypes }: PostFilters
           </select>
           <button
             onClick={() => handleFilterChange('descending', !filters.descending)}
-            className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-              filters.descending === false
-                ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
-                : 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:text-white'
-            }`}
+            className={`px-3 py-2 text-sm rounded-lg border transition-colors ${filters.descending === false ? 'bg-blue-500/20 border-blue-500/50 text-blue-400' : 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:text-white'}`}
           >
             {filters.descending === false ? 'Asc' : 'Desc'}
           </button>

@@ -285,6 +285,45 @@ public interface ITestService {
 
   #endregion
 
+  #region Testing Location Management
+
+  /// <summary>
+  /// Get all testing locations
+  /// </summary>
+  Task<IEnumerable<TestingLocation>> GetAllTestingLocationsAsync();
+
+  /// <summary>
+  /// Get testing locations with pagination
+  /// </summary>
+  Task<IEnumerable<TestingLocation>> GetTestingLocationsAsync(int skip = 0, int take = 50);
+
+  /// <summary>
+  /// Get a testing location by ID
+  /// </summary>
+  Task<TestingLocation?> GetTestingLocationByIdAsync(Guid id);
+
+  /// <summary>
+  /// Create a new testing location
+  /// </summary>
+  Task<TestingLocation> CreateTestingLocationAsync(TestingLocation location);
+
+  /// <summary>
+  /// Update an existing testing location
+  /// </summary>
+  Task<TestingLocation> UpdateTestingLocationAsync(TestingLocation location);
+
+  /// <summary>
+  /// Soft delete a testing location
+  /// </summary>
+  Task<bool> DeleteTestingLocationAsync(Guid id);
+
+  /// <summary>
+  /// Restore a soft-deleted testing location
+  /// </summary>
+  Task<bool> RestoreTestingLocationAsync(Guid id);
+
+  #endregion
+
   #region Feedback Reporting
 
   /// <summary>

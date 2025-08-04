@@ -455,12 +455,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
           return (
             <div key={image.id} className="space-y-1" style={gridAreaStyle}>
               <div className="relative overflow-hidden rounded-md" style={{ aspectRatio: image.displayMode === 'crop' ? '1/1' : 'auto' }}>
-                <img
-                  src={image.src || '/placeholder.svg'}
-                  alt={image.alt || 'Gallery image'}
-                  title={image.alt || ''}
-                  className={image.displayMode === 'crop' ? 'h-full w-full object-cover' : 'h-auto w-full object-contain'}
-                />
+                <img src={image.src || '/placeholder.svg'} alt={image.alt || 'Gallery image'} title={image.alt || ''} className={image.displayMode === 'crop' ? 'h-full w-full object-cover' : 'h-auto w-full object-contain'} />
               </div>
               {image.caption && <div className={getCaptionStyleClasses()}>{image.caption}</div>}
             </div>
@@ -647,11 +642,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setIsEditing(false)}>
-      <div
-        ref={containerRef}
-        className="bg-white rounded-lg border shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div ref={containerRef} className="bg-white rounded-lg border shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         {/* Header with title and actions */}
         <div className="flex items-center justify-between p-4 border-b bg-muted/30 sticky top-0 z-10">
           <div className="flex items-center gap-2">
@@ -711,9 +702,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                         src={image.src || '/placeholder.svg'}
                         alt={image.alt || 'Gallery image'}
                         title={image.alt || ''}
-                        className={
-                          image.displayMode === 'crop' ? 'h-full w-full object-cover pointer-events-none' : 'h-auto w-full object-contain pointer-events-none'
-                        }
+                        className={image.displayMode === 'crop' ? 'h-full w-full object-cover pointer-events-none' : 'h-auto w-full object-contain pointer-events-none'}
                       />
                       <Button
                         variant="destructive"
@@ -736,21 +725,11 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                             Display Mode
                           </Label>
                           <div className="flex items-center gap-2">
-                            <Button
-                              variant={image.displayMode === 'crop' ? 'secondary' : 'outline'}
-                              size="sm"
-                              className="h-7 text-xs px-2"
-                              onClick={() => handleImageDisplayModeChange(image.id, 'crop')}
-                            >
+                            <Button variant={image.displayMode === 'crop' ? 'secondary' : 'outline'} size="sm" className="h-7 text-xs px-2" onClick={() => handleImageDisplayModeChange(image.id, 'crop')}>
                               <Crop className="h-3 w-3 mr-1" />
                               Crop
                             </Button>
-                            <Button
-                              variant={image.displayMode === 'adaptive' ? 'secondary' : 'outline'}
-                              size="sm"
-                              className="h-7 text-xs px-2"
-                              onClick={() => handleImageDisplayModeChange(image.id, 'adaptive')}
-                            >
+                            <Button variant={image.displayMode === 'adaptive' ? 'secondary' : 'outline'} size="sm" className="h-7 text-xs px-2" onClick={() => handleImageDisplayModeChange(image.id, 'adaptive')}>
                               <Maximize className="h-3 w-3 mr-1" />
                               Adapt
                             </Button>
@@ -762,10 +741,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                             <Label htmlFor={`span-${image.id}`} className="text-xs">
                               Grid Span
                             </Label>
-                            <Select
-                              value={image.span || '1x1'}
-                              onValueChange={(value) => handleImageSpanChange(image.id, value as '1x1' | '1x2' | '2x1' | '2x2')}
-                            >
+                            <Select value={image.span || '1x1'} onValueChange={(value) => handleImageSpanChange(image.id, value as '1x1' | '1x2' | '2x1' | '2x2')}>
                               <SelectTrigger id={`span-${image.id}`} className="h-7 text-xs">
                                 <SelectValue placeholder="Select span" />
                               </SelectTrigger>
@@ -784,53 +760,27 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                           <Label htmlFor={`alt-${image.id}`} className="text-xs">
                             Alt Text (for accessibility)
                           </Label>
-                          <Input
-                            id={`alt-${image.id}`}
-                            placeholder="Describe the image for screen readers"
-                            value={image.alt || ''}
-                            onChange={(e) => handleImageAltChange(image.id, e.target.value)}
-                            className="text-xs h-7"
-                          />
+                          <Input id={`alt-${image.id}`} placeholder="Describe the image for screen readers" value={image.alt || ''} onChange={(e) => handleImageAltChange(image.id, e.target.value)} className="text-xs h-7" />
                         </div>
 
                         <div className="flex flex-col gap-1">
                           <Label htmlFor={`caption-${image.id}`} className="text-xs">
                             Caption
                           </Label>
-                          <Input
-                            id={`caption-${image.id}`}
-                            placeholder="Image caption (optional)"
-                            value={image.caption || ''}
-                            onChange={(e) => handleImageCaptionChange(image.id, e.target.value)}
-                            className="text-xs h-7"
-                          />
+                          <Input id={`caption-${image.id}`} placeholder="Image caption (optional)" value={image.caption || ''} onChange={(e) => handleImageCaptionChange(image.id, e.target.value)} className="text-xs h-7" />
                         </div>
                       </div>
                     )}
 
                     {selectedImageId !== image.id && (
                       <div className="space-y-2">
-                        <Input
-                          placeholder="Alt text (for accessibility)"
-                          value={image.alt || ''}
-                          onChange={(e) => handleImageAltChange(image.id, e.target.value)}
-                          className="text-xs"
-                        />
-                        <Input
-                          placeholder="Image caption (optional)"
-                          value={image.caption || ''}
-                          onChange={(e) => handleImageCaptionChange(image.id, e.target.value)}
-                          className="text-xs"
-                        />
+                        <Input placeholder="Alt text (for accessibility)" value={image.alt || ''} onChange={(e) => handleImageAltChange(image.id, e.target.value)} className="text-xs" />
+                        <Input placeholder="Image caption (optional)" value={image.caption || ''} onChange={(e) => handleImageCaptionChange(image.id, e.target.value)} className="text-xs" />
                       </div>
                     )}
                   </div>
                 ))}
-                <Button
-                  variant="outline"
-                  className="flex flex-col items-center justify-center h-32 aspect-square border-dashed mx-auto"
-                  onClick={() => setShowImageDialog(true)}
-                >
+                <Button variant="outline" className="flex flex-col items-center justify-center h-32 aspect-square border-dashed mx-auto" onClick={() => setShowImageDialog(true)}>
                   <Plus className="h-8 w-8 mb-2" />
                   <span>Add Images</span>
                 </Button>
@@ -845,12 +795,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                   const cols = Number.parseInt(option.value);
 
                   return (
-                    <Button
-                      key={option.value}
-                      variant={layout === option.value ? 'default' : 'outline'}
-                      className="h-20 flex flex-col items-center justify-center p-1"
-                      onClick={() => handleLayoutChange(option.value)}
-                    >
+                    <Button key={option.value} variant={layout === option.value ? 'default' : 'outline'} className="h-20 flex flex-col items-center justify-center p-1" onClick={() => handleLayoutChange(option.value)}>
                       {/* Grid visualization */}
                       <div
                         className="grid gap-0.5 mb-1 w-full h-10"
@@ -956,11 +901,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                                   <SelectTrigger className="h-7 text-xs">
                                     <SelectValue placeholder="Grid span" />
                                   </SelectTrigger>
-                                  <SelectContent
-                                    onCloseAutoFocus={(e) => e.preventDefault()}
-                                    onEscapeKeyDown={(e) => e.preventDefault()}
-                                    onPointerDownOutside={(e) => e.preventDefault()}
-                                  >
+                                  <SelectContent onCloseAutoFocus={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()}>
                                     {spanOptions.map((option) => (
                                       <SelectItem key={option.value} value={option.value} className="text-xs">
                                         {option.label}
@@ -1057,28 +998,18 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                   <div className="flex flex-col space-y-1.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant={defaultDisplayMode === 'crop' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => handleDefaultDisplayModeChange('crop')}
-                        >
+                        <Button variant={defaultDisplayMode === 'crop' ? 'default' : 'outline'} size="sm" onClick={() => handleDefaultDisplayModeChange('crop')}>
                           <Crop className="h-4 w-4 mr-2" />
                           Crop to Square
                         </Button>
-                        <Button
-                          variant={defaultDisplayMode === 'adaptive' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => handleDefaultDisplayModeChange('adaptive')}
-                        >
+                        <Button variant={defaultDisplayMode === 'adaptive' ? 'default' : 'outline'} size="sm" onClick={() => handleDefaultDisplayModeChange('adaptive')}>
                           <Maximize className="h-4 w-4 mr-2" />
                           Adaptive
                         </Button>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {defaultDisplayMode === 'crop'
-                        ? 'Images will be cropped to maintain a square aspect ratio'
-                        : 'Images will adapt to the grid and may span multiple cells based on their aspect ratio'}
+                      {defaultDisplayMode === 'crop' ? 'Images will be cropped to maintain a square aspect ratio' : 'Images will adapt to the grid and may span multiple cells based on their aspect ratio'}
                     </p>
                   </div>
                 </div>
@@ -1087,12 +1018,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                   <Label htmlFor="gallery-caption" className="text-sm font-medium">
                     Gallery Caption
                   </Label>
-                  <Input
-                    id="gallery-caption"
-                    value={caption}
-                    onChange={(e) => handleCaptionChange(e.target.value)}
-                    placeholder="Add a caption for your gallery..."
-                  />
+                  <Input id="gallery-caption" value={caption} onChange={(e) => handleCaptionChange(e.target.value)} placeholder="Add a caption for your gallery..." />
                 </div>
               </div>
 

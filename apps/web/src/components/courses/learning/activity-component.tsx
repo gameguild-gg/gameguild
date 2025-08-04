@@ -121,12 +121,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
             id: 'q1',
             question: 'What is a game loop?',
             type: 'multiple-choice' as const,
-            options: [
-              'A loop that only runs once',
-              'A continuous cycle that updates game state and renders graphics',
-              'A loop used for loading game assets',
-              'A debugging tool for games',
-            ],
+            options: ['A loop that only runs once', 'A continuous cycle that updates game state and renders graphics', 'A loop used for loading game assets', 'A debugging tool for games'],
             correctAnswer: 'A continuous cycle that updates game state and renders graphics',
             points: 10,
           },
@@ -197,10 +192,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
             <h4 className="text-lg mb-4 text-white">{currentQuestion.question}</h4>
 
             {currentQuestion.type === 'multiple-choice' || currentQuestion.type === 'true-false' ? (
-              <RadioGroup
-                value={(submission[currentQuestion.id] as string) || ''}
-                onValueChange={(value) => setSubmission((prev) => ({ ...prev, [currentQuestion.id]: value }))}
-              >
+              <RadioGroup value={(submission[currentQuestion.id] as string) || ''} onValueChange={(value) => setSubmission((prev) => ({ ...prev, [currentQuestion.id]: value }))}>
                 {currentQuestion.options?.map((option, index) => (
                   <div key={index} className="flex items-center space-x-2">
                     <RadioGroupItem value={option} id={`option-${index}`} />
@@ -299,11 +291,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
       </Card>
 
       <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          onClick={() => setSubmission((prev) => ({ ...prev, saved: true }))}
-          className="bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500"
-        >
+        <Button variant="outline" onClick={() => setSubmission((prev) => ({ ...prev, saved: true }))} className="bg-slate-800/50 border-slate-600 text-slate-200 hover:bg-slate-700/50 hover:border-slate-500">
           <Save className="h-4 w-4 mr-2" />
           Save Draft
         </Button>
@@ -414,10 +402,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
             </Badge>
           )}
         </div>
-        <Button
-          onClick={handleStart}
-          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all"
-        >
+        <Button onClick={handleStart} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all">
           Start Activity
         </Button>
       </div>

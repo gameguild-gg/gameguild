@@ -105,13 +105,13 @@ public class FinancialTransaction : Entity {
   public string? FailureReason { get; set; }
 
   // Navigation properties
-  [ForeignKey(nameof(FromUserId))] public virtual User? FromUser { get; set; }
+  public virtual User? FromUser { get; set; }
 
-  [ForeignKey(nameof(ToUserId))] public virtual User? ToUser { get; set; }
+  public virtual User? ToUser { get; set; }
 
-  [ForeignKey(nameof(PaymentMethodId))] public virtual UserFinancialMethod? PaymentMethod { get; set; }
+  public virtual UserFinancialMethod? PaymentMethod { get; set; }
 
-  [ForeignKey(nameof(PromoCodeId))] public virtual PromoCode? PromoCode { get; set; }
+  public virtual PromoCode? PromoCode { get; set; }
 
   public virtual ICollection<PromoCodeUse> PromoCodeUses { get; set; } = new List<PromoCodeUse>();
 }

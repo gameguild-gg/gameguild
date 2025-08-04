@@ -19,7 +19,7 @@ namespace GameGuild.Modules.Authentication {
     /// <summary>
     /// When the access token expires
     /// </summary>
-    public DateTime Expires { get; set; }
+    public DateTime ExpiresAt { get; set; }
 
     /// <summary>
     /// User information

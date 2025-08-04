@@ -40,8 +40,7 @@ export function EnhancedCoursesList() {
   };
 
   const filteredCourses = courses.filter((course) => {
-    const matchesSearch =
-      searchTerm === '' || course.title.toLowerCase().includes(searchTerm.toLowerCase()) || course.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = searchTerm === '' || course.title.toLowerCase().includes(searchTerm.toLowerCase()) || course.description.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesArea = areaFilter === 'all' || course.area === areaFilter;
     const matchesLevel = levelFilter === 'all' || course.level.toString() === levelFilter;
@@ -207,9 +206,7 @@ export function EnhancedCoursesList() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-orange-400 text-sm font-medium">Avg Rating</p>
-                  <p className="text-3xl font-bold text-foreground">
-                    {courses.length > 0 ? (courses.reduce((acc, c) => acc + (c.analytics?.averageRating || 0), 0) / courses.length).toFixed(1) : '0.0'}
-                  </p>
+                  <p className="text-3xl font-bold text-foreground">{courses.length > 0 ? (courses.reduce((acc, c) => acc + (c.analytics?.averageRating || 0), 0) / courses.length).toFixed(1) : '0.0'}</p>
                 </div>
                 <GraduationCap className="h-8 w-8 text-orange-400" />
               </div>
@@ -225,12 +222,7 @@ export function EnhancedCoursesList() {
               <div className="flex flex-col sm:flex-row gap-4 flex-1">
                 <div className="relative flex-1 min-w-[300px]">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="Search courses by title or description..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-background/50 border-border text-foreground"
-                  />
+                  <Input placeholder="Search courses by title or description..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 bg-background/50 border-border text-foreground" />
                 </div>
 
                 <Select value={areaFilter} onValueChange={setAreaFilter}>
@@ -273,9 +265,7 @@ export function EnhancedCoursesList() {
             <CardContent className="p-12 text-center">
               <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-foreground mb-2">No courses found</h3>
-              <p className="text-muted-foreground mb-6">
-                {searchTerm || areaFilter !== 'all' || levelFilter !== 'all' ? 'Try adjusting your search or filters' : 'No courses have been created yet'}
-              </p>
+              <p className="text-muted-foreground mb-6">{searchTerm || areaFilter !== 'all' || levelFilter !== 'all' ? 'Try adjusting your search or filters' : 'No courses have been created yet'}</p>
               {!searchTerm && areaFilter === 'all' && levelFilter === 'all' && (
                 <Link href="/dashboard/courses/create">
                   <Button className="bg-gradient-to-r from-primary to-chart-2 hover:from-primary/90 hover:to-chart-2/90">

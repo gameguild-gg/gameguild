@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, BookOpen, DollarSign, Eye, FileText, Image, Save, Settings } from 'lucide-react';
 import Link from 'next/link';
-import { useCourseEditor } from '@/lib/courses/course-editor.context';
+import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { GeneralDetailsSection } from './sections/general-details-section';
 import { ThumbnailMediaSection } from './sections/thumbnail-media-section';
 import { SalesShowcaseSection } from './sections/sales-showcase-section';
@@ -24,7 +24,7 @@ const SECTIONS = [
   { id: 'settings', label: 'Settings', icon: Settings, description: 'Publishing, access, advanced' },
 ] as const;
 
-export function CourseEditor({ courseSlug, isCreating = false }: CourseEditorProps) {
+export function CourseEditor({ slug, isCreating = false }: CourseEditorProps) {
   const { state, validate } = useCourseEditor();
   const [activeSection, setActiveSection] = useState<string>('general');
 
@@ -99,11 +99,7 @@ export function CourseEditor({ courseSlug, isCreating = false }: CourseEditorPro
                 Preview
               </Button>
 
-              <Button
-                onClick={handleSave}
-                disabled={!state.isValid}
-                className="bg-gradient-to-r from-primary to-chart-2 hover:from-primary/90 hover:to-chart-2/90"
-              >
+              <Button onClick={handleSave} disabled={!state.isValid} className="bg-gradient-to-r from-primary to-chart-2 hover:from-primary/90 hover:to-chart-2/90">
                 <Save className="h-4 w-4 mr-2" />
                 {isCreating ? 'Create Course' : 'Save Changes'}
               </Button>
@@ -168,11 +164,7 @@ export function CourseEditor({ courseSlug, isCreating = false }: CourseEditorPro
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                    {state.media.thumbnail?.url ? (
-                      <img src={state.media.thumbnail.url} alt={state.media.thumbnail.alt} className="w-full h-full object-cover rounded-lg" />
-                    ) : (
-                      <div className="text-muted-foreground text-sm">No thumbnail</div>
-                    )}
+                    {state.media.thumbnail?.url ? <img src={state.media.thumbnail.url} alt={state.media.thumbnail.alt} className="w-full h-full object-cover rounded-lg" /> : <div className="text-muted-foreground text-sm">No thumbnail</div>}
                   </div>
 
                   <div>

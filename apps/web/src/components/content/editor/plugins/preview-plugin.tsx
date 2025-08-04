@@ -89,20 +89,7 @@ function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
     return null;
   }
 
-  const {
-    question,
-    questionType,
-    answers,
-    correctFeedback,
-    incorrectFeedback,
-    allowRetry,
-    backgroundColor,
-    blanks,
-    fillBlankMode,
-    fillBlankAlternatives,
-    ratingScale,
-    correctRating,
-  } = node.data;
+  const { question, questionType, answers, correctFeedback, incorrectFeedback, allowRetry, backgroundColor, blanks, fillBlankMode, fillBlankAlternatives, ratingScale, correctRating } = node.data;
 
   const { selectedAnswers, showFeedback, isCorrect, checkAnswers, toggleAnswer, resetQuiz } = quizLogic;
 
@@ -129,12 +116,7 @@ function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
       />
       {showFeedback && !allowRetry && (
         <div className="flex justify-end mt-4 pt-3 border-t border-border/50">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={resetQuiz}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors bg-transparent"
-          >
+          <Button variant="outline" size="sm" onClick={resetQuiz} className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors bg-transparent">
             <RotateCcw className="h-4 w-4" />
             Try Again
           </Button>
@@ -230,11 +212,7 @@ function PreviewGallery({ node }: { node: SerializedGalleryNode }) {
           return (
             <div key={image.id} className="space-y-1" style={gridAreaStyle}>
               <div className="relative aspect-square overflow-hidden rounded-md" style={{ aspectRatio: image.displayMode === 'crop' ? '1/1' : 'auto' }}>
-                <img
-                  src={image.src || '/placeholder.svg'}
-                  alt={image.alt}
-                  className={image.displayMode === 'crop' ? 'h-full w-full object-cover' : 'h-auto w-full object-contain'}
-                />
+                <img src={image.src || '/placeholder.svg'} alt={image.alt} className={image.displayMode === 'crop' ? 'h-full w-full object-cover' : 'h-auto w-full object-contain'} />
               </div>
               {image.caption && <div className={getCaptionStyleClasses()}>{image.caption}</div>}
             </div>
@@ -297,14 +275,7 @@ function PreviewHTML({ node }: { node: SerializedHTMLNode }) {
 
   return (
     <div className="my-0">
-      <iframe
-        ref={iframeRef}
-        srcDoc={getPreviewContent()}
-        className="w-full rounded-md border"
-        style={{ height: iframeHeight ? `${iframeHeight + 2}px` : '0' }}
-        sandbox="allow-scripts allow-popups allow-same-origin"
-        title="HTML Preview"
-      />
+      <iframe ref={iframeRef} srcDoc={getPreviewContent()} className="w-full rounded-md border" style={{ height: iframeHeight ? `${iframeHeight + 2}px` : '0' }} sandbox="allow-scripts allow-popups allow-same-origin" title="HTML Preview" />
     </div>
   );
 }
@@ -336,13 +307,7 @@ function EmbeddedVideoPreview({ embedInfo, size }: { embedInfo: { type: string; 
       <div className="relative pt-[56.25%]">
         {' '}
         {/* 16:9 Aspect Ratio */}
-        <iframe
-          src={embedUrl}
-          title={title}
-          className="absolute top-0 left-0 w-full h-full rounded-lg"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        ></iframe>
+        <iframe src={embedUrl} title={title} className="absolute top-0 left-0 w-full h-full rounded-lg" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
       </div>
     </div>
   );
@@ -360,10 +325,7 @@ function PreviewVideo({ node }: { node: SerializedVideoNode }) {
   const { src, alt, caption, size = 100 } = node.data;
 
   const renderErrorMessage = () => (
-    <div
-      className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-lg p-4 flex flex-col items-center justify-center min-h-[200px]"
-      style={{ width: `${size}%` }}
-    >
+    <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 rounded-lg p-4 flex flex-col items-center justify-center min-h-[200px]" style={{ width: `${size}%` }}>
       <AlertCircle className="h-6 w-6 mb-2" />
       <p className="text-center">Could not load the video</p>
     </div>
@@ -377,14 +339,7 @@ function PreviewVideo({ node }: { node: SerializedVideoNode }) {
         ) : embedInfo ? (
           <EmbeddedVideoPreview embedInfo={embedInfo} size={size} />
         ) : (
-          <video
-            src={src}
-            controls
-            style={{ width: `${size}%` }}
-            className="h-auto rounded-lg"
-            poster={alt ? `/placeholder.svg?text=${encodeURIComponent(alt)}` : undefined}
-            onError={() => setHasError(true)}
-          />
+          <video src={src} controls style={{ width: `${size}%` }} className="h-auto rounded-lg" poster={alt ? `/placeholder.svg?text=${encodeURIComponent(alt)}` : undefined} onError={() => setHasError(true)} />
         )}
       </div>
       {caption && <div className="mt-2 text-sm text-muted-foreground text-center">{caption}</div>}
@@ -477,14 +432,7 @@ function PreviewAudio({ node }: { node: SerializedAudioNode }) {
 
     return (
       <div className="my-4 relative" style={{ width: `${size}%`, margin: '0 auto' }}>
-        <iframe
-          src={embedUrl}
-          title={embedTitle}
-          className={className}
-          height={height}
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          loading="lazy"
-        ></iframe>
+        <iframe src={embedUrl} title={embedTitle} className={className} height={height} allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
         {caption && <div className="mt-2 text-sm text-muted-foreground text-center">{caption}</div>}
       </div>
     );
@@ -690,10 +638,7 @@ function PreviewPresentation({ node }: { node: SerializedPresentationNode }) {
             {slides.map((slide, index) => (
               <button
                 key={slide.id}
-                className={cn(
-                  'flex-shrink-0 w-16 h-10 rounded overflow-hidden border-2',
-                  index === currentSlideIndex ? 'border-primary' : 'border-transparent hover:border-gray-300',
-                )}
+                className={cn('flex-shrink-0 w-16 h-10 rounded overflow-hidden border-2', index === currentSlideIndex ? 'border-primary' : 'border-transparent hover:border-gray-300')}
                 onClick={() => setCurrentSlideIndex(index)}
               >
                 <div className="w-full h-full relative" style={getBackgroundStyle(slide.theme || theme, slide.backgroundImage)}>

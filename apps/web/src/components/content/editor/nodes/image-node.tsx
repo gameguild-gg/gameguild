@@ -145,13 +145,7 @@ function ImageComponent({ data, nodeKey }: ImageComponentProps) {
   return (
     <div className="my-8 relative group image-wrapper" onMouseEnter={() => setShowMenu(true)} onMouseLeave={() => setShowMenu(false)}>
       <div className="relative flex justify-center">
-        <img
-          ref={imageRef}
-          src={data.src || '/placeholder.svg'}
-          alt={data.alt}
-          style={{ width: `${size}%` }}
-          className="h-auto rounded-lg cursor-pointer transition-all duration-200"
-        />
+        <img ref={imageRef} src={data.src || '/placeholder.svg'} alt={data.alt} style={{ width: `${size}%` }} className="h-auto rounded-lg cursor-pointer transition-all duration-200" />
 
         {/* Menu de edição */}
         {showMenu && <ContentEditMenu options={editMenuOptions} />}
@@ -159,11 +153,7 @@ function ImageComponent({ data, nodeKey }: ImageComponentProps) {
 
       {/* Controle de tamanho */}
       {showSizeControls && (
-        <div
-          ref={sizeControlsRef}
-          className="absolute -top-16 left-2 right-2 rounded-lg bg-background/80 p-2 backdrop-blur z-20"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div ref={sizeControlsRef} className="absolute -top-16 left-2 right-2 rounded-lg bg-background/80 p-2 backdrop-blur z-20" onClick={(e) => e.stopPropagation()}>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm font-medium">Ajustar tamanho</span>
@@ -186,11 +176,7 @@ function ImageComponent({ data, nodeKey }: ImageComponentProps) {
 
       {/* Editor de legenda */}
       {isEditing && (
-        <div
-          ref={captionControlsRef}
-          className="absolute -bottom-16 left-2 right-2 rounded-lg bg-background/80 p-2 backdrop-blur z-20"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div ref={captionControlsRef} className="absolute -bottom-16 left-2 right-2 rounded-lg bg-background/80 p-2 backdrop-blur z-20" onClick={(e) => e.stopPropagation()}>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm font-medium">Adicionar legenda</span>

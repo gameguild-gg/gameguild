@@ -26,10 +26,7 @@ export function TestingLabHero() {
             </div>
 
             {/* Title */}
-            <h1
-              className="text-5xl md:text-6xl font-bold text-white"
-              style={{ textShadow: '0 0 8px rgba(59, 130, 246, 0.25), 0 0 16px rgba(147, 51, 234, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15)' }}
-            >
+            <h1 className="text-5xl md:text-6xl font-bold text-white" style={{ textShadow: '0 0 8px rgba(59, 130, 246, 0.25), 0 0 16px rgba(147, 51, 234, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15)' }}>
               Game Testing Lab
             </h1>
           </div>
@@ -48,9 +45,7 @@ export function TestingLabHero() {
                 <Gamepad2 className="h-8 w-8 text-blue-400" />
               </div>
               <h3 className="text-lg font-semibold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Test Latest Games</h3>
-              <p className="text-slate-400 text-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                Get early access to upcoming games and provide valuable feedback
-              </p>
+              <p className="text-slate-400 text-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Get early access to upcoming games and provide valuable feedback</p>
             </div>
 
             <div className="flex flex-col items-center space-y-3">
@@ -58,9 +53,7 @@ export function TestingLabHero() {
                 <Users className="h-8 w-8 text-purple-400" />
               </div>
               <h3 className="text-lg font-semibold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Join Community</h3>
-              <p className="text-slate-400 text-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                Connect with other testers and developers in collaborative sessions
-              </p>
+              <p className="text-slate-400 text-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Connect with other testers and developers in collaborative sessions</p>
             </div>
 
             <div className="flex flex-col items-center space-y-3">
@@ -68,9 +61,7 @@ export function TestingLabHero() {
                 <TestTube className="h-8 w-8 text-green-400" />
               </div>
               <h3 className="text-lg font-semibold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">Earn Rewards</h3>
-              <p className="text-slate-400 text-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
-                Get credits, certificates, and free games for your contributions
-              </p>
+              <p className="text-slate-400 text-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Get credits, certificates, and free games for your contributions</p>
             </div>
           </div>
 

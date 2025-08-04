@@ -161,13 +161,7 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
                       {criteriaScores[criteria.name] || 0} / {criteria.maxScore}
                     </span>
                   </div>
-                  <Slider
-                    value={[criteriaScores[criteria.name] || 0]}
-                    onValueChange={(value) => handleCriteriaScoreChange(criteria.name, value)}
-                    max={criteria.maxScore}
-                    step={1}
-                    className="w-full"
-                  />
+                  <Slider value={[criteriaScores[criteria.name] || 0]} onValueChange={(value) => handleCriteriaScoreChange(criteria.name, value)} max={criteria.maxScore} step={1} className="w-full" />
                 </div>
               ))}
             </div>
@@ -199,13 +193,7 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
           {/* Feedback */}
           <div className="space-y-3">
             <label className="text-sm font-medium">Detailed Feedback *</label>
-            <Textarea
-              placeholder="Provide constructive feedback about the submission. Be specific about strengths and areas for improvement..."
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
-              rows={6}
-              className="resize-y"
-            />
+            <Textarea placeholder="Provide constructive feedback about the submission. Be specific about strengths and areas for improvement..." value={feedback} onChange={(e) => setFeedback(e.target.value)} rows={6} className="resize-y" />
             <p className="text-xs text-gray-500">Minimum 10 characters required. Current: {feedback.length}</p>
           </div>
 

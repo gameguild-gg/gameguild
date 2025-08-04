@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GameGuild.Common;
+using GameGuild.Common.Services;
 using GameGuild.Modules.Permissions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -657,6 +658,217 @@ public class TestingController(ITestService testService) : ControllerBase {
   }
 
   #endregion
+
+  #region Testing Location Endpoints
+
+  // GET: testing/locations
+  [HttpGet("locations")]
+  [RequireResourcePermission<TestingLocation>(PermissionType.Read)]
+  public async Task<ActionResult<IEnumerable<TestingLocation>>> GetTestingLocations(
+    [FromQuery] int skip = 0,
+    [FromQuery] int take = 50
+  ) {
+    var locations = await testService.GetTestingLocationsAsync(skip, take);
+    return Ok(locations);
+  }
+
+  // GET: testing/locations/{id}
+  [HttpGet("locations/{id}")]
+  [RequireResourcePermission<TestingLocation>(PermissionType.Read)]
+  public async Task<ActionResult<TestingLocation>> GetTestingLocation(Guid id) {
+    var location = await testService.GetTestingLocationByIdAsync(id);
+    if (location == null) return NotFound();
+    return Ok(location);
+  }
+
+  // POST: testing/locations
+  [HttpPost("locations")]
+  [RequireResourcePermission<TestingLocation>(PermissionType.Create)]
+  public async Task<ActionResult<TestingLocation>> CreateTestingLocation(CreateTestingLocationDto locationDto) {
+    try {
+      if (!ModelState.IsValid) return BadRequest(ModelState);
+
+      var location = locationDto.ToTestingLocation();
+      var createdLocation = await testService.CreateTestingLocationAsync(location);
+
+      return CreatedAtAction(nameof(GetTestingLocation), new { id = createdLocation.Id }, createdLocation);
+    }
+    catch (Exception ex) {
+      return BadRequest($"Error creating testing location: {ex.Message}");
+    }
+  }
+
+  // PUT: testing/locations/{id}
+  [HttpPut("locations/{id}")]
+  [RequireResourcePermission<TestingLocation>(PermissionType.Edit)]
+  public async Task<ActionResult<TestingLocation>> UpdateTestingLocation(Guid id, UpdateTestingLocationDto locationDto) {
+    try {
+      var existingLocation = await testService.GetTestingLocationByIdAsync(id);
+      if (existingLocation == null) return NotFound();
+
+      locationDto.UpdateTestingLocation(existingLocation);
+      var updatedLocation = await testService.UpdateTestingLocationAsync(existingLocation);
+
+      return Ok(updatedLocation);
+    }
+    catch (Exception ex) {
+      return BadRequest($"Error updating testing location: {ex.Message}");
+    }
+  }
+
+  // DELETE: testing/locations/{id}
+  [HttpDelete("locations/{id}")]
+  [RequireResourcePermission<TestingLocation>(PermissionType.Delete)]
+  public async Task<ActionResult> DeleteTestingLocation(Guid id) {
+    var result = await testService.DeleteTestingLocationAsync(id);
+    if (!result) return NotFound();
+    return NoContent();
+  }
+
+  // POST: testing/locations/{id}/restore
+  [HttpPost("locations/{id}/restore")]
+  [RequireResourcePermission<TestingLocation>(PermissionType.Edit)]
+  public async Task<ActionResult> RestoreTestingLocation(Guid id) {
+    var result = await testService.RestoreTestingLocationAsync(id);
+    if (!result) return NotFound();
+    return Ok(new { message = "Testing location restored successfully" });
+  }
+
+  #endregion
+
+  #region Module Permission Integration Endpoints
+
+  /// <summary>
+  /// Check if current user can perform specific Testing Lab actions
+  /// </summary>
+  [HttpGet("permissions/check")]
+  public async Task<ActionResult<TestingLabActionPermissions>> CheckTestingLabPermissions([FromServices] IModulePermissionService modulePermissionService, [FromQuery] Guid? tenantId = null) {
+    var userId = GetCurrentUserId();
+    
+    var permissions = new TestingLabActionPermissions {
+      CanCreateSessions = await modulePermissionService.CanCreateTestingSessionsAsync(userId, tenantId),
+      CanDeleteSessions = await modulePermissionService.CanDeleteTestingSessionsAsync(userId, tenantId),
+      CanManageTesters = await modulePermissionService.CanManageTestersAsync(userId, tenantId),
+      CanViewReports = await modulePermissionService.CanViewTestingReportsAsync(userId, tenantId),
+      CanExportData = await modulePermissionService.CanExportTestingDataAsync(userId, tenantId),
+    };
+    
+    return Ok(permissions);
+  }
+
+  /// <summary>
+  /// Get comprehensive Testing Lab permissions for current user
+  /// </summary>
+  [HttpGet("permissions/my-permissions")]
+  public async Task<ActionResult<TestingLabPermissions>> GetMyTestingLabPermissions([FromServices] IModulePermissionService modulePermissionService, [FromQuery] Guid? tenantId = null) {
+    var userId = GetCurrentUserId();
+    var permissions = await modulePermissionService.GetUserTestingLabPermissionsAsync(userId, tenantId);
+    return Ok(permissions);
+  }
+
+  /// <summary>
+  /// Assign Testing Lab role to a user (admin only)
+  /// </summary>
+  [HttpPost("permissions/assign-role")]
+  public async Task<ActionResult> AssignTestingLabRole([FromServices] IModulePermissionService modulePermissionService, [FromBody] AssignTestingLabRoleRequest request) {
+    // TODO: Add admin permission check
+    try {
+      await modulePermissionService.AssignRoleAsync(
+        request.UserId,
+        request.TenantId,
+        ModuleType.TestingLab,
+        request.RoleName,
+        request.Constraints,
+        request.ExpiresAt);
+      
+      return Ok(new { message = $"Successfully assigned {request.RoleName} role to user {request.UserId}" });
+    }
+    catch (Exception ex) {
+      return BadRequest($"Error assigning role: {ex.Message}");
+    }
+  }
+
+  /// <summary>
+  /// Create a new testing session with module permission checking
+  /// </summary>
+  [HttpPost("sessions/create-with-permissions")]
+  public async Task<ActionResult<TestingSession>> CreateTestingSessionWithPermissions(
+    [FromServices] IModulePermissionService modulePermissionService,
+    [FromBody] CreateTestingSessionDto sessionDto,
+    [FromQuery] Guid? tenantId = null) {
+    
+    var userId = GetCurrentUserId();
+    
+    // Check if user has permission to create sessions
+    var canCreate = await modulePermissionService.CanCreateTestingSessionsAsync(userId, tenantId);
+    if (!canCreate) {
+      return Forbid("You do not have permission to create testing sessions");
+    }
+    
+    try {
+      // Convert DTO to entity and create session
+      var session = sessionDto.ToTestingSession(userId);
+      var createdSession = await testService.CreateTestingSessionAsync(session);
+      
+      return CreatedAtAction(nameof(GetTestingSession), new { id = createdSession.Id }, createdSession);
+    }
+    catch (Exception ex) {
+      return BadRequest($"Error creating testing session: {ex.Message}");
+    }
+  }
+
+  /// <summary>
+  /// Delete a testing session with module permission checking
+  /// </summary>
+  [HttpDelete("sessions/{id}/delete-with-permissions")]
+  public async Task<ActionResult> DeleteTestingSessionWithPermissions(
+    [FromServices] IModulePermissionService modulePermissionService,
+    Guid id,
+    [FromQuery] Guid? tenantId = null) {
+    
+    var userId = GetCurrentUserId();
+    
+    // Check if user has permission to delete sessions
+    var canDelete = await modulePermissionService.CanDeleteTestingSessionsAsync(userId, tenantId);
+    if (!canDelete) {
+      return Forbid("You do not have permission to delete testing sessions");
+    }
+    
+    try {
+      var result = await testService.DeleteTestingSessionAsync(id);
+      if (!result) return NotFound();
+      
+      return NoContent();
+    }
+    catch (Exception ex) {
+      return BadRequest($"Error deleting testing session: {ex.Message}");
+    }
+  }
+
+  /// <summary>
+  /// Get users with specific Testing Lab roles
+  /// </summary>
+  [HttpGet("permissions/users-with-role/{roleName}")]
+  public async Task<ActionResult<List<UserRoleAssignment>>> GetUsersWithTestingLabRole(
+    [FromServices] IModulePermissionService modulePermissionService,
+    string roleName,
+    [FromQuery] Guid? tenantId = null) {
+    
+    // TODO: Add admin permission check
+    var users = await modulePermissionService.GetUsersWithRoleAsync(tenantId, ModuleType.TestingLab, roleName);
+    return Ok(users);
+  }
+
+  // Helper method to get current user ID
+  private Guid GetCurrentUserId() {
+    var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) {
+      throw new UnauthorizedAccessException("User ID not found in token");
+    }
+    return userId;
+  }
+
+  #endregion
 }
 
 // DTOs for request bodies
@@ -671,4 +883,63 @@ public class ReportFeedbackDto {
 
 public class RateFeedbackQualityDto {
   public FeedbackQuality Quality { get; set; }
+}
+
+public class CreateTestingLocationDto {
+  public string Name { get; set; } = string.Empty;
+  public string? Description { get; set; }
+  public string? Address { get; set; }
+  public int MaxTestersCapacity { get; set; }
+  public int MaxProjectsCapacity { get; set; }
+  public string? EquipmentAvailable { get; set; }
+  public LocationStatus Status { get; set; } = LocationStatus.Active;
+
+  public TestingLocation ToTestingLocation() {
+    return new TestingLocation {
+      Name = Name,
+      Description = Description,
+      Address = Address,
+      MaxTestersCapacity = MaxTestersCapacity,
+      MaxProjectsCapacity = MaxProjectsCapacity,
+      EquipmentAvailable = EquipmentAvailable,
+      Status = Status,
+    };
+  }
+}
+
+public class UpdateTestingLocationDto {
+  public string? Name { get; set; }
+  public string? Description { get; set; }
+  public string? Address { get; set; }
+  public int? MaxTestersCapacity { get; set; }
+  public int? MaxProjectsCapacity { get; set; }
+  public string? EquipmentAvailable { get; set; }
+  public LocationStatus? Status { get; set; }
+
+  public void UpdateTestingLocation(TestingLocation location) {
+    if (!string.IsNullOrEmpty(Name)) location.Name = Name;
+    if (Description != null) location.Description = Description;
+    if (Address != null) location.Address = Address;
+    if (MaxTestersCapacity.HasValue) location.MaxTestersCapacity = MaxTestersCapacity.Value;
+    if (MaxProjectsCapacity.HasValue) location.MaxProjectsCapacity = MaxProjectsCapacity.Value;
+    if (EquipmentAvailable != null) location.EquipmentAvailable = EquipmentAvailable;
+    if (Status.HasValue) location.Status = Status.Value;
+  }
+}
+
+// Module Permission DTOs
+public class TestingLabActionPermissions {
+  public bool CanCreateSessions { get; set; }
+  public bool CanDeleteSessions { get; set; }
+  public bool CanManageTesters { get; set; }
+  public bool CanViewReports { get; set; }
+  public bool CanExportData { get; set; }
+}
+
+public class AssignTestingLabRoleRequest {
+  public Guid UserId { get; set; }
+  public Guid? TenantId { get; set; }
+  public string RoleName { get; set; } = string.Empty; // "TestingLabAdmin", "TestingLabManager", etc.
+  public List<PermissionConstraint>? Constraints { get; set; }
+  public DateTime? ExpiresAt { get; set; }
 }

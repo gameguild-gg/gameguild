@@ -32,7 +32,7 @@ public class ProjectCollaborator : Resource {
   /// <summary>
   /// Navigation property to user
   /// </summary>
-  public virtual User User { get; set; } = null!;
+  public virtual User? User { get; set; }
 
   /// <summary>
   /// Role of the collaborator in the project

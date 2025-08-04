@@ -20,7 +20,7 @@ public class UserAchievement : BaseEntity {
   /// <summary>
   /// The user who earned the achievement
   /// </summary>
-  public Guid UserId { get; set; }
+  public Guid? UserId { get; set; }
 
   /// <summary>
   /// Navigation property to the user

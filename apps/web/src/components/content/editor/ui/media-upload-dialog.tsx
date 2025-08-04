@@ -266,13 +266,7 @@ export function MediaUploadDialog({
                   </div>
 
                   <div className="space-y-4">
-                    <Input
-                      id="media-url"
-                      placeholder={urlPlaceholder}
-                      value={mediaUrl}
-                      onChange={(e) => setMediaUrl(e.target.value)}
-                      className="h-12 text-base"
-                    />
+                    <Input id="media-url" placeholder={urlPlaceholder} value={mediaUrl} onChange={(e) => setMediaUrl(e.target.value)} className="h-12 text-base" />
                     <Button onClick={handleUrlSubmit} className="w-full h-12 text-base" disabled={!mediaUrl.trim()}>
                       Insert from URL
                     </Button>

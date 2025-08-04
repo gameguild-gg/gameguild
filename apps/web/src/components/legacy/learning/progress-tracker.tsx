@@ -152,10 +152,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
           {progressData.nextItem && (
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <h4 className="font-medium text-blue-800 mb-2">Up Next:</h4>
-              <div
-                className="flex items-center gap-3 cursor-pointer hover:bg-blue-100 p-2 rounded transition-colors"
-                onClick={() => onItemClick?.(progressData.nextItem!)}
-              >
+              <div className="flex items-center gap-3 cursor-pointer hover:bg-blue-100 p-2 rounded transition-colors" onClick={() => onItemClick?.(progressData.nextItem!)}>
                 {getTypeIcon(progressData.nextItem.type)}
                 <span className="font-medium">{progressData.nextItem.title}</span>
                 <Badge variant="outline" className="ml-auto">
@@ -221,10 +218,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
                 </div>
 
                 <div className="flex-shrink-0">
-                  <Badge
-                    variant={item.status === 'completed' || item.status === 'graded' ? 'default' : item.status === 'in-progress' ? 'secondary' : 'outline'}
-                    className="capitalize"
-                  >
+                  <Badge variant={item.status === 'completed' || item.status === 'graded' ? 'default' : item.status === 'in-progress' ? 'secondary' : 'outline'} className="capitalize">
                     {item.status.replace('-', ' ')}
                   </Badge>
                 </div>
@@ -253,15 +247,7 @@ export function ProgressTracker({ courseId, onItemClick }: ProgressTrackerProps)
 }
 
 /* Compact progress component for course cards */
-export function CompactProgress({
-  progressPercentage,
-  completedItems,
-  totalItems,
-}: {
-  readonly progressPercentage: number;
-  readonly completedItems: number;
-  readonly totalItems: number;
-}) {
+export function CompactProgress({ progressPercentage, completedItems, totalItems }: { readonly progressPercentage: number; readonly completedItems: number; readonly totalItems: number }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-sm">

@@ -1,59 +1,66 @@
+import { EnrollmentStatus as APIEnrollmentStatus } from '@/lib/api/generated';
+
 export interface Course {
-  id: string;
+  id: number;
   title: string;
   description: string;
-  longDescription?: string;
   category: string;
   level: 'Beginner' | 'Intermediate' | 'Advanced';
   duration: string;
   enrolledStudents: number;
   rating: number;
-  reviewCount?: number;
   price: number;
   image: string;
+  slug: string;
   instructor: {
     name: string;
     avatar: string;
-    title?: string;
-    experience?: string;
   };
-  isEnrolled?: boolean;
+  isEnrolled: boolean;
+  progress: number;
+  certification: boolean;
+}
+
+export interface EnhancedCourse {
+  id: number;
+  title: string;
+  description: string;
+  area: string;
+  level: number;
+  estimatedHours?: number;
+  enrollmentCount?: number;
+  analytics?: {
+    averageRating?: number;
+  };
+  image?: string;
+  slug: string;
+  instructors?: string[];
   progress?: number;
-  certification?: boolean;
-  skills?: string[];
-  outcomes?: string[];
-  prerequisites?: string[];
-  isPopular?: boolean;
-  isFeatured?: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface CourseFilters {
   search: string;
   category: string;
   level: string;
-  sortBy: string;
-  priceRange?: {
-    min?: number;
-    max?: number;
-  };
-  rating?: number;
-  duration?: string;
+  instructor: string;
+  enrollment: string;
 }
 
-export interface CoursePagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
+export interface CourseState {
+  courses: EnhancedCourse[];
+  filteredCourses: EnhancedCourse[];
+  filters: CourseFilters;
+  isLoading: boolean;
+  error: string | null;
+  currentPage: number;
+  itemsPerPage: number;
 }
 
-export type CourseViewMode = 'grid' | 'list' | 'compact';
+export type EnrollmentStatus = APIEnrollmentStatus;
 
-export interface CourseGridProps {
-  courses: Course[];
-  variant?: 'default' | 'compact' | 'featured';
-  columns?: 1 | 2 | 3 | 4;
-  loading?: boolean;
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
 }

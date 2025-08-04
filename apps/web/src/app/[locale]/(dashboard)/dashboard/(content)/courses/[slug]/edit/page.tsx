@@ -2,51 +2,58 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { getCourseBySlug } from '@/lib/courses/actions';
-import { Course } from '@/components/legacy/types/courses';
-import { CourseEditorProvider } from '@/lib/courses/course-editor.context';
-import { CourseEditor } from '@/components/courses/course-editor/course-editor';
+import Link from 'next/link';
+import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
+import { Program } from '@/lib/api/generated/types.gen';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/common/ui/dashboard-page';
 
 export default function EditCoursePage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const [course, setCourse] = useState<Course | null>(null);
+  const [program, setProgram] = useState<Program | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCourse = async () => {
+    const fetchProgram = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const courseData = await getCourseBySlug(slug);
-        if (courseData) {
-          setCourse(courseData);
+        const result = await getProgramBySlugService(slug);
+        if (result.success && result.data) {
+          setProgram(result.data);
         } else {
-          setError('Course not found');
+          setError(result.error || 'Program not found');
         }
       } catch (err) {
-        console.error('Error fetching course:', err);
-        setError('Failed to load course');
+        console.error('Error fetching program:', err);
+        setError('Failed to load program');
       } finally {
         setLoading(false);
       }
     };
 
     if (slug) {
-      fetchCourse();
+      fetchProgram();
     }
   }, [slug]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto max-w-7xl p-6">
+      <DashboardPage>
+        <DashboardPageHeader>
+          <DashboardPageTitle>
+            <Skeleton className="h-8 w-48" />
+          </DashboardPageTitle>
+          <DashboardPageDescription>
+            <Skeleton className="h-4 w-64" />
+          </DashboardPageDescription>
+        </DashboardPageHeader>
+        <DashboardPageContent>
           <div className="space-y-8">
-            <Skeleton className="h-16 w-full" />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-8">
                 <Skeleton className="h-96 w-full" />
@@ -58,52 +65,68 @@ export default function EditCoursePage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </DashboardPageContent>
+      </DashboardPage>
     );
   }
 
-  if (error || !course) {
+  if (error || !program) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Course Not Found</h1>
-          <p className="text-muted-foreground mb-4">{error || 'The requested course could not be found.'}</p>
-          <a href="/dashboard/courses" className="text-primary hover:underline">
-            Return to Courses
-          </a>
-        </div>
-      </div>
+      <DashboardPage>
+        <DashboardPageHeader>
+          <DashboardPageTitle>Program Not Found</DashboardPageTitle>
+          <DashboardPageDescription>{error || 'The requested program could not be found.'}</DashboardPageDescription>
+        </DashboardPageHeader>
+        <DashboardPageContent>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">{error || 'The requested program could not be found.'}</p>
+            <Link href="/dashboard/courses" className="text-primary hover:underline">
+              Return to Programs
+            </Link>
+          </div>
+        </DashboardPageContent>
+      </DashboardPage>
     );
   }
-
-  // Transform course data to match our editor format
-  const initialCourseData = {
-    id: course.id,
-    title: course.title,
-    slug: course.slug,
-    description: course.description,
-    summary: course.description.substring(0, 200), // Use first 200 chars as summary
-    category: course.area,
-    difficulty: course.level,
-    estimatedHours: 10, // Default hours since not available in legacy type
-    status: 'published' as const, // Default status
-    media: {
-      thumbnail: undefined, // Will be handled by the media section
-      showcaseVideo: undefined,
-    },
-    products: [],
-    enrollment: {
-      isOpen: true,
-      currentEnrollments: 0,
-    },
-    tags: Array.isArray(course.tools) ? course.tools : [],
-    manualSlugEdit: true, // Since it's an existing course
-  };
 
   return (
-    <CourseEditorProvider initialCourse={initialCourseData}>
-      <CourseEditor courseSlug={slug} isCreating={false} />
-    </CourseEditorProvider>
+    <DashboardPage>
+      <DashboardPageHeader>
+        <DashboardPageTitle>Edit Program: {program.title}</DashboardPageTitle>
+        <DashboardPageDescription>Edit and manage your program content</DashboardPageDescription>
+      </DashboardPageHeader>
+      <DashboardPageContent>
+        <div className="space-y-8">
+          {/* Program Editor would go here */}
+          <div className="bg-card rounded-lg border p-6">
+            <h3 className="text-lg font-semibold mb-4">Program Details</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Title</label>
+                <p className="text-sm text-muted-foreground">{program.title}</p>
+              </div>
+              {program.description && (
+                <div>
+                  <label className="text-sm font-medium">Description</label>
+                  <p className="text-sm text-muted-foreground">{program.description}</p>
+                </div>
+              )}
+              <div>
+                <label className="text-sm font-medium">Status</label>
+                <p className="text-sm text-muted-foreground capitalize">{program.status || 'draft'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Category</label>
+                <p className="text-sm text-muted-foreground">{program.category || 'Not specified'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Difficulty</label>
+                <p className="text-sm text-muted-foreground">{program.difficulty || 'Not specified'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DashboardPageContent>
+    </DashboardPage>
   );
 }

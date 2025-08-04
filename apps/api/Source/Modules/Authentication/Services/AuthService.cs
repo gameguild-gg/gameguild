@@ -31,8 +31,12 @@ namespace GameGuild.Modules.Authentication {
 
       if (passwordCredential == null || !VerifyPassword(request.Password, passwordCredential.Value)) throw new UnauthorizedAccessException("Invalid credentials");
 
-      var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-      var roles = new[] { "User" }; // TODO: fetch actual roles if available
+      var userDto = new UserDto {
+        Id = user.Id, Username = user.Name, Email = user.Email,
+      };
+      var roles = new[] {
+        "User",
+      }; // TODO: fetch actual roles if available
 
       var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
       var refreshToken = jwtTokenService.GenerateRefreshToken();
@@ -41,7 +45,9 @@ namespace GameGuild.Modules.Authentication {
       await SaveRefreshTokenAsync(user.Id, refreshToken);
 
       // Create initial response
-      var response = new SignInResponseDto { AccessToken = accessToken, RefreshToken = refreshToken, User = userDto };
+      var response = new SignInResponseDto {
+        AccessToken = accessToken, RefreshToken = refreshToken, User = userDto,
+      };
 
       // Enhance response with tenant data
       // Note: We need to cast the user to the expected type for TenantAuthService
@@ -57,7 +63,9 @@ namespace GameGuild.Modules.Authentication {
     public async Task<SignInResponseDto> LocalSignUpAsync(LocalSignUpRequestDto request) {
       if (await context.Users.AnyAsync(u => u.Email == request.Email)) throw new InvalidOperationException("User already exists");
 
-      var user = new User { Name = request.Username ?? request.Email, Email = request.Email, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+      var user = new User {
+        Name = request.Username ?? request.Email, Email = request.Email, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow,
+      };
       context.Users.Add(user);
       await context.SaveChangesAsync();
 
@@ -84,8 +92,12 @@ namespace GameGuild.Modules.Authentication {
         }
       }
 
-      var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-      var roles = new[] { "User" }; // TODO: fetch actual roles if available
+      var userDto = new UserDto {
+        Id = user.Id, Username = user.Name, Email = user.Email,
+      };
+      var roles = new[] {
+        "User",
+      }; // TODO: fetch actual roles if available
 
       var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
       var refreshToken = jwtTokenService.GenerateRefreshToken();
@@ -94,7 +106,9 @@ namespace GameGuild.Modules.Authentication {
       await SaveRefreshTokenAsync(user.Id, refreshToken);
 
       // Create initial response
-      var response = new SignInResponseDto { AccessToken = accessToken, RefreshToken = refreshToken, User = userDto };
+      var response = new SignInResponseDto {
+        AccessToken = accessToken, RefreshToken = refreshToken, User = userDto,
+      };
 
       // Enhance response with tenant data
       return await tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
@@ -111,30 +125,33 @@ namespace GameGuild.Modules.Authentication {
     private static bool VerifyPassword(string password, string hash) { return HashPassword(password) == hash; }
 
     public async Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request) {
-      Console.WriteLine($"🔥🔥🔥 [AUTHSERVICE] RefreshTokenAsync called with token: {request.RefreshToken?.Substring(0, Math.Min(request.RefreshToken?.Length ?? 0, 20))}...");
+      Console.WriteLine($"🔥🔥🔥 [AUTHSERVICE] RefreshTokenAsync called with token: {request.RefreshToken?[..Math.Min(request.RefreshToken?.Length ?? 0, 20)]}...");
       logger.LogInformation("Refresh token request received. Token length: {TokenLength}", request.RefreshToken?.Length ?? 0);
-      
+
       // Check all refresh tokens for debugging
       var allTokens = await context.RefreshTokens.ToListAsync();
       logger.LogInformation("Total refresh tokens in database: {Count}", allTokens.Count);
-      
+
       foreach (var token in allTokens) {
-        var tokenPrefix = token.Token?.Length > 10 ? token.Token.Substring(0, 10) : token.Token ?? "null";
-        logger.LogInformation("Token: {TokenPrefix}... | User: {UserId} | Expires: {ExpiresAt} | Revoked: {IsRevoked}", 
+        var tokenPrefix = token.Token?.Length > 10 ? token.Token[..10] : token.Token ?? "null";
+        logger.LogInformation(
+          "Token: {TokenPrefix}... | User: {UserId} | ExpiresAt: {ExpiresAt} | Revoked: {IsRevoked}",
           tokenPrefix,
-          token.UserId, 
-          token.ExpiresAt, 
-          token.IsRevoked);
+          token.UserId,
+          token.ExpiresAt,
+          token.IsRevoked
+        );
       }
-      
+
       var refreshToken = await context.RefreshTokens.Where(rt => rt.Token == request.RefreshToken)
                                       .Where(rt => !rt.IsRevoked)
                                       .Where(rt => rt.ExpiresAt > DateTime.UtcNow)
                                       .FirstOrDefaultAsync();
 
       if (refreshToken == null) {
-        var tokenPrefix = request.RefreshToken?.Length > 10 ? request.RefreshToken.Substring(0, 10) : request.RefreshToken ?? "null";
+        var tokenPrefix = request.RefreshToken?.Length > 10 ? request.RefreshToken[..10] : request.RefreshToken ?? "null";
         logger.LogWarning("Refresh token validation failed. Token: {TokenPrefix}...", tokenPrefix);
+
         throw new UnauthorizedAccessException("Invalid refresh token");
       }
 
@@ -146,8 +163,12 @@ namespace GameGuild.Modules.Authentication {
       var tenantId = request.TenantId;
 
       // Generate new tokens
-      var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-      var roles = new[] { "User" }; // TODO: fetch actual roles if available
+      var userDto = new UserDto {
+        Id = user.Id, Username = user.Name, Email = user.Email,
+      };
+      var roles = new[] {
+        "User",
+      }; // TODO: fetch actual roles if available
 
       // Get tenant claims if a tenantId was provided
       IEnumerable<Claim>? tenantClaims = null;
@@ -176,7 +197,9 @@ namespace GameGuild.Modules.Authentication {
       context.RefreshTokens.Add(newRefreshTokenEntity);
       await context.SaveChangesAsync();
 
-      var response = new RefreshTokenResponseDto { AccessToken = newAccessToken, RefreshToken = newRefreshToken, ExpiresAt = newRefreshTokenEntity.ExpiresAt, TenantId = tenantId };
+      var response = new RefreshTokenResponseDto {
+        AccessToken = newAccessToken, RefreshToken = newRefreshToken, ExpiresAt = newRefreshTokenEntity.ExpiresAt, TenantId = tenantId,
+      };
 
       return response;
     }
@@ -205,8 +228,12 @@ namespace GameGuild.Modules.Authentication {
         await FindOrCreateOAuthUserAsync(githubUser.Email, githubUser.Name, "github", githubUser.Id.ToString());
 
       // Generate tokens
-      var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-      var roles = new[] { "User" }; // TODO: fetch actual roles
+      var userDto = new UserDto {
+        Id = user.Id, Username = user.Name, Email = user.Email,
+      };
+      var roles = new[] {
+        "User",
+      }; // TODO: fetch actual roles
       var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
       var refreshToken = jwtTokenService.GenerateRefreshToken();
 
@@ -214,7 +241,9 @@ namespace GameGuild.Modules.Authentication {
       await SaveRefreshTokenAsync(user.Id, refreshToken);
 
       // Create initial response
-      var response = new SignInResponseDto { AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto };
+      var response = new SignInResponseDto {
+        AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto,
+      };
 
       // Enhance with tenant data
       return await tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
@@ -232,8 +261,12 @@ namespace GameGuild.Modules.Authentication {
         await FindOrCreateOAuthUserAsync(googleUser.Email, googleUser.Name, "google", googleUser.Id);
 
       // Generate tokens
-      var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-      var roles = new[] { "User" }; // TODO: fetch actual roles
+      var userDto = new UserDto {
+        Id = user.Id, Username = user.Name, Email = user.Email,
+      };
+      var roles = new[] {
+        "User",
+      }; // TODO: fetch actual roles
       var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
       var refreshToken = jwtTokenService.GenerateRefreshToken();
 
@@ -241,7 +274,9 @@ namespace GameGuild.Modules.Authentication {
       await SaveRefreshTokenAsync(user.Id, refreshToken);
 
       // Create initial response
-      var response = new SignInResponseDto { AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto };
+      var response = new SignInResponseDto {
+        AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto,
+      };
 
       // Enhance with tenant data
       return await tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
@@ -263,8 +298,12 @@ namespace GameGuild.Modules.Authentication {
           await FindOrCreateOAuthUserAsync(googleUser.Email, googleUser.Name, "google", googleUser.Id);
 
         // Generate tokens
-        var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-        var roles = new[] { "User" }; // TODO: fetch actual roles
+        var userDto = new UserDto {
+          Id = user.Id, Username = user.Name, Email = user.Email,
+        };
+        var roles = new[] {
+          "User",
+        }; // TODO: fetch actual roles
         var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
         var refreshToken = jwtTokenService.GenerateRefreshToken();
 
@@ -272,7 +311,9 @@ namespace GameGuild.Modules.Authentication {
         await SaveRefreshTokenAsync(user.Id, refreshToken);
 
         // Create initial response
-        var response = new SignInResponseDto { AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto };
+        var response = new SignInResponseDto {
+          AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto,
+        };
 
         // Enhance with tenant data
         var finalResponse =
@@ -344,7 +385,11 @@ namespace GameGuild.Modules.Authentication {
       if (credential == null) {
         // Add OAuth credential - store provider info in Type and provider ID in Metadata
         var metadata =
-          System.Text.Json.JsonSerializer.Serialize(new { ProviderId = providerId, Provider = provider });
+          System.Text.Json.JsonSerializer.Serialize(
+            new {
+              ProviderId = providerId, Provider = provider,
+            }
+          );
 
         credential = new Credential {
           Id = Guid.NewGuid(),
@@ -393,8 +438,12 @@ namespace GameGuild.Modules.Authentication {
         await web3Service.FindOrCreateWeb3UserAsync(request.WalletAddress, request.ChainId ?? "1");
 
       // Generate tokens
-      var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-      var roles = new[] { "User" }; // TODO: fetch actual roles
+      var userDto = new UserDto {
+        Id = user.Id, Username = user.Name, Email = user.Email,
+      };
+      var roles = new[] {
+        "User",
+      }; // TODO: fetch actual roles
       var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
       var refreshToken = jwtTokenService.GenerateRefreshToken();
 
@@ -402,7 +451,9 @@ namespace GameGuild.Modules.Authentication {
       await SaveRefreshTokenAsync(user.Id, refreshToken);
 
       // Create initial response
-      var response = new SignInResponseDto { AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto };
+      var response = new SignInResponseDto {
+        AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto,
+      };
 
       // Enhance with tenant data
       return await tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
@@ -421,16 +472,28 @@ namespace GameGuild.Modules.Authentication {
         var user =
           await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.Id == userId);
 
-        if (user == null) { return new EmailOperationResponseDto { Success = false, Message = "User not found" }; }
+        if (user == null) {
+          return new EmailOperationResponseDto {
+            Success = false, Message = "User not found",
+          };
+        }
 
         var passwordCredential = user.Credentials?.FirstOrDefault(c => c.Type == "password");
 
-        if (passwordCredential == null) { return new EmailOperationResponseDto { Success = false, Message = "No password set for this account" }; }
+        if (passwordCredential == null) {
+          return new EmailOperationResponseDto {
+            Success = false, Message = "No password set for this account",
+          };
+        }
 
         // Verify current password
         var hashedCurrentPassword = HashPassword(request.CurrentPassword);
 
-        if (passwordCredential.Value != hashedCurrentPassword) { return new EmailOperationResponseDto { Success = false, Message = "Current password is incorrect" }; }
+        if (passwordCredential.Value != hashedCurrentPassword) {
+          return new EmailOperationResponseDto {
+            Success = false, Message = "Current password is incorrect",
+          };
+        }
 
         // Update password
         passwordCredential.Value = HashPassword(request.NewPassword);
@@ -439,9 +502,15 @@ namespace GameGuild.Modules.Authentication {
 
         await context.SaveChangesAsync();
 
-        return new EmailOperationResponseDto { Success = true, Message = "Password changed successfully" };
+        return new EmailOperationResponseDto {
+          Success = true, Message = "Password changed successfully",
+        };
       }
-      catch (Exception) { return new EmailOperationResponseDto { Success = false, Message = "Failed to change password" }; }
+      catch (Exception) {
+        return new EmailOperationResponseDto {
+          Success = false, Message = "Failed to change password",
+        };
+      }
     }
   }
 }

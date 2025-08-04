@@ -107,7 +107,7 @@ export async function getRecentActivity(limit: number = 10): Promise<{ success: 
 
 /**
  * Revalidate recent activity cache
-/**
+ /**
  * Note: This function is called from server-side refresh actions only
  * Do not import this directly in client components
  */

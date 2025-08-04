@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useEffect, useCallback } from 'react';
+import { useRouter } from '@/i18n/navigation';
+import { useCallback, useEffect } from 'react';
 
 export default function JoinModal() {
   const router = useRouter();

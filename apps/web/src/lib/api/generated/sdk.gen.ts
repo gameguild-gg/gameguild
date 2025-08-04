@@ -40,15 +40,15 @@ import type {
   GetApiProgramsByProgramIdActivityGradesStatisticsResponses,
   GetApiProgramsByProgramIdActivityGradesContentByContentIdData,
   GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses,
-  PostApiAuthSignupData,
-  PostApiAuthSignupResponses,
-  PostApiAuthSignupErrors,
-  PostApiAuthSigninData,
-  PostApiAuthSigninResponses,
-  PostApiAuthSigninErrors,
-  PostApiAuthGoogleIdTokenData,
-  PostApiAuthGoogleIdTokenResponses,
-  PostApiAuthGoogleIdTokenErrors,
+  PostApiAuthSignUpData,
+  PostApiAuthSignUpResponses,
+  PostApiAuthSignUpErrors,
+  PostApiAuthSignInData,
+  PostApiAuthSignInResponses,
+  PostApiAuthSignInErrors,
+  PostApiAuthGoogleData,
+  PostApiAuthGoogleResponses,
+  PostApiAuthGoogleErrors,
   PostApiAuthRefreshData,
   PostApiAuthRefreshResponses,
   PostApiAuthRefreshErrors,
@@ -102,6 +102,44 @@ import type {
   GetHealthResponses,
   GetHealthDatabaseData,
   GetHealthDatabaseResponses,
+  GetApiModulePermissionsCheckData,
+  GetApiModulePermissionsCheckResponses,
+  GetApiModulePermissionsMyPermissionsData,
+  GetApiModulePermissionsMyPermissionsResponses,
+  GetApiModulePermissionsUsersByUserIdPermissionsData,
+  GetApiModulePermissionsUsersByUserIdPermissionsResponses,
+  GetApiModulePermissionsUsersWithPermissionData,
+  GetApiModulePermissionsUsersWithPermissionResponses,
+  PostApiModulePermissionsAssignRoleData,
+  PostApiModulePermissionsAssignRoleResponses,
+  DeleteApiModulePermissionsRevokeRoleData,
+  DeleteApiModulePermissionsRevokeRoleResponses,
+  GetApiModulePermissionsUsersByUserIdRolesData,
+  GetApiModulePermissionsUsersByUserIdRolesResponses,
+  GetApiModulePermissionsRolesByRoleNameUsersData,
+  GetApiModulePermissionsRolesByRoleNameUsersResponses,
+  GetApiModulePermissionsTestingLabMyPermissionsData,
+  GetApiModulePermissionsTestingLabMyPermissionsResponses,
+  GetApiModulePermissionsTestingLabUsersByUserIdPermissionsData,
+  GetApiModulePermissionsTestingLabUsersByUserIdPermissionsResponses,
+  GetApiModulePermissionsTestingLabCanCreateSessionsData,
+  GetApiModulePermissionsTestingLabCanCreateSessionsResponses,
+  GetApiModulePermissionsTestingLabCanDeleteSessionsData,
+  GetApiModulePermissionsTestingLabCanDeleteSessionsResponses,
+  GetApiModulePermissionsTestingLabCanManageTestersData,
+  GetApiModulePermissionsTestingLabCanManageTestersResponses,
+  GetApiModulePermissionsTestingLabCanViewReportsData,
+  GetApiModulePermissionsTestingLabCanViewReportsResponses,
+  GetApiModulePermissionsTestingLabCanExportDataData,
+  GetApiModulePermissionsTestingLabCanExportDataResponses,
+  GetApiModulePermissionsModulesByModuleRolesData,
+  GetApiModulePermissionsModulesByModuleRolesResponses,
+  PostApiModulePermissionsModulesByModuleRolesData,
+  PostApiModulePermissionsModulesByModuleRolesResponses,
+  DeleteApiModulePermissionsModulesByModuleRolesByRoleNameData,
+  DeleteApiModulePermissionsModulesByModuleRolesByRoleNameResponses,
+  PutApiModulePermissionsModulesByModuleRolesByRoleNameData,
+  PutApiModulePermissionsModulesByModuleRolesByRoleNameResponses,
   GetApiPaymentMethodsMeData,
   GetApiPaymentMethodsMeResponses,
   PostApiPaymentIntentData,
@@ -328,6 +366,20 @@ import type {
   PostApiProgramsByProgramIdContentSearchResponses,
   GetApiProgramsByProgramIdContentStatsData,
   GetApiProgramsByProgramIdContentStatsResponses,
+  GetApiProjectsByProjectIdPermissionsMyPermissionsData,
+  GetApiProjectsByProjectIdPermissionsMyPermissionsResponses,
+  GetApiProjectsByProjectIdPermissionsCollaboratorsData,
+  GetApiProjectsByProjectIdPermissionsCollaboratorsResponses,
+  PostApiProjectsByProjectIdPermissionsCollaboratorsData,
+  PostApiProjectsByProjectIdPermissionsCollaboratorsResponses,
+  DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdData,
+  DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses,
+  PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdData,
+  PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses,
+  GetApiProjectsByProjectIdPermissionsRoleTemplatesData,
+  GetApiProjectsByProjectIdPermissionsRoleTemplatesResponses,
+  PostApiProjectsByProjectIdPermissionsShareWithRoleData,
+  PostApiProjectsByProjectIdPermissionsShareWithRoleResponses,
   GetApiProjectsData,
   GetApiProjectsResponses,
   PostApiProjectsData,
@@ -360,6 +412,22 @@ import type {
   GetApiProjectsCategoryByCategoryIdResponses,
   GetApiProjectsCreatorByCreatorIdData,
   GetApiProjectsCreatorByCreatorIdResponses,
+  GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsData,
+  GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsResponses,
+  GetApiResourcesByResourceTypeByResourceIdPermissionsUsersData,
+  GetApiResourcesByResourceTypeByResourceIdPermissionsUsersResponses,
+  PostApiResourcesByResourceTypeByResourceIdPermissionsShareData,
+  PostApiResourcesByResourceTypeByResourceIdPermissionsShareResponses,
+  DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdData,
+  DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses,
+  PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdData,
+  PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses,
+  PostApiResourcesByResourceTypeByResourceIdPermissionsInviteData,
+  PostApiResourcesByResourceTypeByResourceIdPermissionsInviteResponses,
+  GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsData,
+  GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsResponses,
+  GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyData,
+  GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyResponses,
   GetApiSubscriptionMeData,
   GetApiSubscriptionMeResponses,
   GetApiSubscriptionMeActiveData,
@@ -548,6 +616,30 @@ import type {
   PostTestingFeedbackByFeedbackIdReportResponses,
   PostTestingFeedbackByFeedbackIdQualityData,
   PostTestingFeedbackByFeedbackIdQualityResponses,
+  GetTestingLocationsData,
+  GetTestingLocationsResponses,
+  PostTestingLocationsData,
+  PostTestingLocationsResponses,
+  DeleteTestingLocationsByIdData,
+  DeleteTestingLocationsByIdResponses,
+  GetTestingLocationsByIdData,
+  GetTestingLocationsByIdResponses,
+  PutTestingLocationsByIdData,
+  PutTestingLocationsByIdResponses,
+  PostTestingLocationsByIdRestoreData,
+  PostTestingLocationsByIdRestoreResponses,
+  GetTestingPermissionsCheckData,
+  GetTestingPermissionsCheckResponses,
+  GetTestingPermissionsMyPermissionsData,
+  GetTestingPermissionsMyPermissionsResponses,
+  PostTestingPermissionsAssignRoleData,
+  PostTestingPermissionsAssignRoleResponses,
+  PostTestingSessionsCreateWithPermissionsData,
+  PostTestingSessionsCreateWithPermissionsResponses,
+  DeleteTestingSessionsByIdDeleteWithPermissionsData,
+  DeleteTestingSessionsByIdDeleteWithPermissionsResponses,
+  GetTestingPermissionsUsersWithRoleByRoleNameData,
+  GetTestingPermissionsUsersWithRoleByRoleNameResponses,
   GetApiUsersByUserIdAchievementsData,
   GetApiUsersByUserIdAchievementsResponses,
   GetApiUsersByUserIdAchievementsProgressData,
@@ -644,27 +736,21 @@ export const postApiAchievements = <ThrowOnError extends boolean = false>(option
   });
 };
 
-export const deleteApiAchievementsByAchievementId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiAchievementsByAchievementIdData, ThrowOnError>,
-) => {
+export const deleteApiAchievementsByAchievementId = <ThrowOnError extends boolean = false>(options: Options<DeleteApiAchievementsByAchievementIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiAchievementsByAchievementIdResponses, unknown, ThrowOnError>({
     url: '/api/achievements/{achievementId}',
     ...options,
   });
 };
 
-export const getApiAchievementsByAchievementId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiAchievementsByAchievementIdData, ThrowOnError>,
-) => {
+export const getApiAchievementsByAchievementId = <ThrowOnError extends boolean = false>(options: Options<GetApiAchievementsByAchievementIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiAchievementsByAchievementIdResponses, unknown, ThrowOnError>({
     url: '/api/achievements/{achievementId}',
     ...options,
   });
 };
 
-export const putApiAchievementsByAchievementId = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiAchievementsByAchievementIdData, ThrowOnError>,
-) => {
+export const putApiAchievementsByAchievementId = <ThrowOnError extends boolean = false>(options: Options<PutApiAchievementsByAchievementIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiAchievementsByAchievementIdResponses, unknown, ThrowOnError>({
     url: '/api/achievements/{achievementId}',
     ...options,
@@ -675,9 +761,7 @@ export const putApiAchievementsByAchievementId = <ThrowOnError extends boolean =
   });
 };
 
-export const postApiAchievementsByAchievementIdAward = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiAchievementsByAchievementIdAwardData, ThrowOnError>,
-) => {
+export const postApiAchievementsByAchievementIdAward = <ThrowOnError extends boolean = false>(options: Options<PostApiAchievementsByAchievementIdAwardData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiAchievementsByAchievementIdAwardResponses, unknown, ThrowOnError>({
     url: '/api/achievements/{achievementId}/award',
     ...options,
@@ -688,9 +772,7 @@ export const postApiAchievementsByAchievementIdAward = <ThrowOnError extends boo
   });
 };
 
-export const postApiAchievementsByAchievementIdBulkAward = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiAchievementsByAchievementIdBulkAwardData, ThrowOnError>,
-) => {
+export const postApiAchievementsByAchievementIdBulkAward = <ThrowOnError extends boolean = false>(options: Options<PostApiAchievementsByAchievementIdBulkAwardData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiAchievementsByAchievementIdBulkAwardResponses, unknown, ThrowOnError>({
     url: '/api/achievements/{achievementId}/bulk-award',
     ...options,
@@ -701,9 +783,7 @@ export const postApiAchievementsByAchievementIdBulkAward = <ThrowOnError extends
   });
 };
 
-export const getApiAchievementsByAchievementIdStatistics = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiAchievementsByAchievementIdStatisticsData, ThrowOnError>,
-) => {
+export const getApiAchievementsByAchievementIdStatistics = <ThrowOnError extends boolean = false>(options: Options<GetApiAchievementsByAchievementIdStatisticsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiAchievementsByAchievementIdStatisticsResponses, unknown, ThrowOnError>({
     url: '/api/achievements/{achievementId}/statistics',
     ...options,
@@ -717,9 +797,7 @@ export const getApiAchievementsStatistics = <ThrowOnError extends boolean = fals
   });
 };
 
-export const postApiProgramsByProgramIdActivityGrades = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramsByProgramIdActivityGradesData, ThrowOnError>,
-) => {
+export const postApiProgramsByProgramIdActivityGrades = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramsByProgramIdActivityGradesData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdActivityGradesResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/activity-grades',
     ...options,
@@ -739,36 +817,28 @@ export const getApiProgramsByProgramIdActivityGradesInteractionByContentInteract
   });
 };
 
-export const getApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/activity-grades/grader/{graderProgramUserId}',
     ...options,
   });
 };
 
-export const getApiProgramsByProgramIdActivityGradesStudentByProgramUserId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdActivityGradesStudentByProgramUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/activity-grades/student/{programUserId}',
     ...options,
   });
 };
 
-export const deleteApiProgramsByProgramIdActivityGradesByGradeId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProgramsByProgramIdActivityGradesByGradeIdData, ThrowOnError>,
-) => {
+export const deleteApiProgramsByProgramIdActivityGradesByGradeId = <ThrowOnError extends boolean = false>(options: Options<DeleteApiProgramsByProgramIdActivityGradesByGradeIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramsByProgramIdActivityGradesByGradeIdResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/activity-grades/{gradeId}',
     ...options,
   });
 };
 
-export const putApiProgramsByProgramIdActivityGradesByGradeId = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiProgramsByProgramIdActivityGradesByGradeIdData, ThrowOnError>,
-) => {
+export const putApiProgramsByProgramIdActivityGradesByGradeId = <ThrowOnError extends boolean = false>(options: Options<PutApiProgramsByProgramIdActivityGradesByGradeIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiProgramsByProgramIdActivityGradesByGradeIdResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/activity-grades/{gradeId}',
     ...options,
@@ -779,36 +849,30 @@ export const putApiProgramsByProgramIdActivityGradesByGradeId = <ThrowOnError ex
   });
 };
 
-export const getApiProgramsByProgramIdActivityGradesPending = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdActivityGradesPendingData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdActivityGradesPending = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdActivityGradesPendingData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesPendingResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/activity-grades/pending',
     ...options,
   });
 };
 
-export const getApiProgramsByProgramIdActivityGradesStatistics = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdActivityGradesStatisticsData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdActivityGradesStatistics = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdActivityGradesStatisticsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesStatisticsResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/activity-grades/statistics',
     ...options,
   });
 };
 
-export const getApiProgramsByProgramIdActivityGradesContentByContentId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdActivityGradesContentByContentIdData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdActivityGradesContentByContentId = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdActivityGradesContentByContentIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/activity-grades/content/{contentId}',
     ...options,
   });
 };
 
-export const postApiAuthSignup = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSignupData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiAuthSignupResponses, PostApiAuthSignupErrors, ThrowOnError>({
-    url: '/api/auth/signup',
+export const postApiAuthSignUp = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSignUpData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAuthSignUpResponses, PostApiAuthSignUpErrors, ThrowOnError>({
+    url: '/api/auth/sign-up',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -817,9 +881,9 @@ export const postApiAuthSignup = <ThrowOnError extends boolean = false>(options?
   });
 };
 
-export const postApiAuthSignin = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSigninData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiAuthSigninResponses, PostApiAuthSigninErrors, ThrowOnError>({
-    url: '/api/auth/signin',
+export const postApiAuthSignIn = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSignInData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAuthSignInResponses, PostApiAuthSignInErrors, ThrowOnError>({
+    url: '/api/auth/sign-in',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -828,9 +892,9 @@ export const postApiAuthSignin = <ThrowOnError extends boolean = false>(options?
   });
 };
 
-export const postApiAuthGoogleIdToken = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthGoogleIdTokenData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiAuthGoogleIdTokenResponses, PostApiAuthGoogleIdTokenErrors, ThrowOnError>({
-    url: '/api/auth/google/id-token',
+export const postApiAuthGoogle = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthGoogleData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAuthGoogleResponses, PostApiAuthGoogleErrors, ThrowOnError>({
+    url: '/api/auth/google',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -879,9 +943,7 @@ export const postApiContentinteractionStart = <ThrowOnError extends boolean = fa
   });
 };
 
-export const putApiContentinteractionByInteractionIdProgress = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiContentinteractionByInteractionIdProgressData, ThrowOnError>,
-) => {
+export const putApiContentinteractionByInteractionIdProgress = <ThrowOnError extends boolean = false>(options: Options<PutApiContentinteractionByInteractionIdProgressData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiContentinteractionByInteractionIdProgressResponses, unknown, ThrowOnError>({
     url: '/api/contentinteraction/{interactionId}/progress',
     ...options,
@@ -892,9 +954,7 @@ export const putApiContentinteractionByInteractionIdProgress = <ThrowOnError ext
   });
 };
 
-export const postApiContentinteractionByInteractionIdSubmit = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiContentinteractionByInteractionIdSubmitData, ThrowOnError>,
-) => {
+export const postApiContentinteractionByInteractionIdSubmit = <ThrowOnError extends boolean = false>(options: Options<PostApiContentinteractionByInteractionIdSubmitData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiContentinteractionByInteractionIdSubmitResponses, unknown, ThrowOnError>({
     url: '/api/contentinteraction/{interactionId}/submit',
     ...options,
@@ -905,9 +965,7 @@ export const postApiContentinteractionByInteractionIdSubmit = <ThrowOnError exte
   });
 };
 
-export const postApiContentinteractionByInteractionIdComplete = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiContentinteractionByInteractionIdCompleteData, ThrowOnError>,
-) => {
+export const postApiContentinteractionByInteractionIdComplete = <ThrowOnError extends boolean = false>(options: Options<PostApiContentinteractionByInteractionIdCompleteData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiContentinteractionByInteractionIdCompleteResponses, unknown, ThrowOnError>({
     url: '/api/contentinteraction/{interactionId}/complete',
     ...options,
@@ -918,27 +976,21 @@ export const postApiContentinteractionByInteractionIdComplete = <ThrowOnError ex
   });
 };
 
-export const getApiContentinteractionUserByProgramUserIdContentByContentId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiContentinteractionUserByProgramUserIdContentByContentIdData, ThrowOnError>,
-) => {
+export const getApiContentinteractionUserByProgramUserIdContentByContentId = <ThrowOnError extends boolean = false>(options: Options<GetApiContentinteractionUserByProgramUserIdContentByContentIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiContentinteractionUserByProgramUserIdContentByContentIdResponses, unknown, ThrowOnError>({
     url: '/api/contentinteraction/user/{programUserId}/content/{contentId}',
     ...options,
   });
 };
 
-export const getApiContentinteractionUserByProgramUserId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiContentinteractionUserByProgramUserIdData, ThrowOnError>,
-) => {
+export const getApiContentinteractionUserByProgramUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiContentinteractionUserByProgramUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiContentinteractionUserByProgramUserIdResponses, unknown, ThrowOnError>({
     url: '/api/contentinteraction/user/{programUserId}',
     ...options,
   });
 };
 
-export const putApiContentinteractionByInteractionIdTimeSpent = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiContentinteractionByInteractionIdTimeSpentData, ThrowOnError>,
-) => {
+export const putApiContentinteractionByInteractionIdTimeSpent = <ThrowOnError extends boolean = false>(options: Options<PutApiContentinteractionByInteractionIdTimeSpentData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiContentinteractionByInteractionIdTimeSpentResponses, unknown, ThrowOnError>({
     url: '/api/contentinteraction/{interactionId}/time-spent',
     ...options,
@@ -999,9 +1051,7 @@ export const putCredentialsById = <ThrowOnError extends boolean = false>(options
   });
 };
 
-export const getCredentialsUserByUserIdTypeByType = <ThrowOnError extends boolean = false>(
-  options: Options<GetCredentialsUserByUserIdTypeByTypeData, ThrowOnError>,
-) => {
+export const getCredentialsUserByUserIdTypeByType = <ThrowOnError extends boolean = false>(options: Options<GetCredentialsUserByUserIdTypeByTypeData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetCredentialsUserByUserIdTypeByTypeResponses, unknown, ThrowOnError>({
     url: '/credentials/user/{userId}/type/{type}',
     ...options,
@@ -1061,6 +1111,155 @@ export const getHealthDatabase = <ThrowOnError extends boolean = false>(options?
   return (options?.client ?? _heyApiClient).get<GetHealthDatabaseResponses, unknown, ThrowOnError>({
     url: '/health/database',
     ...options,
+  });
+};
+
+export const getApiModulePermissionsCheck = <ThrowOnError extends boolean = false>(options?: Options<GetApiModulePermissionsCheckData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsCheckResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/check',
+    ...options,
+  });
+};
+
+export const getApiModulePermissionsMyPermissions = <ThrowOnError extends boolean = false>(options?: Options<GetApiModulePermissionsMyPermissionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsMyPermissionsResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/my-permissions',
+    ...options,
+  });
+};
+
+export const getApiModulePermissionsUsersByUserIdPermissions = <ThrowOnError extends boolean = false>(options: Options<GetApiModulePermissionsUsersByUserIdPermissionsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiModulePermissionsUsersByUserIdPermissionsResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/users/{userId}/permissions',
+    ...options,
+  });
+};
+
+export const getApiModulePermissionsUsersWithPermission = <ThrowOnError extends boolean = false>(options?: Options<GetApiModulePermissionsUsersWithPermissionData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsUsersWithPermissionResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/users-with-permission',
+    ...options,
+  });
+};
+
+export const postApiModulePermissionsAssignRole = <ThrowOnError extends boolean = false>(options?: Options<PostApiModulePermissionsAssignRoleData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiModulePermissionsAssignRoleResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/assign-role',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const deleteApiModulePermissionsRevokeRole = <ThrowOnError extends boolean = false>(options?: Options<DeleteApiModulePermissionsRevokeRoleData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).delete<DeleteApiModulePermissionsRevokeRoleResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/revoke-role',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiModulePermissionsUsersByUserIdRoles = <ThrowOnError extends boolean = false>(options: Options<GetApiModulePermissionsUsersByUserIdRolesData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiModulePermissionsUsersByUserIdRolesResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/users/{userId}/roles',
+    ...options,
+  });
+};
+
+export const getApiModulePermissionsRolesByRoleNameUsers = <ThrowOnError extends boolean = false>(options: Options<GetApiModulePermissionsRolesByRoleNameUsersData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiModulePermissionsRolesByRoleNameUsersResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/roles/{roleName}/users',
+    ...options,
+  });
+};
+
+export const getApiModulePermissionsTestingLabMyPermissions = <ThrowOnError extends boolean = false>(options?: Options<GetApiModulePermissionsTestingLabMyPermissionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabMyPermissionsResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/testing-lab/my-permissions',
+    ...options,
+  });
+};
+
+export const getApiModulePermissionsTestingLabUsersByUserIdPermissions = <ThrowOnError extends boolean = false>(options: Options<GetApiModulePermissionsTestingLabUsersByUserIdPermissionsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabUsersByUserIdPermissionsResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/testing-lab/users/{userId}/permissions',
+    ...options,
+  });
+};
+
+export const getApiModulePermissionsTestingLabCanCreateSessions = <ThrowOnError extends boolean = false>(options?: Options<GetApiModulePermissionsTestingLabCanCreateSessionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabCanCreateSessionsResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/testing-lab/can-create-sessions',
+    ...options,
+  });
+};
+
+export const getApiModulePermissionsTestingLabCanDeleteSessions = <ThrowOnError extends boolean = false>(options?: Options<GetApiModulePermissionsTestingLabCanDeleteSessionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabCanDeleteSessionsResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/testing-lab/can-delete-sessions',
+    ...options,
+  });
+};
+
+export const getApiModulePermissionsTestingLabCanManageTesters = <ThrowOnError extends boolean = false>(options?: Options<GetApiModulePermissionsTestingLabCanManageTestersData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabCanManageTestersResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/testing-lab/can-manage-testers',
+    ...options,
+  });
+};
+
+export const getApiModulePermissionsTestingLabCanViewReports = <ThrowOnError extends boolean = false>(options?: Options<GetApiModulePermissionsTestingLabCanViewReportsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabCanViewReportsResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/testing-lab/can-view-reports',
+    ...options,
+  });
+};
+
+export const getApiModulePermissionsTestingLabCanExportData = <ThrowOnError extends boolean = false>(options?: Options<GetApiModulePermissionsTestingLabCanExportDataData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabCanExportDataResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/testing-lab/can-export-data',
+    ...options,
+  });
+};
+
+export const getApiModulePermissionsModulesByModuleRoles = <ThrowOnError extends boolean = false>(options: Options<GetApiModulePermissionsModulesByModuleRolesData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiModulePermissionsModulesByModuleRolesResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/modules/{module}/roles',
+    ...options,
+  });
+};
+
+export const postApiModulePermissionsModulesByModuleRoles = <ThrowOnError extends boolean = false>(options: Options<PostApiModulePermissionsModulesByModuleRolesData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiModulePermissionsModulesByModuleRolesResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/modules/{module}/roles',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const deleteApiModulePermissionsModulesByModuleRolesByRoleName = <ThrowOnError extends boolean = false>(options: Options<DeleteApiModulePermissionsModulesByModuleRolesByRoleNameData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiModulePermissionsModulesByModuleRolesByRoleNameResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/modules/{module}/roles/{roleName}',
+    ...options,
+  });
+};
+
+export const putApiModulePermissionsModulesByModuleRolesByRoleName = <ThrowOnError extends boolean = false>(options: Options<PutApiModulePermissionsModulesByModuleRolesByRoleNameData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiModulePermissionsModulesByModuleRolesByRoleNameResponses, unknown, ThrowOnError>({
+    url: '/api/module-permissions/modules/{module}/roles/{roleName}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
   });
 };
 
@@ -1157,9 +1356,7 @@ export const getApiPaymentsUsersByUserId = <ThrowOnError extends boolean = false
   });
 };
 
-export const getApiPaymentsProductsByProductId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiPaymentsProductsByProductIdData, ThrowOnError>,
-) => {
+export const getApiPaymentsProductsByProductId = <ThrowOnError extends boolean = false>(options: Options<GetApiPaymentsProductsByProductIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiPaymentsProductsByProductIdResponses, unknown, ThrowOnError>({
     url: '/api/payments/products/{productId}',
     ...options,
@@ -1369,18 +1566,14 @@ export const getApiProductByIdBundleItems = <ThrowOnError extends boolean = fals
   });
 };
 
-export const deleteApiProductByBundleIdBundleItemsByProductId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProductByBundleIdBundleItemsByProductIdData, ThrowOnError>,
-) => {
+export const deleteApiProductByBundleIdBundleItemsByProductId = <ThrowOnError extends boolean = false>(options: Options<DeleteApiProductByBundleIdBundleItemsByProductIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProductByBundleIdBundleItemsByProductIdResponses, unknown, ThrowOnError>({
     url: '/api/product/{bundleId}/bundle-items/{productId}',
     ...options,
   });
 };
 
-export const postApiProductByBundleIdBundleItemsByProductId = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProductByBundleIdBundleItemsByProductIdData, ThrowOnError>,
-) => {
+export const postApiProductByBundleIdBundleItemsByProductId = <ThrowOnError extends boolean = false>(options: Options<PostApiProductByBundleIdBundleItemsByProductIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProductByBundleIdBundleItemsByProductIdResponses, unknown, ThrowOnError>({
     url: '/api/product/{bundleId}/bundle-items/{productId}',
     ...options,
@@ -1412,18 +1605,14 @@ export const postApiProductByIdPricing = <ThrowOnError extends boolean = false>(
   });
 };
 
-export const getApiProductByIdSubscriptionPlans = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProductByIdSubscriptionPlansData, ThrowOnError>,
-) => {
+export const getApiProductByIdSubscriptionPlans = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdSubscriptionPlansData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdSubscriptionPlansResponses, unknown, ThrowOnError>({
     url: '/api/product/{id}/subscription-plans',
     ...options,
   });
 };
 
-export const postApiProductByIdSubscriptionPlans = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProductByIdSubscriptionPlansData, ThrowOnError>,
-) => {
+export const postApiProductByIdSubscriptionPlans = <ThrowOnError extends boolean = false>(options: Options<PostApiProductByIdSubscriptionPlansData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProductByIdSubscriptionPlansResponses, unknown, ThrowOnError>({
     url: '/api/product/{id}/subscription-plans',
     ...options,
@@ -1434,18 +1623,14 @@ export const postApiProductByIdSubscriptionPlans = <ThrowOnError extends boolean
   });
 };
 
-export const getApiProductSubscriptionPlansByPlanId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProductSubscriptionPlansByPlanIdData, ThrowOnError>,
-) => {
+export const getApiProductSubscriptionPlansByPlanId = <ThrowOnError extends boolean = false>(options: Options<GetApiProductSubscriptionPlansByPlanIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductSubscriptionPlansByPlanIdResponses, unknown, ThrowOnError>({
     url: '/api/product/subscription-plans/{planId}',
     ...options,
   });
 };
 
-export const deleteApiProductByIdAccessByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProductByIdAccessByUserIdData, ThrowOnError>,
-) => {
+export const deleteApiProductByIdAccessByUserId = <ThrowOnError extends boolean = false>(options: Options<DeleteApiProductByIdAccessByUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProductByIdAccessByUserIdResponses, unknown, ThrowOnError>({
     url: '/api/product/{id}/access/{userId}',
     ...options,
@@ -1459,9 +1644,7 @@ export const getApiProductByIdAccessByUserId = <ThrowOnError extends boolean = f
   });
 };
 
-export const postApiProductByIdAccessByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProductByIdAccessByUserIdData, ThrowOnError>,
-) => {
+export const postApiProductByIdAccessByUserId = <ThrowOnError extends boolean = false>(options: Options<PostApiProductByIdAccessByUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProductByIdAccessByUserIdResponses, unknown, ThrowOnError>({
     url: '/api/product/{id}/access/{userId}',
     ...options,
@@ -1472,9 +1655,7 @@ export const postApiProductByIdAccessByUserId = <ThrowOnError extends boolean = 
   });
 };
 
-export const getApiProductByIdUserProductByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProductByIdUserProductByUserIdData, ThrowOnError>,
-) => {
+export const getApiProductByIdUserProductByUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdUserProductByUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdUserProductByUserIdResponses, unknown, ThrowOnError>({
     url: '/api/product/{id}/user-product/{userId}',
     ...options,
@@ -1488,18 +1669,14 @@ export const getApiProductAnalyticsCount = <ThrowOnError extends boolean = false
   });
 };
 
-export const getApiProductByIdAnalyticsUserCount = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProductByIdAnalyticsUserCountData, ThrowOnError>,
-) => {
+export const getApiProductByIdAnalyticsUserCount = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdAnalyticsUserCountData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdAnalyticsUserCountResponses, unknown, ThrowOnError>({
     url: '/api/product/{id}/analytics/user-count',
     ...options,
   });
 };
 
-export const getApiProductByIdAnalyticsRevenue = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProductByIdAnalyticsRevenueData, ThrowOnError>,
-) => {
+export const getApiProductByIdAnalyticsRevenue = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdAnalyticsRevenueData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProductByIdAnalyticsRevenueResponses, unknown, ThrowOnError>({
     url: '/api/product/{id}/analytics/revenue',
     ...options,
@@ -1538,9 +1715,7 @@ export const getApiProgramCategoryByCategory = <ThrowOnError extends boolean = f
   });
 };
 
-export const getApiProgramDifficultyByDifficulty = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramDifficultyByDifficultyData, ThrowOnError>,
-) => {
+export const getApiProgramDifficultyByDifficulty = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramDifficultyByDifficultyData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramDifficultyByDifficultyResponses, unknown, ThrowOnError>({
     url: '/api/program/difficulty/{difficulty}',
     ...options,
@@ -1636,18 +1811,14 @@ export const postApiProgramByIdContent = <ThrowOnError extends boolean = false>(
   });
 };
 
-export const deleteApiProgramByIdContentByContentId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProgramByIdContentByContentIdData, ThrowOnError>,
-) => {
+export const deleteApiProgramByIdContentByContentId = <ThrowOnError extends boolean = false>(options: Options<DeleteApiProgramByIdContentByContentIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramByIdContentByContentIdResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/content/{contentId}',
     ...options,
   });
 };
 
-export const putApiProgramByIdContentByContentId = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiProgramByIdContentByContentIdData, ThrowOnError>,
-) => {
+export const putApiProgramByIdContentByContentId = <ThrowOnError extends boolean = false>(options: Options<PutApiProgramByIdContentByContentIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiProgramByIdContentByContentIdResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/content/{contentId}',
     ...options,
@@ -1658,9 +1829,7 @@ export const putApiProgramByIdContentByContentId = <ThrowOnError extends boolean
   });
 };
 
-export const postApiProgramByIdContentReorder = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramByIdContentReorderData, ThrowOnError>,
-) => {
+export const postApiProgramByIdContentReorder = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdContentReorderData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdContentReorderResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/content/reorder',
     ...options,
@@ -1671,9 +1840,7 @@ export const postApiProgramByIdContentReorder = <ThrowOnError extends boolean = 
   });
 };
 
-export const deleteApiProgramByIdUsersByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProgramByIdUsersByUserIdData, ThrowOnError>,
-) => {
+export const deleteApiProgramByIdUsersByUserId = <ThrowOnError extends boolean = false>(options: Options<DeleteApiProgramByIdUsersByUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramByIdUsersByUserIdResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/users/{userId}',
     ...options,
@@ -1694,18 +1861,14 @@ export const getApiProgramByIdUsers = <ThrowOnError extends boolean = false>(opt
   });
 };
 
-export const getApiProgramByIdUsersByUserIdProgress = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramByIdUsersByUserIdProgressData, ThrowOnError>,
-) => {
+export const getApiProgramByIdUsersByUserIdProgress = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdUsersByUserIdProgressData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdUsersByUserIdProgressResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/users/{userId}/progress',
     ...options,
   });
 };
 
-export const putApiProgramByIdUsersByUserIdProgress = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiProgramByIdUsersByUserIdProgressData, ThrowOnError>,
-) => {
+export const putApiProgramByIdUsersByUserIdProgress = <ThrowOnError extends boolean = false>(options: Options<PutApiProgramByIdUsersByUserIdProgressData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiProgramByIdUsersByUserIdProgressResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/users/{userId}/progress',
     ...options,
@@ -1716,18 +1879,14 @@ export const putApiProgramByIdUsersByUserIdProgress = <ThrowOnError extends bool
   });
 };
 
-export const postApiProgramByIdUsersByUserIdContentByContentIdComplete = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramByIdUsersByUserIdContentByContentIdCompleteData, ThrowOnError>,
-) => {
+export const postApiProgramByIdUsersByUserIdContentByContentIdComplete = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdUsersByUserIdContentByContentIdCompleteData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdUsersByUserIdContentByContentIdCompleteResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/users/{userId}/content/{contentId}/complete',
     ...options,
   });
 };
 
-export const postApiProgramByIdUsersByUserIdReset = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramByIdUsersByUserIdResetData, ThrowOnError>,
-) => {
+export const postApiProgramByIdUsersByUserIdReset = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdUsersByUserIdResetData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdUsersByUserIdResetResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/users/{userId}/reset',
     ...options,
@@ -1816,9 +1975,7 @@ export const postApiProgramByIdMonetize = <ThrowOnError extends boolean = false>
   });
 };
 
-export const postApiProgramByIdDisableMonetization = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramByIdDisableMonetizationData, ThrowOnError>,
-) => {
+export const postApiProgramByIdDisableMonetization = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdDisableMonetizationData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdDisableMonetizationResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/disable-monetization',
     ...options,
@@ -1850,27 +2007,21 @@ export const getApiProgramByIdAnalytics = <ThrowOnError extends boolean = false>
   });
 };
 
-export const getApiProgramByIdAnalyticsCompletionRates = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramByIdAnalyticsCompletionRatesData, ThrowOnError>,
-) => {
+export const getApiProgramByIdAnalyticsCompletionRates = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdAnalyticsCompletionRatesData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdAnalyticsCompletionRatesResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/analytics/completion-rates',
     ...options,
   });
 };
 
-export const getApiProgramByIdAnalyticsEngagement = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramByIdAnalyticsEngagementData, ThrowOnError>,
-) => {
+export const getApiProgramByIdAnalyticsEngagement = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdAnalyticsEngagementData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdAnalyticsEngagementResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/analytics/engagement',
     ...options,
   });
 };
 
-export const getApiProgramByIdAnalyticsRevenue = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramByIdAnalyticsRevenueData, ThrowOnError>,
-) => {
+export const getApiProgramByIdAnalyticsRevenue = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdAnalyticsRevenueData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramByIdAnalyticsRevenueResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/analytics/revenue',
     ...options,
@@ -1888,18 +2039,14 @@ export const postApiProgramByIdCreateProduct = <ThrowOnError extends boolean = f
   });
 };
 
-export const deleteApiProgramByIdLinkProductByProductId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProgramByIdLinkProductByProductIdData, ThrowOnError>,
-) => {
+export const deleteApiProgramByIdLinkProductByProductId = <ThrowOnError extends boolean = false>(options: Options<DeleteApiProgramByIdLinkProductByProductIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramByIdLinkProductByProductIdResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/link-product/{productId}',
     ...options,
   });
 };
 
-export const postApiProgramByIdLinkProductByProductId = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramByIdLinkProductByProductIdData, ThrowOnError>,
-) => {
+export const postApiProgramByIdLinkProductByProductId = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdLinkProductByProductIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramByIdLinkProductByProductIdResponses, unknown, ThrowOnError>({
     url: '/api/program/{id}/link-product/{productId}',
     ...options,
@@ -1913,18 +2060,14 @@ export const getApiProgramByIdProducts = <ThrowOnError extends boolean = false>(
   });
 };
 
-export const getApiProgramsByProgramIdContent = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdContentData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdContent = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdContentData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content',
     ...options,
   });
 };
 
-export const postApiProgramsByProgramIdContent = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramsByProgramIdContentData, ThrowOnError>,
-) => {
+export const postApiProgramsByProgramIdContent = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramsByProgramIdContentData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content',
     ...options,
@@ -1935,36 +2078,28 @@ export const postApiProgramsByProgramIdContent = <ThrowOnError extends boolean =
   });
 };
 
-export const getApiProgramsByProgramIdContentTopLevel = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdContentTopLevelData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdContentTopLevel = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdContentTopLevelData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentTopLevelResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content/top-level',
     ...options,
   });
 };
 
-export const deleteApiProgramsByProgramIdContentById = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProgramsByProgramIdContentByIdData, ThrowOnError>,
-) => {
+export const deleteApiProgramsByProgramIdContentById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiProgramsByProgramIdContentByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramsByProgramIdContentByIdResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content/{id}',
     ...options,
   });
 };
 
-export const getApiProgramsByProgramIdContentById = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdContentByIdData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdContentById = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdContentByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByIdResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content/{id}',
     ...options,
   });
 };
 
-export const putApiProgramsByProgramIdContentById = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiProgramsByProgramIdContentByIdData, ThrowOnError>,
-) => {
+export const putApiProgramsByProgramIdContentById = <ThrowOnError extends boolean = false>(options: Options<PutApiProgramsByProgramIdContentByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiProgramsByProgramIdContentByIdResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content/{id}',
     ...options,
@@ -1975,18 +2110,14 @@ export const putApiProgramsByProgramIdContentById = <ThrowOnError extends boolea
   });
 };
 
-export const getApiProgramsByProgramIdContentByParentIdChildren = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdContentByParentIdChildrenData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdContentByParentIdChildren = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdContentByParentIdChildrenData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByParentIdChildrenResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content/{parentId}/children',
     ...options,
   });
 };
 
-export const postApiProgramsByProgramIdContentReorder = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramsByProgramIdContentReorderData, ThrowOnError>,
-) => {
+export const postApiProgramsByProgramIdContentReorder = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramsByProgramIdContentReorderData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentReorderResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content/reorder',
     ...options,
@@ -1997,9 +2128,7 @@ export const postApiProgramsByProgramIdContentReorder = <ThrowOnError extends bo
   });
 };
 
-export const postApiProgramsByProgramIdContentByIdMove = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramsByProgramIdContentByIdMoveData, ThrowOnError>,
-) => {
+export const postApiProgramsByProgramIdContentByIdMove = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramsByProgramIdContentByIdMoveData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentByIdMoveResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content/{id}/move',
     ...options,
@@ -2010,36 +2139,28 @@ export const postApiProgramsByProgramIdContentByIdMove = <ThrowOnError extends b
   });
 };
 
-export const getApiProgramsByProgramIdContentRequired = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdContentRequiredData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdContentRequired = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdContentRequiredData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentRequiredResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content/required',
     ...options,
   });
 };
 
-export const getApiProgramsByProgramIdContentByTypeByType = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdContentByTypeByTypeData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdContentByTypeByType = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdContentByTypeByTypeData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByTypeByTypeResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content/by-type/{type}',
     ...options,
   });
 };
 
-export const getApiProgramsByProgramIdContentByVisibilityByVisibility = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdContentByVisibilityByVisibilityData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdContentByVisibilityByVisibility = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdContentByVisibilityByVisibilityData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content/by-visibility/{visibility}',
     ...options,
   });
 };
 
-export const postApiProgramsByProgramIdContentSearch = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramsByProgramIdContentSearchData, ThrowOnError>,
-) => {
+export const postApiProgramsByProgramIdContentSearch = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramsByProgramIdContentSearchData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentSearchResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content/search',
     ...options,
@@ -2050,12 +2171,73 @@ export const postApiProgramsByProgramIdContentSearch = <ThrowOnError extends boo
   });
 };
 
-export const getApiProgramsByProgramIdContentStats = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdContentStatsData, ThrowOnError>,
-) => {
+export const getApiProgramsByProgramIdContentStats = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramsByProgramIdContentStatsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentStatsResponses, unknown, ThrowOnError>({
     url: '/api/programs/{programId}/content/stats',
     ...options,
+  });
+};
+
+export const getApiProjectsByProjectIdPermissionsMyPermissions = <ThrowOnError extends boolean = false>(options: Options<GetApiProjectsByProjectIdPermissionsMyPermissionsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiProjectsByProjectIdPermissionsMyPermissionsResponses, unknown, ThrowOnError>({
+    url: '/api/projects/{projectId}/permissions/my-permissions',
+    ...options,
+  });
+};
+
+export const getApiProjectsByProjectIdPermissionsCollaborators = <ThrowOnError extends boolean = false>(options: Options<GetApiProjectsByProjectIdPermissionsCollaboratorsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiProjectsByProjectIdPermissionsCollaboratorsResponses, unknown, ThrowOnError>({
+    url: '/api/projects/{projectId}/permissions/collaborators',
+    ...options,
+  });
+};
+
+export const postApiProjectsByProjectIdPermissionsCollaborators = <ThrowOnError extends boolean = false>(options: Options<PostApiProjectsByProjectIdPermissionsCollaboratorsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiProjectsByProjectIdPermissionsCollaboratorsResponses, unknown, ThrowOnError>({
+    url: '/api/projects/{projectId}/permissions/collaborators',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const deleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses, unknown, ThrowOnError>({
+    url: '/api/projects/{projectId}/permissions/collaborators/{collaboratorUserId}',
+    ...options,
+  });
+};
+
+export const putApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserId = <ThrowOnError extends boolean = false>(options: Options<PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses, unknown, ThrowOnError>({
+    url: '/api/projects/{projectId}/permissions/collaborators/{collaboratorUserId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiProjectsByProjectIdPermissionsRoleTemplates = <ThrowOnError extends boolean = false>(options: Options<GetApiProjectsByProjectIdPermissionsRoleTemplatesData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiProjectsByProjectIdPermissionsRoleTemplatesResponses, unknown, ThrowOnError>({
+    url: '/api/projects/{projectId}/permissions/role-templates',
+    ...options,
+  });
+};
+
+export const postApiProjectsByProjectIdPermissionsShareWithRole = <ThrowOnError extends boolean = false>(options: Options<PostApiProjectsByProjectIdPermissionsShareWithRoleData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiProjectsByProjectIdPermissionsShareWithRoleResponses, unknown, ThrowOnError>({
+    url: '/api/projects/{projectId}/permissions/share-with-role',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
   });
 };
 
@@ -2165,20 +2347,86 @@ export const getApiProjectsByIdStatistics = <ThrowOnError extends boolean = fals
   });
 };
 
-export const getApiProjectsCategoryByCategoryId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProjectsCategoryByCategoryIdData, ThrowOnError>,
-) => {
+export const getApiProjectsCategoryByCategoryId = <ThrowOnError extends boolean = false>(options: Options<GetApiProjectsCategoryByCategoryIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProjectsCategoryByCategoryIdResponses, unknown, ThrowOnError>({
     url: '/api/projects/category/{categoryId}',
     ...options,
   });
 };
 
-export const getApiProjectsCreatorByCreatorId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProjectsCreatorByCreatorIdData, ThrowOnError>,
-) => {
+export const getApiProjectsCreatorByCreatorId = <ThrowOnError extends boolean = false>(options: Options<GetApiProjectsCreatorByCreatorIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiProjectsCreatorByCreatorIdResponses, unknown, ThrowOnError>({
     url: '/api/projects/creator/{creatorId}',
+    ...options,
+  });
+};
+
+export const getApiResourcesByResourceTypeByResourceIdPermissionsMyPermissions = <ThrowOnError extends boolean = false>(options: Options<GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsResponses, unknown, ThrowOnError>({
+    url: '/api/resources/{resourceType}/{resourceId}/permissions/my-permissions',
+    ...options,
+  });
+};
+
+export const getApiResourcesByResourceTypeByResourceIdPermissionsUsers = <ThrowOnError extends boolean = false>(options: Options<GetApiResourcesByResourceTypeByResourceIdPermissionsUsersData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiResourcesByResourceTypeByResourceIdPermissionsUsersResponses, unknown, ThrowOnError>({
+    url: '/api/resources/{resourceType}/{resourceId}/permissions/users',
+    ...options,
+  });
+};
+
+export const postApiResourcesByResourceTypeByResourceIdPermissionsShare = <ThrowOnError extends boolean = false>(options: Options<PostApiResourcesByResourceTypeByResourceIdPermissionsShareData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiResourcesByResourceTypeByResourceIdPermissionsShareResponses, unknown, ThrowOnError>({
+    url: '/api/resources/{resourceType}/{resourceId}/permissions/share',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const deleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses, unknown, ThrowOnError>({
+    url: '/api/resources/{resourceType}/{resourceId}/permissions/users/{targetUserId}',
+    ...options,
+  });
+};
+
+export const putApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserId = <ThrowOnError extends boolean = false>(options: Options<PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses, unknown, ThrowOnError>({
+    url: '/api/resources/{resourceType}/{resourceId}/permissions/users/{targetUserId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postApiResourcesByResourceTypeByResourceIdPermissionsInvite = <ThrowOnError extends boolean = false>(options: Options<PostApiResourcesByResourceTypeByResourceIdPermissionsInviteData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiResourcesByResourceTypeByResourceIdPermissionsInviteResponses, unknown, ThrowOnError>({
+    url: '/api/resources/{resourceType}/{resourceId}/permissions/invite',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiResourcesByResourceTypeByResourceIdPermissionsInvitations = <ThrowOnError extends boolean = false>(options: Options<GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsResponses, unknown, ThrowOnError>({
+    url: '/api/resources/{resourceType}/{resourceId}/permissions/invitations',
+    ...options,
+  });
+};
+
+export const getApiResourcesByResourceTypeByResourceIdPermissionsHierarchy = <ThrowOnError extends boolean = false>(options: Options<GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyResponses, unknown, ThrowOnError>({
+    url: '/api/resources/{resourceType}/{resourceId}/permissions/hierarchy',
     ...options,
   });
 };
@@ -2236,9 +2484,7 @@ export const postApiSubscriptionByIdResume = <ThrowOnError extends boolean = fal
   });
 };
 
-export const putApiSubscriptionByIdPaymentMethod = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiSubscriptionByIdPaymentMethodData, ThrowOnError>,
-) => {
+export const putApiSubscriptionByIdPaymentMethod = <ThrowOnError extends boolean = false>(options: Options<PutApiSubscriptionByIdPaymentMethodData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiSubscriptionByIdPaymentMethodResponses, unknown, ThrowOnError>({
     url: '/api/subscription/{id}/payment-method',
     ...options,
@@ -2292,9 +2538,7 @@ export const putApiTenantDomainsById = <ThrowOnError extends boolean = false>(op
   });
 };
 
-export const postApiTenantDomainsByTenantIdSetMainByDomainId = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiTenantDomainsByTenantIdSetMainByDomainIdData, ThrowOnError>,
-) => {
+export const postApiTenantDomainsByTenantIdSetMainByDomainId = <ThrowOnError extends boolean = false>(options: Options<PostApiTenantDomainsByTenantIdSetMainByDomainIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiTenantDomainsByTenantIdSetMainByDomainIdResponses, unknown, ThrowOnError>({
     url: '/api/tenant-domains/{tenantId}/set-main/{domainId}',
     ...options,
@@ -2319,27 +2563,21 @@ export const postApiTenantDomainsUserGroups = <ThrowOnError extends boolean = fa
   });
 };
 
-export const deleteApiTenantDomainsUserGroupsById = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiTenantDomainsUserGroupsByIdData, ThrowOnError>,
-) => {
+export const deleteApiTenantDomainsUserGroupsById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiTenantDomainsUserGroupsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiTenantDomainsUserGroupsByIdResponses, unknown, ThrowOnError>({
     url: '/api/tenant-domains/user-groups/{id}',
     ...options,
   });
 };
 
-export const getApiTenantDomainsUserGroupsById = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiTenantDomainsUserGroupsByIdData, ThrowOnError>,
-) => {
+export const getApiTenantDomainsUserGroupsById = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantDomainsUserGroupsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiTenantDomainsUserGroupsByIdResponses, unknown, ThrowOnError>({
     url: '/api/tenant-domains/user-groups/{id}',
     ...options,
   });
 };
 
-export const putApiTenantDomainsUserGroupsById = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiTenantDomainsUserGroupsByIdData, ThrowOnError>,
-) => {
+export const putApiTenantDomainsUserGroupsById = <ThrowOnError extends boolean = false>(options: Options<PutApiTenantDomainsUserGroupsByIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).put<PutApiTenantDomainsUserGroupsByIdResponses, unknown, ThrowOnError>({
     url: '/api/tenant-domains/user-groups/{id}',
     ...options,
@@ -2350,27 +2588,21 @@ export const putApiTenantDomainsUserGroupsById = <ThrowOnError extends boolean =
   });
 };
 
-export const getApiTenantDomainsMembershipsUserByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiTenantDomainsMembershipsUserByUserIdData, ThrowOnError>,
-) => {
+export const getApiTenantDomainsMembershipsUserByUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantDomainsMembershipsUserByUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiTenantDomainsMembershipsUserByUserIdResponses, unknown, ThrowOnError>({
     url: '/api/tenant-domains/memberships/user/{userId}',
     ...options,
   });
 };
 
-export const deleteApiTenantDomainsUserGroupsMemberships = <ThrowOnError extends boolean = false>(
-  options?: Options<DeleteApiTenantDomainsUserGroupsMembershipsData, ThrowOnError>,
-) => {
+export const deleteApiTenantDomainsUserGroupsMemberships = <ThrowOnError extends boolean = false>(options?: Options<DeleteApiTenantDomainsUserGroupsMembershipsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).delete<DeleteApiTenantDomainsUserGroupsMembershipsResponses, unknown, ThrowOnError>({
     url: '/api/tenant-domains/user-groups/memberships',
     ...options,
   });
 };
 
-export const postApiTenantDomainsUserGroupsMemberships = <ThrowOnError extends boolean = false>(
-  options?: Options<PostApiTenantDomainsUserGroupsMembershipsData, ThrowOnError>,
-) => {
+export const postApiTenantDomainsUserGroupsMemberships = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantDomainsUserGroupsMembershipsData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsUserGroupsMembershipsResponses, unknown, ThrowOnError>({
     url: '/api/tenant-domains/user-groups/memberships',
     ...options,
@@ -2381,27 +2613,21 @@ export const postApiTenantDomainsUserGroupsMemberships = <ThrowOnError extends b
   });
 };
 
-export const getApiTenantDomainsUserGroupsByGroupIdMembers = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiTenantDomainsUserGroupsByGroupIdMembersData, ThrowOnError>,
-) => {
+export const getApiTenantDomainsUserGroupsByGroupIdMembers = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantDomainsUserGroupsByGroupIdMembersData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiTenantDomainsUserGroupsByGroupIdMembersResponses, unknown, ThrowOnError>({
     url: '/api/tenant-domains/user-groups/{groupId}/members',
     ...options,
   });
 };
 
-export const getApiTenantDomainsUsersByUserIdGroups = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiTenantDomainsUsersByUserIdGroupsData, ThrowOnError>,
-) => {
+export const getApiTenantDomainsUsersByUserIdGroups = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantDomainsUsersByUserIdGroupsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiTenantDomainsUsersByUserIdGroupsResponses, unknown, ThrowOnError>({
     url: '/api/tenant-domains/users/{userId}/groups',
     ...options,
   });
 };
 
-export const getApiTenantDomainsGroupsByGroupIdUsers = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiTenantDomainsGroupsByGroupIdUsersData, ThrowOnError>,
-) => {
+export const getApiTenantDomainsGroupsByGroupIdUsers = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantDomainsGroupsByGroupIdUsersData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiTenantDomainsGroupsByGroupIdUsersResponses, unknown, ThrowOnError>({
     url: '/api/tenant-domains/groups/{groupId}/users',
     ...options,
@@ -2419,9 +2645,7 @@ export const postApiTenantDomainsAutoAssign = <ThrowOnError extends boolean = fa
   });
 };
 
-export const postApiTenantDomainsAutoAssignBulk = <ThrowOnError extends boolean = false>(
-  options?: Options<PostApiTenantDomainsAutoAssignBulkData, ThrowOnError>,
-) => {
+export const postApiTenantDomainsAutoAssignBulk = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantDomainsAutoAssignBulkData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsAutoAssignBulkResponses, unknown, ThrowOnError>({
     url: '/api/tenant-domains/auto-assign-bulk',
     ...options,
@@ -2699,63 +2923,49 @@ export const postTestingSessionsByIdRestore = <ThrowOnError extends boolean = fa
   });
 };
 
-export const getTestingRequestsByProjectVersionByProjectVersionId = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByProjectVersionByProjectVersionIdData, ThrowOnError>,
-) => {
+export const getTestingRequestsByProjectVersionByProjectVersionId = <ThrowOnError extends boolean = false>(options: Options<GetTestingRequestsByProjectVersionByProjectVersionIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByProjectVersionByProjectVersionIdResponses, unknown, ThrowOnError>({
     url: '/testing/requests/by-project-version/{projectVersionId}',
     ...options,
   });
 };
 
-export const getTestingRequestsByCreatorByCreatorId = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByCreatorByCreatorIdData, ThrowOnError>,
-) => {
+export const getTestingRequestsByCreatorByCreatorId = <ThrowOnError extends boolean = false>(options: Options<GetTestingRequestsByCreatorByCreatorIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByCreatorByCreatorIdResponses, unknown, ThrowOnError>({
     url: '/testing/requests/by-creator/{creatorId}',
     ...options,
   });
 };
 
-export const getTestingRequestsByStatusByStatus = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByStatusByStatusData, ThrowOnError>,
-) => {
+export const getTestingRequestsByStatusByStatus = <ThrowOnError extends boolean = false>(options: Options<GetTestingRequestsByStatusByStatusData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByStatusByStatusResponses, unknown, ThrowOnError>({
     url: '/testing/requests/by-status/{status}',
     ...options,
   });
 };
 
-export const getTestingSessionsByRequestByTestingRequestId = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsByRequestByTestingRequestIdData, ThrowOnError>,
-) => {
+export const getTestingSessionsByRequestByTestingRequestId = <ThrowOnError extends boolean = false>(options: Options<GetTestingSessionsByRequestByTestingRequestIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsByRequestByTestingRequestIdResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/by-request/{testingRequestId}',
     ...options,
   });
 };
 
-export const getTestingSessionsByLocationByLocationId = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsByLocationByLocationIdData, ThrowOnError>,
-) => {
+export const getTestingSessionsByLocationByLocationId = <ThrowOnError extends boolean = false>(options: Options<GetTestingSessionsByLocationByLocationIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsByLocationByLocationIdResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/by-location/{locationId}',
     ...options,
   });
 };
 
-export const getTestingSessionsByStatusByStatus = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsByStatusByStatusData, ThrowOnError>,
-) => {
+export const getTestingSessionsByStatusByStatus = <ThrowOnError extends boolean = false>(options: Options<GetTestingSessionsByStatusByStatusData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsByStatusByStatusResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/by-status/{status}',
     ...options,
   });
 };
 
-export const getTestingSessionsByManagerByManagerId = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsByManagerByManagerIdData, ThrowOnError>,
-) => {
+export const getTestingSessionsByManagerByManagerId = <ThrowOnError extends boolean = false>(options: Options<GetTestingSessionsByManagerByManagerIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsByManagerByManagerIdResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/by-manager/{managerId}',
     ...options,
@@ -2776,54 +2986,42 @@ export const getTestingSessionsSearch = <ThrowOnError extends boolean = false>(o
   });
 };
 
-export const deleteTestingRequestsByRequestIdParticipantsByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteTestingRequestsByRequestIdParticipantsByUserIdData, ThrowOnError>,
-) => {
+export const deleteTestingRequestsByRequestIdParticipantsByUserId = <ThrowOnError extends boolean = false>(options: Options<DeleteTestingRequestsByRequestIdParticipantsByUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteTestingRequestsByRequestIdParticipantsByUserIdResponses, unknown, ThrowOnError>({
     url: '/testing/requests/{requestId}/participants/{userId}',
     ...options,
   });
 };
 
-export const postTestingRequestsByRequestIdParticipantsByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingRequestsByRequestIdParticipantsByUserIdData, ThrowOnError>,
-) => {
+export const postTestingRequestsByRequestIdParticipantsByUserId = <ThrowOnError extends boolean = false>(options: Options<PostTestingRequestsByRequestIdParticipantsByUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostTestingRequestsByRequestIdParticipantsByUserIdResponses, unknown, ThrowOnError>({
     url: '/testing/requests/{requestId}/participants/{userId}',
     ...options,
   });
 };
 
-export const getTestingRequestsByRequestIdParticipants = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByRequestIdParticipantsData, ThrowOnError>,
-) => {
+export const getTestingRequestsByRequestIdParticipants = <ThrowOnError extends boolean = false>(options: Options<GetTestingRequestsByRequestIdParticipantsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByRequestIdParticipantsResponses, unknown, ThrowOnError>({
     url: '/testing/requests/{requestId}/participants',
     ...options,
   });
 };
 
-export const getTestingRequestsByRequestIdParticipantsByUserIdCheck = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByRequestIdParticipantsByUserIdCheckData, ThrowOnError>,
-) => {
+export const getTestingRequestsByRequestIdParticipantsByUserIdCheck = <ThrowOnError extends boolean = false>(options: Options<GetTestingRequestsByRequestIdParticipantsByUserIdCheckData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses, unknown, ThrowOnError>({
     url: '/testing/requests/{requestId}/participants/{userId}/check',
     ...options,
   });
 };
 
-export const deleteTestingSessionsBySessionIdRegister = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteTestingSessionsBySessionIdRegisterData, ThrowOnError>,
-) => {
+export const deleteTestingSessionsBySessionIdRegister = <ThrowOnError extends boolean = false>(options: Options<DeleteTestingSessionsBySessionIdRegisterData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteTestingSessionsBySessionIdRegisterResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/{sessionId}/register',
     ...options,
   });
 };
 
-export const postTestingSessionsBySessionIdRegister = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingSessionsBySessionIdRegisterData, ThrowOnError>,
-) => {
+export const postTestingSessionsBySessionIdRegister = <ThrowOnError extends boolean = false>(options: Options<PostTestingSessionsBySessionIdRegisterData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostTestingSessionsBySessionIdRegisterResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/{sessionId}/register',
     ...options,
@@ -2834,36 +3032,28 @@ export const postTestingSessionsBySessionIdRegister = <ThrowOnError extends bool
   });
 };
 
-export const getTestingSessionsBySessionIdRegistrations = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsBySessionIdRegistrationsData, ThrowOnError>,
-) => {
+export const getTestingSessionsBySessionIdRegistrations = <ThrowOnError extends boolean = false>(options: Options<GetTestingSessionsBySessionIdRegistrationsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsBySessionIdRegistrationsResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/{sessionId}/registrations',
     ...options,
   });
 };
 
-export const deleteTestingSessionsBySessionIdWaitlist = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteTestingSessionsBySessionIdWaitlistData, ThrowOnError>,
-) => {
+export const deleteTestingSessionsBySessionIdWaitlist = <ThrowOnError extends boolean = false>(options: Options<DeleteTestingSessionsBySessionIdWaitlistData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteTestingSessionsBySessionIdWaitlistResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/{sessionId}/waitlist',
     ...options,
   });
 };
 
-export const getTestingSessionsBySessionIdWaitlist = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsBySessionIdWaitlistData, ThrowOnError>,
-) => {
+export const getTestingSessionsBySessionIdWaitlist = <ThrowOnError extends boolean = false>(options: Options<GetTestingSessionsBySessionIdWaitlistData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsBySessionIdWaitlistResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/{sessionId}/waitlist',
     ...options,
   });
 };
 
-export const postTestingSessionsBySessionIdWaitlist = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingSessionsBySessionIdWaitlistData, ThrowOnError>,
-) => {
+export const postTestingSessionsBySessionIdWaitlist = <ThrowOnError extends boolean = false>(options: Options<PostTestingSessionsBySessionIdWaitlistData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostTestingSessionsBySessionIdWaitlistResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/{sessionId}/waitlist',
     ...options,
@@ -2874,18 +3064,14 @@ export const postTestingSessionsBySessionIdWaitlist = <ThrowOnError extends bool
   });
 };
 
-export const getTestingRequestsByRequestIdFeedback = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByRequestIdFeedbackData, ThrowOnError>,
-) => {
+export const getTestingRequestsByRequestIdFeedback = <ThrowOnError extends boolean = false>(options: Options<GetTestingRequestsByRequestIdFeedbackData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByRequestIdFeedbackResponses, unknown, ThrowOnError>({
     url: '/testing/requests/{requestId}/feedback',
     ...options,
   });
 };
 
-export const postTestingRequestsByRequestIdFeedback = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingRequestsByRequestIdFeedbackData, ThrowOnError>,
-) => {
+export const postTestingRequestsByRequestIdFeedback = <ThrowOnError extends boolean = false>(options: Options<PostTestingRequestsByRequestIdFeedbackData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostTestingRequestsByRequestIdFeedbackResponses, unknown, ThrowOnError>({
     url: '/testing/requests/{requestId}/feedback',
     ...options,
@@ -2896,27 +3082,21 @@ export const postTestingRequestsByRequestIdFeedback = <ThrowOnError extends bool
   });
 };
 
-export const getTestingFeedbackByUserByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingFeedbackByUserByUserIdData, ThrowOnError>,
-) => {
+export const getTestingFeedbackByUserByUserId = <ThrowOnError extends boolean = false>(options: Options<GetTestingFeedbackByUserByUserIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingFeedbackByUserByUserIdResponses, unknown, ThrowOnError>({
     url: '/testing/feedback/by-user/{userId}',
     ...options,
   });
 };
 
-export const getTestingRequestsByRequestIdStatistics = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByRequestIdStatisticsData, ThrowOnError>,
-) => {
+export const getTestingRequestsByRequestIdStatistics = <ThrowOnError extends boolean = false>(options: Options<GetTestingRequestsByRequestIdStatisticsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingRequestsByRequestIdStatisticsResponses, unknown, ThrowOnError>({
     url: '/testing/requests/{requestId}/statistics',
     ...options,
   });
 };
 
-export const getTestingSessionsBySessionIdStatistics = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsBySessionIdStatisticsData, ThrowOnError>,
-) => {
+export const getTestingSessionsBySessionIdStatistics = <ThrowOnError extends boolean = false>(options: Options<GetTestingSessionsBySessionIdStatisticsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetTestingSessionsBySessionIdStatisticsResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/{sessionId}/statistics',
     ...options,
@@ -2980,9 +3160,7 @@ export const getTestingAttendanceSessions = <ThrowOnError extends boolean = fals
   });
 };
 
-export const postTestingSessionsBySessionIdAttendance = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingSessionsBySessionIdAttendanceData, ThrowOnError>,
-) => {
+export const postTestingSessionsBySessionIdAttendance = <ThrowOnError extends boolean = false>(options: Options<PostTestingSessionsBySessionIdAttendanceData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostTestingSessionsBySessionIdAttendanceResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/{sessionId}/attendance',
     ...options,
@@ -2993,9 +3171,7 @@ export const postTestingSessionsBySessionIdAttendance = <ThrowOnError extends bo
   });
 };
 
-export const postTestingFeedbackByFeedbackIdReport = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingFeedbackByFeedbackIdReportData, ThrowOnError>,
-) => {
+export const postTestingFeedbackByFeedbackIdReport = <ThrowOnError extends boolean = false>(options: Options<PostTestingFeedbackByFeedbackIdReportData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostTestingFeedbackByFeedbackIdReportResponses, unknown, ThrowOnError>({
     url: '/testing/feedback/{feedbackId}/report',
     ...options,
@@ -3006,9 +3182,7 @@ export const postTestingFeedbackByFeedbackIdReport = <ThrowOnError extends boole
   });
 };
 
-export const postTestingFeedbackByFeedbackIdQuality = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingFeedbackByFeedbackIdQualityData, ThrowOnError>,
-) => {
+export const postTestingFeedbackByFeedbackIdQuality = <ThrowOnError extends boolean = false>(options: Options<PostTestingFeedbackByFeedbackIdQualityData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostTestingFeedbackByFeedbackIdQualityResponses, unknown, ThrowOnError>({
     url: '/testing/feedback/{feedbackId}/quality',
     ...options,
@@ -3019,6 +3193,106 @@ export const postTestingFeedbackByFeedbackIdQuality = <ThrowOnError extends bool
   });
 };
 
+export const getTestingLocations = <ThrowOnError extends boolean = false>(options?: Options<GetTestingLocationsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetTestingLocationsResponses, unknown, ThrowOnError>({
+    url: '/testing/locations',
+    ...options,
+  });
+};
+
+export const postTestingLocations = <ThrowOnError extends boolean = false>(options?: Options<PostTestingLocationsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostTestingLocationsResponses, unknown, ThrowOnError>({
+    url: '/testing/locations',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const deleteTestingLocationsById = <ThrowOnError extends boolean = false>(options: Options<DeleteTestingLocationsByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteTestingLocationsByIdResponses, unknown, ThrowOnError>({
+    url: '/testing/locations/{id}',
+    ...options,
+  });
+};
+
+export const getTestingLocationsById = <ThrowOnError extends boolean = false>(options: Options<GetTestingLocationsByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetTestingLocationsByIdResponses, unknown, ThrowOnError>({
+    url: '/testing/locations/{id}',
+    ...options,
+  });
+};
+
+export const putTestingLocationsById = <ThrowOnError extends boolean = false>(options: Options<PutTestingLocationsByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutTestingLocationsByIdResponses, unknown, ThrowOnError>({
+    url: '/testing/locations/{id}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postTestingLocationsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostTestingLocationsByIdRestoreData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostTestingLocationsByIdRestoreResponses, unknown, ThrowOnError>({
+    url: '/testing/locations/{id}/restore',
+    ...options,
+  });
+};
+
+export const getTestingPermissionsCheck = <ThrowOnError extends boolean = false>(options?: Options<GetTestingPermissionsCheckData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetTestingPermissionsCheckResponses, unknown, ThrowOnError>({
+    url: '/testing/permissions/check',
+    ...options,
+  });
+};
+
+export const getTestingPermissionsMyPermissions = <ThrowOnError extends boolean = false>(options?: Options<GetTestingPermissionsMyPermissionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetTestingPermissionsMyPermissionsResponses, unknown, ThrowOnError>({
+    url: '/testing/permissions/my-permissions',
+    ...options,
+  });
+};
+
+export const postTestingPermissionsAssignRole = <ThrowOnError extends boolean = false>(options?: Options<PostTestingPermissionsAssignRoleData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostTestingPermissionsAssignRoleResponses, unknown, ThrowOnError>({
+    url: '/testing/permissions/assign-role',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postTestingSessionsCreateWithPermissions = <ThrowOnError extends boolean = false>(options?: Options<PostTestingSessionsCreateWithPermissionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostTestingSessionsCreateWithPermissionsResponses, unknown, ThrowOnError>({
+    url: '/testing/sessions/create-with-permissions',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const deleteTestingSessionsByIdDeleteWithPermissions = <ThrowOnError extends boolean = false>(options: Options<DeleteTestingSessionsByIdDeleteWithPermissionsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteTestingSessionsByIdDeleteWithPermissionsResponses, unknown, ThrowOnError>({
+    url: '/testing/sessions/{id}/delete-with-permissions',
+    ...options,
+  });
+};
+
+export const getTestingPermissionsUsersWithRoleByRoleName = <ThrowOnError extends boolean = false>(options: Options<GetTestingPermissionsUsersWithRoleByRoleNameData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetTestingPermissionsUsersWithRoleByRoleNameResponses, unknown, ThrowOnError>({
+    url: '/testing/permissions/users-with-role/{roleName}',
+    ...options,
+  });
+};
+
 export const getApiUsersByUserIdAchievements = <ThrowOnError extends boolean = false>(options: Options<GetApiUsersByUserIdAchievementsData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsResponses, unknown, ThrowOnError>({
     url: '/api/users/{userId}/achievements',
@@ -3026,36 +3300,28 @@ export const getApiUsersByUserIdAchievements = <ThrowOnError extends boolean = f
   });
 };
 
-export const getApiUsersByUserIdAchievementsProgress = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiUsersByUserIdAchievementsProgressData, ThrowOnError>,
-) => {
+export const getApiUsersByUserIdAchievementsProgress = <ThrowOnError extends boolean = false>(options: Options<GetApiUsersByUserIdAchievementsProgressData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsProgressResponses, unknown, ThrowOnError>({
     url: '/api/users/{userId}/achievements/progress',
     ...options,
   });
 };
 
-export const getApiUsersByUserIdAchievementsSummary = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiUsersByUserIdAchievementsSummaryData, ThrowOnError>,
-) => {
+export const getApiUsersByUserIdAchievementsSummary = <ThrowOnError extends boolean = false>(options: Options<GetApiUsersByUserIdAchievementsSummaryData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsSummaryResponses, unknown, ThrowOnError>({
     url: '/api/users/{userId}/achievements/summary',
     ...options,
   });
 };
 
-export const getApiUsersByUserIdAchievementsAvailable = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiUsersByUserIdAchievementsAvailableData, ThrowOnError>,
-) => {
+export const getApiUsersByUserIdAchievementsAvailable = <ThrowOnError extends boolean = false>(options: Options<GetApiUsersByUserIdAchievementsAvailableData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsAvailableResponses, unknown, ThrowOnError>({
     url: '/api/users/{userId}/achievements/available',
     ...options,
   });
 };
 
-export const postApiUsersByUserIdAchievementsByAchievementIdProgress = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiUsersByUserIdAchievementsByAchievementIdProgressData, ThrowOnError>,
-) => {
+export const postApiUsersByUserIdAchievementsByAchievementIdProgress = <ThrowOnError extends boolean = false>(options: Options<PostApiUsersByUserIdAchievementsByAchievementIdProgressData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses, unknown, ThrowOnError>({
     url: '/api/users/{userId}/achievements/{achievementId}/progress',
     ...options,
@@ -3066,27 +3332,21 @@ export const postApiUsersByUserIdAchievementsByAchievementIdProgress = <ThrowOnE
   });
 };
 
-export const getApiUsersByUserIdAchievementsByAchievementIdPrerequisites = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData, ThrowOnError>,
-) => {
+export const getApiUsersByUserIdAchievementsByAchievementIdPrerequisites = <ThrowOnError extends boolean = false>(options: Options<GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses, unknown, ThrowOnError>({
     url: '/api/users/{userId}/achievements/{achievementId}/prerequisites',
     ...options,
   });
 };
 
-export const postApiUsersByUserIdAchievementsByUserAchievementIdMarkNotified = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedData, ThrowOnError>,
-) => {
+export const postApiUsersByUserIdAchievementsByUserAchievementIdMarkNotified = <ThrowOnError extends boolean = false>(options: Options<PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedResponses, unknown, ThrowOnError>({
     url: '/api/users/{userId}/achievements/{userAchievementId}/mark-notified',
     ...options,
   });
 };
 
-export const deleteApiUsersByUserIdAchievementsByUserAchievementId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiUsersByUserIdAchievementsByUserAchievementIdData, ThrowOnError>,
-) => {
+export const deleteApiUsersByUserIdAchievementsByUserAchievementId = <ThrowOnError extends boolean = false>(options: Options<DeleteApiUsersByUserIdAchievementsByUserAchievementIdData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiUsersByUserIdAchievementsByUserAchievementIdResponses, unknown, ThrowOnError>({
     url: '/api/users/{userId}/achievements/{userAchievementId}',
     ...options,

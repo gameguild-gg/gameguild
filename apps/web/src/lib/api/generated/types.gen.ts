@@ -111,7 +111,7 @@ export type AchievementProgress = {
   rowVersion?: string | null;
   isDeleted?: boolean;
   deletedAt?: string | null;
-  userId?: string;
+  userId?: string | null;
   user?: User;
   achievementId?: string;
   achievement?: Achievement;
@@ -208,6 +208,14 @@ export type ActivityGradeDto = {
   readonly hasGradingDetails?: boolean;
 };
 
+export type AddCollaboratorRequest = {
+  email?: string | null;
+  permissions?: Array<PermissionType> | null;
+  expiresAt?: string | null;
+  message?: string | null;
+  requireAcceptance?: boolean;
+};
+
 export type AddUserToGroupDto = {
   userId: string;
   userGroupId: string;
@@ -218,6 +226,23 @@ export type ArchiveProjectResult = {
   success?: boolean;
   project?: Project;
   error?: string | null;
+};
+
+export type AssignRoleRequest = {
+  userId?: string;
+  tenantId?: string | null;
+  module?: ModuleType;
+  roleName?: string | null;
+  constraints?: Array<PermissionConstraint> | null;
+  expiresAt?: string | null;
+};
+
+export type AssignTestingLabRoleRequest = {
+  userId?: string;
+  tenantId?: string | null;
+  roleName?: string | null;
+  constraints?: Array<PermissionConstraint> | null;
+  expiresAt?: string | null;
 };
 
 export type AttendanceStatus = 0 | 1 | 2 | 3;
@@ -536,31 +561,6 @@ export type ContentSummaryDto = {
   estimatedMinutes?: number | null;
 };
 
-export type ContentTypePermission = {
-  readonly isNew?: boolean;
-  readonly isGlobal?: boolean;
-  readonly domainEvents?: Array<IDomainEvent> | null;
-  id?: string;
-  version?: number;
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  readonly isDeleted?: boolean;
-  permissionFlags1?: number;
-  permissionFlags2?: number;
-  userId?: string | null;
-  user?: User;
-  tenantId?: string | null;
-  tenant?: Tenant;
-  expiresAt?: string | null;
-  readonly isExpired?: boolean;
-  readonly isValid?: boolean;
-  readonly isDefaultPermission?: boolean;
-  readonly isGlobalDefaultPermission?: boolean;
-  readonly isUserPermission?: boolean;
-  contentType: string;
-};
-
 export type CreateAchievementCommand = {
   name?: string | null;
   description?: string | null;
@@ -725,6 +725,13 @@ export type CreateProjectResult = {
   error?: string | null;
 };
 
+export type CreateRoleRequest = {
+  roleName?: string | null;
+  description?: string | null;
+  permissions?: Array<ModulePermission> | null;
+  priority?: number;
+};
+
 export type CreateSimpleTestingRequestDto = {
   title: string;
   description?: string | null;
@@ -772,6 +779,16 @@ export type CreateTenantUserGroupDto = {
   isDefault?: boolean;
 };
 
+export type CreateTestingLocationDto = {
+  name?: string | null;
+  description?: string | null;
+  address?: string | null;
+  maxTestersCapacity?: number;
+  maxProjectsCapacity?: number;
+  equipmentAvailable?: string | null;
+  status?: LocationStatus;
+};
+
 export type CreateTestingRequestDto = {
   projectVersionId: string;
   title: string;
@@ -786,6 +803,18 @@ export type CreateTestingRequestDto = {
   startDate: string;
   endDate: string;
   status: TestingRequestStatus;
+};
+
+export type CreateTestingSessionDto = {
+  testingRequestId: string;
+  locationId: string;
+  sessionName: string;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
+  maxTesters: number;
+  status: SessionStatus;
+  managerUserId: string;
 };
 
 export type CreateUserDto = {
@@ -855,6 +884,19 @@ export type DeleteProjectResult = {
 };
 
 export type DevelopmentStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+export type EffectivePermission = {
+  permission?: PermissionType;
+  isGranted?: boolean;
+  source?: PermissionSource;
+  sourceDescription?: string | null;
+  grantedBy?: string | null;
+  grantedAt?: string | null;
+  expiresAt?: string | null;
+  isInherited?: boolean;
+  isExplicit?: boolean;
+  priority?: number;
+};
 
 export type EngagementMetricsDto = {
   programId?: string;
@@ -959,6 +1001,24 @@ export type IDomainEvent = {
 
 export type InstructionType = 0 | 1 | 2;
 
+export type InvitationResult = {
+  success?: boolean;
+  errorMessage?: string | null;
+  invitationId?: string | null;
+  userExists?: boolean;
+  emailSent?: boolean;
+};
+
+export type InvitationStatus = 0 | 1 | 2 | 3 | 4;
+
+export type InviteUserRequest = {
+  email?: string | null;
+  permissions?: Array<PermissionType> | null;
+  expiresAt?: string | null;
+  message?: string | null;
+  requireAcceptance?: boolean;
+};
+
 export type Jam = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
@@ -1042,6 +1102,27 @@ export type LocationStatus = 0 | 1 | 2;
 
 export type MemberStatus = 0 | 1 | 2;
 
+export type ModuleAction = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 20 | 21 | 22 | 23 | 24 | 30 | 31 | 32 | 40 | 41 | 42 | 43;
+
+export type ModulePermission = {
+  module?: ModuleType;
+  action?: ModuleAction;
+  constraints?: Array<PermissionConstraint> | null;
+  isGranted?: boolean;
+  expiresAt?: string | null;
+};
+
+export type ModuleRole = {
+  name?: string | null;
+  module?: ModuleType;
+  description?: string | null;
+  permissions?: Array<ModulePermission> | null;
+  priority?: number;
+  isSystemRole?: boolean;
+};
+
+export type ModuleType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+
 export type MonetizationDto = {
   price?: number;
   currency?: string | null;
@@ -1120,13 +1201,154 @@ export type PaymentStats = {
 
 export type PaymentStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
+export type PermissionConstraint = {
+  type?: string | null;
+  value?: string | null;
+  expiresAt?: string | null;
+};
+
+export type PermissionHierarchy = {
+  permission?: PermissionType;
+  userId?: string;
+  tenantId?: string | null;
+  resourceId?: string | null;
+  contentTypeName?: string | null;
+  layers?: Array<PermissionLayer> | null;
+  finalResult?: PermissionResult;
+};
+
+export type PermissionLayer = {
+  source?: PermissionSource;
+  isGranted?: boolean | null;
+  isDefault?: boolean;
+  grantedBy?: string | null;
+  grantedAt?: string | null;
+  expiresAt?: string | null;
+  priority?: number;
+  description?: string | null;
+};
+
+export type PermissionResult = {
+  isGranted?: boolean;
+  isExplicitlyDenied?: boolean;
+  source?: PermissionSource;
+  grantedBy?: string | null;
+  grantedAt?: string | null;
+  expiresAt?: string | null;
+  reason?: string | null;
+  priority?: number;
+  isInherited?: boolean;
+};
+
+export type PermissionSource = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+export type PermissionType =
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | 20
+  | 21
+  | 22
+  | 23
+  | 24
+  | 25
+  | 26
+  | 27
+  | 28
+  | 29
+  | 30
+  | 31
+  | 32
+  | 33
+  | 34
+  | 35
+  | 36
+  | 37
+  | 38
+  | 39
+  | 40
+  | 41
+  | 42
+  | 43
+  | 44
+  | 45
+  | 46
+  | 47
+  | 48
+  | 49
+  | 50
+  | 51
+  | 52
+  | 53
+  | 54
+  | 55
+  | 56
+  | 57
+  | 58
+  | 59
+  | 60
+  | 61
+  | 62
+  | 63
+  | 64
+  | 65
+  | 66
+  | 67
+  | 68
+  | 69
+  | 70
+  | 71
+  | 72
+  | 73
+  | 74
+  | 75
+  | 76
+  | 77
+  | 78
+  | 79
+  | 80
+  | 81
+  | 82
+  | 83
+  | 84
+  | 85
+  | 86
+  | 87
+  | 88
+  | 89
+  | 90
+  | 91;
+
+export type PermissionUpdateResult = {
+  success?: boolean;
+  errorMessage?: string | null;
+  grantedPermissions?: Array<PermissionType> | null;
+  revokedPermissions?: Array<PermissionType> | null;
+};
+
 export type PostDto = {
   id?: string;
   title?: string | null;
   description?: string | null;
   slug?: string | null;
   postType?: string | null;
-  authorId?: string;
+  authorId?: string | null;
   authorName?: string | null;
   isSystemGenerated?: boolean;
   visibility?: AccessLevel;
@@ -1214,7 +1436,7 @@ export type Product = {
   imageUrl?: string | null;
   type?: ProductType;
   isBundle?: boolean;
-  creatorId?: string;
+  creatorId?: string | null;
   creator?: User;
   bundleItems?: string | null;
   referralCommissionPercentage?: number;
@@ -1614,6 +1836,19 @@ export type ProjectCollaborator = {
   leftAt?: string | null;
 };
 
+export type ProjectCollaboratorDto = {
+  userId?: string;
+  userName?: string | null;
+  email?: string | null;
+  profilePictureUrl?: string | null;
+  role?: string | null;
+  permissions?: Array<PermissionType> | null;
+  joinedAt?: string;
+  invitedBy?: string | null;
+  isOwner?: boolean;
+  expiresAt?: string | null;
+};
+
 export type ProjectFeedback = {
   readonly isNew?: boolean;
   readonly domainEvents?: Array<IDomainEvent> | null;
@@ -1690,7 +1925,7 @@ export type ProjectJamSubmission = {
   localizations?: Array<ResourceLocalization> | null;
   projectId?: string;
   project?: Project;
-  jamId?: string;
+  jamId?: string | null;
   jam?: Jam;
   submittedAt?: string;
   isEligible?: boolean;
@@ -1743,6 +1978,12 @@ export type ProjectRelease = {
   status?: ContentStatus;
   buildNumber?: string | null;
   releaseMetadata?: string | null;
+};
+
+export type ProjectRoleTemplate = {
+  name?: string | null;
+  description?: string | null;
+  permissions?: Array<PermissionType> | null;
 };
 
 export type ProjectStatistics = {
@@ -1912,6 +2153,18 @@ export type ReportFeedbackDto = {
   reason?: string | null;
 };
 
+export type ResourceInvitation = {
+  id?: string;
+  email?: string | null;
+  permissions?: Array<PermissionType> | null;
+  invitedAt?: string;
+  invitedByUserId?: string;
+  invitedByUserName?: string | null;
+  expiresAt?: string | null;
+  message?: string | null;
+  status?: InvitationStatus;
+};
+
 export type ResourceLocalization = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
@@ -1947,6 +2200,20 @@ export type ResourceMetadata = {
   additionalData?: string | null;
   tags?: string | null;
   seoMetadata?: string | null;
+};
+
+export type ResourceUserPermission = {
+  userId?: string;
+  userName?: string | null;
+  email?: string | null;
+  profilePictureUrl?: string | null;
+  permissions?: Array<PermissionType> | null;
+  grantedAt?: string;
+  grantedByUserId?: string;
+  grantedByUserName?: string | null;
+  expiresAt?: string | null;
+  isOwner?: boolean;
+  source?: PermissionSource;
 };
 
 export type RevenueAnalyticsDto = {
@@ -1987,6 +2254,13 @@ export type RevokeAchievementRequest = {
   reason?: string | null;
 };
 
+export type RevokeRoleRequest = {
+  userId?: string;
+  tenantId?: string | null;
+  module?: ModuleType;
+  roleName?: string | null;
+};
+
 export type RevokeTokenRequestDto = {
   refreshToken?: string | null;
 };
@@ -2002,6 +2276,30 @@ export type SearchContentDto = {
   visibility?: Visibility;
   isRequired?: boolean | null;
   parentId?: string | null;
+};
+
+export type SessionProject = {
+  readonly isNew?: boolean;
+  readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+  readonly isDeleted?: boolean;
+  tenant?: Tenant;
+  sessionId?: string;
+  session?: TestingSession;
+  projectId?: string;
+  project?: Project;
+  projectVersionId?: string | null;
+  projectVersion?: ProjectVersion;
+  notes?: string | null;
+  registeredAt?: string;
+  registeredById?: string;
+  registeredBy?: User;
+  isActive?: boolean;
 };
 
 export type SessionRegistration = {
@@ -2058,10 +2356,37 @@ export type SetPricingRequest = {
   currency?: string | null;
 };
 
+export type ShareProjectWithRoleRequest = {
+  roleName?: string | null;
+  userEmails?: Array<string> | null;
+  userIds?: Array<string> | null;
+  expiresAt?: string | null;
+  message?: string | null;
+  requireAcceptance?: boolean;
+  notifyUsers?: boolean;
+};
+
+export type ShareResourceRequest = {
+  userEmails?: Array<string> | null;
+  userIds?: Array<string> | null;
+  permissions?: Array<PermissionType> | null;
+  expiresAt?: string | null;
+  message?: string | null;
+  requireAcceptance?: boolean;
+  notifyUsers?: boolean;
+};
+
+export type ShareResult = {
+  success?: boolean;
+  errorMessage?: string | null;
+  userResults?: Array<UserShareResult> | null;
+  shareId?: string | null;
+};
+
 export type SignInResponseDto = {
   accessToken?: string | null;
   refreshToken?: string | null;
-  expires?: string;
+  expiresAt?: string;
   user?: UserDto;
   tenantId?: string | null;
   availableTenants?: Array<TenantInfoDto> | null;
@@ -2224,7 +2549,6 @@ export type TenantPermission = {
   readonly isDefaultPermission?: boolean;
   readonly isGlobalDefaultPermission?: boolean;
   readonly isUserPermission?: boolean;
-  contentTypePermissions?: Array<ContentTypePermission> | null;
   readonly isActiveMembership?: boolean;
 };
 
@@ -2356,6 +2680,26 @@ export type TestingFeedbackForm = {
   isForSessions?: boolean;
 };
 
+export type TestingLabActionPermissions = {
+  canCreateSessions?: boolean;
+  canDeleteSessions?: boolean;
+  canManageTesters?: boolean;
+  canViewReports?: boolean;
+  canExportData?: boolean;
+};
+
+export type TestingLabPermissions = {
+  canCreateSessions?: boolean;
+  canEditSessions?: boolean;
+  canDeleteSessions?: boolean;
+  canManageTesters?: boolean;
+  canViewReports?: boolean;
+  canExportData?: boolean;
+  canAdminister?: boolean;
+  assignedRoles?: Array<string> | null;
+  constraints?: Array<PermissionConstraint> | null;
+};
+
 export type TestingLocation = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
@@ -2449,6 +2793,7 @@ export type TestingSession = {
   startTime: string;
   endTime: string;
   maxTesters: number;
+  maxProjects: number;
   registeredTesterCount?: number;
   registeredProjectMemberCount?: number;
   registeredProjectCount?: number;
@@ -2458,6 +2803,8 @@ export type TestingSession = {
   managerUserId?: string;
   createdById?: string;
   createdBy?: User;
+  registrations?: Array<SessionRegistration> | null;
+  sessionProjects?: Array<SessionProject> | null;
 };
 
 export type TransactionStatus = 0 | 1 | 2 | 3 | 4 | 5;
@@ -2504,6 +2851,11 @@ export type UpdateAttendanceDto = {
   attendanceStatus?: AttendanceStatus;
 };
 
+export type UpdateCollaboratorRequest = {
+  permissions?: Array<PermissionType> | null;
+  expiresAt?: string | null;
+};
+
 export type UpdateContentDto = {
   title?: string | null;
   description?: string | null;
@@ -2523,6 +2875,11 @@ export type UpdateCredentialDto = {
 
 export type UpdatePaymentMethodDto = {
   paymentMethodId?: string;
+};
+
+export type UpdatePermissionsRequest = {
+  permissions?: Array<PermissionType> | null;
+  expiresAt?: string | null;
 };
 
 export type UpdatePricingDto = {
@@ -2604,6 +2961,10 @@ export type UpdateProjectResult = {
   error?: string | null;
 };
 
+export type UpdateRoleRequest = {
+  permissions?: Array<ModulePermission> | null;
+};
+
 export type UpdateTenantDomainDto = {
   topLevelDomain?: string | null;
   subdomain?: string | null;
@@ -2625,6 +2986,16 @@ export type UpdateTenantUserGroupDto = {
   parentGroupId?: string | null;
   isActive?: boolean | null;
   isDefault?: boolean | null;
+};
+
+export type UpdateTestingLocationDto = {
+  name?: string | null;
+  description?: string | null;
+  address?: string | null;
+  maxTestersCapacity?: number | null;
+  maxProjectsCapacity?: number | null;
+  equipmentAvailable?: string | null;
+  status?: LocationStatus;
 };
 
 export type UpdateTimeSpentRequest = {
@@ -2674,8 +3045,6 @@ export type User = {
   balance?: number;
   availableBalance?: number;
   credentials?: Array<Credential> | null;
-  tenantPermissions?: Array<TenantPermission> | null;
-  contentTypePermissions?: Array<ContentTypePermission> | null;
 };
 
 export type UserAchievement = {
@@ -2685,7 +3054,7 @@ export type UserAchievement = {
   rowVersion?: string | null;
   isDeleted?: boolean;
   deletedAt?: string | null;
-  userId?: string;
+  userId?: string | null;
   user?: User;
   achievementId?: string;
   achievement?: Achievement;
@@ -2900,6 +3269,27 @@ export type UserResponseDtoPagedResult = {
   readonly hasPreviousPage?: boolean;
 };
 
+export type UserRoleAssignment = {
+  id?: string;
+  userId?: string;
+  tenantId?: string | null;
+  module?: ModuleType;
+  roleName?: string | null;
+  constraints?: Array<PermissionConstraint> | null;
+  createdAt?: string;
+  expiresAt?: string | null;
+  isActive?: boolean;
+};
+
+export type UserShareResult = {
+  email?: string | null;
+  userId?: string | null;
+  success?: boolean;
+  errorMessage?: string | null;
+  invitationSent?: boolean;
+  invitationId?: string | null;
+};
+
 export type UserSortField = 0 | 1 | 2 | 3 | 4 | 5;
 
 export type UserStatistics = {
@@ -3093,8 +3483,7 @@ export type PostApiAchievementsByAchievementIdAwardResponses = {
   200: UserAchievement;
 };
 
-export type PostApiAchievementsByAchievementIdAwardResponse =
-  PostApiAchievementsByAchievementIdAwardResponses[keyof PostApiAchievementsByAchievementIdAwardResponses];
+export type PostApiAchievementsByAchievementIdAwardResponse = PostApiAchievementsByAchievementIdAwardResponses[keyof PostApiAchievementsByAchievementIdAwardResponses];
 
 export type PostApiAchievementsByAchievementIdBulkAwardData = {
   body?: BulkAwardAchievementRequest;
@@ -3112,8 +3501,7 @@ export type PostApiAchievementsByAchievementIdBulkAwardResponses = {
   200: Array<UserAchievement>;
 };
 
-export type PostApiAchievementsByAchievementIdBulkAwardResponse =
-  PostApiAchievementsByAchievementIdBulkAwardResponses[keyof PostApiAchievementsByAchievementIdBulkAwardResponses];
+export type PostApiAchievementsByAchievementIdBulkAwardResponse = PostApiAchievementsByAchievementIdBulkAwardResponses[keyof PostApiAchievementsByAchievementIdBulkAwardResponses];
 
 export type GetApiAchievementsByAchievementIdStatisticsData = {
   body?: never;
@@ -3131,8 +3519,7 @@ export type GetApiAchievementsByAchievementIdStatisticsResponses = {
   200: AchievementStatisticsDto;
 };
 
-export type GetApiAchievementsByAchievementIdStatisticsResponse =
-  GetApiAchievementsByAchievementIdStatisticsResponses[keyof GetApiAchievementsByAchievementIdStatisticsResponses];
+export type GetApiAchievementsByAchievementIdStatisticsResponse = GetApiAchievementsByAchievementIdStatisticsResponses[keyof GetApiAchievementsByAchievementIdStatisticsResponses];
 
 export type GetApiAchievementsStatisticsData = {
   body?: never;
@@ -3166,8 +3553,7 @@ export type PostApiProgramsByProgramIdActivityGradesResponses = {
   200: ActivityGradeDto;
 };
 
-export type PostApiProgramsByProgramIdActivityGradesResponse =
-  PostApiProgramsByProgramIdActivityGradesResponses[keyof PostApiProgramsByProgramIdActivityGradesResponses];
+export type PostApiProgramsByProgramIdActivityGradesResponse = PostApiProgramsByProgramIdActivityGradesResponses[keyof PostApiProgramsByProgramIdActivityGradesResponses];
 
 export type GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData = {
   body?: never;
@@ -3226,8 +3612,7 @@ export type GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdRespons
   200: Array<ActivityGradeDto>;
 };
 
-export type GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponse =
-  GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses[keyof GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses];
+export type GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponse = GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses[keyof GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses];
 
 export type DeleteApiProgramsByProgramIdActivityGradesByGradeIdData = {
   body?: never;
@@ -3263,8 +3648,7 @@ export type PutApiProgramsByProgramIdActivityGradesByGradeIdResponses = {
   200: ActivityGradeDto;
 };
 
-export type PutApiProgramsByProgramIdActivityGradesByGradeIdResponse =
-  PutApiProgramsByProgramIdActivityGradesByGradeIdResponses[keyof PutApiProgramsByProgramIdActivityGradesByGradeIdResponses];
+export type PutApiProgramsByProgramIdActivityGradesByGradeIdResponse = PutApiProgramsByProgramIdActivityGradesByGradeIdResponses[keyof PutApiProgramsByProgramIdActivityGradesByGradeIdResponses];
 
 export type GetApiProgramsByProgramIdActivityGradesPendingData = {
   body?: never;
@@ -3282,8 +3666,7 @@ export type GetApiProgramsByProgramIdActivityGradesPendingResponses = {
   200: Array<ContentInteractionDto>;
 };
 
-export type GetApiProgramsByProgramIdActivityGradesPendingResponse =
-  GetApiProgramsByProgramIdActivityGradesPendingResponses[keyof GetApiProgramsByProgramIdActivityGradesPendingResponses];
+export type GetApiProgramsByProgramIdActivityGradesPendingResponse = GetApiProgramsByProgramIdActivityGradesPendingResponses[keyof GetApiProgramsByProgramIdActivityGradesPendingResponses];
 
 export type GetApiProgramsByProgramIdActivityGradesStatisticsData = {
   body?: never;
@@ -3301,8 +3684,7 @@ export type GetApiProgramsByProgramIdActivityGradesStatisticsResponses = {
   200: GradeStatisticsDto;
 };
 
-export type GetApiProgramsByProgramIdActivityGradesStatisticsResponse =
-  GetApiProgramsByProgramIdActivityGradesStatisticsResponses[keyof GetApiProgramsByProgramIdActivityGradesStatisticsResponses];
+export type GetApiProgramsByProgramIdActivityGradesStatisticsResponse = GetApiProgramsByProgramIdActivityGradesStatisticsResponses[keyof GetApiProgramsByProgramIdActivityGradesStatisticsResponses];
 
 export type GetApiProgramsByProgramIdActivityGradesContentByContentIdData = {
   body?: never;
@@ -3321,17 +3703,16 @@ export type GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses =
   200: Array<ActivityGradeDto>;
 };
 
-export type GetApiProgramsByProgramIdActivityGradesContentByContentIdResponse =
-  GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses[keyof GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses];
+export type GetApiProgramsByProgramIdActivityGradesContentByContentIdResponse = GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses[keyof GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses];
 
-export type PostApiAuthSignupData = {
+export type PostApiAuthSignUpData = {
   body?: LocalSignUpRequestDto;
   path?: never;
   query?: never;
-  url: '/api/auth/signup';
+  url: '/api/auth/sign-up';
 };
 
-export type PostApiAuthSignupErrors = {
+export type PostApiAuthSignUpErrors = {
   /**
    * Bad Request
    */
@@ -3342,25 +3723,25 @@ export type PostApiAuthSignupErrors = {
   409: ProblemDetails;
 };
 
-export type PostApiAuthSignupError = PostApiAuthSignupErrors[keyof PostApiAuthSignupErrors];
+export type PostApiAuthSignUpError = PostApiAuthSignUpErrors[keyof PostApiAuthSignUpErrors];
 
-export type PostApiAuthSignupResponses = {
+export type PostApiAuthSignUpResponses = {
   /**
    * Created
    */
   201: SignInResponseDto;
 };
 
-export type PostApiAuthSignupResponse = PostApiAuthSignupResponses[keyof PostApiAuthSignupResponses];
+export type PostApiAuthSignUpResponse = PostApiAuthSignUpResponses[keyof PostApiAuthSignUpResponses];
 
-export type PostApiAuthSigninData = {
+export type PostApiAuthSignInData = {
   body?: LocalSignInRequestDto;
   path?: never;
   query?: never;
-  url: '/api/auth/signin';
+  url: '/api/auth/sign-in';
 };
 
-export type PostApiAuthSigninErrors = {
+export type PostApiAuthSignInErrors = {
   /**
    * Bad Request
    */
@@ -3371,25 +3752,25 @@ export type PostApiAuthSigninErrors = {
   401: ProblemDetails;
 };
 
-export type PostApiAuthSigninError = PostApiAuthSigninErrors[keyof PostApiAuthSigninErrors];
+export type PostApiAuthSignInError = PostApiAuthSignInErrors[keyof PostApiAuthSignInErrors];
 
-export type PostApiAuthSigninResponses = {
+export type PostApiAuthSignInResponses = {
   /**
    * OK
    */
   200: SignInResponseDto;
 };
 
-export type PostApiAuthSigninResponse = PostApiAuthSigninResponses[keyof PostApiAuthSigninResponses];
+export type PostApiAuthSignInResponse = PostApiAuthSignInResponses[keyof PostApiAuthSignInResponses];
 
-export type PostApiAuthGoogleIdTokenData = {
+export type PostApiAuthGoogleData = {
   body?: GoogleIdTokenRequestDto;
   path?: never;
   query?: never;
-  url: '/api/auth/google/id-token';
+  url: '/api/auth/google';
 };
 
-export type PostApiAuthGoogleIdTokenErrors = {
+export type PostApiAuthGoogleErrors = {
   /**
    * Bad Request
    */
@@ -3400,16 +3781,16 @@ export type PostApiAuthGoogleIdTokenErrors = {
   401: ProblemDetails;
 };
 
-export type PostApiAuthGoogleIdTokenError = PostApiAuthGoogleIdTokenErrors[keyof PostApiAuthGoogleIdTokenErrors];
+export type PostApiAuthGoogleError = PostApiAuthGoogleErrors[keyof PostApiAuthGoogleErrors];
 
-export type PostApiAuthGoogleIdTokenResponses = {
+export type PostApiAuthGoogleResponses = {
   /**
    * OK
    */
   200: SignInResponseDto;
 };
 
-export type PostApiAuthGoogleIdTokenResponse = PostApiAuthGoogleIdTokenResponses[keyof PostApiAuthGoogleIdTokenResponses];
+export type PostApiAuthGoogleResponse = PostApiAuthGoogleResponses[keyof PostApiAuthGoogleResponses];
 
 export type PostApiAuthRefreshData = {
   body?: RefreshTokenRequestDto;
@@ -3530,8 +3911,7 @@ export type PutApiContentinteractionByInteractionIdProgressResponses = {
   200: ContentInteractionDto;
 };
 
-export type PutApiContentinteractionByInteractionIdProgressResponse =
-  PutApiContentinteractionByInteractionIdProgressResponses[keyof PutApiContentinteractionByInteractionIdProgressResponses];
+export type PutApiContentinteractionByInteractionIdProgressResponse = PutApiContentinteractionByInteractionIdProgressResponses[keyof PutApiContentinteractionByInteractionIdProgressResponses];
 
 export type PostApiContentinteractionByInteractionIdSubmitData = {
   body?: SubmitContentRequest;
@@ -3551,8 +3931,7 @@ export type PostApiContentinteractionByInteractionIdSubmitResponses = {
   200: ContentInteractionDto;
 };
 
-export type PostApiContentinteractionByInteractionIdSubmitResponse =
-  PostApiContentinteractionByInteractionIdSubmitResponses[keyof PostApiContentinteractionByInteractionIdSubmitResponses];
+export type PostApiContentinteractionByInteractionIdSubmitResponse = PostApiContentinteractionByInteractionIdSubmitResponses[keyof PostApiContentinteractionByInteractionIdSubmitResponses];
 
 export type PostApiContentinteractionByInteractionIdCompleteData = {
   body?: CompleteContentRequest;
@@ -3572,8 +3951,7 @@ export type PostApiContentinteractionByInteractionIdCompleteResponses = {
   200: ContentInteractionDto;
 };
 
-export type PostApiContentinteractionByInteractionIdCompleteResponse =
-  PostApiContentinteractionByInteractionIdCompleteResponses[keyof PostApiContentinteractionByInteractionIdCompleteResponses];
+export type PostApiContentinteractionByInteractionIdCompleteResponse = PostApiContentinteractionByInteractionIdCompleteResponses[keyof PostApiContentinteractionByInteractionIdCompleteResponses];
 
 export type GetApiContentinteractionUserByProgramUserIdContentByContentIdData = {
   body?: never;
@@ -3594,8 +3972,7 @@ export type GetApiContentinteractionUserByProgramUserIdContentByContentIdRespons
   200: ContentInteractionDto;
 };
 
-export type GetApiContentinteractionUserByProgramUserIdContentByContentIdResponse =
-  GetApiContentinteractionUserByProgramUserIdContentByContentIdResponses[keyof GetApiContentinteractionUserByProgramUserIdContentByContentIdResponses];
+export type GetApiContentinteractionUserByProgramUserIdContentByContentIdResponse = GetApiContentinteractionUserByProgramUserIdContentByContentIdResponses[keyof GetApiContentinteractionUserByProgramUserIdContentByContentIdResponses];
 
 export type GetApiContentinteractionUserByProgramUserIdData = {
   body?: never;
@@ -3615,8 +3992,7 @@ export type GetApiContentinteractionUserByProgramUserIdResponses = {
   200: Array<ContentInteractionDto>;
 };
 
-export type GetApiContentinteractionUserByProgramUserIdResponse =
-  GetApiContentinteractionUserByProgramUserIdResponses[keyof GetApiContentinteractionUserByProgramUserIdResponses];
+export type GetApiContentinteractionUserByProgramUserIdResponse = GetApiContentinteractionUserByProgramUserIdResponses[keyof GetApiContentinteractionUserByProgramUserIdResponses];
 
 export type PutApiContentinteractionByInteractionIdTimeSpentData = {
   body?: UpdateTimeSpentRequest;
@@ -3636,8 +4012,7 @@ export type PutApiContentinteractionByInteractionIdTimeSpentResponses = {
   200: ContentInteractionDto;
 };
 
-export type PutApiContentinteractionByInteractionIdTimeSpentResponse =
-  PutApiContentinteractionByInteractionIdTimeSpentResponses[keyof PutApiContentinteractionByInteractionIdTimeSpentResponses];
+export type PutApiContentinteractionByInteractionIdTimeSpentResponse = PutApiContentinteractionByInteractionIdTimeSpentResponses[keyof PutApiContentinteractionByInteractionIdTimeSpentResponses];
 
 export type GetCredentialsData = {
   body?: never;
@@ -3883,6 +4258,359 @@ export type GetHealthDatabaseResponses = {
    */
   200: unknown;
 };
+
+export type GetApiModulePermissionsCheckData = {
+  body?: never;
+  path?: never;
+  query?: {
+    module?: ModuleType;
+    action?: ModuleAction;
+    tenantId?: string;
+    resourceId?: string;
+  };
+  url: '/api/module-permissions/check';
+};
+
+export type GetApiModulePermissionsCheckResponses = {
+  /**
+   * OK
+   */
+  200: boolean;
+};
+
+export type GetApiModulePermissionsCheckResponse = GetApiModulePermissionsCheckResponses[keyof GetApiModulePermissionsCheckResponses];
+
+export type GetApiModulePermissionsMyPermissionsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    module?: ModuleType;
+    tenantId?: string;
+  };
+  url: '/api/module-permissions/my-permissions';
+};
+
+export type GetApiModulePermissionsMyPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: Array<ModulePermission>;
+};
+
+export type GetApiModulePermissionsMyPermissionsResponse = GetApiModulePermissionsMyPermissionsResponses[keyof GetApiModulePermissionsMyPermissionsResponses];
+
+export type GetApiModulePermissionsUsersByUserIdPermissionsData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    module?: ModuleType;
+    tenantId?: string;
+  };
+  url: '/api/module-permissions/users/{userId}/permissions';
+};
+
+export type GetApiModulePermissionsUsersByUserIdPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: Array<ModulePermission>;
+};
+
+export type GetApiModulePermissionsUsersByUserIdPermissionsResponse = GetApiModulePermissionsUsersByUserIdPermissionsResponses[keyof GetApiModulePermissionsUsersByUserIdPermissionsResponses];
+
+export type GetApiModulePermissionsUsersWithPermissionData = {
+  body?: never;
+  path?: never;
+  query?: {
+    module?: ModuleType;
+    action?: ModuleAction;
+    tenantId?: string;
+  };
+  url: '/api/module-permissions/users-with-permission';
+};
+
+export type GetApiModulePermissionsUsersWithPermissionResponses = {
+  /**
+   * OK
+   */
+  200: Array<string>;
+};
+
+export type GetApiModulePermissionsUsersWithPermissionResponse = GetApiModulePermissionsUsersWithPermissionResponses[keyof GetApiModulePermissionsUsersWithPermissionResponses];
+
+export type PostApiModulePermissionsAssignRoleData = {
+  body?: AssignRoleRequest;
+  path?: never;
+  query?: never;
+  url: '/api/module-permissions/assign-role';
+};
+
+export type PostApiModulePermissionsAssignRoleResponses = {
+  /**
+   * OK
+   */
+  200: UserRoleAssignment;
+};
+
+export type PostApiModulePermissionsAssignRoleResponse = PostApiModulePermissionsAssignRoleResponses[keyof PostApiModulePermissionsAssignRoleResponses];
+
+export type DeleteApiModulePermissionsRevokeRoleData = {
+  body?: RevokeRoleRequest;
+  path?: never;
+  query?: never;
+  url: '/api/module-permissions/revoke-role';
+};
+
+export type DeleteApiModulePermissionsRevokeRoleResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetApiModulePermissionsUsersByUserIdRolesData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    module?: ModuleType;
+    tenantId?: string;
+  };
+  url: '/api/module-permissions/users/{userId}/roles';
+};
+
+export type GetApiModulePermissionsUsersByUserIdRolesResponses = {
+  /**
+   * OK
+   */
+  200: Array<UserRoleAssignment>;
+};
+
+export type GetApiModulePermissionsUsersByUserIdRolesResponse = GetApiModulePermissionsUsersByUserIdRolesResponses[keyof GetApiModulePermissionsUsersByUserIdRolesResponses];
+
+export type GetApiModulePermissionsRolesByRoleNameUsersData = {
+  body?: never;
+  path: {
+    roleName: string;
+  };
+  query?: {
+    module?: ModuleType;
+    tenantId?: string;
+  };
+  url: '/api/module-permissions/roles/{roleName}/users';
+};
+
+export type GetApiModulePermissionsRolesByRoleNameUsersResponses = {
+  /**
+   * OK
+   */
+  200: Array<UserRoleAssignment>;
+};
+
+export type GetApiModulePermissionsRolesByRoleNameUsersResponse = GetApiModulePermissionsRolesByRoleNameUsersResponses[keyof GetApiModulePermissionsRolesByRoleNameUsersResponses];
+
+export type GetApiModulePermissionsTestingLabMyPermissionsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    tenantId?: string;
+  };
+  url: '/api/module-permissions/testing-lab/my-permissions';
+};
+
+export type GetApiModulePermissionsTestingLabMyPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: TestingLabPermissions;
+};
+
+export type GetApiModulePermissionsTestingLabMyPermissionsResponse = GetApiModulePermissionsTestingLabMyPermissionsResponses[keyof GetApiModulePermissionsTestingLabMyPermissionsResponses];
+
+export type GetApiModulePermissionsTestingLabUsersByUserIdPermissionsData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    tenantId?: string;
+  };
+  url: '/api/module-permissions/testing-lab/users/{userId}/permissions';
+};
+
+export type GetApiModulePermissionsTestingLabUsersByUserIdPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: TestingLabPermissions;
+};
+
+export type GetApiModulePermissionsTestingLabUsersByUserIdPermissionsResponse = GetApiModulePermissionsTestingLabUsersByUserIdPermissionsResponses[keyof GetApiModulePermissionsTestingLabUsersByUserIdPermissionsResponses];
+
+export type GetApiModulePermissionsTestingLabCanCreateSessionsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    tenantId?: string;
+  };
+  url: '/api/module-permissions/testing-lab/can-create-sessions';
+};
+
+export type GetApiModulePermissionsTestingLabCanCreateSessionsResponses = {
+  /**
+   * OK
+   */
+  200: boolean;
+};
+
+export type GetApiModulePermissionsTestingLabCanCreateSessionsResponse = GetApiModulePermissionsTestingLabCanCreateSessionsResponses[keyof GetApiModulePermissionsTestingLabCanCreateSessionsResponses];
+
+export type GetApiModulePermissionsTestingLabCanDeleteSessionsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    tenantId?: string;
+  };
+  url: '/api/module-permissions/testing-lab/can-delete-sessions';
+};
+
+export type GetApiModulePermissionsTestingLabCanDeleteSessionsResponses = {
+  /**
+   * OK
+   */
+  200: boolean;
+};
+
+export type GetApiModulePermissionsTestingLabCanDeleteSessionsResponse = GetApiModulePermissionsTestingLabCanDeleteSessionsResponses[keyof GetApiModulePermissionsTestingLabCanDeleteSessionsResponses];
+
+export type GetApiModulePermissionsTestingLabCanManageTestersData = {
+  body?: never;
+  path?: never;
+  query?: {
+    tenantId?: string;
+  };
+  url: '/api/module-permissions/testing-lab/can-manage-testers';
+};
+
+export type GetApiModulePermissionsTestingLabCanManageTestersResponses = {
+  /**
+   * OK
+   */
+  200: boolean;
+};
+
+export type GetApiModulePermissionsTestingLabCanManageTestersResponse = GetApiModulePermissionsTestingLabCanManageTestersResponses[keyof GetApiModulePermissionsTestingLabCanManageTestersResponses];
+
+export type GetApiModulePermissionsTestingLabCanViewReportsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    tenantId?: string;
+  };
+  url: '/api/module-permissions/testing-lab/can-view-reports';
+};
+
+export type GetApiModulePermissionsTestingLabCanViewReportsResponses = {
+  /**
+   * OK
+   */
+  200: boolean;
+};
+
+export type GetApiModulePermissionsTestingLabCanViewReportsResponse = GetApiModulePermissionsTestingLabCanViewReportsResponses[keyof GetApiModulePermissionsTestingLabCanViewReportsResponses];
+
+export type GetApiModulePermissionsTestingLabCanExportDataData = {
+  body?: never;
+  path?: never;
+  query?: {
+    tenantId?: string;
+  };
+  url: '/api/module-permissions/testing-lab/can-export-data';
+};
+
+export type GetApiModulePermissionsTestingLabCanExportDataResponses = {
+  /**
+   * OK
+   */
+  200: boolean;
+};
+
+export type GetApiModulePermissionsTestingLabCanExportDataResponse = GetApiModulePermissionsTestingLabCanExportDataResponses[keyof GetApiModulePermissionsTestingLabCanExportDataResponses];
+
+export type GetApiModulePermissionsModulesByModuleRolesData = {
+  body?: never;
+  path: {
+    module: ModuleType;
+  };
+  query?: never;
+  url: '/api/module-permissions/modules/{module}/roles';
+};
+
+export type GetApiModulePermissionsModulesByModuleRolesResponses = {
+  /**
+   * OK
+   */
+  200: Array<ModuleRole>;
+};
+
+export type GetApiModulePermissionsModulesByModuleRolesResponse = GetApiModulePermissionsModulesByModuleRolesResponses[keyof GetApiModulePermissionsModulesByModuleRolesResponses];
+
+export type PostApiModulePermissionsModulesByModuleRolesData = {
+  body?: CreateRoleRequest;
+  path: {
+    module: ModuleType;
+  };
+  query?: never;
+  url: '/api/module-permissions/modules/{module}/roles';
+};
+
+export type PostApiModulePermissionsModulesByModuleRolesResponses = {
+  /**
+   * OK
+   */
+  200: ModuleRole;
+};
+
+export type PostApiModulePermissionsModulesByModuleRolesResponse = PostApiModulePermissionsModulesByModuleRolesResponses[keyof PostApiModulePermissionsModulesByModuleRolesResponses];
+
+export type DeleteApiModulePermissionsModulesByModuleRolesByRoleNameData = {
+  body?: never;
+  path: {
+    module: ModuleType;
+    roleName: string;
+  };
+  query?: never;
+  url: '/api/module-permissions/modules/{module}/roles/{roleName}';
+};
+
+export type DeleteApiModulePermissionsModulesByModuleRolesByRoleNameResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PutApiModulePermissionsModulesByModuleRolesByRoleNameData = {
+  body?: UpdateRoleRequest;
+  path: {
+    module: ModuleType;
+    roleName: string;
+  };
+  query?: never;
+  url: '/api/module-permissions/modules/{module}/roles/{roleName}';
+};
+
+export type PutApiModulePermissionsModulesByModuleRolesByRoleNameResponses = {
+  /**
+   * OK
+   */
+  200: ModuleRole;
+};
+
+export type PutApiModulePermissionsModulesByModuleRolesByRoleNameResponse = PutApiModulePermissionsModulesByModuleRolesByRoleNameResponses[keyof PutApiModulePermissionsModulesByModuleRolesByRoleNameResponses];
 
 export type GetApiPaymentMethodsMeData = {
   body?: never;
@@ -4594,8 +5322,7 @@ export type DeleteApiProductByBundleIdBundleItemsByProductIdResponses = {
   200: Product;
 };
 
-export type DeleteApiProductByBundleIdBundleItemsByProductIdResponse =
-  DeleteApiProductByBundleIdBundleItemsByProductIdResponses[keyof DeleteApiProductByBundleIdBundleItemsByProductIdResponses];
+export type DeleteApiProductByBundleIdBundleItemsByProductIdResponse = DeleteApiProductByBundleIdBundleItemsByProductIdResponses[keyof DeleteApiProductByBundleIdBundleItemsByProductIdResponses];
 
 export type PostApiProductByBundleIdBundleItemsByProductIdData = {
   body?: never;
@@ -4614,8 +5341,7 @@ export type PostApiProductByBundleIdBundleItemsByProductIdResponses = {
   200: Product;
 };
 
-export type PostApiProductByBundleIdBundleItemsByProductIdResponse =
-  PostApiProductByBundleIdBundleItemsByProductIdResponses[keyof PostApiProductByBundleIdBundleItemsByProductIdResponses];
+export type PostApiProductByBundleIdBundleItemsByProductIdResponse = PostApiProductByBundleIdBundleItemsByProductIdResponses[keyof PostApiProductByBundleIdBundleItemsByProductIdResponses];
 
 export type GetApiProductByIdPricingCurrentData = {
   body?: never;
@@ -4723,8 +5449,7 @@ export type GetApiProductSubscriptionPlansByPlanIdResponses = {
   200: ProductSubscriptionPlan;
 };
 
-export type GetApiProductSubscriptionPlansByPlanIdResponse =
-  GetApiProductSubscriptionPlansByPlanIdResponses[keyof GetApiProductSubscriptionPlansByPlanIdResponses];
+export type GetApiProductSubscriptionPlansByPlanIdResponse = GetApiProductSubscriptionPlansByPlanIdResponses[keyof GetApiProductSubscriptionPlansByPlanIdResponses];
 
 export type DeleteApiProductByIdAccessByUserIdData = {
   body?: never;
@@ -5278,8 +6003,7 @@ export type GetApiProgramByIdUsersByUserIdProgressResponses = {
   200: UserProgressDto;
 };
 
-export type GetApiProgramByIdUsersByUserIdProgressResponse =
-  GetApiProgramByIdUsersByUserIdProgressResponses[keyof GetApiProgramByIdUsersByUserIdProgressResponses];
+export type GetApiProgramByIdUsersByUserIdProgressResponse = GetApiProgramByIdUsersByUserIdProgressResponses[keyof GetApiProgramByIdUsersByUserIdProgressResponses];
 
 export type PutApiProgramByIdUsersByUserIdProgressData = {
   body?: UpdateProgressDto;
@@ -5298,8 +6022,7 @@ export type PutApiProgramByIdUsersByUserIdProgressResponses = {
   200: UserProgressDto;
 };
 
-export type PutApiProgramByIdUsersByUserIdProgressResponse =
-  PutApiProgramByIdUsersByUserIdProgressResponses[keyof PutApiProgramByIdUsersByUserIdProgressResponses];
+export type PutApiProgramByIdUsersByUserIdProgressResponse = PutApiProgramByIdUsersByUserIdProgressResponses[keyof PutApiProgramByIdUsersByUserIdProgressResponses];
 
 export type PostApiProgramByIdUsersByUserIdContentByContentIdCompleteData = {
   body?: never;
@@ -5532,8 +6255,7 @@ export type PostApiProgramByIdDisableMonetizationResponses = {
   200: Program;
 };
 
-export type PostApiProgramByIdDisableMonetizationResponse =
-  PostApiProgramByIdDisableMonetizationResponses[keyof PostApiProgramByIdDisableMonetizationResponses];
+export type PostApiProgramByIdDisableMonetizationResponse = PostApiProgramByIdDisableMonetizationResponses[keyof PostApiProgramByIdDisableMonetizationResponses];
 
 export type GetApiProgramByIdPricingData = {
   body?: never;
@@ -5605,8 +6327,7 @@ export type GetApiProgramByIdAnalyticsCompletionRatesResponses = {
   200: CompletionRatesDto;
 };
 
-export type GetApiProgramByIdAnalyticsCompletionRatesResponse =
-  GetApiProgramByIdAnalyticsCompletionRatesResponses[keyof GetApiProgramByIdAnalyticsCompletionRatesResponses];
+export type GetApiProgramByIdAnalyticsCompletionRatesResponse = GetApiProgramByIdAnalyticsCompletionRatesResponses[keyof GetApiProgramByIdAnalyticsCompletionRatesResponses];
 
 export type GetApiProgramByIdAnalyticsEngagementData = {
   body?: never;
@@ -5766,8 +6487,7 @@ export type GetApiProgramsByProgramIdContentTopLevelResponses = {
   200: Array<ProgramContentDto>;
 };
 
-export type GetApiProgramsByProgramIdContentTopLevelResponse =
-  GetApiProgramsByProgramIdContentTopLevelResponses[keyof GetApiProgramsByProgramIdContentTopLevelResponses];
+export type GetApiProgramsByProgramIdContentTopLevelResponse = GetApiProgramsByProgramIdContentTopLevelResponses[keyof GetApiProgramsByProgramIdContentTopLevelResponses];
 
 export type DeleteApiProgramsByProgramIdContentByIdData = {
   body?: never;
@@ -5841,8 +6561,7 @@ export type GetApiProgramsByProgramIdContentByParentIdChildrenResponses = {
   200: Array<ProgramContentDto>;
 };
 
-export type GetApiProgramsByProgramIdContentByParentIdChildrenResponse =
-  GetApiProgramsByProgramIdContentByParentIdChildrenResponses[keyof GetApiProgramsByProgramIdContentByParentIdChildrenResponses];
+export type GetApiProgramsByProgramIdContentByParentIdChildrenResponse = GetApiProgramsByProgramIdContentByParentIdChildrenResponses[keyof GetApiProgramsByProgramIdContentByParentIdChildrenResponses];
 
 export type PostApiProgramsByProgramIdContentReorderData = {
   body?: ReorderContentDto;
@@ -5893,8 +6612,7 @@ export type GetApiProgramsByProgramIdContentRequiredResponses = {
   200: Array<ProgramContentDto>;
 };
 
-export type GetApiProgramsByProgramIdContentRequiredResponse =
-  GetApiProgramsByProgramIdContentRequiredResponses[keyof GetApiProgramsByProgramIdContentRequiredResponses];
+export type GetApiProgramsByProgramIdContentRequiredResponse = GetApiProgramsByProgramIdContentRequiredResponses[keyof GetApiProgramsByProgramIdContentRequiredResponses];
 
 export type GetApiProgramsByProgramIdContentByTypeByTypeData = {
   body?: never;
@@ -5913,8 +6631,7 @@ export type GetApiProgramsByProgramIdContentByTypeByTypeResponses = {
   200: Array<ProgramContentDto>;
 };
 
-export type GetApiProgramsByProgramIdContentByTypeByTypeResponse =
-  GetApiProgramsByProgramIdContentByTypeByTypeResponses[keyof GetApiProgramsByProgramIdContentByTypeByTypeResponses];
+export type GetApiProgramsByProgramIdContentByTypeByTypeResponse = GetApiProgramsByProgramIdContentByTypeByTypeResponses[keyof GetApiProgramsByProgramIdContentByTypeByTypeResponses];
 
 export type GetApiProgramsByProgramIdContentByVisibilityByVisibilityData = {
   body?: never;
@@ -5933,8 +6650,7 @@ export type GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses = 
   200: Array<ProgramContentDto>;
 };
 
-export type GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponse =
-  GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses[keyof GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses];
+export type GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponse = GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses[keyof GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses];
 
 export type PostApiProgramsByProgramIdContentSearchData = {
   body?: SearchContentDto;
@@ -5952,8 +6668,7 @@ export type PostApiProgramsByProgramIdContentSearchResponses = {
   200: Array<ProgramContentDto>;
 };
 
-export type PostApiProgramsByProgramIdContentSearchResponse =
-  PostApiProgramsByProgramIdContentSearchResponses[keyof PostApiProgramsByProgramIdContentSearchResponses];
+export type PostApiProgramsByProgramIdContentSearchResponse = PostApiProgramsByProgramIdContentSearchResponses[keyof PostApiProgramsByProgramIdContentSearchResponses];
 
 export type GetApiProgramsByProgramIdContentStatsData = {
   body?: never;
@@ -5971,8 +6686,137 @@ export type GetApiProgramsByProgramIdContentStatsResponses = {
   200: ContentStatsDto;
 };
 
-export type GetApiProgramsByProgramIdContentStatsResponse =
-  GetApiProgramsByProgramIdContentStatsResponses[keyof GetApiProgramsByProgramIdContentStatsResponses];
+export type GetApiProgramsByProgramIdContentStatsResponse = GetApiProgramsByProgramIdContentStatsResponses[keyof GetApiProgramsByProgramIdContentStatsResponses];
+
+export type GetApiProjectsByProjectIdPermissionsMyPermissionsData = {
+  body?: never;
+  path: {
+    projectId: string;
+  };
+  query?: never;
+  url: '/api/projects/{projectId}/permissions/my-permissions';
+};
+
+export type GetApiProjectsByProjectIdPermissionsMyPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: Array<EffectivePermission>;
+};
+
+export type GetApiProjectsByProjectIdPermissionsMyPermissionsResponse = GetApiProjectsByProjectIdPermissionsMyPermissionsResponses[keyof GetApiProjectsByProjectIdPermissionsMyPermissionsResponses];
+
+export type GetApiProjectsByProjectIdPermissionsCollaboratorsData = {
+  body?: never;
+  path: {
+    projectId: string;
+  };
+  query?: never;
+  url: '/api/projects/{projectId}/permissions/collaborators';
+};
+
+export type GetApiProjectsByProjectIdPermissionsCollaboratorsResponses = {
+  /**
+   * OK
+   */
+  200: Array<ProjectCollaboratorDto>;
+};
+
+export type GetApiProjectsByProjectIdPermissionsCollaboratorsResponse = GetApiProjectsByProjectIdPermissionsCollaboratorsResponses[keyof GetApiProjectsByProjectIdPermissionsCollaboratorsResponses];
+
+export type PostApiProjectsByProjectIdPermissionsCollaboratorsData = {
+  body?: AddCollaboratorRequest;
+  path: {
+    projectId: string;
+  };
+  query?: never;
+  url: '/api/projects/{projectId}/permissions/collaborators';
+};
+
+export type PostApiProjectsByProjectIdPermissionsCollaboratorsResponses = {
+  /**
+   * OK
+   */
+  200: InvitationResult;
+};
+
+export type PostApiProjectsByProjectIdPermissionsCollaboratorsResponse = PostApiProjectsByProjectIdPermissionsCollaboratorsResponses[keyof PostApiProjectsByProjectIdPermissionsCollaboratorsResponses];
+
+export type DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdData = {
+  body?: never;
+  path: {
+    projectId: string;
+    collaboratorUserId: string;
+  };
+  query?: never;
+  url: '/api/projects/{projectId}/permissions/collaborators/{collaboratorUserId}';
+};
+
+export type DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses = {
+  /**
+   * OK
+   */
+  200: PermissionUpdateResult;
+};
+
+export type DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponse =
+  DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses[keyof DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses];
+
+export type PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdData = {
+  body?: UpdateCollaboratorRequest;
+  path: {
+    projectId: string;
+    collaboratorUserId: string;
+  };
+  query?: never;
+  url: '/api/projects/{projectId}/permissions/collaborators/{collaboratorUserId}';
+};
+
+export type PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses = {
+  /**
+   * OK
+   */
+  200: PermissionUpdateResult;
+};
+
+export type PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponse =
+  PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses[keyof PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses];
+
+export type GetApiProjectsByProjectIdPermissionsRoleTemplatesData = {
+  body?: never;
+  path: {
+    projectId: string;
+  };
+  query?: never;
+  url: '/api/projects/{projectId}/permissions/role-templates';
+};
+
+export type GetApiProjectsByProjectIdPermissionsRoleTemplatesResponses = {
+  /**
+   * OK
+   */
+  200: Array<ProjectRoleTemplate>;
+};
+
+export type GetApiProjectsByProjectIdPermissionsRoleTemplatesResponse = GetApiProjectsByProjectIdPermissionsRoleTemplatesResponses[keyof GetApiProjectsByProjectIdPermissionsRoleTemplatesResponses];
+
+export type PostApiProjectsByProjectIdPermissionsShareWithRoleData = {
+  body?: ShareProjectWithRoleRequest;
+  path: {
+    projectId: string;
+  };
+  query?: never;
+  url: '/api/projects/{projectId}/permissions/share-with-role';
+};
+
+export type PostApiProjectsByProjectIdPermissionsShareWithRoleResponses = {
+  /**
+   * OK
+   */
+  200: ShareResult;
+};
+
+export type PostApiProjectsByProjectIdPermissionsShareWithRoleResponse = PostApiProjectsByProjectIdPermissionsShareWithRoleResponses[keyof PostApiProjectsByProjectIdPermissionsShareWithRoleResponses];
 
 export type GetApiProjectsData = {
   body?: never;
@@ -6302,6 +7146,165 @@ export type GetApiProjectsCreatorByCreatorIdResponses = {
 };
 
 export type GetApiProjectsCreatorByCreatorIdResponse = GetApiProjectsCreatorByCreatorIdResponses[keyof GetApiProjectsCreatorByCreatorIdResponses];
+
+export type GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsData = {
+  body?: never;
+  path: {
+    resourceType: string;
+    resourceId: string;
+  };
+  query?: never;
+  url: '/api/resources/{resourceType}/{resourceId}/permissions/my-permissions';
+};
+
+export type GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: Array<EffectivePermission>;
+};
+
+export type GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsResponse =
+  GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsResponses[keyof GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsResponses];
+
+export type GetApiResourcesByResourceTypeByResourceIdPermissionsUsersData = {
+  body?: never;
+  path: {
+    resourceType: string;
+    resourceId: string;
+  };
+  query?: never;
+  url: '/api/resources/{resourceType}/{resourceId}/permissions/users';
+};
+
+export type GetApiResourcesByResourceTypeByResourceIdPermissionsUsersResponses = {
+  /**
+   * OK
+   */
+  200: Array<ResourceUserPermission>;
+};
+
+export type GetApiResourcesByResourceTypeByResourceIdPermissionsUsersResponse = GetApiResourcesByResourceTypeByResourceIdPermissionsUsersResponses[keyof GetApiResourcesByResourceTypeByResourceIdPermissionsUsersResponses];
+
+export type PostApiResourcesByResourceTypeByResourceIdPermissionsShareData = {
+  body?: ShareResourceRequest;
+  path: {
+    resourceType: string;
+    resourceId: string;
+  };
+  query?: never;
+  url: '/api/resources/{resourceType}/{resourceId}/permissions/share';
+};
+
+export type PostApiResourcesByResourceTypeByResourceIdPermissionsShareResponses = {
+  /**
+   * OK
+   */
+  200: ShareResult;
+};
+
+export type PostApiResourcesByResourceTypeByResourceIdPermissionsShareResponse = PostApiResourcesByResourceTypeByResourceIdPermissionsShareResponses[keyof PostApiResourcesByResourceTypeByResourceIdPermissionsShareResponses];
+
+export type DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdData = {
+  body?: never;
+  path: {
+    resourceType: string;
+    resourceId: string;
+    targetUserId: string;
+  };
+  query?: never;
+  url: '/api/resources/{resourceType}/{resourceId}/permissions/users/{targetUserId}';
+};
+
+export type DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses = {
+  /**
+   * OK
+   */
+  200: PermissionUpdateResult;
+};
+
+export type DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponse =
+  DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses[keyof DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses];
+
+export type PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdData = {
+  body?: UpdatePermissionsRequest;
+  path: {
+    resourceType: string;
+    resourceId: string;
+    targetUserId: string;
+  };
+  query?: never;
+  url: '/api/resources/{resourceType}/{resourceId}/permissions/users/{targetUserId}';
+};
+
+export type PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses = {
+  /**
+   * OK
+   */
+  200: PermissionUpdateResult;
+};
+
+export type PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponse =
+  PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses[keyof PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses];
+
+export type PostApiResourcesByResourceTypeByResourceIdPermissionsInviteData = {
+  body?: InviteUserRequest;
+  path: {
+    resourceType: string;
+    resourceId: string;
+  };
+  query?: never;
+  url: '/api/resources/{resourceType}/{resourceId}/permissions/invite';
+};
+
+export type PostApiResourcesByResourceTypeByResourceIdPermissionsInviteResponses = {
+  /**
+   * OK
+   */
+  200: InvitationResult;
+};
+
+export type PostApiResourcesByResourceTypeByResourceIdPermissionsInviteResponse = PostApiResourcesByResourceTypeByResourceIdPermissionsInviteResponses[keyof PostApiResourcesByResourceTypeByResourceIdPermissionsInviteResponses];
+
+export type GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsData = {
+  body?: never;
+  path: {
+    resourceType: string;
+    resourceId: string;
+  };
+  query?: never;
+  url: '/api/resources/{resourceType}/{resourceId}/permissions/invitations';
+};
+
+export type GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsResponses = {
+  /**
+   * OK
+   */
+  200: Array<ResourceInvitation>;
+};
+
+export type GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsResponse = GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsResponses[keyof GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsResponses];
+
+export type GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyData = {
+  body?: never;
+  path: {
+    resourceType: string;
+    resourceId: string;
+  };
+  query?: {
+    permission?: PermissionType;
+  };
+  url: '/api/resources/{resourceType}/{resourceId}/permissions/hierarchy';
+};
+
+export type GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyResponses = {
+  /**
+   * OK
+   */
+  200: PermissionHierarchy;
+};
+
+export type GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyResponse = GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyResponses[keyof GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyResponses];
 
 export type GetApiSubscriptionMeData = {
   body?: never;
@@ -6649,8 +7652,7 @@ export type GetApiTenantDomainsMembershipsUserByUserIdResponses = {
   200: Array<TenantUserGroupMembershipDto>;
 };
 
-export type GetApiTenantDomainsMembershipsUserByUserIdResponse =
-  GetApiTenantDomainsMembershipsUserByUserIdResponses[keyof GetApiTenantDomainsMembershipsUserByUserIdResponses];
+export type GetApiTenantDomainsMembershipsUserByUserIdResponse = GetApiTenantDomainsMembershipsUserByUserIdResponses[keyof GetApiTenantDomainsMembershipsUserByUserIdResponses];
 
 export type DeleteApiTenantDomainsUserGroupsMembershipsData = {
   body?: never;
@@ -6683,8 +7685,7 @@ export type PostApiTenantDomainsUserGroupsMembershipsResponses = {
   200: TenantUserGroupMembership;
 };
 
-export type PostApiTenantDomainsUserGroupsMembershipsResponse =
-  PostApiTenantDomainsUserGroupsMembershipsResponses[keyof PostApiTenantDomainsUserGroupsMembershipsResponses];
+export type PostApiTenantDomainsUserGroupsMembershipsResponse = PostApiTenantDomainsUserGroupsMembershipsResponses[keyof PostApiTenantDomainsUserGroupsMembershipsResponses];
 
 export type GetApiTenantDomainsUserGroupsByGroupIdMembersData = {
   body?: never;
@@ -6702,8 +7703,7 @@ export type GetApiTenantDomainsUserGroupsByGroupIdMembersResponses = {
   200: Array<TenantUserGroupMembership>;
 };
 
-export type GetApiTenantDomainsUserGroupsByGroupIdMembersResponse =
-  GetApiTenantDomainsUserGroupsByGroupIdMembersResponses[keyof GetApiTenantDomainsUserGroupsByGroupIdMembersResponses];
+export type GetApiTenantDomainsUserGroupsByGroupIdMembersResponse = GetApiTenantDomainsUserGroupsByGroupIdMembersResponses[keyof GetApiTenantDomainsUserGroupsByGroupIdMembersResponses];
 
 export type GetApiTenantDomainsUsersByUserIdGroupsData = {
   body?: never;
@@ -6721,8 +7721,7 @@ export type GetApiTenantDomainsUsersByUserIdGroupsResponses = {
   200: Array<TenantUserGroupDto>;
 };
 
-export type GetApiTenantDomainsUsersByUserIdGroupsResponse =
-  GetApiTenantDomainsUsersByUserIdGroupsResponses[keyof GetApiTenantDomainsUsersByUserIdGroupsResponses];
+export type GetApiTenantDomainsUsersByUserIdGroupsResponse = GetApiTenantDomainsUsersByUserIdGroupsResponses[keyof GetApiTenantDomainsUsersByUserIdGroupsResponses];
 
 export type GetApiTenantDomainsGroupsByGroupIdUsersData = {
   body?: never;
@@ -6740,8 +7739,7 @@ export type GetApiTenantDomainsGroupsByGroupIdUsersResponses = {
   200: Array<UserDto>;
 };
 
-export type GetApiTenantDomainsGroupsByGroupIdUsersResponse =
-  GetApiTenantDomainsGroupsByGroupIdUsersResponses[keyof GetApiTenantDomainsGroupsByGroupIdUsersResponses];
+export type GetApiTenantDomainsGroupsByGroupIdUsersResponse = GetApiTenantDomainsGroupsByGroupIdUsersResponses[keyof GetApiTenantDomainsGroupsByGroupIdUsersResponses];
 
 export type PostApiTenantDomainsAutoAssignData = {
   body?: AutoAssignUserDto;
@@ -7361,8 +8359,7 @@ export type GetTestingRequestsByProjectVersionByProjectVersionIdResponses = {
   200: Array<TestingRequest>;
 };
 
-export type GetTestingRequestsByProjectVersionByProjectVersionIdResponse =
-  GetTestingRequestsByProjectVersionByProjectVersionIdResponses[keyof GetTestingRequestsByProjectVersionByProjectVersionIdResponses];
+export type GetTestingRequestsByProjectVersionByProjectVersionIdResponse = GetTestingRequestsByProjectVersionByProjectVersionIdResponses[keyof GetTestingRequestsByProjectVersionByProjectVersionIdResponses];
 
 export type GetTestingRequestsByCreatorByCreatorIdData = {
   body?: never;
@@ -7380,8 +8377,7 @@ export type GetTestingRequestsByCreatorByCreatorIdResponses = {
   200: Array<TestingRequest>;
 };
 
-export type GetTestingRequestsByCreatorByCreatorIdResponse =
-  GetTestingRequestsByCreatorByCreatorIdResponses[keyof GetTestingRequestsByCreatorByCreatorIdResponses];
+export type GetTestingRequestsByCreatorByCreatorIdResponse = GetTestingRequestsByCreatorByCreatorIdResponses[keyof GetTestingRequestsByCreatorByCreatorIdResponses];
 
 export type GetTestingRequestsByStatusByStatusData = {
   body?: never;
@@ -7417,8 +8413,7 @@ export type GetTestingSessionsByRequestByTestingRequestIdResponses = {
   200: Array<TestingSession>;
 };
 
-export type GetTestingSessionsByRequestByTestingRequestIdResponse =
-  GetTestingSessionsByRequestByTestingRequestIdResponses[keyof GetTestingSessionsByRequestByTestingRequestIdResponses];
+export type GetTestingSessionsByRequestByTestingRequestIdResponse = GetTestingSessionsByRequestByTestingRequestIdResponses[keyof GetTestingSessionsByRequestByTestingRequestIdResponses];
 
 export type GetTestingSessionsByLocationByLocationIdData = {
   body?: never;
@@ -7436,8 +8431,7 @@ export type GetTestingSessionsByLocationByLocationIdResponses = {
   200: Array<TestingSession>;
 };
 
-export type GetTestingSessionsByLocationByLocationIdResponse =
-  GetTestingSessionsByLocationByLocationIdResponses[keyof GetTestingSessionsByLocationByLocationIdResponses];
+export type GetTestingSessionsByLocationByLocationIdResponse = GetTestingSessionsByLocationByLocationIdResponses[keyof GetTestingSessionsByLocationByLocationIdResponses];
 
 export type GetTestingSessionsByStatusByStatusData = {
   body?: never;
@@ -7473,8 +8467,7 @@ export type GetTestingSessionsByManagerByManagerIdResponses = {
   200: Array<TestingSession>;
 };
 
-export type GetTestingSessionsByManagerByManagerIdResponse =
-  GetTestingSessionsByManagerByManagerIdResponses[keyof GetTestingSessionsByManagerByManagerIdResponses];
+export type GetTestingSessionsByManagerByManagerIdResponse = GetTestingSessionsByManagerByManagerIdResponses[keyof GetTestingSessionsByManagerByManagerIdResponses];
 
 export type GetTestingRequestsSearchData = {
   body?: never;
@@ -7546,8 +8539,7 @@ export type PostTestingRequestsByRequestIdParticipantsByUserIdResponses = {
   200: TestingParticipant;
 };
 
-export type PostTestingRequestsByRequestIdParticipantsByUserIdResponse =
-  PostTestingRequestsByRequestIdParticipantsByUserIdResponses[keyof PostTestingRequestsByRequestIdParticipantsByUserIdResponses];
+export type PostTestingRequestsByRequestIdParticipantsByUserIdResponse = PostTestingRequestsByRequestIdParticipantsByUserIdResponses[keyof PostTestingRequestsByRequestIdParticipantsByUserIdResponses];
 
 export type GetTestingRequestsByRequestIdParticipantsData = {
   body?: never;
@@ -7565,8 +8557,7 @@ export type GetTestingRequestsByRequestIdParticipantsResponses = {
   200: Array<TestingParticipant>;
 };
 
-export type GetTestingRequestsByRequestIdParticipantsResponse =
-  GetTestingRequestsByRequestIdParticipantsResponses[keyof GetTestingRequestsByRequestIdParticipantsResponses];
+export type GetTestingRequestsByRequestIdParticipantsResponse = GetTestingRequestsByRequestIdParticipantsResponses[keyof GetTestingRequestsByRequestIdParticipantsResponses];
 
 export type GetTestingRequestsByRequestIdParticipantsByUserIdCheckData = {
   body?: never;
@@ -7585,8 +8576,7 @@ export type GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses = {
   200: boolean;
 };
 
-export type GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponse =
-  GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses[keyof GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses];
+export type GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponse = GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses[keyof GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses];
 
 export type DeleteTestingSessionsBySessionIdRegisterData = {
   body?: never;
@@ -7620,8 +8610,7 @@ export type PostTestingSessionsBySessionIdRegisterResponses = {
   200: SessionRegistration;
 };
 
-export type PostTestingSessionsBySessionIdRegisterResponse =
-  PostTestingSessionsBySessionIdRegisterResponses[keyof PostTestingSessionsBySessionIdRegisterResponses];
+export type PostTestingSessionsBySessionIdRegisterResponse = PostTestingSessionsBySessionIdRegisterResponses[keyof PostTestingSessionsBySessionIdRegisterResponses];
 
 export type GetTestingSessionsBySessionIdRegistrationsData = {
   body?: never;
@@ -7639,8 +8628,7 @@ export type GetTestingSessionsBySessionIdRegistrationsResponses = {
   200: Array<SessionRegistration>;
 };
 
-export type GetTestingSessionsBySessionIdRegistrationsResponse =
-  GetTestingSessionsBySessionIdRegistrationsResponses[keyof GetTestingSessionsBySessionIdRegistrationsResponses];
+export type GetTestingSessionsBySessionIdRegistrationsResponse = GetTestingSessionsBySessionIdRegistrationsResponses[keyof GetTestingSessionsBySessionIdRegistrationsResponses];
 
 export type DeleteTestingSessionsBySessionIdWaitlistData = {
   body?: never;
@@ -7674,8 +8662,7 @@ export type GetTestingSessionsBySessionIdWaitlistResponses = {
   200: Array<SessionWaitlist>;
 };
 
-export type GetTestingSessionsBySessionIdWaitlistResponse =
-  GetTestingSessionsBySessionIdWaitlistResponses[keyof GetTestingSessionsBySessionIdWaitlistResponses];
+export type GetTestingSessionsBySessionIdWaitlistResponse = GetTestingSessionsBySessionIdWaitlistResponses[keyof GetTestingSessionsBySessionIdWaitlistResponses];
 
 export type PostTestingSessionsBySessionIdWaitlistData = {
   body?: SessionRegistrationRequest;
@@ -7693,8 +8680,7 @@ export type PostTestingSessionsBySessionIdWaitlistResponses = {
   200: SessionWaitlist;
 };
 
-export type PostTestingSessionsBySessionIdWaitlistResponse =
-  PostTestingSessionsBySessionIdWaitlistResponses[keyof PostTestingSessionsBySessionIdWaitlistResponses];
+export type PostTestingSessionsBySessionIdWaitlistResponse = PostTestingSessionsBySessionIdWaitlistResponses[keyof PostTestingSessionsBySessionIdWaitlistResponses];
 
 export type GetTestingRequestsByRequestIdFeedbackData = {
   body?: never;
@@ -7712,8 +8698,7 @@ export type GetTestingRequestsByRequestIdFeedbackResponses = {
   200: Array<TestingFeedback>;
 };
 
-export type GetTestingRequestsByRequestIdFeedbackResponse =
-  GetTestingRequestsByRequestIdFeedbackResponses[keyof GetTestingRequestsByRequestIdFeedbackResponses];
+export type GetTestingRequestsByRequestIdFeedbackResponse = GetTestingRequestsByRequestIdFeedbackResponses[keyof GetTestingRequestsByRequestIdFeedbackResponses];
 
 export type PostTestingRequestsByRequestIdFeedbackData = {
   body?: FeedbackRequest;
@@ -7731,8 +8716,7 @@ export type PostTestingRequestsByRequestIdFeedbackResponses = {
   200: TestingFeedback;
 };
 
-export type PostTestingRequestsByRequestIdFeedbackResponse =
-  PostTestingRequestsByRequestIdFeedbackResponses[keyof PostTestingRequestsByRequestIdFeedbackResponses];
+export type PostTestingRequestsByRequestIdFeedbackResponse = PostTestingRequestsByRequestIdFeedbackResponses[keyof PostTestingRequestsByRequestIdFeedbackResponses];
 
 export type GetTestingFeedbackByUserByUserIdData = {
   body?: never;
@@ -7938,6 +8922,215 @@ export type PostTestingFeedbackByFeedbackIdQualityResponses = {
   200: unknown;
 };
 
+export type GetTestingLocationsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+  url: '/testing/locations';
+};
+
+export type GetTestingLocationsResponses = {
+  /**
+   * OK
+   */
+  200: Array<TestingLocation>;
+};
+
+export type GetTestingLocationsResponse = GetTestingLocationsResponses[keyof GetTestingLocationsResponses];
+
+export type PostTestingLocationsData = {
+  body?: CreateTestingLocationDto;
+  path?: never;
+  query?: never;
+  url: '/testing/locations';
+};
+
+export type PostTestingLocationsResponses = {
+  /**
+   * OK
+   */
+  200: TestingLocation;
+};
+
+export type PostTestingLocationsResponse = PostTestingLocationsResponses[keyof PostTestingLocationsResponses];
+
+export type DeleteTestingLocationsByIdData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/testing/locations/{id}';
+};
+
+export type DeleteTestingLocationsByIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetTestingLocationsByIdData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/testing/locations/{id}';
+};
+
+export type GetTestingLocationsByIdResponses = {
+  /**
+   * OK
+   */
+  200: TestingLocation;
+};
+
+export type GetTestingLocationsByIdResponse = GetTestingLocationsByIdResponses[keyof GetTestingLocationsByIdResponses];
+
+export type PutTestingLocationsByIdData = {
+  body?: UpdateTestingLocationDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/testing/locations/{id}';
+};
+
+export type PutTestingLocationsByIdResponses = {
+  /**
+   * OK
+   */
+  200: TestingLocation;
+};
+
+export type PutTestingLocationsByIdResponse = PutTestingLocationsByIdResponses[keyof PutTestingLocationsByIdResponses];
+
+export type PostTestingLocationsByIdRestoreData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/testing/locations/{id}/restore';
+};
+
+export type PostTestingLocationsByIdRestoreResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetTestingPermissionsCheckData = {
+  body?: never;
+  path?: never;
+  query?: {
+    tenantId?: string;
+  };
+  url: '/testing/permissions/check';
+};
+
+export type GetTestingPermissionsCheckResponses = {
+  /**
+   * OK
+   */
+  200: TestingLabActionPermissions;
+};
+
+export type GetTestingPermissionsCheckResponse = GetTestingPermissionsCheckResponses[keyof GetTestingPermissionsCheckResponses];
+
+export type GetTestingPermissionsMyPermissionsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    tenantId?: string;
+  };
+  url: '/testing/permissions/my-permissions';
+};
+
+export type GetTestingPermissionsMyPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: TestingLabPermissions;
+};
+
+export type GetTestingPermissionsMyPermissionsResponse = GetTestingPermissionsMyPermissionsResponses[keyof GetTestingPermissionsMyPermissionsResponses];
+
+export type PostTestingPermissionsAssignRoleData = {
+  body?: AssignTestingLabRoleRequest;
+  path?: never;
+  query?: never;
+  url: '/testing/permissions/assign-role';
+};
+
+export type PostTestingPermissionsAssignRoleResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostTestingSessionsCreateWithPermissionsData = {
+  body?: CreateTestingSessionDto;
+  path?: never;
+  query?: {
+    tenantId?: string;
+  };
+  url: '/testing/sessions/create-with-permissions';
+};
+
+export type PostTestingSessionsCreateWithPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: TestingSession;
+};
+
+export type PostTestingSessionsCreateWithPermissionsResponse = PostTestingSessionsCreateWithPermissionsResponses[keyof PostTestingSessionsCreateWithPermissionsResponses];
+
+export type DeleteTestingSessionsByIdDeleteWithPermissionsData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: {
+    tenantId?: string;
+  };
+  url: '/testing/sessions/{id}/delete-with-permissions';
+};
+
+export type DeleteTestingSessionsByIdDeleteWithPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetTestingPermissionsUsersWithRoleByRoleNameData = {
+  body?: never;
+  path: {
+    roleName: string;
+  };
+  query?: {
+    tenantId?: string;
+  };
+  url: '/testing/permissions/users-with-role/{roleName}';
+};
+
+export type GetTestingPermissionsUsersWithRoleByRoleNameResponses = {
+  /**
+   * OK
+   */
+  200: Array<UserRoleAssignment>;
+};
+
+export type GetTestingPermissionsUsersWithRoleByRoleNameResponse = GetTestingPermissionsUsersWithRoleByRoleNameResponses[keyof GetTestingPermissionsUsersWithRoleByRoleNameResponses];
+
 export type GetApiUsersByUserIdAchievementsData = {
   body?: never;
   path: {
@@ -7985,8 +9178,7 @@ export type GetApiUsersByUserIdAchievementsProgressResponses = {
   200: Array<AchievementProgressDto>;
 };
 
-export type GetApiUsersByUserIdAchievementsProgressResponse =
-  GetApiUsersByUserIdAchievementsProgressResponses[keyof GetApiUsersByUserIdAchievementsProgressResponses];
+export type GetApiUsersByUserIdAchievementsProgressResponse = GetApiUsersByUserIdAchievementsProgressResponses[keyof GetApiUsersByUserIdAchievementsProgressResponses];
 
 export type GetApiUsersByUserIdAchievementsSummaryData = {
   body?: never;
@@ -8007,8 +9199,7 @@ export type GetApiUsersByUserIdAchievementsSummaryResponses = {
   200: UserAchievementSummaryDto;
 };
 
-export type GetApiUsersByUserIdAchievementsSummaryResponse =
-  GetApiUsersByUserIdAchievementsSummaryResponses[keyof GetApiUsersByUserIdAchievementsSummaryResponses];
+export type GetApiUsersByUserIdAchievementsSummaryResponse = GetApiUsersByUserIdAchievementsSummaryResponses[keyof GetApiUsersByUserIdAchievementsSummaryResponses];
 
 export type GetApiUsersByUserIdAchievementsAvailableData = {
   body?: never;
@@ -8031,8 +9222,7 @@ export type GetApiUsersByUserIdAchievementsAvailableResponses = {
   200: AchievementsPageDto;
 };
 
-export type GetApiUsersByUserIdAchievementsAvailableResponse =
-  GetApiUsersByUserIdAchievementsAvailableResponses[keyof GetApiUsersByUserIdAchievementsAvailableResponses];
+export type GetApiUsersByUserIdAchievementsAvailableResponse = GetApiUsersByUserIdAchievementsAvailableResponses[keyof GetApiUsersByUserIdAchievementsAvailableResponses];
 
 export type PostApiUsersByUserIdAchievementsByAchievementIdProgressData = {
   body?: UpdateAchievementProgressRequest;
@@ -8051,8 +9241,7 @@ export type PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses = {
   200: AchievementProgress;
 };
 
-export type PostApiUsersByUserIdAchievementsByAchievementIdProgressResponse =
-  PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses[keyof PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses];
+export type PostApiUsersByUserIdAchievementsByAchievementIdProgressResponse = PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses[keyof PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses];
 
 export type GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData = {
   body?: never;
@@ -8071,8 +9260,7 @@ export type GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses
   200: AchievementPrerequisiteCheckDto;
 };
 
-export type GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponse =
-  GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses[keyof GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses];
+export type GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponse = GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses[keyof GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses];
 
 export type PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedData = {
   body?: never;

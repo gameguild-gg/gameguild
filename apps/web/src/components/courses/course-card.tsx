@@ -66,9 +66,7 @@ export function CourseCard({ course, variant = 'default' }: CourseCardProps) {
   }
 
   return (
-    <Card
-      className={`group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden ${variant === 'featured' ? 'border-primary' : ''}`}
-    >
+    <Card className={`group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden ${variant === 'featured' ? 'border-primary' : ''}`}>
       <CardHeader className="p-0">
         <div className="relative">
           <img

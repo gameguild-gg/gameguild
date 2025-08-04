@@ -1,398 +1,353 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowRight, Bell, Check } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ArrowRight, Bell, Check, Star, Archive, Trash2, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-
-interface Notification {
-  id: string;
-  type: 'reminder' | 'status_change' | 'trade_alert' | 'governance' | 'transaction';
-  title: string;
-  message: string;
-  sender?: {
-    name: string;
-    avatar?: string;
-  };
-  timestamp: string;
-  isRead: boolean;
-  isArchived: boolean;
-  actions?: {
-    primary?: {
-      label: string;
-      variant?: 'default' | 'secondary';
-    };
-    secondary?: {
-      label: string;
-      variant?: 'default' | 'secondary';
-    };
-  };
-  metadata?: {
-    projectName?: string;
-    statusFrom?: string;
-    statusTo?: string;
-    amount?: string;
-    icon?: string;
-  };
-}
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { Notification, NotificationType, NotificationPriority } from '@/types/notification';
+import { useNotifications, useNotificationActions } from './notification-provider';
 
 interface NotificationsProps {
-  notifications?: Notification[];
-  onNotificationAction?: (notificationId: string, action: string) => void;
-  onMarkAsRead?: (notificationId: string) => void;
-  onArchive?: (notificationId: string) => void;
+  className?: string;
+  showFilters?: boolean;
+  compact?: boolean;
 }
 
-export function Notifications({ notifications = [], onNotificationAction, onMarkAsRead, onArchive }: NotificationsProps) {
-  const [activeTab, setActiveTab] = useState('unread');
+const getNotificationIcon = (type: NotificationType): string => {
+  const icons = {
+    comment: '💬',
+    follow: '👥',
+    invite: '📨',
+    reminder: '⏰',
+    task: '📋',
+    mention: '@',
+    system: '⚙️',
+    course: '📚',
+    achievement: '🏆',
+    social: '👥',
+    promotion: '🎁',
+  };
+  return icons[type] || '🔔';
+};
 
-  const defaultNotifications: Notification[] = [
-    {
-      id: '1',
-      type: 'reminder',
-      title: 'Reminder',
-      message: 'has sent you a reminder',
-      sender: {
-        name: 'Boyd Larkin',
-        avatar: undefined,
-      },
-      timestamp: '2 hours ago',
-      isRead: false,
-      isArchived: false,
-      actions: {
-        secondary: { label: 'Ignore', variant: 'secondary' },
-        primary: { label: 'Respond', variant: 'default' },
-      },
-    },
-    {
-      id: '2',
-      type: 'status_change',
-      title: 'Status Update',
-      message: 'has changed the status of',
-      sender: {
-        name: 'Josh Krajcik',
-        avatar: undefined,
-      },
-      timestamp: '2 hours ago',
-      isRead: false,
-      isArchived: false,
-      metadata: {
-        projectName: 'Design Project',
-        statusFrom: 'In Progress',
-        statusTo: 'Completed',
-      },
-    },
-    {
-      id: '3',
-      type: 'trade_alert',
-      title: 'Trade Alert',
-      message: 'Your Bitcoin (BTC) trade is ready for review.',
-      timestamp: '8:30 PM',
-      isRead: false,
-      isArchived: false,
-      actions: {
-        primary: { label: 'Review Trade', variant: 'default' },
-        secondary: { label: 'Learn More', variant: 'secondary' },
-      },
-      metadata: {
-        icon: '₿',
-      },
-    },
-    {
-      id: '4',
-      type: 'governance',
-      title: 'Governance Proposal',
-      message: "Voting on Proposal #283 from DeFi DAO has begun. A pivotal moment shaping decentralized finance's future.",
-      timestamp: '8:30 PM',
-      isRead: false,
-      isArchived: false,
-      metadata: {
-        icon: '⚡',
-      },
-    },
-    {
-      id: '5',
-      type: 'transaction',
-      title: 'Sent USDT',
-      message: 'You sent 50 USDT to alice.eth. alice.crypto requests 75 USDT. Help fund their new project.',
-      timestamp: '8:30 PM',
-      isRead: false,
-      isArchived: false,
-      metadata: {
-        icon: '💸',
-      },
-    },
-  ];
+const getPriorityColor = (priority?: NotificationPriority): string => {
+  switch (priority) {
+    case 'high':
+      return 'bg-red-500';
+    case 'medium':
+      return 'bg-yellow-500';
+    case 'low':
+      return 'bg-green-500';
+    default:
+      return 'bg-gray-500';
+  }
+};
 
-  const displayNotifications = notifications.length > 0 ? notifications : defaultNotifications;
+const formatTimeAgo = (date: Date): string => {
+  const now = new Date();
+  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
-  const unreadNotifications = displayNotifications.filter((n) => !n.isRead && !n.isArchived);
-  const readNotifications = displayNotifications.filter((n) => n.isRead && !n.isArchived);
-  const archivedNotifications = displayNotifications.filter((n) => n.isArchived);
+  if (diffInMinutes < 1) return 'Just now';
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
 
-  const getNotificationsByTab = (tab: string) => {
-    switch (tab) {
-      case 'unread':
-        return unreadNotifications;
-      case 'read':
-        return readNotifications;
-      case 'archived':
-        return archivedNotifications;
-      default:
-        return unreadNotifications;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+
+  return date.toLocaleDateString();
+};
+
+interface NotificationItemProps {
+  notification: Notification;
+  compact?: boolean;
+  onAction?: (action: string) => void;
+}
+
+function NotificationItem({ notification, compact = false, onAction }: NotificationItemProps) {
+  const { markAsRead, archiveNotification, toggleStar, removeNotification } = useNotificationActions();
+
+  const handleMarkAsRead = () => {
+    if (!notification.isRead) {
+      markAsRead(notification.id);
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((word) => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+  const handleArchive = () => {
+    archiveNotification(notification.id);
   };
 
-  const getAvatarColors = (name: string) => {
-    const colorPairs = [
-      { bg: 'bg-blue-500', text: 'text-white' },
-      { bg: 'bg-emerald-500', text: 'text-white' },
-      { bg: 'bg-purple-500', text: 'text-white' },
-      { bg: 'bg-orange-500', text: 'text-white' },
-      { bg: 'bg-pink-500', text: 'text-white' },
-      { bg: 'bg-indigo-500', text: 'text-white' },
-    ];
-    const index = name.charCodeAt(0) % colorPairs.length;
-    return colorPairs[index];
+  const handleToggleStar = () => {
+    toggleStar(notification.id);
   };
 
-  const getNotificationIcon = (notification: Notification) => {
-    if (notification.metadata?.icon) {
-      return <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-lg">{notification.metadata.icon}</div>;
-    }
-
-    if (notification.sender) {
-      const avatarColors = getAvatarColors(notification.sender.name);
-      return (
-        <Avatar className="w-10 h-10">
-          <AvatarImage src={notification.sender.avatar} alt={notification.sender.name} />
-          <AvatarFallback className={`${avatarColors.bg} ${avatarColors.text} text-sm font-medium`}>{getInitials(notification.sender.name)}</AvatarFallback>
-        </Avatar>
-      );
-    }
-
-    return (
-      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-        <Bell className="w-5 h-5 text-muted-foreground" />
-      </div>
-    );
+  const handleRemove = () => {
+    removeNotification(notification.id);
   };
 
-  const formatNotificationContent = (notification: Notification) => {
-    if (notification.type === 'status_change' && notification.metadata) {
-      return (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-foreground font-medium">{notification.sender?.name}</span>
-            <span className="text-muted-foreground">{notification.message}</span>
-            <span className="text-foreground font-medium">{notification.metadata.projectName}</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Badge variant="secondary" className="text-xs">
-              <div className="w-2 h-2 bg-orange-500 rounded-full mr-1" />
-              {notification.metadata.statusFrom}
-            </Badge>
-            <ArrowRight className="w-3 h-3 text-muted-foreground" />
-            <Badge variant="secondary" className="text-xs">
-              <Check className="w-3 h-3 text-green-500 mr-1" />
-              {notification.metadata.statusTo}
-            </Badge>
-          </div>
-        </div>
-      );
-    }
-
-    if (notification.sender) {
-      return (
-        <div className="text-sm">
-          <span className="text-foreground font-medium">{notification.sender.name}</span>
-          <span className="text-muted-foreground ml-1">{notification.message}</span>
-        </div>
-      );
-    }
-
-    return <div className="text-sm text-muted-foreground">{notification.message}</div>;
+  const handleActionClick = (action: string) => {
+    onAction?.(action);
   };
-
-  const handleAction = (notificationId: string, action: string) => {
-    onNotificationAction?.(notificationId, action);
-  };
-
-  const todayNotifications = getNotificationsByTab(activeTab).filter((n) => n.timestamp.includes('hours ago') || n.timestamp.includes('minutes ago'));
-
-  const yesterdayNotifications = getNotificationsByTab(activeTab).filter((n) => !n.timestamp.includes('hours ago') && !n.timestamp.includes('minutes ago'));
 
   return (
-    <Card className="w-full max-w-2xl bg-background border-border shadow-lg">
-      <CardContent className="p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-foreground">Notifications</h2>
+    <div className={`group relative flex gap-3 p-4 border-b last:border-b-0 hover:bg-muted/50 transition-colors ${!notification.isRead ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}`}>
+      {/* Priority indicator */}
+      {notification.priority && <div className={`absolute left-0 top-0 bottom-0 w-1 ${getPriorityColor(notification.priority)}`} />}
+
+      {/* Unread indicator */}
+      {!notification.isRead && <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />}
+
+      {/* Avatar */}
+      <div className="flex-shrink-0">
+        {notification.user ? (
+          <Avatar className={compact ? 'w-8 h-8' : 'w-10 h-10'}>
+            <AvatarImage src={notification.user.avatar} alt={notification.user.name} />
+            <AvatarFallback>{notification.user.name.charAt(0).toUpperCase()}</AvatarFallback>
+          </Avatar>
+        ) : (
+          <div className={`${compact ? 'w-8 h-8' : 'w-10 h-10'} rounded-full bg-muted flex items-center justify-center text-sm`}>{getNotificationIcon(notification.type)}</div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <h4 className={`font-medium text-foreground ${compact ? 'text-sm' : 'text-base'}`}>{notification.title}</h4>
+            <p className={`text-muted-foreground ${compact ? 'text-xs' : 'text-sm'} mt-1`}>
+              {notification.user && `${notification.user.name} `}
+              {notification.message}
+              {notification.metadata?.projectName && ` ${notification.metadata.projectName}`}
+            </p>
+          </div>
+
+          {/* Action menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {!notification.isRead && (
+                <DropdownMenuItem onClick={handleMarkAsRead}>
+                  <Check className="h-4 w-4 mr-2" />
+                  Mark as read
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={handleToggleStar}>
+                <Star className={`h-4 w-4 mr-2 ${notification.isStarred ? 'fill-current' : ''}`} />
+                {notification.isStarred ? 'Unstar' : 'Star'}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleArchive}>
+                <Archive className="h-4 w-4 mr-2" />
+                Archive
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleRemove} className="text-destructive">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 rounded-lg h-auto mb-6">
-            <TabsTrigger
-              value="unread"
-              className="text-sm font-medium px-4 py-2.5 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
-            >
-              Unread
-            </TabsTrigger>
-            <TabsTrigger
-              value="read"
-              className="text-sm font-medium px-4 py-2.5 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
-            >
-              Read
-            </TabsTrigger>
-            <TabsTrigger
-              value="archived"
-              className="text-sm font-medium px-4 py-2.5 rounded-md data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground"
-            >
-              Archived
-            </TabsTrigger>
+        {/* Metadata */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <span>{formatTimeAgo(notification.timestamp)}</span>
+          {notification.metadata?.taskId && (
+            <>
+              <Separator orientation="vertical" className="h-3" />
+              <span>{notification.metadata.taskId}</span>
+            </>
+          )}
+          {notification.priority && (
+            <>
+              <Separator orientation="vertical" className="h-3" />
+              <Badge variant="outline" className="text-xs">
+                {notification.priority}
+              </Badge>
+            </>
+          )}
+        </div>
+
+        {/* Action buttons */}
+        {notification.actionButtons && (
+          <div className="flex gap-2 mt-2">
+            {notification.actionButtons.accept && (
+              <Button size="sm" onClick={() => handleActionClick('accept')}>
+                Accept
+              </Button>
+            )}
+            {notification.actionButtons.decline && (
+              <Button size="sm" variant="outline" onClick={() => handleActionClick('decline')}>
+                Decline
+              </Button>
+            )}
+            {notification.actionButtons.view && (
+              <Button size="sm" variant="outline" onClick={() => handleActionClick('view')}>
+                View
+                <ArrowRight className="ml-1 h-3 w-3" />
+              </Button>
+            )}
+            {notification.actionButtons.respond && (
+              <Button size="sm" variant="outline" onClick={() => handleActionClick('respond')}>
+                Respond
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function Notifications({ className, showFilters = true, compact = false }: NotificationsProps) {
+  const { filteredNotifications, state, setFilters } = useNotifications();
+  const { markAllAsRead, refreshNotifications } = useNotificationActions();
+  const [activeTab, setActiveTab] = useState('unread');
+
+  const tabs = useMemo(() => {
+    const unread = filteredNotifications.filter((n) => !n.isRead && !n.isArchived);
+    const read = filteredNotifications.filter((n) => n.isRead && !n.isArchived);
+    const archived = filteredNotifications.filter((n) => n.isArchived);
+    const starred = filteredNotifications.filter((n) => n.isStarred && !n.isArchived);
+
+    return [
+      { id: 'unread', label: 'Unread', count: unread.length, notifications: unread },
+      { id: 'read', label: 'Read', count: read.length, notifications: read },
+      { id: 'starred', label: 'Starred', count: starred.length, notifications: starred },
+      { id: 'archived', label: 'Archived', count: archived.length, notifications: archived },
+    ];
+  }, [filteredNotifications]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    const tabType = value === 'unread' ? 'unread' : value === 'read' ? 'read' : value === 'archived' ? 'archived' : 'all';
+    setFilters({ type: tabType });
+  };
+
+  const handleNotificationAction = async (notificationId: string, action: string) => {
+    // Handle notification-specific actions
+    console.log(`Action ${action} for notification ${notificationId}`);
+  };
+
+  return (
+    <Card className={className}>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-semibold">
+            Notifications
+            {state.unreadCount > 0 && (
+              <Badge variant="secondary" className="ml-2">
+                {state.unreadCount}
+              </Badge>
+            )}
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {showFilters && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="p-2">
+                    <label className="text-xs font-medium text-muted-foreground">Type</label>
+                    <Select value={state.filters.notificationType || 'all'} onValueChange={(value) => setFilters({ notificationType: value as NotificationType | 'all' })}>
+                      <SelectTrigger className="h-8 mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All types</SelectItem>
+                        <SelectItem value="comment">Comments</SelectItem>
+                        <SelectItem value="follow">Follows</SelectItem>
+                        <SelectItem value="invite">Invites</SelectItem>
+                        <SelectItem value="task">Tasks</SelectItem>
+                        <SelectItem value="reminder">Reminders</SelectItem>
+                        <SelectItem value="system">System</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <div className="p-2">
+                    <label className="text-xs font-medium text-muted-foreground">Priority</label>
+                    <Select value={state.filters.priority || 'all'} onValueChange={(value) => setFilters({ priority: value as NotificationPriority | 'all' })}>
+                      <SelectTrigger className="h-8 mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All priorities</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <Button variant="outline" size="sm" onClick={refreshNotifications} disabled={state.isLoading}>
+              <Bell className="h-4 w-4" />
+            </Button>
+            {state.unreadCount > 0 && (
+              <Button variant="outline" size="sm" onClick={markAllAsRead}>
+                <Check className="h-4 w-4 mr-2" />
+                Mark all read
+              </Button>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
+          <TabsList className="grid w-full grid-cols-4 mx-4 mb-4">
+            {tabs.map((tab) => (
+              <TabsTrigger key={tab.id} value={tab.id} className="text-xs">
+                {tab.label}
+                {tab.count > 0 && (
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {tab.count}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
-          <TabsContent value={activeTab} className="space-y-6">
-            {/* Today Section */}
-            {todayNotifications.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">Today</h3>
-                    <Badge variant="secondary" className="text-xs">
-                      {todayNotifications.length}
-                    </Badge>
+          {tabs.map((tab) => (
+            <TabsContent key={tab.id} value={tab.id} className="mt-0">
+              <ScrollArea className="h-[600px]">
+                {tab.notifications.length > 0 ? (
+                  <div>
+                    {tab.notifications.map((notification) => (
+                      <NotificationItem key={notification.id} notification={notification} compact={compact} onAction={(action) => handleNotificationAction(notification.id, action)} />
+                    ))}
                   </div>
-                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
-                    See All
-                  </Button>
-                </div>
-
-                <div className="space-y-3">
-                  {todayNotifications.map((notification) => (
-                    <Card key={notification.id} className="bg-muted/30 border-border/40 p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="relative">
-                          {getNotificationIcon(notification)}
-                          {!notification.isRead && <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full" />}
-                        </div>
-
-                        <div className="flex-1 space-y-2">
-                          {formatNotificationContent(notification)}
-
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">{notification.timestamp}</span>
-
-                            {notification.actions && (
-                              <div className="flex items-center gap-2">
-                                {notification.actions.secondary && (
-                                  <Button variant="ghost" size="sm" className="h-8 px-3 text-xs" onClick={() => handleAction(notification.id, 'secondary')}>
-                                    {notification.actions.secondary.label}
-                                  </Button>
-                                )}
-                                {notification.actions.primary && (
-                                  <Button
-                                    size="sm"
-                                    className="h-8 px-3 text-xs bg-primary hover:bg-primary/90"
-                                    onClick={() => handleAction(notification.id, 'primary')}
-                                  >
-                                    {notification.actions.primary.label}
-                                  </Button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Yesterday Section */}
-            {yesterdayNotifications.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">Yesterday</h3>
-                    <Badge variant="secondary" className="text-xs">
-                      {yesterdayNotifications.length}
-                    </Badge>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Bell className="h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="font-medium text-lg mb-2">No {tab.label.toLowerCase()} notifications</h3>
+                    <p className="text-muted-foreground text-sm">
+                      {tab.id === 'unread' && "You're all caught up! ✨"}
+                      {tab.id === 'read' && 'No read notifications yet.'}
+                      {tab.id === 'starred' && 'Star important notifications to see them here.'}
+                      {tab.id === 'archived' && 'No archived notifications.'}
+                    </p>
                   </div>
-                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground">
-                    See All
-                  </Button>
-                </div>
-
-                <div className="space-y-3">
-                  {yesterdayNotifications.map((notification) => (
-                    <Card key={notification.id} className="bg-muted/30 border-border/40 p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="relative">
-                          {getNotificationIcon(notification)}
-                          {!notification.isRead && <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full" />}
-                        </div>
-
-                        <div className="flex-1 space-y-2">
-                          {formatNotificationContent(notification)}
-
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">{notification.timestamp}</span>
-
-                            {notification.actions && (
-                              <div className="flex items-center gap-2">
-                                {notification.actions.secondary && (
-                                  <Button variant="ghost" size="sm" className="h-8 px-3 text-xs" onClick={() => handleAction(notification.id, 'secondary')}>
-                                    {notification.actions.secondary.label}
-                                  </Button>
-                                )}
-                                {notification.actions.primary && (
-                                  <Button
-                                    size="sm"
-                                    className="h-8 px-3 text-xs bg-primary hover:bg-primary/90"
-                                    onClick={() => handleAction(notification.id, 'primary')}
-                                  >
-                                    {notification.actions.primary.label}
-                                  </Button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {getNotificationsByTab(activeTab).length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                <Bell className="w-12 h-12 mx-auto mb-3 opacity-40" />
-                <p className="text-sm">No {activeTab} notifications</p>
-                <p className="text-xs mt-1 opacity-75">
-                  {activeTab === 'unread' && "You're all caught up!"}
-                  {activeTab === 'read' && 'No read notifications yet'}
-                  {activeTab === 'archived' && 'No archived notifications'}
-                </p>
-              </div>
-            )}
-          </TabsContent>
+                )}
+              </ScrollArea>
+            </TabsContent>
+          ))}
         </Tabs>
       </CardContent>
     </Card>

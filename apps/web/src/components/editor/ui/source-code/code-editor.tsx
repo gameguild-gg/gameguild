@@ -25,18 +25,7 @@ export interface CodeEditorProps {
   isAutocompleteEnabled?: boolean;
 }
 
-export function CodeEditor({
-  codeEditorHeight,
-  activeFileLanguage,
-  activeFileContent,
-  isDarkTheme,
-  readonly,
-  isEditing,
-  updateActiveFileContent,
-  handleCodeEditorResize,
-  onEditorMount,
-  isAutocompleteEnabled,
-}: CodeEditorProps) {
+export function CodeEditor({ codeEditorHeight, activeFileLanguage, activeFileContent, isDarkTheme, readonly, isEditing, updateActiveFileContent, handleCodeEditorResize, onEditorMount, isAutocompleteEnabled }: CodeEditorProps) {
   const editorRef = useRef<any>(null);
   const monaco = useMonaco();
   const [isPythonEnabled, setIsPythonEnabled] = useState(false);
@@ -217,10 +206,7 @@ export function CodeEditor({
       {/* YAML language service */}
       {monaco && editorRef.current && <YAMLLanguageService monaco={monaco} editor={editorRef.current} code={activeFileContent} enabled={isYAMLEnabled} />}
       {/* Add drag handle for resizing */}
-      <div
-        className={cn('h-1 cursor-ns-resize flex items-center justify-center border-t', isDarkTheme ? 'bg-gray-800' : 'bg-gray-200')}
-        onMouseDown={(e) => handleCodeEditorResize(e, e.clientY)}
-      >
+      <div className={cn('h-1 cursor-ns-resize flex items-center justify-center border-t', isDarkTheme ? 'bg-gray-800' : 'bg-gray-200')} onMouseDown={(e) => handleCodeEditorResize(e, e.clientY)}>
         <GripVertical className={cn('h-3 w-3', isDarkTheme ? 'text-gray-600' : 'text-gray-400')} />
       </div>
     </div>

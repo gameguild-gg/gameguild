@@ -82,7 +82,7 @@ public class SlugCaseTransformer : CachedCaseTransformer {
       if (availableLength <= 0) { uniqueSlug = counter.ToString(); }
       else {
         var truncatedBase = baseSlug.Length > availableLength
-                              ? baseSlug.Substring(0, availableLength).TrimEnd('-')
+                              ? baseSlug[..availableLength].TrimEnd('-')
                               : baseSlug;
         uniqueSlug = truncatedBase + suffix;
       }

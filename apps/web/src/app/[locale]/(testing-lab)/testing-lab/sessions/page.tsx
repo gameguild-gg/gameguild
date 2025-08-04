@@ -1,5 +1,5 @@
-import { getAvailableTestSessions } from '@/lib/api/testing-lab/test-sessions';
-import { TestingSessions } from '@/components/testing-lab/sessions/landing/testing-sessions';
+import { TestingSessions } from '@/components/testing-lab/landing/testing-sessions';
+import { getAvailableTestSessions } from '@/lib/admin';
 
 export default async function TestingLabSessionsPage() {
   const testSessions = await getAvailableTestSessions();

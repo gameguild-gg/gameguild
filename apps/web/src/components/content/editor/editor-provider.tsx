@@ -457,24 +457,8 @@ export function useEditorContext() {
  * Hook for dispatching editor actions
  */
 export function useEditorActions() {
-  const {
-    dispatch,
-    initializeEditor,
-    updateConfig,
-    setContent,
-    updateContent,
-    setReadOnly,
-    setLoading,
-    setSaving,
-    markUnsavedChanges,
-    markSaved,
-    addError,
-    clearError,
-    clearAllErrors,
-    togglePlugin,
-    updateToolbar,
-    resetEditor,
-  } = useEditorContext();
+  const { dispatch, initializeEditor, updateConfig, setContent, updateContent, setReadOnly, setLoading, setSaving, markUnsavedChanges, markSaved, addError, clearError, clearAllErrors, togglePlugin, updateToolbar, resetEditor } =
+    useEditorContext();
 
   return {
     dispatch,

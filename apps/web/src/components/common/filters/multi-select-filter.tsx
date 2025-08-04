@@ -24,16 +24,7 @@ interface MultiSelectFilterProps {
   maxSelectedDisplay?: number;
 }
 
-export function MultiSelectFilter({
-  options,
-  selectedValues,
-  onToggle,
-  placeholder,
-  emptyText = 'No options found.',
-  searchPlaceholder = 'Search...',
-  className = '',
-  maxSelectedDisplay = 2,
-}: MultiSelectFilterProps) {
+export function MultiSelectFilter({ options, selectedValues, onToggle, placeholder, emptyText = 'No options found.', searchPlaceholder = 'Search...', className = '', maxSelectedDisplay = 2 }: MultiSelectFilterProps) {
   const [open, setOpen] = useState(false);
 
   const getDisplayText = () => {
@@ -75,12 +66,7 @@ export function MultiSelectFilter({
                   All
                 </CommandItem>
                 {options.map((option) => (
-                  <CommandItem
-                    key={option.value}
-                    value={option.value}
-                    onSelect={() => onToggle(option.value)}
-                    className="text-slate-200 hover:bg-slate-700/50 cursor-pointer"
-                  >
+                  <CommandItem key={option.value} value={option.value} onSelect={() => onToggle(option.value)} className="text-slate-200 hover:bg-slate-700/50 cursor-pointer">
                     <Check className={`mr-2 h-4 w-4 ${selectedValues.includes(option.value) ? 'opacity-100' : 'opacity-0'}`} />
                     <span className="flex-1">{option.label}</span>
                     {option.count !== undefined && (

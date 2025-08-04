@@ -227,9 +227,7 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
                     {course.contents.map((content, index) => (
                       <div
                         key={content.id}
-                        className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                          index === currentContentIndex ? 'bg-blue-600' : content.isLocked ? 'bg-gray-800/30 opacity-50' : 'bg-gray-800/50 hover:bg-gray-800'
-                        }`}
+                        className={`p-3 rounded-lg cursor-pointer transition-colors ${index === currentContentIndex ? 'bg-blue-600' : content.isLocked ? 'bg-gray-800/30 opacity-50' : 'bg-gray-800/50 hover:bg-gray-800'}`}
                         onClick={() => !content.isLocked && setCurrentContentIndex(index)}
                       >
                         <div className="flex items-center gap-2">

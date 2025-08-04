@@ -26,7 +26,7 @@ public class Post : Content {
   /// <summary>
   /// ID of the user who authored/created the post
   /// </summary>
-  public Guid AuthorId { get; set; }
+  public Guid? AuthorId { get; set; }
 
   /// <summary>
   /// Navigation property to the author

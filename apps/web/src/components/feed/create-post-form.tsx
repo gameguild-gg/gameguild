@@ -88,25 +88,13 @@ export function CreatePostForm() {
             {/* Action Buttons */}
             <div className="flex items-center justify-between pt-2 border-t border-slate-600/30">
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200"
-                  title="Add image"
-                >
+                <button type="button" className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200" title="Add image">
                   <Image size={20} aria-label="Add image" />
                 </button>
-                <button
-                  type="button"
-                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200"
-                  title="Add location"
-                >
+                <button type="button" className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200" title="Add location">
                   <MapPin size={20} />
                 </button>
-                <button
-                  type="button"
-                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200"
-                  title="Add emoji"
-                >
+                <button type="button" className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200" title="Add emoji">
                   <Smile size={20} />
                 </button>
               </div>

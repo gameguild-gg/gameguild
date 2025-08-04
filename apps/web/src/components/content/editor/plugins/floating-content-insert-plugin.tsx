@@ -623,13 +623,7 @@ export function FloatingContentInsertPlugin() {
                 <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold">2</span>
                 Start Time (Optional)
               </Label>
-              <Input
-                id="start-at"
-                placeholder="0:30 or 30"
-                value={youtubeStartAt}
-                onChange={(e) => setYoutubeStartAt(e.target.value)}
-                className="pl-4 pr-4 py-3 text-sm"
-              />
+              <Input id="start-at" placeholder="0:30 or 30" value={youtubeStartAt} onChange={(e) => setYoutubeStartAt(e.target.value)} className="pl-4 pr-4 py-3 text-sm" />
               <p className="text-xs text-muted-foreground">Enter time in seconds (30) or MM:SS format (0:30)</p>
             </div>
 
@@ -641,12 +635,7 @@ export function FloatingContentInsertPlugin() {
               </Label>
               <div className="space-y-4 pl-8">
                 <div className="flex items-start space-x-3 p-3 rounded-lg border bg-gray-50/50 hover:bg-gray-50 transition-colors">
-                  <Checkbox
-                    id="show-controls"
-                    checked={youtubeShowControls}
-                    onCheckedChange={(checked) => setYoutubeShowControls(checked === true)}
-                    className="mt-0.5"
-                  />
+                  <Checkbox id="show-controls" checked={youtubeShowControls} onCheckedChange={(checked) => setYoutubeShowControls(checked === true)} className="mt-0.5" />
                   <div className="flex-1">
                     <label htmlFor="show-controls" className="text-sm font-medium leading-none cursor-pointer">
                       Show player controls
@@ -666,12 +655,7 @@ export function FloatingContentInsertPlugin() {
                 </div>
 
                 <div className="flex items-start space-x-3 p-3 rounded-lg border bg-gray-50/50 hover:bg-gray-50 transition-colors">
-                  <Checkbox
-                    id="show-related"
-                    checked={youtubeShowRelated}
-                    onCheckedChange={(checked) => setYoutubeShowRelated(checked === true)}
-                    className="mt-0.5"
-                  />
+                  <Checkbox id="show-related" checked={youtubeShowRelated} onCheckedChange={(checked) => setYoutubeShowRelated(checked === true)} className="mt-0.5" />
                   <div className="flex-1">
                     <label htmlFor="show-related" className="text-sm font-medium leading-none cursor-pointer">
                       Show related videos
@@ -775,12 +759,7 @@ export function FloatingContentInsertPlugin() {
               </Label>
               <div className="space-y-4 pl-8">
                 <div className="flex items-start space-x-3 p-3 rounded-lg border bg-gray-50/50 hover:bg-gray-50 transition-colors">
-                  <Checkbox
-                    id="show-theme"
-                    checked={spotifyShowTheme}
-                    onCheckedChange={(checked) => setSpotifyShowTheme(checked === true)}
-                    className="mt-0.5"
-                  />
+                  <Checkbox id="show-theme" checked={spotifyShowTheme} onCheckedChange={(checked) => setSpotifyShowTheme(checked === true)} className="mt-0.5" />
                   <div className="flex-1">
                     <label htmlFor="show-theme" className="text-sm font-medium leading-none cursor-pointer">
                       Show Spotify theme color

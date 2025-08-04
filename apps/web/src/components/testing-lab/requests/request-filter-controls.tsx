@@ -25,18 +25,7 @@ const statusOptions: FilterOption[] = [
   { value: 'completed', label: 'Completed' },
 ];
 
-export function RequestFilterControls({
-  searchTerm,
-  onSearchChange,
-  statusFilter,
-  onStatusFilterChange,
-  viewMode,
-  onViewModeChange,
-  hideViewToggle = false,
-  onRefresh,
-  onAddRequest,
-  showAddButton = false,
-}: RequestFilterControlsProps) {
+export function RequestFilterControls({ searchTerm, onSearchChange, statusFilter, onStatusFilterChange, viewMode, onViewModeChange, hideViewToggle = false, onRefresh, onAddRequest, showAddButton = false }: RequestFilterControlsProps) {
   // Convert view mode to match ViewModeToggle expectations
   const mappedViewMode = viewMode === 'grid' ? 'cards' : viewMode === 'list' ? 'row' : 'table';
 
