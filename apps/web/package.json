@@ -5,11 +5,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "api:gen": "node --import tsx src/lib/api/scripts/check-api-types.ts",
-    "api:gen:optional": "node --import tsx src/lib/api/scripts/check-api-types.ts || echo 'API generation failed, continuing with build...'",
+    "api:gen": "node --import tsx src/lib/api/scripts/api-gen.ts",
     "dev": "run-p api:gen dev:next",
     "dev:next": "next dev",
-    "build": "run-s api:gen:optional build:next",
+    "build": "run-s api:gen build:next",
     "build:next": "next build",
     "build:prod": "next build",
     "start": "next start",

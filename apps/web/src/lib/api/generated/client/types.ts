@@ -1,6 +1,6 @@
-import type { Auth } from '../core/auth.js';
-import type { Client as CoreClient, Config as CoreConfig } from '../core/types.js';
-import type { Middleware } from './utils.js';
+import type { Auth } from '../core/auth';
+import type { Client as CoreClient, Config as CoreConfig } from '../core/types';
+import type { Middleware } from './utils';
 
 export interface Config<T extends ClientOptions = ClientOptions> extends Omit<RequestInit, 'body' | 'headers' | 'method'>, CoreConfig {
   /**
@@ -75,7 +75,9 @@ export interface ClientOptions {
   throwOnError?: boolean;
 }
 
-type MethodFn = <TData = unknown, TError = unknown, ThrowOnError extends boolean = false>(options: Omit<RequestOptions<ThrowOnError>, 'method'>) => RequestResult<TData, TError, ThrowOnError>;
+type MethodFn = <TData = unknown, TError = unknown, ThrowOnError extends boolean = false>(
+  options: Omit<RequestOptions<ThrowOnError>, 'method'>,
+) => RequestResult<TData, TError, ThrowOnError>;
 
 type RequestFn = <TData = unknown, TError = unknown, ThrowOnError extends boolean = false>(
   options: Omit<RequestOptions<ThrowOnError>, 'method'> & Pick<Required<RequestOptions<ThrowOnError>>, 'method'>,
@@ -116,7 +118,11 @@ export interface TDataShape {
 
 type OmitKeys<T, K> = Pick<T, Exclude<keyof T, K>>;
 
-export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = OmitKeys<RequestOptions<ThrowOnError>, 'body' | 'path' | 'query' | 'url'> & Omit<TData, 'url'>;
+export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = OmitKeys<
+  RequestOptions<ThrowOnError>,
+  'body' | 'path' | 'query' | 'url'
+> &
+  Omit<TData, 'url'>;
 
 export type OptionsLegacyParser<TData = unknown, ThrowOnError extends boolean = boolean> = TData extends { body?: any }
   ? TData extends { headers?: any }
