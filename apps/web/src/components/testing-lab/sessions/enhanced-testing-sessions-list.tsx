@@ -163,7 +163,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
       const apiSessions = sessionsData?.testingSessions || [];
       // Properly map the API response to match component interface
       setSessions(
-        apiSessions.map((session: TestingSession) => ({
+        apiSessions.map((session: any) => ({
           id: session.id || '',
           sessionName: session.sessionName,
           sessionDate: session.sessionDate,

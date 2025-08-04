@@ -2,7 +2,6 @@ import type { ArrayStyle, ObjectStyle, SerializerOptions } from './pathSerialize
 
 export type QuerySerializer = (query: Record<string, unknown>) => string;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type BodySerializer = (body: any) => any;
 
 export interface QuerySerializerOptions {
@@ -30,7 +29,6 @@ const serializeUrlSearchParamsPair = (data: URLSearchParams, key: string, value:
 };
 
 export const formDataBodySerializer = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   bodySerializer: <T extends Record<string, any> | Array<Record<string, any>>>(body: T): FormData => {
     const data = new FormData();
 
@@ -54,7 +52,6 @@ export const jsonBodySerializer = {
 };
 
 export const urlSearchParamsBodySerializer = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   bodySerializer: <T extends Record<string, any> | Array<Record<string, any>>>(body: T): string => {
     const data = new URLSearchParams();
 

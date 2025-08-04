@@ -118,7 +118,6 @@ export interface ModulePermission {
 
 export interface PermissionConstraint {
   type: 'ownership' | 'time' | 'location' | 'status' | 'custom';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any;
   description: string;
 }
@@ -353,7 +352,7 @@ export interface ModulePermissionResult {
   reason?: string;
 }
 
-const modulePermissionsExport = {
+export default {
   ModuleType,
   RoleLevel,
   ModuleAction,
@@ -362,5 +361,3 @@ const modulePermissionsExport = {
   ALL_PREDEFINED_ROLES,
   MODULE_RESOURCES,
 };
-
-export default modulePermissionsExport;
