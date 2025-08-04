@@ -62,6 +62,13 @@ ENV NEW_RELIC_AI_MONITORING_ENABLED=true
 ENV NEW_RELIC_CUSTOM_INSIGHTS_EVENTS_MAX_SAMPLES_STORED=100k
 ENV NEW_RELIC_SPAN_EVENTS_MAX_SAMPLES_STORED=10k
 
+# Accept runtime arguments for domain configuration
+ARG DOMAIN_NAME
+ENV DOMAIN_NAME=$DOMAIN_NAME
+
+# Configure Node.js DNS resolution to prefer IPv4 and handle local domains
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
+
 # NextAuth configuration - set via Coolify environment variables
 # These should be configured in Coolify's runtime environment variables
 
