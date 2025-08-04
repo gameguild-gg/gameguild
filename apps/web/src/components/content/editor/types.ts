@@ -233,7 +233,6 @@ export interface EditorProviderProps {
   children: ReactNode;
   config?: Partial<EditorConfig>;
   initialState?: Partial<EditorState>;
-  scopeId?: string;
   forceNested?: boolean;
 }
 

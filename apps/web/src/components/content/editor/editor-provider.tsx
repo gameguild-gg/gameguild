@@ -239,27 +239,13 @@ const createInitialEditorState = (initialState: EditorState): EditorState => {
 };
 
 /**
- * Generate a unique scope ID for nested editors
- */
-const generateScopeId = (): string => {
-  const stack = new Error().stack;
-  const componentMatch = stack?.match(/at (\w+)/g)?.[2];
-  const componentName = componentMatch?.replace('at ', '') || 'unknown';
-  const randomId = Math.random().toString(36).substr(2, 6);
-  return `editor-${componentName}-${randomId}`;
-};
-
-/**
  * Provider that manages editor state using a reducer
  */
-export function EditorProvider({ children, config = {}, initialState = defaultEditorState, scopeId, forceNested = false }: EditorProviderProps) {
+export function EditorProvider({ children, config = {}, initialState = defaultEditorState, forceNested = false }: EditorProviderProps) {
   // Auto-detect if this is a nested provider
   const existingContext = useContext(EditorContext);
   const hasParentProvider = existingContext && existingContext !== defaultContextValue;
   const isNested = forceNested || hasParentProvider;
-
-  // Auto-generate scopeId if not provided
-  const autoScopeId = scopeId || (isNested ? generateScopeId() : 'root');
 
   // Get parent context if this is a nested provider
   const parentContext = isNested ? existingContext : undefined;
