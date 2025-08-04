@@ -6,6 +6,12 @@ export const routing = defineRouting({
   localePrefix: 'as-needed',
   // Used when no locale matches
   defaultLocale: 'en',
-  // Add domains configuration to handle subdomains properly
-  domains: process.env.NODE_ENV === 'production' ? [] : undefined,
+  // Configure locale cookie for subdomain handling
+  localeCookie: {
+    path: "/",
+    domain: ".gameguild.gg",
+    maxAge: 60 * 60 * 24 * 4, // 4 days
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === 'production'
+  },
 });

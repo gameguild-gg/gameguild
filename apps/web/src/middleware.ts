@@ -1,43 +1,44 @@
 import { auth } from '@/auth';
 import { routing } from '@/i18n/routing';
 import createMiddleware from 'next-intl/middleware';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-// Create the internationalization middleware
-const intlMiddleware = createMiddleware(routing);
+export function middleware(request: NextRequest) {
+  const hostname = request.headers.get('host') || '';
+  const locale = request.cookies.get('NEXT_LOCALE')?.value || 'en';
 
-// Chain auth middleware first, then intl middleware
-export default auth((request) => {
-  // Get the hostname from the request
-  const hostname = request.nextUrl.hostname;
-  
-  // If we're in development and getting requests for external domains, reject them
-  if (process.env.NODE_ENV !== 'production' && 
-      hostname !== 'localhost' && 
-      hostname !== '127.0.0.1' && 
-      !hostname.startsWith('192.168.') && 
-      !hostname.startsWith('10.') &&
-      hostname !== request.nextUrl.hostname) {
-    console.warn(`Rejecting request to external hostname: ${hostname}`);
-    return new Response('External requests not allowed in development', { status: 403 });
+  // Subdomain handling for dev.gameguild.gg
+  if (hostname.startsWith('dev.')) {
+    const url = request.nextUrl.clone();
+
+    // For subdomain, handle locale routing differently
+    if (locale === "en") {
+      // For default locale, don't add locale prefix
+      request.nextUrl.pathname = `${url.pathname}`;
+    } else {
+      // For non-default locales, add locale prefix if not already present
+      if (!url.pathname.startsWith(`/${locale}`)) {
+        request.nextUrl.pathname = `/${locale}${url.pathname}`;
+      }
+    }
   }
 
-  // Get tenant ID from auth session and create request with tenant headers
-  const tenantId = request.auth?.tenantId || request.auth?.currentTenant?.id;
-
-  const finalRequest = tenantId
-    ? new NextRequest(request.url, {
-        headers: new Headers({ ...request.headers, 'x-tenant-id': tenantId }),
-      })
-    : request;
-
-  // Always proceed with intl middleware
-  return intlMiddleware(finalRequest);
-});
+  // Handle internationalization routing
+  // The next-intl middleware will automatically pick up any basePath from next.config.js
+  const handleI18nRouting = createMiddleware(routing);
+  const response = handleI18nRouting(request);
+  
+  return response;
+}
 
 export const config = {
-  // Match all pathnames except for
-  // - … if they start with `/api`, `/trpc`, `/_next` or `/_vercel`
-  // - … the ones containing a dot (e.g. `favicon.ico`)
-  matcher: ['/((?!api|trpc|_next|_vercel|.*\\..*).*)'],
+  // The `matcher` is relative to the `basePath`
+  matcher: [
+    // This entry handles the root of the base path and should always be included
+    '/',
+    // Match all other pathnames except for
+    // - … if they start with `/api`, `/_next` or `/_vercel`
+    // - … the ones containing a dot (e.g. `favicon.ico`)
+    '/((?!api|_next|_vercel|.*\\..*).*)' 
+  ],
 };
