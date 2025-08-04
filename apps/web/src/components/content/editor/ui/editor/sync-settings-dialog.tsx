@@ -160,12 +160,7 @@ export function SyncSettingsDialog({ open, onOpenChange }: SyncSettingsDialogPro
                     <Server className="w-4 h-4" />
                     URL do Servidor
                   </Label>
-                  <Input
-                    id="server-url"
-                    value={tempConfig.serverUrl}
-                    onChange={(e) => setTempConfig({ ...tempConfig, serverUrl: e.target.value })}
-                    placeholder="http://localhost:3001/api"
-                  />
+                  <Input id="server-url" value={tempConfig.serverUrl} onChange={(e) => setTempConfig({ ...tempConfig, serverUrl: e.target.value })} placeholder="http://localhost:3001/api" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -174,14 +169,7 @@ export function SyncSettingsDialog({ open, onOpenChange }: SyncSettingsDialogPro
                       <Clock className="w-4 h-4" />
                       Timeout (ms)
                     </Label>
-                    <Input
-                      id="timeout"
-                      type="number"
-                      value={tempConfig.timeout}
-                      onChange={(e) => setTempConfig({ ...tempConfig, timeout: Number(e.target.value) })}
-                      min="1000"
-                      max="60000"
-                    />
+                    <Input id="timeout" type="number" value={tempConfig.timeout} onChange={(e) => setTempConfig({ ...tempConfig, timeout: Number(e.target.value) })} min="1000" max="60000" />
                   </div>
 
                   <div className="space-y-2">
@@ -189,14 +177,7 @@ export function SyncSettingsDialog({ open, onOpenChange }: SyncSettingsDialogPro
                       <Repeat className="w-4 h-4" />
                       Tentativas
                     </Label>
-                    <Input
-                      id="retries"
-                      type="number"
-                      value={tempConfig.retries}
-                      onChange={(e) => setTempConfig({ ...tempConfig, retries: Number(e.target.value) })}
-                      min="0"
-                      max="10"
-                    />
+                    <Input id="retries" type="number" value={tempConfig.retries} onChange={(e) => setTempConfig({ ...tempConfig, retries: Number(e.target.value) })} min="0" max="10" />
                   </div>
                 </div>
 
@@ -211,14 +192,7 @@ export function SyncSettingsDialog({ open, onOpenChange }: SyncSettingsDialogPro
                 {tempConfig.autoSync && (
                   <div className="space-y-2">
                     <Label htmlFor="sync-interval">Intervalo de Sincronização (ms)</Label>
-                    <Input
-                      id="sync-interval"
-                      type="number"
-                      value={tempConfig.syncInterval}
-                      onChange={(e) => setTempConfig({ ...tempConfig, syncInterval: Number(e.target.value) })}
-                      min="5000"
-                      max="300000"
-                    />
+                    <Input id="sync-interval" type="number" value={tempConfig.syncInterval} onChange={(e) => setTempConfig({ ...tempConfig, syncInterval: Number(e.target.value) })} min="5000" max="300000" />
                     <p className="text-xs text-muted-foreground">Atual: {(tempConfig.syncInterval / 1000).toFixed(0)} segundos</p>
                   </div>
                 )}
@@ -228,14 +202,7 @@ export function SyncSettingsDialog({ open, onOpenChange }: SyncSettingsDialogPro
                     <Package className="w-4 h-4" />
                     Tamanho do Lote
                   </Label>
-                  <Input
-                    id="batch-size"
-                    type="number"
-                    value={tempConfig.batchSize}
-                    onChange={(e) => setTempConfig({ ...tempConfig, batchSize: Number(e.target.value) })}
-                    min="1"
-                    max="100"
-                  />
+                  <Input id="batch-size" type="number" value={tempConfig.batchSize} onChange={(e) => setTempConfig({ ...tempConfig, batchSize: Number(e.target.value) })} min="1" max="100" />
                   <p className="text-xs text-muted-foreground">Número de projetos processados por vez</p>
                 </div>
 

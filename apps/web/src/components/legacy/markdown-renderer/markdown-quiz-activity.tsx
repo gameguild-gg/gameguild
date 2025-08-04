@@ -31,12 +31,7 @@ export function MarkdownQuizActivity({ title, question, options, answers }: Quiz
       <div className="space-y-2">
         {options.map((option, index) => (
           <div key={index} className="flex items-center space-x-2">
-            <Checkbox
-              id={`option-${index}`}
-              checked={selectedOptions.includes(option)}
-              onCheckedChange={() => handleOptionChange(option)}
-              disabled={submitted && isCorrect}
-            />
+            <Checkbox id={`option-${index}`} checked={selectedOptions.includes(option)} onCheckedChange={() => handleOptionChange(option)} disabled={submitted && isCorrect} />
             <label htmlFor={`option-${index}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               {option}
             </label>
@@ -48,11 +43,7 @@ export function MarkdownQuizActivity({ title, question, options, answers }: Quiz
           Submit
         </Button>
       )}
-      {submitted && (
-        <div className={`mt-4 p-2 rounded ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-          {isCorrect ? 'Correct!' : 'Incorrect. Try again!'}
-        </div>
-      )}
+      {submitted && <div className={`mt-4 p-2 rounded ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{isCorrect ? 'Correct!' : 'Incorrect. Try again!'}</div>}
     </div>
   );
 }

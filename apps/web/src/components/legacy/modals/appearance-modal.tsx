@@ -83,10 +83,7 @@ export function AppearanceModal({ isOpen, onClose, onSave }: AppearanceModalProp
   };
 
   const ThemePreview = ({ theme }: { theme: ThemeOption }) => (
-    <Card
-      className={`cursor-pointer transition-all duration-200 hover:scale-105 ${theme.isSelected ? 'ring-2 ring-green-500' : 'border-border'}`}
-      onClick={() => setSelectedTheme(theme.id)}
-    >
+    <Card className={`cursor-pointer transition-all duration-200 hover:scale-105 ${theme.isSelected ? 'ring-2 ring-green-500' : 'border-border'}`} onClick={() => setSelectedTheme(theme.id)}>
       <CardContent className="p-4">
         <div className={`${theme.preview.background} rounded-lg p-3 mb-3 relative overflow-hidden`}>
           {/* Browser chrome */}

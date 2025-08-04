@@ -244,18 +244,8 @@ function HTMLComponent({ data, nodeKey }: HTMLComponentProps) {
             />
           </div>
         ) : (
-          <div className="w-full bg-background rounded-md" onClick={() => setIsEditing(true)}>
-            {content ? (
-              <iframe
-                srcDoc={getPreviewContent()}
-                className="w-full rounded-md"
-                style={{ height: content ? 'auto' : '0' }}
-                sandbox="allow-scripts allow-popups allow-same-origin"
-                title="HTML Preview"
-              />
-            ) : (
-              'Click to edit HTML...'
-            )}
+          <div className={cn('w-full bg-background rounded-md', !content && 'min-h-[2.5rem] flex items-center justify-center text-sm text-muted-foreground')}>
+            {content ? <iframe srcDoc={getPreviewContent()} className="w-full rounded-md" style={{ height: content ? 'auto' : '0' }} sandbox="allow-scripts allow-popups allow-same-origin" title="HTML Preview" /> : 'Click to edit HTML...'}
           </div>
         )}
       </div>

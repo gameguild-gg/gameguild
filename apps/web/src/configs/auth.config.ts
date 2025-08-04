@@ -1,397 +1,254 @@
-import { NextAuthConfig } from 'next-auth';
+import { googleIdTokenSignIn, localSign, refreshAccessToken } from '@/lib/auth/auth.actions';
+import { SignInResponse } from '@/lib/auth/auth.types';
+import { isUserWithAuthData } from '@/lib/auth/auth.utils';
+import { Account, DefaultSession, NextAuthConfig, Profile, Session, User } from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
+import type { CredentialInput, Provider } from 'next-auth/providers';
+import Credentials from 'next-auth/providers/credentials';
+import GitHub from 'next-auth/providers/github';
 import Google from 'next-auth/providers/google';
-import { environment } from '@/configs/environment';
-import { SignInResponse } from '@/components/legacy/types/auth';
-import { apiClient } from '@/lib/api/api-client';
-import { getJwtExpiryDate } from '@/lib/utils/jwt-utils';
-import { refreshAccessToken } from '@/lib/auth/token-refresh';
 
-interface ExtendedUser {
-  cmsData?: unknown;
-  accessToken?: string;
-  refreshToken?: string;
-  tenantId?: string;
-  availableTenants?: unknown[];
-}
+const providers: Provider[] = [
+  Credentials({
+    id: 'local',
+    credentials: {
+      email: { label: 'Email', type: 'text' },
+      password: { label: 'Password', type: 'password' },
+    },
+    authorize: async (credentials): Promise<User | null> => {
+      if (!credentials?.email || !credentials?.password) throw new Error('Email and password are required');
 
-interface ExtendedSession {
-  refreshToken?: string;
-  tenantId?: string;
-  availableTenants?: unknown[];
-  currentTenant?: unknown;
-  user?: unknown;
-}
+      try {
+        const response = await localSign({
+          email: credentials.email as string,
+          password: credentials.password as string,
+        });
 
-interface ErrorWithCause {
-  cause?: {
-    code?: string;
-  };
-}
+        if (!response?.user) throw new Error('Invalid credentials');
+
+        // Return user with additional auth data
+        return {
+          id: response.user.id,
+          email: response.user.email,
+          name: response.user.username,
+          // Store auth tokens in the user object for JWT callback
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+          expiresAt: response.expiresAt,
+          tenantId: response.tenantId,
+          availableTenants: response.availableTenants,
+        } as User & SignInResponse;
+      } catch (error) {
+        console.error('Local authentication failed:', error);
+        throw new Error('Invalid credentials');
+      }
+    },
+  }),
+  GitHub,
+  Google,
+];
 
 export const authConfig: NextAuthConfig = {
+  debug: !!process.env.AUTH_DEBUG,
   pages: {
     signIn: '/sign-in',
-    error: '/auth/error', // Error code passed in query string as ?error=
   },
-  providers: [
-    Google({
-      clientId: environment.googleClientId,
-      clientSecret: environment.googleClientSecret,
-      authorization: {
-        params: {
-          request_uri: environment.signInGoogleCallbackUrl,
-          // scope: 'openid email profile',
-        },
-      },
-    }),
-  ],
+  providers: providers,
   session: {
     strategy: 'jwt',
-    // Extend session duration to 7 days
-    maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
-    // Update session every hour to keep it fresh
-    updateAge: 60 * 60, // 1 hour in seconds
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
-      console.log('🔑 [AUTH DEBUG] SignIn callback triggered:', {
-        provider: account?.provider,
-        hasIdToken: !!account?.id_token,
-        userEmail: user?.email,
-        accountType: account?.type,
-        profileId: profile?.sub,
-        timestamp: new Date().toISOString(),
-      });
-
+    signIn: async ({ user, account }: { user: User; account?: Account | null; profile?: Profile; email?: { verificationRequest?: boolean }; credentials?: Record<string, CredentialInput> }): Promise<boolean> => {
       if (account?.provider === 'google') {
-        console.log('🔍 [AUTH DEBUG] Processing Google authentication...');
-        if (!account?.id_token) {
-          console.error('❌ [AUTH DEBUG] No id_token received from Google');
-          return false;
-        }
-
-        console.log('📨 [AUTH DEBUG] Google ID token received, length:', account.id_token.length);
-
+        if (!account?.id_token) return false;
         try {
-          console.log('🚀 [AUTH DEBUG] Attempting Google ID token validation with CMS backend:', environment.apiBaseUrl);
-          console.log('🔑 [AUTH DEBUG] Making request to: POST /api/auth/google/id-token');
+          const response = await googleIdTokenSignIn({ idToken: account.id_token });
 
-          // Try the new Google ID token endpoint
-          const response = await apiClient.googleIdTokenSignIn({
-            idToken: account.id_token,
-            tenantId: undefined, // Can be set later via tenant switching
+          // Safely extend the user object with auth data.
+          Object.assign(user, {
+            tenantId: response?.tenantId,
+            accessToken: response?.accessToken,
+            refreshToken: response?.refreshToken,
+            expiresAt: response?.expiresAt,
+            availableTenants: response?.availableTenants,
           });
-
-          console.log('✅ [AUTH DEBUG] CMS backend authentication successful:', {
-            userId: response.user?.id,
-            userEmail: response.user?.email,
-            tenantId: response.tenantId,
-            availableTenants: response.availableTenants?.length,
-            hasAccessToken: !!response.accessToken,
-            hasRefreshToken: !!response.refreshToken,
-          });
-
-          // Store the backend response in the user object
-          (user as ExtendedUser).cmsData = response;
-          (user as ExtendedUser).accessToken = response.accessToken;
-          (user as ExtendedUser).refreshToken = response.refreshToken;
-          (user as ExtendedUser).tenantId = response.tenantId;
-          (user as ExtendedUser).availableTenants = response.availableTenants;
 
           return true;
         } catch (error) {
-          console.error('❌ [AUTH DEBUG] CMS backend authentication failed:', {
-            error: error instanceof Error ? error.message : error,
-            apiBaseUrl: environment.apiBaseUrl,
-            endpoint: '/auth/google/id-token',
-            cause: (error as ErrorWithCause)?.cause?.code || 'Unknown',
-            stack: error instanceof Error ? error.stack : 'No stack trace',
-            fullError: error,
-          });
-
-          // Check if it's a connection error
-          if ((error as ErrorWithCause)?.cause?.code === 'ECONNREFUSED') {
-            console.error('🚨 [AUTH DEBUG] CMS Backend is not running on:', environment.apiBaseUrl);
-            console.error('💡 [AUTH DEBUG] Please start the CMS backend with: cd apps/api && dotnet run');
-          } else {
-            console.error('🔍 [AUTH DEBUG] CMS Backend is running but authentication failed. Check CMS logs for details.');
-            console.error('🐛 [AUTH DEBUG] This might be a Google ID token validation issue in the CMS backend.');
-          }
-
+          console.error('Google sign-in failed:', error);
           return false;
         }
       }
-
-      console.log('⚠️ [AUTH DEBUG] SignIn: Provider not supported:', account?.provider);
-      return false;
+      // Allow local authentication.
+      return account?.provider === 'local';
     },
-    async jwt({ token, user, account, trigger, session }) {
-      console.log('🔐 [AUTH DEBUG] JWT callback triggered:', {
-        trigger,
-        hasUser: !!user,
-        hasAccount: !!account,
-        hasToken: !!token,
-        hasSession: !!session,
-        userId: user?.id,
-        provider: account?.provider,
-        hasStoredRefreshToken: !!token.refreshToken,
-        timestamp: new Date().toISOString(),
-      });
+    jwt: async ({ token, user, trigger, session }: { token: JWT; user: User; account?: Account | null; profile?: Profile; trigger?: 'update' | 'signIn' | 'signUp'; isNewUser?: boolean; session?: Session }): Promise<JWT | null> => {
+      // This is called when a user signing-in or signing-up.
+      if (trigger === 'signIn' || trigger === 'signUp') {
+        // We must have auth data from our API, otherwise the session is corrupted.
 
-      // If this is a new sign-in, store the CMS data
-      if (user && (user as ExtendedUser).cmsData) {
-        console.log('📦 [AUTH DEBUG] Storing CMS data in JWT token...');
-        const cmsData = (user as ExtendedUser).cmsData as SignInResponse;
+        if (!isUserWithAuthData(user)) {
+          // If we don't have auth data, the authentication flow failed
+          console.error('Authentication failed: No auth data from API');
+          // Return null to prevent creating a broken JWT token
+          return null;
+        }
 
-        token.id = cmsData.user.id;
-        token.accessToken = cmsData.accessToken;
-        token.refreshToken = cmsData.refreshToken;
-        token.expires = new Date(cmsData.expires);
-        token.user = cmsData.user;
-        token.tenantId = cmsData.tenantId;
-        token.availableTenants = cmsData.availableTenants;
+        token.id = user.id;
+        token.username = user.name || '';
+        token.email = user.email || '';
+        token.api = {
+          accessToken: user.accessToken || '',
+          refreshToken: user.refreshToken || '',
+        };
+        token.availableTenants = user.availableTenants;
+        // Set token expiration from the initial sign-in response
+        if ((user as User & SignInResponse).expiresAt) {
+          token.expiresAt = (user as User & SignInResponse).expiresAt;
+        }
 
-        console.log('✅ [AUTH DEBUG] CMS data stored in token:', {
-          userId: token.id,
-          hasAccessToken: !!token.accessToken,
-          hasRefreshToken: !!token.refreshToken,
-          expires: token.expires,
-          tenantId: token.tenantId,
-        });
+        // Set the current tenant from availableTenants (it must exist in the list)
+        if (user.tenantId) {
+          // Find a tenant in availableTenants
+          const tenantFromList = user.availableTenants?.find((tenant) => tenant.id === user.tenantId);
+          // Tenant not in an available list means that the session is corrupted.
+          if (!tenantFromList) {
+            console.error('Session corrupted: currentTenant not found in availableTenants');
+            return null;
+          }
+
+          // Set the current tenant in the token
+          token.currentTenant = tenantFromList;
+        }
+
+        return token;
       }
 
-      // Handle session updates (like tenant switching)
-      if (trigger === 'update' && session) {
-        console.log('🔄 [AUTH DEBUG] Session update triggered:', {
-          hasCurrentTenant: !!session.currentTenant,
-          currentTenant: session.currentTenant,
-        });
-        if (session.currentTenant) {
-          token.currentTenant = session.currentTenant;
+      // Check token expiration and refresh if needed (for all requests, not just updates)
+      if (token?.api?.refreshToken && (!token?.expiresAt || Date.now() >= new Date(token.expiresAt).getTime())) {
+        // Token expired or no expiration set, try to refresh it
+        console.log('Token expired or missing expiration, attempting refresh...');
+        try {
+          const response = await refreshAccessToken(token.api.refreshToken);
+
+          // Update token with new values
+          if (response?.accessToken) {
+            token.api.accessToken = response.accessToken;
+            console.log('Access token refreshed successfully');
+          }
+          if (response?.refreshToken) {
+            token.api.refreshToken = response.refreshToken;
+          }
+          if (response?.expiresAt) {
+            token.expiresAt = response.expiresAt;
+          }
+
+          // Update tenant ID if present in refresh response
+          if (response?.tenantId) {
+            // Tenant must exist in the available tenants list. Otherwise, the session is corrupted
+            const tenantFromList = token.availableTenants?.find((tenant) => tenant.id === response?.tenantId);
+            if (!tenantFromList) {
+              // Tenant not in an available list means that the session is corrupted.
+              console.error('Session corrupted: refreshed tenantId not found in availableTenants');
+              return null;
+            }
+
+            token.currentTenant = tenantFromList;
+          }
+        } catch (error) {
+          console.error('Error refreshing api access token', error);
+          // If we fail to refresh the token, return null to force the sign-out.
+          return null;
         }
       }
 
-      // Check if we have essential data - if not, the session is corrupted
-      if (!token.id || !token.user) {
-        console.error('❌ [AUTH DEBUG] Session corrupted - missing essential data:', {
-          hasId: !!token.id,
-          hasUser: !!token.user,
-          hasAccessToken: !!token.accessToken,
-          hasRefreshToken: !!token.refreshToken,
-        });
+      if (trigger === 'update') {
+        // This is called when the user updates their profile or switches tenants.
+        // Handle session updates with new user data
+        if (session) {
+          // Handle tenant switching
+          if (session.currentTenant?.id && session.currentTenant.id !== token.currentTenant?.id) {
+            // Validate that the new tenant exists in availableTenants
+            const tenantFromList = token.availableTenants?.find((tenant) => tenant.id === session.currentTenant?.id);
+            if (!tenantFromList) {
+              // Tenant must exist in the available tenants list. Otherwise, the session is corrupted
+              console.error('Session corrupted: refreshed tenantId not found in availableTenants');
+              return null;
+            }
+            token.currentTenant = tenantFromList;
+            console.log(`Switched to tenant: ${tenantFromList.name}`);
+          }
 
-        // Mark session as corrupted to force re-authentication
-        token.error = 'SessionCorrupted';
-        return token;
-      }
+          // Handle profile updates (username, email, etc.)
+          if (session.user) {
+            // Update user fields if they've changed
+            if (session.user.username && session.user.username !== token.username) {
+              token.username = session.user.username;
+            }
+            if (session.user.email && session.user.email !== token.email) {
+              token.email = session.user.email;
+            }
+            if (session.user.displayName && session.user.displayName !== token.displayName) {
+              token.displayName = session.user.displayName;
+            }
+            if (session.user.profilePictureUrl && session.user.profilePictureUrl !== token.profilePictureUrl) {
+              token.profilePictureUrl = session.user.profilePictureUrl;
+            }
+          }
 
-      // If we don't have a refresh token, we can't refresh - mark for re-auth
-      if (!token.refreshToken) {
-        console.warn('⚠️ [AUTH DEBUG] No refresh token available - session will need re-authentication');
-        console.warn('⚠️ [AUTH DEBUG] Current token state:', {
-          hasId: !!token.id,
-          hasUser: !!token.user,
-          hasAccessToken: !!token.accessToken,
-          hasRefreshToken: !!token.refreshToken,
-          expires: token.expires,
-          error: token.error,
-        });
-        token.error = 'RefreshTokenError';
-        return token;
-      }
+          // Handle availableTenants updates (if a user gained/lost access to tenants)
+          // TODO: Fetch new available tenants from the API if needed.
+          if (session.availableTenants) {
+            token.availableTenants = session.availableTenants;
 
-      // Check if token is expired and refresh if needed
-      const now = new Date();
-      let expiresAt: Date | null = null;
-
-      // Try to get expiry from JWT token itself (most reliable)
-      if (token.accessToken) {
-        expiresAt = await getJwtExpiryDate(token.accessToken as string);
-      }
-
-      // Fallback to stored expires value if JWT decode fails
-      if (!expiresAt && token.expires) {
-        expiresAt = new Date(token.expires as unknown as string);
-      }
-
-      // Add 30-second buffer to avoid race conditions
-      const refreshBuffer = 30 * 1000; // 30 seconds
-      const shouldRefresh = expiresAt && now.getTime() + refreshBuffer >= expiresAt.getTime();
-
-      console.log('⏰ [AUTH DEBUG] Token expiry check:', {
-        now: now.toISOString(),
-        expiresAt: expiresAt?.toISOString(),
-        isExpired: expiresAt ? now > expiresAt : false,
-        shouldRefresh,
-        hasRefreshToken: !!token.refreshToken,
-        hasError: !!token.error,
-        tokenSource: expiresAt ? (token.accessToken ? 'JWT_DECODE' : 'STORED_VALUE') : 'NONE',
-        willAttemptRefresh: shouldRefresh && !!token.refreshToken && !token.error,
-        refreshBuffer: `${refreshBuffer / 1000}s`,
-      });
-
-      // Only attempt refresh if:
-      // 1. Token is about to expire or expired
-      // 2. We have a refresh token
-      // 3. We don't already have a refresh error
-      // 4. This is not a session update trigger (to avoid infinite loops)
-      if (shouldRefresh && token.refreshToken && !token.error && trigger !== 'update') {
-        console.log('🔄 [AUTH DEBUG] Token needs refresh, attempting...');
-
-        const refreshResult = await refreshAccessToken(token.refreshToken as string);
-
-        if (refreshResult.success && refreshResult.data) {
-          console.log('✅ [AUTH DEBUG] Token refresh successful:', {
-            newExpiresAt: refreshResult.data.expires,
-            hasNewAccessToken: !!refreshResult.data.accessToken,
-            hasNewRefreshToken: !!refreshResult.data.refreshToken,
-          });
-
-          token.accessToken = refreshResult.data.accessToken;
-          token.refreshToken = refreshResult.data.refreshToken;
-          token.expires = new Date(refreshResult.data.expires);
-
-          // Clear any previous errors
-          delete token.error;
-        } else {
-          console.error('❌ [AUTH DEBUG] Failed to refresh token:', {
-            error: refreshResult.error,
-            refreshToken: token.refreshToken ? 'present' : 'missing',
-            refreshTokenPrefix: token.refreshToken ? (token.refreshToken as string).substring(0, 20) + '...' : 'none',
-            tokenLength: token.refreshToken ? (token.refreshToken as string).length : 0,
-          });
-          // Token refresh failed, user needs to sign in again
-          token.error = 'RefreshTokenError';
-          // Don't immediately clear tokens to allow graceful degradation
-          // They will be cleared in the session callback
+            // Validate currentTenant is still in the updated availableTenants list
+            if (token.currentTenant?.id) {
+              // Tenant must exist in the available tenants list. Otherwise, the user is no longer in that tenant.
+              const currentTenantStillAvailable = session.availableTenants.find((tenant) => tenant.id === token.currentTenant?.id);
+              if (!currentTenantStillAvailable) {
+                // If the current tenant is no longer available, clear it.
+                token.currentTenant = undefined;
+                console.log('No tenants available, cleared currentTenant');
+              }
+            }
+          }
         }
       }
 
       return token;
     },
-    async session({ session, token }) {
-      console.log('📋 [AUTH DEBUG] Session callback triggered:', {
-        hasSession: !!session,
-        hasToken: !!token,
-        tokenId: token.id,
-        hasAccessToken: !!token.accessToken,
-        hasError: !!token.error,
-        sessionUserEmail: session?.user?.email,
-        timestamp: new Date().toISOString(),
-      });
-
-      // If there's any token error, clear the session data and return minimal session
-      if (token.error === 'RefreshTokenError' || token.error === 'SessionCorrupted') {
-        console.log('🚨 [AUTH DEBUG] Token error detected, clearing session data:', token.error);
-
-        // Return null to force NextAuth to clear the session completely
-        // This will automatically redirect to sign-in page
-        return {
-          ...session,
-          accessToken: undefined,
-          error: token.error,
-          user: {
-            ...session.user,
-            id: token.id as string,
-          },
-          // Add expires in the past to force session expiry
-          expires: new Date(0).toISOString(),
-        };
+    session: async ({ session, token, trigger }: { session: Session; token: JWT | null; newSession?: Session; trigger?: 'update' }): Promise<Session | DefaultSession> => {
+      // Check if the token is null (JWT callback returned null due to corruption)
+      if (!token) {
+        session.error = 'CorruptedSessionError';
+        return session;
       }
 
-      // Ensure we have essential data
-      if (!token.id || !token.user) {
-        console.error('❌ [AUTH DEBUG] Session missing essential data');
-        return {
-          ...session,
-          accessToken: undefined,
-          error: 'SessionCorrupted',
-          user: {
-            ...session.user,
-            id: (token.id as string) || 'unknown',
-          },
-        };
+      // Check if we have API tokens first - we need these for any API operations
+      if (!token.api?.accessToken || !token.api?.refreshToken) {
+        session.error = 'CorruptedSessionError';
+        return session;
       }
 
-      // Pass token data to the session only if we don't have errors
-      if (token.accessToken) {
-        session.accessToken = token.accessToken as string;
+      // Always set the session with the current valid token (refreshed in JWT callback if needed)
+      session.api = {
+        accessToken: token.api.accessToken,
+      };
+
+      if (trigger === 'update') {
+        // Handle session updates when the user updates their profile or switches tenants.
+        // The JWT callback has already processed the updates, so we just need to copy the data
+        console.log('Session update triggered - data already processed in JWT callback');
       }
 
-      // DEBUG ONLY: Expose refresh token for debugging (remove in production)
-      if (token.refreshToken) {
-        (session as ExtendedSession).refreshToken = token.refreshToken as string;
-      }
-
-      session.user.id = token.id as string;
-
-      if (token.user) {
-        session.user = {
-          ...session.user,
-          ...(token.user as Record<string, unknown>),
-        };
-      }
-
-      if (token.tenantId) {
-        (session as ExtendedSession).tenantId = token.tenantId;
-      }
-
-      if (token.availableTenants) {
-        (session as ExtendedSession).availableTenants = token.availableTenants;
-      }
-
-      if (token.currentTenant) {
-        (session as ExtendedSession).currentTenant = token.currentTenant;
-      }
+      // Add user ID, available tenants, and current tenant to the session
+      if (token.id) session.user.id = token.id;
+      if (token.username) session.user.username = token.username;
+      if (token.email) session.user.email = token.email;
+      if (token.availableTenants) session.availableTenants = token.availableTenants;
+      if (token.currentTenant) session.currentTenant = token.currentTenant;
 
       return session;
     },
   },
 };
-
-declare module 'next-auth' {
-  interface Session {
-    accessToken?: string;
-    tenantId?: string;
-    availableTenants?: Array<{
-      id: string;
-      name: string;
-      isActive: boolean;
-    }>;
-    currentTenant?: {
-      id: string;
-      name: string;
-      isActive: boolean;
-    };
-    error?: 'RefreshTokenError' | 'SessionCorrupted';
-  }
-
-  interface User {
-    id: string;
-    username?: string;
-  }
-
-  interface JWT {
-    id: string;
-    accessToken?: string;
-    refreshToken?: string;
-    expires?: Date;
-    user?: {
-      id: string;
-      username: string;
-      email: string;
-    };
-    tenantId?: string;
-    availableTenants?: Array<{
-      id: string;
-      name: string;
-      isActive: boolean;
-    }>;
-    currentTenant?: {
-      id: string;
-      name: string;
-      isActive: boolean;
-    };
-    error?: 'RefreshTokenError' | 'SessionCorrupted';
-  }
-}

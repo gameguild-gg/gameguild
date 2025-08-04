@@ -18,18 +18,11 @@ export default function CourseListWrapper({ courses }: { courses: Course[] }) {
     <div>
       {/* Simple filter buttons */}
       <div className="flex gap-2 mb-6">
-        <button
-          onClick={() => handleFilter('All')}
-          className={`px-3 py-1 rounded ${selectedCategory === 'All' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-        >
+        <button onClick={() => handleFilter('All')} className={`px-3 py-1 rounded ${selectedCategory === 'All' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
           All
         </button>
         {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => handleFilter(cat)}
-            className={`px-3 py-1 rounded ${selectedCategory === cat ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}
-          >
+          <button key={cat} onClick={() => handleFilter(cat)} className={`px-3 py-1 rounded ${selectedCategory === cat ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
             {cat}
           </button>
         ))}

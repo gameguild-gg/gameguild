@@ -16,9 +16,7 @@ export function QuizFeedback({ isCorrect, correctFeedback, incorrectFeedback, al
   return (
     <div
       className={`flex items-center justify-between gap-3 rounded-lg mt-3 px-4 py-3 text-sm border-l-4 ${
-        isCorrect
-          ? 'bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border-green-500'
-          : 'bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border-red-500'
+        isCorrect ? 'bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border-green-500' : 'bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border-red-500'
       }`}
     >
       <div className="flex items-center gap-2 flex-1">

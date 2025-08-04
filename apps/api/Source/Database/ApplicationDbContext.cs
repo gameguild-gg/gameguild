@@ -146,6 +146,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<TestingSession> TestingSessions { get; set; }
 
+  public DbSet<SessionProject> SessionProjects { get; set; }
+
   public DbSet<TestingParticipant> TestingParticipants { get; set; }
 
   public DbSet<TestingFeedback> TestingFeedback { get; set; }
@@ -237,20 +239,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
 
     // NOTE: do not add fluent api configurations here, they should be in the same file of the entity. On the entity, use notations for simple configurations, and fluent API for complex ones.
-
-    // Configure ContentTypePermission relationships explicitly to avoid ambiguity
-    modelBuilder.Entity<ContentTypePermission>()
-                .HasOne(ctp => ctp.User)
-                .WithMany()
-                .HasForeignKey(ctp => ctp.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-    // Configure TenantPermission relationships explicitly to avoid ambiguity
-    modelBuilder.Entity<TenantPermission>()
-                .HasOne(tp => tp.User)
-                .WithMany()
-                .HasForeignKey(tp => tp.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
 
     // Configure ITenantable entities (this logic needs to stay in OnModelCreating)
     foreach (var entityType in modelBuilder.Model.GetEntityTypes()

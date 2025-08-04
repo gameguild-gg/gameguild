@@ -16,10 +16,9 @@ public static class WebApplicationBuilderExtensions {
   /// </summary>
   /// <param name="builder">The WebApplicationBuilder instance</param>
   /// <returns>The configured WebApplicationBuilder for method chaining</returns>
-  public static WebApplicationBuilder ConfigureGameGuildApplication(this WebApplicationBuilder builder) =>
-    builder
-      .ConfigureEnvironment()
-      .ConfigureServices();
+  public static WebApplicationBuilder ConfigureGameGuildApplication(this WebApplicationBuilder builder) => builder
+                                                                                                           .ConfigureEnvironment()
+                                                                                                           .ConfigureServices();
 
   /// <summary>
   /// Configures environment variables and configuration sources.
@@ -397,7 +396,11 @@ public static class AdvancedWebApplicationBuilderExtensions {
           context.Response.ContentType = "application/json";
           var result = System.Text.Json.JsonSerializer.Serialize(
             new {
-              status = report.Status.ToString(), checks = report.Entries.Select(entry => new { name = entry.Key, status = entry.Value.Status.ToString(), duration = entry.Value.Duration.ToString(), description = entry.Value.Description }),
+              status = report.Status.ToString(),
+              checks = report.Entries.Select(entry => new {
+                  name = entry.Key, status = entry.Value.Status.ToString(), duration = entry.Value.Duration.ToString(), description = entry.Value.Description
+                }
+              ),
             }
           );
           await context.Response.WriteAsync(result);

@@ -14,14 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { BarChart3, Calendar, Download, MessageSquare, Plus, TestTube, Upload, Users, Search, Star, PlayCircle, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
-import {
-  getTestingRequestsData,
-  getTestingSessionsData,
-  createTestingRequest,
-  createTestingSession,
-  joinTestingRequest,
-  leaveTestingRequest,
-} from '@/lib/testing-lab/testing-lab.actions';
+import { getTestingRequestsData, getTestingSessionsData, createTestingRequest, createTestingSession, joinTestingRequest, leaveTestingRequest } from '@/lib/testing-lab/testing-lab.actions';
 import type { TestingRequest, TestingSession } from '@/lib/api/generated/types.gen';
 
 interface TestingLabStats {
@@ -296,10 +289,7 @@ export function TestingLabOverview() {
 
     if (searchTerm) {
       filtered = filtered.filter(
-        (request) =>
-          request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          request.gameTitle.toLowerCase().includes(searchTerm.toLowerCase()),
+        (request) => request.title.toLowerCase().includes(searchTerm.toLowerCase()) || request.description.toLowerCase().includes(searchTerm.toLowerCase()) || request.gameTitle.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -437,19 +427,11 @@ export function TestingLabOverview() {
                 Submit New Version
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-              onClick={() => window.open('/dashboard/testing-lab/requests', '_self')}
-            >
+            <Button variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50" onClick={() => window.open('/dashboard/testing-lab/requests', '_self')}>
               <Download className="mr-2 h-4 w-4" />
               View Testing Assignments
             </Button>
-            <Button
-              variant="outline"
-              className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-              onClick={() => window.open('/dashboard/testing-lab/feedback', '_self')}
-            >
+            <Button variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50" onClick={() => window.open('/dashboard/testing-lab/feedback', '_self')}>
               <MessageSquare className="mr-2 h-4 w-4" />
               Complete Feedback
             </Button>
@@ -470,19 +452,11 @@ export function TestingLabOverview() {
                 Create Testing Session
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-              onClick={() => window.open('/dashboard/testing-lab/attendance', '_self')}
-            >
+            <Button variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50" onClick={() => window.open('/dashboard/testing-lab/attendance', '_self')}>
               <Users className="mr-2 h-4 w-4" />
               View Attendance Reports
             </Button>
-            <Button
-              variant="outline"
-              className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50"
-              onClick={() => window.open('/dashboard/testing-lab/feedback', '_self')}
-            >
+            <Button variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50" onClick={() => window.open('/dashboard/testing-lab/feedback', '_self')}>
               <BarChart3 className="mr-2 h-4 w-4" />
               Review Feedback
             </Button>
@@ -510,9 +484,7 @@ export function TestingLabOverview() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Testing Lab</h1>
-            <p className="text-slate-400 mt-2">
-              {userRole.isStudent ? 'Submit your games and participate in testing sessions' : 'Manage testing sessions and review feedback'}
-            </p>
+            <p className="text-slate-400 mt-2">{userRole.isStudent ? 'Submit your games and participate in testing sessions' : 'Manage testing sessions and review feedback'}</p>
           </div>
           <Badge variant="outline" className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-500/20 text-blue-300">
             {userRole.type.charAt(0).toUpperCase() + userRole.type.slice(1)} Dashboard
@@ -547,12 +519,8 @@ export function TestingLabOverview() {
               {/* Testing Requests Overview */}
               <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm lg:col-span-2">
                 <CardHeader>
-                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    Testing Requests
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    {userRole.isStudent ? 'Track your game submissions and their status' : 'Manage all student testing requests'}
-                  </CardDescription>
+                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Testing Requests</CardTitle>
+                  <CardDescription className="text-slate-400">{userRole.isStudent ? 'Track your game submissions and their status' : 'Manage all student testing requests'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -578,12 +546,8 @@ export function TestingLabOverview() {
               {/* Testing Sessions Overview */}
               <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    Testing Sessions
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    {userRole.isStudent ? 'View your scheduled testing sessions' : 'Manage and create testing sessions'}
-                  </CardDescription>
+                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Testing Sessions</CardTitle>
+                  <CardDescription className="text-slate-400">{userRole.isStudent ? 'View your scheduled testing sessions' : 'Manage and create testing sessions'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -607,12 +571,8 @@ export function TestingLabOverview() {
               {/* Feedback Overview */}
               <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    Feedback System
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    {userRole.isStudent ? 'Complete feedback for games you tested' : 'Review and approve feedback responses'}
-                  </CardDescription>
+                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Feedback System</CardTitle>
+                  <CardDescription className="text-slate-400">{userRole.isStudent ? 'Complete feedback for games you tested' : 'Review and approve feedback responses'}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -685,9 +645,7 @@ export function TestingLabOverview() {
                         <span>Priority: {request.priority === 1 ? 'Low' : request.priority === 2 ? 'Medium' : 'High'}</span>
                       </div>
                       <div className="flex items-center gap-4 text-sm">
-                        <Badge
-                          variant={request.status === 1 ? 'default' : request.status === 2 ? 'secondary' : request.status === 3 ? 'default' : 'destructive'}
-                        >
+                        <Badge variant={request.status === 1 ? 'default' : request.status === 2 ? 'secondary' : request.status === 3 ? 'default' : 'destructive'}>
                           {request.status === 1 ? 'Open' : request.status === 2 ? 'In Progress' : request.status === 3 ? 'Completed' : 'Cancelled'}
                         </Badge>
                         {request.deadline && <span className="text-muted-foreground">Due: {new Date(request.deadline).toLocaleDateString()}</span>}
@@ -727,9 +685,7 @@ export function TestingLabOverview() {
                     <div className="space-y-2">
                       <div className="flex items-start justify-between">
                         <h4 className="font-semibold">{session.title || 'Untitled Session'}</h4>
-                        <Badge
-                          variant={session.status === 1 ? 'default' : session.status === 2 ? 'secondary' : session.status === 3 ? 'default' : 'destructive'}
-                        >
+                        <Badge variant={session.status === 1 ? 'default' : session.status === 2 ? 'secondary' : session.status === 3 ? 'default' : 'destructive'}>
                           {session.status === 1 ? 'Scheduled' : session.status === 2 ? 'In Progress' : session.status === 3 ? 'Completed' : 'Cancelled'}
                         </Badge>
                       </div>

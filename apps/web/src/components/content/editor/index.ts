@@ -5,16 +5,6 @@ export { Editor } from './editor';
 export { EditorProvider, useEditorContext, useEditorActions, useEditorState, useEditorContent, useEditorConfig, useEditorStatus } from './editor-provider';
 
 // Types
-export type {
-  EditorConfig,
-  EditorState,
-  EditorContent,
-  EditorError,
-  EditorTheme,
-  EnabledPlugins,
-  ToolbarState,
-  EditorContextValue,
-  EditorProviderProps,
-} from './types';
+export type { EditorConfig, EditorState, EditorContent, EditorError, EditorTheme, EnabledPlugins, ToolbarState, EditorContextValue, EditorProviderProps } from './types';
 
 export { EditorActionTypes, EditorErrorType, defaultEditorConfig, defaultEditorState, defaultEnabledPlugins, defaultToolbarState } from './types';

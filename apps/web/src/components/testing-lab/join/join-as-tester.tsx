@@ -36,24 +36,7 @@ const PLATFORMS = [
   { id: 'mobile-android', name: 'Android', icon: Smartphone },
 ];
 
-const GENRES = [
-  'Action',
-  'Adventure',
-  'RPG',
-  'Strategy',
-  'Simulation',
-  'Sports',
-  'Racing',
-  'Puzzle',
-  'Platformer',
-  'Fighting',
-  'Shooter',
-  'Horror',
-  'Indie',
-  'Casual',
-  'Educational',
-  'Multiplayer',
-];
+const GENRES = ['Action', 'Adventure', 'RPG', 'Strategy', 'Simulation', 'Sports', 'Racing', 'Puzzle', 'Platformer', 'Fighting', 'Shooter', 'Horror', 'Indie', 'Casual', 'Educational', 'Multiplayer'];
 
 export function JoinAsTester({ onBack, onSuccess }: JoinAsTesterProps) {
   const [profile, setProfile] = useState<TesterProfile>({
@@ -131,26 +114,13 @@ export function JoinAsTester({ onBack, onSuccess }: JoinAsTesterProps) {
                   <Label htmlFor="name" className="text-slate-200">
                     Full Name *
                   </Label>
-                  <Input
-                    id="name"
-                    value={profile.name}
-                    onChange={(e) => setProfile((prev) => ({ ...prev, name: e.target.value }))}
-                    required
-                    className="bg-slate-800/50 border-slate-600 text-white"
-                  />
+                  <Input id="name" value={profile.name} onChange={(e) => setProfile((prev) => ({ ...prev, name: e.target.value }))} required className="bg-slate-800/50 border-slate-600 text-white" />
                 </div>
                 <div>
                   <Label htmlFor="email" className="text-slate-200">
                     Email Address *
                   </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profile.email}
-                    onChange={(e) => setProfile((prev) => ({ ...prev, email: e.target.value }))}
-                    required
-                    className="bg-slate-800/50 border-slate-600 text-white"
-                  />
+                  <Input id="email" type="email" value={profile.email} onChange={(e) => setProfile((prev) => ({ ...prev, email: e.target.value }))} required className="bg-slate-800/50 border-slate-600 text-white" />
                 </div>
               </div>
 
@@ -158,13 +128,7 @@ export function JoinAsTester({ onBack, onSuccess }: JoinAsTesterProps) {
                 <Label htmlFor="discord" className="text-slate-200">
                   Discord Username
                 </Label>
-                <Input
-                  id="discord"
-                  value={profile.discord}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, discord: e.target.value }))}
-                  placeholder="username#1234"
-                  className="bg-slate-800/50 border-slate-600 text-white"
-                />
+                <Input id="discord" value={profile.discord} onChange={(e) => setProfile((prev) => ({ ...prev, discord: e.target.value }))} placeholder="username#1234" className="bg-slate-800/50 border-slate-600 text-white" />
                 <p className="text-xs text-slate-400 mt-1">Used for testing session communication</p>
               </div>
             </CardContent>
@@ -207,9 +171,7 @@ export function JoinAsTester({ onBack, onSuccess }: JoinAsTesterProps) {
                         key={platform.id}
                         type="button"
                         onClick={() => handlePlatformToggle(platform.id)}
-                        className={`p-3 rounded-lg border transition-colors text-left ${
-                          isSelected ? 'border-blue-500 bg-blue-900/20 text-blue-300' : 'border-slate-600 bg-slate-800/30 text-slate-400 hover:border-slate-500'
-                        }`}
+                        className={`p-3 rounded-lg border transition-colors text-left ${isSelected ? 'border-blue-500 bg-blue-900/20 text-blue-300' : 'border-slate-600 bg-slate-800/30 text-slate-400 hover:border-slate-500'}`}
                       >
                         <Icon className="h-4 w-4 mb-1" />
                         <div className="text-sm font-medium">{platform.name}</div>
@@ -230,9 +192,7 @@ export function JoinAsTester({ onBack, onSuccess }: JoinAsTesterProps) {
                         key={genre}
                         type="button"
                         onClick={() => handleGenreToggle(genre)}
-                        className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                          isSelected ? 'bg-blue-600 text-white' : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50'
-                        }`}
+                        className={`px-3 py-1 rounded-full text-sm transition-colors ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50'}`}
                       >
                         {genre}
                       </button>
@@ -246,9 +206,7 @@ export function JoinAsTester({ onBack, onSuccess }: JoinAsTesterProps) {
           {/* Availability & Motivation */}
           <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Availability & Motivation
-              </CardTitle>
+              <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Availability & Motivation</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -291,25 +249,14 @@ export function JoinAsTester({ onBack, onSuccess }: JoinAsTesterProps) {
             <CardContent className="pt-6">
               <div className="space-y-6">
                 <div className="flex items-start gap-3">
-                  <Checkbox
-                    id="terms"
-                    checked={profile.agreeToTerms}
-                    onCheckedChange={(checked) => setProfile((prev) => ({ ...prev, agreeToTerms: !!checked }))}
-                    className="mt-1"
-                  />
+                  <Checkbox id="terms" checked={profile.agreeToTerms} onCheckedChange={(checked) => setProfile((prev) => ({ ...prev, agreeToTerms: !!checked }))} className="mt-1" />
                   <Label htmlFor="terms" className="text-slate-200 text-sm leading-relaxed">
-                    I agree to the <span className="text-blue-400 hover:underline cursor-pointer">Terms of Service</span> and{' '}
-                    <span className="text-blue-400 hover:underline cursor-pointer">Privacy Policy</span>. I understand that I will receive testing assignments
-                    and commit to providing quality feedback.
+                    I agree to the <span className="text-blue-400 hover:underline cursor-pointer">Terms of Service</span> and <span className="text-blue-400 hover:underline cursor-pointer">Privacy Policy</span>. I understand that I will
+                    receive testing assignments and commit to providing quality feedback.
                   </Label>
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || !profile.agreeToTerms}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0"
-                  size="lg"
-                >
+                <Button type="submit" disabled={isSubmitting || !profile.agreeToTerms} className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0" size="lg">
                   {isSubmitting ? 'Creating Profile...' : 'Complete Registration'}
                 </Button>
               </div>

@@ -1,12 +1,13 @@
 'use client';
 
-import { User } from '@/components/legacy/types/user';
 import { UserNavigation } from './user-navigation';
 import { UserHeader } from './user-header';
 import { UserContent } from './user-content';
 import { UserEmptyState } from './user-empty-state';
-import { useResponsiveViewMode } from '../common/hooks/use-responsive-view-mode';
+
 import { UserActiveFilters, UserFilterControls, UserFilterProvider, useUserFilters } from './filters';
+import { useResponsiveViewMode } from '@/hooks/use-responsive-view-mode';
+import { User } from '@/lib/api/generated';
 
 interface UserManagementProps {
   users: User[];
@@ -28,11 +29,7 @@ function UserManagementContent() {
       </div>
 
       {/* Users Display */}
-      {filteredUsers.length > 0 ? (
-        <UserContent users={filteredUsers} viewMode={state.viewMode} />
-      ) : (
-        <UserEmptyState hasFilters={hasActiveFilters()} hasUsers={filteredUsers.length > 0} />
-      )}
+      {filteredUsers.length > 0 ? <UserContent users={filteredUsers} viewMode={state.viewMode} /> : <UserEmptyState hasFilters={hasActiveFilters()} hasUsers={filteredUsers.length > 0} />}
     </>
   );
 }

@@ -30,13 +30,7 @@ export function UserFilterControls({ hideViewToggle = false, statusOptions = def
 
         {/* Center - Filter Dropdowns */}
         <div className="flex gap-3 items-center">
-          <MultiSelectFilter
-            options={statusOptions}
-            selectedValues={state.selectedStatuses}
-            onToggle={toggleStatus}
-            placeholder="Status"
-            searchPlaceholder="Search status..."
-          />
+          <MultiSelectFilter options={statusOptions} selectedValues={state.selectedStatuses} onToggle={toggleStatus} placeholder="Status" searchPlaceholder="Search status..." />
         </div>
 
         {/* Right Side - Add User Button and View Mode Toggle */}
@@ -75,13 +69,7 @@ export function UserFilterControls({ hideViewToggle = false, statusOptions = def
 
           {/* Filter Dropdowns */}
           <div className="flex gap-3 items-center flex-shrink-0">
-            <MultiSelectFilter
-              options={statusOptions}
-              selectedValues={state.selectedStatuses}
-              onToggle={toggleStatus}
-              placeholder="Status"
-              searchPlaceholder="Search status..."
-            />
+            <MultiSelectFilter options={statusOptions} selectedValues={state.selectedStatuses} onToggle={toggleStatus} placeholder="Status" searchPlaceholder="Search status..." />
           </div>
         </div>
       </div>

@@ -47,10 +47,7 @@ const ExploreMoreSection: React.FC = () => {
         </div>
 
         {/* CTA Button */}
-        <Button
-          asChild
-          className="bg-transparent border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-all duration-300 px-8 py-3 text-lg font-semibold rounded-lg"
-        >
+        <Button asChild className="bg-transparent border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-all duration-300 px-8 py-3 text-lg font-semibold rounded-lg">
           <Link href="/courses">VIEW ALL</Link>
         </Button>
       </div>

@@ -71,7 +71,7 @@ public class CreatePostHandler(
       await eventPublisher.PublishAsync(
         new PostCreatedEvent(
           post.Id,
-          post.AuthorId,
+          post.AuthorId ?? Guid.Empty,
           post.Title,
           post.PostType,
           post.IsSystemGenerated,

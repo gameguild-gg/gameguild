@@ -82,12 +82,7 @@ export function FileTabs({
                     >
                       <div className="flex items-center justify-between w-full">
                         <span>Show file actions in view mode</span>
-                        <span
-                          className={cn(
-                            'ml-2 h-4 w-4 border rounded flex items-center justify-center',
-                            showBasicFileActionsInReadMode ? 'bg-primary border-primary' : 'border-gray-400',
-                          )}
-                        >
+                        <span className={cn('ml-2 h-4 w-4 border rounded flex items-center justify-center', showBasicFileActionsInReadMode ? 'bg-primary border-primary' : 'border-gray-400')}>
                           {showBasicFileActionsInReadMode && <Check className="h-3 w-3 text-primary-foreground" />}
                         </span>
                       </div>
@@ -103,12 +98,7 @@ export function FileTabs({
                     >
                       <div className="flex items-center justify-between w-full">
                         <span>Show file properties in view mode</span>
-                        <span
-                          className={cn(
-                            'ml-2 h-4 w-4 border rounded flex items-center justify-center',
-                            showFilePropertiesInReadMode ? 'bg-primary border-primary' : 'border-gray-400',
-                          )}
-                        >
+                        <span className={cn('ml-2 h-4 w-4 border rounded flex items-center justify-center', showFilePropertiesInReadMode ? 'bg-primary border-primary' : 'border-gray-400')}>
                           {showFilePropertiesInReadMode && <Check className="h-3 w-3 text-primary-foreground" />}
                         </span>
                       </div>
@@ -145,11 +135,7 @@ export function FileTabs({
                       <Upload className="h-4 w-4 mr-2" />
                       Import file
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setShowDeleteConfirmDialog(true)}
-                      disabled={files.length <= 1}
-                      className={cn('text-destructive focus:text-destructive', isDarkTheme && 'hover:bg-gray-700 focus:bg-gray-700')}
-                    >
+                    <DropdownMenuItem onClick={() => setShowDeleteConfirmDialog(true)} disabled={files.length <= 1} className={cn('text-destructive focus:text-destructive', isDarkTheme && 'hover:bg-gray-700 focus:bg-gray-700')}>
                       <Trash2 className="h-4 w-4 mr-2" />
                       Delete file
                     </DropdownMenuItem>
@@ -230,13 +216,7 @@ export function FileTabs({
               <Settings className="h-4 w-4" />
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={() => setIsDarkTheme(!isDarkTheme)}
-            title={isDarkTheme ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsDarkTheme(!isDarkTheme)} title={isDarkTheme ? 'Switch to light mode' : 'Switch to dark mode'}>
             {isDarkTheme ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
         </div>

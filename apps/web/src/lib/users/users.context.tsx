@@ -1,20 +1,27 @@
 'use client';
 
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 import { User } from '@/components/legacy/types/user';
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useReducer } from 'react';
 
 // Enhanced types with better filtering options
 export interface UserFilters {
   search: string;
+
   isActive: boolean | 'all';
+
   sortBy: 'name' | 'email' | 'createdAt' | 'updatedAt' | 'balance';
+
   sortOrder: 'asc' | 'desc';
+
   role?: string | 'all';
+
   subscriptionStatus?: 'active' | 'inactive' | 'expired' | 'all';
+
   balanceRange?: {
     min?: number;
     max?: number;
   };
+
   dateRange?: {
     start?: Date;
     end?: Date;
@@ -23,29 +30,45 @@ export interface UserFilters {
 
 export interface UserPagination {
   page: number;
+
   limit: number;
+
   total: number;
+
   totalPages: number;
 }
 
 export interface UserOperationStatus {
   type: 'create' | 'update' | 'delete' | 'bulk_operation' | null;
+
   isProcessing: boolean;
+
   success: boolean | null;
+
   message: string | null;
 }
 
 export interface UserState {
   users: User[];
+
   filteredUsers: User[];
+
   selectedUsers: string[];
+
   filters: UserFilters;
+
   pagination: UserPagination;
+
   isLoading: boolean;
+
   error: string | null;
+
   lastUpdated: Date | null;
+
   operationStatus: UserOperationStatus;
+
   searchHistory: string[];
+
   bulkOperationProgress?: {
     total: number;
     completed: number;
@@ -246,8 +269,7 @@ export function userReducer(state: UserState, action: UserAction): UserState {
     }
 
     case 'ADD_TO_SEARCH_HISTORY': {
-      const newHistory =
-        action.payload && !state.searchHistory.includes(action.payload) ? [action.payload, ...state.searchHistory.slice(0, 9)] : state.searchHistory;
+      const newHistory = action.payload && !state.searchHistory.includes(action.payload) ? [action.payload, ...state.searchHistory.slice(0, 9)] : state.searchHistory;
       return { ...state, searchHistory: newHistory };
     }
 
@@ -484,28 +506,48 @@ function applyFilters(users: User[], filters: UserFilters): User[] {
 // Enhanced Context interface
 interface UserContextType {
   state: UserState;
+
   dispatch: React.Dispatch<UserAction>;
+
   // Computed values
   paginatedUsers: User[];
+
   hasSelection: boolean;
+
   allSelected: boolean;
+
   totalUsers: number;
+
   activeUsers: number;
+
   inactiveUsers: number;
+
   isFiltered: boolean;
+
   // Helper functions
   selectAll: () => void;
+
   clearSelection: () => void;
+
   toggleSort: (column: UserFilters['sortBy']) => void;
+
   setPage: (page: number) => void;
+
   resetFilters: () => void;
+
   refreshData: () => void;
+
   bulkDelete: () => Promise<void>;
+
   bulkUpdate: (updates: Partial<User>) => Promise<void>;
+
   exportUsers: (format: 'csv' | 'json') => void;
+
   getFilterSummary: () => string;
+
   // Operation status helpers
   clearOperationStatus: () => void;
+
   isProcessing: boolean;
 }
 
@@ -514,7 +556,9 @@ const UsersContext = createContext<UserContextType | undefined>(undefined);
 // Provider props
 interface UserProviderProps {
   children: ReactNode;
+
   initialUsers?: User[];
+
   initialPagination?: UserPagination;
 }
 
@@ -731,15 +775,7 @@ function convertToCSV(data: User[]): string {
   if (data.length === 0) return '';
 
   const headers = ['ID', 'Name', 'Email', 'Role', 'Status', 'Balance', 'Created At'];
-  const rows = data.map((user) => [
-    user.id,
-    user.name,
-    user.email,
-    user.role || '',
-    user.isActive ? 'Active' : 'Inactive',
-    user.balance?.toString() || '0',
-    new Date(user.createdAt).toLocaleDateString(),
-  ]);
+  const rows = data.map((user) => [user.id, user.name, user.email, user.role || '', user.isActive ? 'Active' : 'Inactive', user.balance?.toString() || '0', new Date(user.createdAt).toLocaleDateString()]);
 
   return [headers, ...rows].map((row) => row.join(',')).join('\n');
 }

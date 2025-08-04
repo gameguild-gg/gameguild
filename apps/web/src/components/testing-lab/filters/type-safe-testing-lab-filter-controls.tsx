@@ -1,15 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import {
-  ContextPeriodSelector,
-  ContextSearchBar,
-  ContextViewModeToggle,
-  FilterOption,
-  FilterProvider,
-  TypeSafeMultiSelectFilter,
-  useFilterContext,
-} from '../../common/filters';
+import { ContextPeriodSelector, ContextSearchBar, ContextViewModeToggle, FilterOption, FilterProvider, TypeSafeMultiSelectFilter, useFilterContext } from '../../common/filters';
 
 // Type-safe interface for testing lab sessions
 interface TestingLabSession extends Record<string, unknown> {
@@ -65,11 +57,7 @@ interface TypeSafeTestingLabFilterControlsProps {
  * Type-safe filter controls for testing lab sessions.
  * This component demonstrates the enhanced type-safe filter system.
  */
-function TypeSafeTestingLabFilterControlsContent({
-  hideViewToggle = false,
-  hidePeriodSelector = false,
-  className = '',
-}: TypeSafeTestingLabFilterControlsProps) {
+function TypeSafeTestingLabFilterControlsContent({ hideViewToggle = false, hidePeriodSelector = false, className = '' }: TypeSafeTestingLabFilterControlsProps) {
   const { registerFilterConfig } = useFilterContext<TestingLabSession>();
 
   // Register type-safe filter configurations

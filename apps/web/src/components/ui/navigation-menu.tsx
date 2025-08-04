@@ -14,12 +14,7 @@ function NavigationMenu({
   viewport?: boolean;
 }) {
   return (
-    <NavigationMenuPrimitive.Root
-      data-slot="navigation-menu"
-      data-viewport={viewport}
-      className={cn('group/navigation-menu relative flex max-w-max flex-1 items-center justify-center', className)}
-      {...props}
-    >
+    <NavigationMenuPrimitive.Root data-slot="navigation-menu" data-viewport={viewport} className={cn('group/navigation-menu relative flex max-w-max flex-1 items-center justify-center', className)} {...props}>
       {children}
       {viewport && <NavigationMenuViewport />}
     </NavigationMenuPrimitive.Root>
@@ -27,13 +22,7 @@ function NavigationMenu({
 }
 
 function NavigationMenuList({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.List>) {
-  return (
-    <NavigationMenuPrimitive.List
-      data-slot="navigation-menu-list"
-      className={cn('group flex flex-1 list-none items-center justify-center gap-1', className)}
-      {...props}
-    />
-  );
+  return <NavigationMenuPrimitive.List data-slot="navigation-menu-list" className={cn('group flex flex-1 list-none items-center justify-center gap-1', className)} {...props} />;
 }
 
 function NavigationMenuItem({ className, ...props }: React.ComponentProps<typeof NavigationMenuPrimitive.Item>) {
@@ -98,10 +87,7 @@ function NavigationMenuIndicator({ className, ...props }: React.ComponentProps<t
   return (
     <NavigationMenuPrimitive.Indicator
       data-slot="navigation-menu-indicator"
-      className={cn(
-        'data-[state=visible]:animate-in data-[state=hidden]:animate-out data-[state=hidden]:fade-out data-[state=visible]:fade-in top-full z-[1] flex h-1.5 items-end justify-center overflow-hidden',
-        className,
-      )}
+      className={cn('data-[state=visible]:animate-in data-[state=hidden]:animate-out data-[state=hidden]:fade-out data-[state=visible]:fade-in top-full z-[1] flex h-1.5 items-end justify-center overflow-hidden', className)}
       {...props}
     >
       <div className="bg-border relative top-[60%] h-2 w-2 rotate-45 rounded-tl-sm shadow-md" />
@@ -109,14 +95,4 @@ function NavigationMenuIndicator({ className, ...props }: React.ComponentProps<t
   );
 }
 
-export {
-  NavigationMenu,
-  NavigationMenuList,
-  NavigationMenuItem,
-  NavigationMenuContent,
-  NavigationMenuTrigger,
-  NavigationMenuLink,
-  NavigationMenuIndicator,
-  NavigationMenuViewport,
-  navigationMenuTriggerStyle,
-};
+export { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuContent, NavigationMenuTrigger, NavigationMenuLink, NavigationMenuIndicator, NavigationMenuViewport, navigationMenuTriggerStyle };

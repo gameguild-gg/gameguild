@@ -134,9 +134,7 @@ export default function UserProfileDropdown() {
         <DropdownMenuTrigger asChild>
           <Avatar className="h-9 w-9 cursor-pointer">
             {session.user?.image && <AvatarImage src={session.user.image} alt={`${session.user.name || 'User'} avatar`} />}
-            <AvatarFallback className="bg-zinc-800 text-zinc-200 font-medium">
-              {session.user?.name?.charAt(0).toUpperCase() || session.user?.email?.charAt(0).toUpperCase() || 'U'}
-            </AvatarFallback>
+            <AvatarFallback className="bg-zinc-800 text-zinc-200 font-medium">{session.user?.name?.charAt(0).toUpperCase() || session.user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-full max-w-sm mx-auto p-0 border-zinc-800">
@@ -145,13 +143,7 @@ export default function UserProfileDropdown() {
               <div className="flex items-center gap-4 mb-8">
                 <div className="relative shrink-0">
                   {session.user?.image ? (
-                    <Image
-                      src={session.user.image}
-                      alt={session.user.name || 'User'}
-                      width={72}
-                      height={72}
-                      className="rounded-full ring-4 ring-white dark:ring-zinc-900 object-cover"
-                    />
+                    <Image src={session.user.image} alt={session.user.name || 'User'} width={72} height={72} className="rounded-full ring-4 ring-white dark:ring-zinc-900 object-cover" />
                   ) : (
                     <div className="w-[72px] h-[72px] rounded-full ring-4 ring-white dark:ring-zinc-900 bg-zinc-800 flex items-center justify-center text-2xl font-bold text-zinc-200">
                       {session.user?.name?.charAt(0).toUpperCase() || session.user?.email?.charAt(0).toUpperCase() || 'U'}
@@ -169,11 +161,7 @@ export default function UserProfileDropdown() {
               </div>
               <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-6" />
               <div className="space-y-2">
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="w-full flex items-center justify-between p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-lg transition-colors duration-200"
-                >
+                <button type="button" onClick={handleLogout} className="w-full flex items-center justify-between p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-lg transition-colors duration-200">
                   <div className="flex items-center gap-2">
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Logout</span>
@@ -230,17 +218,9 @@ export default function UserProfileDropdown() {
             <div className="flex items-center gap-4 mb-8">
               <div className="relative shrink-0">
                 {userData.image ? (
-                  <Image
-                    src={userData.image}
-                    alt={userData.name || 'User'}
-                    width={72}
-                    height={72}
-                    className="rounded-full ring-4 ring-white dark:ring-zinc-900 object-cover"
-                  />
+                  <Image src={userData.image} alt={userData.name || 'User'} width={72} height={72} className="rounded-full ring-4 ring-white dark:ring-zinc-900 object-cover" />
                 ) : (
-                  <div className="w-[72px] h-[72px] rounded-full ring-4 ring-white dark:ring-zinc-900 bg-zinc-800 flex items-center justify-center text-2xl font-bold text-zinc-200">
-                    {userData.name?.charAt(0).toUpperCase() || 'U'}
-                  </div>
+                  <div className="w-[72px] h-[72px] rounded-full ring-4 ring-white dark:ring-zinc-900 bg-zinc-800 flex items-center justify-center text-2xl font-bold text-zinc-200">{userData.name?.charAt(0).toUpperCase() || 'U'}</div>
                 )}
                 <div className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
               </div>
@@ -255,11 +235,7 @@ export default function UserProfileDropdown() {
             <div className="h-px bg-zinc-200 dark:bg-zinc-800 my-6" />
             <div className="space-y-2">
               {menuItems.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="flex items-center justify-between p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-lg transition-colors duration-200"
-                >
+                <Link key={item.label} href={item.href} className="flex items-center justify-between p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-lg transition-colors duration-200">
                   <div className="flex items-center gap-2">
                     {item.icon}
                     <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{item.label}</span>
@@ -271,11 +247,7 @@ export default function UserProfileDropdown() {
                 </Link>
               ))}
 
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full flex items-center justify-between p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-lg transition-colors duration-200"
-              >
+              <button type="button" onClick={handleLogout} className="w-full flex items-center justify-between p-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 rounded-lg transition-colors duration-200">
                 <div className="flex items-center gap-2">
                   <LogOut className="w-4 h-4" />
                   <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">Logout</span>

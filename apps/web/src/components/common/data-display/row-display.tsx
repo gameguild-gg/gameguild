@@ -1,13 +1,7 @@
 import React from 'react';
 import { RowDisplayProps } from './types';
 
-export function RowDisplay<T extends Record<string, unknown>>({
-  data,
-  renderRow,
-  loading = false,
-  emptyMessage = 'No data available',
-  className = '',
-}: RowDisplayProps<T>) {
+export function RowDisplay<T extends Record<string, unknown>>({ data, renderRow, loading = false, emptyMessage = 'No data available', className = '' }: RowDisplayProps<T>) {
   if (loading) {
     return (
       <div className={`space-y-2 ${className}`}>

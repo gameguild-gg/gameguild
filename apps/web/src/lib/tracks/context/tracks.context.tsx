@@ -1,101 +1,43 @@
 'use client';
 
-import React, { createContext, ReactNode, useContext, useReducer } from 'react';
-import { Track, TracksData } from '@/components/legacy/types/tracks';
+import React, { createContext, useContext, useState } from 'react';
 
-// Track filter state
-export interface TrackState {
-  tracks: Track[];
-  filteredTracks: Track[];
+export interface Track {
+  id: number;
+  title: string;
+  description: string;
+  slug: string;
   area: string;
-  tool: string;
-  level: string;
-  searchTerm: string;
-  toolsByArea: Record<string, string[]>;
-  availableTools: string[];
-  isLoading: boolean;
-  error: string | null;
+  level: number;
+  tools: string[];
+  estimatedHours: number;
+  coursesCount: number;
+  image?: string;
 }
 
-// Track actions
-export type TrackAction =
-  | { type: 'SET_TRACKS'; payload: TracksData }
-  | { type: 'SET_AREA'; payload: string }
-  | { type: 'SET_TOOL'; payload: string }
-  | { type: 'SET_LEVEL'; payload: string }
-  | { type: 'SET_SEARCH_TERM'; payload: string }
-  | { type: 'SET_AVAILABLE_TOOLS'; payload: string[] }
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null };
-
-// Initial state
-const initialState: TrackState = {
-  tracks: [],
-  filteredTracks: [],
-  area: 'all',
-  tool: 'all',
-  level: 'all',
-  searchTerm: '',
-  toolsByArea: {},
-  availableTools: [],
-  isLoading: false,
-  error: null,
-};
-
-// Reducer function
-function trackReducer(state: TrackState, action: TrackAction): TrackState {
-  switch (action.type) {
-    case 'SET_TRACKS':
-      return {
-        ...state,
-        tracks: action.payload.tracks,
-        toolsByArea: action.payload.toolsByArea,
-        filteredTracks: action.payload.tracks,
-      };
-    case 'SET_AREA':
-      return { ...state, area: action.payload };
-    case 'SET_TOOL':
-      return { ...state, tool: action.payload };
-    case 'SET_LEVEL':
-      return { ...state, level: action.payload };
-    case 'SET_SEARCH_TERM':
-      return { ...state, searchTerm: action.payload };
-    case 'SET_AVAILABLE_TOOLS':
-      return { ...state, availableTools: action.payload };
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.payload };
-    case 'SET_ERROR':
-      return { ...state, error: action.payload };
-    default:
-      return state;
-  }
+interface TracksContextType {
+  tracks: Track[];
+  setTracks: (tracks: Track[]) => void;
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
 }
 
-// Context
-const TrackContext = createContext<{
-  state: TrackState;
-  dispatch: React.Dispatch<TrackAction>;
-} | null>(null);
+const TracksContext = createContext<TracksContextType | undefined>(undefined);
 
-// Provider component
-export function TrackProvider({ children, initialData }: { children: ReactNode; initialData?: TracksData }) {
-  const [state, dispatch] = useReducer(trackReducer, {
-    ...initialState,
-    ...(initialData && {
-      tracks: initialData.tracks,
-      toolsByArea: initialData.toolsByArea,
-      filteredTracks: initialData.tracks,
-    }),
-  });
+export function TracksProvider({ children }: { children: React.ReactNode }) {
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  return <TrackContext.Provider value={{ state, dispatch }}>{children}</TrackContext.Provider>;
+  return <TracksContext.Provider value={{ tracks, setTracks, loading, setLoading }}>{children}</TracksContext.Provider>;
 }
 
-// Hook to use track context
-export function useTrackContext() {
-  const context = useContext(TrackContext);
-  if (!context) {
-    throw new Error('useTrackContext must be used within a TrackProvider');
+// Alias for backward compatibility
+export const TrackProvider = TracksProvider;
+
+export function useTracksContext() {
+  const context = useContext(TracksContext);
+  if (context === undefined) {
+    throw new Error('useTracksContext must be used within a TracksProvider');
   }
   return context;
 }

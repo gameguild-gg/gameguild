@@ -20,11 +20,7 @@ export function SessionActiveFilters({ searchTerm, selectedStatuses, selectedSes
       <span className="text-sm text-slate-400">
         Showing {filteredCount} of {totalCount} sessions in total, filtered by:
       </span>
-      {searchTerm && (
-        <div className="bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1 text-blue-300 text-xs flex items-center gap-2">
-          Search: &quot;{searchTerm}&quot;
-        </div>
-      )}
+      {searchTerm && <div className="bg-blue-500/20 border border-blue-400/30 rounded-full px-3 py-1 text-blue-300 text-xs flex items-center gap-2">Search: &quot;{searchTerm}&quot;</div>}
       {selectedStatuses.map((status) => (
         <div key={status} className="bg-green-500/20 border border-green-400/30 rounded-full px-3 py-1 text-green-300 text-xs flex items-center gap-2">
           Status: {status.charAt(0).toUpperCase() + status.slice(1)}

@@ -195,9 +195,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
       // Calculate stats
       const totalSessions = transformedSessionData.length || 12;
       const totalAttendees = mockAttendance.filter((a) => a.attendanceStatus === 'present' || a.attendanceStatus === 'late').length;
-      const averageAttendance = transformedSessionData.length > 0 
-        ? Math.round(transformedSessionData.reduce((sum, s) => sum + s.attendanceRate, 0) / transformedSessionData.length)
-        : 75;
+      const averageAttendance = transformedSessionData.length > 0 ? Math.round(transformedSessionData.reduce((sum, s) => sum + s.attendanceRate, 0) / transformedSessionData.length) : 75;
       const onTrackStudents = transformedStudentData.filter((p) => p.isOnTrack).length;
       const totalStudents = transformedStudentData.length;
 
@@ -217,8 +215,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
 
   // Filter functions
   const filteredStudentProgress = studentProgress.filter((student) => {
-    const matchesSearch = student.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = student.user.name.toLowerCase().includes(searchTerm.toLowerCase()) || student.user.email.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
@@ -274,11 +271,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
       {/* Title */}
       <div className="flex flex-col space-y-2">
         <h1 className="text-3xl font-bold">Attendance Tracker</h1>
-        {sessionInfo && (
-          <p className="text-muted-foreground">
-            Attendance data for session: {sessionInfo.sessionName}
-          </p>
-        )}
+        {sessionInfo && <p className="text-muted-foreground">Attendance data for session: {sessionInfo.sessionName}</p>}
       </div>
 
       {/* Stats Cards */}
@@ -342,14 +335,9 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex items-center space-x-2 flex-1">
           <Search className="h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search students or sessions..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1"
-          />
+          <Input placeholder="Search students or sessions..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="flex-1" />
         </div>
-        
+
         <div className="flex gap-2">
           <Select value={selectedSession} onValueChange={setSelectedSession}>
             <SelectTrigger className="w-[180px]">
@@ -379,20 +367,10 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
           </Select>
 
           <div className="flex border rounded-lg">
-            <Button
-              variant={viewMode === 'students' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('students')}
-              className="rounded-r-none"
-            >
+            <Button variant={viewMode === 'students' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('students')} className="rounded-r-none">
               Students
             </Button>
-            <Button
-              variant={viewMode === 'sessions' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('sessions')}
-              className="rounded-l-none"
-            >
+            <Button variant={viewMode === 'sessions' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('sessions')} className="rounded-l-none">
               Sessions
             </Button>
           </div>
@@ -404,9 +382,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
         <Card>
           <CardHeader>
             <CardTitle>Student Progress</CardTitle>
-            <CardDescription>
-              Track individual student attendance and testing progress
-            </CardDescription>
+            <CardDescription>Track individual student attendance and testing progress</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -427,29 +403,14 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
                     <TableCell className="font-medium">
                       <div>
                         <div>{student.user.name}</div>
-                        {student.user.studentId && (
-                          <div className="text-sm text-muted-foreground">
-                            {student.user.studentId}
-                          </div>
-                        )}
+                        {student.user.studentId && <div className="text-sm text-muted-foreground">{student.user.studentId}</div>}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {student.user.email}
-                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{student.user.email}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className="w-20 bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${
-                              student.attendanceRate >= 80
-                                ? 'bg-green-500'
-                                : student.attendanceRate >= 60
-                                ? 'bg-yellow-500'
-                                : 'bg-red-500'
-                            }`}
-                            style={{ width: `${student.attendanceRate}%` }}
-                          />
+                          <div className={`h-2 rounded-full ${student.attendanceRate >= 80 ? 'bg-green-500' : student.attendanceRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${student.attendanceRate}%` }} />
                         </div>
                         <span className="text-sm">{student.attendanceRate}%</span>
                       </div>
@@ -460,11 +421,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
                     <TableCell>{student.totalGamesTermd}</TableCell>
                     <TableCell>{student.totalFeedbackSubmitted}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={student.isOnTrack ? 'default' : 'destructive'}
-                      >
-                        {student.isOnTrack ? 'On Track' : 'At Risk'}
-                      </Badge>
+                      <Badge variant={student.isOnTrack ? 'default' : 'destructive'}>{student.isOnTrack ? 'On Track' : 'At Risk'}</Badge>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -476,9 +433,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
         <Card>
           <CardHeader>
             <CardTitle>Session Attendance</CardTitle>
-            <CardDescription>
-              View attendance rates and statistics for each testing session
-            </CardDescription>
+            <CardDescription>View attendance rates and statistics for each testing session</CardDescription>
           </CardHeader>
           <CardContent>
             <Table>
@@ -497,9 +452,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
               <TableBody>
                 {filteredSessionAttendance.map((session) => (
                   <TableRow key={session.id}>
-                    <TableCell className="font-medium">
-                      {session.sessionName}
-                    </TableCell>
+                    <TableCell className="font-medium">{session.sessionName}</TableCell>
                     <TableCell>{session.date}</TableCell>
                     <TableCell>{session.location}</TableCell>
                     <TableCell>{session.totalCapacity}</TableCell>
@@ -508,16 +461,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${
-                              session.attendanceRate >= 80
-                                ? 'bg-green-500'
-                                : session.attendanceRate >= 60
-                                ? 'bg-yellow-500'
-                                : 'bg-red-500'
-                            }`}
-                            style={{ width: `${session.attendanceRate}%` }}
-                          />
+                          <div className={`h-2 rounded-full ${session.attendanceRate >= 80 ? 'bg-green-500' : session.attendanceRate >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${session.attendanceRate}%` }} />
                         </div>
                         <span className="text-sm">{session.attendanceRate}%</span>
                       </div>
