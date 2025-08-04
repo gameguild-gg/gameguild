@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,7 +32,6 @@ interface TestingLabOverviewClientProps {
 }
 
 export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabOverviewClientProps) {
-  const { data: session } = useSession();
   const [stats] = useState<TestingLabStats>(initialStats);
 
   const userRoleObj: UserRole = {

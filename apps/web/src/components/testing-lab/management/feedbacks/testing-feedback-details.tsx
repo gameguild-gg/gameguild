@@ -2,16 +2,13 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Calendar, Star, MessageSquare, User, ThumbsUp, ThumbsDown, TestTube } from 'lucide-react';
+import { Star, MessageSquare, ThumbsUp, ThumbsDown, TestTube } from 'lucide-react';
 import Link from 'next/link';
 import type { TestingFeedback } from '@/lib/api/generated/types.gen';
 
@@ -21,7 +18,6 @@ interface TestingFeedbackDetailsProps {
 
 export function TestingFeedbackDetails({ data: feedback }: TestingFeedbackDetailsProps) {
   const { data: session } = useSession();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const formatDate = (dateString: string) => {
@@ -71,7 +67,7 @@ export function TestingFeedbackDetails({ data: feedback }: TestingFeedbackDetail
     try {
       // Implement report feedback logic here
       toast.success('Feedback reported successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to report feedback. Please try again.');
     } finally {
       setLoading(false);
