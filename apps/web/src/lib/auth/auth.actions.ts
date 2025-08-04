@@ -15,7 +15,7 @@ interface GoogleSignInRequest {
 export async function signInWithEmailAndPassword(email: string, password: string): Promise<void> {
   try {
     await signIn('local', { email, password });
-    redirect('/'); // Redirect to home page after successful sign-in
+    // redirect('/'); // Redirect to home page after successful sign-in
   } catch (error) {
     // Handle known NextAuth errors
     if (error instanceof AuthError) {
