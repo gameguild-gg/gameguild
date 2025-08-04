@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\apps\api\GameGuild.API.csproj"/>
+    <ProjectReference Include="..\GameGuild.csproj"/>
   </ItemGroup>
 
   <ItemGroup>
