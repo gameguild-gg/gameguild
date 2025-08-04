@@ -57,6 +57,8 @@ export const authConfig: NextAuthConfig = {
   session: {
     strategy: 'jwt',
   },
+  // Disable automatic URL verification to prevent DNS resolution loops
+  trustHost: true,
   callbacks: {
     signIn: async ({ user, account }: { user: User; account?: Account | null; profile?: Profile; email?: { verificationRequest?: boolean }; credentials?: Record<string, CredentialInput> }): Promise<boolean> => {
       if (account?.provider === 'google') {
