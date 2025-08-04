@@ -6,11 +6,26 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'standalone',
+  // Force the app to use the correct base URL
+  assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  // Explicitly disable automatic redirects that might interfere with auth
+  async redirects() {
+    return [];
+  },
+  // Disable automatic rewrites that might cause issues
+  async rewrites() {
+    return [];
+  },
+  // Configure experimental features for better subdomain handling
+  experimental: {
+    // Disable middleware matcher optimizations that might cause issues
+    optimizeServerReact: false,
   },
   images: {
     remotePatterns: [
