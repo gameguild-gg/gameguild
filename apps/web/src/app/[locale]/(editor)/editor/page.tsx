@@ -178,6 +178,10 @@ export default function Page() {
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
+  // Add these state variables after the existing state declarations:
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [editingProjectName, setEditingProjectName] = useState("")
+
   // Initialize IndexedDB and load projects
   useEffect(() => {
     const initDB = async () => {
@@ -757,6 +761,82 @@ export default function Page() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [showTagDropdown])
 
+   // Add these handler functions after the existing handler functions:
+  const handleTitleEdit = () => {
+    if (!currentProjectId) {
+      toast.error("Sem projeto ativo", {
+        description: "Crie ou abra um projeto primeiro",
+        duration: 3000,
+        icon: "📝",
+      })
+      return
+    }
+    setEditingProjectName(currentProjectName)
+    setIsEditingTitle(true)
+  }
+
+  const handleTitleSave = async () => {
+    if (!editingProjectName.trim()) {
+      toast.error("Nome obrigatório", {
+        description: "O projeto precisa ter um nome",
+        duration: 3000,
+        icon: "✏️",
+      })
+      setEditingProjectName(currentProjectName)
+      setIsEditingTitle(false)
+      return
+    }
+
+    if (editingProjectName.trim() === currentProjectName) {
+      setIsEditingTitle(false)
+      return
+    }
+
+    // Check if project with same name already exists
+    const existingProjects = await storageAdapter.list()
+    if (existingProjects.some((p) => p.name === editingProjectName.trim() && p.id !== currentProjectId)) {
+      toast.error("Nome já existe", {
+        description: `Já existe um projeto com o nome "${editingProjectName.trim()}"`,
+        duration: 4000,
+        icon: "🚫",
+      })
+      setEditingProjectName(currentProjectName)
+      setIsEditingTitle(false)
+      return
+    }
+
+    try {
+      // Get current editor state
+      let stateToSave = editorState
+      if (!stateToSave && editorRef.current) {
+        const currentState = editorRef.current.getEditorState()
+        stateToSave = JSON.stringify(currentState.toJSON())
+      }
+
+      if (stateToSave) {
+        await storageAdapter.save(currentProjectId, editingProjectName.trim(), stateToSave, projectTags)
+        setCurrentProjectName(editingProjectName.trim())
+        await loadSavedProjectsList()
+
+        toast.success("Nome alterado", {
+          description: `Projeto renomeado para "${editingProjectName.trim()}"`,
+          duration: 3000,
+          icon: "✏️",
+        })
+      }
+    } catch (error) {
+      console.error("Failed to rename project:", error)
+      toast.error("Erro ao renomear", {
+        description: "Não foi possível alterar o nome do projeto",
+        duration: 4000,
+        icon: "❌",
+      })
+      setEditingProjectName(currentProjectName)
+    }
+
+    setIsEditingTitle(false)
+  }
+
   return (
     <>
       {/* Botão de alternância no topo direito */}
@@ -794,9 +874,32 @@ export default function Page() {
             <div className="p-6 space-y-4">
               {/* Top Row - Project Title */}
               <div className="flex items-center justify-center">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                  {currentProjectName || "Untitled Project"}
-                </h2>
+                {isEditingTitle ? (
+                  <input
+                    type="text"
+                    value={editingProjectName}
+                    onChange={(e) => setEditingProjectName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleTitleSave()
+                      } else if (e.key === "Escape") {
+                        setIsEditingTitle(false)
+                        setEditingProjectName(currentProjectName)
+                      }
+                    }}
+                    onBlur={handleTitleSave}
+                    className="text-xl font-semibold text-gray-900 dark:text-gray-100 bg-transparent border-b-2 border-blue-500 outline-none text-center px-2 py-1"
+                    autoFocus
+                  />
+                ) : (
+                  <h2
+                    className="text-xl font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-2 py-1 rounded"
+                    onClick={handleTitleEdit}
+                    title="Click to edit project name"
+                  >
+                    {currentProjectName || "Untitled Project"}
+                  </h2>
+                )}
               </div>
 
               {/* Second Row - Auto-save and Project Info */}
