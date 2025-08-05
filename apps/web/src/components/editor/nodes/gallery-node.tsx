@@ -7,7 +7,7 @@ import { useState, useEffect, useRef, useContext } from "react"
 import { DecoratorNode, type SerializedLexicalNode } from "lexical"
 import { $getNodeByKey } from "lexical"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { ImageIcon, Plus, Trash2, Check, Crop, Maximize, Settings } from "lucide-react"
+import { ImageIcon, Plus, Trash2, Check, Crop, Maximize, Settings, Type } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/ui/media-upload-dialog"
@@ -659,7 +659,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
     >
       <div
         ref={containerRef}
-        className="bg-white rounded-lg border shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-lg border shadow-xl max-w-4xl w-full mx-4 h-[80vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header with title and actions */}
@@ -683,24 +683,28 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
         </div>
 
         {/* Main content area */}
-        <div className="p-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+        <div className="p-4 flex-1 overflow-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+            <TabsList className="grid w-full grid-cols-4 mb-6 flex-shrink-0">
               <TabsTrigger value="images" className="flex items-center gap-2">
                 <ImageIcon className="h-4 w-4" />
                 Images
+              </TabsTrigger>
+              <TabsTrigger value="adaptation" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Adaptation
               </TabsTrigger>
               <TabsTrigger value="layout" className="flex items-center gap-2">
                 <Maximize className="h-4 w-4" />
                 Layout
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Settings
+              <TabsTrigger value="caption" className="flex items-center gap-2">
+                <Type className="h-4 w-4" />
+                Caption
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="images" className="space-y-4">
+            <TabsContent value="images" className="space-y-4 flex-1 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 {images.map((image) => (
                   <div key={image.id} className="space-y-2">
@@ -842,7 +846,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                 ))}
                 <Button
                   variant="outline"
-                  className="flex flex-col items-center justify-center h-32 aspect-square border-dashed mx-auto"
+                  className="flex flex-col items-center justify-center h-32 aspect-square border-dashed mx-auto bg-transparent"
                   onClick={() => setShowImageDialog(true)}
                 >
                   <Plus className="h-8 w-8 mb-2" />
@@ -856,45 +860,17 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
               )}
             </TabsContent>
 
-            <TabsContent value="layout" className="space-y-4">
-              <div className="grid grid-cols-4 gap-4">
-                {layoutOptions.map((option) => {
-                  // Get number of columns from the option value
-                  const cols = Number.parseInt(option.value)
-
-                  return (
-                    <Button
-                      key={option.value}
-                      variant={layout === option.value ? "default" : "outline"}
-                      className="h-20 flex flex-col items-center justify-center p-1"
-                      onClick={() => handleLayoutChange(option.value)}
-                    >
-                      {/* Grid visualization */}
-                      <div
-                        className="grid gap-0.5 mb-1 w-full h-10"
-                        style={{
-                          gridTemplateColumns: `repeat(${cols}, 1fr)`,
-                          gridTemplateRows: "repeat(2, 1fr)",
-                        }}
-                      >
-                        {Array.from({ length: cols * 2 }).map((_, i) => (
-                          <div key={i} className="bg-muted rounded-sm" />
-                        ))}
-                      </div>
-                      <span>{option.label}</span>
-                    </Button>
-                  )
-                })}
-              </div>
-              <div className="mt-6 space-y-4">
-                <div className="border rounded-lg p-4 overflow-visible">
-                  <h4 className="text-sm font-medium mb-3">Image Adaptation</h4>
-                  {images.length > 0 ? (
-                    <div className="space-y-3">
+            <TabsContent value="adaptation" className="space-y-4 flex-1 overflow-y-auto">
+              <div className="space-y-6">
+                {/* Image Adaptation */}
+                {images.length > 0 ? (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-medium">Image Adaptation</h4>
+                    <div className="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-3">
                       {images.map((image) => (
                         <div
                           key={image.id}
-                          className="flex items-center gap-3 p-2 border rounded-md cursor-move hover:shadow-sm transition-all"
+                          className="flex flex-col gap-3 p-3 border rounded-md cursor-move hover:shadow-sm transition-all"
                           draggable
                           data-id={image.id}
                           onDragStart={(e) => handleDragStart(e, image.id)}
@@ -906,11 +882,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                             const target = e.currentTarget as HTMLElement
                             const rect = target.getBoundingClientRect()
                             const y = e.clientY - rect.top
-
-                            // Clear previous indicators
                             target.classList.remove("border-t-2", "border-b-2", "border-t-primary", "border-b-primary")
-
-                            // Add indicator based on position (top or bottom half)
                             if (y < rect.height / 2) {
                               target.classList.add("border-t-2", "border-t-primary")
                             } else {
@@ -923,104 +895,206 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                             target.classList.remove("border-t-2", "border-b-2", "border-t-primary", "border-b-primary")
                           }}
                         >
-                          {/* Thumbnail */}
+                          {/* Image Preview */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">{image.alt || "Image"}</span>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant={image.displayMode === "crop" ? "secondary" : "outline"}
+                                size="sm"
+                                className="h-7 text-xs px-2"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  handleImageDisplayModeChange(image.id, "crop")
+                                }}
+                              >
+                                <Crop className="h-3 w-3 mr-1" />
+                                Crop
+                              </Button>
+                              <Button
+                                variant={image.displayMode === "adaptive" ? "secondary" : "outline"}
+                                size="sm"
+                                className="h-7 text-xs px-2"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  handleImageDisplayModeChange(image.id, "adaptive")
+                                }}
+                              >
+                                <Maximize className="h-3 w-3 mr-1" />
+                                Adapt
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Large Image Preview */}
                           <div
-                            className="h-16 w-16 rounded-md overflow-hidden flex-shrink-0 border"
-                            style={{ aspectRatio: "1/1" }}
+                            className="relative overflow-hidden rounded-md border bg-muted/10"
+                            style={{
+                              aspectRatio: image.displayMode === "crop" ? "1/1" : "auto",
+                              width:
+                                image.displayMode === "adaptive" && image.span
+                                  ? image.span === "1x2" || image.span === "2x2"
+                                    ? "100%"
+                                    : image.span === "2x1"
+                                      ? "50%"
+                                      : "50%"
+                                  : "50%",
+                              maxWidth: "200px",
+                              minHeight: image.displayMode === "crop" ? "100px" : "auto",
+                            }}
                           >
                             <img
                               src={image.src || "/placeholder.svg"}
                               alt={image.alt}
-                              className="h-full w-full object-cover"
+                              className={
+                                image.displayMode === "crop"
+                                  ? "h-full w-full object-cover"
+                                  : "h-auto w-full object-contain"
+                              }
                             />
+                            {/* Span indicator overlay */}
+                            {image.displayMode === "adaptive" && image.span && image.span !== "1x1" && (
+                              <div className="absolute top-1 right-1 bg-black/70 text-white text-xs px-1 py-0.5 rounded">
+                                {image.span}
+                              </div>
+                            )}
                           </div>
 
                           {/* Controls */}
-                          <div className="flex-grow space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-medium truncate max-w-[120px]">{image.alt || "Image"}</span>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  variant={image.displayMode === "crop" ? "secondary" : "outline"}
-                                  size="sm"
-                                  className="h-7 text-xs px-2"
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    handleImageDisplayModeChange(image.id, "crop")
-                                  }}
-                                >
-                                  <Crop className="h-3 w-3 mr-1" />
-                                  Crop
-                                </Button>
-                                <Button
-                                  variant={image.displayMode === "adaptive" ? "secondary" : "outline"}
-                                  size="sm"
-                                  className="h-7 text-xs px-2"
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    handleImageDisplayModeChange(image.id, "adaptive")
-                                  }}
-                                >
-                                  <Maximize className="h-3 w-3 mr-1" />
-                                  Adapt
-                                </Button>
-                              </div>
+                          {image.displayMode === "adaptive" && (
+                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                              <span className="text-xs font-medium">Grid Span:</span>
+                              <Select
+                                value={image.span || "1x1"}
+                                onValueChange={(value) => {
+                                  handleImageSpanChange(image.id, value as "1x1" | "1x2" | "2x1" | "2x2")
+                                }}
+                              >
+                                <SelectTrigger className="h-7 text-xs w-32">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {spanOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value} className="text-xs">
+                                      {option.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
+                          )}
 
-                            {image.displayMode === "adaptive" && (
-                              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                <span className="text-xs">Span:</span>
-                                <Select
-                                  value={image.span || "1x1"}
-                                  onValueChange={(value) => {
-                                    handleImageSpanChange(image.id, value as "1x1" | "1x2" | "2x1" | "2x2")
-                                  }}
-                                >
-                                  <SelectTrigger className="h-7 text-xs">
-                                    <SelectValue placeholder="Grid span" />
-                                  </SelectTrigger>
-                                  <SelectContent
-                                    onCloseAutoFocus={(e) => e.preventDefault()}
-                                    onEscapeKeyDown={(e) => e.preventDefault()}
-                                    onPointerDownOutside={(e) => e.preventDefault()}
-                                  >
-                                    {spanOptions.map((option) => (
-                                      <SelectItem key={option.value} value={option.value} className="text-xs">
-                                        {option.label}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            )}
+                          {/* Display mode explanation */}
+                          <div className="text-xs text-muted-foreground">
+                            {image.displayMode === "crop"
+                              ? "Image will be cropped to fit a square aspect ratio"
+                              : `Image will adapt to grid${image.span && image.span !== "1x1" ? ` and span ${image.span.replace("x", "×")} cells` : ""}`}
                           </div>
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <div className="text-sm text-muted-foreground text-center py-4">
-                      Add images to customize their display
-                    </div>
-                  )}
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground text-sm py-8">
+                    Add images to customize their display adaptation
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="layout" className="space-y-4 flex-1 overflow-y-auto">
+              <div className="space-y-6">
+                {/* Layout Grid Options */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium">Grid Layout</h4>
+                  <div className="grid grid-cols-4 gap-3">
+                    {layoutOptions.map((option) => {
+                      const cols = Number.parseInt(option.value)
+                      return (
+                        <Button
+                          key={option.value}
+                          variant={layout === option.value ? "default" : "outline"}
+                          className="h-16 flex flex-col items-center justify-center p-1"
+                          onClick={() => handleLayoutChange(option.value)}
+                        >
+                          <div
+                            className="grid gap-0.5 mb-1 w-full h-8"
+                            style={{
+                              gridTemplateColumns: `repeat(${cols}, 1fr)`,
+                              gridTemplateRows: "repeat(2, 1fr)",
+                            }}
+                          >
+                            {Array.from({ length: cols * 2 }).map((_, i) => (
+                              <div key={i} className="bg-muted rounded-sm" />
+                            ))}
+                          </div>
+                          <span className="text-xs">{option.label}</span>
+                        </Button>
+                      )
+                    })}
+                  </div>
                 </div>
 
-                <div className="space-y-2 mt-4">
-                  <Label htmlFor="caption-style" className="text-sm font-medium">
-                    Caption Style
-                  </Label>
-                  <div className="grid grid-cols-3 gap-4">
+                {/* Default Display Mode */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium">Default Display Mode</h4>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={defaultDisplayMode === "crop" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleDefaultDisplayModeChange("crop")}
+                    >
+                      <Crop className="h-4 w-4 mr-2" />
+                      Crop to Square
+                    </Button>
+                    <Button
+                      variant={defaultDisplayMode === "adaptive" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleDefaultDisplayModeChange("adaptive")}
+                    >
+                      <Maximize className="h-4 w-4 mr-2" />
+                      Adaptive
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {defaultDisplayMode === "crop"
+                      ? "Images will be cropped to maintain a square aspect ratio"
+                      : "Images will adapt to the grid and may span multiple cells based on their aspect ratio"}
+                  </p>
+                </div>
+
+                {/* Preview */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium">Preview</h4>
+                  <div className="border rounded-lg p-3 bg-muted/10">
+                    {images.length > 0 ? (
+                      renderGalleryGrid()
+                    ) : (
+                      <div className="flex items-center justify-center h-32 bg-muted/20 rounded-lg border border-dashed">
+                        <p className="text-sm text-muted-foreground">Add images to preview layout</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="caption" className="space-y-4 flex-1 overflow-y-auto">
+              <div className="space-y-6">
+                {/* Caption Style */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium">Caption Style</h4>
+                  <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <Label htmlFor="caption-font-size" className="text-xs">
-                        Font Size
-                      </Label>
+                      <Label className="text-xs">Font Size</Label>
                       <Select
                         value={captionStyle.fontSize || "sm"}
                         onValueChange={(value) => handleCaptionStyleChange("fontSize", value)}
                       >
-                        <SelectTrigger id="caption-font-size">
-                          <SelectValue placeholder="Font size" />
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="xs">Extra Small</SelectItem>
@@ -1030,17 +1104,14 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                         </SelectContent>
                       </Select>
                     </div>
-
                     <div className="space-y-1">
-                      <Label htmlFor="caption-font-family" className="text-xs">
-                        Font Family
-                      </Label>
+                      <Label className="text-xs">Font Family</Label>
                       <Select
                         value={captionStyle.fontFamily || "sans"}
                         onValueChange={(value) => handleCaptionStyleChange("fontFamily", value)}
                       >
-                        <SelectTrigger id="caption-font-family">
-                          <SelectValue placeholder="Font family" />
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="sans">Sans-serif</SelectItem>
@@ -1049,17 +1120,14 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                         </SelectContent>
                       </Select>
                     </div>
-
                     <div className="space-y-1">
-                      <Label htmlFor="caption-font-weight" className="text-xs">
-                        Font Weight
-                      </Label>
+                      <Label className="text-xs">Font Weight</Label>
                       <Select
                         value={captionStyle.fontWeight || "normal"}
                         onValueChange={(value) => handleCaptionStyleChange("fontWeight", value)}
                       >
-                        <SelectTrigger id="caption-font-weight">
-                          <SelectValue placeholder="Font weight" />
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="normal">Normal</SelectItem>
@@ -1071,75 +1139,22 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Preview</h4>
-                  {images.length > 0 ? (
-                    renderGalleryGrid()
-                  ) : (
-                    <div className="flex items-center justify-center h-40 bg-muted/20 rounded-lg border border-dashed">
-                      <p className="text-sm text-muted-foreground">Add images to preview layout</p>
+                {/* Gallery Caption */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium">Gallery Caption</h4>
+                  <Input
+                    value={caption}
+                    onChange={(e) => handleCaptionChange(e.target.value)}
+                    placeholder="Add a caption for your gallery..."
+                    className="w-full"
+                  />
+                  {caption && (
+                    <div className="p-2 border rounded-md">
+                      <p className={getCaptionStyleClasses()}>{caption}</p>
                     </div>
                   )}
                 </div>
               </div>
-            </TabsContent>
-
-            <TabsContent value="settings" className="space-y-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="default-display-mode" className="text-sm font-medium">
-                    Default Display Mode
-                  </Label>
-                  <div className="flex flex-col space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant={defaultDisplayMode === "crop" ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handleDefaultDisplayModeChange("crop")}
-                        >
-                          <Crop className="h-4 w-4 mr-2" />
-                          Crop to Square
-                        </Button>
-                        <Button
-                          variant={defaultDisplayMode === "adaptive" ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handleDefaultDisplayModeChange("adaptive")}
-                        >
-                          <Maximize className="h-4 w-4 mr-2" />
-                          Adaptive
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {defaultDisplayMode === "crop"
-                        ? "Images will be cropped to maintain a square aspect ratio"
-                        : "Images will adapt to the grid and may span multiple cells based on their aspect ratio"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="gallery-caption" className="text-sm font-medium">
-                    Gallery Caption
-                  </Label>
-                  <Input
-                    id="gallery-caption"
-                    value={caption}
-                    onChange={(e) => handleCaptionChange(e.target.value)}
-                    placeholder="Add a caption for your gallery..."
-                  />
-                </div>
-              </div>
-
-              {caption && (
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium mb-2">Preview</h4>
-                  <div className="p-2 border rounded-md">
-                    <p className={`text-sm text-center ${getCaptionStyleClasses()}`}>{caption}</p>
-                  </div>
-                </div>
-              )}
             </TabsContent>
           </Tabs>
 
