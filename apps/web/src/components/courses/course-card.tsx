@@ -1,10 +1,9 @@
 'use client';
 
-import React from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowRight, Clock, Star, Users } from 'lucide-react';
 import Link from 'next/link';
 
@@ -45,7 +44,7 @@ export function CourseCard({ course, variant = 'default' }: CourseCardProps) {
               alt={course.title}
               className="w-16 h-16 rounded object-cover"
               onError={(e) => {
-                e.currentTarget.src = '/placeholder-course.jpg';
+                e.currentTarget.src = '/placeholder.jpg';
               }}
             />
             <div className="flex-1 min-w-0">
@@ -74,7 +73,7 @@ export function CourseCard({ course, variant = 'default' }: CourseCardProps) {
             alt={course.title}
             className="w-full h-48 object-cover"
             onError={(e) => {
-              e.currentTarget.src = '/placeholder-course.jpg';
+              e.currentTarget.src = '/placeholder.jpg';
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />

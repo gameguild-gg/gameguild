@@ -1,12 +1,12 @@
-import { getCourseBySlug } from '@/lib/courses/services/course.service';
-import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
+import { CourseFeatures } from '@/components/courses/course/course-features';
 import { CourseHeader } from '@/components/courses/course/course-header';
 import { CourseOverview } from '@/components/courses/course/course-overview';
-import { CourseTools } from '@/components/courses/course/course-tools';
-import { CourseFeatures } from '@/components/courses/course/course-features';
 import { CourseSidebar } from '@/components/courses/course/course-sidebar';
+import { CourseTools } from '@/components/courses/course/course-tools';
+import { getCourseBySlug } from '@/lib/courses/services/course.service';
 import { Loader2 } from 'lucide-react';
+import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: course.title,
       description: course.description,
-      images: [course.image],
+      images: [course.thumbnail || '/placeholder.svg'],
     },
   };
 }
@@ -56,13 +56,13 @@ async function CourseContent({ slug }: { slug: string }) {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             <CourseOverview course={course} />
-            <CourseTools tools={course.tools} />
+            <CourseTools course={course} />
             <CourseFeatures />
           </div>
 
           {/* Right Sidebar */}
           <div className="lg:col-span-1">
-            <CourseSidebar courseSlug={slug} courseTitle={course.title} />
+            <CourseSidebar course={course} />
           </div>
         </div>
       </div>
