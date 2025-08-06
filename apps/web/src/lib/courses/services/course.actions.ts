@@ -19,7 +19,7 @@ export async function getCourseBySlugAction(slug: string): Promise<Course | null
       enrolledStudents: 150,
       rating: 4.5,
       price: 0,
-      image: '/placeholder-course.jpg',
+      image: '/placeholder.jpg',
       slug,
       instructor: {
         name: 'John Doe',
