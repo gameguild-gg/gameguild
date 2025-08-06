@@ -221,22 +221,16 @@ public static class WebApplicationExtensions {
   private static async Task EnsureDatabaseAsync(this WebApplication app, IServiceScope scope, ILogger logger) {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    if (context.Database.IsInMemory()) {
-      logger.LogInformation("Using in-memory database, ensuring schema is created");
-      await context.Database.EnsureCreatedAsync();
+    logger.LogInformation("Applying database migrations...");
+    try {
+      await context.Database.MigrateAsync();
+      logger.LogInformation("Database migrations applied successfully");
     }
-    else {
-      logger.LogInformation("Applying database migrations...");
-      try {
-        await context.Database.MigrateAsync();
-        logger.LogInformation("Database migrations applied successfully");
-      }
-      catch (InvalidOperationException ex) when (ex.Message.Contains("PendingModelChangesWarning")) {
-        logger.LogWarning("Pending model changes detected, but continuing with application startup. This is expected after project renaming.");
-        // Try to apply migrations without validation
-        await context.Database.MigrateAsync();
-        logger.LogInformation("Database migrations applied successfully after handling pending changes");
-      }
+    catch (InvalidOperationException ex) when (ex.Message.Contains("PendingModelChangesWarning")) {
+      logger.LogWarning("Pending model changes detected, but continuing with application startup. This is expected after project renaming.");
+      // Try to apply migrations without validation
+      await context.Database.MigrateAsync();
+      logger.LogInformation("Database migrations applied successfully after handling pending changes");
     }
 
     // Seed initial data
@@ -308,7 +302,6 @@ public static class GameGuildApiBuilderFactory {
 
     // Testing-specific configuration
     builder.Environment.EnvironmentName = "Testing";
-    Environment.SetEnvironmentVariable("USE_IN_MEMORY_DB", "true");
 
     return builder.ConfigureGameGuildApplication();
   }
