@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
-import { useCourseContext } from '@/lib/courses';
 import { CourseGrid } from '@/components/courses/course-grid';
-import { EnhancedCourse } from '@/lib/courses/courses-enhanced.context';
+import { Program } from '@/lib/api/generated';
+import { useCourseContext } from '@/lib/courses';
+import { getCourseCategoryName, getCourseLevelConfig } from '@/lib/courses/services/course.service';
 
 // Enhanced CourseGrid that uses the context
 export function CourseGridEnhanced() {
@@ -17,27 +17,34 @@ export function CourseGridEnhanced() {
     filters: state.filters,
   });
 
-  // Convert EnhancedCourse to Course for the grid component
-  const coursesForGrid = paginatedCourses.map((course: EnhancedCourse) => ({
-    id: course.id,
-    title: course.title,
-    description: course.description,
-    category: course.area,
-    level: course.level === 1 ? ('Beginner' as const) : course.level === 2 ? ('Intermediate' as const) : course.level === 3 ? ('Advanced' as const) : ('Advanced' as const),
-    duration: `${course.estimatedHours || 0}h`,
-    enrolledStudents: course.enrollmentCount || 0,
-    rating: course.analytics?.averageRating || 0,
-    price: 0, // You may want to add pricing to EnhancedCourse
-    image: course.image || '/placeholder-course.jpg',
-    slug: course.slug,
-    instructor: {
-      name: course.instructors?.[0] || 'Unknown',
-      avatar: '/placeholder-avatar.jpg',
-    },
-    isEnrolled: false,
-    progress: course.progress || 0,
-    certification: false,
-  }));
+  // Convert Program to Course for the grid component
+  const coursesForGrid = paginatedCourses.map((course: Program) => {
+    const levelConfig = getCourseLevelConfig(course.difficulty || 0);
+    const categoryName = getCourseCategoryName(course.category || 0);
+
+    return {
+      id: parseInt(course.id || '0'),
+      title: course.title || '',
+      description: course.description || '',
+      category: categoryName,
+      level: course.difficulty === 0 ? ('Beginner' as const) :
+        course.difficulty === 1 ? ('Intermediate' as const) :
+          course.difficulty === 2 ? ('Advanced' as const) : ('Advanced' as const),
+      duration: `${course.estimatedHours || 0}h`,
+      enrolledStudents: course.currentEnrollments || 0,
+      rating: course.averageRating || 0,
+      price: 0, // Free courses
+      image: course.thumbnail || '/placeholder.jpg',
+      slug: course.slug || '',
+      instructor: {
+        name: course.programUsers?.[0]?.user?.name || 'Unknown',
+        avatar: '/placeholder-avatar.jpg',
+      },
+      isEnrolled: false,
+      progress: 0, // Default progress
+      certification: false,
+    };
+  });
 
   console.log('CourseGridEnhanced - coursesForGrid:', coursesForGrid.length, coursesForGrid.slice(0, 2));
   console.log(

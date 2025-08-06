@@ -87,6 +87,12 @@ const nextConfig: NextConfig = {
       '.jsx': ['.jsx', '.tsx'],
     };
 
+    // Add rule to handle markdown files as raw text
+    config.module.rules.push({
+      test: /\.md$/,
+      type: 'asset/source',
+    });
+
     return config;
   },
 };
