@@ -1,7 +1,25 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useEffect, useMemo } from 'react';
-import { CourseState, CourseFilters, EnhancedCourse } from './types';
+import { Program } from '@/lib/api/generated';
+import React, { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
+
+interface CourseFilters {
+  search: string;
+  category: string;
+  level: string;
+  instructor: string;
+  enrollment: string;
+}
+
+interface CourseState {
+  courses: Program[];
+  filteredCourses: Program[];
+  filters: CourseFilters;
+  isLoading: boolean;
+  error: string | null;
+  currentPage: number;
+  itemsPerPage: number;
+}
 
 const initialFilters: CourseFilters = {
   search: '',
@@ -22,7 +40,7 @@ const initialState: CourseState = {
 };
 
 type CourseAction =
-  | { type: 'SET_COURSES'; payload: EnhancedCourse[] }
+  | { type: 'SET_COURSES'; payload: Program[] }
   | { type: 'SET_FILTERS'; payload: Partial<CourseFilters> }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
@@ -65,7 +83,7 @@ function courseReducer(state: CourseState, action: CourseAction): CourseState {
 
 interface CourseContextType {
   state: CourseState;
-  paginatedCourses: EnhancedCourse[];
+  paginatedCourses: Program[];
   dispatch: React.Dispatch<CourseAction>;
   setFilters: (filters: Partial<CourseFilters>) => void;
   setPage: (page: number) => void;
@@ -73,10 +91,15 @@ interface CourseContextType {
 
 const CourseContext = createContext<CourseContextType | undefined>(undefined);
 
-export type { EnhancedCourse } from './types';
-
-export function CourseProvider({ children }: { children: React.ReactNode }) {
+export function CourseProvider({ children, initialCourses = [] }: { children: React.ReactNode; initialCourses?: Program[] }) {
   const [state, dispatch] = useReducer(courseReducer, initialState);
+
+  // Load initial courses
+  useEffect(() => {
+    if (initialCourses.length > 0) {
+      dispatch({ type: 'SET_COURSES', payload: initialCourses });
+    }
+  }, [initialCourses]);
 
   // Filter courses based on current filters
   const filteredCourses = useMemo(() => {
@@ -84,24 +107,24 @@ export function CourseProvider({ children }: { children: React.ReactNode }) {
 
     if (state.filters.search) {
       const searchTerm = state.filters.search.toLowerCase();
-      filtered = filtered.filter((course) => course.title.toLowerCase().includes(searchTerm) || course.description.toLowerCase().includes(searchTerm) || course.area.toLowerCase().includes(searchTerm));
+      filtered = filtered.filter((course) =>
+        course.title?.toLowerCase().includes(searchTerm) ||
+        course.description?.toLowerCase().includes(searchTerm)
+      );
     }
 
     if (state.filters.category !== 'all') {
-      filtered = filtered.filter((course) => course.area === state.filters.category);
+      filtered = filtered.filter((course) => course.category?.toString() === state.filters.category);
     }
 
     if (state.filters.level !== 'all') {
-      filtered = filtered.filter((course) => course.level.toString() === state.filters.level);
+      filtered = filtered.filter((course) => course.difficulty?.toString() === state.filters.level);
     }
 
     return filtered;
   }, [state.courses, state.filters]);
 
-  // Update filtered courses when they change
-  useEffect(() => {
-    dispatch({ type: 'SET_COURSES', payload: state.courses });
-  }, [filteredCourses, state.courses]);
+  // No need to update courses when filtered courses change - this was causing an infinite loop
 
   // Paginate filtered courses
   const paginatedCourses = useMemo(() => {
@@ -117,68 +140,6 @@ export function CourseProvider({ children }: { children: React.ReactNode }) {
   const setPage = (page: number) => {
     dispatch({ type: 'SET_PAGE', payload: page });
   };
-
-  // Load mock courses data
-  useEffect(() => {
-    const loadCourses = async () => {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      try {
-        // Mock courses data - replace with actual API call
-        const mockCourses: EnhancedCourse[] = [
-          {
-            id: 1,
-            title: 'Introduction to Game Development',
-            description: 'Learn the fundamentals of game development using modern tools and techniques.',
-            area: 'Programming',
-            level: 1,
-            estimatedHours: 40,
-            enrollmentCount: 150,
-            analytics: { averageRating: 4.5 },
-            image: '/placeholder-course.jpg',
-            slug: 'introduction-to-game-development',
-            instructors: ['John Doe'],
-            progress: 0,
-          },
-          {
-            id: 2,
-            title: 'Advanced 3D Modeling',
-            description: 'Master advanced 3D modeling techniques for games and animations.',
-            area: 'Art',
-            level: 3,
-            estimatedHours: 60,
-            enrollmentCount: 85,
-            analytics: { averageRating: 4.8 },
-            image: '/placeholder-course.jpg',
-            slug: 'advanced-3d-modeling',
-            instructors: ['Jane Smith'],
-            progress: 0,
-          },
-          {
-            id: 3,
-            title: 'UI/UX Design for Games',
-            description: 'Design compelling user interfaces and experiences for games.',
-            area: 'Design',
-            level: 2,
-            estimatedHours: 35,
-            enrollmentCount: 120,
-            analytics: { averageRating: 4.3 },
-            image: '/placeholder-course.jpg',
-            slug: 'ui-ux-design-for-games',
-            instructors: ['Alex Johnson'],
-            progress: 0,
-          },
-        ];
-
-        setTimeout(() => {
-          dispatch({ type: 'SET_COURSES', payload: mockCourses });
-        }, 1000); // Simulate loading time
-      } catch {
-        dispatch({ type: 'SET_ERROR', payload: 'Failed to load courses' });
-      }
-    };
-
-    loadCourses();
-  }, []);
 
   return <CourseContext.Provider value={{ state: { ...state, filteredCourses }, paginatedCourses, dispatch, setFilters, setPage }}>{children}</CourseContext.Provider>;
 }
