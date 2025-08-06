@@ -26,7 +26,7 @@ namespace GameGuild.Tests.Helpers {
       // Set required environment variables for tests
       // Use InMemory connection string instead of SQLite to avoid provider conflicts
       Environment.SetEnvironmentVariable("DB_CONNECTION_STRING", "InMemory");
-      Environment.SetEnvironmentVariable("USE_IN_MEMORY_DB", "true");
+  
       Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
       Environment.SetEnvironmentVariable("SKIP_MOCK_DATA_SEEDING", "true");
 
