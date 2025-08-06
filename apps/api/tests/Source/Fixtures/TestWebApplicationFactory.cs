@@ -25,7 +25,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
 
     // Set required environment variables for tests
     Environment.SetEnvironmentVariable("DB_CONNECTION_STRING", "InMemory");
-    Environment.SetEnvironmentVariable("USE_IN_MEMORY_DB", "true");
+
     Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
     Environment.SetEnvironmentVariable("ASPNETCORE_DETAILEDERRORS", "true");
 

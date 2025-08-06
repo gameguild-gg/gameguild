@@ -1,15 +1,11 @@
 name: game-guild
 
-networks:
-  game-guild-network:
-    name: game-guild-network
-
 services:
   api:
     build:
       context: ./apps/api
       dockerfile: Dockerfile
-    container_name: game-guild-api
+    container_name: api
     image: game-guild-api
     restart: always
     ports:
@@ -69,8 +65,6 @@ services:
         condition: service_healthy
     links:
       - postgres
-    networks:
-      - game-guild-network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://$(hostname):5000/health || exit 1"]
       interval: 30s
@@ -87,7 +81,7 @@ services:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
         - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL:-http://localhost:3000}
     image: game-guild-web
-    container_name: game-guild-web
+    container_name: web
     restart: always
     ports:
       - "${WEB_PORT:-3000}:3000"
@@ -105,10 +99,6 @@ services:
     depends_on:
       api:
         condition: service_healthy
-    networks:
-      game-guild-network:
-        aliases:
-          - web
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://$(hostname):3000 || exit 1"]
       interval: 30s
@@ -118,7 +108,7 @@ services:
 
   postgres:
     image: postgres
-    container_name: game-guild-postgres
+    container_name: postgres
     restart: always
     ports:
       - "${DB_PORT:-5432}:5432"
@@ -132,6 +122,10 @@ services:
     volumes:
       # Database persistence
       - postgres:/var/lib/postgresql/data
+    command: >
+      postgres
+      -c listen_addresses='*'
+      -c max_connections=200
     healthcheck:
       test:
         [
@@ -142,8 +136,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    networks:
-      - game-guild-network
 
 #  minio:
 #    image: minio/minio
@@ -182,7 +174,7 @@ services:
 # Database Administration (optional - uncomment to enable)
 # adminer:
 #   image: adminer:4.8.1
-#   container_name: game-guild-adminer
+#   container_name: adminer
 #   restart: always
 #   ports:
 #     - '8080:8080'
@@ -191,12 +183,10 @@ services:
 #   depends_on:
 #     postgres:
 #       condition: service_healthy
-#   networks:
-#     - game-guild-network
 
 volumes:
   #  minio-data:
   #    driver: local
   postgres:
-    name: game-guild-postgres
+    name: postgres
     driver: local
