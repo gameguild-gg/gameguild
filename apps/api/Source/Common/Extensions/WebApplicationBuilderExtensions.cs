@@ -184,6 +184,9 @@ public static class WebApplicationExtensions {
     app.MapEndpoints();
     app.MapGraphQL();
     app.MapControllers();
+    
+    // Health checks
+    app.MapHealthChecks();
 
     return app;
   }
