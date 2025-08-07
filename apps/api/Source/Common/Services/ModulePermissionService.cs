@@ -1,32 +1,29 @@
 using GameGuild.Common.Services;
+using GameGuild.Database;
 using GameGuild.Modules.Permissions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Common.Services;
 
 /// <summary>
-/// Implementation of module-based permission service
+/// Implementation of module-based permission service using Entity Framework
 /// </summary>
-public class ModulePermissionService : IModulePermissionService
+public class ModulePermissionService(ApplicationDbContext context, ILogger<ModulePermissionService> logger) : IModulePermissionService
 {
-    private readonly ILogger<ModulePermissionService> _logger;
-    
-    // In-memory storage for demo purposes - in production this would be a database
-    private static readonly List<UserRoleAssignment> _userRoleAssignments = new();
-    private static readonly List<ModuleRole> _moduleRoles = new();
-    
-    public ModulePermissionService(ILogger<ModulePermissionService> logger)
-    {
-        _logger = logger;
-        InitializeDefaultRoles();
-    }
+    private readonly ApplicationDbContext _context = context;
+    private readonly ILogger<ModulePermissionService> _logger = logger;
     
     // ===== ROLE MANAGEMENT =====
     
     public async Task<UserRoleAssignment> AssignRoleAsync(Guid userId, Guid? tenantId, ModuleType module, string roleName, List<PermissionConstraint>? constraints = null, DateTime? expiresAt = null)
     {
         // Remove existing assignment for this user/tenant/module/role combination
-        _userRoleAssignments.RemoveAll(r => r.UserId == userId && r.TenantId == tenantId && r.Module == module && r.RoleName == roleName);
+        var existingAssignments = await _context.UserRoleAssignments
+            .Where(r => r.UserId == userId && r.TenantId == tenantId && r.Module == module && r.RoleName == roleName)
+            .ToListAsync();
+        
+        _context.UserRoleAssignments.RemoveRange(existingAssignments);
         
         var assignment = new UserRoleAssignment
         {
@@ -35,13 +32,16 @@ public class ModulePermissionService : IModulePermissionService
             TenantId = tenantId,
             Module = module,
             RoleName = roleName,
-            Constraints = constraints ?? new List<PermissionConstraint>(),
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = expiresAt,
             IsActive = true,
         };
         
-        _userRoleAssignments.Add(assignment);
+        // Set constraints using the method
+        assignment.SetConstraints(constraints ?? new List<PermissionConstraint>());
+        
+        _context.UserRoleAssignments.Add(assignment);
+        await _context.SaveChangesAsync();
         
         _logger.LogInformation("Assigned role {RoleName} to user {UserId} for module {Module} in tenant {TenantId}", 
             roleName, userId, module, tenantId);
@@ -51,14 +51,15 @@ public class ModulePermissionService : IModulePermissionService
     
     public async Task<bool> RevokeRoleAsync(Guid userId, Guid? tenantId, ModuleType module, string roleName)
     {
-        var removed = _userRoleAssignments.RemoveAll(r => 
-            r.UserId == userId && 
-            r.TenantId == tenantId && 
-            r.Module == module && 
-            r.RoleName == roleName);
+        var assignmentsToRemove = await _context.UserRoleAssignments
+            .Where(r => r.UserId == userId && r.TenantId == tenantId && r.Module == module && r.RoleName == roleName)
+            .ToListAsync();
         
-        if (removed > 0)
+        if (assignmentsToRemove.Any())
         {
+            _context.UserRoleAssignments.RemoveRange(assignmentsToRemove);
+            await _context.SaveChangesAsync();
+            
             _logger.LogInformation("Revoked role {RoleName} from user {UserId} for module {Module} in tenant {TenantId}", 
                 roleName, userId, module, tenantId);
             return true;
@@ -69,18 +70,18 @@ public class ModulePermissionService : IModulePermissionService
     
     public async Task<List<UserRoleAssignment>> GetUserRolesAsync(Guid userId, Guid? tenantId, ModuleType module)
     {
-        return _userRoleAssignments
+        return await _context.UserRoleAssignments
             .Where(r => r.UserId == userId && r.TenantId == tenantId && r.Module == module && r.IsActive)
             .Where(r => r.ExpiresAt == null || r.ExpiresAt > DateTime.UtcNow)
-            .ToList();
+            .ToListAsync();
     }
     
     public async Task<List<UserRoleAssignment>> GetUsersWithRoleAsync(Guid? tenantId, ModuleType module, string roleName)
     {
-        return _userRoleAssignments
+        return await _context.UserRoleAssignments
             .Where(r => r.TenantId == tenantId && r.Module == module && r.RoleName == roleName && r.IsActive)
             .Where(r => r.ExpiresAt == null || r.ExpiresAt > DateTime.UtcNow)
-            .ToList();
+            .ToListAsync();
     }
     
     // ===== PERMISSION CHECKING =====
@@ -91,7 +92,8 @@ public class ModulePermissionService : IModulePermissionService
         
         foreach (var roleAssignment in userRoles)
         {
-            var roleDefinition = _moduleRoles.FirstOrDefault(r => r.Name == roleAssignment.RoleName && r.Module == module);
+            var roleDefinition = await _context.ModuleRoles
+                .FirstOrDefaultAsync(r => r.Name == roleAssignment.RoleName && r.Module == module);
             if (roleDefinition == null) continue;
             
             var hasPermission = roleDefinition.Permissions.Any(p => 
@@ -103,7 +105,7 @@ public class ModulePermissionService : IModulePermissionService
             if (hasPermission)
             {
                 // Check constraints
-                if (await CheckConstraintsAsync(roleAssignment.Constraints, userId, tenantId, resourceId))
+                if (await CheckConstraintsAsync(roleAssignment.Constraints.ToList(), userId, tenantId, resourceId).ConfigureAwait(false))
                 {
                     return true;
                 }
@@ -113,14 +115,16 @@ public class ModulePermissionService : IModulePermissionService
         return false;
     }
     
-    public async Task<List<ModulePermission>> GetUserModulePermissionsAsync(Guid userId, Guid? tenantId, ModuleType module)
+    public async Task<List<ModulePermissionDefinition>> GetUserModulePermissionsAsync(Guid userId, Guid? tenantId, ModuleType module)
     {
+        // Get all roles for this user in this module
+        var permissions = new List<ModulePermissionDefinition>();
         var userRoles = await GetUserRolesAsync(userId, tenantId, module);
-        var permissions = new List<ModulePermission>();
         
         foreach (var roleAssignment in userRoles)
         {
-            var roleDefinition = _moduleRoles.FirstOrDefault(r => r.Name == roleAssignment.RoleName && r.Module == module);
+            var roleDefinition = await _context.ModuleRoles
+                .FirstOrDefaultAsync(r => r.Name == roleAssignment.RoleName && r.Module == module);
             if (roleDefinition != null)
             {
                 permissions.AddRange(roleDefinition.Permissions.Where(p => p.IsGranted));
@@ -135,13 +139,15 @@ public class ModulePermissionService : IModulePermissionService
         var usersWithPermission = new List<Guid>();
         
         // Get all role assignments for this module
-        var roleAssignments = _userRoleAssignments
+        var roleAssignments = await _context.UserRoleAssignments
             .Where(r => r.TenantId == tenantId && r.Module == module && r.IsActive)
-            .Where(r => r.ExpiresAt == null || r.ExpiresAt > DateTime.UtcNow);
+            .Where(r => r.ExpiresAt == null || r.ExpiresAt > DateTime.UtcNow)
+            .ToListAsync();
         
         foreach (var assignment in roleAssignments)
         {
-            var roleDefinition = _moduleRoles.FirstOrDefault(r => r.Name == assignment.RoleName && r.Module == module);
+            var roleDefinition = await _context.ModuleRoles
+                .FirstOrDefaultAsync(r => r.Name == assignment.RoleName && r.Module == module);
             if (roleDefinition?.Permissions.Any(p => p.Module == module && p.Action == action && p.IsGranted) == true)
             {
                 usersWithPermission.Add(assignment.UserId);
@@ -198,9 +204,10 @@ public class ModulePermissionService : IModulePermissionService
     
     // ===== ROLE DEFINITION MANAGEMENT =====
     
-    public async Task<ModuleRole> CreateRoleDefinitionAsync(string roleName, ModuleType module, string description, List<ModulePermission> permissions, int priority = 0)
+    public async Task<ModuleRole> CreateRoleDefinitionAsync(string roleName, ModuleType module, string description, List<ModulePermissionDefinition> permissions, int priority = 0)
     {
-        var existingRole = _moduleRoles.FirstOrDefault(r => r.Name == roleName && r.Module == module);
+        var existingRole = await _context.ModuleRoles
+            .FirstOrDefaultAsync(r => r.Name == roleName && r.Module == module);
         if (existingRole != null)
         {
             throw new InvalidOperationException($"Role {roleName} already exists for module {module}");
@@ -216,16 +223,18 @@ public class ModulePermissionService : IModulePermissionService
             IsSystemRole = false,
         };
         
-        _moduleRoles.Add(role);
+        _context.ModuleRoles.Add(role);
+        await _context.SaveChangesAsync();
         
         _logger.LogInformation("Created role definition {RoleName} for module {Module}", roleName, module);
         
         return role;
     }
     
-    public async Task<ModuleRole> UpdateRoleDefinitionAsync(string roleName, ModuleType module, List<ModulePermission> permissions)
+    public async Task<ModuleRole> UpdateRoleDefinitionAsync(string roleName, ModuleType module, List<ModulePermissionDefinition> permissions)
     {
-        var role = _moduleRoles.FirstOrDefault(r => r.Name == roleName && r.Module == module);
+        var role = await _context.ModuleRoles
+            .FirstOrDefaultAsync(r => r.Name == roleName && r.Module == module);
         if (role == null)
         {
             throw new InvalidOperationException($"Role {roleName} not found for module {module}");
@@ -237,6 +246,7 @@ public class ModulePermissionService : IModulePermissionService
         }
         
         role.Permissions = permissions;
+        await _context.SaveChangesAsync();
         
         _logger.LogInformation("Updated role definition {RoleName} for module {Module}", roleName, module);
         
@@ -245,12 +255,16 @@ public class ModulePermissionService : IModulePermissionService
     
     public async Task<List<ModuleRole>> GetModuleRoleDefinitionsAsync(ModuleType module)
     {
-        return _moduleRoles.Where(r => r.Module == module).OrderBy(r => r.Priority).ToList();
+        return await _context.ModuleRoles
+            .Where(r => r.Module == module)
+            .OrderBy(r => r.Priority)
+            .ToListAsync();
     }
     
     public async Task<bool> DeleteRoleDefinitionAsync(string roleName, ModuleType module)
     {
-        var role = _moduleRoles.FirstOrDefault(r => r.Name == roleName && r.Module == module);
+        var role = await _context.ModuleRoles
+            .FirstOrDefaultAsync(r => r.Name == roleName && r.Module == module);
         if (role == null) return false;
         
         if (role.IsSystemRole)
@@ -259,13 +273,15 @@ public class ModulePermissionService : IModulePermissionService
         }
         
         // Check if any users are assigned to this role
-        var hasAssignments = _userRoleAssignments.Any(r => r.RoleName == roleName && r.Module == module && r.IsActive);
+        var hasAssignments = await _context.UserRoleAssignments
+            .AnyAsync(r => r.RoleName == roleName && r.Module == module && r.IsActive);
         if (hasAssignments)
         {
             throw new InvalidOperationException($"Cannot delete role {roleName} because users are still assigned to it");
         }
         
-        _moduleRoles.Remove(role);
+        _context.ModuleRoles.Remove(role);
+        await _context.SaveChangesAsync();
         
         _logger.LogInformation("Deleted role definition {RoleName} for module {Module}", roleName, module);
         
@@ -274,19 +290,26 @@ public class ModulePermissionService : IModulePermissionService
     
     // ===== PRIVATE HELPERS =====
     
-    private async Task<bool> CheckConstraintsAsync(List<PermissionConstraint> constraints, Guid userId, Guid? tenantId, Guid? resourceId)
+    private static Task<bool> CheckConstraintsAsync(List<PermissionConstraint> constraints, Guid userId, Guid? tenantId, Guid? resourceId)
     {
         // For now, just return true - in production this would check actual constraints
         // like resource ownership, time-based restrictions, etc.
-        return true;
+        return Task.FromResult(true);
     }
     
-    private void InitializeDefaultRoles()
+    /// <summary>
+    /// Ensures default module roles exist in the database. Should be called during application startup.
+    /// </summary>
+    public async Task EnsureDefaultRolesExistAsync()
     {
-        if (_moduleRoles.Any()) return; // Already initialized
+        var existingRoles = await _context.ModuleRoles
+            .Where(r => r.Module == ModuleType.TestingLab)
+            .ToListAsync();
+        
+        if (existingRoles.Any()) return; // Already initialized
         
         // Testing Lab Roles
-        var testingLabAdminPermissions = new List<ModulePermission>
+        var testingLabAdminPermissions = new List<ModulePermissionDefinition>
         {
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.Create, IsGranted = true },
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.Read, IsGranted = true },
@@ -300,7 +323,7 @@ public class ModulePermissionService : IModulePermissionService
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.ExportData, IsGranted = true },
         };
         
-        var testingLabManagerPermissions = new List<ModulePermission>
+        var testingLabManagerPermissions = new List<ModulePermissionDefinition>
         {
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.Create, IsGranted = true },
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.Read, IsGranted = true },
@@ -310,7 +333,7 @@ public class ModulePermissionService : IModulePermissionService
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.ViewReports, IsGranted = true },
         };
         
-        var testingLabCoordinatorPermissions = new List<ModulePermission>
+        var testingLabCoordinatorPermissions = new List<ModulePermissionDefinition>
         {
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.Read, IsGranted = true },
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.CreateSession, IsGranted = true },
@@ -318,12 +341,12 @@ public class ModulePermissionService : IModulePermissionService
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.ViewReports, IsGranted = true },
         };
         
-        var testingLabTesterPermissions = new List<ModulePermission>
+        var testingLabTesterPermissions = new List<ModulePermissionDefinition>
         {
             new() { Module = ModuleType.TestingLab, Action = ModuleAction.Read, IsGranted = true },
         };
         
-        _moduleRoles.AddRange(new[]
+        var defaultRoles = new[]
         {
             new ModuleRole
             {
@@ -361,8 +384,11 @@ public class ModulePermissionService : IModulePermissionService
                 Priority = 40,
                 IsSystemRole = true,
             },
-        });
+        };
         
-        _logger.LogInformation("Initialized default module roles");
+        _context.ModuleRoles.AddRange(defaultRoles);
+        await _context.SaveChangesAsync();
+        
+        _logger.LogInformation("Initialized default module roles in database");
     }
 }

@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using GameGuild.Common.Services;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Credentials;
@@ -19,6 +20,7 @@ namespace GameGuild.Common;
 public class DatabaseSeeder(
   ApplicationDbContext context,
   IPermissionService permissionService,
+  IModulePermissionService modulePermissionService,
   IUserService userService,
   ILogger<DatabaseSeeder> logger
 ) : IDatabaseSeeder {
@@ -32,6 +34,9 @@ public class DatabaseSeeder(
       await SeedGlobalProjectDefaultPermissionsAsync();
       await SeedTenantDomainDefaultPermissionsAsync();
       await SeedTestingLabDefaultPermissionsAsync();
+      
+      // Seed module-based permission roles
+      await modulePermissionService.EnsureDefaultRolesExistAsync();
       
       // Check if mock data seeding should be skipped (e.g., during tests)
       var skipMockData = Environment.GetEnvironmentVariable("SKIP_MOCK_DATA_SEEDING") == "true";
