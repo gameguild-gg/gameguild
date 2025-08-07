@@ -25,6 +25,7 @@ using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Tag = GameGuild.Modules.Tags.Models.Tag;
+using UserRoleAssignment = GameGuild.Modules.Permissions.UserRoleAssignment;
 
 
 namespace GameGuild.Database;
@@ -65,22 +66,19 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<ResourceLocalization> ResourceLocalizations { get; set; }
 
-  // Resource Permission DbSets (Layer 3 of DAC system)
-  public DbSet<CommentPermission> CommentPermissions { get; set; }
+  // Simplified Permission System DbSets
+  public DbSet<RoleTemplate> RoleTemplates { get; set; }
 
-  public DbSet<ProgramPermission> ProgramPermissions { get; set; }
+  public DbSet<UserRoleAssignment> UserRoleAssignments { get; set; }
 
-  public DbSet<ProductPermission> ProductPermissions { get; set; }
+  public DbSet<UserPermission> UserPermissions { get; set; }
 
-  public DbSet<ProjectPermission> ProjectPermissions { get; set; }
+  // Module Permission System DbSets
+  public DbSet<ModuleRole> ModuleRoles { get; set; }
 
-  public DbSet<TestingSessionPermission> TestingSessionPermissions { get; set; }
-
-  public DbSet<TestingRequestPermission> TestingRequestPermissions { get; set; }
-
-  public DbSet<TestingFeedbackPermission> TestingFeedbackPermissions { get; set; }
-
-  public DbSet<SessionRegistrationPermission> SessionRegistrationPermissions { get; set; }
+  // Resource Permission DbSets
+  public DbSet<GameGuild.Modules.Projects.ProjectPermission> ProjectPermissions { get; set; }
+  public DbSet<GameGuild.Modules.Comments.CommentPermission> CommentPermissions { get; set; }
 
   // Reputation Management DbSets
   public DbSet<UserReputation> UserReputations { get; set; }

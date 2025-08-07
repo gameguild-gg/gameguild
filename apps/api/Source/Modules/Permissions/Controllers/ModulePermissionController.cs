@@ -49,7 +49,7 @@ public class ModulePermissionController : ControllerBase
     /// Get all effective permissions for the current user in a module
     /// </summary>
     [HttpGet("my-permissions")]
-    public async Task<ActionResult<List<ModulePermission>>> GetMyModulePermissions(
+    public async Task<ActionResult<List<ModulePermissionDefinition>>> GetMyModulePermissions(
         [FromQuery] ModuleType module,
         [FromQuery] Guid? tenantId = null)
     {
@@ -62,7 +62,7 @@ public class ModulePermissionController : ControllerBase
     /// Get all effective permissions for a specific user in a module (admin only)
     /// </summary>
     [HttpGet("users/{userId}/permissions")]
-    public async Task<ActionResult<List<ModulePermission>>> GetUserModulePermissions(
+    public async Task<ActionResult<List<ModulePermissionDefinition>>> GetUserModulePermissions(
         Guid userId,
         [FromQuery] ModuleType module,
         [FromQuery] Guid? tenantId = null)
@@ -342,11 +342,11 @@ public class CreateRoleRequest
 {
     public string RoleName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public List<ModulePermission> Permissions { get; set; } = new();
+    public List<ModulePermissionDefinition> Permissions { get; set; } = new();
     public int Priority { get; set; } = 0;
 }
 
 public class UpdateRoleRequest
 {
-    public List<ModulePermission> Permissions { get; set; } = new();
+    public List<ModulePermissionDefinition> Permissions { get; set; } = new();
 }

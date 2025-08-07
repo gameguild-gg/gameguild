@@ -3,6 +3,7 @@ using System;
 using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameGuild.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250805171339_AddModulePermissionTables")]
+    partial class AddModulePermissionTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1402,10 +1405,13 @@ namespace GameGuild.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1414,9 +1420,6 @@ namespace GameGuild.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsSystemRole")
                         .HasColumnType("boolean");
@@ -1436,170 +1439,46 @@ namespace GameGuild.Migrations
                     b.Property<int>("Priority")
                         .HasColumnType("integer");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
-
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name", "Module", "TenantId")
-                        .IsUnique();
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("ModuleRoles");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Permissions.RoleTemplate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<bool>("IsSystemRole")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("PermissionTemplatesJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("RoleTemplates");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Permissions.UserPermission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
-
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("ConstraintsJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("GrantedByRole")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid?>("ResourceId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ResourceType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<Guid?>("RoleTemplateId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("DeletedAt");
-
-                    b.HasIndex("RoleTemplateId");
-
-                    b.HasIndex("TenantId");
-
-                    b.ToTable("UserPermissions");
                 });
 
             modelBuilder.Entity("GameGuild.Modules.Permissions.UserRoleAssignment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
 
                     b.Property<string>("ConstraintsJson")
                         .IsRequired()
                         .HasColumnType("jsonb");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
@@ -1608,9 +1487,6 @@ namespace GameGuild.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
                     b.Property<int>("Module")
@@ -1624,27 +1500,32 @@ namespace GameGuild.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
-
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
 
                     b.HasIndex("RoleId");
 
-                    b.HasIndex("UserId", "Module", "RoleName")
-                        .IsUnique();
+                    b.HasIndex("TenantId");
 
                     b.ToTable("UserRoleAssignments");
                 });
@@ -2159,6 +2040,68 @@ namespace GameGuild.Migrations
                         .IsUnique();
 
                     b.ToTable("post_likes");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductPermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("PermissionFlags1")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PermissionFlags2")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ResourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex(new[] { "ExpiresAt" }, "IX_ProductPermissions_Expiration");
+
+                    b.HasIndex(new[] { "ResourceId", "UserId" }, "IX_ProductPermissions_Resource_User");
+
+                    b.HasIndex(new[] { "TenantId" }, "IX_ProductPermissions_TenantId");
+
+                    b.HasIndex(new[] { "UserId", "TenantId", "ResourceId" }, "IX_ProductPermissions_User_Tenant_Resource")
+                        .IsUnique();
+
+                    b.ToTable("ProductPermissions");
                 });
 
             modelBuilder.Entity("GameGuild.Modules.Products.ProductPricing", b =>
@@ -3270,6 +3213,68 @@ namespace GameGuild.Migrations
                         .IsUnique();
 
                     b.ToTable("program_enrollments");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramPermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("PermissionFlags1")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PermissionFlags2")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ResourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex(new[] { "ExpiresAt" }, "IX_ProgramPermissions_Expiration");
+
+                    b.HasIndex(new[] { "ResourceId", "UserId" }, "IX_ProgramPermissions_Resource_User");
+
+                    b.HasIndex(new[] { "TenantId" }, "IX_ProgramPermissions_TenantId");
+
+                    b.HasIndex(new[] { "UserId", "TenantId", "ResourceId" }, "IX_ProgramPermissions_User_Tenant_Resource")
+                        .IsUnique();
+
+                    b.ToTable("ProgramPermissions");
                 });
 
             modelBuilder.Entity("GameGuild.Modules.Programs.ProgramRating", b =>
@@ -4682,6 +4687,65 @@ namespace GameGuild.Migrations
                     b.ToTable("SessionRegistrations");
                 });
 
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionRegistrationPermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("PermissionFlags1")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PermissionFlags2")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ResourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("ResourceId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex(new[] { "UserId", "TenantId", "ResourceId" }, "IX_SessionRegistrationPermissions_User_Tenant_Resource");
+
+                    b.ToTable("SessionRegistrationPermissions");
+                });
+
             modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionWaitlist", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4885,6 +4949,65 @@ namespace GameGuild.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("TestingFeedbackForms");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingFeedbackPermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("PermissionFlags1")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PermissionFlags2")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ResourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("ResourceId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex(new[] { "UserId", "TenantId", "ResourceId" }, "IX_TestingFeedbackPermissions_User_Tenant_Resource");
+
+                    b.ToTable("TestingFeedbackPermissions");
                 });
 
             modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingLocation", b =>
@@ -5105,6 +5228,65 @@ namespace GameGuild.Migrations
                     b.ToTable("TestingRequests");
                 });
 
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingRequestPermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("PermissionFlags1")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PermissionFlags2")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ResourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("ResourceId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TestingRequestPermissions");
+                });
+
             modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingSession", b =>
                 {
                     b.Property<Guid>("Id")
@@ -5198,6 +5380,68 @@ namespace GameGuild.Migrations
                     b.HasIndex("TestingRequestId");
 
                     b.ToTable("TestingSessions");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingSessionPermission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("PermissionFlags1")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PermissionFlags2")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("ResourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex(new[] { "ExpiresAt" }, "IX_TestingSessionPermissions_Expiration");
+
+                    b.HasIndex(new[] { "ResourceId", "UserId" }, "IX_TestingSessionPermissions_Resource_User");
+
+                    b.HasIndex(new[] { "TenantId" }, "IX_TestingSessionPermissions_TenantId");
+
+                    b.HasIndex(new[] { "UserId", "TenantId", "ResourceId" }, "IX_TestingSessionPermissions_User_Tenant_Resource")
+                        .IsUnique();
+
+                    b.ToTable("TestingSessionPermissions");
                 });
 
             modelBuilder.Entity("GameGuild.Modules.UserAchievements.Achievement", b =>
@@ -6885,21 +7129,8 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GameGuild.Modules.Permissions.RoleTemplate", b =>
+            modelBuilder.Entity("GameGuild.Modules.Permissions.ModuleRole", b =>
                 {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
-
-                    b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Permissions.UserPermission", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Permissions.RoleTemplate", null)
-                        .WithMany("UserPermissions")
-                        .HasForeignKey("RoleTemplateId");
-
                     b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId");
@@ -6910,11 +7141,16 @@ namespace GameGuild.Migrations
             modelBuilder.Entity("GameGuild.Modules.Permissions.UserRoleAssignment", b =>
                 {
                     b.HasOne("GameGuild.Modules.Permissions.ModuleRole", "Role")
-                        .WithMany("UserRoleAssignments")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .WithMany("RoleAssignments")
+                        .HasForeignKey("RoleId");
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
 
                     b.Navigation("Role");
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostFollower", b =>
@@ -7091,6 +7327,29 @@ namespace GameGuild.Migrations
                         .IsRequired();
 
                     b.Navigation("Post");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductPermission", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Products.Product", "Resource")
+                        .WithMany()
+                        .HasForeignKey("ResourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Resource");
 
                     b.Navigation("Tenant");
 
@@ -7458,6 +7717,29 @@ namespace GameGuild.Migrations
                         .IsRequired();
 
                     b.Navigation("Program");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramPermission", b =>
+                {
+                    b.HasOne("GameGuild.Modules.Programs.Program", "Resource")
+                        .WithMany()
+                        .HasForeignKey("ResourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Resource");
 
                     b.Navigation("Tenant");
 
@@ -7929,6 +8211,29 @@ namespace GameGuild.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionRegistrationPermission", b =>
+                {
+                    b.HasOne("GameGuild.Modules.TestingLab.SessionRegistration", "Resource")
+                        .WithMany()
+                        .HasForeignKey("ResourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Resource");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionWaitlist", b =>
                 {
                     b.HasOne("GameGuild.Modules.TestingLab.TestingSession", "Session")
@@ -8008,6 +8313,29 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingFeedbackPermission", b =>
+                {
+                    b.HasOne("GameGuild.Modules.TestingLab.TestingFeedback", "Resource")
+                        .WithMany()
+                        .HasForeignKey("ResourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Resource");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingLocation", b =>
                 {
                     b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
@@ -8067,6 +8395,29 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingRequestPermission", b =>
+                {
+                    b.HasOne("GameGuild.Modules.TestingLab.TestingRequest", "Resource")
+                        .WithMany()
+                        .HasForeignKey("ResourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Resource");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingSession", b =>
                 {
                     b.HasOne("GameGuild.Modules.Users.User", "CreatedBy")
@@ -8106,6 +8457,29 @@ namespace GameGuild.Migrations
                     b.Navigation("Tenant");
 
                     b.Navigation("TestingRequest");
+                });
+
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingSessionPermission", b =>
+                {
+                    b.HasOne("GameGuild.Modules.TestingLab.TestingSession", "Resource")
+                        .WithMany()
+                        .HasForeignKey("ResourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId");
+
+                    b.HasOne("GameGuild.Modules.Users.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Resource");
+
+                    b.Navigation("Tenant");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementLevel", b =>
@@ -8467,12 +8841,7 @@ namespace GameGuild.Migrations
 
             modelBuilder.Entity("GameGuild.Modules.Permissions.ModuleRole", b =>
                 {
-                    b.Navigation("UserRoleAssignments");
-                });
-
-            modelBuilder.Entity("GameGuild.Modules.Permissions.RoleTemplate", b =>
-                {
-                    b.Navigation("UserPermissions");
+                    b.Navigation("RoleAssignments");
                 });
 
             modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTag", b =>
