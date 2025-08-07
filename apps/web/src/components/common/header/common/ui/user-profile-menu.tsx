@@ -1,13 +1,14 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { LogOut, MoveUpRight } from 'lucide-react';
 import type { Session } from 'next-auth';
 import { signOut } from 'next-auth/react';
+import Image from 'next/image';
 import Link from 'next/link';
-import React from 'react';
+import React, { useState } from 'react';
 
 interface MenuItem {
   label: string;
@@ -23,6 +24,8 @@ interface UserProfileMenuProps {
 }
 
 export const UserProfileMenu = ({ session, menuItems = [] }: UserProfileMenuProps): React.JSX.Element => {
+  const [imageError, setImageError] = useState(false);
+
   const handleSignOut = async () => {
     await signOut({ redirect: true, redirectTo: '/' });
   };
@@ -31,13 +34,24 @@ export const UserProfileMenu = ({ session, menuItems = [] }: UserProfileMenuProp
   const displayName = session.user.username || 'User';
   const avatarFallback = displayName?.charAt(0).toUpperCase() || session.user.email?.charAt(0).toUpperCase() || 'U';
   const userImage = session.user.profilePictureUrl;
+  const shouldShowImage = userImage && !imageError;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar className="h-9 w-9 cursor-pointer">
-          {userImage && <AvatarImage src={userImage} alt={displayName} />}
-          <AvatarFallback className="bg-zinc-800 text-zinc-200 font-medium">{avatarFallback}</AvatarFallback>
+          {shouldShowImage ? (
+            <Image
+              src={userImage}
+              alt={displayName}
+              width={36}
+              height={36}
+              className="rounded-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <AvatarFallback className="bg-zinc-800 text-zinc-200 font-medium">{avatarFallback}</AvatarFallback>
+          )}
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-full max-w-sm mx-auto p-0 border-zinc-800">
@@ -45,9 +59,16 @@ export const UserProfileMenu = ({ session, menuItems = [] }: UserProfileMenuProp
           <div className="flex flex-col relative p-4 bg-white dark:bg-zinc-900 gap-4">
             <div className="flex items-center gap-4">
               <div className="relative shrink-0">
-                {userImage ? (
+                {shouldShowImage ? (
                   <div className="w-[72px] h-[72px] rounded-full ring-4 ring-white dark:ring-zinc-900 overflow-hidden">
-                    <img src={userImage} alt={displayName} className="w-full h-full object-cover" />
+                    <Image
+                      src={userImage}
+                      alt={displayName}
+                      width={72}
+                      height={72}
+                      className="w-full h-full object-cover"
+                      onError={() => setImageError(true)}
+                    />
                   </div>
                 ) : (
                   <div className="w-[72px] h-[72px] rounded-full ring-4 ring-white dark:ring-zinc-900 bg-zinc-800 flex items-center justify-center text-2xl font-bold text-zinc-200">{avatarFallback}</div>
