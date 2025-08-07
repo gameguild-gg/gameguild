@@ -1,17 +1,18 @@
-import type { Course } from '@/components/legacy/types/course-enhanced';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Program } from '@/lib/api/generated';
+import { getCourseCategoryName, getCourseLevelConfig } from '@/lib/courses/services/course.service';
+import { ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft } from 'lucide-react';
-import { getCourseLevelConfig } from '@/lib/courses/services/course.service';
 
 interface CourseHeaderProps {
-  readonly course: Course;
+  readonly course: Program;
 }
 
 export function CourseHeader({ course }: CourseHeaderProps) {
-  const { name: levelName, color: levelColor } = getCourseLevelConfig(course.level);
+  const { name: levelName, color: levelColor } = getCourseLevelConfig(course.difficulty || 0);
+  const categoryName = getCourseCategoryName(course.category || 0);
 
   return (
     <>
@@ -41,13 +42,13 @@ export function CourseHeader({ course }: CourseHeaderProps) {
       {/* Hero Section */}
       <section className="relative">
         <div className="aspect-video relative overflow-hidden rounded-xl bg-gray-800">
-          <Image src={course.image || '/placeholder.svg'} alt={course.title} fill className="object-cover" priority />
+          <Image src={course.thumbnail || '/placeholder.svg'} alt={course.title} fill className="object-cover" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
           <div className="absolute bottom-6 left-6 right-6">
             <div className="flex flex-wrap gap-2 mb-4">
               <Badge className={`border ${levelColor}`}>{levelName}</Badge>
               <Badge variant="outline" className="border-gray-600 text-gray-300">
-                {course.area.charAt(0).toUpperCase() + course.area.slice(1)}
+                {categoryName}
               </Badge>
             </div>
             <h1 className="text-4xl font-bold mb-2">{course.title}</h1>
