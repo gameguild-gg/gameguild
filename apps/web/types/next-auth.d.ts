@@ -11,6 +11,8 @@ declare module 'next-auth' {
     // displayName: string;
     username?: string;
     email?: string;
+    name?: string;
+    image?: string;
     profilePictureUrl?: string;
   }
 
