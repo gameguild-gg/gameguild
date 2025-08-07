@@ -1,4 +1,3 @@
-import React from 'react';
 import Link from 'next/link';
 
 interface NavSection {
@@ -63,14 +62,18 @@ const colorClasses = {
 
 export function NavigationLinks() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
       {navSections.map((section) => (
-        <div key={section.title}>
-          <h3 className={`font-semibold mb-4 ${colorClasses[section.color].header}`}>{section.title}</h3>
-          <ul className="space-y-2 text-sm text-slate-400 list-disc list-inside">
+        <div key={section.title} className="min-w-0">
+          <h3 className={`font-semibold mb-4 ${colorClasses[section.color].header} text-base lg:text-lg`}>{section.title}</h3>
+          <ul className="space-y-2 text-sm text-slate-400">
             {section.links.map((link) => (
-              <li key={link.href} className="marker:text-slate-500">
-                <Link href={link.href} className={`${colorClasses[section.color].hover} transition-colors duration-300 block py-1`}>
+              <li key={link.href} className="flex items-start">
+                <span className="text-slate-500 mr-2 mt-1.5 flex-shrink-0">•</span>
+                <Link
+                  href={link.href}
+                  className={`${colorClasses[section.color].hover} transition-colors duration-300 block py-1 leading-relaxed break-words`}
+                >
                   {link.label}
                 </Link>
               </li>
