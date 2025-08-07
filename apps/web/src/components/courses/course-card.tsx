@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { ArrowRight, Clock, Star, Users } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 interface Course {
@@ -39,12 +40,14 @@ export function CourseCard({ course, variant = 'default' }: CourseCardProps) {
       <Card className="hover:shadow-md transition-shadow">
         <CardContent className="p-4">
           <div className="flex gap-3">
-            <img
+            <Image
               src={course.image}
               alt={course.title}
+              width={64}
+              height={64}
               className="w-16 h-16 rounded object-cover"
               onError={(e) => {
-                e.currentTarget.src = '/placeholder.jpg';
+                e.currentTarget.src = 'https://placehold.co/64x64/1f2937/ffffff?text=Course';
               }}
             />
             <div className="flex-1 min-w-0">
@@ -68,12 +71,14 @@ export function CourseCard({ course, variant = 'default' }: CourseCardProps) {
     <Card className={`group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden ${variant === 'featured' ? 'border-primary' : ''}`}>
       <CardHeader className="p-0">
         <div className="relative">
-          <img
+          <Image
             src={course.image}
             alt={course.title}
+            width={400}
+            height={225}
             className="w-full h-48 object-cover"
             onError={(e) => {
-              e.currentTarget.src = '/placeholder.jpg';
+              e.currentTarget.src = 'https://placehold.co/400x225/1f2937/ffffff?text=Course+Image';
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
