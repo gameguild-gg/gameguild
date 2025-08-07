@@ -1,20 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeRaw from 'rehype-raw';
-import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
+import NextImage from 'next/image';
+import React, { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import { Admonition } from './Admonition';
-import Mermaid from './Mermaid';
-import RevealJS from './RevealJS';
-import { MarkdownQuizActivity } from './MarkdownQuizActivity';
 import { MarkdownCodeActivity } from './MarkdownCodeActivity';
 import { MarkdownErrorBoundary } from './MarkdownErrorBoundary';
+import { MarkdownQuizActivity } from './MarkdownQuizActivity';
+import Mermaid from './Mermaid';
+import RevealJS from './RevealJS';
 
 export type RendererType = 'markdown' | 'reveal';
 
@@ -59,6 +60,15 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
     h5: (props) => <h5 className="text-lg font-semibold mt-2 mb-1" {...props} />,
     h6: (props) => <h6 className="text-base font-semibold mt-2 mb-1" {...props} />,
     p: (props) => <p className="mb-4" {...props} />,
+    img: (props) => (
+      <NextImage
+        className="max-w-full h-auto rounded-lg shadow-sm"
+        width={800}
+        height={600}
+        style={{ maxWidth: '100%', height: 'auto' }}
+        {...props}
+      />
+    ),
     ul: (props) => <ul className="list-disc pl-5 mb-4" {...props} />,
     ol: (props) => <ol className="list-decimal pl-5 mb-4" {...props} />,
     li: (props) => <li className="mb-1" {...props} />,
@@ -68,9 +78,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
       const match = /language-(\w+)/.exec(className || '');
       const lang = match && match[1] ? match[1] : '';
 
-              if (lang === 'mermaid') {
-          return <Mermaid chart={String(children).replace(/\n$/, '')} />;
-        }
+      if (lang === 'mermaid') {
+        return <Mermaid chart={String(children).replace(/\n$/, '')} />;
+      }
 
       const codeContent = String(children).replace(/\n$/, '');
       const inline = !codeContent.includes('\n');
@@ -107,7 +117,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
       }
 
       return (
-        <code className="bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 font-mono text-sm inline whitespace-nowrap text-gray-800 font-medium" {...props}>
+        <code className="bg-muted border border-border rounded px-1.5 py-0.5 font-mono text-sm inline whitespace-nowrap text-foreground font-medium" {...props}>
           {children}
         </code>
       );
@@ -176,17 +186,16 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
   return (
     <MarkdownErrorBoundary>
       <div className="markdown-content">
-        <ReactMarkdown 
-          remarkPlugins={[remarkGfm, remarkMath]} 
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm, remarkMath]}
           rehypePlugins={[rehypeRaw, rehypeKatex]}
           components={components}
         >
           {processedContent}
         </ReactMarkdown>
-      <style jsx global>{`
+        <style jsx global>{`
         .markdown-content {
           line-height: 1.7;
-          color: #374151;
           width: 100% !important;
           max-width: none !important;
           min-width: 100% !important;
@@ -198,7 +207,6 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
         .markdown-content h4,
         .markdown-content h5,
         .markdown-content h6 {
-          color: #111827;
           font-weight: 600;
           line-height: 1.25;
         }
@@ -236,21 +244,30 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
           margin-bottom: 0.25rem;
         }
 
+        .markdown-content img {
+          max-width: 100% !important;
+          height: auto !important;
+          display: block !important;
+          margin: 1rem auto !important;
+          border-radius: 0.5rem !important;
+          box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+        }
+
         .markdown-content blockquote {
-          border-left: 4px solid #e5e7eb;
+          border-left: 4px solid hsl(var(--border));
           padding-left: 1rem;
           margin: 1rem 0;
           font-style: italic;
-          color: #6b7280;
+          color: hsl(var(--muted-foreground));
         }
 
         .markdown-content a {
-          color: #2563eb;
+          color: hsl(var(--primary));
           text-decoration: underline;
         }
 
         .markdown-content a:hover {
-          color: #1d4ed8;
+          color: hsl(var(--primary) / 0.8);
         }
 
         .syntax-highlighter {
@@ -283,13 +300,13 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
 
         .markdown-content th,
         .markdown-content td {
-          border: 1px solid #e5e7eb;
+          border: 1px solid hsl(var(--border));
           padding: 0.5rem;
           text-align: left;
         }
 
         .markdown-content th {
-          background-color: #f9fafb;
+          background-color: hsl(var(--muted));
           font-weight: 600;
         }
 
@@ -314,58 +331,39 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
           position: relative !important;
           height: 100% !important;
           width: 100% !important;
-          background: white !important;
+          background: hsl(var(--background)) !important;
         }
         
         .reveal .slides {
           position: relative !important;
           height: 100% !important;
           width: 100% !important;
-          background: white !important;
+          background: hsl(var(--background)) !important;
         }
         
         .reveal .slides section {
-          background: white !important;
+          background: hsl(var(--background)) !important;
         }
 
         /* Prevent any black backgrounds from affecting the page */
         body {
-          background-color: #f9fafb !important;
-          width: 100% !important;
-          max-width: none !important;
+          background-color: hsl(var(--background)) !important;
         }
         
         html {
-          background-color: #f9fafb !important;
-          width: 100% !important;
-          max-width: none !important;
+          background-color: hsl(var(--background)) !important;
         }
 
-        /* Force full width on all containers */
-        div {
-          max-width: none !important;
-        }
-
-        /* Override any potential layout constraints */
-        .min-h-screen {
-          width: 100vw !important;
-          max-width: none !important;
-        }
-
-        /* Ensure full width usage */
-        .markdown-content * {
-          max-width: none !important;
-        }
-
+        /* Ensure proper width constraints for markdown content */
         .markdown-content pre,
         .markdown-content code {
-          width: 100% !important;
-          max-width: none !important;
+          max-width: 100% !important;
+          overflow-x: auto !important;
         }
 
         .syntax-highlighter {
-          width: 100% !important;
-          max-width: none !important;
+          max-width: 100% !important;
+          overflow-x: auto !important;
         }
 
         /* Mermaid diagram sizing - fixed width */

@@ -22,13 +22,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const course = result.data;
 
+  if (!course) {
+    return {
+      title: 'Course Not Found',
+      description: 'The requested course could not be found.',
+    };
+  }
+
   return {
     title: `${course.title} | Game Guild`,
     description: course.description,
     openGraph: {
       title: course.title,
       description: course.description,
-      images: [course.thumbnail || '/placeholder.svg'],
+      images: [course.thumbnail || 'https://placehold.co/1200x630/1f2937/ffffff?text=Course+Image'],
     },
   };
 }
@@ -46,6 +53,13 @@ async function CourseContent({ slug }: { slug: string }) {
   }
 
   const course = result.data;
+
+  if (!course) {
+    return {
+      title: 'Course Not Found',
+      description: 'The requested course could not be found.',
+    };
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">

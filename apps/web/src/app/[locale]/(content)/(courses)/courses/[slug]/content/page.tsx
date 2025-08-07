@@ -1,275 +1,472 @@
-import { auth } from '@/auth';
-import { getCourseBySlug } from '@/lib/courses/actions';
-import { notFound, redirect } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
+'use client';
+
+import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Award, CheckCircle, Clock, Code, FileText, Play, Video } from 'lucide-react';
+import { BookOpen, CheckCircle, ChevronRight, Circle, Code, FileText, Play } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-const levelColors = {
-  1: 'bg-green-500/10 border-green-500 text-green-400',
-  2: 'bg-blue-500/10 border-blue-500 text-blue-400',
-  3: 'bg-orange-500/10 border-orange-500 text-orange-400',
-  4: 'bg-red-500/10 border-red-500 text-red-400',
-};
+// Import actual markdown content from Python course
+import week01Content from '@/data/courses/python/chapters/week01/lecture.md';
+import week02Content from '@/data/courses/python/chapters/week02/lecture.md';
+import week03Content from '@/data/courses/python/chapters/week03/lecture.md';
+import week04Content from '@/data/courses/python/chapters/week04/lecture.md';
+import week05Exercise01Content from '@/data/courses/python/chapters/week05/exercise-lists-01.md';
+import week05Exercise02Content from '@/data/courses/python/chapters/week05/exercise-lists-02.md';
+import week05ListsContent from '@/data/courses/python/chapters/week05/lists.md';
+import week06Content from '@/data/courses/python/chapters/week06/lecture.md';
+import week07Content from '@/data/courses/python/chapters/week07/lecture.md';
+import week10DictionariesContent from '@/data/courses/python/chapters/week10/dictionaries.md';
+import week10SetsContent from '@/data/courses/python/chapters/week10/sets.md';
+import week11Content from '@/data/courses/python/chapters/week11/lecture.md';
+import week12ApisContent from '@/data/courses/python/chapters/week12/lecture.md';
+import week12LocalLlmContent from '@/data/courses/python/chapters/week12/local-llm.md';
+import syllabusContent from '@/data/courses/python/syllabus.md';
 
-const levelNames = {
-  1: 'Beginner',
-  2: 'Intermediate',
-  3: 'Advanced',
-  4: 'Arcane',
-};
+interface CourseModule {
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  completed: boolean;
+  lessons: CourseLesson[];
+}
 
-// Mock course content structure
-const mockCourseContent = {
-  modules: [
-    {
-      id: '1',
-      title: 'Getting Started',
-      description: 'Introduction to the fundamentals',
-      duration: '45 min',
-      completed: true,
-      lessons: [
-        { id: '1-1', title: 'Welcome & Course Overview', type: 'video', duration: '5 min', completed: true },
-        { id: '1-2', title: 'Setting Up Your Environment', type: 'video', duration: '15 min', completed: true },
-        { id: '1-3', title: 'Basic Concepts', type: 'text', duration: '10 min', completed: true },
-        { id: '1-4', title: 'First Hands-on Exercise', type: 'exercise', duration: '15 min', completed: false },
-      ],
-    },
-    {
-      id: '2',
-      title: 'Core Concepts',
-      description: 'Deep dive into essential topics',
-      duration: '2h 30min',
-      completed: false,
-      lessons: [
-        { id: '2-1', title: 'Advanced Techniques', type: 'video', duration: '25 min', completed: false },
-        { id: '2-2', title: 'Best Practices', type: 'text', duration: '20 min', completed: false },
-        { id: '2-3', title: 'Code Examples', type: 'code', duration: '30 min', completed: false },
-        { id: '2-4', title: 'Practical Project', type: 'exercise', duration: '45 min', completed: false },
-        { id: '2-5', title: 'Project Review', type: 'video', duration: '20 min', completed: false },
-      ],
-    },
-    {
-      id: '3',
-      title: 'Advanced Topics',
-      description: 'Master advanced techniques and patterns',
-      duration: '3h 15min',
-      completed: false,
-      lessons: [
-        { id: '3-1', title: 'Advanced Architecture', type: 'video', duration: '35 min', completed: false },
-        { id: '3-2', title: 'Performance Optimization', type: 'text', duration: '25 min', completed: false },
-        { id: '3-3', title: 'Complex Scenarios', type: 'code', duration: '40 min', completed: false },
-        { id: '3-4', title: 'Final Project Setup', type: 'exercise', duration: '30 min', completed: false },
-        { id: '3-5', title: 'Final Project Implementation', type: 'exercise', duration: '60 min', completed: false },
-        { id: '3-6', title: 'Course Completion & Certificate', type: 'video', duration: '5 min', completed: false },
-      ],
-    },
-  ],
-};
+interface CourseLesson {
+  id: string;
+  title: string;
+  type: 'text' | 'video' | 'exercise' | 'code';
+  duration: string;
+  completed: boolean;
+  content?: string;
+}
 
-const contentTypeIcons = {
-  video: Video,
-  text: FileText,
-  code: Code,
-  exercise: Award,
-};
-
-export default async function CourseContentPage({ params }: { params: Promise<{ slug: string }> }) {
-  // Check authentication
-  const session = await auth();
-  const { slug } = await params;
-
-  if (!session?.user) {
-    redirect(`/connect?returnUrl=/course/${slug}/content`);
+// Mock course data using actual markdown content
+const getCourseContent = (slug: string): CourseModule[] => {
+  if (slug === 'python') {
+    return [
+      {
+        id: 'syllabus',
+        title: 'Course Syllabus',
+        description: 'Course overview, objectives, and schedule',
+        duration: '15 min',
+        completed: true,
+        lessons: [
+          {
+            id: 'syllabus-1',
+            title: 'Python Programming Course Overview',
+            type: 'text',
+            duration: '15 min',
+            completed: true,
+            content: syllabusContent,
+          },
+        ],
+      },
+      {
+        id: '1',
+        title: 'Week 01: Introduction to Python',
+        description: 'Introduction to algorithms and algorithmic thinking',
+        duration: '45 min',
+        completed: true,
+        lessons: [
+          {
+            id: '1-1',
+            title: 'What is an algorithm?',
+            type: 'text',
+            duration: '15 min',
+            completed: true,
+            content: week01Content,
+          },
+        ],
+      },
+      {
+        id: '2',
+        title: 'Week 02: Python Basics',
+        description: 'Introduction to Python programming basics',
+        duration: '2h 30min',
+        completed: false,
+        lessons: [
+          {
+            id: '2-1',
+            title: 'Python REPL and Basic Concepts',
+            type: 'text',
+            duration: '2h 30min',
+            completed: false,
+            content: week02Content,
+          },
+        ],
+      },
+      {
+        id: '3',
+        title: 'Week 03: Functions and Math',
+        description: 'Functions and math in Python programming',
+        duration: '3h 15min',
+        completed: false,
+        lessons: [
+          {
+            id: '3-1',
+            title: 'Functions and Mathematical Operations',
+            type: 'text',
+            duration: '3h 15min',
+            completed: false,
+            content: week03Content,
+          },
+        ],
+      },
+      {
+        id: '4',
+        title: 'Week 04: Python Conditionals and Loops',
+        description: 'Flow control in Python programming',
+        duration: '2h 45min',
+        completed: false,
+        lessons: [
+          {
+            id: '4-1',
+            title: 'Conditionals and Loop Structures',
+            type: 'text',
+            duration: '2h 45min',
+            completed: false,
+            content: week04Content,
+          },
+        ],
+      },
+      {
+        id: '5',
+        title: 'Week 05: Lists and Data Structures',
+        description: 'Lists, tuples, and string manipulation',
+        duration: '3h 30min',
+        completed: false,
+        lessons: [
+          {
+            id: '5-1',
+            title: 'Lists and Basic Data Structures',
+            type: 'text',
+            duration: '2h',
+            completed: false,
+            content: week05ListsContent,
+          },
+          {
+            id: '5-2',
+            title: 'Exercise: Two Sum',
+            type: 'exercise',
+            duration: '45 min',
+            completed: false,
+            content: week05Exercise01Content,
+          },
+          {
+            id: '5-3',
+            title: 'Exercise: Search Insert Position',
+            type: 'exercise',
+            duration: '45 min',
+            completed: false,
+            content: week05Exercise02Content,
+          },
+        ],
+      },
+      {
+        id: '6',
+        title: 'Week 06: Advanced Loops',
+        description: 'Advanced looping techniques and patterns',
+        duration: '3h 30min',
+        completed: false,
+        lessons: [
+          {
+            id: '6-1',
+            title: 'Loop Patterns and Advanced Techniques',
+            type: 'text',
+            duration: '3h 30min',
+            completed: false,
+            content: week06Content,
+          },
+        ],
+      },
+      {
+        id: '7',
+        title: 'Week 07: Nested Loops',
+        description: 'Nested loops and advanced loop control',
+        duration: '2h 15min',
+        completed: false,
+        lessons: [
+          {
+            id: '7-1',
+            title: 'Nested Loops and Connect-4 Game',
+            type: 'text',
+            duration: '2h 15min',
+            completed: false,
+            content: week07Content,
+          },
+        ],
+      },
+      {
+        id: '10',
+        title: 'Week 10: Dictionaries and Sets',
+        description: 'Advanced data structures in Python',
+        duration: '3h 45min',
+        completed: false,
+        lessons: [
+          {
+            id: '10-1',
+            title: 'Dictionaries and Key-Value Pairs',
+            type: 'text',
+            duration: '2h',
+            completed: false,
+            content: week10DictionariesContent,
+          },
+          {
+            id: '10-2',
+            title: 'Sets and Set Operations',
+            type: 'text',
+            duration: '1h 45min',
+            completed: false,
+            content: week10SetsContent,
+          },
+        ],
+      },
+      {
+        id: '11',
+        title: 'Week 11: Files and Exceptions',
+        description: 'File handling and exception management',
+        duration: '3h 20min',
+        completed: false,
+        lessons: [
+          {
+            id: '11-1',
+            title: 'File I/O and Exception Handling',
+            type: 'text',
+            duration: '3h 20min',
+            completed: false,
+            content: week11Content,
+          },
+        ],
+      },
+      {
+        id: '12',
+        title: 'Week 12: APIs and Web Services',
+        description: 'Working with APIs and web services',
+        duration: '2h 30min',
+        completed: false,
+        lessons: [
+          {
+            id: '12-1',
+            title: 'APIs and Web Services',
+            type: 'text',
+            duration: '1h',
+            completed: false,
+            content: week12ApisContent,
+          },
+          {
+            id: '12-2',
+            title: 'Local LLMs with Ollama',
+            type: 'text',
+            duration: '1h 30min',
+            completed: false,
+            content: week12LocalLlmContent,
+          },
+        ],
+      },
+    ];
   }
+  return [];
+};
 
-  let course;
-  try {
-    course = await getCourseBySlug(slug);
-  } catch (error) {
-    console.error('Error fetching course:', error);
-    course = null;
+const getLessonIcon = (type: string) => {
+  switch (type) {
+    case 'video':
+      return <Play className="h-4 w-4" />;
+    case 'exercise':
+      return <Code className="h-4 w-4" />;
+    case 'code':
+      return <Code className="h-4 w-4" />;
+    default:
+      return <FileText className="h-4 w-4" />;
   }
+};
 
-  if (!course) {
-    notFound();
+const getLessonTypeColor = (type: string) => {
+  switch (type) {
+    case 'video':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
+    case 'exercise':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
+    case 'code':
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300';
+    default:
+      return 'bg-muted text-muted-foreground';
   }
+};
 
-  const levelColor = levelColors[course.level as keyof typeof levelColors] || levelColors[1];
-  const levelName = levelNames[course.level as keyof typeof levelNames] || 'Beginner';
+export default function CourseContentPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const [selectedLesson, setSelectedLesson] = useState<CourseLesson | null>(null);
+  const [courseContent] = useState(() => getCourseContent(slug));
 
-  // Calculate progress
-  const totalLessons = mockCourseContent.modules.reduce((total, module) => total + module.lessons.length, 0);
-  const completedLessons = mockCourseContent.modules.reduce((total, module) => total + module.lessons.filter((lesson) => lesson.completed).length, 0);
-  const progressPercentage = Math.round((completedLessons / totalLessons) * 100);
+  const totalLessons = courseContent.reduce((acc, module) => acc + module.lessons.length, 0);
+  const completedLessons = courseContent.reduce(
+    (acc, module) => acc + module.lessons.filter(lesson => lesson.completed).length,
+    0
+  );
+  const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+
+  useEffect(() => {
+    // Set the first lesson as selected by default
+    const firstModule = courseContent[0];
+    if (firstModule && firstModule.lessons && firstModule.lessons.length > 0) {
+      const firstLesson = firstModule.lessons[0];
+      if (firstLesson) {
+        setSelectedLesson(firstLesson);
+      }
+    }
+  }, [courseContent]);
+
+  const handleLessonClick = (lesson: CourseLesson) => {
+    setSelectedLesson(lesson);
+  };
+
+  const handleLessonComplete = (moduleId: string, lessonId: string) => {
+    // In a real implementation, this would update the backend
+    console.log(`Marking lesson ${lessonId} in module ${moduleId} as completed`);
+  };
+
+  if (!courseContent.length) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">Course Not Found</h1>
+          <p className="text-muted-foreground">The requested course could not be found.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      {/* Navigation */}
-      <div className="border-b border-gray-800">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-2 text-sm">
-            <Button asChild variant="ghost" className="text-gray-300 hover:text-white p-0">
-              <Link href="/courses">Courses</Link>
-            </Button>
-            <span className="text-gray-500">/</span>
-            <Button asChild variant="ghost" className="text-gray-300 hover:text-white p-0">
-              <Link href={`/course/${slug}`}>{course.title}</Link>
-            </Button>
-            <span className="text-gray-500">/</span>
-            <span className="text-gray-400">Content</span>
+    <div className="container mx-auto px-4 py-8">
+      {/* Course Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Python Programming</h1>
+            <p className="text-muted-foreground mt-2">
+              Master Python programming fundamentals and advanced concepts
+            </p>
           </div>
-          <Button asChild variant="ghost" className="text-gray-300 hover:text-white mt-2">
-            <Link href={`/course/${slug}`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Course Details
-            </Link>
-          </Button>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-foreground">{completedLessons}/{totalLessons}</div>
+            <div className="text-sm text-muted-foreground">Lessons completed</div>
+          </div>
+        </div>
+        <Progress value={progressPercentage} className="h-2" />
+        <div className="text-sm text-muted-foreground mt-2">
+          {Math.round(progressPercentage)}% complete
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Course Progress Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="bg-gray-800/50 border-gray-700 sticky top-8">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 relative rounded-lg overflow-hidden">
-                    <Image src={course.image || '/placeholder.svg'} alt={course.title} fill className="object-cover" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Course Modules */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Course Content
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {courseContent.map((module) => (
+                <div key={module.id} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-foreground">{module.title}</h3>
+                    <Badge variant={module.completed ? 'default' : 'secondary'}>
+                      {module.completed ? 'Completed' : 'In Progress'}
+                    </Badge>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-sm">{course.title}</h3>
-                    <Badge className={`text-xs ${levelColor}`}>{levelName}</Badge>
+                  <p className="text-sm text-muted-foreground">{module.description}</p>
+                  <div className="space-y-1">
+                    {module.lessons.map((lesson) => (
+                      <button
+                        key={lesson.id}
+                        onClick={() => handleLessonClick(lesson)}
+                        className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${selectedLesson?.id === lesson.id
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-border/80 hover:bg-muted/50'
+                          }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {lesson.completed ? (
+                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                          ) : (
+                            <Circle className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <div className="flex items-center gap-2">
+                            {getLessonIcon(lesson.type)}
+                            <span className="text-sm font-medium text-foreground">
+                              {lesson.title}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={getLessonTypeColor(lesson.type)}>
+                            {lesson.type}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">{lesson.duration}</span>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Progress</span>
-                      <span>{progressPercentage}%</span>
-                    </div>
-                    <Progress value={progressPercentage} className="h-2" />
-                    <p className="text-xs text-gray-400 mt-1">
-                      {completedLessons} of {totalLessons} lessons completed
-                    </p>
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-700">
-                    <h4 className="font-medium mb-3 text-sm">Course Modules</h4>
-                    <div className="space-y-2">
-                      {mockCourseContent.modules.map((module) => (
-                        <div key={module.id} className="flex items-center gap-2 text-sm">
-                          {module.completed ? <CheckCircle className="w-4 h-4 text-green-400" /> : <div className="w-4 h-4 rounded-full border-2 border-gray-600" />}
-                          <span className={module.completed ? 'text-green-400' : 'text-gray-400'}>{module.title}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            <div className="space-y-6">
-              {/* Welcome Header */}
-              <div className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-500/20 rounded-xl p-6">
-                <h1 className="text-3xl font-bold mb-2">Welcome back, {session.user.name || 'Student'}!</h1>
-                <p className="text-gray-300">Continue your learning journey in {course.title}</p>
-              </div>
-
-              {/* Course Modules */}
-              {mockCourseContent.modules.map((module) => (
-                <Card key={module.id} className="bg-gray-800/50 border-gray-700">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        {module.completed ? (
-                          <CheckCircle className="w-6 h-6 text-green-400" />
-                        ) : (
-                          <div className="w-6 h-6 rounded-full border-2 border-gray-600 flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-gray-600" />
-                          </div>
-                        )}
-                        <div>
-                          <CardTitle className="text-xl">{module.title}</CardTitle>
-                          <p className="text-gray-400 text-sm">{module.description}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
-                        <Clock className="w-4 h-4" />
-                        {module.duration}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {module.lessons.map((lesson) => {
-                        const IconComponent = contentTypeIcons[lesson.type as keyof typeof contentTypeIcons];
-                        return (
-                          <div
-                            key={lesson.id}
-                            className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${lesson.completed ? 'bg-green-500/5 border-green-500/20' : 'bg-gray-700/30 border-gray-600 hover:bg-gray-700/50'}`}
-                          >
-                            <div className="flex items-center gap-3">
-                              {lesson.completed ? <CheckCircle className="w-5 h-5 text-green-400" /> : <IconComponent className="w-5 h-5 text-gray-400" />}
-                              <div>
-                                <h4 className={`font-medium ${lesson.completed ? 'text-green-400' : 'text-white'}`}>{lesson.title}</h4>
-                                <div className="flex items-center gap-2 text-sm text-gray-400">
-                                  <Clock className="w-3 h-3" />
-                                  {lesson.duration}
-                                </div>
-                              </div>
-                            </div>
-                            <Button variant={lesson.completed ? 'outline' : 'default'} size="sm" className={lesson.completed ? 'border-green-500 text-green-400' : ''}>
-                              {lesson.completed ? 'Review' : 'Start'}
-                              <Play className="ml-2 w-4 h-4" />
-                            </Button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
               ))}
+            </CardContent>
+          </Card>
+        </div>
 
-              {/* Next Steps */}
-              {progressPercentage < 100 && (
-                <Card className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-500/20">
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-bold mb-2">Keep Learning!</h3>
-                    <p className="text-gray-300 mb-4">You&apos;re {progressPercentage}% through the course. Continue with the next lesson to maintain your momentum.</p>
-                    <Button className="bg-blue-600 hover:bg-blue-700">
-                      Continue Learning
-                      <Play className="ml-2 w-4 h-4" />
+        {/* Lesson Content */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {selectedLesson && getLessonIcon(selectedLesson.type)}
+                {selectedLesson?.title || 'Select a lesson to begin'}
+              </CardTitle>
+              {selectedLesson && (
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <Badge className={getLessonTypeColor(selectedLesson.type)}>
+                    {selectedLesson.type}
+                  </Badge>
+                  <span>{selectedLesson.duration}</span>
+                  {!selectedLesson.completed && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleLessonComplete('', selectedLesson.id)}
+                      className="ml-auto"
+                    >
+                      Mark as Complete
                     </Button>
-                  </CardContent>
-                </Card>
+                  )}
+                </div>
               )}
-
-              {progressPercentage === 100 && (
-                <Card className="bg-gradient-to-r from-green-600/10 to-emerald-600/10 border border-green-500/20">
-                  <CardContent className="p-6 text-center">
-                    <Award className="w-12 h-12 text-green-400 mx-auto mb-4" />
-                    <h3 className="text-2xl font-bold mb-2">Congratulations!</h3>
-                    <p className="text-gray-300 mb-4">You&apos;ve completed the entire course. Download your certificate and continue with advanced topics.</p>
-                    <div className="flex gap-4 justify-center">
-                      <Button className="bg-green-600 hover:bg-green-700">Download Certificate</Button>
-                      <Button variant="outline">View Related Courses</Button>
-                    </div>
-                  </CardContent>
-                </Card>
+            </CardHeader>
+            <CardContent>
+              {selectedLesson?.content ? (
+                <div className="prose max-w-none">
+                  <MarkdownRenderer content={selectedLesson.content} />
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    Select a lesson to begin learning
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Choose a lesson from the course content to start your learning journey.
+                  </p>
+                </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
