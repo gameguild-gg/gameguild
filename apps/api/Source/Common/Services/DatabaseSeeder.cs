@@ -240,7 +240,7 @@ public class DatabaseSeeder(
     // Grant essential content type permissions
     var contentTypes = new[] { "Project", "TenantDomain", "TenantUserGroup", "TenantUserGroupMembership", "User", "Tenant", "Comment", "Product", "Program", "TestingSession", "TestingRequest", "TestingFeedback", "SessionRegistration" };
 
-    var contentPermissions = new PermissionType[] { PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete };
+    var contentPermissions = new PermissionType[] { PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete, PermissionType.Draft };
 
     foreach (var contentType in contentTypes) {
       await permissionService.GrantContentTypePermissionAsync(
