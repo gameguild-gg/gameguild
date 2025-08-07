@@ -154,7 +154,7 @@ export const ai4gamesProgram: Program = {
     title: 'AI for Games',
     description: 'Learn artificial intelligence techniques specifically designed for game development, including pathfinding, decision-making, and procedural content generation.',
     slug: 'ai4games',
-    thumbnail: 'https://placehold.co/400x225/1f2937/ffffff?text=AI+for+Games',
+    thumbnail: 'https://placehold.co/400x225/1f2937/ffffff.png?text=AI+for+Games',
     videoShowcaseUrl: null,
     estimatedHours: 60,
     enrollmentStatus: 0, // Open
@@ -181,7 +181,7 @@ export const portfolioProgram: Program = {
     title: 'Portfolio Development',
     description: 'Build a professional portfolio to showcase your skills and projects to potential employers and clients.',
     slug: 'portfolio',
-    thumbnail: 'https://placehold.co/400x225/1f2937/ffffff?text=Portfolio+Development',
+    thumbnail: 'https://placehold.co/400x225/1f2937/ffffff.png?text=Portfolio+Development',
     videoShowcaseUrl: null,
     estimatedHours: 30,
     enrollmentStatus: 0, // Open
@@ -209,7 +209,7 @@ export const ai4gamesProduct: Product = {
     name: 'AI for Games',
     description: 'Master AI techniques for game development',
     shortDescription: 'Learn pathfinding, decision-making, and procedural content generation',
-    imageUrl: 'https://placehold.co/400x225/1f2937/ffffff?text=AI+for+Games',
+    imageUrl: 'https://placehold.co/400x225/1f2937/ffffff.png?text=AI+for+Games',
     type: 0, // Course
     isBundle: false,
     creatorId: '1',
@@ -237,7 +237,7 @@ export const portfolioProduct: Product = {
     name: 'Portfolio Development',
     description: 'Build a professional portfolio',
     shortDescription: 'Showcase your skills and projects effectively',
-    imageUrl: 'https://placehold.co/400x225/1f2937/ffffff?text=Portfolio+Development',
+    imageUrl: 'https://placehold.co/400x225/1f2937/ffffff.png?text=Portfolio+Development',
     type: 0, // Course
     isBundle: false,
     creatorId: '1',
