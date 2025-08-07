@@ -1,3 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
+using GameGuild.Common;
+
 namespace GameGuild.Modules.Permissions;
 
 /// <summary>
@@ -5,6 +10,7 @@ namespace GameGuild.Modules.Permissions;
 /// </summary>
 public enum ModuleType
 {
+    None = 0,
     TestingLab = 1,
     Projects = 2,
     Programs = 3,
@@ -22,6 +28,7 @@ public enum ModuleType
 /// </summary>
 public enum ModuleAction
 {
+    None = 0,
     // Basic CRUD operations
     Create = 1,
     Read = 2,
@@ -64,6 +71,7 @@ public enum ModuleAction
 /// </summary>
 public enum TestingLabRole
 {
+    None = 0,
     Admin = 1,      // Full access to everything
     Manager = 2,    // Can create/edit but not delete sessions, manage testers
     Coordinator = 3, // Can create sessions and manage testers 
@@ -81,9 +89,65 @@ public class PermissionConstraint
 }
 
 /// <summary>
+/// Simple permission template - defines what action can be performed on what resource type
+/// </summary>
+public class PermissionTemplate
+{
+    public string Action { get; set; } = string.Empty; // "read", "create", "edit", "delete", etc.
+    public string ResourceType { get; set; } = string.Empty; // "TestingSession", "Project", etc.
+    public List<PermissionConstraint> Constraints { get; set; } = new();
+}
+
+/// <summary>
+/// User permission assignment - links user to specific resources with specific actions
+/// </summary>
+[Table("UserPermissions")]
+public class UserPermission : Entity
+{
+    [Required]
+    public Guid UserId { get; set; }
+    
+    public Guid? TenantId { get; set; }
+    
+    [Required]
+    [MaxLength(50)]
+    public string Action { get; set; } = string.Empty; // "read", "create", "edit", "delete"
+    
+    [Required]
+    [MaxLength(100)]
+    public string ResourceType { get; set; } = string.Empty; // "TestingSession", "Project", etc.
+    
+    public Guid? ResourceId { get; set; } // Specific resource ID, null for type-level permissions
+    
+    [MaxLength(100)]
+    public string? GrantedByRole { get; set; } // Which role template granted this permission
+    
+    /// <summary>
+    /// Serialized constraints as JSON
+    /// </summary>
+    [Column(TypeName = "jsonb")]
+    public string ConstraintsJson { get; set; } = "[]";
+    
+    /// <summary>
+    /// Constraints for this permission
+    /// </summary>
+    [NotMapped]
+    public List<PermissionConstraint> Constraints
+    {
+        get => string.IsNullOrEmpty(ConstraintsJson) 
+            ? new List<PermissionConstraint>() 
+            : JsonSerializer.Deserialize<List<PermissionConstraint>>(ConstraintsJson) ?? new List<PermissionConstraint>();
+        set => ConstraintsJson = JsonSerializer.Serialize(value);
+    }
+    
+    public DateTime? ExpiresAt { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+/// <summary>
 /// Module permission definition
 /// </summary>
-public class ModulePermission
+public class ModulePermissionDefinition
 {
     public ModuleType Module { get; set; }
     public ModuleAction Action { get; set; }
@@ -93,30 +157,65 @@ public class ModulePermission
 }
 
 /// <summary>
-/// User role assignment for a specific module
+/// User role assignment - simple mapping of user to role template
 /// </summary>
-public class UserRoleAssignment
+[Table("SimpleUserRoleAssignments")]
+public class SimpleUserRoleAssignment : Entity
 {
-    public Guid Id { get; set; }
+    [Required]
     public Guid UserId { get; set; }
-    public Guid? TenantId { get; set; } // Null for global assignments
-    public ModuleType Module { get; set; }
-    public string RoleName { get; set; } = string.Empty; // "TestingLabAdmin", "TestingLabManager", etc.
-    public List<PermissionConstraint> Constraints { get; set; } = new();
-    public DateTime CreatedAt { get; set; }
+    
+    public Guid? TenantId { get; set; }
+    
+    [Required]
+    [MaxLength(100)]
+    public string RoleTemplateName { get; set; } = string.Empty; // "TestingLabAdmin", "ProjectManager", etc.
+    
     public DateTime? ExpiresAt { get; set; }
     public bool IsActive { get; set; } = true;
+    
+    /// <summary>
+    /// Navigation property to the role template
+    /// </summary>
+    public virtual RoleTemplate? RoleTemplate { get; set; }
 }
 
 /// <summary>
-/// Module role definition
+/// Simple role template that defines what permissions a user gets
 /// </summary>
-public class ModuleRole
+[Table("RoleTemplates")]
+public class RoleTemplate : Entity
 {
+    [Required]
+    [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
-    public ModuleType Module { get; set; }
+    
+    [MaxLength(500)]
     public string Description { get; set; } = string.Empty;
-    public List<ModulePermission> Permissions { get; set; } = new();
-    public int Priority { get; set; } // Higher priority roles override lower ones
-    public bool IsSystemRole { get; set; } = false; // System roles cannot be modified
+    
+    /// <summary>
+    /// Serialized permission templates as JSON
+    /// Example: [{"action": "read", "resourceType": "TestingSession"}, {"action": "create", "resourceType": "TestingSession"}]
+    /// </summary>
+    [Column(TypeName = "jsonb")]
+    public string PermissionTemplatesJson { get; set; } = "[]";
+    
+    /// <summary>
+    /// Permission templates for this role
+    /// </summary>
+    [NotMapped]
+    public List<PermissionTemplate> PermissionTemplates
+    {
+        get => string.IsNullOrEmpty(PermissionTemplatesJson) 
+            ? new List<PermissionTemplate>() 
+            : JsonSerializer.Deserialize<List<PermissionTemplate>>(PermissionTemplatesJson) ?? new List<PermissionTemplate>();
+        set => PermissionTemplatesJson = JsonSerializer.Serialize(value);
+    }
+    
+    public bool IsSystemRole { get; set; } // System roles cannot be modified
+    
+    /// <summary>
+    /// Navigation property to user assignments
+    /// </summary>
+    public virtual ICollection<UserPermission> UserPermissions { get; set; } = new List<UserPermission>();
 }
