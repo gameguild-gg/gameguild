@@ -50,8 +50,8 @@ const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children,
       <NewsletterSection />
 
       {/* Main Footer Content */}
-      <div className="container mx-auto max-w-6xl px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+      <div className="container mx-auto max-w-6xl px-4 py-8 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Community Info */}
           <div className="lg:col-span-2">
             <CommunityInfo />
@@ -64,8 +64,8 @@ const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children,
         </div>
 
         {/* Social Media & Bottom Links */}
-        <div className="mt-12 pt-8 border-t border-slate-700/50">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="mt-8 lg:mt-12 pt-6 lg:pt-8 border-t border-slate-700/50">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
             <SocialMediaLinks links={socialLinks} />
             <LegalLinks
               links={[
@@ -77,7 +77,7 @@ const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children,
             />
           </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-700/50 text-center text-sm text-slate-500">© {new Date().getFullYear()} Game Guild Inc. All rights reserved.</div>
+          <div className="mt-6 lg:mt-8 pt-4 lg:pt-6 border-t border-slate-700/50 text-center text-sm text-slate-500">© {new Date().getFullYear()} Game Guild Inc. All rights reserved.</div>
         </div>
       </div>
 
