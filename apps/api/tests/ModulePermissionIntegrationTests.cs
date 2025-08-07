@@ -1,5 +1,7 @@
 using GameGuild.Common.Services;
+using GameGuild.Database;
 using GameGuild.Modules.Permissions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -10,16 +12,24 @@ namespace GameGuild.Tests.ModulePermissions;
 /// Integration tests for the Module Permission System
 /// Tests the complete flow from role assignment to permission checking
 /// </summary>
-public class ModulePermissionIntegrationTests
+public class ModulePermissionIntegrationTests : IDisposable
 {
+    private readonly ApplicationDbContext _context;
     private readonly IModulePermissionService _modulePermissionService;
     private readonly Guid _testUserId = Guid.NewGuid();
     private readonly Guid _testTenantId = Guid.NewGuid();
+    private readonly string _databaseName;
 
     public ModulePermissionIntegrationTests()
     {
+        _databaseName = Guid.NewGuid().ToString();
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(_databaseName)
+            .Options;
+
+        _context = new ApplicationDbContext(options);
         var logger = new NullLogger<ModulePermissionService>();
-        _modulePermissionService = new ModulePermissionService(logger);
+        _modulePermissionService = new ModulePermissionService(_context, logger);
     }
 
     [Fact]
@@ -197,5 +207,19 @@ public class ModulePermissionIntegrationTests
         
         var roles = await _modulePermissionService.GetUserRolesAsync(_testUserId, _testTenantId, ModuleType.TestingLab);
         Assert.Equal(2, roles.Count);
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _context?.Dispose();
+        }
     }
 }
