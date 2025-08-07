@@ -40,7 +40,7 @@ public interface IModulePermissionService
     /// <summary>
     /// Get all effective permissions for a user in a module
     /// </summary>
-    Task<List<ModulePermission>> GetUserModulePermissionsAsync(Guid userId, Guid? tenantId, ModuleType module);
+    Task<List<ModulePermissionDefinition>> GetUserModulePermissionsAsync(Guid userId, Guid? tenantId, ModuleType module);
     
     /// <summary>
     /// Get users who have a specific permission in a module
@@ -82,14 +82,14 @@ public interface IModulePermissionService
     // ===== ROLE DEFINITION MANAGEMENT =====
     
     /// <summary>
-    /// Create a new module role definition
+    /// Create a new role definition for a module
     /// </summary>
-    Task<ModuleRole> CreateRoleDefinitionAsync(string roleName, ModuleType module, string description, List<ModulePermission> permissions, int priority = 0);
+    Task<ModuleRole> CreateRoleDefinitionAsync(string roleName, ModuleType module, string description, List<ModulePermissionDefinition> permissions, int priority = 0);
     
     /// <summary>
-    /// Update an existing role definition
+    /// Update permissions for an existing role definition
     /// </summary>
-    Task<ModuleRole> UpdateRoleDefinitionAsync(string roleName, ModuleType module, List<ModulePermission> permissions);
+    Task<ModuleRole> UpdateRoleDefinitionAsync(string roleName, ModuleType module, List<ModulePermissionDefinition> permissions);
     
     /// <summary>
     /// Get all role definitions for a module
@@ -100,6 +100,11 @@ public interface IModulePermissionService
     /// Delete a role definition (only if no users are assigned to it)
     /// </summary>
     Task<bool> DeleteRoleDefinitionAsync(string roleName, ModuleType module);
+    
+    /// <summary>
+    /// Ensures default module roles exist in the database. Should be called during application startup.
+    /// </summary>
+    Task EnsureDefaultRolesExistAsync();
 }
 
 /// <summary>
