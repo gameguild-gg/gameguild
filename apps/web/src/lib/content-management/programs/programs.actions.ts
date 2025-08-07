@@ -86,8 +86,11 @@ import type {
   PostApiProgramByIdContentReorderData,
   PostApiProgramByIdUsersByUserIdData,
   PostApiProgramData,
+  ProgramContentType,
   PutApiProgramByIdContentByContentIdData,
   PutApiProgramByIdData,
+  SearchContentDto,
+  Visibility,
 } from '@/lib/api/generated/types.gen';
 import { revalidateTag } from 'next/cache';
 
@@ -110,16 +113,33 @@ export async function getPrograms(data?: GetApiProgramData) {
  * Create a new program
  */
 export async function createProgram(data?: PostApiProgramData) {
-  await configureAuthenticatedClient();
+  try {
+    await configureAuthenticatedClient();
 
-  const result = await postApiProgram({
-    body: data?.body,
-  });
+    const result = await postApiProgram({
+      body: data?.body,
+    });
 
-  // Revalidate programs cache
-  revalidateTag('programs');
+    // Revalidate programs cache
+    revalidateTag('programs');
 
-  return result;
+    // Return only the serializable data, not the Response object
+    return {
+      data: result.data,
+      error: result.error || null
+    };
+  } catch (error) {
+    console.error('Error in createProgram:', error);
+
+    // Return a serializable error object instead of throwing
+    return {
+      data: null,
+      error: {
+        message: error instanceof Error ? error.message : 'An unexpected error occurred',
+        status: 'error'
+      }
+    };
+  }
 }
 
 /**
@@ -730,22 +750,22 @@ export async function unlinkProductFromProgram(programId: string, productId: str
 /**
  * Get program content by type
  */
-export async function getProgramContentByType(programId: string, type: string) {
+export async function getProgramContentByType(programId: string, type: ProgramContentType) {
   await configureAuthenticatedClient();
 
   return getApiProgramsByProgramIdContentByTypeByType({
-    path: { programId, type: type as 'lesson' | 'quiz' | 'assignment' | 'resource' },
+    path: { programId, type },
   });
 }
 
 /**
  * Get program content by visibility
  */
-export async function getProgramContentByVisibility(programId: string, visibility: string) {
+export async function getProgramContentByVisibility(programId: string, visibility: Visibility) {
   await configureAuthenticatedClient();
 
   return getApiProgramsByProgramIdContentByVisibilityByVisibility({
-    path: { programId, visibility: visibility as 'public' | 'private' | 'unlisted' },
+    path: { programId, visibility },
   });
 }
 
@@ -763,12 +783,16 @@ export async function getProgramContentStats(programId: string) {
 /**
  * Search content in a program
  */
-export async function searchContentInProgram(programId: string, searchData: object) {
+export async function searchContentInProgram(programId: string, searchTerm: string, searchData?: Partial<SearchContentDto>) {
   await configureAuthenticatedClient();
 
   const result = await postApiProgramsByProgramIdContentSearch({
     path: { programId },
-    body: searchData,
+    body: {
+      programId,
+      searchTerm,
+      ...searchData,
+    },
   });
 
   return result;
