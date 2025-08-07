@@ -51,6 +51,14 @@ const providers: Provider[] = [
   Google({
     clientId: environment.googleClientId,
     clientSecret: environment.googleClientSecret,
+    profile(profile) {
+      return {
+        id: profile.sub,
+        name: profile.name,
+        email: profile.email,
+        image: profile.picture,
+      };
+    },
   }),
 ];
 
@@ -128,16 +136,16 @@ export const authConfig: NextAuthConfig = {
         token.id = user.id;
         token.username = user.name || '';
         token.email = user.email || '';
-        
+
         // Set profile picture URL with priority: Google OAuth picture > DiceBear generated
-        if (profile?.picture) {
+        if (user.image) {
           // Use Google OAuth profile picture if available
-          token.profilePictureUrl = profile.picture;
+          token.profilePictureUrl = user.image;
         } else {
           // Fall back to DiceBear generated avatar
           token.profilePictureUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name || user.email || 'default'}`;
         }
-        
+
         token.api = {
           accessToken: user.accessToken || '',
           refreshToken: user.refreshToken || '',
