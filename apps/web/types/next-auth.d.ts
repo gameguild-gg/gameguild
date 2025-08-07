@@ -11,7 +11,7 @@ declare module 'next-auth' {
     // displayName: string;
     username?: string;
     email?: string;
-    // profilePictureUrl?: string;
+    profilePictureUrl?: string;
   }
 
   /**
@@ -19,7 +19,7 @@ declare module 'next-auth' {
    * Usually contains information about the provider being used, like OAuth tokens (`access_token`, etc).
    */
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  interface Account {}
+  interface Account { }
 
   /**
    * Returned by `useSession`, `auth`, contains information about the active session.

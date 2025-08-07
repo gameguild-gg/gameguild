@@ -3,7 +3,6 @@
 import { signIn, signOut } from '@/auth';
 import { environment } from '@/configs/environment';
 import { AuthError } from 'next-auth';
-import { redirect } from 'next/navigation';
 import { RefreshTokenResponse, SignInResponse } from './auth.types';
 
 interface GoogleSignInRequest {
@@ -68,7 +67,10 @@ export async function localSign(payload: { email: string; password: string }): P
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        Email: payload.email,
+        Password: payload.password,
+      }),
     });
 
     if (!response.ok) throw new Error(`Authentication failed: ${response.status} ${response.statusText}`);
@@ -87,7 +89,10 @@ export async function googleIdTokenSignIn(request: GoogleSignInRequest): Promise
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify({
+        IdToken: request.idToken,
+        TenantId: request.tenantId,
+      }),
     });
 
     if (!response.ok) throw new Error(`Authentication failed: ${response.status} ${response.statusText}`);
@@ -101,23 +106,50 @@ export async function googleIdTokenSignIn(request: GoogleSignInRequest): Promise
 
 export async function refreshAccessToken(refreshToken: string): Promise<RefreshTokenResponse> {
   try {
+    console.log('Attempting to refresh token with:', {
+      url: `${environment.apiBaseUrl}/api/auth/refresh`,
+      refreshToken: refreshToken ? `${refreshToken.substring(0, 10)}...` : 'null'
+    });
+
     const response = await fetch(`${environment.apiBaseUrl}/api/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ refreshToken }),
+      body: JSON.stringify({ RefreshToken: refreshToken }),
     });
 
+    console.log('Refresh token response status:', response.status, response.statusText);
+
     if (!response.ok) {
-      throw new Error(`Refresh failed: ${response.status} ${response.statusText}`);
+      let errorDetails = '';
+      try {
+        const errorData = await response.json();
+        errorDetails = JSON.stringify(errorData);
+      } catch {
+        errorDetails = await response.text();
+      }
+
+      console.error('Refresh token API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        details: errorDetails
+      });
+
+      throw new Error(`Refresh failed: ${response.status} ${response.statusText} - ${errorDetails}`);
     }
 
     const data = await response.json();
+    console.log('Refresh token response data:', {
+      hasAccessToken: !!data.accessToken,
+      hasRefreshToken: !!data.refreshToken,
+      expiresAt: data.expiresAt
+    });
+
     return data;
   } catch (error) {
     console.error('Token refresh failed:', error);
-    throw new Error('Failed to refresh token');
+    throw error; // Re-throw the original error instead of wrapping it
   }
 }
 

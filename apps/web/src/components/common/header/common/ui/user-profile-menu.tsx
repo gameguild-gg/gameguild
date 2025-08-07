@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { LogOut, MoveUpRight } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { signOut } from 'next-auth/react';
-import type { Session } from 'next-auth';
 import { Separator } from '@/components/ui/separator';
+import { LogOut, MoveUpRight } from 'lucide-react';
+import type { Session } from 'next-auth';
+import { signOut } from 'next-auth/react';
+import Link from 'next/link';
+import React from 'react';
 
 interface MenuItem {
   label: string;
@@ -30,11 +30,13 @@ export const UserProfileMenu = ({ session, menuItems = [] }: UserProfileMenuProp
   // Generate display name and avatar fallback
   const displayName = session.user.username || 'User';
   const avatarFallback = displayName?.charAt(0).toUpperCase() || session.user.email?.charAt(0).toUpperCase() || 'U';
+  const userImage = session.user.profilePictureUrl;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar className="h-9 w-9 cursor-pointer">
+          {userImage && <AvatarImage src={userImage} alt={displayName} />}
           <AvatarFallback className="bg-zinc-800 text-zinc-200 font-medium">{avatarFallback}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
@@ -43,7 +45,13 @@ export const UserProfileMenu = ({ session, menuItems = [] }: UserProfileMenuProp
           <div className="flex flex-col relative p-4 bg-white dark:bg-zinc-900 gap-4">
             <div className="flex items-center gap-4">
               <div className="relative shrink-0">
-                <div className="w-[72px] h-[72px] rounded-full ring-4 ring-white dark:ring-zinc-900 bg-zinc-800 flex items-center justify-center text-2xl font-bold text-zinc-200">{avatarFallback}</div>
+                {userImage ? (
+                  <div className="w-[72px] h-[72px] rounded-full ring-4 ring-white dark:ring-zinc-900 overflow-hidden">
+                    <img src={userImage} alt={displayName} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-[72px] h-[72px] rounded-full ring-4 ring-white dark:ring-zinc-900 bg-zinc-800 flex items-center justify-center text-2xl font-bold text-zinc-200">{avatarFallback}</div>
+                )}
                 <div className="absolute bottom-0 right-0 size-4 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
               </div>
 
