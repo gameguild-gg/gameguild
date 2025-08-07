@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, ArrowLeft } from 'lucide-react';
 import { createProgram } from '@/lib/content-management/programs/programs.actions';
+import { AlertCircle, ArrowLeft, Loader2, Save } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 
 interface CreateCourseFormData {
   title: string;
@@ -24,87 +24,201 @@ export const CreateCourseForm = (): React.JSX.Element => {
     description: '',
     slug: '',
   });
+  const [error, setError] = useState<string | null>(null);
 
-  // Auto-generate slug from title
-  const handleTitleChange = (title: string) => {
-    const slug = title
+  const handleInputChange = (field: keyof CreateCourseFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (error) setError(null);
+  };
+
+  const generateSlug = (title: string) => {
+    return title
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim();
+  };
 
-    setFormData({ ...formData, title, slug });
+  const handleTitleChange = (value: string) => {
+    handleInputChange('title', value);
+    // Auto-generate slug from title
+    const slug = generateSlug(value);
+    setFormData(prev => ({ ...prev, slug }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
     try {
-      const response = await createProgram({
-        url: '/api/program',
+      // Validate form data
+      if (!formData.title.trim()) {
+        throw new Error('Title is required');
+      }
+      if (!formData.description.trim()) {
+        throw new Error('Description is required');
+      }
+      if (!formData.slug.trim()) {
+        throw new Error('Slug is required');
+      }
+
+      const result = await createProgram({
         body: {
-          title: formData.title,
-          description: formData.description || null,
-          slug: formData.slug || null,
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          slug: formData.slug.trim(),
         },
+        url: '/api/program',
       });
 
-      if (response.data) {
-        // Redirect to the courses list or the newly created course
-        router.push('/dashboard/courses');
-      } else {
-        console.error('Failed to create course:', response.error);
+      // Check if the result has an error
+      if (result.error) {
+        const errorMessage = (result.error as any)?.message || 'An error occurred while creating the course';
+        throw new Error(errorMessage);
       }
-    } catch (error) {
-      console.error('Error creating course:', error);
+
+      if (result.data) {
+        // Success! Redirect to the created course using slug
+        const slug = result.data.slug || formData.slug;
+        router.push(`/dashboard/courses/${slug}`);
+      } else {
+        throw new Error('Failed to create course');
+      }
+    } catch (err) {
+      console.error('Error creating course:', err);
+
+      // Handle different types of errors
+      if (err instanceof Error) {
+        if (err.message.includes('Authentication required') || err.message.includes('401')) {
+          setError('Please sign in to create a course. Redirecting to sign-in page...');
+          setTimeout(() => {
+            router.push('/sign-in');
+          }, 2000);
+        } else if (err.message.includes('403') || err.message.includes('Forbidden')) {
+          setError('You do not have permission to create courses. Please contact an administrator.');
+        } else if (err.message.includes('409') || err.message.includes('Conflict')) {
+          setError('A course with this title or slug already exists. Please choose a different title.');
+        } else {
+          setError(err.message || 'An unexpected error occurred while creating the course.');
+        }
+      } else {
+        setError('An unexpected error occurred while creating the course.');
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCancel = () => {
-    router.push('/dashboard/courses');
-  };
-
   return (
-    <div className="max-w-2xl mx-auto">
-      <Card>
+    <div className="max-w-2xl mx-auto p-6">
+      <Card className="shadow-lg border-0">
         <CardHeader>
-          <CardTitle>Course Details</CardTitle>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back
+            </Button>
+            <CardTitle className="text-2xl font-bold">Create New Course</CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Title */}
-            <div className="space-y-2">
-              <Label htmlFor="title">Course Title *</Label>
-              <Input id="title" type="text" value={formData.title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Enter course title" required />
+            {error && (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-destructive font-medium">Error</p>
+                    <p className="text-destructive/80 text-sm mt-1">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="title" className="text-sm font-medium">
+                  Course Title *
+                </Label>
+                <Input
+                  id="title"
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                  placeholder="Enter course title"
+                  required
+                  className="mt-1 !border-border focus:!border-ring focus:!ring-ring/50"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="description" className="text-sm font-medium">
+                  Description *
+                </Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Enter course description"
+                  rows={4}
+                  required
+                  className="mt-1 border-0 !border-border focus:!border-ring focus:!ring-ring/50 resize-none overflow-hidden [&_.grammarly-desktop-integration]:!hidden [&_.grammarly-extension]:!hidden [&_.grammarly-extension__editing-area]:!border-none [&_.grammarly-extension__editing-area]:!outline-none [&_.grammarly-extension__editing-area]:!resize-none [&_.grammarly-extension__editing-area]:!overflow-hidden"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="slug" className="text-sm font-medium">
+                  URL Slug *
+                </Label>
+                <Input
+                  id="slug"
+                  type="text"
+                  value={formData.slug}
+                  onChange={(e) => handleInputChange('slug', e.target.value)}
+                  placeholder="course-url-slug"
+                  required
+                  className="mt-1 !border-border focus:!border-ring focus:!ring-ring/50"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  This will be used in the course URL. Use only lowercase letters, numbers, and hyphens.
+                </p>
+              </div>
             </div>
 
-            {/* Slug */}
-            <div className="space-y-2">
-              <Label htmlFor="slug">Course Slug</Label>
-              <Input id="slug" type="text" value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} placeholder="course-url-slug" />
-              <p className="text-sm text-slate-500">This will be used in the course URL</p>
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Describe what students will learn in this course" rows={4} />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-6">
-              <Button type="button" variant="outline" onClick={handleCancel} className="flex items-center gap-2">
-                <ArrowLeft className="h-4 w-4" />
+            <div className="flex gap-4 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.back()}
+                disabled={isSubmitting}
+                className="flex-1"
+              >
                 Cancel
               </Button>
-
-              <Button type="submit" disabled={isSubmitting || !formData.title.trim()} className="flex items-center gap-2">
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                {isSubmitting ? 'Creating...' : 'Create Course'}
+              <Button
+                type="submit"
+                disabled={isSubmitting || !formData.title.trim() || !formData.description.trim() || !formData.slug.trim()}
+                className="flex-1"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Create Course
+                  </>
+                )}
               </Button>
             </div>
           </form>
