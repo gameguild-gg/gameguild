@@ -1,3 +1,4 @@
+import { environment } from '@/configs/environment';
 import { googleIdTokenSignIn, localSign, refreshAccessToken } from '@/lib/auth/auth.actions';
 import { SignInResponse } from '@/lib/auth/auth.types';
 import { isUserWithAuthData } from '@/lib/auth/auth.utils';
@@ -7,6 +8,8 @@ import type { CredentialInput, Provider } from 'next-auth/providers';
 import Credentials from 'next-auth/providers/credentials';
 import GitHub from 'next-auth/providers/github';
 import Google from 'next-auth/providers/google';
+
+
 
 const providers: Provider[] = [
   Credentials({
@@ -45,7 +48,10 @@ const providers: Provider[] = [
     },
   }),
   GitHub,
-  Google,
+  Google({
+    clientId: environment.googleClientId,
+    clientSecret: environment.googleClientSecret,
+  }),
 ];
 
 export const authConfig: NextAuthConfig = {
@@ -62,34 +68,24 @@ export const authConfig: NextAuthConfig = {
   trustHost: true,
   // Disable URL verification to prevent DNS resolution loops
   secret: process.env.NEXTAUTH_SECRET,
-  // Use internal URL for callbacks
-  // basePath: '',
-  // Use internal URL for all server-side operations
-  url: process.env.NEXTAUTH_URL_INTERNAL || 'http://localhost:3000',
-  
   // Override the base URL to use internal URL for all operations
   basePath: '',
-  
-  // Debug logging for URL configuration
-  onError: (error) => {
-    console.error('NextAuth error:', error);
-  },
   // Custom callback to prevent URL verification
   callbacks: {
     async redirect({ url, baseUrl }) {
       // Get the configured URL from environment, fallback to localhost
       const configuredUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-      
+
       // If the URL is relative, make it absolute using the configured URL
       if (url.startsWith('/')) {
         return `${configuredUrl}${url}`;
       }
-      
+
       // If the URL already starts with our configured URL, allow it
       if (url.startsWith(configuredUrl)) {
         return url;
       }
-      
+
       // For any other case, redirect to the configured base URL
       return configuredUrl;
     },
@@ -117,7 +113,7 @@ export const authConfig: NextAuthConfig = {
       // Allow local authentication.
       return account?.provider === 'local';
     },
-    jwt: async ({ token, user, trigger, session }: { token: JWT; user: User; account?: Account | null; profile?: Profile; trigger?: 'update' | 'signIn' | 'signUp'; isNewUser?: boolean; session?: Session }): Promise<JWT | null> => {
+    jwt: async ({ token, user, trigger, session, profile }: { token: JWT; user: User; account?: Account | null; profile?: Profile; trigger?: 'update' | 'signIn' | 'signUp'; isNewUser?: boolean; session?: Session }): Promise<JWT | null> => {
       // This is called when a user signing-in or signing-up.
       if (trigger === 'signIn' || trigger === 'signUp') {
         // We must have auth data from our API, otherwise the session is corrupted.
@@ -132,6 +128,16 @@ export const authConfig: NextAuthConfig = {
         token.id = user.id;
         token.username = user.name || '';
         token.email = user.email || '';
+        
+        // Set profile picture URL with priority: Google OAuth picture > DiceBear generated
+        if (profile?.picture) {
+          // Use Google OAuth profile picture if available
+          token.profilePictureUrl = profile.picture;
+        } else {
+          // Fall back to DiceBear generated avatar
+          token.profilePictureUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name || user.email || 'default'}`;
+        }
+        
         token.api = {
           accessToken: user.accessToken || '',
           refreshToken: user.refreshToken || '',
@@ -159,41 +165,43 @@ export const authConfig: NextAuthConfig = {
         return token;
       }
 
-      // Check token expiration and refresh if needed (for all requests, not just updates)
-      if (token?.api?.refreshToken && (!token?.expiresAt || Date.now() >= new Date(token.expiresAt).getTime())) {
-        // Token expired or no expiration set, try to refresh it
-        console.log('Token expired or missing expiration, attempting refresh...');
-        try {
-          const response = await refreshAccessToken(token.api.refreshToken);
+      // Check token expiration and refresh if needed
+      if (token?.api?.refreshToken && token?.expiresAt) {
+        const expirationTime = new Date(token.expiresAt).getTime();
+        const currentTime = Date.now();
 
-          // Update token with new values
-          if (response?.accessToken) {
-            token.api.accessToken = response.accessToken;
-            console.log('Access token refreshed successfully');
-          }
-          if (response?.refreshToken) {
-            token.api.refreshToken = response.refreshToken;
-          }
-          if (response?.expiresAt) {
-            token.expiresAt = response.expiresAt;
-          }
+        console.log('Token expiration check:', {
+          expiresAt: token.expiresAt,
+          expirationTime: new Date(expirationTime).toISOString(),
+          currentTime: new Date(currentTime).toISOString(),
+          timeUntilExpiration: expirationTime - currentTime,
+          shouldRefresh: currentTime >= expirationTime
+        });
 
-          // Update tenant ID if present in refresh response
-          if (response?.tenantId) {
-            // Tenant must exist in the available tenants list. Otherwise, the session is corrupted
-            const tenantFromList = token.availableTenants?.find((tenant) => tenant.id === response?.tenantId);
-            if (!tenantFromList) {
-              // Tenant not in an available list means that the session is corrupted.
-              console.error('Session corrupted: refreshed tenantId not found in availableTenants');
-              return null;
+        if (currentTime >= expirationTime) {
+          console.log('Token expired, attempting refresh...');
+
+          try {
+            const response = await refreshAccessToken(token.api.refreshToken);
+
+            if (response) {
+              if (response.accessToken) {
+                token.api.accessToken = response.accessToken;
+                console.log('Access token updated');
+              }
+              if (response.refreshToken) {
+                token.api.refreshToken = response.refreshToken;
+                console.log('Refresh token updated');
+              }
+              if (response.expiresAt) {
+                token.expiresAt = response.expiresAt;
+                console.log('Token expiration updated:', response.expiresAt);
+              }
             }
-
-            token.currentTenant = tenantFromList;
+          } catch (error) {
+            console.error('Token refresh failed, forcing sign-out');
+            return null;
           }
-        } catch (error) {
-          console.error('Error refreshing api access token', error);
-          // If we fail to refresh the token, return null to force the sign-out.
-          return null;
         }
       }
 
@@ -222,12 +230,6 @@ export const authConfig: NextAuthConfig = {
             }
             if (session.user.email && session.user.email !== token.email) {
               token.email = session.user.email;
-            }
-            if (session.user.displayName && session.user.displayName !== token.displayName) {
-              token.displayName = session.user.displayName;
-            }
-            if (session.user.profilePictureUrl && session.user.profilePictureUrl !== token.profilePictureUrl) {
-              token.profilePictureUrl = session.user.profilePictureUrl;
             }
           }
 
@@ -280,6 +282,7 @@ export const authConfig: NextAuthConfig = {
       if (token.id) session.user.id = token.id;
       if (token.username) session.user.username = token.username;
       if (token.email) session.user.email = token.email;
+      if (token.profilePictureUrl) session.user.profilePictureUrl = token.profilePictureUrl;
       if (token.availableTenants) session.availableTenants = token.availableTenants;
       if (token.currentTenant) session.currentTenant = token.currentTenant;
 
