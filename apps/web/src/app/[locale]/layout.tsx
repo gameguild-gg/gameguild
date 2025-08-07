@@ -41,7 +41,7 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
   // Enable static rendering (cache) based on the locale.
   setRequestLocale(locale);
   
-  // Get messages for client-side
+  // Get messages for the client-side
   const messages = await getMessages();
 
   return (
@@ -53,7 +53,7 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
         <InitializeGoogleConsent />
 
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {/* Conditional Analytics - only loads when user consents */}
+          {/* Conditional Analytics - only loads when the user consents */}
           <ConditionalAnalytics />
           <GoogleAnalytics gaId={environment.googleAnalyticsMeasurementId} />
           <GoogleTagManager gtmId={environment.googleTagManagerId} />
