@@ -23,7 +23,7 @@ export function CourseGridEnhanced() {
     const categoryName = getCourseCategoryName(course.category || 0);
 
     return {
-      id: parseInt(course.id || '0'),
+      id: course.id || '0',
       title: course.title || '',
       description: course.description || '',
       category: categoryName,
@@ -34,11 +34,11 @@ export function CourseGridEnhanced() {
       enrolledStudents: course.currentEnrollments || 0,
       rating: course.averageRating || 0,
       price: 0, // Free courses
-      image: course.thumbnail || '/placeholder.jpg',
+      image: course.thumbnail || 'https://placehold.co/400x225/1f2937/ffffff?text=Course+Image',
       slug: course.slug || '',
       instructor: {
         name: course.programUsers?.[0]?.user?.name || 'Unknown',
-        avatar: '/placeholder-avatar.jpg',
+        avatar: 'https://placehold.co/40x40/6b7280/ffffff?text=U',
       },
       isEnrolled: false,
       progress: 0, // Default progress
