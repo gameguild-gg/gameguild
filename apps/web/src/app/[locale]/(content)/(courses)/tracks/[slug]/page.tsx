@@ -1,13 +1,13 @@
 // import { getTrackBySlug } from '@/lib/tracks/actions';
-import { getCourseData } from '@/lib/courses/actions';
-import Image from 'next/image';
-import Link from 'next/link';
+import { TRACK_LEVELS, TRACK_LEVEL_COLORS, Track } from '@/components/legacy/types/tracks';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { getCourseData } from '@/lib/courses/actions';
 import { ArrowLeft, Award, BookOpen, CheckCircle, Clock, Code, ExternalLink, Gamepad2, Lightbulb, Palette, Play, Star, Target, Trophy, Users } from 'lucide-react';
-import { Track, TRACK_LEVEL_COLORS, TRACK_LEVELS } from '@/components/legacy/types/tracks';
+import Image from 'next/image';
+import Link from 'next/link';
 
 // Temporary fallback function
 async function getTrackBySlug(slug: string): Promise<Track | null> {
@@ -146,7 +146,7 @@ function transformRealCoursesToCurriculum(realCourses: RealCourse[]): TrackBlock
     description: course.description,
     duration: `${course.estimatedHours} hours`,
     level: getDifficultyName(course.difficulty),
-    image: course.thumbnail.startsWith('/images/') ? course.thumbnail : '/placeholder.svg',
+    image: course.thumbnail.startsWith('/images/') ? course.thumbnail : 'https://placehold.co/400x225/1f2937/ffffff?text=Course+Image',
     projects: [], // Projects would need to come from course content
     features: [], // Features would need to come from course content
     slug: course.slug,
@@ -195,14 +195,14 @@ function transformRealCoursesToCurriculum(realCourses: RealCourse[]): TrackBlock
 const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
   // Fetch real course data
   const courseData = await getCourseData();
-  const realCourses: RealCourse[] = courseData.courses.map((course) => ({
-    id: course.id,
+  const realCourses: RealCourse[] = courseData.map((course) => ({
+    id: course.id || '',
     title: course.title,
-    description: course.description,
-    slug: course.slug,
-    thumbnail: course.image,
-    estimatedHours: 40, // Default hours since not provided in Course type
-    difficulty: course.level - 1, // Convert level (1-4) to difficulty (0-3)
+    description: course.description || '',
+    slug: course.slug || '',
+    thumbnail: course.thumbnail || '',
+    estimatedHours: course.estimatedHours || 40,
+    difficulty: course.difficulty === 'Beginner' ? 0 : course.difficulty === 'Intermediate' ? 1 : course.difficulty === 'Advanced' ? 2 : 3,
     category: 0, // Default category
   }));
 
@@ -210,28 +210,28 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
     realCourses.length > 0
       ? transformRealCoursesToCurriculum(realCourses)
       : [
-          // Fallback mock data if no real courses available
-          {
-            id: 0,
-            title: 'Foundation Block',
-            description: 'Build your fundamental skills in game development',
-            duration: '14 weeks',
-            features: ['Interactive Learning', 'Hands-on Projects', 'Expert Mentorship'],
-            courses: [
-              {
-                id: 1,
-                name: 'Course 101',
-                title: 'Course 101: Game Development Basics',
-                description: 'Learn the core concepts and principles that drive successful game creation.',
-                duration: '8 weeks',
-                level: 'Beginner',
-                image: '/placeholder.svg',
-                projects: ['Simple 2D Game', 'Game Design Document'],
-                features: ['Game Design Fundamentals', 'Development Lifecycle'],
-              },
-            ],
-          },
-        ];
+        // Fallback mock data if no real courses available
+        {
+          id: 0,
+          title: 'Foundation Block',
+          description: 'Build your fundamental skills in game development',
+          duration: '14 weeks',
+          features: ['Interactive Learning', 'Hands-on Projects', 'Expert Mentorship'],
+          courses: [
+            {
+              id: 1,
+              name: 'Course 101',
+              title: 'Course 101: Game Development Basics',
+              description: 'Learn the core concepts and principles that drive successful game creation.',
+              duration: '8 weeks',
+              level: 'Beginner',
+              image: 'https://placehold.co/400x225/1f2937/ffffff?text=Course+Image',
+              projects: ['Simple 2D Game', 'Game Design Document'],
+              features: ['Game Design Fundamentals', 'Development Lifecycle'],
+            },
+          ],
+        },
+      ];
 
   return {
     ...track,
@@ -267,8 +267,8 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
     instructor: {
       name: 'Alex Richardson',
       title: 'Senior Game Developer',
-      image: '/placeholder.svg',
-      avatar: '/placeholder.svg',
+      image: 'https://placehold.co/400x225/1f2937/ffffff?text=Instructor',
+      avatar: 'https://placehold.co/40x40/6b7280/ffffff?text=A',
       bio: 'Former Lead Developer at Epic Games with 12+ years of industry experience. Alex has shipped multiple AAA titles and indie games, bringing real-world expertise to guide students through their game development journey.',
       experience: '12+ years',
       students: '2,500+',
@@ -282,8 +282,8 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
         content: 'This track completely transformed my understanding of game development. The structured approach and hands-on projects gave me the confidence to land my dream job.',
         comment: 'This track completely transformed my understanding of game development. The structured approach and hands-on projects gave me the confidence to land my dream job.',
         rating: 5,
-        image: '/placeholder.svg',
-        avatar: '/placeholder.svg',
+        image: 'https://placehold.co/400x225/1f2937/ffffff?text=Testimonial',
+        avatar: 'https://placehold.co/40x40/6b7280/ffffff?text=S',
       },
       {
         name: 'Marcus Thompson',
@@ -292,8 +292,8 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
         content: 'The progression from basics to advanced topics was perfect. I went from knowing nothing to shipping my first commercial game within a year.',
         comment: 'The progression from basics to advanced topics was perfect. I went from knowing nothing to shipping my first commercial game within a year.',
         rating: 5,
-        image: '/placeholder.svg',
-        avatar: '/placeholder.svg',
+        image: 'https://placehold.co/400x225/1f2937/ffffff?text=Testimonial',
+        avatar: 'https://placehold.co/40x40/6b7280/ffffff?text=M',
       },
       {
         name: 'Elena Rodriguez',
@@ -302,8 +302,8 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
         content: 'The hands-on approach and real-world projects prepared me for the challenges I face daily in a professional studio environment.',
         comment: 'The hands-on approach and real-world projects prepared me for the challenges I face daily in a professional studio environment.',
         rating: 5,
-        image: '/placeholder.svg',
-        avatar: '/placeholder.svg',
+        image: 'https://placehold.co/400x225/1f2937/ffffff?text=Testimonial',
+        avatar: 'https://placehold.co/40x40/6b7280/ffffff?text=E',
       },
     ],
     industryContext: {

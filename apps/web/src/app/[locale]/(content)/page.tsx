@@ -3,9 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   ArrowRight,
+  Beaker,
   BookOpen,
   Code,
-  TestTube,
   Trophy,
   Users,
   Zap
@@ -81,7 +81,7 @@ export default async function Page(): Promise<React.JSX.Element> {
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
                   <div className="p-3 bg-purple-500/20 rounded-lg mr-4">
-                    <TestTube className="h-6 w-6 text-purple-400" />
+                    <Beaker className="h-6 w-6 text-purple-400" />
                   </div>
                   <h3 className="text-xl font-semibold text-white">Testing Lab</h3>
                 </div>
