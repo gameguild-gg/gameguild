@@ -19,8 +19,8 @@ public class TenantContextService(ApplicationDbContext context) : ITenantContext
   public async Task<Guid?> GetCurrentTenantIdAsync(ClaimsPrincipal? user = null, string? tenantHeader = null) {
     // Check header first (highest priority)
     if (!string.IsNullOrEmpty(tenantHeader) && Guid.TryParse(tenantHeader, out var tenantHeaderId))
-      // Verify tenant exists
-      if (await context.Tenants.AnyAsync(t => t.Id == tenantHeaderId && t.IsActive))
+      // Verify tenant exists and is active
+      if (await context.Tenants.AnyAsync(t => t.Id == tenantHeaderId && t.DeletedAt == null && t.IsActive))
         return tenantHeaderId;
 
     // Check user claims
@@ -28,8 +28,8 @@ public class TenantContextService(ApplicationDbContext context) : ITenantContext
       var tenantClaim = user.FindFirst(TenantClaim);
 
       if (tenantClaim != null && Guid.TryParse(tenantClaim.Value, out var tenantClaimId))
-        // Verify tenant exists
-        if (await context.Tenants.AnyAsync(t => t.Id == tenantClaimId && t.IsActive))
+        // Verify tenant exists and is active
+        if (await context.Tenants.AnyAsync(t => t.Id == tenantClaimId && t.DeletedAt == null && t.IsActive))
           return tenantClaimId;
     }
 
@@ -52,7 +52,10 @@ public class TenantContextService(ApplicationDbContext context) : ITenantContext
   /// </summary>
   public async Task<TenantPermission?> GetTenantPermissionAsync(Guid userId, Guid tenantId) {
     return await context.TenantPermissions.FirstOrDefaultAsync(tp =>
-                                                                 tp.UserId == userId && tp.TenantId == tenantId && tp.IsValid
+                                                                 tp.UserId == userId && 
+                                                                 tp.TenantId == tenantId && 
+                                                                 tp.DeletedAt == null && 
+                                                                 (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
            );
   }
 

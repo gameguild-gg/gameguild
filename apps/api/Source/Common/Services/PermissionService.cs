@@ -75,7 +75,7 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
                                                              (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
                                       );
 
-    if (userPermission?.IsValid == true && userPermission.HasPermission(permission)) return true;
+    if (userPermission != null && userPermission.HasPermission(permission)) return true;
 
     // 2. Check tenant default permissions
     if (tenantId.HasValue) {
@@ -87,7 +87,7 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
                                                               (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
                                        );
 
-      if (tenantDefault?.IsValid == true && tenantDefault.HasPermission(permission)) return true;
+      if (tenantDefault != null && tenantDefault.HasPermission(permission)) return true;
     }
 
     // 3. Check global default permissions
@@ -99,7 +99,7 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
                                                             (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
                                      );
 
-    return globalDefault?.IsValid == true && globalDefault.HasPermission(permission);
+    return globalDefault != null && globalDefault.HasPermission(permission);
   }
 
   public async Task<IEnumerable<PermissionType>> GetTenantPermissionsAsync(Guid? userId, Guid? tenantId) {
@@ -111,7 +111,7 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
                                                          (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
                                   );
 
-    if (permission?.IsValid != true) return [];
+    if (permission == null) return [];
 
     return GetPermissionsFromEntity(permission);
   }
@@ -186,7 +186,7 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
 
     if (existingMembership != null) {
       // Reactivate if expired or deleted
-      if (!existingMembership.IsValid) {
+      if (existingMembership.DeletedAt != null || (existingMembership.ExpiresAt != null && existingMembership.ExpiresAt <= DateTime.UtcNow)) {
         existingMembership.ExpiresAt = null; // Remove expiration
         existingMembership.Restore(); // Undelete if deleted
         // Reset to minimal permissions only when reactivating
@@ -408,7 +408,7 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
                                                               tp.UserId == null && tp.TenantId == tenantId && tp.ExpiresAt == null && tp.DeletedAt == null
                                        );
 
-      if (tenantDefault?.IsValid == true && tenantDefault.HasPermission(permission)) return true;
+      if (tenantDefault != null && tenantDefault.HasPermission(permission)) return true;
     }
 
     // Check global default
@@ -417,7 +417,7 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
                                                             tp.UserId == null && tp.TenantId == null && tp.ExpiresAt == null && tp.DeletedAt == null
                                      );
 
-    return globalDefault?.IsValid == true && globalDefault.HasPermission(permission);
+    return globalDefault != null && globalDefault.HasPermission(permission);
   }
 
   private static IEnumerable<PermissionType> GetPermissionsFromEntity(TenantPermission permission) {
