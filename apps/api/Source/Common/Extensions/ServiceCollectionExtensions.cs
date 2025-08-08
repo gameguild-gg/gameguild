@@ -2,6 +2,7 @@ using GameGuild.Modules.Projects;
 using GameGuild.Modules.Subscriptions.Services;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.TestingLab;
+using GameGuild.Modules.TestingLab.Services;
 using GameGuild.Modules.UserAchievements;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
@@ -77,6 +78,9 @@ public static class ServiceCollectionExtensions {
 
     // Add permission service for three-layer permission system
     services.AddScoped<IPermissionService, PermissionService>();
+    
+    // Add DAC permission resolver for attribute-based permission checks
+    services.AddScoped<IDacPermissionResolver, DacPermissionResolver>();
     
     // Add module permission service for granular module-based permissions
     services.AddScoped<IModulePermissionService, ModulePermissionService>();
@@ -154,6 +158,14 @@ public static class ServiceCollectionExtensions {
   public static IServiceCollection AddPostModule(this IServiceCollection services) {
     // Register Post module services
     services.AddScoped<IPostService, PostService>();
+
+    return services;
+  }
+
+  public static IServiceCollection AddTestingLabModule(this IServiceCollection services) {
+    // Register TestingLab module services
+    services.AddScoped<ITestService, TestService>();
+    services.AddScoped<ITestingLabSettingsService, TestingLabSettingsService>();
 
     return services;
   }

@@ -46,21 +46,11 @@ const TESTING_LAB_MODULE: ModuleType = 1; // TestingLab = 1
 export class TestingLabPermissionAPI {
   // Role Templates (using Module Role endpoints)
   static async getRoleTemplates(): Promise<RoleTemplate[]> {
-    await configureAuthenticatedClient();
-    
     try {
-      const response = await client.GET('/api/module-permissions/modules/{module}/roles', {
-        params: {
-          path: {
-            module: TESTING_LAB_MODULE
-          }
-        }
-      });
-      
-      if (response.data) {
-        return response.data.map(this.convertModuleRoleToRoleTemplate);
-      }
-      return [];
+      // For now, return mock data to prevent blocking the UI
+      // TODO: Implement proper server-side authentication for this endpoint
+      console.log('getRoleTemplates: Using mock data - implement proper auth later');
+      return this.getMockRoleTemplates();
     } catch (error) {
       console.error('Failed to get role templates:', error);
       return this.getMockRoleTemplates();
