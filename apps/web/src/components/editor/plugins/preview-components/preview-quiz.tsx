@@ -47,8 +47,8 @@ export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
         setSelectedAnswers={() => {}} // Dummy function
         showFeedback={showFeedback}
         isCorrect={isCorrect}
-        correctFeedback={correctFeedback}
-        incorrectFeedback={incorrectFeedback}
+        correctFeedback={correctFeedback ?? ""}
+        incorrectFeedback={incorrectFeedback ?? ""}
         allowRetry={allowRetry}
         checkAnswers={checkAnswers}
         toggleAnswer={toggleAnswer}
