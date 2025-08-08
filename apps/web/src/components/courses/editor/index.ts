@@ -11,33 +11,23 @@
 
 // Types
 export type {
-  CourseEditorState,
-  CourseEditorAction,
-  CourseEditorActionType,
-  CourseEditorContextValue,
-  CourseEditorConfig,
-  CourseEditorMode,
-  CourseEditorTab,
-  CoursePreviewMode,
+  CourseChapter, CourseEditorAction,
+  CourseEditorActionType, CourseEditorConfig, CourseEditorContextValue, CourseEditorHistoryEntry, CourseEditorMode, CourseEditorState, CourseEditorTab, CourseLesson,
+  CourseLessonType, CoursePreviewMode,
   CourseValidationError,
-  CourseValidationRule,
-  CourseEditorHistoryEntry,
-  CourseChapter,
-  CourseLesson,
-  CourseLessonType,
-  EnhancedCourseContent,
+  CourseValidationRule, EnhancedCourseContent
 } from './types';
 
-export { CourseEditorActionType, defaultCourseEditorState, courseEditorValidationRules } from './types';
+export { CourseEditorActionType, courseEditorValidationRules, defaultCourseEditorState } from './types';
 
 // Context Provider and Hooks
-export { CourseEditorProvider, useCourseEditor, useCourseEditorState, useCourseEditorActions } from './context/course-editor-provider';
+export { CourseEditorProvider, useCourseEditor, useCourseEditorActions, useCourseEditorState } from './context/course-editor-provider';
 
 // Reducer and Utilities
-export { courseEditorReducer, createInitialCourseEditorState, createEmptyCourse, validateCourse } from './context/course-editor-reducer';
+export { courseEditorReducer, createEmptyCourse, createInitialCourseEditorState, validateCourse } from './context/course-editor-reducer';
 
 // Server Actions
-export { getCourseBySlug, saveCourse, autoSaveCourse, createCourse, publishCourse } from './actions';
+export { autoSaveCourse, createCourse, getCourseBySlug, publishCourse, saveCourse } from './actions';
 
 // Enhanced Course Types (re-export for convenience)
 export type { Course } from '../../../lib/courses/course-enhanced.types';
@@ -70,18 +60,6 @@ export const COURSE_EDITOR_CONFIG = {
  * Course Editor Utility Functions
  */
 export const CourseEditorUtils = {
-  /**
-   * Generate a URL-friendly slug from a title
-   */
-  generateSlug: (title: string): string => {
-    return title
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-  },
-
   /**
    * Calculate total course duration from chapters
    */
