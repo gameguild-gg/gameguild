@@ -46,6 +46,12 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                 "Full administrative control over all Testing Lab resources",
                 new List<GameGuild.Modules.Permissions.PermissionTemplate>
                 {
+                    // TestingLabSettings - full control
+                    new() { Action = "create", ResourceType = "TestingLabSettings" },
+                    new() { Action = "read", ResourceType = "TestingLabSettings" },
+                    new() { Action = "edit", ResourceType = "TestingLabSettings" },
+                    new() { Action = "delete", ResourceType = "TestingLabSettings" },
+                    
                     // Sessions - full control
                     new() { Action = "create", ResourceType = "TestingSession" },
                     new() { Action = "read", ResourceType = "TestingSession" },
@@ -83,6 +89,10 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                 "Can manage testing resources but cannot delete sessions or locations",
                 new List<GameGuild.Modules.Permissions.PermissionTemplate>
                 {
+                    // TestingLabSettings - can read and edit
+                    new() { Action = "read", ResourceType = "TestingLabSettings" },
+                    new() { Action = "edit", ResourceType = "TestingLabSettings" },
+                    
                     // Sessions - can create/edit but not delete
                     new() { Action = "create", ResourceType = "TestingSession" },
                     new() { Action = "read", ResourceType = "TestingSession" },
@@ -114,6 +124,9 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                 "Can coordinate testing sessions and handle requests",
                 new List<GameGuild.Modules.Permissions.PermissionTemplate>
                 {
+                    // TestingLabSettings - read only
+                    new() { Action = "read", ResourceType = "TestingLabSettings" },
+                    
                     // Sessions - read and edit own
                     new() { Action = "read", ResourceType = "TestingSession" },
                     new() { Action = "edit", ResourceType = "TestingSession", 
@@ -140,6 +153,9 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                 "Can participate in testing sessions and provide feedback",
                 new List<GameGuild.Modules.Permissions.PermissionTemplate>
                 {
+                    // TestingLabSettings - read only
+                    new() { Action = "read", ResourceType = "TestingLabSettings" },
+                    
                     // Sessions - read only
                     new() { Action = "read", ResourceType = "TestingSession" },
                     
@@ -164,6 +180,9 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                 "Can manage testing locations and view sessions",
                 new List<GameGuild.Modules.Permissions.PermissionTemplate>
                 {
+                    // TestingLabSettings - read only
+                    new() { Action = "read", ResourceType = "TestingLabSettings" },
+                    
                     // Sessions - read only
                     new() { Action = "read", ResourceType = "TestingSession" },
                     
@@ -183,6 +202,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                 "Can view all testing lab resources but cannot make changes",
                 new List<GameGuild.Modules.Permissions.PermissionTemplate>
                 {
+                    new() { Action = "read", ResourceType = "TestingLabSettings" },
                     new() { Action = "read", ResourceType = "TestingSession" },
                     new() { Action = "read", ResourceType = "TestingLocation" },
                     new() { Action = "read", ResourceType = "TestingFeedback" },

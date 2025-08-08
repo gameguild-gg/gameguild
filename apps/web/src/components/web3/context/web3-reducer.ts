@@ -181,7 +181,7 @@ export const getNetworkInfo = (chainId: string, supportedNetworks: NetworkInfo[]
   return supportedNetworks.find((network) => network.chainId === chainId);
 };
 
-/**
+/** 
  * Helper function to format chain ID
  */
 export const formatChainId = (chainId: string | number | bigint): string => {

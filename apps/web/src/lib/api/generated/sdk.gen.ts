@@ -182,6 +182,34 @@ import type {
   GetApiPaymentsStatsResponses,
   GetApiPaymentsRevenueReportData,
   GetApiPaymentsRevenueReportResponses,
+  GetApiAdminPermissionsRoleTemplatesData,
+  GetApiAdminPermissionsRoleTemplatesResponses,
+  PostApiAdminPermissionsRoleTemplatesData,
+  PostApiAdminPermissionsRoleTemplatesResponses,
+  DeleteApiAdminPermissionsRoleTemplatesByNameData,
+  DeleteApiAdminPermissionsRoleTemplatesByNameResponses,
+  GetApiAdminPermissionsRoleTemplatesByNameData,
+  GetApiAdminPermissionsRoleTemplatesByNameResponses,
+  PutApiAdminPermissionsRoleTemplatesByNameData,
+  PutApiAdminPermissionsRoleTemplatesByNameResponses,
+  GetApiAdminPermissionsUsersByUserIdRolesData,
+  GetApiAdminPermissionsUsersByUserIdRolesResponses,
+  PostApiAdminPermissionsUsersByUserIdRolesData,
+  PostApiAdminPermissionsUsersByUserIdRolesResponses,
+  DeleteApiAdminPermissionsUsersByUserIdRolesByRoleNameData,
+  DeleteApiAdminPermissionsUsersByUserIdRolesByRoleNameResponses,
+  DeleteApiAdminPermissionsUsersByUserIdPermissionsData,
+  DeleteApiAdminPermissionsUsersByUserIdPermissionsResponses,
+  GetApiAdminPermissionsUsersByUserIdPermissionsData,
+  GetApiAdminPermissionsUsersByUserIdPermissionsResponses,
+  PostApiAdminPermissionsUsersByUserIdPermissionsData,
+  PostApiAdminPermissionsUsersByUserIdPermissionsResponses,
+  GetApiAdminPermissionsUsersByUserIdCheckData,
+  GetApiAdminPermissionsUsersByUserIdCheckResponses,
+  GetApiAdminPermissionsDefaultRoleData,
+  GetApiAdminPermissionsDefaultRoleResponses,
+  PutApiAdminPermissionsDefaultRoleData,
+  PutApiAdminPermissionsDefaultRoleResponses,
   GetApiPostsData,
   GetApiPostsResponses,
   PostApiPostsData,
@@ -648,6 +676,36 @@ import type {
   DeleteTestingSessionsByIdDeleteWithPermissionsResponses,
   GetTestingPermissionsUsersWithRoleByRoleNameData,
   GetTestingPermissionsUsersWithRoleByRoleNameResponses,
+  GetApiTestingLabPermissionsRoleTemplatesData,
+  GetApiTestingLabPermissionsRoleTemplatesResponses,
+  PostApiTestingLabPermissionsRoleTemplatesData,
+  PostApiTestingLabPermissionsRoleTemplatesResponses,
+  DeleteApiTestingLabPermissionsRoleTemplatesByNameData,
+  DeleteApiTestingLabPermissionsRoleTemplatesByNameResponses,
+  PutApiTestingLabPermissionsRoleTemplatesByNameData,
+  PutApiTestingLabPermissionsRoleTemplatesByNameResponses,
+  GetApiTestingLabPermissionsUsersByUserIdData,
+  GetApiTestingLabPermissionsUsersByUserIdResponses,
+  PostApiTestingLabPermissionsUsersByUserIdRolesData,
+  PostApiTestingLabPermissionsUsersByUserIdRolesResponses,
+  DeleteApiTestingLabPermissionsUsersByUserIdRolesByRoleNameData,
+  DeleteApiTestingLabPermissionsUsersByUserIdRolesByRoleNameResponses,
+  DeleteApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdData,
+  DeleteApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdResponses,
+  PostApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdData,
+  PostApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdResponses,
+  GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeData,
+  GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponses,
+  GetApiTestingLabSettingsData,
+  GetApiTestingLabSettingsResponses,
+  PatchApiTestingLabSettingsData,
+  PatchApiTestingLabSettingsResponses,
+  PutApiTestingLabSettingsData,
+  PutApiTestingLabSettingsResponses,
+  PostApiTestingLabSettingsResetData,
+  PostApiTestingLabSettingsResetResponses,
+  GetApiTestingLabSettingsExistsData,
+  GetApiTestingLabSettingsExistsResponses,
   GetApiUsersByUserIdAchievementsData,
   GetApiUsersByUserIdAchievementsResponses,
   GetApiUsersByUserIdAchievementsProgressData,
@@ -1523,6 +1581,156 @@ export const getApiPaymentsRevenueReport = <ThrowOnError extends boolean = false
   return (options?.client ?? _heyApiClient).get<GetApiPaymentsRevenueReportResponses, unknown, ThrowOnError>({
     url: '/api/payments/revenue-report',
     ...options,
+  });
+};
+
+export const getApiAdminPermissionsRoleTemplates = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiAdminPermissionsRoleTemplatesData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).get<GetApiAdminPermissionsRoleTemplatesResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/role-templates',
+    ...options,
+  });
+};
+
+export const postApiAdminPermissionsRoleTemplates = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiAdminPermissionsRoleTemplatesData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAdminPermissionsRoleTemplatesResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/role-templates',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const deleteApiAdminPermissionsRoleTemplatesByName = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiAdminPermissionsRoleTemplatesByNameData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiAdminPermissionsRoleTemplatesByNameResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/role-templates/{name}',
+    ...options,
+  });
+};
+
+export const getApiAdminPermissionsRoleTemplatesByName = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiAdminPermissionsRoleTemplatesByNameData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiAdminPermissionsRoleTemplatesByNameResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/role-templates/{name}',
+    ...options,
+  });
+};
+
+export const putApiAdminPermissionsRoleTemplatesByName = <ThrowOnError extends boolean = false>(
+  options: Options<PutApiAdminPermissionsRoleTemplatesByNameData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutApiAdminPermissionsRoleTemplatesByNameResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/role-templates/{name}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiAdminPermissionsUsersByUserIdRoles = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiAdminPermissionsUsersByUserIdRolesData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiAdminPermissionsUsersByUserIdRolesResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/users/{userId}/roles',
+    ...options,
+  });
+};
+
+export const postApiAdminPermissionsUsersByUserIdRoles = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiAdminPermissionsUsersByUserIdRolesData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiAdminPermissionsUsersByUserIdRolesResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/users/{userId}/roles',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const deleteApiAdminPermissionsUsersByUserIdRolesByRoleName = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiAdminPermissionsUsersByUserIdRolesByRoleNameData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiAdminPermissionsUsersByUserIdRolesByRoleNameResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/users/{userId}/roles/{roleName}',
+    ...options,
+  });
+};
+
+export const deleteApiAdminPermissionsUsersByUserIdPermissions = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiAdminPermissionsUsersByUserIdPermissionsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiAdminPermissionsUsersByUserIdPermissionsResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/users/{userId}/permissions',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiAdminPermissionsUsersByUserIdPermissions = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiAdminPermissionsUsersByUserIdPermissionsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiAdminPermissionsUsersByUserIdPermissionsResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/users/{userId}/permissions',
+    ...options,
+  });
+};
+
+export const postApiAdminPermissionsUsersByUserIdPermissions = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiAdminPermissionsUsersByUserIdPermissionsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiAdminPermissionsUsersByUserIdPermissionsResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/users/{userId}/permissions',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiAdminPermissionsUsersByUserIdCheck = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiAdminPermissionsUsersByUserIdCheckData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiAdminPermissionsUsersByUserIdCheckResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/users/{userId}/check',
+    ...options,
+  });
+};
+
+export const getApiAdminPermissionsDefaultRole = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiAdminPermissionsDefaultRoleData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).get<GetApiAdminPermissionsDefaultRoleResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/default-role',
+    ...options,
+  });
+};
+
+export const putApiAdminPermissionsDefaultRole = <ThrowOnError extends boolean = false>(
+  options?: Options<PutApiAdminPermissionsDefaultRoleData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).put<PutApiAdminPermissionsDefaultRoleResponses, unknown, ThrowOnError>({
+    url: '/api/admin/permissions/default-role',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   });
 };
 
@@ -3597,6 +3805,159 @@ export const getTestingPermissionsUsersWithRoleByRoleName = <ThrowOnError extend
 ) => {
   return (options.client ?? _heyApiClient).get<GetTestingPermissionsUsersWithRoleByRoleNameResponses, unknown, ThrowOnError>({
     url: '/testing/permissions/users-with-role/{roleName}',
+    ...options,
+  });
+};
+
+export const getApiTestingLabPermissionsRoleTemplates = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiTestingLabPermissionsRoleTemplatesData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).get<GetApiTestingLabPermissionsRoleTemplatesResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/role-templates',
+    ...options,
+  });
+};
+
+export const postApiTestingLabPermissionsRoleTemplates = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiTestingLabPermissionsRoleTemplatesData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiTestingLabPermissionsRoleTemplatesResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/role-templates',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const deleteApiTestingLabPermissionsRoleTemplatesByName = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiTestingLabPermissionsRoleTemplatesByNameData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiTestingLabPermissionsRoleTemplatesByNameResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/role-templates/{name}',
+    ...options,
+  });
+};
+
+export const putApiTestingLabPermissionsRoleTemplatesByName = <ThrowOnError extends boolean = false>(
+  options: Options<PutApiTestingLabPermissionsRoleTemplatesByNameData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutApiTestingLabPermissionsRoleTemplatesByNameResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/role-templates/{name}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiTestingLabPermissionsUsersByUserId = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiTestingLabPermissionsUsersByUserIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiTestingLabPermissionsUsersByUserIdResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/users/{userId}',
+    ...options,
+  });
+};
+
+export const postApiTestingLabPermissionsUsersByUserIdRoles = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiTestingLabPermissionsUsersByUserIdRolesData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiTestingLabPermissionsUsersByUserIdRolesResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/users/{userId}/roles',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const deleteApiTestingLabPermissionsUsersByUserIdRolesByRoleName = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiTestingLabPermissionsUsersByUserIdRolesByRoleNameData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiTestingLabPermissionsUsersByUserIdRolesByRoleNameResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/users/{userId}/roles/{roleName}',
+    ...options,
+  });
+};
+
+export const deleteApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<
+    DeleteApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdResponses,
+    unknown,
+    ThrowOnError
+  >({
+    url: '/api/testing-lab/permissions/users/{userId}/resources/{resourceType}/{resourceId}',
+    ...options,
+  });
+};
+
+export const postApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceId = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/users/{userId}/resources/{resourceType}/{resourceId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiTestingLabPermissionsUsersByUserIdCheckByResourceType = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/users/{userId}/check/{resourceType}',
+    ...options,
+  });
+};
+
+export const getApiTestingLabSettings = <ThrowOnError extends boolean = false>(options?: Options<GetApiTestingLabSettingsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiTestingLabSettingsResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/settings',
+    ...options,
+  });
+};
+
+export const patchApiTestingLabSettings = <ThrowOnError extends boolean = false>(options?: Options<PatchApiTestingLabSettingsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).patch<PatchApiTestingLabSettingsResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/settings',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const putApiTestingLabSettings = <ThrowOnError extends boolean = false>(options?: Options<PutApiTestingLabSettingsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).put<PutApiTestingLabSettingsResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/settings',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiTestingLabSettingsReset = <ThrowOnError extends boolean = false>(options?: Options<PostApiTestingLabSettingsResetData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiTestingLabSettingsResetResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/settings/reset',
+    ...options,
+  });
+};
+
+export const getApiTestingLabSettingsExists = <ThrowOnError extends boolean = false>(options?: Options<GetApiTestingLabSettingsExistsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiTestingLabSettingsExistsResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/settings/exists',
     ...options,
   });
 };

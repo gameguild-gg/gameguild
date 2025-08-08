@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using System.Text.Json;
 using FluentValidation;
 using GameGuild.Common.Configuration;
 using GameGuild.Common.Extensions;
@@ -63,12 +64,27 @@ public static class DependencyInjection {
             .AddJsonOptions(options => {
               // Handle circular references in navigation properties
               options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+              
+              // Configure JSON naming policy
+              options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+              options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+              options.JsonSerializerOptions.WriteIndented = true; // Pretty print in development
+              options.JsonSerializerOptions.PropertyNameCaseInsensitive = true; // Accept both cases on input
             }
             )
             .ConfigureApiBehaviorOptions(options => {
               options.SuppressModelStateInvalidFilter = true; // We handle validation through MediatR
             }
             );
+
+    // Configure HTTP JSON options for minimal APIs (for consistency)
+    services.ConfigureHttpJsonOptions(options => {
+      options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+      options.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+      options.SerializerOptions.WriteIndented = true;
+      options.SerializerOptions.PropertyNameCaseInsensitive = true;
+      options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
     // Configure routing to use lowercase URLs
     services.Configure<RouteOptions>(options => {
@@ -331,6 +347,7 @@ public static class DependencyInjection {
       .AddPaymentModule()
       .AddPostsModule()
       .AddTestModule()
+      .AddTestingLabModule()
       .AddCommonServices();
 
   /// <summary>

@@ -20,6 +20,7 @@ using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.Modules.Tags.Models;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.TestingLab;
+using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Modules.UserAchievements;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
@@ -153,6 +154,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<TestingFeedbackForm> TestingFeedbackForms { get; set; }
 
   public DbSet<TestingLocation> TestingLocations { get; set; }
+
+  public DbSet<TestingLabSettings> TestingLabSettings { get; set; }
 
   public DbSet<SessionRegistration> SessionRegistrations { get; set; }
 

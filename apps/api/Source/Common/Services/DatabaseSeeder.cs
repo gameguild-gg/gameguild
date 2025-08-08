@@ -237,8 +237,30 @@ public class DatabaseSeeder(
     await permissionService.GrantTenantPermissionAsync(createdUser.Id, null, globalPermissions);
     logger.LogInformation("Granted {PermissionCount} global tenant permissions to super admin", globalPermissions.Length);
 
+    // Create or get default tenant for super admin
+    var defaultTenant = await context.Tenants.FirstOrDefaultAsync(t => t.Name == "Default Tenant");
+    if (defaultTenant == null) {
+      defaultTenant = new GameGuild.Modules.Tenants.Tenant {
+        Name = "Default Tenant",
+        Title = "Default Organization",
+        Slug = "default",
+        Description = "Default tenant for super admin and initial setup",
+        IsActive = true,
+        Visibility = AccessLevel.Private,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow,
+      };
+      context.Tenants.Add(defaultTenant);
+      await context.SaveChangesAsync();
+      logger.LogInformation("Created default tenant for super admin: {TenantName}", defaultTenant.Name);
+    }
+
+    // Grant tenant-specific permissions to super admin for the default tenant
+    await permissionService.GrantTenantPermissionAsync(createdUser.Id, defaultTenant.Id, globalPermissions);
+    logger.LogInformation("Granted tenant-specific permissions to super admin for default tenant");
+
     // Grant essential content type permissions
-    var contentTypes = new[] { "Project", "TenantDomain", "TenantUserGroup", "TenantUserGroupMembership", "User", "Tenant", "Comment", "Product", "Program", "TestingSession", "TestingRequest", "TestingFeedback", "SessionRegistration" };
+    var contentTypes = new[] { "Project", "TenantDomain", "TenantUserGroup", "TenantUserGroupMembership", "User", "Tenant", "Comment", "Product", "Program", "TestingSession", "TestingRequest", "TestingFeedback", "SessionRegistration", "TestingLabSettings" };
 
     var contentPermissions = new PermissionType[] { PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete, PermissionType.Draft };
 

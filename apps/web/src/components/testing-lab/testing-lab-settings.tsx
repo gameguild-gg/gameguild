@@ -11,9 +11,11 @@ import { Separator }                                                            
 import { Switch }                                                                                                             from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow }                                                      from '@/components/ui/table';
 import { Textarea }                                                                                                           from '@/components/ui/textarea';
-import type { LocationStatus, TestingLocation as ApiTestingLocation }                                                         from '@/lib/api/generated/types.gen';
+import type { LocationStatus, TestingLocation as ApiTestingLocation, UserRoleAssignment as GeneratedUserRoleAssignment, User } from '@/lib/api/generated/types.gen';
 import { createTestingLocation, deleteTestingLocation, getTestingLocations, updateTestingLocation }                           from '@/lib/api/testing-lab';
 import { convertAPIPermissionsToForm, convertFormPermissionsToAPI, RoleTemplate as APIRoleTemplate, TestingLabPermissionAPI } from '@/lib/api/testing-lab-permissions';
+import { getTestingLabSettings, updateTestingLabSettings } from '@/actions/testing-lab-settings';
+import { getUsers } from '@/lib/api/users';
 import { ChevronRight, Edit, MapPin, Plus, Settings, Shield, Trash2, UserCheck, UserMinus, UserPlus, Users }                  from 'lucide-react';
 import { useEffect, useState }                                                                                                from 'react';
 import { toast }                                                                                                              from 'sonner';
@@ -108,23 +110,13 @@ interface TestingLabManager {
 type RoleTemplate = APIRoleTemplate;
 
 // Define UserRoleAssignment locally since it's not exported
-interface UserRoleAssignment {
+// Extended type that combines API type with additional UI properties
+interface UserRoleAssignment extends GeneratedUserRoleAssignment {
   id: string;
-
-  userId?: string;
-
   userEmail?: string;
-
   userName?: string;
-
   roleTemplateId?: string;
-
-  roleName?: string;
-
   assignedAt?: string;
-
-  createdAt?: string;
-
   isActive: boolean;
 }
 
@@ -321,6 +313,7 @@ export function TestingLabSettings() {
     loadManagers();
     loadRoles();
     loadUserRoles();
+    loadGeneralSettings();
   }, []);
 
   const loadLocations = async () => {
@@ -378,67 +371,48 @@ export function TestingLabSettings() {
 
   const loadManagers = async () => {
     try {
-      // TODO: Replace with actual API call when endpoints are available
-      const mockManagers: TestingLabManager[] = [
-        {
-          id: '1',
-          userId: 'user-1',
-          email: 'alice.johnson@gameguild.gg',
-          firstName: 'Alice',
-          lastName: 'Johnson',
-          role: 'Admin',
-          permissions: {
-            canManageLocations: true,
-            canScheduleSessions: true,
-            canManageUsers: true,
-            canViewReports: true,
-            canModifySettings: true,
-          },
-          assignedLocations: ['1', '2', '3'],
-          status: 'Active',
-          createdAt: '2024-01-15T10:00:00Z',
-          updatedAt: '2024-01-15T10:00:00Z',
-        },
-        {
-          id: '2',
-          userId: 'user-2',
-          email: 'bob.smith@gameguild.gg',
-          firstName: 'Bob',
-          lastName: 'Smith',
-          role: 'Manager',
-          permissions: {
-            canManageLocations: false,
-            canScheduleSessions: true,
-            canManageUsers: false,
-            canViewReports: true,
-            canModifySettings: false,
-          },
-          assignedLocations: ['1', '2'],
-          status: 'Active',
-          createdAt: '2024-01-16T10:00:00Z',
-          updatedAt: '2024-01-16T10:00:00Z',
-        },
-        {
-          id: '3',
-          userId: 'user-3',
-          email: 'carol.davis@gameguild.gg',
-          firstName: 'Carol',
-          lastName: 'Davis',
-          role: 'Coordinator',
-          permissions: {
-            canManageLocations: false,
-            canScheduleSessions: true,
-            canManageUsers: false,
-            canViewReports: false,
-            canModifySettings: false,
-          },
-          assignedLocations: ['3'],
-          status: 'Active',
-          createdAt: '2024-01-17T10:00:00Z',
-          updatedAt: '2024-01-17T10:00:00Z',
-        },
-      ];
-      setManagers(mockManagers);
+      // Get all users and filter for those with testing lab roles
+      const allUsers = await getUsers();
+      const allRoleAssignments = await TestingLabPermissionAPI.getAllTestingLabRoleAssignments();
+      
+      // Transform users to TestingLabManager format based on role assignments
+      const managers: TestingLabManager[] = allUsers
+        .filter(user => {
+          // Include users that have any testing lab role assignment
+          return allRoleAssignments.some(assignment => assignment.userId === user.id);
+        })
+        .map(user => {
+          const userAssignments = allRoleAssignments.filter(assignment => assignment.userId === user.id);
+          const primaryRole = userAssignments[0]?.roleName || 'Viewer';
+          
+          // Map role names to simplified roles
+          let role: 'Admin' | 'Manager' | 'Coordinator' | 'Viewer' = 'Viewer';
+          if (primaryRole.includes('Admin')) role = 'Admin';
+          else if (primaryRole.includes('Manager')) role = 'Manager';
+          else if (primaryRole.includes('Coordinator')) role = 'Coordinator';
+          
+          return {
+            id: user.id!,
+            userId: user.id!,
+            email: user.email || '',
+            firstName: user.name?.split(' ')[0] || '',
+            lastName: user.name?.split(' ').slice(1).join(' ') || '',
+            role,
+            permissions: {
+              canManageLocations: role === 'Admin',
+              canScheduleSessions: ['Admin', 'Manager', 'Coordinator'].includes(role),
+              canManageUsers: role === 'Admin',
+              canViewReports: ['Admin', 'Manager'].includes(role),
+              canModifySettings: role === 'Admin',
+            },
+            assignedLocations: [], // Will need to get location-specific assignments
+            status: userAssignments.some(assignment => assignment.isActive) ? 'Active' as const : 'Inactive' as const,
+            createdAt: user.createdAt || new Date().toISOString(),
+            updatedAt: user.updatedAt || user.createdAt || new Date().toISOString(),
+          };
+        });
+      
+      setManagers(managers);
     } catch (error) {
       console.error('Failed to load managers:', error);
       toast.error('Failed to load testing lab managers');
@@ -447,58 +421,9 @@ export function TestingLabSettings() {
 
   const loadRoles = async () => {
     try {
-      // TODO: Replace with actual API call to /api/testing-lab/permissions/role-templates
-      const mockRoles: RoleTemplate[] = [
-        {
-          id: '1',
-          name: 'TestingLabAdmin',
-          description: 'Full administrative control over all Testing Lab resources',
-          permissionTemplates: [],
-          isSystemRole: true,
-          userCount: 2,
-        },
-        {
-          id: '2',
-          name: 'TestingLabManager',
-          description: 'Can manage testing resources but cannot delete sessions or locations',
-          permissionTemplates: [],
-          isSystemRole: true,
-          userCount: 5,
-        },
-        {
-          id: '3',
-          name: 'TestingLabCoordinator',
-          description: 'Can coordinate testing sessions and handle requests',
-          permissionTemplates: [],
-          isSystemRole: true,
-          userCount: 8,
-        },
-        {
-          id: '4',
-          name: 'TestingLabTester',
-          description: 'Can participate in testing sessions and provide feedback',
-          permissionTemplates: [],
-          isSystemRole: true,
-          userCount: 24,
-        },
-        {
-          id: '5',
-          name: 'TestingLabLocationManager',
-          description: 'Can manage testing locations and view sessions',
-          permissionTemplates: [],
-          isSystemRole: true,
-          userCount: 3,
-        },
-        {
-          id: '6',
-          name: 'TestingLabReadOnly',
-          description: 'Can view all testing lab resources but cannot make changes',
-          permissionTemplates: [],
-          isSystemRole: true,
-          userCount: 12,
-        },
-      ];
-      setRoles(mockRoles);
+      // Use real API call to get role templates
+      const apiRoles = await TestingLabPermissionAPI.getRoleTemplates();
+      setRoles(apiRoles);
     } catch (error) {
       console.error('Failed to load roles:', error);
       toast.error('Failed to load testing lab roles');
@@ -507,43 +432,76 @@ export function TestingLabSettings() {
 
   const loadUserRoles = async () => {
     try {
-      // TODO: Replace with actual API call to get user role assignments
-      const mockUserRoles: UserRoleAssignment[] = [
-        {
-          id: '1',
-          userId: 'user-1',
-          userEmail: 'alice.johnson@gameguild.gg',
-          userName: 'Alice Johnson',
-          roleTemplateId: '1',
-          roleName: 'TestingLabAdmin',
-          assignedAt: '2024-01-15T10:00:00Z',
-          isActive: true,
-        },
-        {
-          id: '2',
-          userId: 'user-2',
-          userEmail: 'bob.smith@gameguild.gg',
-          userName: 'Bob Smith',
-          roleTemplateId: '2',
-          roleName: 'TestingLabManager',
-          assignedAt: '2024-01-16T10:00:00Z',
-          isActive: true,
-        },
-        {
-          id: '3',
-          userId: 'user-3',
-          userEmail: 'carol.davis@gameguild.gg',
-          userName: 'Carol Davis',
-          roleTemplateId: '3',
-          roleName: 'TestingLabCoordinator',
-          assignedAt: '2024-01-17T10:00:00Z',
-          isActive: true,
-        },
-      ];
-      setUserRoles(mockUserRoles);
+      // Use real API calls to get user role assignments and user data
+      const apiUserRoles = await TestingLabPermissionAPI.getAllTestingLabRoleAssignments();
+      const allUsers = await getUsers();
+      
+      // Transform API data to match our extended interface
+      const transformedUserRoles: UserRoleAssignment[] = apiUserRoles
+        .filter(role => role.id) // Filter out entries without id
+        .map(role => {
+          const user = allUsers.find(u => u.id === role.userId);
+          return {
+            id: role.id!,
+            userId: role.userId,
+            userEmail: user?.email || '',
+            userName: user?.name || '',
+            roleTemplateId: '', // Will need mapping from roleName
+            roleName: role.roleName,
+            assignedAt: role.createdAt, // Use createdAt as assignedAt
+            tenantId: role.tenantId,
+            module: role.module,
+            constraints: role.constraints,
+            createdAt: role.createdAt,
+            expiresAt: role.expiresAt,
+            isActive: role.isActive ?? true,
+          };
+        });
+      
+      setUserRoles(transformedUserRoles);
     } catch (error) {
       console.error('Failed to load user roles:', error);
       toast.error('Failed to load user role assignments');
+    }
+  };
+
+  const loadGeneralSettings = async () => {
+    try {
+      // Try to load existing settings from API
+      const apiSettings = await getTestingLabSettings();
+      setGeneralSettings({
+        labName: apiSettings.labName,
+        description: apiSettings.description || '',
+        timezone: apiSettings.timezone,
+        defaultSessionDuration: apiSettings.defaultSessionDuration,
+        allowPublicSignups: apiSettings.allowPublicSignups,
+        requireApproval: apiSettings.requireApproval,
+        enableNotifications: apiSettings.enableNotifications,
+        maxSimultaneousSessions: apiSettings.maxSimultaneousSessions,
+      });
+    } catch (error) {
+      console.error('Failed to load general settings:', error);
+      // Settings will remain with default values set in useState
+      toast.error('Failed to load general settings');
+    }
+  };
+
+  const saveGeneralSettings = async (settings: typeof generalSettings) => {
+    try {
+      await updateTestingLabSettings({
+        labName: settings.labName,
+        description: settings.description,
+        timezone: settings.timezone,
+        defaultSessionDuration: settings.defaultSessionDuration,
+        allowPublicSignups: settings.allowPublicSignups,
+        requireApproval: settings.requireApproval,
+        enableNotifications: settings.enableNotifications,
+        maxSimultaneousSessions: settings.maxSimultaneousSessions,
+      });
+      toast.success('Settings saved successfully');
+    } catch (error) {
+      console.error('Failed to save general settings:', error);
+      toast.error('Failed to save settings');
     }
   };
 
@@ -916,7 +874,7 @@ export function TestingLabSettings() {
       <div className="flex flex-col flex-1 items-center justify-center">
         <div className="flex flex-1 container">
           <div className="flex flex-col flex-1 ">
-            { currentSection === 'general' && <GeneralSettings generalSettings={ generalSettings } setGeneralSettings={ setGeneralSettings }/> }
+            { currentSection === 'general' && <GeneralSettings generalSettings={ generalSettings } setGeneralSettings={ setGeneralSettings } saveGeneralSettings={ saveGeneralSettings }/> }
             { currentSection === 'collaborators' && (
               <CollaboratorsSettings
                 managers={ managers }
@@ -1078,11 +1036,17 @@ interface GeneralSettingsProps {
   generalSettings: any;
 
   setGeneralSettings: (settings: any) => void;
+
+  saveGeneralSettings: (settings: any) => Promise<void>;
 }
 
-function GeneralSettings({ generalSettings, setGeneralSettings }: GeneralSettingsProps) {
+function GeneralSettings({ generalSettings, setGeneralSettings, saveGeneralSettings }: GeneralSettingsProps) {
   const handleSettingChange = (key: string, value: any) => {
     setGeneralSettings({ ...generalSettings, [key]: value });
+  };
+
+  const handleSave = () => {
+    saveGeneralSettings(generalSettings);
   };
 
   return (
@@ -1221,6 +1185,12 @@ function GeneralSettings({ generalSettings, setGeneralSettings }: GeneralSetting
             </div>
           </CardContent>
         </Card>
+
+        <div className="flex justify-end">
+          <Button onClick={handleSave}>
+            Save Settings
+          </Button>
+        </div>
       </div>
     </div>
   );
