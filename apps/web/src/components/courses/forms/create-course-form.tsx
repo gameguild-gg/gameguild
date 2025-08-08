@@ -32,7 +32,7 @@ export const CreateCourseForm = (): React.JSX.Element => {
     if (error) setError(null);
   };
 
-  const generateSlug = (title: string) => {
+  const speakingurl = (title: string) => {
     return title
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '')
@@ -44,7 +44,7 @@ export const CreateCourseForm = (): React.JSX.Element => {
   const handleTitleChange = (value: string) => {
     handleInputChange('title', value);
     // Auto-generate slug from title
-    const slug = generateSlug(value);
+    const slug = speakingurl(value);
     setFormData(prev => ({ ...prev, slug }));
   };
 

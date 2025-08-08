@@ -1,7 +1,8 @@
-import { cache } from 'react';
-import { unstable_cache } from 'next/cache';
 import type { Course, CourseId, Result } from '@/components/legacy/types/course-enhanced';
 import { COURSE_LEVELS } from '@/components/legacy/types/course-enhanced';
+import { unstable_cache } from 'next/cache';
+import { cache } from 'react';
+import speakingurl from 'speakingurl';
 
 // Cache configuration
 const CACHE_TAGS = {
@@ -77,7 +78,7 @@ interface ApiProgram {
  */
 function transformProgramToCourse(program: ApiProgram): Course {
   // Generate slug from title if not provided
-  const slug = program.slug || generateSlugFromTitle(program.title);
+  const slug = program.slug || speakingurl(program.title);
 
   // Debug logging
   console.log('Transforming course:', {
@@ -97,19 +98,6 @@ function transformProgramToCourse(program: ApiProgram): Course {
     slug: slug,
     progress: program.progress,
   } as const;
-}
-
-/**
- * Generate a URL-friendly slug from a title
- */
-function generateSlugFromTitle(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
-    .replace(/\s+/g, '-') // Replace spaces with hyphens
-    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
-    .trim()
-    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 }
 
 /**
