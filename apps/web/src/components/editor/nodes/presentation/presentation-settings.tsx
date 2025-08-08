@@ -252,7 +252,7 @@ export function PresentationSettings({
   const isSettingsTabDisabled = !selectedMode || localSlides.length === 0
 
   return (
-    <div className="space-y-6 p-6 bg-card rounded-lg border">
+    <div className="space-y-6 p-6 rounded-lg border">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="mode" className="flex items-center gap-2">
@@ -607,6 +607,7 @@ export function PresentationSettings({
         cancelText="Cancelar"
       />
 
+    <div className="z-[30]">
       <MediaUploadDialog
         open={showImportDialog}
         onOpenChange={setShowImportDialog}
@@ -619,7 +620,9 @@ export function PresentationSettings({
         urlLabel="Enter presentation URL"
         maxSizeKB={51200}
       />
+    </div>
 
+    <div className="z-[30]">
       <MediaUploadDialog
         open={showImageDialog}
         onOpenChange={setShowImageDialog}
@@ -633,7 +636,9 @@ export function PresentationSettings({
         maxSizeKB={5120}
         multiple={true}
       />
+    </div>
 
+    <div className="z-[10]">
       <SlideEditDialog
         open={editSlideId !== null}
         onOpenChange={(open) => {
@@ -646,5 +651,6 @@ export function PresentationSettings({
         onSave={handleSaveSlideEdit}
       />
     </div>
-  )
+  </div>
+)
 }
