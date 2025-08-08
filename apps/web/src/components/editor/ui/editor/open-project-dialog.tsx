@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { FolderOpen, Trash2 } from "lucide-react"
+import { DeleteConfirmDialog } from "@/components/editor/ui/delete-confirm-dialog"
+import { FolderOpen, Trash2 } from 'lucide-react'
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import type { LexicalEditor } from "lexical"
@@ -46,54 +47,6 @@ interface OpenProjectDialogProps {
   storageLimit: number | null
   totalStorageUsed: number
   formatStorageSize: (sizeInKB: number) => string
-}
-
-interface DeleteConfirmDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  projectToDelete: { id: string; name: string } | null
-  onConfirm: (id: string, name: string) => void
-}
-
-function DeleteConfirmDialog({ open, onOpenChange, projectToDelete, onConfirm }: DeleteConfirmDialogProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="text-center">Confirmar Exclusão</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-3">
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className="p-3 bg-red-100 rounded-full mb-3">
-              <Trash2 className="w-6 h-6 text-red-600" />
-            </div>
-            <h3 className="text-lg font-medium">Excluir projeto?</h3>
-            <p className="text-sm text-gray-500 mt-2 mb-3">
-              Você está prestes a excluir <span className="font-semibold">{projectToDelete?.name}</span>. Esta ação não
-              pode ser desfeita.
-            </p>
-          </div>
-          <div className="flex justify-between gap-3 pt-2">
-            <Button variant="outline" className="flex-1 bg-transparent" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button
-              variant="destructive"
-              className="flex-1"
-              onClick={() => {
-                if (projectToDelete) {
-                  onConfirm(projectToDelete.id, projectToDelete.name)
-                  onOpenChange(false)
-                }
-              }}
-            >
-              Excluir
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
 }
 
 export function OpenProjectDialog({
@@ -237,13 +190,15 @@ export function OpenProjectDialog({
     setDeleteDialogOpen(true)
   }
 
-  const handleDelete = async (projectId: string, projectName: string) => {
+  const handleDelete = async () => {
+    if (!projectToDelete) return
+
     try {
-      await storageAdapter.delete(projectId)
+      await storageAdapter.delete(projectToDelete.id)
       await onProjectsListUpdate()
 
       toast.success("Projeto excluído", {
-        description: `"${projectName}" foi removido permanentemente`,
+        description: `"${projectToDelete.name}" foi removido permanentemente`,
         duration: 3000,
         icon: "🗑️",
       })
@@ -254,6 +209,8 @@ export function OpenProjectDialog({
         duration: 4000,
         icon: "❌",
       })
+    } finally {
+      setProjectToDelete(null)
     }
   }
 
@@ -678,11 +635,9 @@ export function OpenProjectDialog({
       <DeleteConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        projectToDelete={projectToDelete}
-        onConfirm={(id, name) => {
-          handleDelete(id, name)
-          setProjectToDelete(null)
-        }}
+        itemName={projectToDelete?.name}
+        itemType="projeto"
+        onConfirm={handleDelete}
       />
     </>
   )

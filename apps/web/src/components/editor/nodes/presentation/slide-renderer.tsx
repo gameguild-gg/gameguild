@@ -1,5 +1,5 @@
 "use client"
-import { ImageIcon } from "lucide-react"
+import { ImageIcon } from 'lucide-react'
 import { cn } from "@/lib/utils"
 import type { Slide, SlideTheme } from "./types"
 
@@ -267,7 +267,6 @@ export function SlideRenderer({ slide, customThemeColor }: SlideRendererProps) {
                 />
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
             <div className="absolute bottom-0 left-0 right-0 p-8">
               {slide.content && <div className="text-white/90">{processContent(slide.content)}</div>}
             </div>
