@@ -1,0 +1,18 @@
+.mermaid-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center;
+  margin: 1rem 0;
+  overflow: visible;
+  width: auto !important;
+  max-width: 100% !important;
+}
+
+.mermaid-container svg {
+  display: inline-block !important;
+  max-width: none !important;
+  height: auto !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+}
