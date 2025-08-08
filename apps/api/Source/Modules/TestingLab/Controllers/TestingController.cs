@@ -770,7 +770,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   /// Assign Testing Lab role to a user (admin only)
   /// </summary>
   [HttpPost("permissions/assign-role")]
-  public async Task<ActionResult> AssignTestingLabRole([FromServices] IModulePermissionService modulePermissionService, [FromBody] AssignTestingLabRoleRequest request) {
+  public async Task<ActionResult> AssignTestingLabRole([FromServices] IModulePermissionService modulePermissionService, [FromBody] AssignTestingLabRoleDto request) {
     // TODO: Add admin permission check
     try {
       await modulePermissionService.AssignRoleAsync(
@@ -936,7 +936,7 @@ public class TestingLabActionPermissions {
   public bool CanExportData { get; set; }
 }
 
-public class AssignTestingLabRoleRequest {
+public class AssignTestingLabRoleDto {
   public Guid UserId { get; set; }
   public Guid? TenantId { get; set; }
   public string RoleName { get; set; } = string.Empty; // "TestingLabAdmin", "TestingLabManager", etc.

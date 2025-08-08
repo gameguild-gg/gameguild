@@ -46,7 +46,7 @@ public class TestingLabPermissionController : ControllerBase
                 Name = t.Name,
                 Description = t.Description,
                 IsSystemRole = t.IsSystemRole,
-                Permissions = new TestingLabPermissions
+                Permissions = new TestingLabPermissionsDto
                 {
                     // Sessions
                     CanCreateSessions = t.PermissionTemplates.Any(p => p.Action == "create" && p.ResourceType == "TestingSession"),
@@ -175,7 +175,7 @@ public class TestingLabPermissionController : ControllerBase
             UserId = userId,
             TenantId = tenantId,
             AssignedRoles = userRoles.Select(r => r.RoleName).ToList(),
-            Permissions = new TestingLabPermissions
+            Permissions = new TestingLabPermissionsDto
             {
                 // Sessions
                 CanCreateSessions = testingLabPermissions.Any(p => p.Action == "create" && p.ResourceType == "TestingSession"),
@@ -338,7 +338,7 @@ public class TestingLabPermissionController : ControllerBase
         };
     }
 
-    private static List<PermissionTemplate> BuildPermissionTemplates(TestingLabPermissions permissions)
+    private static List<PermissionTemplate> BuildPermissionTemplates(TestingLabPermissionsDto permissions)
     {
         var templates = new List<PermissionTemplate>();
 
@@ -382,7 +382,7 @@ public class TestingLabPermissionController : ControllerBase
             Name = template.Name,
             Description = template.Description,
             IsSystemRole = template.IsSystemRole,
-            Permissions = new TestingLabPermissions
+            Permissions = new TestingLabPermissionsDto
             {
                 // Sessions
                 CanCreateSessions = template.PermissionTemplates.Any(p => p.Action == "create" && p.ResourceType == "TestingSession"),
@@ -420,7 +420,7 @@ public class TestingLabPermissionController : ControllerBase
 
 // ===== TESTING LAB SPECIFIC MODELS =====
 
-public class TestingLabPermissions
+public class TestingLabPermissionsDto
 {
     // Sessions
     public bool CanCreateSessions { get; set; }
@@ -458,7 +458,7 @@ public class TestingLabRoleTemplate
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public bool IsSystemRole { get; set; }
-    public TestingLabPermissions Permissions { get; set; } = new();
+    public TestingLabPermissionsDto Permissions { get; set; } = new();
 }
 
 public class UserTestingLabPermissions
@@ -466,20 +466,20 @@ public class UserTestingLabPermissions
     public Guid UserId { get; set; }
     public Guid? TenantId { get; set; }
     public List<string> AssignedRoles { get; set; } = new();
-    public TestingLabPermissions Permissions { get; set; } = new();
+    public TestingLabPermissionsDto Permissions { get; set; } = new();
 }
 
 public class CreateTestingLabRoleRequest
 {
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public TestingLabPermissions Permissions { get; set; } = new();
+    public TestingLabPermissionsDto Permissions { get; set; } = new();
 }
 
 public class UpdateTestingLabRoleRequest
 {
     public string Description { get; set; } = string.Empty;
-    public TestingLabPermissions Permissions { get; set; } = new();
+    public TestingLabPermissionsDto Permissions { get; set; } = new();
 }
 
 public class AssignTestingLabRoleRequest
