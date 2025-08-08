@@ -14,30 +14,47 @@ public class ContextMiddleware {
 
   public async Task InvokeAsync(HttpContext context, IUserContext userContext, ITenantContext tenantContext) {
     try {
+      // Extract and log token information for debugging
+      var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+      if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ")) {
+        var token = authHeader["Bearer ".Length..].Trim();
+        _logger.LogDebug("Processing request with JWT token (length: {TokenLength})", token.Length);
+      }
+
       // Log context information for debugging
       if (userContext.IsAuthenticated) {
         _logger.LogDebug(
-          "User context: UserId={UserId}, Email={Email}, TenantId={TenantId}",
+          "User context: UserId={UserId}, Email={Email}, TenantId={TenantId}, IsAuthenticated={IsAuthenticated}",
           userContext.UserId,
           userContext.Email,
-          tenantContext.TenantId
+          tenantContext.TenantId,
+          userContext.IsAuthenticated
         );
+
+        // Log all user claims for debugging (in debug builds only)
+        if (_logger.IsEnabled(LogLevel.Debug)) {
+          var claims = string.Join(", ", userContext.Claims.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+          _logger.LogDebug("User claims: {Claims}", claims);
+        }
+      } else {
+        _logger.LogDebug("Request with no authenticated user context");
       }
 
       // Add context information to HttpContext items for easy access
-      context.Items["UsersContext"] = userContext;
+      context.Items["UserContext"] = userContext;
       context.Items["TenantContext"] = tenantContext;
       context.Items["UserId"] = userContext.UserId;
       context.Items["TenantId"] = tenantContext.TenantId;
 
       // Validate tenant if user is authenticated
-      if (userContext.IsAuthenticated && tenantContext.TenantId == null) { _logger.LogWarning("Authenticated user {UserId} has no tenant context", userContext.UserId); }
+      if (userContext.IsAuthenticated && tenantContext.TenantId == null) {
+        _logger.LogWarning("Authenticated user {UserId} has no tenant context", userContext.UserId);
+      }
 
       await _next(context);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error in context middleware");
-
       throw;
     }
   }
