@@ -70,7 +70,7 @@ public class TestingLabSettingsController(ITestingLabSettingsService settingsSer
   /// Create or update testing lab settings for the current tenant
   /// </summary>
   [HttpPut]
-  [RequireResourcePermission<TestingLabSettings>(PermissionType.Edit)]
+  [RequireContentTypePermission<TestingLabSettings>(PermissionType.Edit)]
   public async Task<ActionResult<TestingLabSettingsDto>> CreateOrUpdateSettings([FromBody] CreateTestingLabSettingsDto dto) {
     try {
       var tenantId = await GetCurrentTenantIdAsync();
@@ -94,7 +94,7 @@ public class TestingLabSettingsController(ITestingLabSettingsService settingsSer
   /// Update testing lab settings for the current tenant (partial update)
   /// </summary>
   [HttpPatch]
-  [RequireResourcePermission<TestingLabSettings>(PermissionType.Edit)]
+  [RequireContentTypePermission<TestingLabSettings>(PermissionType.Edit)]
   public async Task<ActionResult<TestingLabSettingsDto>> UpdateSettings([FromBody] UpdateTestingLabSettingsDto dto) {
     try {
       var tenantId = await GetCurrentTenantIdAsync();
@@ -118,7 +118,7 @@ public class TestingLabSettingsController(ITestingLabSettingsService settingsSer
   /// Reset testing lab settings to default values for the current tenant
   /// </summary>
   [HttpPost("reset")]
-  [RequireResourcePermission<TestingLabSettings>(PermissionType.Edit)]
+  [RequireContentTypePermission<TestingLabSettings>(PermissionType.Edit)]
   public async Task<ActionResult<TestingLabSettingsDto>> ResetSettings() {
     try {
       var tenantId = await GetCurrentTenantIdAsync();
@@ -142,7 +142,7 @@ public class TestingLabSettingsController(ITestingLabSettingsService settingsSer
   /// Check if testing lab settings exist for the current tenant
   /// </summary>
   [HttpGet("exists")]
-  [RequireResourcePermission<TestingLabSettings>(PermissionType.Read)]
+  [RequireContentTypePermission<TestingLabSettings>(PermissionType.Read)]
   public async Task<ActionResult<bool>> SettingsExist() {
     try {
       var tenantId = await GetCurrentTenantIdAsync();
