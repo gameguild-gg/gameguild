@@ -28,7 +28,7 @@ const Mermaid: React.FC<MermaidProps> = ({ chart }) => {
         nodeSpacing: 30,
         rankSpacing: 30,
         curve: 'basis',
-        useMaxWidth: false,
+        useMaxWidth: true,
         htmlLabels: false,
       },
       themeVariables: {
@@ -76,12 +76,13 @@ const Mermaid: React.FC<MermaidProps> = ({ chart }) => {
       ref={containerRef} 
       className="mermaid-container" 
       style={{
-        width: 'auto',
+        width: '100%',
+        maxWidth: '100%',
         margin: '1rem auto',
-        overflow: 'visible'
+        overflow: 'hidden'
       }}
     />
   );
 };
 
-export default Mermaid; 
+export default Mermaid;

@@ -93,6 +93,18 @@ $$
 \\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
 $$
 
+### Images
+
+Here are some test images to verify responsive behavior:
+
+![Small Image](https://via.placeholder.com/300x200/0066cc/ffffff?text=Small+Image)
+
+![Medium Image](https://via.placeholder.com/600x400/cc6600/ffffff?text=Medium+Image)
+
+![Large Image](https://via.placeholder.com/1200x800/cc0066/ffffff?text=Large+Image)
+
+![Extra Large Image](https://via.placeholder.com/2000x1000/66cc00/ffffff?text=Extra+Large+Image)
+
 ### Tables
 
 | Feature | Status | Notes |
@@ -103,6 +115,7 @@ $$
 | Quiz | ✅ | Working |
 | Code Activities | ✅ | Working |
 | Math | ✅ | Working |
+| Images | ✅ | Working |
 
 ## Conclusion
 
@@ -154,4 +167,4 @@ export default function MarkdownTestPage() {
       </div>
     </div>
   );
-} 
+}

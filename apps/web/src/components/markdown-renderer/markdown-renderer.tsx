@@ -63,9 +63,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
     img: (props) => (
       <NextImage
         className="max-w-full h-auto rounded-lg shadow-sm"
-        width={800}
-        height={600}
-        style={{ maxWidth: '100%', height: 'auto' }}
+        width={0}
+        height={0}
+        sizes="100vw"
+        style={{ width: '100%', height: 'auto', maxWidth: '100%' }}
         {...props}
       />
     ),
@@ -246,11 +247,13 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
 
         .markdown-content img {
           max-width: 100% !important;
+          width: 100% !important;
           height: auto !important;
           display: block !important;
           margin: 1rem auto !important;
           border-radius: 0.5rem !important;
           box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+          object-fit: contain !important;
         }
 
         .markdown-content blockquote {
@@ -366,18 +369,19 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
           overflow-x: auto !important;
         }
 
-        /* Mermaid diagram sizing - fixed width */
+        /* Mermaid diagram sizing - responsive width */
         .mermaid-container {
-          width: auto !important;
+          width: 100% !important;
+          max-width: 100% !important;
           margin: 1rem auto !important;
-          overflow: visible !important;
-          display: inline-block !important;
+          overflow: hidden !important;
+          display: block !important;
         }
 
         .mermaid-container svg {
-          width: auto !important;
+          width: 100% !important;
           height: auto !important;
-          max-width: none !important;
+          max-width: 100% !important;
         }
 
         /* Let Mermaid handle text sizing and positioning naturally */
@@ -390,4 +394,4 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
   );
 };
 
-export default MarkdownRenderer; 
+export default MarkdownRenderer;

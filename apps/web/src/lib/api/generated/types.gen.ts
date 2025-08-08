@@ -222,6 +222,12 @@ export type AddUserToGroupDto = {
   isAutoAssigned?: boolean;
 };
 
+export type AdminAssignRoleRequest = {
+  tenantId?: string | null;
+  roleName?: string | null;
+  expiresAt?: string | null;
+};
+
 export type ArchiveProjectResult = {
   success?: boolean;
   project?: Project;
@@ -237,11 +243,17 @@ export type AssignRoleRequest = {
   expiresAt?: string | null;
 };
 
-export type AssignTestingLabRoleRequest = {
+export type AssignTestingLabRoleDto = {
   userId?: string;
   tenantId?: string | null;
   roleName?: string | null;
   constraints?: Array<PermissionConstraint> | null;
+  expiresAt?: string | null;
+};
+
+export type AssignTestingLabRoleRequest = {
+  tenantId?: string | null;
+  roleName?: string | null;
   expiresAt?: string | null;
 };
 
@@ -734,8 +746,14 @@ export type CreateProjectResult = {
 export type CreateRoleRequest = {
   roleName?: string | null;
   description?: string | null;
-  permissions?: Array<ModulePermission> | null;
+  permissions?: Array<ModulePermissionDefinition> | null;
   priority?: number;
+};
+
+export type CreateRoleTemplateRequest = {
+  name?: string | null;
+  description?: string | null;
+  permissionTemplates?: Array<PermissionTemplate> | null;
 };
 
 export type CreateSimpleTestingRequestDto = {
@@ -783,6 +801,12 @@ export type CreateTenantUserGroupDto = {
   parentGroupId?: string | null;
   isActive?: boolean;
   isDefault?: boolean;
+};
+
+export type CreateTestingLabRoleRequest = {
+  name?: string | null;
+  description?: string | null;
+  permissions?: TestingLabPermissionsDto;
 };
 
 export type CreateTestingLocationDto = {
@@ -997,6 +1021,20 @@ export type GrantAccessRequest = {
   expiresAt?: string | null;
 };
 
+export type GrantPermissionRequest = {
+  tenantId?: string | null;
+  action?: string | null;
+  resourceType?: string | null;
+  resourceId?: string | null;
+  expiresAt?: string | null;
+};
+
+export type GrantResourcePermissionRequest = {
+  tenantId?: string | null;
+  action?: string | null;
+  expiresAt?: string | null;
+};
+
 export type IDomainEvent = {
   readonly eventId?: string;
   readonly occurredAt?: string;
@@ -1108,9 +1146,9 @@ export type LocationStatus = 0 | 1 | 2;
 
 export type MemberStatus = 0 | 1 | 2;
 
-export type ModuleAction = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 20 | 21 | 22 | 23 | 24 | 30 | 31 | 32 | 40 | 41 | 42 | 43;
+export type ModuleAction = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 20 | 21 | 22 | 23 | 24 | 30 | 31 | 32 | 40 | 41 | 42 | 43;
 
-export type ModulePermission = {
+export type ModulePermissionDefinition = {
   module?: ModuleType;
   action?: ModuleAction;
   constraints?: Array<PermissionConstraint> | null;
@@ -1119,15 +1157,24 @@ export type ModulePermission = {
 };
 
 export type ModuleRole = {
-  name?: string | null;
-  module?: ModuleType;
-  description?: string | null;
-  permissions?: Array<ModulePermission> | null;
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  rowVersion?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  name: string;
+  module: ModuleType;
+  description: string;
+  permissionsJson?: string | null;
+  permissions?: Array<ModulePermissionDefinition> | null;
   priority?: number;
   isSystemRole?: boolean;
+  tenantId?: string | null;
+  readonly userRoleAssignments?: Array<UserRoleAssignment> | null;
 };
 
-export type ModuleType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export type ModuleType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 export type MonetizationDto = {
   price?: number;
@@ -1247,6 +1294,12 @@ export type PermissionResult = {
 };
 
 export type PermissionSource = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+export type PermissionTemplate = {
+  action?: string | null;
+  resourceType?: string | null;
+  constraints?: Array<PermissionConstraint> | null;
+};
 
 export type PermissionType =
   | 1
@@ -2260,6 +2313,13 @@ export type RevokeAchievementRequest = {
   reason?: string | null;
 };
 
+export type RevokePermissionRequest = {
+  tenantId?: string | null;
+  action?: string | null;
+  resourceType?: string | null;
+  resourceId?: string | null;
+};
+
 export type RevokeRoleRequest = {
   userId?: string;
   tenantId?: string | null;
@@ -2269,6 +2329,25 @@ export type RevokeRoleRequest = {
 
 export type RevokeTokenRequestDto = {
   refreshToken?: string | null;
+};
+
+export type RoleTemplate = {
+  readonly isNew?: boolean;
+  readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+  readonly isDeleted?: boolean;
+  tenant?: Tenant;
+  name: string;
+  description?: string | null;
+  permissionTemplatesJson?: string | null;
+  permissionTemplates?: Array<PermissionTemplate> | null;
+  isSystemRole?: boolean;
+  userPermissions?: Array<UserPermission> | null;
 };
 
 export type ScheduleProgramDto = {
@@ -2706,6 +2785,36 @@ export type TestingLabPermissions = {
   constraints?: Array<PermissionConstraint> | null;
 };
 
+export type TestingLabPermissionsDto = {
+  canCreateSessions?: boolean;
+  canEditSessions?: boolean;
+  canDeleteSessions?: boolean;
+  canViewSessions?: boolean;
+  canCreateLocations?: boolean;
+  canEditLocations?: boolean;
+  canDeleteLocations?: boolean;
+  canViewLocations?: boolean;
+  canCreateFeedback?: boolean;
+  canEditFeedback?: boolean;
+  canDeleteFeedback?: boolean;
+  canViewFeedback?: boolean;
+  canModerateFeedback?: boolean;
+  canCreateRequests?: boolean;
+  canEditRequests?: boolean;
+  canDeleteRequests?: boolean;
+  canViewRequests?: boolean;
+  canApproveRequests?: boolean;
+  canManageParticipants?: boolean;
+  canViewParticipants?: boolean;
+};
+
+export type TestingLabRoleTemplate = {
+  name?: string | null;
+  description?: string | null;
+  isSystemRole?: boolean;
+  permissions?: TestingLabPermissionsDto;
+};
+
 export type TestingLocation = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
@@ -2879,6 +2988,10 @@ export type UpdateCredentialDto = {
   isActive?: boolean;
 };
 
+export type UpdateDefaultRoleRequest = {
+  roleName?: string | null;
+};
+
 export type UpdatePaymentMethodDto = {
   paymentMethodId?: string;
 };
@@ -2968,7 +3081,12 @@ export type UpdateProjectResult = {
 };
 
 export type UpdateRoleRequest = {
-  permissions?: Array<ModulePermission> | null;
+  permissions?: Array<ModulePermissionDefinition> | null;
+};
+
+export type UpdateRoleTemplateRequest = {
+  description?: string | null;
+  permissionTemplates?: Array<PermissionTemplate> | null;
 };
 
 export type UpdateTenantDomainDto = {
@@ -2992,6 +3110,11 @@ export type UpdateTenantUserGroupDto = {
   parentGroupId?: string | null;
   isActive?: boolean | null;
   isDefault?: boolean | null;
+};
+
+export type UpdateTestingLabRoleRequest = {
+  description?: string | null;
+  permissions?: TestingLabPermissionsDto;
 };
 
 export type UpdateTestingLocationDto = {
@@ -3179,6 +3302,29 @@ export type UserFinancialMethod = {
   user?: User;
 };
 
+export type UserPermission = {
+  readonly isNew?: boolean;
+  readonly isGlobal?: boolean;
+  readonly domainEvents?: Array<IDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+  readonly isDeleted?: boolean;
+  tenant?: Tenant;
+  userId: string;
+  tenantId?: string | null;
+  action: string;
+  resourceType: string;
+  resourceId?: string | null;
+  grantedByRole?: string | null;
+  constraintsJson?: string | null;
+  constraints?: Array<PermissionConstraint> | null;
+  expiresAt?: string | null;
+  isActive?: boolean;
+};
+
 export type UserProduct = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
@@ -3277,14 +3423,21 @@ export type UserResponseDtoPagedResult = {
 
 export type UserRoleAssignment = {
   id?: string;
-  userId?: string;
-  tenantId?: string | null;
-  module?: ModuleType;
-  roleName?: string | null;
-  constraints?: Array<PermissionConstraint> | null;
   createdAt?: string;
+  updatedAt?: string;
+  rowVersion?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  userId: string;
+  tenantId?: string | null;
+  module: ModuleType;
+  roleName: string;
+  constraintsJson?: string | null;
+  readonly constraints?: Array<PermissionConstraint> | null;
   expiresAt?: string | null;
   isActive?: boolean;
+  roleId?: string | null;
+  role?: ModuleRole;
 };
 
 export type UserShareResult = {
@@ -3347,6 +3500,13 @@ export type UserSubscriptionSummaryDto = {
   nextBillingAt?: string | null;
   isTrialActive?: boolean;
   isActive?: boolean;
+};
+
+export type UserTestingLabPermissions = {
+  userId?: string;
+  tenantId?: string | null;
+  assignedRoles?: Array<string> | null;
+  permissions?: TestingLabPermissionsDto;
 };
 
 export type VerificationMethod = 0 | 1 | 2;
@@ -4375,7 +4535,7 @@ export type GetApiModulePermissionsMyPermissionsResponses = {
   /**
    * OK
    */
-  200: Array<ModulePermission>;
+  200: Array<ModulePermissionDefinition>;
 };
 
 export type GetApiModulePermissionsMyPermissionsResponse = GetApiModulePermissionsMyPermissionsResponses[keyof GetApiModulePermissionsMyPermissionsResponses];
@@ -4396,7 +4556,7 @@ export type GetApiModulePermissionsUsersByUserIdPermissionsResponses = {
   /**
    * OK
    */
-  200: Array<ModulePermission>;
+  200: Array<ModulePermissionDefinition>;
 };
 
 export type GetApiModulePermissionsUsersByUserIdPermissionsResponse =
@@ -5026,6 +5186,256 @@ export type GetApiPaymentsRevenueReportResponses = {
 };
 
 export type GetApiPaymentsRevenueReportResponse = GetApiPaymentsRevenueReportResponses[keyof GetApiPaymentsRevenueReportResponses];
+
+export type GetApiAdminPermissionsRoleTemplatesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/admin/permissions/role-templates';
+};
+
+export type GetApiAdminPermissionsRoleTemplatesResponses = {
+  /**
+   * OK
+   */
+  200: Array<RoleTemplate>;
+};
+
+export type GetApiAdminPermissionsRoleTemplatesResponse = GetApiAdminPermissionsRoleTemplatesResponses[keyof GetApiAdminPermissionsRoleTemplatesResponses];
+
+export type PostApiAdminPermissionsRoleTemplatesData = {
+  body?: CreateRoleTemplateRequest;
+  path?: never;
+  query?: never;
+  url: '/api/admin/permissions/role-templates';
+};
+
+export type PostApiAdminPermissionsRoleTemplatesResponses = {
+  /**
+   * OK
+   */
+  200: RoleTemplate;
+};
+
+export type PostApiAdminPermissionsRoleTemplatesResponse = PostApiAdminPermissionsRoleTemplatesResponses[keyof PostApiAdminPermissionsRoleTemplatesResponses];
+
+export type DeleteApiAdminPermissionsRoleTemplatesByNameData = {
+  body?: never;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/admin/permissions/role-templates/{name}';
+};
+
+export type DeleteApiAdminPermissionsRoleTemplatesByNameResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetApiAdminPermissionsRoleTemplatesByNameData = {
+  body?: never;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/admin/permissions/role-templates/{name}';
+};
+
+export type GetApiAdminPermissionsRoleTemplatesByNameResponses = {
+  /**
+   * OK
+   */
+  200: RoleTemplate;
+};
+
+export type GetApiAdminPermissionsRoleTemplatesByNameResponse =
+  GetApiAdminPermissionsRoleTemplatesByNameResponses[keyof GetApiAdminPermissionsRoleTemplatesByNameResponses];
+
+export type PutApiAdminPermissionsRoleTemplatesByNameData = {
+  body?: UpdateRoleTemplateRequest;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/admin/permissions/role-templates/{name}';
+};
+
+export type PutApiAdminPermissionsRoleTemplatesByNameResponses = {
+  /**
+   * OK
+   */
+  200: RoleTemplate;
+};
+
+export type PutApiAdminPermissionsRoleTemplatesByNameResponse =
+  PutApiAdminPermissionsRoleTemplatesByNameResponses[keyof PutApiAdminPermissionsRoleTemplatesByNameResponses];
+
+export type GetApiAdminPermissionsUsersByUserIdRolesData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    tenantId?: string;
+  };
+  url: '/api/admin/permissions/users/{userId}/roles';
+};
+
+export type GetApiAdminPermissionsUsersByUserIdRolesResponses = {
+  /**
+   * OK
+   */
+  200: Array<UserRoleAssignment>;
+};
+
+export type GetApiAdminPermissionsUsersByUserIdRolesResponse =
+  GetApiAdminPermissionsUsersByUserIdRolesResponses[keyof GetApiAdminPermissionsUsersByUserIdRolesResponses];
+
+export type PostApiAdminPermissionsUsersByUserIdRolesData = {
+  body?: AdminAssignRoleRequest;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: '/api/admin/permissions/users/{userId}/roles';
+};
+
+export type PostApiAdminPermissionsUsersByUserIdRolesResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type DeleteApiAdminPermissionsUsersByUserIdRolesByRoleNameData = {
+  body?: never;
+  path: {
+    userId: string;
+    roleName: string;
+  };
+  query?: {
+    tenantId?: string;
+  };
+  url: '/api/admin/permissions/users/{userId}/roles/{roleName}';
+};
+
+export type DeleteApiAdminPermissionsUsersByUserIdRolesByRoleNameResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type DeleteApiAdminPermissionsUsersByUserIdPermissionsData = {
+  body?: RevokePermissionRequest;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: '/api/admin/permissions/users/{userId}/permissions';
+};
+
+export type DeleteApiAdminPermissionsUsersByUserIdPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetApiAdminPermissionsUsersByUserIdPermissionsData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    tenantId?: string;
+    resourceType?: string;
+  };
+  url: '/api/admin/permissions/users/{userId}/permissions';
+};
+
+export type GetApiAdminPermissionsUsersByUserIdPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: Array<UserPermission>;
+};
+
+export type GetApiAdminPermissionsUsersByUserIdPermissionsResponse =
+  GetApiAdminPermissionsUsersByUserIdPermissionsResponses[keyof GetApiAdminPermissionsUsersByUserIdPermissionsResponses];
+
+export type PostApiAdminPermissionsUsersByUserIdPermissionsData = {
+  body?: GrantPermissionRequest;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: '/api/admin/permissions/users/{userId}/permissions';
+};
+
+export type PostApiAdminPermissionsUsersByUserIdPermissionsResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetApiAdminPermissionsUsersByUserIdCheckData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    tenantId?: string;
+    action?: string;
+    resourceType?: string;
+    resourceId?: string;
+  };
+  url: '/api/admin/permissions/users/{userId}/check';
+};
+
+export type GetApiAdminPermissionsUsersByUserIdCheckResponses = {
+  /**
+   * OK
+   */
+  200: boolean;
+};
+
+export type GetApiAdminPermissionsUsersByUserIdCheckResponse =
+  GetApiAdminPermissionsUsersByUserIdCheckResponses[keyof GetApiAdminPermissionsUsersByUserIdCheckResponses];
+
+export type GetApiAdminPermissionsDefaultRoleData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/admin/permissions/default-role';
+};
+
+export type GetApiAdminPermissionsDefaultRoleResponses = {
+  /**
+   * OK
+   */
+  200: string;
+};
+
+export type GetApiAdminPermissionsDefaultRoleResponse = GetApiAdminPermissionsDefaultRoleResponses[keyof GetApiAdminPermissionsDefaultRoleResponses];
+
+export type PutApiAdminPermissionsDefaultRoleData = {
+  body?: UpdateDefaultRoleRequest;
+  path?: never;
+  query?: never;
+  url: '/api/admin/permissions/default-role';
+};
+
+export type PutApiAdminPermissionsDefaultRoleResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
 
 export type GetApiPostsData = {
   body?: never;
@@ -9200,7 +9610,7 @@ export type GetTestingPermissionsMyPermissionsResponses = {
 export type GetTestingPermissionsMyPermissionsResponse = GetTestingPermissionsMyPermissionsResponses[keyof GetTestingPermissionsMyPermissionsResponses];
 
 export type PostTestingPermissionsAssignRoleData = {
-  body?: AssignTestingLabRoleRequest;
+  body?: AssignTestingLabRoleDto;
   path?: never;
   query?: never;
   url: '/testing/permissions/assign-role';
@@ -9270,6 +9680,194 @@ export type GetTestingPermissionsUsersWithRoleByRoleNameResponses = {
 
 export type GetTestingPermissionsUsersWithRoleByRoleNameResponse =
   GetTestingPermissionsUsersWithRoleByRoleNameResponses[keyof GetTestingPermissionsUsersWithRoleByRoleNameResponses];
+
+export type GetApiTestingLabPermissionsRoleTemplatesData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/testing-lab/permissions/role-templates';
+};
+
+export type GetApiTestingLabPermissionsRoleTemplatesResponses = {
+  /**
+   * OK
+   */
+  200: Array<TestingLabRoleTemplate>;
+};
+
+export type GetApiTestingLabPermissionsRoleTemplatesResponse =
+  GetApiTestingLabPermissionsRoleTemplatesResponses[keyof GetApiTestingLabPermissionsRoleTemplatesResponses];
+
+export type PostApiTestingLabPermissionsRoleTemplatesData = {
+  body?: CreateTestingLabRoleRequest;
+  path?: never;
+  query?: never;
+  url: '/api/testing-lab/permissions/role-templates';
+};
+
+export type PostApiTestingLabPermissionsRoleTemplatesResponses = {
+  /**
+   * OK
+   */
+  200: TestingLabRoleTemplate;
+};
+
+export type PostApiTestingLabPermissionsRoleTemplatesResponse =
+  PostApiTestingLabPermissionsRoleTemplatesResponses[keyof PostApiTestingLabPermissionsRoleTemplatesResponses];
+
+export type DeleteApiTestingLabPermissionsRoleTemplatesByNameData = {
+  body?: never;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/testing-lab/permissions/role-templates/{name}';
+};
+
+export type DeleteApiTestingLabPermissionsRoleTemplatesByNameResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PutApiTestingLabPermissionsRoleTemplatesByNameData = {
+  body?: UpdateTestingLabRoleRequest;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/testing-lab/permissions/role-templates/{name}';
+};
+
+export type PutApiTestingLabPermissionsRoleTemplatesByNameResponses = {
+  /**
+   * OK
+   */
+  200: TestingLabRoleTemplate;
+};
+
+export type PutApiTestingLabPermissionsRoleTemplatesByNameResponse =
+  PutApiTestingLabPermissionsRoleTemplatesByNameResponses[keyof PutApiTestingLabPermissionsRoleTemplatesByNameResponses];
+
+export type GetApiTestingLabPermissionsUsersByUserIdData = {
+  body?: never;
+  path: {
+    userId: string;
+  };
+  query?: {
+    tenantId?: string;
+  };
+  url: '/api/testing-lab/permissions/users/{userId}';
+};
+
+export type GetApiTestingLabPermissionsUsersByUserIdResponses = {
+  /**
+   * OK
+   */
+  200: UserTestingLabPermissions;
+};
+
+export type GetApiTestingLabPermissionsUsersByUserIdResponse =
+  GetApiTestingLabPermissionsUsersByUserIdResponses[keyof GetApiTestingLabPermissionsUsersByUserIdResponses];
+
+export type PostApiTestingLabPermissionsUsersByUserIdRolesData = {
+  body?: AssignTestingLabRoleRequest;
+  path: {
+    userId: string;
+  };
+  query?: never;
+  url: '/api/testing-lab/permissions/users/{userId}/roles';
+};
+
+export type PostApiTestingLabPermissionsUsersByUserIdRolesResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type DeleteApiTestingLabPermissionsUsersByUserIdRolesByRoleNameData = {
+  body?: never;
+  path: {
+    userId: string;
+    roleName: string;
+  };
+  query?: {
+    tenantId?: string;
+  };
+  url: '/api/testing-lab/permissions/users/{userId}/roles/{roleName}';
+};
+
+export type DeleteApiTestingLabPermissionsUsersByUserIdRolesByRoleNameResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type DeleteApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdData = {
+  body?: never;
+  path: {
+    userId: string;
+    resourceType: string;
+    resourceId: string;
+  };
+  query?: {
+    action?: string;
+    tenantId?: string;
+  };
+  url: '/api/testing-lab/permissions/users/{userId}/resources/{resourceType}/{resourceId}';
+};
+
+export type DeleteApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdData = {
+  body?: GrantResourcePermissionRequest;
+  path: {
+    userId: string;
+    resourceType: string;
+    resourceId: string;
+  };
+  query?: never;
+  url: '/api/testing-lab/permissions/users/{userId}/resources/{resourceType}/{resourceId}';
+};
+
+export type PostApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeData = {
+  body?: never;
+  path: {
+    userId: string;
+    resourceType: string;
+  };
+  query?: {
+    action?: string;
+    resourceId?: string;
+    tenantId?: string;
+  };
+  url: '/api/testing-lab/permissions/users/{userId}/check/{resourceType}';
+};
+
+export type GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponses = {
+  /**
+   * OK
+   */
+  200: boolean;
+};
+
+export type GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponse =
+  GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponses[keyof GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponses];
 
 export type GetApiUsersByUserIdAchievementsData = {
   body?: never;
