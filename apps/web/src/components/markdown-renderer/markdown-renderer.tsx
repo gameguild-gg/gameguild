@@ -1,12 +1,12 @@
 'use client';
 
 import 'katex/dist/katex.min.css';
+import { useTheme } from 'next-themes';
 import NextImage from 'next/image';
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { useTheme } from 'next-themes';
+import { vs, vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
@@ -383,19 +383,24 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
           overflow-x: auto !important;
         }
 
-        /* Mermaid diagram sizing - responsive width */
+        /* Mermaid diagram sizing - smart scaling */
         .mermaid-container {
-          width: 100% !important;
+          width: auto !important;
           max-width: 100% !important;
           margin: 1rem auto !important;
-          overflow: hidden !important;
-          display: block !important;
+          overflow: visible !important;
+          display: flex !important;
+          justify-content: center !important;
+          align-items: center !important;
+          text-align: center !important;
         }
 
         .mermaid-container svg {
-          width: 100% !important;
+          max-width: none !important;
           height: auto !important;
-          max-width: 100% !important;
+          display: inline-block !important;
+          flex-shrink: 0 !important;
+          flex-grow: 0 !important;
         }
 
         /* Let Mermaid handle text sizing and positioning naturally */
