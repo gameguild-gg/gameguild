@@ -102,7 +102,7 @@ export function MarkdownCodeActivity(params: MarkdownCodeActivityProps) {
 
   return (
     <>
-      <Card className="container flex flex-auto flex-col p-4 gap-4 shadow-lg border border-gray-300">
+      <Card className="w-full flex flex-auto flex-col p-4 gap-4 shadow-lg border border-gray-300">
         <p className="text-lg font-bold">{params.description}</p>
         <Card className="bg-[#1e1e1e] text-white p-4 font-mono text-sm">
           <Editor
