@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 
 namespace GameGuild.Common;
@@ -9,17 +10,30 @@ namespace GameGuild.Common;
 public class UsersContext : IUserContext {
   private readonly IHttpContextAccessor _httpContextAccessor;
   private readonly ClaimsPrincipal? _user;
+  private readonly ILogger<UsersContext> _logger;
 
-  public UsersContext(IHttpContextAccessor httpContextAccessor) {
+  public UsersContext(IHttpContextAccessor httpContextAccessor, ILogger<UsersContext> logger) {
     _httpContextAccessor = httpContextAccessor;
     _user = _httpContextAccessor.HttpContext?.User;
+    _logger = logger;
   }
 
   public Guid? UserId {
     get {
-      var userIdClaim = _user?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? _user?.FindFirst("sub")?.Value ?? _user?.FindFirst("user_id")?.Value;
+      var userIdClaim = _user?.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+                        _user?.FindFirst("sub")?.Value ??
+                        _user?.FindFirst("user_id")?.Value ??
+                        _user?.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
 
-      return Guid.TryParse(userIdClaim, out var id) ? id : null;
+      if (Guid.TryParse(userIdClaim, out var id)) {
+        _logger.LogDebug("Found user ID: {UserId} from claim: {Claim}", id, userIdClaim);
+        return id;
+      }
+
+      _logger.LogWarning("Could not extract user ID from token claims. Available claims: {Claims}",
+        string.Join(", ", _user?.Claims?.Select(c => $"{c.Type}={c.Value}") ?? Array.Empty<string>()));
+
+      return null;
     }
   }
 
@@ -52,29 +66,45 @@ public class TenantContext : ITenantContext {
   private readonly IHttpContextAccessor _httpContextAccessor;
   private readonly ClaimsPrincipal? _user;
   private readonly IHttpContextAccessor _accessor;
+  private readonly ILogger<TenantContext> _logger;
 
-  public TenantContext(IHttpContextAccessor httpContextAccessor) {
+  public TenantContext(IHttpContextAccessor httpContextAccessor, ILogger<TenantContext> logger) {
     _httpContextAccessor = httpContextAccessor;
     _accessor = httpContextAccessor;
     _user = _httpContextAccessor.HttpContext?.User;
+    _logger = logger;
   }
 
   public Guid? TenantId {
     get {
-      // Try to get tenant from claims first
-      var tenantIdClaim = _user?.FindFirst("tenant_id")?.Value ?? _user?.FindFirst("tid")?.Value;
+      // Try to get tenant from claims first (most common for JWT tokens)
+      var tenantIdClaim = _user?.FindFirst("tenant_id")?.Value ??
+                          _user?.FindFirst("tid")?.Value ??
+                          _user?.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid")?.Value;
 
-      if (Guid.TryParse(tenantIdClaim, out var claimTenantId)) return claimTenantId;
+      if (Guid.TryParse(tenantIdClaim, out var claimTenantId)) {
+        _logger.LogDebug("Found tenant ID from claims: {TenantId}", claimTenantId);
+        return claimTenantId;
+      }
 
       // Try to get from headers
       var headerTenantId = _accessor.HttpContext?.Request.Headers["X-Tenant-ID"].FirstOrDefault();
 
-      if (Guid.TryParse(headerTenantId, out var headerTid)) return headerTid;
+      if (Guid.TryParse(headerTenantId, out var headerTid)) {
+        _logger.LogDebug("Found tenant ID from header: {TenantId}", headerTid);
+        return headerTid;
+      }
 
       // Try to get from query string
       var queryTenantId = _accessor.HttpContext?.Request.Query["tenantId"].FirstOrDefault();
 
-      if (Guid.TryParse(queryTenantId, out var queryTid)) return queryTid;
+      if (Guid.TryParse(queryTenantId, out var queryTid)) {
+        _logger.LogDebug("Found tenant ID from query: {TenantId}", queryTid);
+        return queryTid;
+      }
+
+      _logger.LogInformation("No tenant ID found in claims, headers, or query. Available claims: {Claims}",
+        string.Join(", ", _user?.Claims?.Select(c => $"{c.Type}={c.Value}") ?? Array.Empty<string>()));
 
       return null;
     }

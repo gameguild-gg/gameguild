@@ -2,6 +2,7 @@ using GameGuild.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Moq;
 using System.Security.Claims;
 
 
@@ -37,8 +38,10 @@ public class ContextMiddlewareTests
 
         // Create context services with the test HTTP context
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
-        var userContext = new UsersContext(httpContextAccessor);
-        var tenantContext = new TenantContext(httpContextAccessor);
+        var userLogger = new Mock<ILogger<UsersContext>>();
+        var tenantLogger = new Mock<ILogger<TenantContext>>();
+        var userContext = new UsersContext(httpContextAccessor, userLogger.Object);
+        var tenantContext = new TenantContext(httpContextAccessor, tenantLogger.Object);
 
         // Act
         await middleware.InvokeAsync(httpContext, userContext, tenantContext);
@@ -58,7 +61,8 @@ public class ContextMiddlewareTests
         var testUserId = Guid.NewGuid().ToString();
         var httpContext = CreateHttpContextWithUser(testUserId, "test@example.com", "TestTenant");
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
-        var userContext = new UsersContext(httpContextAccessor);
+        var userLogger = new Mock<ILogger<UsersContext>>();
+        var userContext = new UsersContext(httpContextAccessor, userLogger.Object);
 
         // Act & Assert
         Assert.True(userContext.IsAuthenticated);
@@ -75,7 +79,8 @@ public class ContextMiddlewareTests
         var httpContext = CreateHttpContextWithUser(testUserId, "test@example.com", "TestTenant");
         httpContext.Request.Headers.Append("X-Tenant-Id", "tenant-123");
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
-        var tenantContext = new TenantContext(httpContextAccessor);
+        var tenantLogger = new Mock<ILogger<TenantContext>>();
+        var tenantContext = new TenantContext(httpContextAccessor, tenantLogger.Object);
 
         // Act & Assert
         Assert.Equal("TestTenant", tenantContext.TenantName);
@@ -88,7 +93,8 @@ public class ContextMiddlewareTests
         // Arrange
         var httpContext = new DefaultHttpContext();
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
-        var userContext = new UsersContext(httpContextAccessor);
+        var userLogger = new Mock<ILogger<UsersContext>>();
+        var userContext = new UsersContext(httpContextAccessor, userLogger.Object);
 
         // Act & Assert
         Assert.False(userContext.IsAuthenticated);
