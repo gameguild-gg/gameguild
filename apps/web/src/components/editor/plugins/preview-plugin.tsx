@@ -4,16 +4,7 @@ import type React from "react"
 
 import { useCallback, useRef, useState, useEffect } from "react"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import {
-  ExternalLink,
-  ImageIcon,
-  LayoutGrid,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  AlertCircle,
-  RotateCcw,
-} from "lucide-react"
+import { ExternalLink, ImageIcon, Eye, AlertCircle, RotateCcw } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import type { SerializedEditorState } from "lexical"
 import type { SerializedQuizNode } from "../nodes/quiz-node"
@@ -31,13 +22,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import type { SerializedHeaderNode } from "../nodes/header-node"
 import type { SerializedDividerNode } from "../nodes/divider-node"
 
-import { cn } from "@/lib/utils"
-
 // Add the import for SerializedGalleryNode
 import type { SerializedGalleryNode } from "../nodes/gallery-node"
 
 // Add the import for SerializedPresentationNode
 import type { SerializedPresentationNode } from "../nodes/presentation-node"
+
+// Add the SlidePlayer import at the top with the other imports
+import { SlidePlayer } from "@/components/editor/ui/slide-player"
 
 // Add the import for SerializedSourceNode
 import type { SerializedSourceNode } from "../nodes/source-node"
@@ -532,6 +524,12 @@ function PreviewAudio({ node }: { node: SerializedAudioNode }) {
   )
 }
 
+// Add this function to the PreviewContent component, alongside the other node renderers
+// Find the PreviewCallout function and update it to use the type name as default title
+// and add the getTypeLabel function
+
+// Add this function to the PreviewContent component, alongside the other node renderers
+
 // Adicione a função de renderização para o nó de cabeçalho
 // Adicione esta função junto com as outras funções de preview (como PreviewQuiz, PreviewImage, etc.)
 // Atualize a função PreviewHeader para incluir os estilos
@@ -615,6 +613,7 @@ function PreviewDivider({ node }: { node: SerializedDividerNode }) {
   }
 }
 
+// Replace the entire `PreviewPresentation` function with this simplified version that uses SlidePlayer:
 function PreviewPresentation({ node }: { node: SerializedPresentationNode }) {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
 
@@ -623,122 +622,30 @@ function PreviewPresentation({ node }: { node: SerializedPresentationNode }) {
     return null
   }
 
-  const { slides, title, theme } = node.data
-
-  if (slides.length === 0) {
-    return (
-      <div className="my-4 flex items-center justify-center h-40 bg-muted/20 rounded-lg border border-dashed">
-        <div className="text-center">
-          <LayoutGrid className="h-8 w-8 mx-auto text-muted-foreground" />
-          <p className="mt-2 text-sm text-muted-foreground">No slides in presentation</p>
-        </div>
-      </div>
-    )
-  }
-
-  const currentSlide = slides[currentSlideIndex]
-
-  // Get background style based on theme
-  const getBackgroundStyle = (slideTheme: string, backgroundImage?: string) => {
-    switch (slideTheme) {
-      case "light":
-        return { backgroundColor: "white", color: "black" }
-      case "dark":
-        return { backgroundColor: "#1a1a1a", color: "white" }
-      case "gradient":
-        return {
-          background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-          color: "white",
-        }
-      case "image":
-        return {
-          backgroundImage: `url(${backgroundImage || "/placeholder.svg"})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          color: "white",
-          position: "relative" as const,
-        }
-      default:
-        return { backgroundColor: "white", color: "black" }
-    }
-  }
+  const { slides, title, theme, transitionEffect, autoAdvance, autoAdvanceDelay, autoAdvanceLoop, showControls } =
+    node.data
 
   return (
     <div className="my-4">
-      <div className="rounded-lg overflow-hidden border shadow-sm">
-        <div className="bg-gray-100 dark:bg-gray-800 p-2 flex items-center justify-between">
-          <h3 className="text-sm font-medium truncate">{title}</h3>
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">
-              {currentSlideIndex + 1} / {slides.length}
-            </span>
-          </div>
-        </div>
-
-        <div className="aspect-video relative">
-          <div
-            className="w-full h-full overflow-hidden"
-            style={getBackgroundStyle(currentSlide.theme || theme, currentSlide.backgroundImage)}
-          >
-            {currentSlide.theme === "image" && <div className="absolute inset-0 bg-black/40"></div>}
-
-            <div className="relative z-10 w-full h-full p-8">
-              {currentSlide.title && <h2 className="text-3xl font-bold mb-4">{currentSlide.title}</h2>}
-              {currentSlide.content && <div className="prose max-w-none">{currentSlide.content}</div>}
-            </div>
-          </div>
-
-          {/* Navigation controls */}
-          {slides.length > 1 && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full h-8 w-8"
-                onClick={() => setCurrentSlideIndex((prev) => Math.max(0, prev - 1))}
-                disabled={currentSlideIndex === 0}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full h-8 w-8"
-                onClick={() => setCurrentSlideIndex((prev) => Math.min(slides.length - 1, prev + 1))}
-                disabled={currentSlideIndex === slides.length - 1}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-        </div>
-
-        {/* Slide thumbnails */}
-        <div className="bg-gray-100 dark:bg-gray-800 p-2 overflow-x-auto">
-          <div className="flex gap-2">
-            {slides.map((slide, index) => (
-              <button
-                key={slide.id}
-                className={cn(
-                  "flex-shrink-0 w-16 h-10 rounded overflow-hidden border-2",
-                  index === currentSlideIndex ? "border-primary" : "border-transparent hover:border-gray-300",
-                )}
-                onClick={() => setCurrentSlideIndex(index)}
-              >
-                <div
-                  className="w-full h-full relative"
-                  style={getBackgroundStyle(slide.theme || theme, slide.backgroundImage)}
-                >
-                  {slide.theme === "image" && <div className="absolute inset-0 bg-black/40"></div>}
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-xs">{index + 1}</span>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      <SlidePlayer
+        slides={slides}
+        title={title}
+        currentSlideIndex={currentSlideIndex}
+        onSlideChange={setCurrentSlideIndex}
+        autoAdvance={autoAdvance}
+        autoAdvanceDelay={autoAdvanceDelay}
+        autoAdvanceLoop={autoAdvanceLoop}
+        transitionEffect={transitionEffect}
+        showControls={showControls}
+        showThumbnails={true}
+        showHeader={true}
+        showFullscreenButton={false}
+        theme={theme}
+        customThemeColor={node.data.customThemeColor}
+        size="lg"
+        isPresenting={false}
+        isEditing={false}
+      />
     </div>
   )
 }
@@ -1511,7 +1418,7 @@ export function PreviewPlugin() {
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Preview</DialogTitle>
             <DialogDescription>Preview of your content as it would appear to readers</DialogDescription>
