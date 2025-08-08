@@ -1,0 +1,67 @@
+# Global analyzer configuration for test projects
+is_global = true
+
+# Suppress test-specific warnings that are acceptable in test code
+# Naming conventions - underscores are common in test method names
+dotnet_diagnostic.CA1707.severity = none
+
+# ConfigureAwait - not needed in test code
+dotnet_diagnostic.CA2007.severity = none
+
+# Expression value never used - common in test assertions
+dotnet_diagnostic.IDE0058.severity = none
+
+# Add braces - less critical in test code
+dotnet_diagnostic.IDE0011.severity = none
+
+# HttpClient URI vs string - less critical in tests
+dotnet_diagnostic.CA2234.severity = none
+
+# JsonSerializerOptions caching - acceptable in tests
+dotnet_diagnostic.CA1869.severity = none
+
+# IDisposable implementation - test fixtures often have simpler disposal
+dotnet_diagnostic.CA1063.severity = none
+dotnet_diagnostic.CA1816.severity = none
+dotnet_diagnostic.CA2213.severity = none
+
+# Culture-specific operations - often acceptable in tests
+dotnet_diagnostic.CA1311.severity = none
+dotnet_diagnostic.CA1304.severity = none
+dotnet_diagnostic.CA1307.severity = none
+
+# Unused parameters - common in test method signatures
+dotnet_diagnostic.IDE0060.severity = none
+dotnet_diagnostic.S1172.severity = none
+
+# Collection initialization - less critical in tests
+dotnet_diagnostic.IDE0305.severity = none
+
+# Sealing types - not important for test classes
+dotnet_diagnostic.CA1852.severity = none
+
+# Dispose objects - test code often has different disposal patterns
+dotnet_diagnostic.CA2000.severity = none
+
+# Types that own disposable fields - test fixtures handle this differently
+dotnet_diagnostic.CA1001.severity = none
+
+# Performance rules that are less critical in test code
+dotnet_diagnostic.CA1822.severity = none  # Mark members as static
+dotnet_diagnostic.CA1801.severity = none  # Review unused parameters
+
+# Security rules that are less relevant in test code
+dotnet_diagnostic.CA5394.severity = none  # Do not use insecure randomness
+dotnet_diagnostic.CA5397.severity = none  # Do not use deprecated SslProtocols values
+
+# Maintainability rules that are relaxed for tests
+dotnet_diagnostic.CA1506.severity = none  # Avoid excessive class coupling
+dotnet_diagnostic.CA1502.severity = none  # Avoid excessive complexity
+
+# Additional IDE and style rules for tests
+dotnet_diagnostic.IDE0090.severity = none  # 'new' expression can be simplified
+dotnet_diagnostic.IDE0052.severity = none  # Private member can be removed
+dotnet_diagnostic.IDE0051.severity = none  # Private member is unused
+
+# Exception handling rules relaxed for tests
+dotnet_diagnostic.CA2201.severity = none  # Exception type not sufficiently specific

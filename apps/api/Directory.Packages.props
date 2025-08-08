@@ -52,7 +52,7 @@
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.13.0"/>
 
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="9.0.3"/>
-    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.4.0"/>
+    <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.4.0.108396"/>
     <PackageVersion Include="coverlet.collector" Version="6.0.4"/>
     <PackageVersion Include="xunit" Version="2.9.3"/>
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.3"/>
