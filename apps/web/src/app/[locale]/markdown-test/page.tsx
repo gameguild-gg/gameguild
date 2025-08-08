@@ -125,7 +125,7 @@ The markdown renderer is working correctly! 🎉
 export default function MarkdownTestPage() {
   return (
     <div 
-      className="min-h-screen bg-gray-50" 
+      className="min-h-screen bg-background" 
       style={{ 
         width: '100vw', 
         maxWidth: 'none',
@@ -148,14 +148,14 @@ export default function MarkdownTestPage() {
             maxWidth: 'none'
           }}
         >
-          <h1 className="text-3xl font-bold mb-4 text-gray-900">Markdown Renderer Test</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold mb-4 text-foreground">Markdown Renderer Test</h1>
+          <p className="text-muted-foreground">
             This page demonstrates the markdown renderer functionality migrated from the old implementation.
           </p>
         </div>
         
         <div 
-          className="bg-white rounded-lg shadow-lg p-4 md:p-8"
+          className="bg-card rounded-lg shadow-lg p-4 md:p-8"
           style={{ 
             width: '100%', 
             maxWidth: 'none',
