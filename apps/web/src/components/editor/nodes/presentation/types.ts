@@ -1,40 +1,55 @@
-export type SlideLayout =
-  | "title-slide"
+export type SlideLayout = 
+  | "title"
+  | "content" 
   | "title-content"
-  | "two-column"
-  | "content-only"
-  | "image-only"
+  | "image-text"
+  | "text-image"
   | "full-image"
+  | "two-column"
   | "blank"
 
-export type SlideTheme = "light" | "dark" | "standard" | "gradient" | "custom" | "image"
+export type SlideTheme = 
+  | "light"
+  | "dark" 
+  | "standard"
+  | "gradient"
+  | "custom"
+  | "image"
 
-export type TransitionEffect = "none" | "fade" | "slide" | "zoom" | "flip" | "cube"
+export type TransitionEffect = 
+  | "none"
+  | "fade"
+  | "slide"
+  | "zoom"
+  | "flip"
+  | "cube"
 
 export interface SlideShape {
   id: string
-  type: "rectangle" | "circle" | "line" | "text"
-  x: number
-  y: number
-  width: number
-  height: number
+  type: "rectangle" | "circle" | "ellipse" | "line"
+  x?: number
+  y?: number
+  width?: number
+  height?: number
   fill?: string
   stroke?: string
   strokeWidth?: number
   text?: string
-  fontSize?: number
-  fontWeight?: "normal" | "bold"
-  fontStyle?: "normal" | "italic"
 }
 
-export interface SlideImage {
-  id: string
-  src: string
-  alt?: string
-  x: number
-  y: number
+export interface ImageFilters {
+  brightness: number
+  contrast: number
+  saturation: number
+  blur: number
+  hueRotate: number
+  opacity: number
+}
+
+export interface ImageSize {
   width: number
   height: number
+  objectFit: "cover" | "contain" | "fill" | "scale-down"
 }
 
 export interface Slide {
@@ -45,15 +60,11 @@ export interface Slide {
   theme: SlideTheme
   backgroundImage?: string
   backgroundGradient?: string
-  notes?: string
-  images?: SlideImage[]
+  notes: string
   shapes?: SlideShape[]
-  customStyles?: {
-    fontSize?: number
-    fontFamily?: string
-    textColor?: string
-    backgroundColor?: string
-  }
+  images?: string[]
+  filters?: ImageFilters
+  imageSize?: ImageSize
 }
 
 export interface PresentationData {
@@ -63,24 +74,13 @@ export interface PresentationData {
   transitionEffect: TransitionEffect
   autoAdvance: boolean
   autoAdvanceDelay: number
-  autoAdvanceLoop?: boolean
+  autoAdvanceLoop: boolean
   showControls: boolean
-  customThemeColor?: string | null
   isNew?: boolean
+  customThemeColor?: string | null
 }
 
 export interface ParseProgress {
   progress: number
   status: string
-}
-
-export interface PresentationMetadata {
-  title?: string
-  author?: string
-  subject?: string
-  keywords?: string
-  description?: string
-  createdDate?: string
-  modifiedDate?: string
-  slideCount?: number
 }

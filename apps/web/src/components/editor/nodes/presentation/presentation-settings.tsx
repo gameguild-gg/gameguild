@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Upload, Plus, Trash2, ChevronUp, ChevronDown, Settings, FileText, ImageIcon } from 'lucide-react'
+import { Upload, Plus, Trash2, ChevronUp, ChevronDown, Settings, FileText, ImageIcon, Edit } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -14,6 +14,7 @@ import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/u
 import { SlidePlayer } from "@/components/editor/ui/slide-player"
 import type { Slide, SlideTheme, TransitionEffect } from "./types"
 import { DeleteConfirmDialog } from "@/components/editor/ui/delete-confirm-dialog"
+import { SlideEditDialog } from "@/components/editor/ui/slide-edit-dialog"
 
 interface PresentationSettingsProps {
   title: string
@@ -78,18 +79,26 @@ export function PresentationSettings({
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
   const [deleteSlideId, setDeleteSlideId] = useState<string | null>(null)
   const [slideToDelete, setSlideToDelete] = useState<Slide | null>(null)
+  const [editSlideId, setEditSlideId] = useState<string | null>(null)
+  const [slideToEdit, setSlideToEdit] = useState<Slide | null>(null)
 
   // Sincronizar slides locais com os slides da prop
   useEffect(() => {
-    setLocalSlides(slides)
-    
-    // Detectar modo baseado nos dados existentes
-    if (slides.length > 0) {
-      if (hasPresentation) {
-        setSelectedMode("import")
-      } else if (isImageSlideshow) {
-        setSelectedMode("create")
+    // Verificar se slides existe e é um array
+    if (slides && Array.isArray(slides)) {
+      setLocalSlides(slides)
+      
+      // Detectar modo baseado nos dados existentes
+      if (slides.length > 0) {
+        if (hasPresentation) {
+          setSelectedMode("import")
+        } else if (isImageSlideshow) {
+          setSelectedMode("create")
+        }
       }
+    } else {
+      // Se slides não existe ou não é um array, inicializar como array vazio
+      setLocalSlides([])
     }
   }, [slides, hasPresentation, isImageSlideshow])
 
@@ -162,6 +171,81 @@ export function PresentationSettings({
     
     setLocalSlides(updatedSlides)
     setSlides(updatedSlides)
+  }
+
+  const handleEditSlide = (slideId: string) => {
+    const slide = localSlides.find(s => s.id === slideId)
+    if (slide) {
+      setSlideToEdit(slide)
+      setEditSlideId(slideId)
+    }
+  }
+
+  const handleSaveSlideEdit = (editedSlide: Slide) => {
+    const updatedSlides = localSlides.map(slide => 
+      slide.id === editedSlide.id ? editedSlide : slide
+    )
+    setLocalSlides(updatedSlides)
+    setSlides(updatedSlides)
+    setEditSlideId(null)
+    setSlideToEdit(null)
+  }
+
+  // Get thumbnail style for slide with custom settings
+  const getThumbnailStyle = (slide: Slide) => {
+    const hasCustomImageSettings = slide.filters || slide.imageSize
+    
+    if (slide.theme === "image" && slide.backgroundImage) {
+      if (hasCustomImageSettings) {
+        // Apply custom filters and sizing to thumbnail
+        const filters = slide.filters || {
+          brightness: 100,
+          contrast: 100,
+          saturation: 100,
+          blur: 0,
+          hueRotate: 0,
+          opacity: 100,
+        }
+        
+        const imageSize = slide.imageSize || {
+          width: 100,
+          height: 100,
+          objectFit: "cover" as const,
+        }
+
+        return {
+          backgroundImage: `url(${slide.backgroundImage})`,
+          backgroundSize: imageSize.objectFit === "cover" ? "cover" : "contain",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          filter: `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%) blur(${Math.max(0, filters.blur * 0.5)}px) hue-rotate(${filters.hueRotate}deg) opacity(${filters.opacity}%)`,
+        }
+      } else {
+        // Default background image style
+        return {
+          backgroundImage: `url(${slide.backgroundImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }
+      }
+    }
+    
+    // Default solid background based on theme
+    switch (slide.theme) {
+      case "light":
+        return { backgroundColor: "white" }
+      case "dark":
+        return { backgroundColor: "#1a1a1a" }
+      case "standard":
+        return { backgroundColor: "#f8f9fa" }
+      case "gradient":
+        return { background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }
+      case "custom":
+        return { backgroundColor: "#3b82f6" }
+      default:
+        return { backgroundColor: "white" }
+    }
   }
 
   const isContentTabDisabled = !selectedMode
@@ -240,16 +324,33 @@ export function PresentationSettings({
                     <div className="space-y-2 max-h-60 overflow-y-auto">
                       {localSlides.map((slide, index) => (
                         <div key={slide.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                          <div className="w-16 h-12 bg-muted rounded flex items-center justify-center text-xs">
-                            {index + 1}
+                          <div 
+                            className="w-16 h-12 rounded flex items-center justify-center text-xs overflow-hidden relative"
+                            style={getThumbnailStyle(slide)}
+                          >
+                            {slide.theme === "image" && slide.backgroundImage && (
+                              <div className="absolute inset-0 bg-black/20"></div>
+                            )}
+                            <span className="relative z-10 text-white font-medium drop-shadow-sm">
+                              {index + 1}
+                            </span>
                           </div>
                           <div className="flex-1">
                             <div className="font-medium">{slide.title || `Slide ${index + 1}`}</div>
                             <div className="text-xs text-muted-foreground">
                               {slide.layout} layout
+                              {(slide.filters || slide.imageSize) && " • edited"}
                             </div>
                           </div>
                           <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditSlide(slide.id)}
+                              title="Edit slide"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -297,24 +398,39 @@ export function PresentationSettings({
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {localSlides.map((slide, index) => (
                     <div key={slide.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                      <div className="w-16 h-12 rounded overflow-hidden bg-muted">
-                        {slide.backgroundImage ? (
-                          <img
-                            src={slide.backgroundImage || "/placeholder.svg"}
-                            alt={slide.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xs">
+                      <div 
+                        className="w-16 h-12 rounded overflow-hidden relative"
+                        style={getThumbnailStyle(slide)}
+                      >
+                        {!slide.backgroundImage && (
+                          <div className="w-full h-full flex items-center justify-center text-xs bg-muted">
                             {index + 1}
+                          </div>
+                        )}
+                        {slide.theme === "image" && slide.backgroundImage && (
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                            <span className="text-white font-medium text-xs drop-shadow-sm">
+                              {index + 1}
+                            </span>
                           </div>
                         )}
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">{slide.title}</div>
-                        <div className="text-xs text-muted-foreground">Image slide</div>
+                        <div className="text-xs text-muted-foreground">
+                          Image slide
+                          {(slide.filters || slide.imageSize) && " • edited"}
+                        </div>
                       </div>
                       <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditSlide(slide.id)}
+                          title="Edit slide"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -501,7 +617,7 @@ export function PresentationSettings({
         urlPlaceholder="https://example.com/presentation.pptx"
         uploadLabel="Select a presentation file"
         urlLabel="Enter presentation URL"
-        maxSizeKB={75200}
+        maxSizeKB={51200}
       />
 
       <MediaUploadDialog
@@ -516,6 +632,18 @@ export function PresentationSettings({
         urlLabel="Enter image URL"
         maxSizeKB={5120}
         multiple={true}
+      />
+
+      <SlideEditDialog
+        open={editSlideId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditSlideId(null)
+            setSlideToEdit(null)
+          }
+        }}
+        slide={slideToEdit}
+        onSave={handleSaveSlideEdit}
       />
     </div>
   )

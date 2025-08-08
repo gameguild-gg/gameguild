@@ -9,6 +9,9 @@ interface SlideRendererProps {
 }
 
 export function SlideRenderer({ slide, customThemeColor }: SlideRendererProps) {
+  // Check if slide has custom image settings
+  const hasCustomImageSettings = slide.filters || slide.imageSize
+
   // Get background style based on theme
   const getBackgroundStyle = (slideTheme: SlideTheme, backgroundImage?: string, backgroundGradient?: string) => {
     switch (slideTheme) {
@@ -29,12 +32,18 @@ export function SlideRenderer({ slide, customThemeColor }: SlideRendererProps) {
           color: "#ffffff",
         }
       case "image":
-        return {
-          backgroundImage: `url(${backgroundImage || "/placeholder.svg"})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          color: "white",
-          position: "relative" as const,
+        // Only show background image if no custom settings are applied
+        if (!hasCustomImageSettings && backgroundImage) {
+          return {
+            backgroundImage: `url(${backgroundImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            color: "white",
+            position: "relative" as const,
+          }
+        } else {
+          // Use solid background when image has custom settings
+          return { backgroundColor: "#1a1a1a", color: "white" }
         }
       default:
         return { backgroundColor: "white", color: "black" }
@@ -68,8 +77,33 @@ export function SlideRenderer({ slide, customThemeColor }: SlideRendererProps) {
   const backgroundStyle = getBackgroundStyle(slide.theme, slide.backgroundImage, slide.backgroundGradient)
   const layoutClass = getLayoutStyle(slide.layout)
 
-  // Add overlay for image backgrounds to ensure text readability
-  const hasOverlay = slide.theme === "image" && slide.backgroundImage
+  // Add overlay for image backgrounds to ensure text readability (only if no custom settings)
+  const hasOverlay = slide.theme === "image" && slide.backgroundImage && !hasCustomImageSettings
+
+  // Get image style with filters and size
+  const getImageStyle = () => {
+    const filters = slide.filters || {
+      brightness: 100,
+      contrast: 100,
+      saturation: 100,
+      blur: 0,
+      hueRotate: 0,
+      opacity: 100,
+    }
+    
+    const imageSize = slide.imageSize || {
+      width: 100,
+      height: 100,
+      objectFit: "cover" as const,
+    }
+
+    return {
+      filter: `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%) blur(${filters.blur}px) hue-rotate(${filters.hueRotate}deg) opacity(${filters.opacity}%)`,
+      width: `${imageSize.width}%`,
+      height: `${imageSize.height}%`,
+      objectFit: imageSize.objectFit,
+    }
+  }
 
   // Render shapes if present
   const renderShapes = () => {
@@ -98,7 +132,7 @@ export function SlideRenderer({ slide, customThemeColor }: SlideRendererProps) {
     )
   }
 
-  // Render embedded images
+  // Render embedded images with custom styling
   const renderEmbeddedImages = () => {
     if (!slide.images || slide.images.length === 0) return null
 
@@ -110,8 +144,25 @@ export function SlideRenderer({ slide, customThemeColor }: SlideRendererProps) {
             src={image || "/placeholder.svg"}
             alt={`Slide image ${index + 1}`}
             className="max-w-full max-h-64 object-contain rounded-lg shadow-lg"
+            style={hasCustomImageSettings ? getImageStyle() : undefined}
           />
         ))}
+      </div>
+    )
+  }
+
+  // Render background image with custom styling (when theme is image and has custom settings)
+  const renderCustomBackgroundImage = () => {
+    if (slide.theme !== "image" || !slide.backgroundImage || !hasCustomImageSettings) return null
+
+    return (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <img
+          src={slide.backgroundImage || "/placeholder.svg"}
+          alt="Slide background"
+          className="max-w-full max-h-full object-contain"
+          style={getImageStyle()}
+        />
       </div>
     )
   }
@@ -171,6 +222,9 @@ export function SlideRenderer({ slide, customThemeColor }: SlideRendererProps) {
     <div className={cn("w-full h-full overflow-hidden relative aspect-video")} style={backgroundStyle}>
       {hasOverlay && <div className="absolute inset-0 bg-black bg-opacity-30"></div>}
 
+      {/* Render custom background image if applicable */}
+      {renderCustomBackgroundImage()}
+
       {/* Render shapes */}
       {renderShapes()}
 
@@ -201,11 +255,18 @@ export function SlideRenderer({ slide, customThemeColor }: SlideRendererProps) {
           <div className="flex flex-col gap-6 p-8 h-full">
             {slide.backgroundImage || (slide.images && slide.images.length > 0) ? (
               <div className="flex-1 flex items-center justify-center">
-                {slide.backgroundImage ? (
+                {slide.backgroundImage && !hasCustomImageSettings ? (
                   <img
                     src={slide.backgroundImage || "/placeholder.svg"}
                     alt="Slide image"
                     className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                  />
+                ) : slide.backgroundImage && hasCustomImageSettings ? (
+                  <img
+                    src={slide.backgroundImage || "/placeholder.svg"}
+                    alt="Slide image"
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                    style={getImageStyle()}
                   />
                 ) : (
                   renderEmbeddedImages()
@@ -231,11 +292,18 @@ export function SlideRenderer({ slide, customThemeColor }: SlideRendererProps) {
             </div>
             {slide.backgroundImage || (slide.images && slide.images.length > 0) ? (
               <div className="flex-1 flex items-center justify-center">
-                {slide.backgroundImage ? (
+                {slide.backgroundImage && !hasCustomImageSettings ? (
                   <img
                     src={slide.backgroundImage || "/placeholder.svg"}
                     alt="Slide image"
                     className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                  />
+                ) : slide.backgroundImage && hasCustomImageSettings ? (
+                  <img
+                    src={slide.backgroundImage || "/placeholder.svg"}
+                    alt="Slide image"
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                    style={getImageStyle()}
                   />
                 ) : (
                   renderEmbeddedImages()
@@ -251,12 +319,22 @@ export function SlideRenderer({ slide, customThemeColor }: SlideRendererProps) {
 
         {slide.layout === "full-image" && (
           <div className="relative w-full h-full">
-            {slide.backgroundImage && (
+            {slide.backgroundImage && !hasCustomImageSettings && (
               <img
                 src={slide.backgroundImage || "/placeholder.svg"}
                 alt="Slide background"
                 className="absolute inset-0 w-full h-full object-cover"
               />
+            )}
+            {slide.backgroundImage && hasCustomImageSettings && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img
+                  src={slide.backgroundImage || "/placeholder.svg"}
+                  alt="Slide background"
+                  className="max-w-full max-h-full object-contain"
+                  style={getImageStyle()}
+                />
+              </div>
             )}
             {slide.images && slide.images.length > 0 && !slide.backgroundImage && (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -264,6 +342,7 @@ export function SlideRenderer({ slide, customThemeColor }: SlideRendererProps) {
                   src={slide.images[0] || "/placeholder.svg"}
                   alt="Slide image"
                   className="max-w-full max-h-full object-contain"
+                  style={hasCustomImageSettings ? getImageStyle() : undefined}
                 />
               </div>
             )}

@@ -1,6 +1,6 @@
 "use client"
-import { useState, useEffect, useRef, useCallback } from "react" // Import useCallback
-import { ChevronLeft, ChevronRight, Expand, X, LayoutGrid } from "lucide-react"
+import { useState, useEffect, useRef, useCallback } from "react"
+import { ChevronLeft, ChevronRight, Expand, X, LayoutGrid } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -161,7 +161,7 @@ export function SlidePlayer({
     return () => {
       document.removeEventListener("keydown", handleKeyDown)
     }
-  }, [isFullscreen, handlePrevSlide, handleNextSlide]) // Added handlePrevSlide and handleNextSlide to dependencies
+  }, [isFullscreen, handlePrevSlide, handleNextSlide])
 
   // Handle mouse position for bottom bar in fullscreen
   const [showBottomBar, setShowBottomBar] = useState(false)
@@ -217,27 +217,60 @@ export function SlidePlayer({
     }
   }
 
-  const getBackgroundStyle = (slide: Slide) => {
-    switch (slide.theme) {
-      case "light":
-        return { backgroundColor: "white", color: "black" }
-      case "dark":
-        return { backgroundColor: "#1a1a1a", color: "white" }
-      case "standard":
-        return { backgroundColor: "#f8f9fa", color: "#333333" }
-      case "gradient":
-        return { backgroundColor: "#6366f1", color: "white" }
-      case "custom":
-        return { backgroundColor: customThemeColor || "#3b82f6", color: "#ffffff" }
-      case "image":
+  // Get thumbnail style for slide with custom settings
+  const getThumbnailStyle = (slide: Slide) => {
+    const hasCustomImageSettings = slide.filters || slide.imageSize
+    
+    if (slide.theme === "image" && slide.backgroundImage) {
+      if (hasCustomImageSettings) {
+        // Apply custom filters and sizing to thumbnail
+        const filters = slide.filters || {
+          brightness: 100,
+          contrast: 100,
+          saturation: 100,
+          blur: 0,
+          hueRotate: 0,
+          opacity: 100,
+        }
+        
+        const imageSize = slide.imageSize || {
+          width: 100,
+          height: 100,
+          objectFit: "cover" as const,
+        }
+
         return {
-          backgroundImage: `url(${slide.backgroundImage || "/placeholder.svg"})`,
+          backgroundImage: `url(${slide.backgroundImage})`,
+          backgroundSize: imageSize.objectFit === "cover" ? "cover" : "contain",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          filter: `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%) blur(${Math.max(0, filters.blur * 0.5)}px) hue-rotate(${filters.hueRotate}deg) opacity(${filters.opacity}%)`,
+        }
+      } else {
+        // Default background image style
+        return {
+          backgroundImage: `url(${slide.backgroundImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          color: "white",
+          backgroundRepeat: "no-repeat",
         }
+      }
+    }
+    
+    // Default solid background based on theme
+    switch (slide.theme) {
+      case "light":
+        return { backgroundColor: "white" }
+      case "dark":
+        return { backgroundColor: "#1a1a1a" }
+      case "standard":
+        return { backgroundColor: "#f8f9fa" }
+      case "gradient":
+        return { background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }
+      case "custom":
+        return { backgroundColor: customThemeColor || "#3b82f6" }
       default:
-        return { backgroundColor: "white", color: "black" }
+        return { backgroundColor: "white" }
     }
   }
 
@@ -451,10 +484,12 @@ export function SlidePlayer({
                       )}
                       onClick={() => onSlideChange(index)}
                     >
-                      <div className="w-full h-full relative" style={getBackgroundStyle(slide)}>
-                        {slide.theme === "image" && <div className="absolute inset-0 bg-black/40"></div>}
+                      <div className="w-full h-full relative" style={getThumbnailStyle(slide)}>
+                        {slide.theme === "image" && slide.backgroundImage && (
+                          <div className="absolute inset-0 bg-black/40"></div>
+                        )}
                         <div className="w-full h-full flex items-center justify-center">
-                          <span className="text-xs font-medium">{index + 1}</span>
+                          <span className="text-xs font-medium text-white drop-shadow-sm">{index + 1}</span>
                         </div>
 
                         {/* Slide info indicators */}
@@ -470,6 +505,11 @@ export function SlidePlayer({
                               <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" title="Has notes" />
                             )}
                           </div>
+                        )}
+
+                        {/* Edited indicator */}
+                        {(slide.filters || slide.imageSize) && (
+                          <div className="absolute bottom-0 left-0 w-2 h-2 bg-orange-500 rounded-tr-sm" title="Edited" />
                         )}
                       </div>
                     </button>
@@ -556,10 +596,12 @@ export function SlidePlayer({
                             )}
                             onClick={() => onSlideChange(index)}
                           >
-                            <div className="w-full h-full relative" style={getBackgroundStyle(slide)}>
-                              {slide.theme === "image" && <div className="absolute inset-0 bg-black/40"></div>}
+                            <div className="w-full h-full relative" style={getThumbnailStyle(slide)}>
+                              {slide.theme === "image" && slide.backgroundImage && (
+                                <div className="absolute inset-0 bg-black/40"></div>
+                              )}
                               <div className="w-full h-full flex items-center justify-center">
-                                <span className="text-xs font-medium">{index + 1}</span>
+                                <span className="text-xs font-medium text-white drop-shadow-sm">{index + 1}</span>
                               </div>
 
                               {/* Slide info indicators */}
@@ -575,6 +617,11 @@ export function SlidePlayer({
                                     <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full" title="Has notes" />
                                   )}
                                 </div>
+                              )}
+
+                              {/* Edited indicator */}
+                              {(slide.filters || slide.imageSize) && (
+                                <div className="absolute bottom-0 left-0 w-2 h-2 bg-orange-400 rounded-tr-sm" title="Edited" />
                               )}
                             </div>
                           </button>
