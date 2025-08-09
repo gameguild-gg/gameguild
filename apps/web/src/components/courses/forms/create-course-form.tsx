@@ -9,6 +9,7 @@ import { createProgram } from '@/lib/content-management/programs/programs.action
 import { AlertCircle, ArrowLeft, Loader2, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
+import speakingurl from 'speakingurl';
 
 interface CreateCourseFormData {
   title: string;
@@ -30,15 +31,6 @@ export const CreateCourseForm = (): React.JSX.Element => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (error) setError(null);
-  };
-
-  const speakingurl = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
   };
 
   const handleTitleChange = (value: string) => {
@@ -72,6 +64,15 @@ export const CreateCourseForm = (): React.JSX.Element => {
           slug: formData.slug.trim(),
         },
         url: '/api/program',
+      });
+
+      console.log('Form received result:', {
+        hasData: !!result.data,
+        hasError: !!result.error,
+        dataKeys: result.data ? Object.keys(result.data) : null,
+        errorType: result.error ? typeof result.error : null,
+        error: result.error,
+        fullResult: result
       });
 
       // Check if the result has an error
