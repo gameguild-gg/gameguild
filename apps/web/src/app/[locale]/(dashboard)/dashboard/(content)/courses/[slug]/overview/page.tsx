@@ -1,10 +1,10 @@
-import React from 'react';
-import { notFound } from 'next/navigation';
-import { getProgramBySlugService, getProgramLevelConfig } from '@/lib/content-management/programs/programs.service';
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/common/ui/dashboard-page';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Users, Star, BookOpen, Eye, FileText, Archive } from 'lucide-react';
+import { getProgramBySlugService, getProgramLevelConfig } from '@/lib/content-management/programs/programs.service';
+import { Archive, BookOpen, Clock, Eye, FileText, Star, Users } from 'lucide-react';
+import { notFound } from 'next/navigation';
+import React from 'react';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -137,11 +137,11 @@ export default async function Page({ params }: PageProps): Promise<React.JSX.Ele
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Difficulty Level</label>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge className={`${levelConfig.bgColor} ${levelConfig.color} ${levelConfig.borderColor}`}>
-                      Level {program.difficulty || 1} • {levelConfig.name}
+                    <Badge className={`${(await levelConfig).bgColor} ${(await levelConfig).color} ${(await levelConfig).borderColor}`}>
+                      Level {program.difficulty || 1} • {(await levelConfig).name}
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">{levelConfig.description}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{(await levelConfig).description}</p>
                 </div>
                 {program.slug && (
                   <div>
