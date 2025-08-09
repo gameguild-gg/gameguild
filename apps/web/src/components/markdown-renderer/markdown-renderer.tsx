@@ -1,11 +1,12 @@
 'use client';
 
 import 'katex/dist/katex.min.css';
+import { useTheme } from 'next-themes';
 import NextImage from 'next/image';
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { vs, vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
@@ -26,6 +27,8 @@ export interface MarkdownRendererProps {
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer = 'markdown' }) => {
   const [isClient, setIsClient] = useState(false);
+  const { theme, resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
 
   useEffect(() => {
     setIsClient(true);
@@ -53,27 +56,28 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
     });
 
   const components: Record<string, React.FC<any>> = {
-    h1: (props) => <h1 className="text-4xl font-bold mt-6 mb-4" {...props} />,
-    h2: (props) => <h2 className="text-3xl font-semibold mt-5 mb-3" {...props} />,
-    h3: (props) => <h3 className="text-2xl font-semibold mt-4 mb-2" {...props} />,
-    h4: (props) => <h4 className="text-xl font-semibold mt-3 mb-2" {...props} />,
-    h5: (props) => <h5 className="text-lg font-semibold mt-2 mb-1" {...props} />,
-    h6: (props) => <h6 className="text-base font-semibold mt-2 mb-1" {...props} />,
-    p: (props) => <p className="mb-4" {...props} />,
+    h1: (props) => <h1 className="text-4xl font-bold mt-6 mb-4 text-foreground" {...props} />,
+    h2: (props) => <h2 className="text-3xl font-semibold mt-5 mb-3 text-foreground" {...props} />,
+    h3: (props) => <h3 className="text-2xl font-semibold mt-4 mb-2 text-foreground" {...props} />,
+    h4: (props) => <h4 className="text-xl font-semibold mt-3 mb-2 text-foreground" {...props} />,
+    h5: (props) => <h5 className="text-lg font-semibold mt-2 mb-1 text-foreground" {...props} />,
+    h6: (props) => <h6 className="text-base font-semibold mt-2 mb-1 text-foreground" {...props} />,
+    p: (props) => <p className="mb-4 text-foreground" {...props} />,
     img: (props) => (
       <NextImage
         className="max-w-full h-auto rounded-lg shadow-sm"
-        width={800}
-        height={600}
-        style={{ maxWidth: '100%', height: 'auto' }}
+        width={0}
+        height={0}
+        sizes="100vw"
+        style={{ width: '100%', height: 'auto', maxWidth: '100%' }}
         {...props}
       />
     ),
-    ul: (props) => <ul className="list-disc pl-5 mb-4" {...props} />,
-    ol: (props) => <ol className="list-decimal pl-5 mb-4" {...props} />,
-    li: (props) => <li className="mb-1" {...props} />,
-    a: (props) => <a className="text-blue-600 hover:underline" {...props} />,
-    blockquote: (props) => <blockquote className="border-l-4 border-gray-300 pl-4 italic my-4" {...props} />,
+    ul: (props) => <ul className="list-disc pl-5 mb-4 text-foreground" {...props} />,
+    ol: (props) => <ol className="list-decimal pl-5 mb-4 text-foreground" {...props} />,
+    li: (props) => <li className="mb-1 text-foreground" {...props} />,
+    a: (props) => <a className="text-primary hover:text-primary/80 underline" {...props} />,
+    blockquote: (props) => <blockquote className="border-l-4 border-border pl-4 italic my-4 text-muted-foreground" {...props} />,
     code: ({ node, className, children, ...props }) => {
       const match = /language-(\w+)/.exec(className || '');
       const lang = match && match[1] ? match[1] : '';
@@ -88,15 +92,16 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
       if (!inline) {
         return (
           <SyntaxHighlighter
-            style={vscDarkPlus}
+            style={isDark ? vscDarkPlus : vs}
             language={lang}
             PreTag="div"
             customStyle={{
               padding: '1rem',
               borderRadius: '0.5rem',
               marginBottom: '1rem',
-              backgroundColor: '#1e1e1e',
-              border: '1px solid #2d2d2d',
+              backgroundColor: isDark ? 'hsl(var(--muted))' : 'hsl(var(--background))',
+              border: '1px solid hsl(var(--border))',
+              color: 'hsl(var(--foreground))',
             }}
             codeTagProps={{
               style: {
@@ -106,6 +111,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
                 fontSize: '0.875rem',
                 lineHeight: '1.6',
                 fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace',
+                color: 'inherit',
               },
             }}
             wrapLines={true}
@@ -199,6 +205,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
           width: 100% !important;
           max-width: none !important;
           min-width: 100% !important;
+          color: hsl(var(--foreground)) !important;
         }
 
         .markdown-content h1,
@@ -209,6 +216,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
         .markdown-content h6 {
           font-weight: 600;
           line-height: 1.25;
+          color: hsl(var(--foreground)) !important;
         }
 
         .markdown-content h1 {
@@ -232,25 +240,30 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
         .markdown-content p {
           margin-bottom: 1rem;
           line-height: 1.7;
+          color: hsl(var(--foreground)) !important;
         }
 
         .markdown-content ul,
         .markdown-content ol {
           margin-bottom: 1rem;
           padding-left: 1.5rem;
+          color: hsl(var(--foreground)) !important;
         }
 
         .markdown-content li {
           margin-bottom: 0.25rem;
+          color: hsl(var(--foreground)) !important;
         }
 
         .markdown-content img {
           max-width: 100% !important;
+          width: 100% !important;
           height: auto !important;
           display: block !important;
           margin: 1rem auto !important;
           border-radius: 0.5rem !important;
           box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+          object-fit: contain !important;
         }
 
         .markdown-content blockquote {
@@ -273,6 +286,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
         .syntax-highlighter {
           overflow-x: auto;
           box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          background-color: hsl(var(--muted)) !important;
+          border: 1px solid hsl(var(--border)) !important;
         }
 
         .syntax-highlighter pre {
@@ -280,10 +295,12 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
           word-break: keep-all !important;
           overflow-wrap: break-word !important;
           margin: 0 !important;
+          background-color: transparent !important;
         }
 
         .syntax-highlighter code {
           font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace !important;
+          color: hsl(var(--foreground)) !important;
         }
 
         .katex-display {
@@ -366,18 +383,24 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
           overflow-x: auto !important;
         }
 
-        /* Mermaid diagram sizing - fixed width */
+        /* Mermaid diagram sizing - smart scaling */
         .mermaid-container {
           width: auto !important;
+          max-width: 100% !important;
           margin: 1rem auto !important;
           overflow: visible !important;
-          display: inline-block !important;
+          display: flex !important;
+          justify-content: center !important;
+          align-items: center !important;
+          text-align: center !important;
         }
 
         .mermaid-container svg {
-          width: auto !important;
-          height: auto !important;
           max-width: none !important;
+          height: auto !important;
+          display: inline-block !important;
+          flex-shrink: 0 !important;
+          flex-grow: 0 !important;
         }
 
         /* Let Mermaid handle text sizing and positioning naturally */
@@ -390,4 +413,4 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
   );
 };
 
-export default MarkdownRenderer; 
+export default MarkdownRenderer;
