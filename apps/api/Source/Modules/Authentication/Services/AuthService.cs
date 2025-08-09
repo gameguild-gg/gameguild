@@ -41,14 +41,16 @@ namespace GameGuild.Modules.Authentication {
       var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
       var refreshToken = jwtTokenService.GenerateRefreshToken();
 
-      // Save refresh token
+      // Expiries
+      var accessTokenExpiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
+      var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
       var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-      var expiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+      var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
       
       var refreshTokenEntity = new RefreshToken {
         UserId = user.Id,
         Token = refreshToken,
-        ExpiresAt = expiresAt,
+        ExpiresAt = refreshTokenExpiresAt,
         IsRevoked = false,
         CreatedByIp = "0.0.0.0",
       };
@@ -59,7 +61,9 @@ namespace GameGuild.Modules.Authentication {
       var response = new SignInResponseDto {
         AccessToken = accessToken, 
         RefreshToken = refreshToken, 
-        ExpiresAt = expiresAt,
+        ExpiresAt = refreshTokenExpiresAt, // backward compatible
+        AccessTokenExpiresAt = accessTokenExpiresAt,
+        RefreshTokenExpiresAt = refreshTokenExpiresAt,
         User = userDto,
       };
 
@@ -115,14 +119,16 @@ namespace GameGuild.Modules.Authentication {
       var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
       var refreshToken = jwtTokenService.GenerateRefreshToken();
 
-      // Save refresh token
+      // Expiries
+      var accessTokenExpiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
+      var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
       var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-      var expiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+      var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
       
       var refreshTokenEntity = new RefreshToken {
         UserId = user.Id,
         Token = refreshToken,
-        ExpiresAt = expiresAt,
+        ExpiresAt = refreshTokenExpiresAt,
         IsRevoked = false,
         CreatedByIp = "0.0.0.0",
       };
@@ -133,7 +139,9 @@ namespace GameGuild.Modules.Authentication {
       var response = new SignInResponseDto {
         AccessToken = accessToken, 
         RefreshToken = refreshToken, 
-        ExpiresAt = expiresAt,
+        ExpiresAt = refreshTokenExpiresAt,
+        AccessTokenExpiresAt = accessTokenExpiresAt,
+        RefreshTokenExpiresAt = refreshTokenExpiresAt,
         User = userDto,
       };
 
@@ -207,8 +215,10 @@ namespace GameGuild.Modules.Authentication {
       }
 
       // Generate token with tenant claims if available
-      var newAccessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
-      var newRefreshToken = jwtTokenService.GenerateRefreshToken();
+  var newAccessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
+  var newRefreshToken = jwtTokenService.GenerateRefreshToken();
+  var accessTokenExpiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
+  var newAccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
 
       // Revoke old refresh token
       refreshToken.IsRevoked = true;
@@ -225,7 +235,12 @@ namespace GameGuild.Modules.Authentication {
       await context.SaveChangesAsync();
 
       var response = new RefreshTokenResponseDto {
-        AccessToken = newAccessToken, RefreshToken = newRefreshToken, ExpiresAt = newRefreshTokenEntity.ExpiresAt, TenantId = tenantId,
+        AccessToken = newAccessToken,
+        RefreshToken = newRefreshToken,
+        ExpiresAt = newRefreshTokenEntity.ExpiresAt, // backward compatible
+        AccessTokenExpiresAt = newAccessTokenExpiresAt,
+        RefreshTokenExpiresAt = newRefreshTokenEntity.ExpiresAt,
+        TenantId = tenantId,
       };
 
       return response;
@@ -335,13 +350,15 @@ namespace GameGuild.Modules.Authentication {
         var refreshToken = jwtTokenService.GenerateRefreshToken();
 
         // Save refresh token
-        var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-        var expiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+  var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+  var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+  var accessTokenExpiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
+  var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
         
         var refreshTokenEntity = new RefreshToken {
           UserId = user.Id,
           Token = refreshToken,
-          ExpiresAt = expiresAt,
+            ExpiresAt = refreshTokenExpiresAt,
           IsRevoked = false,
           CreatedByIp = "0.0.0.0",
         };
@@ -352,7 +369,9 @@ namespace GameGuild.Modules.Authentication {
         var response = new SignInResponseDto {
           AccessToken = jwtToken, 
           RefreshToken = refreshToken, 
-          ExpiresAt = expiresAt,
+          ExpiresAt = refreshTokenExpiresAt,
+          AccessTokenExpiresAt = accessTokenExpiresAt,
+          RefreshTokenExpiresAt = refreshTokenExpiresAt,
           User = userDto,
         };
 
