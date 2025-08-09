@@ -116,8 +116,18 @@ export async function createProgram(data?: PostApiProgramData) {
   try {
     await configureAuthenticatedClient();
 
+    console.log('Creating program with data:', data?.body);
+    
     const result = await postApiProgram({
       body: data?.body,
+    });
+
+    console.log('API response result:', {
+      hasData: !!result.data,
+      hasError: !!result.error,
+      dataKeys: result.data ? Object.keys(result.data) : null,
+      errorType: result.error ? typeof result.error : null,
+      error: result.error
     });
 
     // Revalidate programs cache
