@@ -56,3 +56,5 @@ old/services/web/.env
 apps/abc/
 
 GameGuild.sln.DotSettings.user
+
+**/swagger.json

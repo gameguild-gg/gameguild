@@ -696,16 +696,6 @@ import type {
   PostApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdResponses,
   GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeData,
   GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponses,
-  GetApiTestingLabSettingsData,
-  GetApiTestingLabSettingsResponses,
-  PatchApiTestingLabSettingsData,
-  PatchApiTestingLabSettingsResponses,
-  PutApiTestingLabSettingsData,
-  PutApiTestingLabSettingsResponses,
-  PostApiTestingLabSettingsResetData,
-  PostApiTestingLabSettingsResetResponses,
-  GetApiTestingLabSettingsExistsData,
-  GetApiTestingLabSettingsExistsResponses,
   GetApiUsersByUserIdAchievementsData,
   GetApiUsersByUserIdAchievementsResponses,
   GetApiUsersByUserIdAchievementsProgressData,
@@ -3915,49 +3905,6 @@ export const getApiTestingLabPermissionsUsersByUserIdCheckByResourceType = <Thro
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponses, unknown, ThrowOnError>({
     url: '/api/testing-lab/permissions/users/{userId}/check/{resourceType}',
-    ...options,
-  });
-};
-
-export const getApiTestingLabSettings = <ThrowOnError extends boolean = false>(options?: Options<GetApiTestingLabSettingsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTestingLabSettingsResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/settings',
-    ...options,
-  });
-};
-
-export const patchApiTestingLabSettings = <ThrowOnError extends boolean = false>(options?: Options<PatchApiTestingLabSettingsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).patch<PatchApiTestingLabSettingsResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/settings',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const putApiTestingLabSettings = <ThrowOnError extends boolean = false>(options?: Options<PutApiTestingLabSettingsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).put<PutApiTestingLabSettingsResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/settings',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postApiTestingLabSettingsReset = <ThrowOnError extends boolean = false>(options?: Options<PostApiTestingLabSettingsResetData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiTestingLabSettingsResetResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/settings/reset',
-    ...options,
-  });
-};
-
-export const getApiTestingLabSettingsExists = <ThrowOnError extends boolean = false>(options?: Options<GetApiTestingLabSettingsExistsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTestingLabSettingsExistsResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/settings/exists',
     ...options,
   });
 };

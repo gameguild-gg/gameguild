@@ -172,7 +172,7 @@ async function generateTypes(swaggerSpec: SwaggerSpec): Promise<void> {
     const tempSwaggerFile = join(generatedDir, 'swagger.json');
     writeFileSync(tempSwaggerFile, JSON.stringify(swaggerSpec, null, 2));
     try {
-        const command = `npx @hey-api/openapi-ts -i "${tempSwaggerFile}" -o "${generatedDir}" --client @hey-api/client-next`;
+        const command = `npx @hey-api/openapi-ts -i "${tempSwaggerFile}" -o "${generatedDir}" -f openapi-ts.config.js`;
         console.log('Running:', command);
         await execAsync(command, {
             cwd: projectRoot,
@@ -259,4 +259,4 @@ main().catch((error) => {
     stopStatusTracking();
     // Always exit with success to not break builds
     process.exit(0);
-}); 
+});

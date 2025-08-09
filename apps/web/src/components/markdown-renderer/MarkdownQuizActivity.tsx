@@ -34,8 +34,8 @@ export function MarkdownQuizActivity({
     JSON.stringify(selectedOptions.sort()) === JSON.stringify(answers.sort());
 
   return (
-    <div className="border rounded-lg p-4 my-4 bg-gray-50">
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+    <div className="border border-border rounded-lg p-4 my-4 bg-card">
+      <h3 className="text-lg font-semibold mb-2 text-foreground">{title}</h3>
       <MarkdownRenderer
         renderer="markdown"
         content={question}
@@ -46,15 +46,15 @@ export function MarkdownQuizActivity({
             key={index} 
             className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors cursor-pointer ${
               selectedOptions.includes(option)
-                ? 'border-blue-500 bg-blue-50 hover:bg-blue-100'
-                : 'border-gray-200 hover:bg-gray-50'
+                ? 'border-primary bg-primary/10 hover:bg-primary/20'
+                : 'border-border hover:bg-muted/50'
             }`}
             onClick={() => handleOptionChange(option)}
           >
             <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
               selectedOptions.includes(option)
-                ? 'border-blue-600 bg-blue-600'
-                : 'border-gray-400 bg-white'
+                ? 'border-primary bg-primary'
+                : 'border-muted-foreground bg-background'
             }`}>
               {selectedOptions.includes(option) && (
                 <svg 
@@ -70,7 +70,7 @@ export function MarkdownQuizActivity({
                 </svg>
               )}
             </div>
-            <span className="text-sm font-medium flex-1">
+            <span className="text-sm font-medium flex-1 text-foreground">
               {option}
             </span>
           </div>
@@ -79,18 +79,22 @@ export function MarkdownQuizActivity({
       {(!submitted || !isCorrect) && (
         <Button 
           onClick={handleSubmit} 
-          className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg"
+          className="mt-4 w-full"
         >
           Submit
         </Button>
       )}
       {submitted && (
         <div
-          className={`mt-4 p-2 rounded ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+          className={`mt-4 p-3 rounded-lg border ${
+            isCorrect 
+              ? 'bg-green-50 border-green-200 text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-200' 
+              : 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950 dark:border-red-800 dark:text-red-200'
+          }`}
         >
           {isCorrect ? 'Correct!' : 'Incorrect. Try again!'}
         </div>
       )}
     </div>
   );
-} 
+}
