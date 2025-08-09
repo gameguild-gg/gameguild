@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Reflection;
 using FluentValidation;
 using GameGuild.Common.Configuration;
@@ -55,6 +55,9 @@ public static class DependencyInjection {
         var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
 
         if (File.Exists(xmlPath)) c.IncludeXmlComments(xmlPath);
+        
+        // Add custom schema filter for enhanced enum documentation
+        c.SchemaFilter<GameGuild.Common.Swagger.EnumSchemaFilter>();
       }
       );
 
