@@ -1,13 +1,12 @@
 'use client';
 
-import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
-import { RichTextEditor } from '../rich-text-editor';
 import { CourseLevel } from '@/components/legacy/types/courses';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '../rich-text-editor';
 
 const CATEGORIES = ['Web Development', 'Mobile Development', 'Data Science', 'Machine Learning', 'DevOps', 'Design', 'Business', 'Marketing', 'Other'];
 
