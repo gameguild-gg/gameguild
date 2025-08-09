@@ -12,7 +12,6 @@ import { Switch }                                                               
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow }                                                      from '@/components/ui/table';
 import { Textarea }                                                                                                           from '@/components/ui/textarea';
 import type { LocationStatus, TestingLocation as ApiTestingLocation, UserRoleAssignment as GeneratedUserRoleAssignment, User } from '@/lib/api/generated/types.gen';
-import { createTestingLocation, deleteTestingLocation, getTestingLocations, updateTestingLocation }                           from '@/lib/api/testing-lab';
 import { convertAPIPermissionsToForm, convertFormPermissionsToAPI, RoleTemplate as APIRoleTemplate, TestingLabPermissionAPI } from '@/lib/api/testing-lab-permissions';
 import { getTestingLabSettings, updateTestingLabSettings } from '@/actions/testing-lab-settings';
 import { 
@@ -325,7 +324,7 @@ export function TestingLabSettings() {
   const loadLocations = async () => {
     setIsLoading(true);
     try {
-      const apiLocations = await getTestingLocations(0, 50);
+      const apiLocations = await getTestingLocationsAction(0, 50);
       setLocations(apiLocations as TestingLocation[]);
     } catch (error) {
       console.error('Failed to load locations:', error);
@@ -333,14 +332,16 @@ export function TestingLabSettings() {
       // Provide user feedback about the error
       let shouldUseMockData = false;
       if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        if (error.message.includes('Authentication required')) {
+          toast.error('Authentication required - please log in');
+        } else if (error.message.includes('permission')) {
+          toast.error('You do not have permission to view locations');
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
           toast.warning('Server unavailable - using demo data');
           shouldUseMockData = true;
         } else if (error.message.includes('500')) {
           toast.error('Server error - using demo data as fallback');
           shouldUseMockData = true;
-        } else if (error.message.includes('401') || error.message.includes('403')) {
-          toast.error('Authentication required - please log in');
         } else {
           toast.warning('API unavailable - using demo data');
           shouldUseMockData = true;
