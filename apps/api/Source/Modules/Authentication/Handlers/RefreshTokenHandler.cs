@@ -31,6 +31,8 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, SignInRe
         AccessToken = refreshResponse.AccessToken,
         RefreshToken = refreshResponse.RefreshToken,
         ExpiresAt = refreshResponse.ExpiresAt,
+        AccessTokenExpiresAt = refreshResponse.AccessTokenExpiresAt,
+        RefreshTokenExpiresAt = refreshResponse.RefreshTokenExpiresAt,
         TenantId = refreshResponse.TenantId,
         User = new UserDto(), // This would need to be populated from JWT claims or service
         AvailableTenants = new List<TenantInfoDto>(),
