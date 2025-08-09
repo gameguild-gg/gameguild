@@ -757,7 +757,7 @@ export function TestingLabSettings() {
     setRoleFormData({
       name: role.name,
       description: role.description,
-      permissions: convertAPIPermissionsToForm(role.permissionTemplates),
+      permissions: convertAPIPermissionsToForm(role.permissionTemplates || []),
     });
     setIsRoleDialogOpen(true);
   };
@@ -2265,14 +2265,14 @@ function RolesSettings({ roles, onCreateRole, onEditRole, onDeleteRole }: RolesS
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Permissions:</p>
                       <div className="flex flex-wrap gap-1">
-                        { role.permissionTemplates.slice(0, 4).map((permission, idx) => (
+                        { (role.permissionTemplates || []).slice(0, 4).map((permission, idx) => (
                           <Badge key={ idx } variant="outline" className="text-xs">
                             { permission.action } { permission.resourceType }
                           </Badge>
                         )) }
-                        { role.permissionTemplates.length > 4 && (
+                        { (role.permissionTemplates || []).length > 4 && (
                           <Badge variant="outline" className="text-xs">
-                            +{ role.permissionTemplates.length - 4 } more
+                            +{ (role.permissionTemplates || []).length - 4 } more
                           </Badge>
                         ) }
                       </div>
