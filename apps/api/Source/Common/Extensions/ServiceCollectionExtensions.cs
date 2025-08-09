@@ -84,6 +84,9 @@ public static class ServiceCollectionExtensions {
     
     // Add module permission service for granular module-based permissions
     services.AddScoped<IModulePermissionService, ModulePermissionService>();
+    
+    // Add simple permission service for basic permission operations
+    services.AddScoped<ISimplePermissionService, SimplePermissionService>();
 
     return services;
   }
