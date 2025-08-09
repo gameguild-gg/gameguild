@@ -1,26 +1,26 @@
 import React from 'react';
 
-// import { LogOut, Moon, Search, Settings, Sun, User } from 'lucide-react';
-// import { Button } from '@/components/ui/button';
-// import { Input } from '@/components/ui/input';
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuLabel,
-//   DropdownMenuSeparator,
-//   DropdownMenuTrigger,
-// } from '@/components/ui/dropdown-menu';
+import { LogOut, Settings, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { auth } from '@/auth';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ThemeToggle } from '@/components/theme';
+import { forceSignOut } from '@/lib/auth/auth.actions';
 
 export const DashboardHeader = async (): Promise<React.JSX.Element> => {
   const session = await auth();
+
   // const [searchQuery, setSearchQuery] = useState('');
-
   // const { theme, setTheme } = useTheme();
-
   // const { data: session } = useSession();
 
   // const handleSearch = (e: React.FormEvent) => {
@@ -29,13 +29,14 @@ export const DashboardHeader = async (): Promise<React.JSX.Element> => {
   //   console.log('Searching for:', searchQuery);
   // };
 
-  // const handleLogout = async () => {
-  //   try {
-  //     await signOut({ callbackUrl: '/sign-in' });
-  //   } catch (error) {
-  //     console.error('Logout failed:', error);
-  //   }
-  // };
+  const handleLogout = async () => {
+    'use server';
+    try {
+      await forceSignOut();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   // Get user display information from session
   const userDisplayName = session?.user?.name || 'Unknown User';
@@ -74,51 +75,48 @@ export const DashboardHeader = async (): Promise<React.JSX.Element> => {
           {/* Theme Toggle */}
           <ThemeToggle />
 
-          {/* Notifications */}
-          {/*<NotificationDropdown className="text-slate-400 hover:text-white hover:bg-slate-800/50" />*/}
-
-          {/*/!* Settings *!/*/}
-          {/*<Button variant="ghost" size="sm" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800/50">*/}
-          {/*  <Settings className="h-4 w-4" />*/}
-          {/*  <span className="sr-only">Settings</span>*/}
-          {/*</Button>*/}
-
           {/* User Menu */}
-          {/*<DropdownMenu>*/}
-          {/*  <DropdownMenuTrigger asChild>*/}
-          {/*    <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-slate-800/50">*/}
-          {/*      <Avatar className="h-8 w-8">*/}
-          {/*        {userImage ? (*/}
-          {/*          <AvatarImage src={userImage} alt={userDisplayName} />*/}
-          {/*        ) : (*/}
-          {/*          <AvatarFallback className="bg-slate-700 text-white">{userInitials}</AvatarFallback>*/}
-          {/*        )}*/}
-          {/*      </Avatar>*/}
-          {/*    </Button>*/}
-          {/*  </DropdownMenuTrigger>*/}
-          {/*  <DropdownMenuContent className="w-56 bg-slate-800 border-slate-700" align="end" forceMount>*/}
-          {/*    <DropdownMenuLabel className="font-normal">*/}
-          {/*      <div className="flex flex-col space-y-1">*/}
-          {/*        <p className="text-sm font-medium leading-none text-white">{userDisplayName}</p>*/}
-          {/*        <p className="text-xs leading-none text-slate-400">{userEmail}</p>*/}
-          {/*      </div>*/}
-          {/*    </DropdownMenuLabel>*/}
-          {/*    <DropdownMenuSeparator className="bg-slate-700" />*/}
-          {/*    <DropdownMenuItem className="text-white hover:bg-slate-700/50">*/}
-          {/*      <User className="mr-2 h-4 w-4" />*/}
-          {/*      <span>Profile</span>*/}
-          {/*    </DropdownMenuItem>*/}
-          {/*    <DropdownMenuItem className="text-white hover:bg-slate-700/50">*/}
-          {/*      <Settings className="mr-2 h-4 w-4" />*/}
-          {/*      <span>Settings</span>*/}
-          {/*    </DropdownMenuItem>*/}
-          {/*    <DropdownMenuSeparator className="bg-slate-700" />*/}
-          {/*    <DropdownMenuItem onClick={handleLogout} className="text-white hover:bg-slate-700/50">*/}
-          {/*      <LogOut className="mr-2 h-4 w-4" />*/}
-          {/*      <span>Log out</span>*/}
-          {/*    </DropdownMenuItem>*/}
-          {/*  </DropdownMenuContent>*/}
-          {/*</DropdownMenu>*/}
+          {session?.user && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-slate-800/50">
+                  <Avatar className="h-8 w-8">
+                    {userImage ? (
+                      <AvatarImage src={userImage} alt={userDisplayName} />
+                    ) : (
+                      <AvatarFallback className="bg-slate-700 text-white">{userInitials}</AvatarFallback>
+                    )}
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56 bg-slate-800 border-slate-700" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none text-white">{userDisplayName}</p>
+                    <p className="text-xs leading-none text-slate-400">{userEmail}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-slate-700" />
+                <DropdownMenuItem className="text-white hover:bg-slate-700/50">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-white hover:bg-slate-700/50">
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-slate-700" />
+                <form action={handleLogout}>
+                  <DropdownMenuItem asChild>
+                    <button type="submit" className="w-full text-white hover:bg-slate-700/50 flex items-center">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </button>
+                  </DropdownMenuItem>
+                </form>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </header>
