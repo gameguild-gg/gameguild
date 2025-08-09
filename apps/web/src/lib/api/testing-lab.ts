@@ -2,27 +2,10 @@
 
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import { client } from '@/lib/api/generated/client.gen';
-import type { TestingLocation, LocationStatus, TestingSession } from '@/lib/api/testing-types';
+import type { TestingLocation, LocationStatus, TestingSession, CreateTestingLocationDto, UpdateTestingLocationDto } from '@/lib/api/generated/types.gen';
 
-export interface CreateTestingLocationRequest {
-  name: string;
-  description?: string;
-  address?: string;
-  maxTestersCapacity: number;
-  maxProjectsCapacity: number;
-  equipmentAvailable?: string;
-  status: LocationStatus;
-}
-
-export interface UpdateTestingLocationRequest {
-  name?: string;
-  description?: string;
-  address?: string;
-  maxTestersCapacity?: number;
-  maxProjectsCapacity?: number;
-  equipmentAvailable?: string;
-  status?: LocationStatus;
-}
+// Re-export the generated types for convenience
+export type { CreateTestingLocationDto as CreateTestingLocationRequest, UpdateTestingLocationDto as UpdateTestingLocationRequest } from '@/lib/api/generated/types.gen';
 
 export interface TestingLabManager {
   id: string;
@@ -73,48 +56,34 @@ export interface UpdateTestingLabManagerRequest {
  * Get all testing locations
  */
 export async function getTestingLocations(skip = 0, take = 50): Promise<TestingLocation[]> {
-  // Mock implementation - replace with actual API call when backend supports it
-  await configureAuthenticatedClient();
+  try {
+    await configureAuthenticatedClient();
 
-  // Return mock data for now
-  return [
-    {
-      id: '1',
-      name: 'Main Testing Lab',
-      description: 'Primary testing facility with advanced equipment',
-      address: '123 Game St, Tech City, TC 12345',
-      maxTestersCapacity: 20,
-      maxProjectsCapacity: 5,
-      equipmentAvailable: 'Gaming PCs, VR headsets, Controllers, Recording equipment',
-      status: 1 as LocationStatus, // Active
-      createdAt: '2024-01-10T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-    },
-    {
-      id: '2',
-      name: 'Mobile Testing Studio',
-      description: 'Specialized facility for mobile game testing',
-      address: '456 Mobile Ave, App Town, AT 67890',
-      maxTestersCapacity: 15,
-      maxProjectsCapacity: 8,
-      equipmentAvailable: 'Various mobile devices, Tablets, Wireless charging stations',
-      status: 1 as LocationStatus, // Active
-      createdAt: '2024-01-12T14:00:00Z',
-      updatedAt: '2024-01-16T09:00:00Z',
-    },
-    {
-      id: '3',
-      name: 'VR Experience Center',
-      description: 'Virtual reality testing space',
-      address: '789 Virtual Blvd, Reality City, RC 11111',
-      maxTestersCapacity: 10,
-      maxProjectsCapacity: 3,
-      equipmentAvailable: 'VR headsets, Motion tracking, Haptic feedback systems',
-      status: 2 as LocationStatus, // Maintenance
-      createdAt: '2024-01-08T11:00:00Z',
-      updatedAt: '2024-01-18T16:00:00Z',
-    },
-  ].slice(skip, skip + take);
+    const response = await client.get({
+      url: '/testing/locations',
+      query: {
+        skip: skip.toString(),
+        take: take.toString(),
+      },
+    });
+
+    if (response.error) {
+      // Handle different error types
+      const errorMessage = typeof response.error === 'object' 
+        ? JSON.stringify(response.error) 
+        : String(response.error);
+      throw new Error(`Failed to fetch testing locations: ${errorMessage}`);
+    }
+
+    return response.data as TestingLocation[];
+  } catch (error) {
+    console.error('Error fetching testing locations from API:', error);
+    // Re-throw with better error handling
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(`Failed to fetch testing locations: ${String(error)}`);
+  }
 }
 
 /**
@@ -140,7 +109,7 @@ export async function getTestingLocation(id: string): Promise<TestingLocation | 
 /**
  * Create a new testing location
  */
-export async function createTestingLocation(locationData: CreateTestingLocationRequest): Promise<TestingLocation> {
+export async function createTestingLocation(locationData: CreateTestingLocationDto): Promise<TestingLocation> {
   try {
     await configureAuthenticatedClient();
 
@@ -170,7 +139,7 @@ export async function createTestingLocation(locationData: CreateTestingLocationR
 /**
  * Update an existing testing location
  */
-export async function updateTestingLocation(id: string, locationData: UpdateTestingLocationRequest): Promise<TestingLocation> {
+export async function updateTestingLocation(id: string, locationData: UpdateTestingLocationDto): Promise<TestingLocation> {
   try {
     await configureAuthenticatedClient();
 

@@ -33,6 +33,9 @@ export async function configureAuthenticatedClient() {
       Authorization: `Bearer ${session.api.accessToken}`,
       'X-Tenant-Id': session.currentTenant?.id,
       'Content-Type': 'application/json',
+      // Prevent caching issues
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
     },
   });
 
