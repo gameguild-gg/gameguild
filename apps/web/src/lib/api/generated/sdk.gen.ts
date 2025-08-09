@@ -43,9 +43,15 @@ import type {
   PostApiAuthSignUpData,
   PostApiAuthSignUpResponses,
   PostApiAuthSignUpErrors,
+  PostApiAuthSignupData,
+  PostApiAuthSignupResponses,
+  PostApiAuthSignupErrors,
   PostApiAuthSignInData,
   PostApiAuthSignInResponses,
   PostApiAuthSignInErrors,
+  PostApiAuthSigninData,
+  PostApiAuthSigninResponses,
+  PostApiAuthSigninErrors,
   PostApiAuthGoogleData,
   PostApiAuthGoogleResponses,
   PostApiAuthGoogleErrors,
@@ -680,10 +686,10 @@ import type {
   GetApiTestingLabPermissionsRoleTemplatesResponses,
   PostApiTestingLabPermissionsRoleTemplatesData,
   PostApiTestingLabPermissionsRoleTemplatesResponses,
-  DeleteApiTestingLabPermissionsRoleTemplatesByNameData,
-  DeleteApiTestingLabPermissionsRoleTemplatesByNameResponses,
-  PutApiTestingLabPermissionsRoleTemplatesByNameData,
-  PutApiTestingLabPermissionsRoleTemplatesByNameResponses,
+  DeleteApiTestingLabPermissionsRoleTemplatesByIdData,
+  DeleteApiTestingLabPermissionsRoleTemplatesByIdResponses,
+  PutApiTestingLabPermissionsRoleTemplatesByIdData,
+  PutApiTestingLabPermissionsRoleTemplatesByIdResponses,
   GetApiTestingLabPermissionsUsersByUserIdData,
   GetApiTestingLabPermissionsUsersByUserIdResponses,
   PostApiTestingLabPermissionsUsersByUserIdRolesData,
@@ -975,9 +981,31 @@ export const postApiAuthSignUp = <ThrowOnError extends boolean = false>(options?
   });
 };
 
+export const postApiAuthSignup = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSignupData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAuthSignupResponses, PostApiAuthSignupErrors, ThrowOnError>({
+    url: '/api/auth/signup',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
 export const postApiAuthSignIn = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSignInData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostApiAuthSignInResponses, PostApiAuthSignInErrors, ThrowOnError>({
     url: '/api/auth/sign-in',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiAuthSignin = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSigninData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAuthSigninResponses, PostApiAuthSigninErrors, ThrowOnError>({
+    url: '/api/auth/signin',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -3831,20 +3859,20 @@ export const postApiTestingLabPermissionsRoleTemplates = <ThrowOnError extends b
   });
 };
 
-export const deleteApiTestingLabPermissionsRoleTemplatesByName = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiTestingLabPermissionsRoleTemplatesByNameData, ThrowOnError>,
+export const deleteApiTestingLabPermissionsRoleTemplatesById = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiTestingLabPermissionsRoleTemplatesByIdData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiTestingLabPermissionsRoleTemplatesByNameResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/role-templates/{name}',
+  return (options.client ?? _heyApiClient).delete<DeleteApiTestingLabPermissionsRoleTemplatesByIdResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/role-templates/{id}',
     ...options,
   });
 };
 
-export const putApiTestingLabPermissionsRoleTemplatesByName = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiTestingLabPermissionsRoleTemplatesByNameData, ThrowOnError>,
+export const putApiTestingLabPermissionsRoleTemplatesById = <ThrowOnError extends boolean = false>(
+  options: Options<PutApiTestingLabPermissionsRoleTemplatesByIdData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).put<PutApiTestingLabPermissionsRoleTemplatesByNameResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/role-templates/{name}',
+  return (options.client ?? _heyApiClient).put<PutApiTestingLabPermissionsRoleTemplatesByIdResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/role-templates/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',

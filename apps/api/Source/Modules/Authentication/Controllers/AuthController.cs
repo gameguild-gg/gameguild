@@ -26,6 +26,7 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
   /// <param name="request">User registration details</param>
   /// <returns>Authentication response with tokens</returns>
   [HttpPost("sign-up")]
+  [HttpPost("signup")] // backward compatibility or client variants
   [ProducesResponseType(typeof(SignInResponseDto), StatusCodes.Status201Created)]
   [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
   [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
@@ -82,6 +83,7 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
   /// <param name="request">User login credentials</param>
   /// <returns>Authentication response with tokens</returns>
   [HttpPost("sign-in")]
+  [HttpPost("signin")] // backward compatibility or client variants
   [ProducesResponseType(typeof(SignInResponseDto), StatusCodes.Status200OK)]
   [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
   [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
