@@ -141,50 +141,86 @@ export async function getTestingLocation(id: string): Promise<TestingLocation | 
  * Create a new testing location
  */
 export async function createTestingLocation(locationData: CreateTestingLocationRequest): Promise<TestingLocation> {
-  await configureAuthenticatedClient();
+  try {
+    await configureAuthenticatedClient();
 
-  const response = await client.post({
-    url: '/testing/locations',
-    body: locationData,
-  });
+    const response = await client.post({
+      url: '/testing/locations',
+      body: locationData,
+    });
 
-  if (response.error) {
-    throw new Error(`Failed to create testing location: ${response.error}`);
+    if (response.error) {
+      // Handle different error types
+      const errorMessage = typeof response.error === 'object' 
+        ? JSON.stringify(response.error) 
+        : String(response.error);
+      throw new Error(`Failed to create testing location: ${errorMessage}`);
+    }
+
+    return response.data as TestingLocation;
+  } catch (error) {
+    // Re-throw with better error handling
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(`Failed to create testing location: ${String(error)}`);
   }
-
-  return response.data as TestingLocation;
 }
 
 /**
  * Update an existing testing location
  */
 export async function updateTestingLocation(id: string, locationData: UpdateTestingLocationRequest): Promise<TestingLocation> {
-  await configureAuthenticatedClient();
+  try {
+    await configureAuthenticatedClient();
 
-  const response = await client.put({
-    url: `/testing/locations/${id}`,
-    body: locationData,
-  });
+    const response = await client.put({
+      url: `/testing/locations/${id}`,
+      body: locationData,
+    });
 
-  if (response.error) {
-    throw new Error(`Failed to update testing location: ${response.error}`);
+    if (response.error) {
+      // Handle different error types
+      const errorMessage = typeof response.error === 'object' 
+        ? JSON.stringify(response.error) 
+        : String(response.error);
+      throw new Error(`Failed to update testing location: ${errorMessage}`);
+    }
+
+    return response.data as TestingLocation;
+  } catch (error) {
+    // Re-throw with better error handling
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(`Failed to update testing location: ${String(error)}`);
   }
-
-  return response.data as TestingLocation;
 }
 
 /**
  * Delete a testing location
  */
 export async function deleteTestingLocation(id: string): Promise<void> {
-  await configureAuthenticatedClient();
+  try {
+    await configureAuthenticatedClient();
 
-  const response = await client.delete({
-    url: `/testing/locations/${id}`,
-  });
+    const response = await client.delete({
+      url: `/testing/locations/${id}`,
+    });
 
-  if (response.error) {
-    throw new Error(`Failed to delete testing location: ${response.error}`);
+    if (response.error) {
+      // Handle different error types
+      const errorMessage = typeof response.error === 'object' 
+        ? JSON.stringify(response.error) 
+        : String(response.error);
+      throw new Error(`Failed to delete testing location: ${errorMessage}`);
+    }
+  } catch (error) {
+    // Re-throw with better error handling
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(`Failed to delete testing location: ${String(error)}`);
   }
 }
 

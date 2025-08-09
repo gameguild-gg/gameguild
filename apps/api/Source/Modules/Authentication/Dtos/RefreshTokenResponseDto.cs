@@ -19,10 +19,22 @@ public class RefreshTokenResponseDto {
   public string RefreshToken { get; init; } = string.Empty;
 
   /// <summary>
-  /// When the refresh token expires
+  /// Backward compatible combined expiry (was refresh token expiry). Prefer using AccessTokenExpiresAt/RefreshTokenExpiresAt.
   /// </summary>
   [JsonPropertyName("expiresAt")]
   public DateTime ExpiresAt { get; init; }
+
+  /// <summary>
+  /// Access token expiry (short-lived)
+  /// </summary>
+  [JsonPropertyName("accessTokenExpiresAt")]
+  public DateTime AccessTokenExpiresAt { get; init; }
+
+  /// <summary>
+  /// Refresh token expiry (long-lived)
+  /// </summary>
+  [JsonPropertyName("refreshTokenExpiresAt")]
+  public DateTime RefreshTokenExpiresAt { get; init; }
 
   /// <summary>
   /// Tenant ID associated with this token (if any)

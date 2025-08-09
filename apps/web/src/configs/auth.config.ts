@@ -174,19 +174,43 @@ export const authConfig: NextAuthConfig = {
       }
 
       // Check token expiration and refresh if needed
-      if (token?.api?.refreshToken && token?.expiresAt) {
-        const expirationTime = new Date(token.expiresAt).getTime();
-        const currentTime = Date.now();
+      if (token?.api?.refreshToken) {
+        // Access token expiry: use token.expiresAt if provided (backend sets to refresh token expiry currently)
+        // We'll maintain a separate access token expiry derived from JWT 'exp' claim for more accurate refresh timing.
+    if (!token.accessTokenExpiresAt && token.api?.accessToken) {
+          try {
+            const parts = token.api.accessToken.split('.');
+            if (parts.length === 3) {
+      const payloadB64 = parts[1] || '';
+      const payloadJson = Buffer.from(payloadB64, 'base64').toString('utf-8');
+      const payload = JSON.parse(payloadJson);
+              if (payload.exp) {
+                token.accessTokenExpiresAt = new Date(payload.exp * 1000).toISOString();
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to parse access token exp claim', e);
+          }
+        }
 
-        console.log('Token expiration check:', {
-          expiresAt: token.expiresAt,
-          expirationTime: new Date(expirationTime).toISOString(),
-          currentTime: new Date(currentTime).toISOString(),
-          timeUntilExpiration: expirationTime - currentTime,
-          shouldRefresh: currentTime >= expirationTime
-        });
+        const rawExpiry = token.accessTokenExpiresAt || token.expiresAt; // fallback to previous behavior
+    if (rawExpiry && typeof rawExpiry === 'string') {
+      const expirationTime = new Date(rawExpiry as string).getTime();
+          const currentTime = Date.now();
+          const earlyRefreshWindowMs = 60_000; // refresh 60s early
+          const shouldRefresh = currentTime >= (expirationTime - earlyRefreshWindowMs);
 
-        if (currentTime >= expirationTime) {
+            console.log('Token expiration check:', {
+              accessTokenExpiresAt: token.accessTokenExpiresAt,
+              fallbackExpiresAt: token.expiresAt,
+              expirationTime: new Date(expirationTime).toISOString(),
+              currentTime: new Date(currentTime).toISOString(),
+              msUntilExpiration: expirationTime - currentTime,
+              earlyRefreshWindowMs,
+              shouldRefresh
+            });
+
+        if (shouldRefresh) {
           console.log('Token expired, attempting refresh...');
 
           try {
@@ -201,15 +225,37 @@ export const authConfig: NextAuthConfig = {
                 token.api.refreshToken = response.refreshToken;
                 console.log('Refresh token updated');
               }
-              if (response.expiresAt) {
+              if (response.accessTokenExpiresAt) {
+                token.accessTokenExpiresAt = response.accessTokenExpiresAt;
+                console.log('Access token exp (server) set:', token.accessTokenExpiresAt);
+              } else if (!token.accessTokenExpiresAt) {
+                // Fallback parse
+                try {
+                  const parts = response.accessToken.split('.');
+                  if (parts.length === 3) {
+                    const payloadB64 = parts[1] || '';
+                    const payloadJson = Buffer.from(payloadB64, 'base64').toString('utf-8');
+                    const payload = JSON.parse(payloadJson);
+                    if (payload.exp) {
+                      token.accessTokenExpiresAt = new Date(payload.exp * 1000).toISOString();
+                      console.log('Access token exp parsed:', token.accessTokenExpiresAt);
+                    }
+                  }
+                } catch (e) { console.warn('Failed to parse new access token exp', e); }
+              }
+              if (response.refreshTokenExpiresAt) {
+                token.expiresAt = response.refreshTokenExpiresAt; // keep backward compatibility
+                console.log('Refresh token exp (server) set:', token.expiresAt);
+              } else if (response.expiresAt) {
                 token.expiresAt = response.expiresAt;
-                console.log('Token expiration updated:', response.expiresAt);
+                console.log('Refresh token exp (legacy) updated:', response.expiresAt);
               }
             }
           } catch (error) {
             console.error('Token refresh failed, forcing sign-out');
             return null;
           }
+        }
         }
       }
 
@@ -290,7 +336,7 @@ export const authConfig: NextAuthConfig = {
       if (token.id) session.user.id = token.id;
       if (token.username) session.user.username = token.username;
       if (token.email) session.user.email = token.email;
-      if (token.profilePictureUrl) session.user.profilePictureUrl = token.profilePictureUrl;
+  if (token.profilePictureUrl) (session.user as any).profilePictureUrl = token.profilePictureUrl;
       if (token.availableTenants) session.availableTenants = token.availableTenants;
       if (token.currentTenant) session.currentTenant = token.currentTenant;
 

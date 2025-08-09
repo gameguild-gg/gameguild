@@ -16,7 +16,7 @@ import { createTestingLocation, deleteTestingLocation, getTestingLocations, upda
 import { convertAPIPermissionsToForm, convertFormPermissionsToAPI, RoleTemplate as APIRoleTemplate, TestingLabPermissionAPI } from '@/lib/api/testing-lab-permissions';
 import { getTestingLabSettings, updateTestingLabSettings } from '@/actions/testing-lab-settings';
 import { getUsers } from '@/lib/api/users';
-import { ChevronRight, Edit, MapPin, Plus, Settings, Shield, Trash2, UserCheck, UserMinus, UserPlus, Users }                  from 'lucide-react';
+import { ChevronRight, Edit, MapPin, Plus, RefreshCw, Settings, Shield, Trash2, UserCheck, UserMinus, UserPlus, Users }                  from 'lucide-react';
 import { useEffect, useState }                                                                                                from 'react';
 import { toast }                                                                                                              from 'sonner';
 
@@ -323,47 +323,69 @@ export function TestingLabSettings() {
       setLocations(apiLocations as TestingLocation[]);
     } catch (error) {
       console.error('Failed to load locations:', error);
-      // Fallback to mock data when API is unavailable
-      const mockLocations: TestingLocation[] = [
-        {
-          id: '1',
-          name: 'Main Testing Lab',
-          description: 'Primary testing facility with full VR setup',
-          address: '123 Game Development Street, Tech City, TC 12345',
-          maxTestersCapacity: 20,
-          maxProjectsCapacity: 8,
-          equipmentAvailable: 'VR Headsets, Gaming PCs, Recording Equipment',
-          status: 0, // Active
-          createdAt: '2024-01-15T10:00:00Z',
-          updatedAt: '2024-01-15T10:00:00Z',
-        },
-        {
-          id: '2',
-          name: 'Mobile Testing Suite',
-          description: 'Specialized mobile and tablet testing environment',
-          address: '456 Innovation Boulevard, Tech City, TC 12346',
-          maxTestersCapacity: 15,
-          maxProjectsCapacity: 5,
-          equipmentAvailable: 'iOS/Android Devices, Tablets, Emulators',
-          status: 0, // Active
-          createdAt: '2024-01-16T10:00:00Z',
-          updatedAt: '2024-01-16T10:00:00Z',
-        },
-        {
-          id: '3',
-          name: 'Console Testing Room',
-          description: 'Dedicated console gaming testing space',
-          address: '789 Gaming Plaza, Tech City, TC 12347',
-          maxTestersCapacity: 12,
-          maxProjectsCapacity: 4,
-          equipmentAvailable: 'PlayStation 5, Xbox Series X/S, Nintendo Switch',
-          status: 1, // Maintenance
-          createdAt: '2024-01-17T10:00:00Z',
-          updatedAt: '2024-01-17T10:00:00Z',
-        },
-      ];
-      setLocations(mockLocations);
-      toast.warning('Using demo data - API server unavailable');
+      
+      // Provide user feedback about the error
+      let shouldUseMockData = false;
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          toast.warning('Server unavailable - using demo data');
+          shouldUseMockData = true;
+        } else if (error.message.includes('500')) {
+          toast.error('Server error - using demo data as fallback');
+          shouldUseMockData = true;
+        } else if (error.message.includes('401') || error.message.includes('403')) {
+          toast.error('Authentication required - please log in');
+        } else {
+          toast.warning('API unavailable - using demo data');
+          shouldUseMockData = true;
+        }
+      } else {
+        toast.warning('Server unavailable - using demo data');
+        shouldUseMockData = true;
+      }
+
+      if (shouldUseMockData) {
+        // Fallback to mock data when API is unavailable
+        const mockLocations: TestingLocation[] = [
+          {
+            id: '1',
+            name: 'Main Testing Lab',
+            description: 'Primary testing facility with full VR setup',
+            address: '123 Game Development Street, Tech City, TC 12345',
+            maxTestersCapacity: 20,
+            maxProjectsCapacity: 8,
+            equipmentAvailable: 'VR Headsets, Gaming PCs, Recording Equipment',
+            status: 0, // Active
+            createdAt: '2024-01-15T10:00:00Z',
+            updatedAt: '2024-01-15T10:00:00Z',
+          },
+          {
+            id: '2',
+            name: 'Mobile Testing Suite',
+            description: 'Specialized mobile and tablet testing environment',
+            address: '456 Innovation Boulevard, Tech City, TC 12346',
+            maxTestersCapacity: 15,
+            maxProjectsCapacity: 5,
+            equipmentAvailable: 'iOS/Android Devices, Tablets, Emulators',
+            status: 0, // Active
+            createdAt: '2024-01-16T10:00:00Z',
+            updatedAt: '2024-01-16T10:00:00Z',
+          },
+          {
+            id: '3',
+            name: 'Console Testing Room',
+            description: 'Dedicated console gaming testing space',
+            address: '789 Gaming Plaza, Tech City, TC 12347',
+            maxTestersCapacity: 12,
+            maxProjectsCapacity: 4,
+            equipmentAvailable: 'PlayStation 5, Xbox Series X/S, Nintendo Switch',
+            status: 1, // Maintenance
+            createdAt: '2024-01-17T10:00:00Z',
+            updatedAt: '2024-01-17T10:00:00Z',
+          },
+        ];
+        setLocations(mockLocations);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -526,15 +548,45 @@ export function TestingLabSettings() {
   };
 
   const handleDeleteLocation = async (id: string) => {
+    const locationToDelete = locations.find(loc => loc.id === id);
+    const locationName = locationToDelete?.name || 'this location';
+    
+    if (!confirm(`Are you sure you want to delete "${locationName}"? This action cannot be undone and may affect any ongoing testing sessions at this location.`)) {
+      return;
+    }
+
     try {
       await deleteTestingLocation(id);
       setLocations(locations.filter(location => location.id !== id));
       toast.success('Location deleted successfully');
     } catch (error) {
-      console.warn('API unavailable, using local deletion:', error);
-      // Fallback to local deletion when API is unavailable
-      setLocations(locations.filter(location => location.id !== id));
-      toast.success('Location deleted (demo mode)');
+      console.warn('Failed to delete location:', error);
+      
+      let shouldFallback = false;
+      let errorMessage = 'Failed to delete location';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+          shouldFallback = true;
+          errorMessage = 'Server unavailable - working in offline mode';
+        } else if (error.message.includes('500')) {
+          errorMessage = 'Server error occurred. Please try again later.';
+        } else if (error.message.includes('401') || error.message.includes('403')) {
+          errorMessage = 'You do not have permission to delete this location.';
+        }
+      } else {
+        // If it's not a standard error, assume server is unavailable
+        shouldFallback = true;
+        errorMessage = 'Server unavailable - working in offline mode';
+      }
+      
+      if (shouldFallback) {
+        // Fallback to local deletion when API is unavailable
+        setLocations(locations.filter(location => location.id !== id));
+        toast.success(errorMessage);
+      } else {
+        toast.error(errorMessage);
+      }
     }
   };
 
@@ -920,12 +972,13 @@ export function TestingLabSettings() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Location Name</Label>
+              <Label htmlFor="name">Location Name *</Label>
               <Input
                 id="name"
                 value={ formData.name }
                 onChange={ (e) => setFormData({ ...formData, name: e.target.value }) }
-                placeholder="Enter location name"
+                placeholder="e.g., Main Testing Lab, VR Suite, Mobile Lab"
+                required
               />
             </div>
             <div className="space-y-2">
@@ -934,7 +987,8 @@ export function TestingLabSettings() {
                 id="description"
                 value={formData.description}
                 onChange={ (e) => setFormData({ ...formData, description: e.target.value }) }
-                placeholder="Describe the testing location"
+                placeholder="Describe the testing environment, specializations, or unique features"
+                className="min-h-[60px]"
               />
             </div>
             <div className="space-y-2">
@@ -943,26 +997,35 @@ export function TestingLabSettings() {
                 id="address"
                 value={formData.address}
                 onChange={ (e) => setFormData({ ...formData, address: e.target.value }) }
-                placeholder="Enter full address"
+                placeholder="123 Innovation Street, Tech City, TC 12345"
+                className="min-h-[60px]"
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="maxTesters">Max Testers</Label>
+                <Label htmlFor="maxTesters">Max Testers *</Label>
                 <Input
                   id="maxTesters"
                   type="number"
+                  min="1"
+                  max="100"
                   value={formData.maxTestersCapacity}
                   onChange={ (e) => setFormData({ ...formData, maxTestersCapacity: parseInt(e.target.value) || 0 }) }
+                  placeholder="e.g., 15"
+                  required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="maxProjects">Max Projects</Label>
+                <Label htmlFor="maxProjects">Max Projects *</Label>
                 <Input
                   id="maxProjects"
                   type="number"
+                  min="1"
+                  max="50"
                   value={formData.maxProjectsCapacity}
                   onChange={ (e) => setFormData({ ...formData, maxProjectsCapacity: parseInt(e.target.value) || 0 }) }
+                  placeholder="e.g., 5"
+                  required
                 />
               </div>
             </div>
@@ -972,7 +1035,8 @@ export function TestingLabSettings() {
                 id="equipment"
                 value={formData.equipmentAvailable}
                 onChange={ (e) => setFormData({ ...formData, equipmentAvailable: e.target.value }) }
-                placeholder="List available equipment"
+                placeholder="VR Headsets (10x), Gaming PCs (15x), Recording Equipment, Tablets, etc."
+                className="min-h-[60px]"
               />
             </div>
             <div className="space-y-2">
@@ -998,29 +1062,72 @@ export function TestingLabSettings() {
             <Button variant="outline" onClick={ () => setIsLocationDialogOpen(false) }>
               Cancel
             </Button>
-            <Button onClick={ async () => {
-              try {
-                const locationData = {
-                  ...formData,
-                  status: stringToLocationStatus(formData.status),
-                };
-
-                if (editingLocation) {
-                  const updatedLocation = await updateTestingLocation(editingLocation.id!, locationData);
-                  setLocations(locations.map((loc) => (loc.id === editingLocation.id ? updatedLocation as TestingLocation : loc)));
-                  toast.success('Location updated successfully');
-                } else {
-                  const newLocation = await createTestingLocation(locationData);
-                  setLocations([ ...locations, newLocation as TestingLocation ]);
-                  toast.success('Location created successfully');
+            <Button 
+              onClick={ async () => {
+                // Enhanced validation
+                if (!formData.name.trim()) {
+                  toast.error('Location name is required');
+                  return;
                 }
-                setIsLocationDialogOpen(false);
-              } catch (error) {
-                console.error('Failed to save location:', error);
-                toast.error('Failed to save location');
-              }
-            } }>
-              { editingLocation ? 'Update' : 'Create' }
+                if (!formData.description.trim()) {
+                  toast.error('Location description is required');
+                  return;
+                }
+                if (!formData.address.trim()) {
+                  toast.error('Location address is required');
+                  return;
+                }
+                if (formData.maxTestersCapacity <= 0 || formData.maxTestersCapacity > 1000) {
+                  toast.error('Max testers must be between 1 and 1000');
+                  return;
+                }
+                if (formData.maxProjectsCapacity <= 0 || formData.maxProjectsCapacity > 100) {
+                  toast.error('Max projects must be between 1 and 100');
+                  return;
+                }
+
+                try {
+                  const locationData = {
+                    ...formData,
+                    status: stringToLocationStatus(formData.status),
+                  };
+
+                  if (editingLocation) {
+                    const updatedLocation = await updateTestingLocation(editingLocation.id!, locationData);
+                    setLocations(locations.map((loc) => (loc.id === editingLocation.id ? updatedLocation as TestingLocation : loc)));
+                    toast.success('Location updated successfully');
+                  } else {
+                    const newLocation = await createTestingLocation(locationData);
+                    setLocations([ ...locations, newLocation as TestingLocation ]);
+                    toast.success('Location created successfully');
+                  }
+                  setIsLocationDialogOpen(false);
+                } catch (error) {
+                  console.error('Failed to save location:', error);
+                  
+                  let errorMessage = 'Failed to save location';
+                  if (error instanceof Error) {
+                    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                      errorMessage = 'Unable to connect to server. Please check your connection and try again.';
+                    } else if (error.message.includes('500')) {
+                      errorMessage = 'Server error occurred. Please try again later.';
+                    } else if (error.message.includes('401') || error.message.includes('403')) {
+                      errorMessage = 'You do not have permission to perform this action.';
+                    } else if (error.message.includes('400')) {
+                      errorMessage = 'Invalid data provided. Please check your input and try again.';
+                    } else if (error.message.includes('409')) {
+                      errorMessage = 'A location with this name already exists.';
+                    } else {
+                      errorMessage = `Error: ${error.message}`;
+                    }
+                  }
+                  
+                  toast.error(errorMessage);
+                }
+              } }
+              disabled={!formData.name.trim() || !formData.description.trim() || !formData.address.trim() || formData.maxTestersCapacity <= 0 || formData.maxProjectsCapacity <= 0}
+            >
+              { editingLocation ? 'Update Location' : 'Create Location' }
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1089,9 +1196,97 @@ function GeneralSettings({ generalSettings, setGeneralSettings, saveGeneralSetti
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="UTC">UTC</SelectItem>
-                    <SelectItem value="America/New_York">Eastern Time</SelectItem>
-                    <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
-                    <SelectItem value="Europe/London">GMT</SelectItem>
+                    
+                    {/* Americas */}
+                    <SelectItem value="America/New_York">America/New_York (EST/EDT)</SelectItem>
+                    <SelectItem value="America/Chicago">America/Chicago (CST/CDT)</SelectItem>
+                    <SelectItem value="America/Denver">America/Denver (MST/MDT)</SelectItem>
+                    <SelectItem value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</SelectItem>
+                    <SelectItem value="America/Phoenix">America/Phoenix (MST)</SelectItem>
+                    <SelectItem value="America/Anchorage">America/Anchorage (AKST/AKDT)</SelectItem>
+                    <SelectItem value="Pacific/Honolulu">Pacific/Honolulu (HST)</SelectItem>
+                    <SelectItem value="America/Toronto">America/Toronto (EST/EDT)</SelectItem>
+                    <SelectItem value="America/Vancouver">America/Vancouver (PST/PDT)</SelectItem>
+                    <SelectItem value="America/Mexico_City">America/Mexico_City (CST/CDT)</SelectItem>
+                    <SelectItem value="America/Sao_Paulo">America/Sao_Paulo (BRT/BRST)</SelectItem>
+                    <SelectItem value="America/Buenos_Aires">America/Buenos_Aires (ART)</SelectItem>
+                    <SelectItem value="America/Lima">America/Lima (PET)</SelectItem>
+                    <SelectItem value="America/Bogota">America/Bogota (COT)</SelectItem>
+                    <SelectItem value="America/Caracas">America/Caracas (VET)</SelectItem>
+                    <SelectItem value="America/Santiago">America/Santiago (CLT/CLST)</SelectItem>
+                    
+                    {/* Europe */}
+                    <SelectItem value="Europe/London">Europe/London (GMT/BST)</SelectItem>
+                    <SelectItem value="Europe/Dublin">Europe/Dublin (GMT/IST)</SelectItem>
+                    <SelectItem value="Europe/Paris">Europe/Paris (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Berlin">Europe/Berlin (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Rome">Europe/Rome (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Madrid">Europe/Madrid (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Amsterdam">Europe/Amsterdam (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Brussels">Europe/Brussels (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Vienna">Europe/Vienna (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Zurich">Europe/Zurich (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Prague">Europe/Prague (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Warsaw">Europe/Warsaw (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Stockholm">Europe/Stockholm (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Oslo">Europe/Oslo (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Copenhagen">Europe/Copenhagen (CET/CEST)</SelectItem>
+                    <SelectItem value="Europe/Helsinki">Europe/Helsinki (EET/EEST)</SelectItem>
+                    <SelectItem value="Europe/Athens">Europe/Athens (EET/EEST)</SelectItem>
+                    <SelectItem value="Europe/Istanbul">Europe/Istanbul (TRT)</SelectItem>
+                    <SelectItem value="Europe/Moscow">Europe/Moscow (MSK)</SelectItem>
+                    <SelectItem value="Europe/Kiev">Europe/Kiev (EET/EEST)</SelectItem>
+                    <SelectItem value="Europe/Bucharest">Europe/Bucharest (EET/EEST)</SelectItem>
+                    <SelectItem value="Europe/Sofia">Europe/Sofia (EET/EEST)</SelectItem>
+                    
+                    {/* Asia */}
+                    <SelectItem value="Asia/Tokyo">Asia/Tokyo (JST)</SelectItem>
+                    <SelectItem value="Asia/Seoul">Asia/Seoul (KST)</SelectItem>
+                    <SelectItem value="Asia/Shanghai">Asia/Shanghai (CST)</SelectItem>
+                    <SelectItem value="Asia/Hong_Kong">Asia/Hong_Kong (HKT)</SelectItem>
+                    <SelectItem value="Asia/Singapore">Asia/Singapore (SGT)</SelectItem>
+                    <SelectItem value="Asia/Bangkok">Asia/Bangkok (ICT)</SelectItem>
+                    <SelectItem value="Asia/Manila">Asia/Manila (PHT)</SelectItem>
+                    <SelectItem value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur (MYT)</SelectItem>
+                    <SelectItem value="Asia/Jakarta">Asia/Jakarta (WIB)</SelectItem>
+                    <SelectItem value="Asia/Ho_Chi_Minh">Asia/Ho_Chi_Minh (ICT)</SelectItem>
+                    <SelectItem value="Asia/Mumbai">Asia/Mumbai (IST)</SelectItem>
+                    <SelectItem value="Asia/Kolkata">Asia/Kolkata (IST)</SelectItem>
+                    <SelectItem value="Asia/Dhaka">Asia/Dhaka (BDT)</SelectItem>
+                    <SelectItem value="Asia/Karachi">Asia/Karachi (PKT)</SelectItem>
+                    <SelectItem value="Asia/Dubai">Asia/Dubai (GST)</SelectItem>
+                    <SelectItem value="Asia/Tehran">Asia/Tehran (IRST/IRDT)</SelectItem>
+                    <SelectItem value="Asia/Jerusalem">Asia/Jerusalem (IST/IDT)</SelectItem>
+                    <SelectItem value="Asia/Riyadh">Asia/Riyadh (AST)</SelectItem>
+                    <SelectItem value="Asia/Baghdad">Asia/Baghdad (AST)</SelectItem>
+                    <SelectItem value="Asia/Tashkent">Asia/Tashkent (UZT)</SelectItem>
+                    <SelectItem value="Asia/Almaty">Asia/Almaty (ALMT)</SelectItem>
+                    <SelectItem value="Asia/Novosibirsk">Asia/Novosibirsk (NOVT)</SelectItem>
+                    <SelectItem value="Asia/Vladivostok">Asia/Vladivostok (VLAT)</SelectItem>
+                    
+                    {/* Africa */}
+                    <SelectItem value="Africa/Cairo">Africa/Cairo (EET)</SelectItem>
+                    <SelectItem value="Africa/Johannesburg">Africa/Johannesburg (SAST)</SelectItem>
+                    <SelectItem value="Africa/Lagos">Africa/Lagos (WAT)</SelectItem>
+                    <SelectItem value="Africa/Nairobi">Africa/Nairobi (EAT)</SelectItem>
+                    <SelectItem value="Africa/Casablanca">Africa/Casablanca (WET/WEST)</SelectItem>
+                    <SelectItem value="Africa/Tunis">Africa/Tunis (CET)</SelectItem>
+                    <SelectItem value="Africa/Algiers">Africa/Algiers (CET)</SelectItem>
+                    <SelectItem value="Africa/Addis_Ababa">Africa/Addis_Ababa (EAT)</SelectItem>
+                    <SelectItem value="Africa/Dar_es_Salaam">Africa/Dar_es_Salaam (EAT)</SelectItem>
+                    <SelectItem value="Africa/Kampala">Africa/Kampala (EAT)</SelectItem>
+                    
+                    {/* Oceania */}
+                    <SelectItem value="Australia/Sydney">Australia/Sydney (AEST/AEDT)</SelectItem>
+                    <SelectItem value="Australia/Melbourne">Australia/Melbourne (AEST/AEDT)</SelectItem>
+                    <SelectItem value="Australia/Brisbane">Australia/Brisbane (AEST)</SelectItem>
+                    <SelectItem value="Australia/Perth">Australia/Perth (AWST)</SelectItem>
+                    <SelectItem value="Australia/Adelaide">Australia/Adelaide (ACST/ACDT)</SelectItem>
+                    <SelectItem value="Australia/Darwin">Australia/Darwin (ACST)</SelectItem>
+                    <SelectItem value="Pacific/Auckland">Pacific/Auckland (NZST/NZDT)</SelectItem>
+                    <SelectItem value="Pacific/Fiji">Pacific/Fiji (FJT/FJST)</SelectItem>
+                    <SelectItem value="Pacific/Tahiti">Pacific/Tahiti (TAHT)</SelectItem>
+                    <SelectItem value="Pacific/Guam">Pacific/Guam (ChST)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1546,14 +1741,30 @@ function LocationsSettings({ locations, onCreateLocation, onEditLocation, onDele
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            Testing Locations
-            <Button onClick={ onCreateLocation } className="flex items-center gap-2">
-              <Plus className="h-4 w-4"/>
-              Add Location
-            </Button>
+            <div className="flex items-center gap-2">
+              Testing Locations
+              <Badge variant="secondary" className="text-xs">
+                {locations.length} location{locations.length !== 1 ? 's' : ''}
+              </Badge>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => window.location.reload()}
+                className="flex items-center gap-1"
+              >
+                <RefreshCw className="h-3 w-3"/>
+                Refresh
+              </Button>
+              <Button onClick={ onCreateLocation } className="flex items-center gap-2">
+                <Plus className="h-4 w-4"/>
+                Add Location
+              </Button>
+            </div>
           </CardTitle>
           <CardDescription>
-            Manage your testing facilities and their configurations
+            Manage your testing facilities and their configurations. Each location can host multiple testing sessions simultaneously.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -1582,12 +1793,27 @@ function LocationsSettings({ locations, onCreateLocation, onEditLocation, onDele
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="space-y-2 text-sm text-muted-foreground">
-                      <p>📍 { location.address }</p>
-                      <div className="flex justify-between">
-                        <span>Max Testers: { location.maxTestersCapacity }</span>
-                        <span>Max Projects: { location.maxProjectsCapacity }</span>
+                      {location.address && (
+                        <p className="flex items-start gap-2">
+                          <span>📍</span>
+                          <span className="flex-1">{ location.address }</span>
+                        </p>
+                      )}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3"/>
+                          <span>{ location.maxTestersCapacity } testers</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3"/>
+                          <span>{ location.maxProjectsCapacity } projects</span>
+                        </div>
                       </div>
-                      <p className="text-xs">Equipment: { location.equipmentAvailable }</p>
+                      {location.equipmentAvailable && (
+                        <p className="text-xs bg-gray-50 dark:bg-gray-800 rounded p-2 mt-2">
+                          <strong>Equipment:</strong> { location.equipmentAvailable }
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-2 mt-4">
                       <Button
@@ -1603,6 +1829,8 @@ function LocationsSettings({ locations, onCreateLocation, onEditLocation, onDele
                         variant="outline"
                         size="sm"
                         onClick={ () => onDeleteLocation(location.id!) }
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                        title="Delete location"
                       >
                         <Trash2 className="h-4 w-4"/>
                       </Button>
@@ -1614,10 +1842,14 @@ function LocationsSettings({ locations, onCreateLocation, onEditLocation, onDele
           ) : (
                 <div className="text-center py-8">
                   <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4"/>
-                  <p className="text-muted-foreground mb-4">No testing locations found</p>
+                  <h3 className="text-lg font-semibold mb-2">No testing locations</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Get started by creating your first testing location. You can set up multiple locations 
+                    to organize different types of testing environments.
+                  </p>
                   <Button onClick={ onCreateLocation } className="flex items-center gap-2">
                     <Plus className="h-4 w-4"/>
-                    Add First Location
+                    Create First Location
                   </Button>
                 </div>
               ) }

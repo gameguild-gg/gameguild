@@ -9,7 +9,10 @@ export interface SignInResponse {
 
   refreshToken: string;
 
+  // Legacy combined expiry (refresh token). Prefer using accessTokenExpiresAt / refreshTokenExpiresAt when available.
   expiresAt: string;
+  accessTokenExpiresAt?: string;
+  refreshTokenExpiresAt?: string;
 
   tenantId?: string;
 
@@ -27,5 +30,8 @@ export interface RefreshTokenResponse {
 
   refreshToken: string;
 
+  // Legacy combined expiry (refresh token). Prefer using accessTokenExpiresAt / refreshTokenExpiresAt.
   expiresAt: string;
+  accessTokenExpiresAt?: string;
+  refreshTokenExpiresAt?: string;
 }
