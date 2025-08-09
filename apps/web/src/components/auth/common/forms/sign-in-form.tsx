@@ -96,14 +96,9 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                     />
                   </div>
                   <div className="grid gap-2">
-                    <div className="flex items-center">
-                      <Label htmlFor="password" className="text-slate-300">
-                        Password
-                      </Label>
-                      <Link href="#" className="ml-auto text-sm text-slate-400 hover:text-blue-400 transition-colors underline-offset-4 hover:underline">
-                        Forgot your password?
-                      </Link>
-                    </div>
+                    <Label htmlFor="password" className="text-slate-300">
+                      Password
+                    </Label>
                     <Input
                       id="password"
                       type="password"
@@ -113,6 +108,11 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                       required
                       className="bg-slate-800/50 border-slate-600 text-white placeholder-slate-400 focus:border-purple-400 transition-colors"
                     />
+                    <div className="flex justify-end">
+                      <Link href="#" className="text-sm text-slate-400 hover:text-blue-400 transition-colors underline-offset-4 hover:underline">
+                        Forgot your password?
+                      </Link>
+                    </div>
                   </div>
                   <Button type="submit" className="w-full bg-slate-700 hover:bg-slate-600 text-white border-slate-600 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" disabled={emailPasswordLoading}>
                     {emailPasswordLoading ? (
