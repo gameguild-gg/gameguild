@@ -21,7 +21,7 @@ import {
   deleteTestingLocationAction 
 } from '@/actions/testing-lab-locations';
 import { getUsers } from '@/lib/api/users';
-import { ChevronRight, Edit, MapPin, Plus, RefreshCw, Settings, Shield, Trash2, UserCheck, UserMinus, UserPlus, Users }                  from 'lucide-react';
+import { ChevronRight, Edit, MapPin, Plus, RefreshCw, Settings, Shield, Trash2, UserCheck, UserMinus, UserPlus, Users, AlertTriangle }                  from 'lucide-react';
 import { useEffect, useState }                                                                                                from 'react';
 import { toast }                                                                                                              from 'sonner';
 
@@ -166,21 +166,24 @@ interface RoleFormData {
 // Utility functions for type conversion
 const locationStatusToString = (status: LocationStatus): 'Active' | 'Inactive' | 'Maintenance' => {
   switch (status) {
-    case 0: return 'Active';
-    case 1: return 'Maintenance';
-    case 2: return 'Inactive';
+    case 0: return 'Active';      // ACTIVE = 0
+    case 1: return 'Maintenance'; // MAINTENANCE = 1  
+    case 2: return 'Inactive';    // INACTIVE = 2
     default: return 'Active';
   }
 };
 
 const stringToLocationStatus = (status: 'Active' | 'Inactive' | 'Maintenance'): LocationStatus => {
   switch (status) {
-    case 'Active': return 0;
-    case 'Maintenance': return 1;
-    case 'Inactive': return 2;
-    default: return 0;
+    case 'Active': return 0;      // ACTIVE = 0
+    case 'Maintenance': return 1; // MAINTENANCE = 1
+    case 'Inactive': return 2;    // INACTIVE = 2
+    default: return 0; // Default to Active (0)
   }
 };
+
+// Reusable GUID validator (RFC 4122 variants 1-5)
+const isGuid = (val: string) => /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(val);
 
 interface LocationFormData {
   name: string;
@@ -279,12 +282,16 @@ export function TestingLabSettings() {
   const [isManagerDialogOpen, setIsManagerDialogOpen] = useState(false);
   const [ isRoleDialogOpen, setIsRoleDialogOpen ] = useState(false);
   const [ isUserRoleDialogOpen, setIsUserRoleDialogOpen ] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleteManagerDialogOpen, setIsDeleteManagerDialogOpen] = useState(false);
 
   // Editing states
   const [editingLocation, setEditingLocation] = useState<TestingLocation | null>(null);
   const [editingManager, setEditingManager] = useState<TestingLabManager | null>(null);
   const [ editingRole, setEditingRole ] = useState<RoleTemplate | null>(null);
   const [ selectedUserEmail, setSelectedUserEmail ] = useState<string>('');
+  const [locationToDelete, setLocationToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [managerToDelete, setManagerToDelete] = useState<{ id: string; email: string } | null>(null);
 
   // Form states
   const [formData, setFormData] = useState<LocationFormData>(initialFormData);
@@ -555,46 +562,38 @@ export function TestingLabSettings() {
   };
 
   const handleDeleteLocation = async (id: string) => {
-    const locationToDelete = locations.find(loc => loc.id === id);
-    const locationName = locationToDelete?.name || 'this location';
+    const locationToDeleteInfo = locations.find(loc => loc.id === id);
+    const locationName = locationToDeleteInfo?.name || 'this location';
     
-    if (!confirm(`Are you sure you want to delete "${locationName}"? This action cannot be undone and may affect any ongoing testing sessions at this location.`)) {
-      return;
-    }
+    // Open delete confirmation dialog
+    setLocationToDelete({ id, name: locationName });
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteLocation = async () => {
+    if (!locationToDelete) return;
 
     try {
-      await deleteTestingLocation(id);
-      setLocations(locations.filter(location => location.id !== id));
+      await deleteTestingLocationAction(locationToDelete.id);
+      setLocations(locations.filter(location => location.id !== locationToDelete.id));
       toast.success('Location deleted successfully');
     } catch (error) {
       console.warn('Failed to delete location:', error);
       
-      let shouldFallback = false;
-      let errorMessage = 'Failed to delete location';
-      
       if (error instanceof Error) {
-        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-          shouldFallback = true;
-          errorMessage = 'Server unavailable - working in offline mode';
-        } else if (error.message.includes('500')) {
-          errorMessage = 'Server error occurred. Please try again later.';
-        } else if (error.message.includes('401') || error.message.includes('403')) {
-          errorMessage = 'You do not have permission to delete this location.';
-        }
+        toast.error(error.message);
       } else {
-        // If it's not a standard error, assume server is unavailable
-        shouldFallback = true;
-        errorMessage = 'Server unavailable - working in offline mode';
+        toast.error('An unexpected error occurred. Please try again.');
       }
-      
-      if (shouldFallback) {
-        // Fallback to local deletion when API is unavailable
-        setLocations(locations.filter(location => location.id !== id));
-        toast.success(errorMessage);
-      } else {
-        toast.error(errorMessage);
-      }
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setLocationToDelete(null);
     }
+  };
+
+  const cancelDeleteLocation = () => {
+    setIsDeleteDialogOpen(false);
+    setLocationToDelete(null);
   };
 
   const handleCreateManager = () => {
@@ -615,18 +614,33 @@ export function TestingLabSettings() {
   };
 
   const handleDeleteManager = async (managerId: string) => {
-    if (!confirm('Are you sure you want to remove this manager? This action cannot be undone.')) {
-      return;
-    }
+    const managerToDeleteInfo = managers.find(mgr => mgr.id === managerId);
+    const managerEmail = managerToDeleteInfo?.email || 'this manager';
+    
+    // Open delete confirmation dialog
+    setManagerToDelete({ id: managerId, email: managerEmail });
+    setIsDeleteManagerDialogOpen(true);
+  };
+
+  const confirmDeleteManager = async () => {
+    if (!managerToDelete) return;
 
     try {
       // TODO: Replace with actual API call
-      setManagers(managers.filter((mgr) => mgr.id !== managerId));
+      setManagers(managers.filter((mgr) => mgr.id !== managerToDelete.id));
       toast.success('Manager removed successfully');
     } catch (error) {
       console.error('Failed to remove manager:', error);
       toast.error('Failed to remove manager');
+    } finally {
+      setIsDeleteManagerDialogOpen(false);
+      setManagerToDelete(null);
     }
+  };
+
+  const cancelDeleteManager = () => {
+    setIsDeleteManagerDialogOpen(false);
+    setManagerToDelete(null);
   };
 
   const handleSubmitLocation = async (e: React.FormEvent) => {
@@ -634,17 +648,44 @@ export function TestingLabSettings() {
     
     try {
       if (editingLocation) {
+  // If the existing location has a non-GUID id (e.g., locally generated fallback like a numeric or timestamp),
+  // we should treat this as an unsynced local record and perform a create instead of update.
+        const targetId = editingLocation.id!;
+        const locationPayload = {
+          name: formData.name,
+          description: formData.description,
+          address: formData.address,
+          maxTestersCapacity: formData.maxTestersCapacity,
+          maxProjectsCapacity: formData.maxProjectsCapacity,
+          equipmentAvailable: formData.equipmentAvailable,
+          status: stringToLocationStatus(formData.status),
+        };
+
+        if (!isGuid(targetId)) {
+          console.warn('Non-GUID location id detected, creating new location instead of updating:', targetId);
+          try {
+            const created = await createTestingLocationAction(locationPayload as any);
+            // Replace the local placeholder entry
+            setLocations(locations.map((loc) => (loc.id === targetId ? (created as TestingLocation) : loc)));
+            toast.success('Location synced successfully');
+          } catch (createErr) {
+            console.error('Failed to sync placeholder location, using local update fallback:', createErr);
+            const updatedLocal: TestingLocation = {
+              ...editingLocation,
+              ...locationPayload,
+              updatedAt: new Date().toISOString(),
+            };
+            setLocations(locations.map((loc) => (loc.id === targetId ? updatedLocal : loc)));
+            toast.success('Location updated locally (unsynced)');
+          }
+          setIsLocationDialogOpen(false);
+          setFormData(initialFormData);
+          setEditingLocation(null);
+          return;
+        }
         // Update existing location
         try {
-          const updatedLocation = await updateTestingLocation(editingLocation.id!, {
-            name: formData.name,
-            description: formData.description,
-            address: formData.address,
-            maxTestersCapacity: formData.maxTestersCapacity,
-            maxProjectsCapacity: formData.maxProjectsCapacity,
-            equipmentAvailable: formData.equipmentAvailable,
-            status: stringToLocationStatus(formData.status),
-          });
+          const updatedLocation = await updateTestingLocationAction(targetId, locationPayload as any);
           setLocations(locations.map((loc) => (loc.id === editingLocation.id ? updatedLocation as TestingLocation : loc)));
           toast.success('Location updated successfully');
         } catch (apiError) {
@@ -652,13 +693,7 @@ export function TestingLabSettings() {
           console.warn('API unavailable, using local update:', apiError);
           const updatedLocation: TestingLocation = {
             ...editingLocation,
-            name: formData.name,
-            description: formData.description,
-            address: formData.address,
-            maxTestersCapacity: formData.maxTestersCapacity,
-            maxProjectsCapacity: formData.maxProjectsCapacity,
-            equipmentAvailable: formData.equipmentAvailable,
-            status: stringToLocationStatus(formData.status),
+            ...locationPayload,
             updatedAt: new Date().toISOString(),
           };
           setLocations(locations.map((loc) => (loc.id === editingLocation.id ? updatedLocation : loc)));
@@ -667,7 +702,7 @@ export function TestingLabSettings() {
       } else {
         // Create new location
         try {
-          const newLocation = await createTestingLocation({
+          const newLocation = await createTestingLocationAction({
             name: formData.name,
             description: formData.description,
             address: formData.address,
@@ -845,6 +880,8 @@ export function TestingLabSettings() {
         roleName: selectedRole.name,
         assignedAt: new Date().toISOString(),
         isActive: true,
+  // Default module context for Testing Lab (cast to satisfy generated type expectations)
+  module: 'TestingLab' as any,
       };
 
       setUserRoles([ ...userRoles, compatibleAssignment ]);
@@ -954,6 +991,7 @@ export function TestingLabSettings() {
                 onCreateLocation={ handleCreateLocation }
                 onEditLocation={ handleEditLocation }
                 onDeleteLocation={ handleDeleteLocation }
+                onRefreshLocations={ loadLocations }
                 isLoading={ isLoading }
               />
             ) }
@@ -1099,12 +1137,43 @@ export function TestingLabSettings() {
                     status: stringToLocationStatus(formData.status),
                   };
 
+                  console.log('Form data before sending:', {
+                    formData,
+                    locationData,
+                    statusMapping: {
+                      originalStatus: formData.status,
+                      mappedStatus: locationData.status
+                    }
+                  });
+
                   if (editingLocation) {
-                    const updatedLocation = await updateTestingLocation(editingLocation.id!, locationData);
-                    setLocations(locations.map((loc) => (loc.id === editingLocation.id ? updatedLocation as TestingLocation : loc)));
+                    const targetId = editingLocation.id!;
+                    if (!isGuid(targetId)) {
+                      console.warn('Non-GUID location id detected (dialog footer), creating new location instead of updating:', targetId);
+                      try {
+                        const created = await createTestingLocationAction(locationData as any);
+                        setLocations(locations.map((loc) => (loc.id === targetId ? (created as TestingLocation) : loc)));
+                        toast.success('Location synced successfully');
+                        setIsLocationDialogOpen(false);
+                        return;
+                      } catch (createErr) {
+                        console.error('Failed to sync placeholder location from dialog footer, using local update fallback:', createErr);
+                        const updatedLocal: TestingLocation = {
+                          ...editingLocation,
+                          ...locationData,
+                          updatedAt: new Date().toISOString(),
+                        } as TestingLocation;
+                        setLocations(locations.map((loc) => (loc.id === targetId ? updatedLocal : loc)));
+                        toast.success('Location updated locally (unsynced)');
+                        setIsLocationDialogOpen(false);
+                        return;
+                      }
+                    }
+                    const updatedLocation = await updateTestingLocationAction(targetId, locationData as any);
+                    setLocations(locations.map((loc) => (loc.id === targetId ? (updatedLocation as TestingLocation) : loc)));
                     toast.success('Location updated successfully');
                   } else {
-                    const newLocation = await createTestingLocation(locationData);
+                    const newLocation = await createTestingLocationAction(locationData);
                     setLocations([ ...locations, newLocation as TestingLocation ]);
                     toast.success('Location created successfully');
                   }
@@ -1112,29 +1181,72 @@ export function TestingLabSettings() {
                 } catch (error) {
                   console.error('Failed to save location:', error);
                   
-                  let errorMessage = 'Failed to save location';
                   if (error instanceof Error) {
-                    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                      errorMessage = 'Unable to connect to server. Please check your connection and try again.';
-                    } else if (error.message.includes('500')) {
-                      errorMessage = 'Server error occurred. Please try again later.';
-                    } else if (error.message.includes('401') || error.message.includes('403')) {
-                      errorMessage = 'You do not have permission to perform this action.';
-                    } else if (error.message.includes('400')) {
-                      errorMessage = 'Invalid data provided. Please check your input and try again.';
-                    } else if (error.message.includes('409')) {
-                      errorMessage = 'A location with this name already exists.';
-                    } else {
-                      errorMessage = `Error: ${error.message}`;
-                    }
+                    toast.error(error.message);
+                  } else {
+                    toast.error('An unexpected error occurred. Please try again.');
                   }
-                  
-                  toast.error(errorMessage);
                 }
               } }
               disabled={!formData.name.trim() || !formData.description.trim() || !formData.address.trim() || formData.maxTestersCapacity <= 0 || formData.maxProjectsCapacity <= 0}
             >
               { editingLocation ? 'Update Location' : 'Create Location' }
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Confirm Deletion
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &ldquo;{locationToDelete?.name}&rdquo;?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              This action cannot be undone and may affect any ongoing testing sessions at this location.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={cancelDeleteLocation}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteLocation}>
+              Delete Location
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Manager Confirmation Dialog */}
+      <Dialog open={isDeleteManagerDialogOpen} onOpenChange={setIsDeleteManagerDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Confirm Manager Removal
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove &ldquo;{managerToDelete?.email}&rdquo;?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              This action cannot be undone and will remove all their permissions and access to the testing lab.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={cancelDeleteManager}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteManager}>
+              Remove Manager
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1704,10 +1816,12 @@ interface LocationsSettingsProps {
 
   onDeleteLocation: (locationId: string) => void;
 
+  onRefreshLocations: () => void;
+
   isLoading: boolean;
 }
 
-function LocationsSettings({ locations, onCreateLocation, onEditLocation, onDeleteLocation, isLoading }: LocationsSettingsProps) {
+function LocationsSettings({ locations, onCreateLocation, onEditLocation, onDeleteLocation, onRefreshLocations, isLoading }: LocationsSettingsProps) {
   const getStatusBadgeColor = (status: LocationStatus) => {
     switch (status) {
       case 0: // Active
@@ -1758,7 +1872,9 @@ function LocationsSettings({ locations, onCreateLocation, onEditLocation, onDele
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  onRefreshLocations();
+                }}
                 className="flex items-center gap-1"
               >
                 <RefreshCw className="h-3 w-3"/>
