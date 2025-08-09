@@ -298,6 +298,8 @@ export function TestingLabSettings() {
   const [editingLocation, setEditingLocation] = useState<TestingLocation | null>(null);
   const [editingManager, setEditingManager] = useState<TestingLabManager | null>(null);
   const [ editingRole, setEditingRole ] = useState<RoleTemplate | null>(null);
+  const [ originalRoleId, setOriginalRoleId ] = useState<string | null>(null); // Store original ID for API calls
+  const [ originalRoleName, setOriginalRoleName ] = useState<string | null>(null); // Store original name for comparison
   const [ selectedUserEmail, setSelectedUserEmail ] = useState<string>('');
 
   // Form states
@@ -464,12 +466,9 @@ export function TestingLabSettings() {
 
   const loadRoles = async () => {
     try {
-      console.log('Starting to load roles...');
       // Use server action to get role templates
       const apiRoles = await getTestingLabRoleTemplatesAction();
-      console.log('API roles loaded:', apiRoles);
       setRoles(apiRoles as any[]);
-      console.log('Roles state updated, total roles:', apiRoles.length);
     } catch (error) {
       console.error('Failed to load roles:', error);
       if (error instanceof Error && error.message.includes('permission')) {
@@ -757,6 +756,8 @@ export function TestingLabSettings() {
   const handleEditRole = (role: RoleTemplate) => {
     // Allow editing of all roles, including system roles
     setEditingRole(role);
+    setOriginalRoleId(role.id); // Store the original ID for API calls
+    setOriginalRoleName(role.name); // Store the original name for comparison
     setRoleFormData({
       name: role.name,
       description: role.description,
@@ -775,7 +776,7 @@ export function TestingLabSettings() {
     }
 
     try {
-      await deleteRoleTemplateAction(role.name);
+      await deleteRoleTemplateAction(role.id);
       setRoles(roles.filter(r => r.id !== roleId));
       toast.success('Role deleted successfully');
     } catch (error) {
@@ -796,12 +797,14 @@ export function TestingLabSettings() {
 
       if (editingRole) {
         // Update existing role
-        const updatedRole = await updateRoleTemplateAction(editingRole.name, {
+        const updatedRole = await updateRoleTemplateAction(originalRoleId!, {
+          name: roleFormData.name !== originalRoleName ? roleFormData.name : undefined,
           description: roleFormData.description,
           permissions: convertFormPermissionsToAPI(roleFormData.permissions),
         });
 
-        setRoles(roles.map(r => r.id === editingRole.id ? updatedRole as any : r));
+        // Refresh the roles list from the server to ensure we have fresh data
+        await loadRoles();
         toast.success('Role updated successfully');
       } else {
         // Create new role
@@ -811,13 +814,16 @@ export function TestingLabSettings() {
           permissions: convertFormPermissionsToAPI(roleFormData.permissions),
         });
 
-        setRoles([ ...roles, newRole as any ]);
+        // Refresh the roles list from the server to ensure we have fresh data
+        await loadRoles();
         toast.success('Role created successfully');
       }
 
       setIsRoleDialogOpen(false);
       setRoleFormData(initialRoleFormData);
       setEditingRole(null);
+      setOriginalRoleId(null);
+      setOriginalRoleName(null);
     } catch (error) {
       console.error('Failed to save role:', error);
       toast.error('Failed to save role');
@@ -1189,7 +1195,6 @@ export function TestingLabSettings() {
                   value={roleFormData.name}
                   onChange={(e) => setRoleFormData({ ...roleFormData, name: e.target.value })}
                   placeholder="e.g., TestingLabAdmin, GameTester, QALead"
-                  disabled={editingRole?.isSystemRole}
                   required
                 />
               </div>
@@ -1465,7 +1470,13 @@ export function TestingLabSettings() {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsRoleDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => {
+                setIsRoleDialogOpen(false);
+                setEditingRole(null);
+                setOriginalRoleId(null);
+                setOriginalRoleName(null);
+                setRoleFormData(initialRoleFormData);
+              }}>
                 Cancel
               </Button>
               <Button 
@@ -2246,11 +2257,6 @@ function RolesSettings({ roles, onCreateRole, onEditRole, onDeleteRole }: RolesS
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {(() => {
-            console.log('RolesSettings render - roles array:', roles);
-            console.log('RolesSettings render - roles length:', roles.length);
-            return null;
-          })()}
           { roles.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
               { roles.map((role) => (

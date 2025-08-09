@@ -202,7 +202,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
     // Assert
     Assert.Equal(HttpStatusCode.OK, refreshResponse.StatusCode);
 
-    var responseData = await refreshResponse.Content.ReadFromJsonAsync<RefreshTokenResponseDto>();
+  var responseData = await refreshResponse.Content.ReadFromJsonAsync<SignInResponseDto>();
     Assert.NotNull(responseData);
     Assert.NotEmpty(responseData.AccessToken);
     Assert.NotEmpty(responseData.RefreshToken);

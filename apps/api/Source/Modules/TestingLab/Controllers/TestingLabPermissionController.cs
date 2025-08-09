@@ -39,6 +39,10 @@ public class TestingLabPermissionController : ControllerBase
     public async Task<ActionResult<List<TestingLabRoleTemplate>>> GetTestingLabRoleTemplates()
     {
         var allTemplates = await _permissionService.GetRoleTemplatesAsync();
+        
+        _logger.LogInformation("Found {Count} role templates in database: [{Names}]", 
+            allTemplates.Count, string.Join(", ", allTemplates.Select(t => $"'{t.Name}'")));
+            
         // Show all role templates, not just TestingLab-specific ones
         var testingLabTemplates = allTemplates
             .Select(t => new TestingLabRoleTemplate
@@ -112,19 +116,26 @@ public class TestingLabPermissionController : ControllerBase
     /// <summary>
     /// Update an existing TestingLab role template
     /// </summary>
-    [HttpPut("role-templates/{name}")]
-    public async Task<ActionResult<TestingLabRoleTemplate>> UpdateTestingLabRoleTemplate(string name, [FromBody] UpdateTestingLabRoleRequest request)
+    [HttpPut("role-templates/{id}")]
+    public async Task<ActionResult<TestingLabRoleTemplate>> UpdateTestingLabRoleTemplate(Guid id, [FromBody] UpdateTestingLabRoleRequest request)
     {
         try
         {
+            _logger.LogInformation("Updating role template with ID: '{Id}', Request name: '{RequestName}', Description: '{Description}'", 
+                id, request.Name, request.Description);
+                
             var permissionTemplates = BuildPermissionTemplates(request.Permissions);
             
-            var template = await _permissionService.UpdateRoleTemplateAsync(
-                name,
+            RoleTemplate template;
+            
+            // Use the ID-based service method
+            template = await _permissionService.UpdateRoleTemplateAsync(
+                id,
+                request.Name ?? string.Empty,
                 request.Description,
                 permissionTemplates);
 
-            _logger.LogInformation("Admin user {UserId} updated TestingLab role template '{RoleName}'", GetCurrentUserId(), name);
+            _logger.LogInformation("Admin user {UserId} updated TestingLab role template with ID '{Id}'", GetCurrentUserId(), id);
             
             return Ok(MapToTestingLabRoleTemplate(template));
         }
@@ -137,18 +148,18 @@ public class TestingLabPermissionController : ControllerBase
     /// <summary>
     /// Delete a TestingLab role template
     /// </summary>
-    [HttpDelete("role-templates/{name}")]
-    public async Task<ActionResult> DeleteTestingLabRoleTemplate(string name)
+    [HttpDelete("role-templates/{id}")]
+    public async Task<ActionResult> DeleteTestingLabRoleTemplate(Guid id)
     {
         try
         {
-            var deleted = await _permissionService.DeleteRoleTemplateAsync(name);
+            var deleted = await _permissionService.DeleteRoleTemplateAsync(id);
             if (!deleted)
             {
-                return NotFound($"Role template '{name}' not found");
+                return NotFound($"Role template with ID '{id}' not found");
             }
 
-            _logger.LogInformation("Admin user {UserId} deleted TestingLab role template '{RoleName}'", GetCurrentUserId(), name);
+            _logger.LogInformation("Admin user {UserId} deleted TestingLab role template with ID '{Id}'", GetCurrentUserId(), id);
             return NoContent();
         }
         catch (InvalidOperationException ex)
@@ -478,6 +489,7 @@ public class CreateTestingLabRoleRequest
 
 public class UpdateTestingLabRoleRequest
 {
+    public string? Name { get; set; }  // Optional new name
     public string Description { get; set; } = string.Empty;
     public TestingLabPermissionsDto Permissions { get; set; } = new();
 }

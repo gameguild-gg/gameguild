@@ -63,12 +63,13 @@ public class RefreshTokenHandlerTests
             TenantId = tenantId,
         };
 
-        var refreshResponse = new RefreshTokenResponseDto
+        var refreshResponse = new SignInResponseDto
         {
             AccessToken = "new-access-token",
             RefreshToken = "new-refresh-token",
             ExpiresAt = DateTime.UtcNow.AddHours(1),
             TenantId = tenantId,
+            User = new UserDto { Id = Guid.NewGuid(), Email = "user@example.com" }
         };
 
         _mockAuthService.Setup(x => x.RefreshTokenAsync(
@@ -89,7 +90,7 @@ public class RefreshTokenHandlerTests
         Assert.NotNull(result);
         Assert.Equal("new-access-token", result.AccessToken);
         Assert.Equal("new-refresh-token", result.RefreshToken);
-        Assert.Equal(refreshResponse.ExpiresAt, result.ExpiresAt);
+    Assert.Equal(refreshResponse.ExpiresAt, result.ExpiresAt);
         Assert.Equal(tenantId, result.TenantId);
 
         _mockAuthService.Verify(x => x.RefreshTokenAsync(It.IsAny<RefreshTokenRequestDto>()), Times.Once);

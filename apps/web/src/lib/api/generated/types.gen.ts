@@ -5666,6 +5666,7 @@ export type UpdateTenantUserGroupDto = {
 };
 
 export type UpdateTestingLabRoleRequest = {
+  name?: string | null;
   description?: string | null;
   permissions?: TestingLabPermissionsDto;
 };
@@ -6566,6 +6567,35 @@ export type PostApiAuthSignUpResponses = {
 
 export type PostApiAuthSignUpResponse = PostApiAuthSignUpResponses[keyof PostApiAuthSignUpResponses];
 
+export type PostApiAuthSignupData = {
+  body?: LocalSignUpRequestDto;
+  path?: never;
+  query?: never;
+  url: '/api/auth/signup';
+};
+
+export type PostApiAuthSignupErrors = {
+  /**
+   * Bad Request
+   */
+  400: ProblemDetails;
+  /**
+   * Conflict
+   */
+  409: ProblemDetails;
+};
+
+export type PostApiAuthSignupError = PostApiAuthSignupErrors[keyof PostApiAuthSignupErrors];
+
+export type PostApiAuthSignupResponses = {
+  /**
+   * Created
+   */
+  201: SignInResponseDto;
+};
+
+export type PostApiAuthSignupResponse = PostApiAuthSignupResponses[keyof PostApiAuthSignupResponses];
+
 export type PostApiAuthSignInData = {
   body?: LocalSignInRequestDto;
   path?: never;
@@ -6594,6 +6624,35 @@ export type PostApiAuthSignInResponses = {
 };
 
 export type PostApiAuthSignInResponse = PostApiAuthSignInResponses[keyof PostApiAuthSignInResponses];
+
+export type PostApiAuthSigninData = {
+  body?: LocalSignInRequestDto;
+  path?: never;
+  query?: never;
+  url: '/api/auth/signin';
+};
+
+export type PostApiAuthSigninErrors = {
+  /**
+   * Bad Request
+   */
+  400: ProblemDetails;
+  /**
+   * Unauthorized
+   */
+  401: ProblemDetails;
+};
+
+export type PostApiAuthSigninError = PostApiAuthSigninErrors[keyof PostApiAuthSigninErrors];
+
+export type PostApiAuthSigninResponses = {
+  /**
+   * OK
+   */
+  200: SignInResponseDto;
+};
+
+export type PostApiAuthSigninResponse = PostApiAuthSigninResponses[keyof PostApiAuthSigninResponses];
 
 export type PostApiAuthGoogleData = {
   body?: GoogleIdTokenRequestDto;
@@ -13025,40 +13084,40 @@ export type PostApiTestingLabPermissionsRoleTemplatesResponses = {
 export type PostApiTestingLabPermissionsRoleTemplatesResponse =
   PostApiTestingLabPermissionsRoleTemplatesResponses[keyof PostApiTestingLabPermissionsRoleTemplatesResponses];
 
-export type DeleteApiTestingLabPermissionsRoleTemplatesByNameData = {
+export type DeleteApiTestingLabPermissionsRoleTemplatesByIdData = {
   body?: never;
   path: {
-    name: string;
+    id: string;
   };
   query?: never;
-  url: '/api/testing-lab/permissions/role-templates/{name}';
+  url: '/api/testing-lab/permissions/role-templates/{id}';
 };
 
-export type DeleteApiTestingLabPermissionsRoleTemplatesByNameResponses = {
+export type DeleteApiTestingLabPermissionsRoleTemplatesByIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PutApiTestingLabPermissionsRoleTemplatesByNameData = {
+export type PutApiTestingLabPermissionsRoleTemplatesByIdData = {
   body?: UpdateTestingLabRoleRequest;
   path: {
-    name: string;
+    id: string;
   };
   query?: never;
-  url: '/api/testing-lab/permissions/role-templates/{name}';
+  url: '/api/testing-lab/permissions/role-templates/{id}';
 };
 
-export type PutApiTestingLabPermissionsRoleTemplatesByNameResponses = {
+export type PutApiTestingLabPermissionsRoleTemplatesByIdResponses = {
   /**
    * OK
    */
   200: TestingLabRoleTemplate;
 };
 
-export type PutApiTestingLabPermissionsRoleTemplatesByNameResponse =
-  PutApiTestingLabPermissionsRoleTemplatesByNameResponses[keyof PutApiTestingLabPermissionsRoleTemplatesByNameResponses];
+export type PutApiTestingLabPermissionsRoleTemplatesByIdResponse =
+  PutApiTestingLabPermissionsRoleTemplatesByIdResponses[keyof PutApiTestingLabPermissionsRoleTemplatesByIdResponses];
 
 export type GetApiTestingLabPermissionsUsersByUserIdData = {
   body?: never;

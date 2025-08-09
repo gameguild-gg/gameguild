@@ -33,13 +33,15 @@ public class MockAuthService : IAuthService
         });
     }
 
-    public Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request)
+    public Task<SignInResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request)
     {
-        return Task.FromResult(new RefreshTokenResponseDto
+        return Task.FromResult(new SignInResponseDto
         {
             AccessToken = "mock-new-access-token",
             RefreshToken = "mock-new-refresh-token",
             ExpiresAt = DateTime.UtcNow.AddMinutes(15),
+            User = new UserDto { Id = Guid.NewGuid(), Email = "refreshed@example.com" },
+            TenantId = Guid.NewGuid(),
         });
     }
 

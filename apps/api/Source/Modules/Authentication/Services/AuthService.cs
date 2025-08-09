@@ -159,91 +159,95 @@ namespace GameGuild.Modules.Authentication {
 
     private static bool VerifyPassword(string password, string hash) { return HashPassword(password) == hash; }
 
-    public async Task<RefreshTokenResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request) {
-      Console.WriteLine($"🔥🔥🔥 [AUTHSERVICE] RefreshTokenAsync called with token: {request.RefreshToken?[..Math.Min(request.RefreshToken?.Length ?? 0, 20)]}...");
-      logger.LogInformation("Refresh token request received. Token length: {TokenLength}", request.RefreshToken?.Length ?? 0);
+    public async Task<SignInResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request) {
+      // Light logging only (avoid dumping all tokens in production)
+      logger.LogInformation("Processing refresh token (len={Len})", request.RefreshToken?.Length);
 
-      // Check all refresh tokens for debugging
-      var allTokens = await context.RefreshTokens.ToListAsync();
-      logger.LogInformation("Total refresh tokens in database: {Count}", allTokens.Count);
+      if (string.IsNullOrWhiteSpace(request.RefreshToken)) throw new UnauthorizedAccessException("Invalid refresh token");
 
-      foreach (var token in allTokens) {
-        var tokenPrefix = token.Token?.Length > 10 ? token.Token[..10] : token.Token ?? "null";
-        logger.LogInformation(
-          "Token: {TokenPrefix}... | User: {UserId} | ExpiresAt: {ExpiresAt} | Revoked: {IsRevoked}",
-          tokenPrefix,
-          token.UserId,
-          token.ExpiresAt,
-          token.IsRevoked
-        );
-      }
+      // Validate existing refresh token (active & not expired)
+      var existing = await context.RefreshTokens
+        .Where(rt => rt.Token == request.RefreshToken)
+        .FirstOrDefaultAsync();
 
-      var refreshToken = await context.RefreshTokens.Where(rt => rt.Token == request.RefreshToken)
-                                      .Where(rt => !rt.IsRevoked)
-                                      .Where(rt => rt.ExpiresAt > DateTime.UtcNow)
-                                      .FirstOrDefaultAsync();
-
-      if (refreshToken == null) {
-        var tokenPrefix = request.RefreshToken?.Length > 10 ? request.RefreshToken[..10] : request.RefreshToken ?? "null";
-        logger.LogWarning("Refresh token validation failed. Token: {TokenPrefix}...", tokenPrefix);
-
+      if (existing == null || existing.IsRevoked || existing.ExpiresAt <= DateTime.UtcNow) {
+        logger.LogWarning("Refresh token rejected (not found / revoked / expired)");
         throw new UnauthorizedAccessException("Invalid refresh token");
       }
 
-      var user = await context.Users.FindAsync(refreshToken.UserId);
-
+      var user = await context.Users.FindAsync(existing.UserId);
       if (user == null) throw new UnauthorizedAccessException("User not found");
 
-      // Get the tenantId from the request or from the claims
-      var tenantId = request.TenantId;
+      var tenantId = request.TenantId; // optional override
 
-      // Generate new tokens
-      var userDto = new UserDto {
-        Id = user.Id, Username = user.Name, Email = user.Email,
-      };
-      var roles = new[] {
-        "User",
-      }; // TODO: fetch actual roles if available
+      var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
+      var roles = new[] { "User" }; // TODO: actual roles
 
-      // Get tenant claims if a tenantId was provided
       IEnumerable<Claim>? tenantClaims = null;
-
       if (tenantId.HasValue) {
-        // Verify the user has access to this tenant
-        if (await tenantAuthService.GetUserTenantsAsync(user) is var tenants &&
-            tenants.Any(t => t.TenantId.HasValue && t.TenantId.Value == tenantId.Value)) { tenantClaims = await tenantAuthService.GetTenantClaimsAsync(user, tenantId.Value); }
+        var permittedTenants = await tenantAuthService.GetUserTenantsAsync(user);
+        if (permittedTenants.Any(t => t.TenantId.HasValue && t.TenantId.Value == tenantId.Value)) {
+          tenantClaims = await tenantAuthService.GetTenantClaimsAsync(user, tenantId.Value);
+        } else {
+          // If requested tenant not accessible, ignore it
+          tenantId = null;
+        }
       }
 
-      // Generate token with tenant claims if available
-  var newAccessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
-  var newRefreshToken = jwtTokenService.GenerateRefreshToken();
-  var accessTokenExpiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
-  var newAccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
+      // Use unified config keys (support both old & new names for backward compatibility)
+      int accessMinutes = int.Parse(
+        configuration["Jwt:ExpirationMinutes"] ??
+        configuration["Jwt:ExpiryInMinutes"] ??
+        "60"
+      );
+      int refreshDays = int.Parse(
+        configuration["Jwt:RefreshTokenExpirationDays"] ??
+        configuration["Jwt:RefreshTokenExpiryInDays"] ??
+        "7"
+      );
 
-      // Revoke old refresh token
-      refreshToken.IsRevoked = true;
-      refreshToken.RevokedAt = DateTime.UtcNow;
-      refreshToken.ReplacedByToken = newRefreshToken;
+      var newAccessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
+      var newRefreshTokenValue = jwtTokenService.GenerateRefreshToken();
+      var newAccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessMinutes);
+      var newRefreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshDays);
 
-      // Create new refresh token
-      var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+      // Rotate: revoke old
+      existing.IsRevoked = true;
+      existing.RevokedAt = DateTime.UtcNow;
+      existing.ReplacedByToken = newRefreshTokenValue;
+
+      // Persist new refresh token
       var newRefreshTokenEntity = new RefreshToken {
-        UserId = user.Id, Token = newRefreshToken, ExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays), CreatedByIp = "0.0.0.0", // TODO: get real IP address
+        UserId = user.Id,
+        Token = newRefreshTokenValue,
+        ExpiresAt = newRefreshTokenExpiresAt,
+        CreatedByIp = "0.0.0.0", // TODO: capture actual IP
+        IsRevoked = false,
       };
-
       context.RefreshTokens.Add(newRefreshTokenEntity);
+
+      // Optional maintenance: prune old expired tokens for this user (simple heuristic)
+      var stale = await context.RefreshTokens
+        .Where(rt => rt.UserId == user.Id && rt.ExpiresAt < DateTime.UtcNow.AddDays(-30))
+        .ToListAsync();
+      if (stale.Count > 0) context.RefreshTokens.RemoveRange(stale);
+
       await context.SaveChangesAsync();
 
-      var response = new RefreshTokenResponseDto {
+      // Enrich with tenant availability
+      var signInResponse = new SignInResponseDto {
         AccessToken = newAccessToken,
-        RefreshToken = newRefreshToken,
-        ExpiresAt = newRefreshTokenEntity.ExpiresAt, // backward compatible
+        RefreshToken = newRefreshTokenValue,
+        ExpiresAt = newRefreshTokenExpiresAt, // backward compatibility field
         AccessTokenExpiresAt = newAccessTokenExpiresAt,
-        RefreshTokenExpiresAt = newRefreshTokenEntity.ExpiresAt,
+        RefreshTokenExpiresAt = newRefreshTokenExpiresAt,
+        User = userDto,
         TenantId = tenantId,
       };
 
-      return response;
+      signInResponse = await tenantAuthService.EnhanceWithTenantDataAsync(signInResponse, user, tenantId);
+
+      return signInResponse;
     }
 
     public async Task RevokeRefreshTokenAsync(string token, string ipAddress) {

@@ -18,44 +18,25 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, SignInRe
   }
 
   public async Task<SignInResponseDto> Handle(RefreshTokenCommand request, CancellationToken cancellationToken) {
-    _logger.LogInformation("Processing refresh token request");
+      _logger.LogInformation("Processing refresh token request");
+      var refreshRequest = new RefreshTokenRequestDto { RefreshToken = request.RefreshToken, TenantId = request.TenantId };
+      try {
+        var response = await _authService.RefreshTokenAsync(refreshRequest);
 
-    var refreshRequest = new RefreshTokenRequestDto { RefreshToken = request.RefreshToken, TenantId = request.TenantId };
+        // Optional: publish notification with extracted info
+        var notification = new TokenRefreshedNotification {
+          UserId = response.User.Id,
+          Email = response.User.Email,
+          TenantId = response.TenantId,
+          RefreshedAt = DateTime.UtcNow,
+        };
+        await _mediator.Publish(notification, cancellationToken);
 
-    try {
-      var refreshResponse = await _authService.RefreshTokenAsync(refreshRequest);
-
-      // Note: RefreshTokenResponseDto may not include full user data, 
-      // so we'll need to get it from the JWT token or return a simple success response
-      var signInResponse = new SignInResponseDto {
-        AccessToken = refreshResponse.AccessToken,
-        RefreshToken = refreshResponse.RefreshToken,
-        ExpiresAt = refreshResponse.ExpiresAt,
-        AccessTokenExpiresAt = refreshResponse.AccessTokenExpiresAt,
-        RefreshTokenExpiresAt = refreshResponse.RefreshTokenExpiresAt,
-        TenantId = refreshResponse.TenantId,
-        User = new UserDto(), // This would need to be populated from JWT claims or service
-        AvailableTenants = new List<TenantInfoDto>(),
-      };
-
-      // For now, we'll create a minimal notification without full user data
-      var notification = new TokenRefreshedNotification {
-        UserId = Guid.Empty, // Would need to extract from JWT or get from service
-        Email = "",
-        TenantId = signInResponse.TenantId,
-        RefreshedAt = DateTime.UtcNow,
-      };
-
-      await _mediator.Publish(notification, cancellationToken);
-
-      _logger.LogInformation("Refresh token processed successfully");
-
-      return signInResponse;
+        _logger.LogInformation("Refresh token processed successfully");
+        return response;
+      } catch (Exception ex) {
+        _logger.LogError(ex, "Failed to process refresh token request");
+        throw;
+      }
     }
-    catch (Exception ex) {
-      _logger.LogError(ex, "Failed to process refresh token request");
-
-      throw;
-    }
-  }
 }

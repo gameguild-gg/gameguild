@@ -181,7 +181,8 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
     // Assert - The refresh should work and return new tokens
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-    var responseData = await response.Content.ReadFromJsonAsync<RefreshTokenResponseDto>();
+  // After refactor, refresh returns full SignInResponseDto for consistency
+  var responseData = await response.Content.ReadFromJsonAsync<SignInResponseDto>();
     Assert.NotNull(responseData);
     Assert.NotEmpty(responseData.AccessToken);
     Assert.NotEmpty(responseData.RefreshToken);
