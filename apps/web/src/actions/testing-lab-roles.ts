@@ -5,6 +5,45 @@ import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import { client } from '@/lib/api/generated/client.gen';
 import { revalidatePath } from 'next/cache';
 
+/**
+ * Helper function to create permission templates array from permissions object
+ */
+function createPermissionTemplatesFromPermissions(permissions: any): Array<{action: string; resourceType: string}> {
+  const templates: Array<{action: string; resourceType: string}> = [];
+  
+  // Sessions permissions
+  if (permissions.canCreateSessions) templates.push({ action: 'Create', resourceType: 'Sessions' });
+  if (permissions.canEditSessions) templates.push({ action: 'Edit', resourceType: 'Sessions' });
+  if (permissions.canDeleteSessions) templates.push({ action: 'Delete', resourceType: 'Sessions' });
+  if (permissions.canViewSessions) templates.push({ action: 'View', resourceType: 'Sessions' });
+  
+  // Locations permissions
+  if (permissions.canCreateLocations) templates.push({ action: 'Create', resourceType: 'Locations' });
+  if (permissions.canEditLocations) templates.push({ action: 'Edit', resourceType: 'Locations' });
+  if (permissions.canDeleteLocations) templates.push({ action: 'Delete', resourceType: 'Locations' });
+  if (permissions.canViewLocations) templates.push({ action: 'View', resourceType: 'Locations' });
+  
+  // Feedback permissions
+  if (permissions.canCreateFeedback) templates.push({ action: 'Create', resourceType: 'Feedback' });
+  if (permissions.canEditFeedback) templates.push({ action: 'Edit', resourceType: 'Feedback' });
+  if (permissions.canDeleteFeedback) templates.push({ action: 'Delete', resourceType: 'Feedback' });
+  if (permissions.canViewFeedback) templates.push({ action: 'View', resourceType: 'Feedback' });
+  if (permissions.canModerateFeedback) templates.push({ action: 'Moderate', resourceType: 'Feedback' });
+  
+  // Requests permissions
+  if (permissions.canCreateRequests) templates.push({ action: 'Create', resourceType: 'Requests' });
+  if (permissions.canEditRequests) templates.push({ action: 'Edit', resourceType: 'Requests' });
+  if (permissions.canDeleteRequests) templates.push({ action: 'Delete', resourceType: 'Requests' });
+  if (permissions.canViewRequests) templates.push({ action: 'View', resourceType: 'Requests' });
+  if (permissions.canApproveRequests) templates.push({ action: 'Approve', resourceType: 'Requests' });
+  
+  // Participants permissions
+  if (permissions.canManageParticipants) templates.push({ action: 'Manage', resourceType: 'Participants' });
+  if (permissions.canViewParticipants) templates.push({ action: 'View', resourceType: 'Participants' });
+  
+  return templates;
+}
+
 export interface RoleTemplate {
   id: string;
   name: string;
@@ -42,6 +81,11 @@ export interface RoleTemplate {
     canManageParticipants: boolean;
     canViewParticipants: boolean;
   };
+  // For UI display purposes
+  permissionTemplates: Array<{
+    action: string;
+    resourceType: string;
+  }>;
 }
 
 /**
@@ -82,16 +126,17 @@ function convertFormPermissionsToBackendDto(formPermissions: any): any {
 }
 
 /**
- * Server action to get all testing lab role templates
+ * Server action to get all role templates
  */
 export async function getTestingLabRoleTemplatesAction(): Promise<RoleTemplate[]> {
   const session = await auth();
   if (!session?.api.accessToken) {
     throw new Error('Authentication required');
   }
-  
-  // Ensure fresh data by revalidating
-  revalidatePath('/testing-lab-settings');
+
+  // Ensure fresh data by revalidating the paths
+  revalidatePath('/dashboard/testing-lab/settings');
+  revalidatePath('/testing-lab/settings');
   
   try {
     await configureAuthenticatedClient();
@@ -99,6 +144,10 @@ export async function getTestingLabRoleTemplatesAction(): Promise<RoleTemplate[]
     console.log('Fetching role templates from API...');
     const response = await client.get({
       url: '/api/testing-lab/permissions/role-templates',
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+      },
     });
     
     console.log('API response:', { status: response.response?.status, hasData: !!response.data, hasError: !!response.error });
@@ -115,44 +164,51 @@ export async function getTestingLabRoleTemplatesAction(): Promise<RoleTemplate[]
     const backendTemplates = response.data as any[];
     console.log('Backend templates:', backendTemplates);
     
-    return backendTemplates.map(template => ({
-      id: template.name, // Use name as ID for now
-      name: template.name,
-      description: template.description,
-      isSystemRole: template.isSystemRole,
-      userCount: 0, // TODO: Get actual user count from API
-      permissions: {
-        // Sessions
-        canCreateSessions: template.permissions?.canCreateSessions || false,
-        canEditSessions: template.permissions?.canEditSessions || false,
-        canDeleteSessions: template.permissions?.canDeleteSessions || false,
-        canViewSessions: template.permissions?.canViewSessions || false,
-        
-        // Locations
-        canCreateLocations: template.permissions?.canCreateLocations || false,
-        canEditLocations: template.permissions?.canEditLocations || false,
-        canDeleteLocations: template.permissions?.canDeleteLocations || false,
-        canViewLocations: template.permissions?.canViewLocations || false,
-        
-        // Feedback
-        canCreateFeedback: template.permissions?.canCreateFeedback || false,
-        canEditFeedback: template.permissions?.canEditFeedback || false,
-        canDeleteFeedback: template.permissions?.canDeleteFeedback || false,
-        canViewFeedback: template.permissions?.canViewFeedback || false,
-        canModerateFeedback: template.permissions?.canModerateFeedback || false,
-        
-        // Requests
-        canCreateRequests: template.permissions?.canCreateRequests || false,
-        canEditRequests: template.permissions?.canEditRequests || false,
-        canDeleteRequests: template.permissions?.canDeleteRequests || false,
-        canViewRequests: template.permissions?.canViewRequests || false,
-        canApproveRequests: template.permissions?.canApproveRequests || false,
-        
-        // Participants
-        canManageParticipants: template.permissions?.canManageParticipants || false,
-        canViewParticipants: template.permissions?.canViewParticipants || false,
-      }
-    }));
+    return backendTemplates.map(template => {
+      // Handle both camelCase (permissions) and PascalCase (Permissions) property names
+      const perms = template.permissions || template.Permissions || {};
+      
+      return {
+        id: template.name, // Use name as ID for now
+        name: template.name,
+        description: template.description,
+        isSystemRole: template.isSystemRole,
+        userCount: 0, // TODO: Get actual user count from API
+        permissions: {
+          // Sessions
+          canCreateSessions: perms.canCreateSessions || perms.CanCreateSessions || false,
+          canEditSessions: perms.canEditSessions || perms.CanEditSessions || false,
+          canDeleteSessions: perms.canDeleteSessions || perms.CanDeleteSessions || false,
+          canViewSessions: perms.canViewSessions || perms.CanViewSessions || false,
+          
+          // Locations
+          canCreateLocations: perms.canCreateLocations || perms.CanCreateLocations || false,
+          canEditLocations: perms.canEditLocations || perms.CanEditLocations || false,
+          canDeleteLocations: perms.canDeleteLocations || perms.CanDeleteLocations || false,
+          canViewLocations: perms.canViewLocations || perms.CanViewLocations || false,
+          
+          // Feedback
+          canCreateFeedback: perms.canCreateFeedback || perms.CanCreateFeedback || false,
+          canEditFeedback: perms.canEditFeedback || perms.CanEditFeedback || false,
+          canDeleteFeedback: perms.canDeleteFeedback || perms.CanDeleteFeedback || false,
+          canViewFeedback: perms.canViewFeedback || perms.CanViewFeedback || false,
+          canModerateFeedback: perms.canModerateFeedback || perms.CanModerateFeedback || false,
+          
+          // Requests
+          canCreateRequests: perms.canCreateRequests || perms.CanCreateRequests || false,
+          canEditRequests: perms.canEditRequests || perms.CanEditRequests || false,
+          canDeleteRequests: perms.canDeleteRequests || perms.CanDeleteRequests || false,
+          canViewRequests: perms.canViewRequests || perms.CanViewRequests || false,
+          canApproveRequests: perms.canApproveRequests || perms.CanApproveRequests || false,
+          
+          // Participants
+          canManageParticipants: perms.canManageParticipants || perms.CanManageParticipants || false,
+          canViewParticipants: perms.canViewParticipants || perms.CanViewParticipants || false,
+        },
+        // Create permissionTemplates array for UI display
+        permissionTemplates: createPermissionTemplatesFromPermissions(perms)
+      };
+    });
   } catch (error) {
     console.error('Error getting role templates:', error);
     if (error instanceof Error) {
@@ -206,8 +262,9 @@ export async function createRoleTemplateAction(roleData: {
       throw new Error(`Failed to create role template: ${errorMessage}`);
     }
 
-    // Revalidate the path to ensure fresh data on next load
-    revalidatePath('/testing-lab-settings');
+    // Revalidate the paths to ensure fresh data on next load
+    revalidatePath('/dashboard/testing-lab/settings');
+    revalidatePath('/testing-lab/settings');
 
     return response.data as RoleTemplate;
   } catch (error) {
@@ -261,8 +318,9 @@ export async function updateRoleTemplateAction(roleName: string, roleData: {
       throw new Error(`Failed to update role template: ${errorMessage}`);
     }
 
-    // Revalidate the path to ensure fresh data on next load
-    revalidatePath('/testing-lab-settings');
+    // Revalidate the paths to ensure fresh data on next load
+    revalidatePath('/dashboard/testing-lab/settings');
+    revalidatePath('/testing-lab/settings');
 
     return response.data as RoleTemplate;
   } catch (error) {
@@ -303,8 +361,9 @@ export async function deleteRoleTemplateAction(roleName: string): Promise<void> 
       throw new Error(`Failed to delete role template: ${errorMessage}`);
     }
 
-    // Revalidate the path to ensure fresh data on next load
-    revalidatePath('/testing-lab-settings');
+    // Revalidate the paths to ensure fresh data on next load
+    revalidatePath('/dashboard/testing-lab/settings');
+    revalidatePath('/testing-lab/settings');
   } catch (error) {
     console.error('Error deleting role template:', error);
     if (error instanceof Error) {

@@ -464,9 +464,12 @@ export function TestingLabSettings() {
 
   const loadRoles = async () => {
     try {
+      console.log('Starting to load roles...');
       // Use server action to get role templates
       const apiRoles = await getTestingLabRoleTemplatesAction();
+      console.log('API roles loaded:', apiRoles);
       setRoles(apiRoles as any[]);
+      console.log('Roles state updated, total roles:', apiRoles.length);
     } catch (error) {
       console.error('Failed to load roles:', error);
       if (error instanceof Error && error.message.includes('permission')) {
@@ -1950,7 +1953,7 @@ function CollaboratorsSettings({
 
                               return (
                                 <DualColorChip
-                                  key={ index }
+                                  key={`${collaborator.id}-${locationRole.locationId}-${locationRole.roleName}`}
                                   leftText={ locationRole.locationName }
                                   rightText={ locationRole.roleName }
                                   isActive={ locationRole.isActive }
@@ -2243,6 +2246,11 @@ function RolesSettings({ roles, onCreateRole, onEditRole, onDeleteRole }: RolesS
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {(() => {
+            console.log('RolesSettings render - roles array:', roles);
+            console.log('RolesSettings render - roles length:', roles.length);
+            return null;
+          })()}
           { roles.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
               { roles.map((role) => (
@@ -2265,8 +2273,8 @@ function RolesSettings({ roles, onCreateRole, onEditRole, onDeleteRole }: RolesS
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Permissions:</p>
                       <div className="flex flex-wrap gap-1">
-                        { (role.permissionTemplates || []).slice(0, 4).map((permission, idx) => (
-                          <Badge key={ idx } variant="outline" className="text-xs">
+                        { (role.permissionTemplates || []).slice(0, 4).map((permission, index) => (
+                          <Badge key={ `${role.id}-${permission.action}-${permission.resourceType}-${index}` } variant="outline" className="text-xs">
                             { permission.action } { permission.resourceType }
                           </Badge>
                         )) }
