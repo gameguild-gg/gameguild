@@ -1,9 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Laptop, LogOut, Moon, Search, Settings, Sun, User } from 'lucide-react';
-import { UserProfileMenu } from '@/components/common/header/common/ui/user-profile-menu';
-import Link from 'next/link';
+import { useState } from 'react';
+import { LogOut, Moon, Search, Settings, Sun, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -21,12 +19,6 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  
-  // Only show theme toggle client-side to prevent hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
   const { data: session } = useSession();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -84,42 +76,12 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          {/* Theme Toggle Dropdown */}
-          {mounted && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800/50">
-                  {theme === 'light' && <Sun className="h-4 w-4" />}
-                  {theme === 'dark' && <Moon className="h-4 w-4" />}
-                  {theme === 'system' && <Laptop className="h-4 w-4" />}
-                  <span className="sr-only">Toggle theme</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-40 bg-slate-800 border-slate-700" align="end">
-                <DropdownMenuItem 
-                  onClick={() => setTheme('light')} 
-                  className="text-white hover:bg-slate-700/50"
-                >
-                  <Sun className="mr-2 h-4 w-4" />
-                  <span>Light</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setTheme('dark')} 
-                  className="text-white hover:bg-slate-700/50"
-                >
-                  <Moon className="mr-2 h-4 w-4" />
-                  <span>Dark</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setTheme('system')} 
-                  className="text-white hover:bg-slate-700/50"
-                >
-                  <Laptop className="mr-2 h-4 w-4" />
-                  <span>System</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          {/* Theme Toggle */}
+          <Button variant="ghost" size="sm" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800/50">
+            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            <span className="sr-only">Toggle theme</span>
+          </Button>
 
           {/* Notifications */}
           <NotificationDropdown className="text-slate-400 hover:text-white hover:bg-slate-800/50" />
@@ -131,44 +93,35 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
           {/*</Button>*/}
 
           {/* User Menu */}
-          {session ? (
-            <UserProfileMenu 
-              session={{
-                ...session,
-                user: {
-                  ...session.user,
-                  username: session.user?.name || 'User'
-                }
-              }} 
-              menuItems={[
-                {
-                  label: 'Profile',
-                  href: `/users/${session.user?.name?.toLowerCase().replace(/\s+/g, '') || 'user'}`,
-                  icon: <User className="size-4" />,
-                },
-                {
-                  label: 'Settings',
-                  href: '/settings',
-                  icon: <Settings className="size-4" />,
-                },
-              ]} 
-            />
-          ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-slate-800/50">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-slate-700 text-white">U</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-slate-800 border-slate-700" align="end">
-                <DropdownMenuItem asChild className="text-white hover:bg-slate-700/50">
-                  <Link href="/sign-in">Sign In</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-slate-800/50">
+                <Avatar className="h-8 w-8">{userImage ? <AvatarImage src={userImage} alt={userDisplayName} /> : <AvatarFallback className="bg-slate-700 text-white">{userInitials}</AvatarFallback>}</Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56 bg-slate-800 border-slate-700" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none text-white">{userDisplayName}</p>
+                  <p className="text-xs leading-none text-slate-400">{userEmail}</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-slate-700" />
+              <DropdownMenuItem className="text-white hover:bg-slate-700/50">
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-white hover:bg-slate-700/50">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-slate-700" />
+              <DropdownMenuItem onClick={handleLogout} className="text-white hover:bg-slate-700/50">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

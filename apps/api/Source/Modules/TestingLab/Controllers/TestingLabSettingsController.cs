@@ -17,7 +17,11 @@ namespace GameGuild.Modules.TestingLab.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/testing-lab/settings")]
-public class TestingLabSettingsController(ITestingLabSettingsService settingsService, ITenantService tenantService) : ControllerBase {
+public class TestingLabSettingsController(
+  ITestingLabSettingsService settingsService,
+  ITenantService tenantService,
+  ITenantContext tenantContext // prefer middleware-provided tenant context
+) : ControllerBase {
   /// <summary>
   /// Get testing lab settings for the current tenant or global settings if no tenant context
   /// Creates default settings if none exist
@@ -44,9 +48,8 @@ public class TestingLabSettingsController(ITestingLabSettingsService settingsSer
         });
       }
       
-      // Still call GetCurrentTenantIdAsync for backward compatibility
-      var tenantId = await GetCurrentTenantIdAsync();
-      // tenantId can be null for global settings - this is allowed
+  // Use middleware-provided tenant context (nullable for global)
+  var tenantId = tenantContext.TenantId;
       
       var settings = await settingsService.GetTestingLabSettingsDtoAsync(tenantId);
       return Ok(settings);
@@ -73,13 +76,10 @@ public class TestingLabSettingsController(ITestingLabSettingsService settingsSer
   [RequireContentTypePermission<TestingLabSettings>(PermissionType.Edit)]
   public async Task<ActionResult<TestingLabSettingsDto>> CreateOrUpdateSettings([FromBody] CreateTestingLabSettingsDto dto) {
     try {
-      var tenantId = await GetCurrentTenantIdAsync();
-      if (tenantId == null) {
-        return BadRequest("No tenant context available");
-      }
-
-      await settingsService.CreateOrUpdateTestingLabSettingsAsync(tenantId.Value, dto);
-      var settingsDto = await settingsService.GetTestingLabSettingsDtoAsync(tenantId.Value);
+      // Allow null tenant (global) – pass through nullable context
+      var tenantId = tenantContext.TenantId; // may be null for global settings
+      await settingsService.CreateOrUpdateTestingLabSettingsAsync(tenantId, dto);
+      var settingsDto = await settingsService.GetTestingLabSettingsDtoAsync(tenantId);
       return Ok(settingsDto);
     }
     catch (ArgumentException ex) {
@@ -97,13 +97,9 @@ public class TestingLabSettingsController(ITestingLabSettingsService settingsSer
   [RequireContentTypePermission<TestingLabSettings>(PermissionType.Edit)]
   public async Task<ActionResult<TestingLabSettingsDto>> UpdateSettings([FromBody] UpdateTestingLabSettingsDto dto) {
     try {
-      var tenantId = await GetCurrentTenantIdAsync();
-      if (tenantId == null) {
-        return BadRequest("No tenant context available");
-      }
-
-      await settingsService.UpdateTestingLabSettingsAsync(tenantId.Value, dto);
-      var settingsDto = await settingsService.GetTestingLabSettingsDtoAsync(tenantId.Value);
+      var tenantId = tenantContext.TenantId; // nullable allowed
+      await settingsService.UpdateTestingLabSettingsAsync(tenantId, dto);
+      var settingsDto = await settingsService.GetTestingLabSettingsDtoAsync(tenantId);
       return Ok(settingsDto);
     }
     catch (ArgumentException ex) {
@@ -121,13 +117,9 @@ public class TestingLabSettingsController(ITestingLabSettingsService settingsSer
   [RequireContentTypePermission<TestingLabSettings>(PermissionType.Edit)]
   public async Task<ActionResult<TestingLabSettingsDto>> ResetSettings() {
     try {
-      var tenantId = await GetCurrentTenantIdAsync();
-      if (tenantId == null) {
-        return BadRequest("No tenant context available");
-      }
-
-      await settingsService.ResetTestingLabSettingsAsync(tenantId.Value);
-      var settingsDto = await settingsService.GetTestingLabSettingsDtoAsync(tenantId.Value);
+      var tenantId = tenantContext.TenantId;
+      await settingsService.ResetTestingLabSettingsAsync(tenantId);
+      var settingsDto = await settingsService.GetTestingLabSettingsDtoAsync(tenantId);
       return Ok(settingsDto);
     }
     catch (ArgumentException ex) {
@@ -145,12 +137,8 @@ public class TestingLabSettingsController(ITestingLabSettingsService settingsSer
   [RequireContentTypePermission<TestingLabSettings>(PermissionType.Read)]
   public async Task<ActionResult<bool>> SettingsExist() {
     try {
-      var tenantId = await GetCurrentTenantIdAsync();
-      if (tenantId == null) {
-        return BadRequest("No tenant context available");
-      }
-
-      var exists = await settingsService.TestingLabSettingsExistAsync(tenantId.Value);
+      var tenantId = tenantContext.TenantId;
+      var exists = await settingsService.TestingLabSettingsExistAsync(tenantId);
       return Ok(exists);
     }
     catch (Exception ex) {
