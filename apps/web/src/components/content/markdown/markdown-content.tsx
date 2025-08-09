@@ -1,5 +1,6 @@
 import React, { type AnchorHTMLAttributes, type HTMLAttributes } from 'react';
 import ReactMarkdown from 'react-markdown';
+import NextImage from 'next/image';
 
 export type MarkdownComponentType = Record<string, (props: HTMLAttributes<HTMLElement>) => React.JSX.Element>;
 
@@ -17,6 +18,21 @@ const baseComponents: MarkdownComponentType = {
   li: (props: HTMLAttributes<HTMLLIElement>) => <li className="text-foreground mb-1" {...props} />,
   a: (props: AnchorHTMLAttributes<HTMLAnchorElement>) => <a className="text-primary hover:underline" {...props} />,
   blockquote: (props: HTMLAttributes<HTMLElement>) => <blockquote className="text-muted-foreground italic my-4 pl-4 border-l-4 border-border" {...props} />,
+  img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
+    const { src, alt, width, height, ...restProps } = props;
+    return (
+      <NextImage
+        className="max-w-full h-auto rounded-lg shadow-sm"
+        width={0}
+        height={0}
+        sizes="100vw"
+        style={{ width: '100%', height: 'auto', maxWidth: '100%' }}
+        src={typeof src === 'string' ? src : ''}
+        alt={typeof alt === 'string' ? alt : ''}
+        {...restProps}
+      />
+    );
+  },
 };
 
 export interface MarkdownContentProps {

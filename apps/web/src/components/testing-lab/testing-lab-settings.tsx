@@ -15,6 +15,12 @@ import type { LocationStatus, TestingLocation as ApiTestingLocation, UserRoleAss
 import { createTestingLocation, deleteTestingLocation, getTestingLocations, updateTestingLocation }                           from '@/lib/api/testing-lab';
 import { convertAPIPermissionsToForm, convertFormPermissionsToAPI, RoleTemplate as APIRoleTemplate, TestingLabPermissionAPI } from '@/lib/api/testing-lab-permissions';
 import { getTestingLabSettings, updateTestingLabSettings } from '@/actions/testing-lab-settings';
+import { 
+  getTestingLocationsAction, 
+  createTestingLocationAction, 
+  updateTestingLocationAction, 
+  deleteTestingLocationAction 
+} from '@/actions/testing-lab-locations';
 import { getUsers } from '@/lib/api/users';
 import { ChevronRight, Edit, MapPin, Plus, RefreshCw, Settings, Shield, Trash2, UserCheck, UserMinus, UserPlus, Users }                  from 'lucide-react';
 import { useEffect, useState }                                                                                                from 'react';

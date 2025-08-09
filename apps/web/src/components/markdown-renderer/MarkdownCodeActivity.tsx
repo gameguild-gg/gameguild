@@ -71,26 +71,38 @@ export function MarkdownCodeActivity(params: MarkdownCodeActivityProps) {
     setIsRunning(true);
     setStdErr('');
     setStdOut('');
+    setIsCorrect(null);
     
     // Simulate code execution for demo purposes
     setTimeout(() => {
       // This is a simplified version - in a real implementation, you'd have actual code execution
-      const mockOutput = `Running ${params.language} code...
-Output: Hello, World!
-Execution completed.`;
+      let actualOutput = '';
       
-      setStdOut(mockOutput);
+      // Simple simulation based on the code content
+       if (params.language === 'python' && code.includes('print(')) {
+         // Extract what's being printed
+         const printMatch = code.match(/print\(['"]([^'"]*)['"]\)/);
+         if (printMatch && printMatch[1]) {
+           actualOutput = printMatch[1];
+         }
+       }
+      
+      setStdOut(actualOutput);
       setIsRunning(false);
       
-      // For demo purposes, always show as correct
-      setIsCorrect(true);
-      triggerConfetti();
+      // Compare actual output with expected output
+      const isOutputCorrect = actualOutput.trim() === params.expectedOutput.trim();
+      setIsCorrect(isOutputCorrect);
+      
+      if (isOutputCorrect) {
+        triggerConfetti();
+      }
     }, 2000);
   };
 
   return (
     <>
-      <Card className="container flex flex-auto flex-col p-4 gap-4 shadow-lg border border-gray-300">
+      <Card className="w-full flex flex-auto flex-col p-4 gap-4 shadow-lg border border-gray-300">
         <p className="text-lg font-bold">{params.description}</p>
         <Card className="bg-[#1e1e1e] text-white p-4 font-mono text-sm">
           <Editor
@@ -118,8 +130,24 @@ Execution completed.`;
           <div className="p-3 rounded-md bg-green-100 border border-green-300 text-green-800 font-semibold text-center">Correct output!</div>
         )}
 
+        {isCorrect === false && (
+          <div className="p-3 rounded-md bg-red-100 border border-red-300 text-red-800">
+            <p className="font-semibold mb-2">Incorrect output!</p>
+            <div className="space-y-2">
+              <div>
+                <p className="text-sm font-medium">Expected:</p>
+                <p className="font-mono bg-red-50 p-2 rounded">{params.expectedOutput}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Your Output:</p>
+                <p className="font-mono bg-red-50 p-2 rounded">{stdOut}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Área de saída */}
-        {!isCorrect && (
+        {isCorrect === null && (
           <>
             <Card className="bg-[#2d2d2d] text-white p-4 min-h-fit font-mono">
               {isRunning && <p>Running {params.language} code...</p>}
@@ -140,7 +168,7 @@ Execution completed.`;
         )}
 
         {/* Botões */}
-        {!isCorrect && (
+        {isCorrect !== true && (
           <div className="flex justify-between">
             <Button
               variant="secondary"
@@ -156,4 +184,4 @@ Execution completed.`;
       </Card>
     </>
   );
-} 
+}
