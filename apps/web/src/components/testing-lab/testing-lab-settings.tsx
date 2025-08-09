@@ -12,7 +12,7 @@ import { Switch }                                                               
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow }                                                      from '@/components/ui/table';
 import { Textarea }                                                                                                           from '@/components/ui/textarea';
 import type { LocationStatus, TestingLocation as ApiTestingLocation, UserRoleAssignment as GeneratedUserRoleAssignment, User } from '@/lib/api/generated/types.gen';
-import { convertAPIPermissionsToForm, convertFormPermissionsToAPI, RoleTemplate as APIRoleTemplate, TestingLabPermissionAPI } from '@/lib/api/testing-lab-permissions';
+import { convertAPIPermissionsToForm, convertFormPermissionsToAPI, RoleTemplate as APIRoleTemplate } from '@/lib/api/testing-lab-permissions';
 import { getTestingLabSettings, updateTestingLabSettings } from '@/actions/testing-lab-settings';
 import { 
   getTestingLocationsAction, 
@@ -20,8 +20,19 @@ import {
   updateTestingLocationAction, 
   deleteTestingLocationAction 
 } from '@/actions/testing-lab-locations';
+import { 
+  getTestingLabRoleTemplatesAction,
+  createRoleTemplateAction,
+  updateRoleTemplateAction,
+  deleteRoleTemplateAction 
+} from '@/actions/testing-lab-roles';
+import { 
+  getTestingLabUserRoleAssignmentsAction,
+  assignUserRoleAction,
+  removeUserRoleAction 
+} from '@/actions/testing-lab-user-roles';
 import { getUsers } from '@/lib/api/users';
-import { ChevronRight, Edit, MapPin, Plus, RefreshCw, Settings, Shield, Trash2, UserCheck, UserMinus, UserPlus, Users, AlertTriangle }                  from 'lucide-react';
+import { ChevronRight, Edit, MapPin, Plus, RefreshCw, Settings, Shield, Trash2, UserCheck, UserMinus, UserPlus, Users }                  from 'lucide-react';
 import { useEffect, useState }                                                                                                from 'react';
 import { toast }                                                                                                              from 'sonner';
 
@@ -282,16 +293,12 @@ export function TestingLabSettings() {
   const [isManagerDialogOpen, setIsManagerDialogOpen] = useState(false);
   const [ isRoleDialogOpen, setIsRoleDialogOpen ] = useState(false);
   const [ isUserRoleDialogOpen, setIsUserRoleDialogOpen ] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isDeleteManagerDialogOpen, setIsDeleteManagerDialogOpen] = useState(false);
 
   // Editing states
   const [editingLocation, setEditingLocation] = useState<TestingLocation | null>(null);
   const [editingManager, setEditingManager] = useState<TestingLabManager | null>(null);
   const [ editingRole, setEditingRole ] = useState<RoleTemplate | null>(null);
   const [ selectedUserEmail, setSelectedUserEmail ] = useState<string>('');
-  const [locationToDelete, setLocationToDelete] = useState<{ id: string; name: string } | null>(null);
-  const [managerToDelete, setManagerToDelete] = useState<{ id: string; email: string } | null>(null);
 
   // Form states
   const [formData, setFormData] = useState<LocationFormData>(initialFormData);
@@ -409,7 +416,7 @@ export function TestingLabSettings() {
     try {
       // Get all users and filter for those with testing lab roles
       const allUsers = await getUsers();
-      const allRoleAssignments = await TestingLabPermissionAPI.getAllTestingLabRoleAssignments();
+      const allRoleAssignments = await getTestingLabUserRoleAssignmentsAction();
       
       // Transform users to TestingLabManager format based on role assignments
       const managers: TestingLabManager[] = allUsers
@@ -457,47 +464,31 @@ export function TestingLabSettings() {
 
   const loadRoles = async () => {
     try {
-      // Use real API call to get role templates
-      const apiRoles = await TestingLabPermissionAPI.getRoleTemplates();
-      setRoles(apiRoles);
+      // Use server action to get role templates
+      const apiRoles = await getTestingLabRoleTemplatesAction();
+      setRoles(apiRoles as any[]);
     } catch (error) {
       console.error('Failed to load roles:', error);
-      toast.error('Failed to load testing lab roles');
+      if (error instanceof Error && error.message.includes('permission')) {
+        toast.error('You do not have permission to view role templates');
+      } else {
+        toast.error('Failed to load testing lab roles');
+      }
     }
   };
 
   const loadUserRoles = async () => {
     try {
-      // Use real API calls to get user role assignments and user data
-      const apiUserRoles = await TestingLabPermissionAPI.getAllTestingLabRoleAssignments();
-      const allUsers = await getUsers();
-      
-      // Transform API data to match our extended interface
-      const transformedUserRoles: UserRoleAssignment[] = apiUserRoles
-        .filter(role => role.id) // Filter out entries without id
-        .map(role => {
-          const user = allUsers.find(u => u.id === role.userId);
-          return {
-            id: role.id!,
-            userId: role.userId,
-            userEmail: user?.email || '',
-            userName: user?.name || '',
-            roleTemplateId: '', // Will need mapping from roleName
-            roleName: role.roleName,
-            assignedAt: role.createdAt, // Use createdAt as assignedAt
-            tenantId: role.tenantId,
-            module: role.module,
-            constraints: role.constraints,
-            createdAt: role.createdAt,
-            expiresAt: role.expiresAt,
-            isActive: role.isActive ?? true,
-          };
-        });
-      
-      setUserRoles(transformedUserRoles);
+      // Use server action to get user role assignments
+      const apiUserRoles = await getTestingLabUserRoleAssignmentsAction();
+      setUserRoles(apiUserRoles as any[]);
     } catch (error) {
       console.error('Failed to load user roles:', error);
-      toast.error('Failed to load user role assignments');
+      if (error instanceof Error && error.message.includes('permission')) {
+        toast.error('You do not have permission to view user role assignments');
+      } else {
+        toast.error('Failed to load user role assignments');
+      }
     }
   };
 
@@ -562,20 +553,16 @@ export function TestingLabSettings() {
   };
 
   const handleDeleteLocation = async (id: string) => {
-    const locationToDeleteInfo = locations.find(loc => loc.id === id);
-    const locationName = locationToDeleteInfo?.name || 'this location';
+    const locationToDelete = locations.find(loc => loc.id === id);
+    const locationName = locationToDelete?.name || 'this location';
     
-    // Open delete confirmation dialog
-    setLocationToDelete({ id, name: locationName });
-    setIsDeleteDialogOpen(true);
-  };
-
-  const confirmDeleteLocation = async () => {
-    if (!locationToDelete) return;
+    if (!confirm(`Are you sure you want to delete "${locationName}"? This action cannot be undone and may affect any ongoing testing sessions at this location.`)) {
+      return;
+    }
 
     try {
-      await deleteTestingLocationAction(locationToDelete.id);
-      setLocations(locations.filter(location => location.id !== locationToDelete.id));
+      await deleteTestingLocationAction(id);
+      setLocations(locations.filter(location => location.id !== id));
       toast.success('Location deleted successfully');
     } catch (error) {
       console.warn('Failed to delete location:', error);
@@ -585,15 +572,7 @@ export function TestingLabSettings() {
       } else {
         toast.error('An unexpected error occurred. Please try again.');
       }
-    } finally {
-      setIsDeleteDialogOpen(false);
-      setLocationToDelete(null);
     }
-  };
-
-  const cancelDeleteLocation = () => {
-    setIsDeleteDialogOpen(false);
-    setLocationToDelete(null);
   };
 
   const handleCreateManager = () => {
@@ -614,33 +593,18 @@ export function TestingLabSettings() {
   };
 
   const handleDeleteManager = async (managerId: string) => {
-    const managerToDeleteInfo = managers.find(mgr => mgr.id === managerId);
-    const managerEmail = managerToDeleteInfo?.email || 'this manager';
-    
-    // Open delete confirmation dialog
-    setManagerToDelete({ id: managerId, email: managerEmail });
-    setIsDeleteManagerDialogOpen(true);
-  };
-
-  const confirmDeleteManager = async () => {
-    if (!managerToDelete) return;
+    if (!confirm('Are you sure you want to remove this manager? This action cannot be undone.')) {
+      return;
+    }
 
     try {
       // TODO: Replace with actual API call
-      setManagers(managers.filter((mgr) => mgr.id !== managerToDelete.id));
+      setManagers(managers.filter((mgr) => mgr.id !== managerId));
       toast.success('Manager removed successfully');
     } catch (error) {
       console.error('Failed to remove manager:', error);
       toast.error('Failed to remove manager');
-    } finally {
-      setIsDeleteManagerDialogOpen(false);
-      setManagerToDelete(null);
     }
-  };
-
-  const cancelDeleteManager = () => {
-    setIsDeleteManagerDialogOpen(false);
-    setManagerToDelete(null);
   };
 
   const handleSubmitLocation = async (e: React.FormEvent) => {
@@ -808,12 +772,16 @@ export function TestingLabSettings() {
     }
 
     try {
-      await TestingLabPermissionAPI.deleteRoleTemplate(role.name);
+      await deleteRoleTemplateAction(role.name);
       setRoles(roles.filter(r => r.id !== roleId));
       toast.success('Role deleted successfully');
     } catch (error) {
       console.error('Failed to delete role:', error);
-      toast.error('Failed to delete role');
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error('Failed to delete role');
+      }
     }
   };
 
@@ -825,22 +793,22 @@ export function TestingLabSettings() {
 
       if (editingRole) {
         // Update existing role
-        const updatedRole = await TestingLabPermissionAPI.updateRoleTemplate(editingRole.name, {
+        const updatedRole = await updateRoleTemplateAction(editingRole.name, {
           description: roleFormData.description,
-          permissionTemplates,
+          permissions: convertFormPermissionsToAPI(roleFormData.permissions),
         });
 
-        setRoles(roles.map(r => r.id === editingRole.id ? updatedRole : r));
+        setRoles(roles.map(r => r.id === editingRole.id ? updatedRole as any : r));
         toast.success('Role updated successfully');
       } else {
         // Create new role
-        const newRole = await TestingLabPermissionAPI.createRoleTemplate({
+        const newRole = await createRoleTemplateAction({
           name: roleFormData.name,
           description: roleFormData.description,
-          permissionTemplates,
+          permissions: convertFormPermissionsToAPI(roleFormData.permissions),
         });
 
-        setRoles([ ...roles, newRole ]);
+        setRoles([ ...roles, newRole as any ]);
         toast.success('Role created successfully');
       }
 
@@ -868,7 +836,11 @@ export function TestingLabSettings() {
     }
 
     try {
-      const newAssignment = await TestingLabPermissionAPI.assignRoleToUser(selectedUserEmail, selectedRole.name);
+      const newAssignment = await assignUserRoleAction({
+        userId: selectedUserEmail,
+        roleName: selectedRole.name,
+        userEmail: selectedUserEmail
+      });
 
       // Create a compatible assignment object
       const compatibleAssignment: UserRoleAssignment = {
@@ -906,7 +878,7 @@ export function TestingLabSettings() {
     try {
       const assignment = userRoles.find(ur => ur.id === assignmentId);
       if (assignment) {
-        await TestingLabPermissionAPI.removeUserRole(assignment.userId || '', assignment.roleName || '');
+        await removeUserRoleAction(assignment.userId || '', assignment.roleName || '');
 
         setUserRoles(userRoles.filter(ur => ur.id !== assignmentId));
 
@@ -1196,59 +1168,311 @@ export function TestingLabSettings() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-md">
+      {/* Role Dialog */}
+      <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              Confirm Deletion
-            </DialogTitle>
+            <DialogTitle>{editingRole ? 'Edit Role Template' : 'Create New Role Template'}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{locationToDelete?.name}&rdquo;?
+              {editingRole ? 'Update the role template details and permissions' : 'Create a new role template with specific permissions'}
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              This action cannot be undone and may affect any ongoing testing sessions at this location.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={cancelDeleteLocation}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDeleteLocation}>
-              Delete Location
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <form onSubmit={handleSubmitRole}>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="role-name">Role Name *</Label>
+                <Input
+                  id="role-name"
+                  value={roleFormData.name}
+                  onChange={(e) => setRoleFormData({ ...roleFormData, name: e.target.value })}
+                  placeholder="e.g., TestingLabAdmin, GameTester, QALead"
+                  disabled={editingRole?.isSystemRole}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="role-description">Description *</Label>
+                <Textarea
+                  id="role-description"
+                  value={roleFormData.description}
+                  onChange={(e) => setRoleFormData({ ...roleFormData, description: e.target.value })}
+                  placeholder="Describe the purpose and responsibilities of this role"
+                  className="min-h-[60px]"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm">Permissions</h4>
+                
+                {/* Session Permissions */}
+                <div className="space-y-3">
+                  <h5 className="font-medium text-sm text-muted-foreground">Testing Sessions</h5>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="create-session"
+                        checked={roleFormData.permissions.createSession}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, createSession: checked }
+                        })}
+                      />
+                      <Label htmlFor="create-session">Create Sessions</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="edit-session"
+                        checked={roleFormData.permissions.editSession}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, editSession: checked }
+                        })}
+                      />
+                      <Label htmlFor="edit-session">Edit Sessions</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="delete-session"
+                        checked={roleFormData.permissions.deleteSession}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, deleteSession: checked }
+                        })}
+                      />
+                      <Label htmlFor="delete-session">Delete Sessions</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="read-session"
+                        checked={roleFormData.permissions.readSession}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, readSession: checked }
+                        })}
+                      />
+                      <Label htmlFor="read-session">View Sessions</Label>
+                    </div>
+                  </div>
+                </div>
 
-      {/* Delete Manager Confirmation Dialog */}
-      <Dialog open={isDeleteManagerDialogOpen} onOpenChange={setIsDeleteManagerDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              Confirm Manager Removal
-            </DialogTitle>
-            <DialogDescription>
-              Are you sure you want to remove &ldquo;{managerToDelete?.email}&rdquo;?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              This action cannot be undone and will remove all their permissions and access to the testing lab.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={cancelDeleteManager}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={confirmDeleteManager}>
-              Remove Manager
-            </Button>
-          </DialogFooter>
+                {/* Location Permissions */}
+                <div className="space-y-3">
+                  <h5 className="font-medium text-sm text-muted-foreground">Testing Locations</h5>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="create-location"
+                        checked={roleFormData.permissions.createLocation}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, createLocation: checked }
+                        })}
+                      />
+                      <Label htmlFor="create-location">Create Locations</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="edit-location"
+                        checked={roleFormData.permissions.editLocation}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, editLocation: checked }
+                        })}
+                      />
+                      <Label htmlFor="edit-location">Edit Locations</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="delete-location"
+                        checked={roleFormData.permissions.deleteLocation}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, deleteLocation: checked }
+                        })}
+                      />
+                      <Label htmlFor="delete-location">Delete Locations</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="read-location"
+                        checked={roleFormData.permissions.readLocation}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, readLocation: checked }
+                        })}
+                      />
+                      <Label htmlFor="read-location">View Locations</Label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Feedback Permissions */}
+                <div className="space-y-3">
+                  <h5 className="font-medium text-sm text-muted-foreground">Testing Feedback</h5>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="create-feedback"
+                        checked={roleFormData.permissions.createFeedback}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, createFeedback: checked }
+                        })}
+                      />
+                      <Label htmlFor="create-feedback">Create Feedback</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="edit-feedback"
+                        checked={roleFormData.permissions.editFeedback}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, editFeedback: checked }
+                        })}
+                      />
+                      <Label htmlFor="edit-feedback">Edit Feedback</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="delete-feedback"
+                        checked={roleFormData.permissions.deleteFeedback}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, deleteFeedback: checked }
+                        })}
+                      />
+                      <Label htmlFor="delete-feedback">Delete Feedback</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="read-feedback"
+                        checked={roleFormData.permissions.readFeedback}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, readFeedback: checked }
+                        })}
+                      />
+                      <Label htmlFor="read-feedback">View Feedback</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="moderate-feedback"
+                        checked={roleFormData.permissions.moderateFeedback}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, moderateFeedback: checked }
+                        })}
+                      />
+                      <Label htmlFor="moderate-feedback">Moderate Feedback</Label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Request Permissions */}
+                <div className="space-y-3">
+                  <h5 className="font-medium text-sm text-muted-foreground">Testing Requests</h5>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="create-request"
+                        checked={roleFormData.permissions.createRequest}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, createRequest: checked }
+                        })}
+                      />
+                      <Label htmlFor="create-request">Create Requests</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="edit-request"
+                        checked={roleFormData.permissions.editRequest}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, editRequest: checked }
+                        })}
+                      />
+                      <Label htmlFor="edit-request">Edit Requests</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="delete-request"
+                        checked={roleFormData.permissions.deleteRequest}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, deleteRequest: checked }
+                        })}
+                      />
+                      <Label htmlFor="delete-request">Delete Requests</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="read-request"
+                        checked={roleFormData.permissions.readRequest}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, readRequest: checked }
+                        })}
+                      />
+                      <Label htmlFor="read-request">View Requests</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="approve-request"
+                        checked={roleFormData.permissions.approveRequest}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, approveRequest: checked }
+                        })}
+                      />
+                      <Label htmlFor="approve-request">Approve Requests</Label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Participant Permissions */}
+                <div className="space-y-3">
+                  <h5 className="font-medium text-sm text-muted-foreground">Testing Participants</h5>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="manage-participant"
+                        checked={roleFormData.permissions.manageParticipant}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, manageParticipant: checked }
+                        })}
+                      />
+                      <Label htmlFor="manage-participant">Manage Participants</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="read-participant"
+                        checked={roleFormData.permissions.readParticipant}
+                        onCheckedChange={(checked) => setRoleFormData({
+                          ...roleFormData,
+                          permissions: { ...roleFormData.permissions, readParticipant: checked }
+                        })}
+                      />
+                      <Label htmlFor="read-participant">View Participants</Label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsRoleDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit"
+                disabled={!roleFormData.name.trim() || !roleFormData.description.trim()}
+              >
+                {editingRole ? 'Update Role' : 'Create Role'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

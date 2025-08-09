@@ -1049,6 +1049,17 @@ export type CreateTestingLabRoleRequest = {
   permissions?: TestingLabPermissionsDto;
 };
 
+export type CreateTestingLabSettingsDto = {
+  labName: string;
+  description?: string | null;
+  timezone: string;
+  defaultSessionDuration: number;
+  allowPublicSignups?: boolean;
+  requireApproval?: boolean;
+  enableNotifications?: boolean;
+  maxSimultaneousSessions: number;
+};
+
 export type CreateTestingLocationDto = {
   name?: string | null;
   description?: string | null;
@@ -4584,6 +4595,8 @@ export type SignInResponseDto = {
   accessToken?: string | null;
   refreshToken?: string | null;
   expiresAt?: string;
+  accessTokenExpiresAt?: string;
+  refreshTokenExpiresAt?: string;
   user?: UserDto;
   tenantId?: string | null;
   availableTenants?: Array<TenantInfoDto> | null;
@@ -5211,6 +5224,21 @@ export type TestingLabRoleTemplate = {
   permissions?: TestingLabPermissionsDto;
 };
 
+export type TestingLabSettingsDto = {
+  id?: string;
+  labName?: string | null;
+  description?: string | null;
+  timezone?: string | null;
+  defaultSessionDuration?: number;
+  allowPublicSignups?: boolean;
+  requireApproval?: boolean;
+  enableNotifications?: boolean;
+  maxSimultaneousSessions?: number;
+  tenantId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type TestingLocation = {
   readonly isNew?: boolean;
   readonly isGlobal?: boolean;
@@ -5640,6 +5668,17 @@ export type UpdateTenantUserGroupDto = {
 export type UpdateTestingLabRoleRequest = {
   description?: string | null;
   permissions?: TestingLabPermissionsDto;
+};
+
+export type UpdateTestingLabSettingsDto = {
+  labName?: string | null;
+  description?: string | null;
+  timezone?: string | null;
+  defaultSessionDuration?: number | null;
+  allowPublicSignups?: boolean | null;
+  requireApproval?: boolean | null;
+  enableNotifications?: boolean | null;
+  maxSimultaneousSessions?: number | null;
 };
 
 export type UpdateTestingLocationDto = {
@@ -13139,6 +13178,86 @@ export type GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponses
 
 export type GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponse =
   GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponses[keyof GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponses];
+
+export type GetApiTestingLabSettingsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/testing-lab/settings';
+};
+
+export type GetApiTestingLabSettingsResponses = {
+  /**
+   * OK
+   */
+  200: TestingLabSettingsDto;
+};
+
+export type GetApiTestingLabSettingsResponse = GetApiTestingLabSettingsResponses[keyof GetApiTestingLabSettingsResponses];
+
+export type PatchApiTestingLabSettingsData = {
+  body?: UpdateTestingLabSettingsDto;
+  path?: never;
+  query?: never;
+  url: '/api/testing-lab/settings';
+};
+
+export type PatchApiTestingLabSettingsResponses = {
+  /**
+   * OK
+   */
+  200: TestingLabSettingsDto;
+};
+
+export type PatchApiTestingLabSettingsResponse = PatchApiTestingLabSettingsResponses[keyof PatchApiTestingLabSettingsResponses];
+
+export type PutApiTestingLabSettingsData = {
+  body?: CreateTestingLabSettingsDto;
+  path?: never;
+  query?: never;
+  url: '/api/testing-lab/settings';
+};
+
+export type PutApiTestingLabSettingsResponses = {
+  /**
+   * OK
+   */
+  200: TestingLabSettingsDto;
+};
+
+export type PutApiTestingLabSettingsResponse = PutApiTestingLabSettingsResponses[keyof PutApiTestingLabSettingsResponses];
+
+export type PostApiTestingLabSettingsResetData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/testing-lab/settings/reset';
+};
+
+export type PostApiTestingLabSettingsResetResponses = {
+  /**
+   * OK
+   */
+  200: TestingLabSettingsDto;
+};
+
+export type PostApiTestingLabSettingsResetResponse = PostApiTestingLabSettingsResetResponses[keyof PostApiTestingLabSettingsResetResponses];
+
+export type GetApiTestingLabSettingsExistsData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/testing-lab/settings/exists';
+};
+
+export type GetApiTestingLabSettingsExistsResponses = {
+  /**
+   * OK
+   */
+  200: boolean;
+};
+
+export type GetApiTestingLabSettingsExistsResponse = GetApiTestingLabSettingsExistsResponses[keyof GetApiTestingLabSettingsExistsResponses];
 
 export type GetApiUsersByUserIdAchievementsData = {
   body?: never;
