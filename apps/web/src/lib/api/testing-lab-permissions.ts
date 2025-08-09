@@ -47,14 +47,63 @@ export class TestingLabPermissionAPI {
   // Role Templates (using Module Role endpoints)
   static async getRoleTemplates(): Promise<RoleTemplate[]> {
     try {
-      // For now, return mock data to prevent blocking the UI
-      // TODO: Implement proper server-side authentication for this endpoint
-      console.log('getRoleTemplates: Using mock data - implement proper auth later');
-      return this.getMockRoleTemplates();
+      await configureAuthenticatedClient();
+
+      const response = await client.get({
+        url: '/testing-lab/permissions/role-templates',
+      });
+
+      if (response.error) {
+        console.error('Failed to get role templates from API:', response.error);
+        throw new Error(`Failed to get role templates: ${response.error}`);
+      }
+
+      // Convert backend format to frontend format
+      const backendTemplates = response.data as any[];
+      return backendTemplates.map(template => ({
+        id: template.name, // Use name as ID for now
+        name: template.name,
+        description: template.description,
+        isSystemRole: template.isSystemRole,
+        userCount: 0, // TODO: Get actual user count from API
+        permissionTemplates: this.convertBackendPermissionsToFrontend(template.permissions)
+      }));
     } catch (error) {
-      console.error('Failed to get role templates:', error);
+      console.error('Failed to get role templates, falling back to mock data:', error);
       return this.getMockRoleTemplates();
     }
+  }
+
+  // Convert backend permissions format to frontend format
+  private static convertBackendPermissionsToFrontend(backendPermissions: any): PermissionTemplate[] {
+    const permissions: PermissionTemplate[] = [];
+    
+    if (backendPermissions?.canCreateSessions) permissions.push({ action: 'create', resourceType: 'TestingSession' });
+    if (backendPermissions?.canEditSessions) permissions.push({ action: 'edit', resourceType: 'TestingSession' });
+    if (backendPermissions?.canDeleteSessions) permissions.push({ action: 'delete', resourceType: 'TestingSession' });
+    if (backendPermissions?.canViewSessions) permissions.push({ action: 'read', resourceType: 'TestingSession' });
+    
+    if (backendPermissions?.canCreateLocations) permissions.push({ action: 'create', resourceType: 'TestingLocation' });
+    if (backendPermissions?.canEditLocations) permissions.push({ action: 'edit', resourceType: 'TestingLocation' });
+    if (backendPermissions?.canDeleteLocations) permissions.push({ action: 'delete', resourceType: 'TestingLocation' });
+    if (backendPermissions?.canViewLocations) permissions.push({ action: 'read', resourceType: 'TestingLocation' });
+    
+    if (backendPermissions?.canCreateFeedback) permissions.push({ action: 'create', resourceType: 'TestingFeedback' });
+    if (backendPermissions?.canEditFeedback) permissions.push({ action: 'edit', resourceType: 'TestingFeedback' });
+    if (backendPermissions?.canDeleteFeedback) permissions.push({ action: 'delete', resourceType: 'TestingFeedback' });
+    if (backendPermissions?.canViewFeedback) permissions.push({ action: 'read', resourceType: 'TestingFeedback' });
+    if (backendPermissions?.canModerateFeedback) permissions.push({ action: 'moderate', resourceType: 'TestingFeedback' });
+    
+    if (backendPermissions?.canCreateRequests) permissions.push({ action: 'create', resourceType: 'TestingRequest' });
+    if (backendPermissions?.canEditRequests) permissions.push({ action: 'edit', resourceType: 'TestingRequest' });
+    if (backendPermissions?.canDeleteRequests) permissions.push({ action: 'delete', resourceType: 'TestingRequest' });
+    if (backendPermissions?.canViewRequests) permissions.push({ action: 'read', resourceType: 'TestingRequest' });
+    if (backendPermissions?.canApproveRequests) permissions.push({ action: 'approve', resourceType: 'TestingRequest' });
+    
+    if (backendPermissions?.canManageParticipants) permissions.push({ action: 'manage', resourceType: 'TestingParticipant' });
+    if (backendPermissions?.canViewParticipants) permissions.push({ action: 'read', resourceType: 'TestingParticipant' });
+    
+    return permissions;
   }
 
   static async createRoleTemplate(request: CreateRoleTemplateRequest): Promise<RoleTemplate> {
@@ -68,12 +117,8 @@ export class TestingLabPermissionAPI {
         priority: 0
       };
 
-      const response = await client.POST('/api/module-permissions/modules/{module}/roles', {
-        params: {
-          path: {
-            module: TESTING_LAB_MODULE
-          }
-        },
+      const response = await client.post({
+        url: '/module-permissions/modules/${TESTING_LAB_MODULE}/roles',
         body: createRequest
       });
 
