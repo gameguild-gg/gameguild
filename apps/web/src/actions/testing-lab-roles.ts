@@ -113,13 +113,45 @@ export async function getTestingLabRoleTemplatesAction(): Promise<RoleTemplate[]
 
     // Convert backend format to frontend format
     const backendTemplates = response.data as any[];
+    console.log('Backend templates:', backendTemplates);
+    
     return backendTemplates.map(template => ({
       id: template.name, // Use name as ID for now
       name: template.name,
       description: template.description,
       isSystemRole: template.isSystemRole,
       userCount: 0, // TODO: Get actual user count from API
-      permissions: template.permissions || {}
+      permissions: {
+        // Sessions
+        canCreateSessions: template.permissions?.canCreateSessions || false,
+        canEditSessions: template.permissions?.canEditSessions || false,
+        canDeleteSessions: template.permissions?.canDeleteSessions || false,
+        canViewSessions: template.permissions?.canViewSessions || false,
+        
+        // Locations
+        canCreateLocations: template.permissions?.canCreateLocations || false,
+        canEditLocations: template.permissions?.canEditLocations || false,
+        canDeleteLocations: template.permissions?.canDeleteLocations || false,
+        canViewLocations: template.permissions?.canViewLocations || false,
+        
+        // Feedback
+        canCreateFeedback: template.permissions?.canCreateFeedback || false,
+        canEditFeedback: template.permissions?.canEditFeedback || false,
+        canDeleteFeedback: template.permissions?.canDeleteFeedback || false,
+        canViewFeedback: template.permissions?.canViewFeedback || false,
+        canModerateFeedback: template.permissions?.canModerateFeedback || false,
+        
+        // Requests
+        canCreateRequests: template.permissions?.canCreateRequests || false,
+        canEditRequests: template.permissions?.canEditRequests || false,
+        canDeleteRequests: template.permissions?.canDeleteRequests || false,
+        canViewRequests: template.permissions?.canViewRequests || false,
+        canApproveRequests: template.permissions?.canApproveRequests || false,
+        
+        // Participants
+        canManageParticipants: template.permissions?.canManageParticipants || false,
+        canViewParticipants: template.permissions?.canViewParticipants || false,
+      }
     }));
   } catch (error) {
     console.error('Error getting role templates:', error);
