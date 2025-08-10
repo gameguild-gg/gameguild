@@ -686,10 +686,12 @@ import type {
   GetApiTestingLabPermissionsRoleTemplatesResponses,
   PostApiTestingLabPermissionsRoleTemplatesData,
   PostApiTestingLabPermissionsRoleTemplatesResponses,
-  DeleteApiTestingLabPermissionsRoleTemplatesByIdData,
-  DeleteApiTestingLabPermissionsRoleTemplatesByIdResponses,
-  PutApiTestingLabPermissionsRoleTemplatesByIdData,
-  PutApiTestingLabPermissionsRoleTemplatesByIdResponses,
+  DeleteApiTestingLabPermissionsRoleTemplatesByIdOrNameData,
+  DeleteApiTestingLabPermissionsRoleTemplatesByIdOrNameResponses,
+  PutApiTestingLabPermissionsRoleTemplatesByIdOrNameData,
+  PutApiTestingLabPermissionsRoleTemplatesByIdOrNameResponses,
+  DeleteApiTestingLabPermissionsRoleTemplatesByNameByNameData,
+  DeleteApiTestingLabPermissionsRoleTemplatesByNameByNameResponses,
   GetApiTestingLabPermissionsUsersByUserIdData,
   GetApiTestingLabPermissionsUsersByUserIdResponses,
   PostApiTestingLabPermissionsUsersByUserIdRolesData,
@@ -3859,25 +3861,34 @@ export const postApiTestingLabPermissionsRoleTemplates = <ThrowOnError extends b
   });
 };
 
-export const deleteApiTestingLabPermissionsRoleTemplatesById = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiTestingLabPermissionsRoleTemplatesByIdData, ThrowOnError>,
+export const deleteApiTestingLabPermissionsRoleTemplatesByIdOrName = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiTestingLabPermissionsRoleTemplatesByIdOrNameData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiTestingLabPermissionsRoleTemplatesByIdResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/role-templates/{id}',
+  return (options.client ?? _heyApiClient).delete<DeleteApiTestingLabPermissionsRoleTemplatesByIdOrNameResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/role-templates/{idOrName}',
     ...options,
   });
 };
 
-export const putApiTestingLabPermissionsRoleTemplatesById = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiTestingLabPermissionsRoleTemplatesByIdData, ThrowOnError>,
+export const putApiTestingLabPermissionsRoleTemplatesByIdOrName = <ThrowOnError extends boolean = false>(
+  options: Options<PutApiTestingLabPermissionsRoleTemplatesByIdOrNameData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).put<PutApiTestingLabPermissionsRoleTemplatesByIdResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/role-templates/{id}',
+  return (options.client ?? _heyApiClient).put<PutApiTestingLabPermissionsRoleTemplatesByIdOrNameResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/role-templates/{idOrName}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
       ...options.headers,
     },
+  });
+};
+
+export const deleteApiTestingLabPermissionsRoleTemplatesByNameByName = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiTestingLabPermissionsRoleTemplatesByNameByNameData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiTestingLabPermissionsRoleTemplatesByNameByNameResponses, unknown, ThrowOnError>({
+    url: '/api/testing-lab/permissions/role-templates/by-name/{name}',
+    ...options,
   });
 };
 

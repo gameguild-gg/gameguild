@@ -166,13 +166,21 @@ export async function getTestingLabRoleTemplatesAction(): Promise<RoleTemplate[]
 
     const mapTemplate = (template: any, index: number): RoleTemplate => {
       const perms = template.permissions || template.Permissions || {};
-      const id = template.id || template.Id; // expect backend now returns Guid Id
-      if (!id) {
-        // Without a real id, update/delete would fail; log loud so it can be fixed
-        console.warn('Role template missing id from backend payload; update/delete will not work correctly', template);
+      const rawId = template.id ?? template.Id; // Backend should now always supply this (Guid)
+
+      if (!rawId) {
+        // Hard fail instead of silently falling back to name; forces backend / client alignment
+        console.error('Backend role template payload missing id property; cannot safely perform CRUD.', template);
+        throw new Error('Backend role template payload missing id property; please refresh after deployment.');
       }
+
+      const guidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+      if (!guidRegex.test(rawId)) {
+        console.warn('Role template id is not a GUID (unexpected). CRUD endpoints expect GUID. Value:', rawId);
+      }
+
       return {
-        id: id ?? template.name ?? `role-${index}`,
+        id: rawId,
         name: template.name,
         description: template.description,
         isSystemRole: template.isSystemRole,
@@ -306,6 +314,11 @@ export async function updateRoleTemplateAction(roleId: string, roleData: {
       permissions: backendPermissions
     });
 
+    const guidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+    if (!guidRegex.test(roleId)) {
+      throw new Error('Invalid role id supplied for update (expected GUID). Refresh the page to reload proper identifiers.');
+    }
+
     const response = await client.put({
       url: `/api/testing-lab/permissions/role-templates/${encodeURIComponent(roleId)}`,
       body: {
@@ -360,6 +373,11 @@ export async function deleteRoleTemplateAction(roleId: string): Promise<void> {
   
   try {
     await configureAuthenticatedClient();
+
+    const guidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+    if (!guidRegex.test(roleId)) {
+      throw new Error('Invalid role id supplied for delete (expected GUID). Refresh the page to reload proper identifiers.');
+    }
 
     const response = await client.delete({
       url: `/api/testing-lab/permissions/role-templates/${encodeURIComponent(roleId)}`,
