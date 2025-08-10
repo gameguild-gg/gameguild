@@ -2,6 +2,7 @@ import { environment } from '@/configs/environment';
 import { googleIdTokenSignIn, localSign, refreshAccessToken } from '@/lib/auth/auth.actions';
 import { SignInResponse } from '@/lib/auth/auth.types';
 import { isUserWithAuthData } from '@/lib/auth/auth.utils';
+import { logTokenDebugInfo, shouldRefreshToken } from '@/lib/utils/jwt-debug';
 import { Account, DefaultSession, NextAuthConfig, Profile, Session, User } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
 import type { CredentialInput, Provider } from 'next-auth/providers';
@@ -174,89 +175,78 @@ export const authConfig: NextAuthConfig = {
       }
 
       // Check token expiration and refresh if needed
-      if (token?.api?.refreshToken) {
-        // Access token expiry: use token.expiresAt if provided (backend sets to refresh token expiry currently)
-        // We'll maintain a separate access token expiry derived from JWT 'exp' claim for more accurate refresh timing.
-    if (!token.accessTokenExpiresAt && token.api?.accessToken) {
-          try {
-            const parts = token.api.accessToken.split('.');
-            if (parts.length === 3) {
-      const payloadB64 = parts[1] || '';
-      const payloadJson = Buffer.from(payloadB64, 'base64').toString('utf-8');
-      const payload = JSON.parse(payloadJson);
-              if (payload.exp) {
-                token.accessTokenExpiresAt = new Date(payload.exp * 1000).toISOString();
-              }
-            }
-          } catch (e) {
-            console.warn('Failed to parse access token exp claim', e);
-          }
+      if (token?.api?.refreshToken && token?.api?.accessToken) {
+        // Debug the current access token
+        if (process.env.NODE_ENV === 'development') {
+          logTokenDebugInfo(token.api.accessToken, 'Current Access Token');
         }
 
-        const rawExpiry = token.accessTokenExpiresAt || token.expiresAt; // fallback to previous behavior
-    if (rawExpiry && typeof rawExpiry === 'string') {
-      const expirationTime = new Date(rawExpiry as string).getTime();
-          const currentTime = Date.now();
-          const earlyRefreshWindowMs = 60_000; // refresh 60s early
-          const shouldRefresh = currentTime >= (expirationTime - earlyRefreshWindowMs);
+        // Check if token needs refreshing using the debug utility
+        const needsRefresh = shouldRefreshToken(token.api.accessToken, 30000); // 30s buffer
 
-            console.log('Token expiration check:', {
-              accessTokenExpiresAt: token.accessTokenExpiresAt,
-              fallbackExpiresAt: token.expiresAt,
-              expirationTime: new Date(expirationTime).toISOString(),
-              currentTime: new Date(currentTime).toISOString(),
-              msUntilExpiration: expirationTime - currentTime,
-              earlyRefreshWindowMs,
-              shouldRefresh
-            });
-
-        if (shouldRefresh) {
-          console.log('Token expired, attempting refresh...');
+        if (needsRefresh) {
+          console.log('🔄 Token needs refresh, attempting...');
 
           try {
             const response = await refreshAccessToken(token.api.refreshToken);
 
-            if (response) {
-              if (response.accessToken) {
-                token.api.accessToken = response.accessToken;
-                console.log('Access token updated');
+            if (response && response.accessToken && response.refreshToken) {
+              // Update tokens
+              token.api.accessToken = response.accessToken;
+              token.api.refreshToken = response.refreshToken;
+              
+              // Debug the new access token
+              if (process.env.NODE_ENV === 'development') {
+                logTokenDebugInfo(response.accessToken, 'New Access Token');
               }
-              if (response.refreshToken) {
-                token.api.refreshToken = response.refreshToken;
-                console.log('Refresh token updated');
-              }
-              if (response.accessTokenExpiresAt) {
-                token.accessTokenExpiresAt = response.accessTokenExpiresAt;
-                console.log('Access token exp (server) set:', token.accessTokenExpiresAt);
-              } else if (!token.accessTokenExpiresAt) {
-                // Fallback parse
-                try {
-                  const parts = response.accessToken.split('.');
-                  if (parts.length === 3) {
-                    const payloadB64 = parts[1] || '';
-                    const payloadJson = Buffer.from(payloadB64, 'base64').toString('utf-8');
-                    const payload = JSON.parse(payloadJson);
-                    if (payload.exp) {
-                      token.accessTokenExpiresAt = new Date(payload.exp * 1000).toISOString();
-                      console.log('Access token exp parsed:', token.accessTokenExpiresAt);
-                    }
+              
+              // Update expiration times based on JWT payload
+              try {
+                const parts = response.accessToken.split('.');
+                if (parts.length === 3) {
+                  let payloadB64 = parts[1] || '';
+                  while (payloadB64.length % 4) {
+                    payloadB64 += '=';
                   }
-                } catch (e) { console.warn('Failed to parse new access token exp', e); }
+                  
+                  const payloadJson = Buffer.from(payloadB64, 'base64').toString('utf-8');
+                  const payload = JSON.parse(payloadJson);
+                  
+                  if (payload.exp) {
+                    token.accessTokenExpiresAt = new Date(payload.exp * 1000).toISOString();
+                    console.log('✅ Access token exp (parsed):', token.accessTokenExpiresAt);
+                  }
+                }
+              } catch (e) {
+                console.warn('⚠️ Failed to parse new access token exp:', e);
               }
+              
+              // Update refresh token expiry from server response
               if (response.refreshTokenExpiresAt) {
-                token.expiresAt = response.refreshTokenExpiresAt; // keep backward compatibility
-                console.log('Refresh token exp (server) set:', token.expiresAt);
+                token.expiresAt = response.refreshTokenExpiresAt;
+                console.log('✅ Refresh token exp (server):', token.expiresAt);
               } else if (response.expiresAt) {
                 token.expiresAt = response.expiresAt;
-                console.log('Refresh token exp (legacy) updated:', response.expiresAt);
+                console.log('✅ Refresh token exp (legacy):', response.expiresAt);
               }
+              
+              console.log('✅ Token refresh completed successfully');
+            } else {
+              console.error('❌ Invalid refresh response structure');
+              return null;
             }
           } catch (error) {
-            console.error('Token refresh failed, forcing sign-out');
+            console.error('❌ Token refresh failed:', error);
+            // Set error flag to handle in session callback
+            token.error = 'RefreshTokenError';
             return null;
           }
+        } else {
+          console.log('🔍 Token is still valid, no refresh needed');
         }
-        }
+      } else if (!token?.api?.accessToken || !token?.api?.refreshToken) {
+        console.error('❌ Missing required tokens in JWT callback');
+        return null;
       }
 
       if (trigger === 'update') {
@@ -309,15 +299,24 @@ export const authConfig: NextAuthConfig = {
       return token;
     },
     session: async ({ session, token, trigger }: { session: Session; token: JWT | null; newSession?: Session; trigger?: 'update' }): Promise<Session | DefaultSession> => {
-      // Check if the token is null (JWT callback returned null due to corruption)
+      // Check if the token is null (JWT callback returned null due to corruption or refresh failure)
       if (!token) {
-        session.error = 'CorruptedSessionError';
+        console.error('❌ Session callback: Token is null, returning error session');
+        session.error = 'RefreshTokenError';
+        return session;
+      }
+
+      // Check for refresh token error flag
+      if (token.error === 'RefreshTokenError') {
+        console.error('❌ Session callback: Refresh token error detected');
+        session.error = 'RefreshTokenError';
         return session;
       }
 
       // Check if we have API tokens first - we need these for any API operations
       if (!token.api?.accessToken || !token.api?.refreshToken) {
-        session.error = 'CorruptedSessionError';
+        console.error('❌ Session callback: Missing API tokens');
+        session.error = 'MissingTokensError';
         return session;
       }
 
@@ -327,16 +326,14 @@ export const authConfig: NextAuthConfig = {
       };
 
       if (trigger === 'update') {
-        // Handle session updates when the user updates their profile or switches tenants.
-        // The JWT callback has already processed the updates, so we just need to copy the data
-        console.log('Session update triggered - data already processed in JWT callback');
+        console.log('🔄 Session update triggered - data already processed in JWT callback');
       }
 
-      // Add user ID, available tenants, and current tenant to the session
+      // Add user data to the session
       if (token.id) session.user.id = token.id;
       if (token.username) session.user.username = token.username;
       if (token.email) session.user.email = token.email;
-  if (token.profilePictureUrl) (session.user as any).profilePictureUrl = token.profilePictureUrl;
+      if (token.profilePictureUrl) (session.user as any).profilePictureUrl = token.profilePictureUrl;
       if (token.availableTenants) session.availableTenants = token.availableTenants;
       if (token.currentTenant) session.currentTenant = token.currentTenant;
 
