@@ -13,6 +13,39 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow }        
 import { Textarea }                                                                                                           from '@/components/ui/textarea';
 import type { LocationStatus, TestingLocation as ApiTestingLocation, UserRoleAssignment as GeneratedUserRoleAssignment, User } from '@/lib/api/generated/types.gen';
 import { convertAPIPermissionsToForm, convertFormPermissionsToAPI, RoleTemplate as APIRoleTemplate } from '@/lib/api/testing-lab-permissions';
+import { RoleTemplate } from '@/actions/testing-lab-roles';
+
+// Helper to map aggregated API permissions (role.permissions) to form permission shape
+function mapAggregatedPermissionsToForm(agg: any) {
+  if (!agg) return initialRoleFormData.permissions;
+  return {
+    // Sessions
+    createSession: !!(agg.canCreateSessions ?? agg.CanCreateSessions),
+    readSession: !!(agg.canViewSessions ?? agg.CanViewSessions),
+    editSession: !!(agg.canEditSessions ?? agg.CanEditSessions),
+    deleteSession: !!(agg.canDeleteSessions ?? agg.CanDeleteSessions),
+    // Locations
+    createLocation: !!(agg.canCreateLocations ?? agg.CanCreateLocations),
+    readLocation: !!(agg.canViewLocations ?? agg.CanViewLocations),
+    editLocation: !!(agg.canEditLocations ?? agg.CanEditLocations),
+    deleteLocation: !!(agg.canDeleteLocations ?? agg.CanDeleteLocations),
+    // Feedback
+    createFeedback: !!(agg.canCreateFeedback ?? agg.CanCreateFeedback),
+    readFeedback: !!(agg.canViewFeedback ?? agg.CanViewFeedback),
+    editFeedback: !!(agg.canEditFeedback ?? agg.CanEditFeedback),
+    deleteFeedback: !!(agg.canDeleteFeedback ?? agg.CanDeleteFeedback),
+    moderateFeedback: !!(agg.canModerateFeedback ?? agg.CanModerateFeedback),
+    // Requests
+    createRequest: !!(agg.canCreateRequests ?? agg.CanCreateRequests),
+    readRequest: !!(agg.canViewRequests ?? agg.CanViewRequests),
+    editRequest: !!(agg.canEditRequests ?? agg.CanEditRequests),
+    deleteRequest: !!(agg.canDeleteRequests ?? agg.CanDeleteRequests),
+    approveRequest: !!(agg.canApproveRequests ?? agg.CanApproveRequests),
+    // Participants
+    manageParticipant: !!(agg.canManageParticipants ?? agg.CanManageParticipants),
+    readParticipant: !!(agg.canViewParticipants ?? agg.CanViewParticipants),
+  };
+}
 import { getTestingLabSettings, updateTestingLabSettings } from '@/actions/testing-lab-settings';
 import { 
   getTestingLocationsAction, 
@@ -122,8 +155,7 @@ interface TestingLabManager {
 }
 
 // Role management types
-// Use API types
-type RoleTemplate = APIRoleTemplate;
+// Use the proper RoleTemplate from actions which has both permissions and permissionTemplates
 
 // Define UserRoleAssignment locally since it's not exported
 // Extended type that combines API type with additional UI properties
@@ -468,6 +500,8 @@ export function TestingLabSettings() {
     try {
       // Use server action to get role templates
       const apiRoles = await getTestingLabRoleTemplatesAction();
+      console.log('=== ROLES LOADED FROM API ===');
+      console.log('Raw API roles:', apiRoles);
       setRoles(apiRoles as any[]);
     } catch (error) {
       console.error('Failed to load roles:', error);
@@ -754,21 +788,29 @@ export function TestingLabSettings() {
   };
 
   const handleEditRole = (role: RoleTemplate) => {
-    // Allow editing of all roles, including system roles
-    console.log('handleEditRole called with role:', role);
-    console.log('Role permission templates:', role.permissionTemplates);
+    console.log('=== handleEditRole DEBUG ===');
+    console.log('Full role object:', role);
+    console.log('role.permissions:', role.permissions);
+    console.log('role.permissionTemplates:', role.permissionTemplates);
     
+    // Prefer aggregated permissions over display list (permissionTemplates) because the latter uses prettified labels
+    const permissionsFromAggregate = mapAggregatedPermissionsToForm(role.permissions);
+    console.log('Mapped permissions from aggregate:', permissionsFromAggregate);
+    
+    // Fallback: if aggregate object missing (legacy), try to derive from permissionTemplates
+    const fallbackFromTemplates = () => {
+      try { return convertAPIPermissionsToForm(role.permissionTemplates || []); } catch { return permissionsFromAggregate; }
+    };
+    const finalPerms = permissionsFromAggregate || fallbackFromTemplates();
+    console.log('Final permissions for form:', finalPerms);
+
     setEditingRole(role);
-    setOriginalRoleId(role.id); // Store the original ID for API calls
-    setOriginalRoleName(role.name); // Store the original name for comparison
-    
-    const convertedPermissions = convertAPIPermissionsToForm(role.permissionTemplates || []);
-    console.log('Converted permissions:', convertedPermissions);
-    
+    setOriginalRoleId(role.id);
+    setOriginalRoleName(role.name);
     setRoleFormData({
       name: role.name,
       description: role.description,
-      permissions: convertedPermissions,
+      permissions: finalPerms,
     });
     setIsRoleDialogOpen(true);
   };
@@ -803,17 +845,20 @@ export function TestingLabSettings() {
     e.preventDefault();
 
     try {
-      const permissionTemplates = convertFormPermissionsToAPI(roleFormData.permissions);
+      console.log('=== SAVE OPERATION START ===');
+      console.log('Raw form permissions object (expected by server action):', roleFormData.permissions);
 
       if (editingRole) {
         // Update existing role
+        console.log('Updating role with ID:', originalRoleId);
         const updatedRole = await updateRoleTemplateAction(originalRoleId!, {
           name: roleFormData.name !== originalRoleName ? roleFormData.name : undefined,
           description: roleFormData.description,
-          permissions: convertFormPermissionsToAPI(roleFormData.permissions),
+          // Pass raw form permissions; server action converts to backend DTO
+          permissions: roleFormData.permissions,
         });
+        console.log('Update API response:', updatedRole);
 
-        // Refresh the roles list from the server to ensure we have fresh data
         await loadRoles();
         toast.success('Role updated successfully');
       } else {
@@ -821,10 +866,10 @@ export function TestingLabSettings() {
         const newRole = await createRoleTemplateAction({
           name: roleFormData.name,
           description: roleFormData.description,
-          permissions: convertFormPermissionsToAPI(roleFormData.permissions),
+          permissions: roleFormData.permissions,
         });
+        console.log('Create API response:', newRole);
 
-        // Refresh the roles list from the server to ensure we have fresh data
         await loadRoles();
         toast.success('Role created successfully');
       }

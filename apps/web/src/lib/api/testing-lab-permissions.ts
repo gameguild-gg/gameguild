@@ -803,8 +803,6 @@ export function convertFormPermissionsToAPI(formPermissions: any): PermissionTem
 
 // Helper function to convert API permissions to form format
 export function convertAPIPermissionsToForm(permissions: PermissionTemplate[]): any {
-  console.log('convertAPIPermissionsToForm called with:', permissions);
-  
   const formPermissions = {
     createSession: false,
     readSession: false,
@@ -853,16 +851,12 @@ export function convertAPIPermissionsToForm(permissions: PermissionTemplate[]): 
     }
 
     const key = `${p.action}${resourceSuffix}`;
-    console.log('Mapping permission:', p.action, p.resourceType, '->', key);
-    
     if (key in formPermissions) {
       (formPermissions as any)[key] = true;
-      console.log('Successfully set', key, 'to true');
     } else {
       console.warn('Unknown permission key:', key, 'from', p.action, p.resourceType);
     }
   });
 
-  console.log('Final form permissions:', formPermissions);
   return formPermissions;
 }
