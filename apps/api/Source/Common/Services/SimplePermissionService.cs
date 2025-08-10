@@ -202,6 +202,13 @@ public class SimplePermissionService(ApplicationDbContext context, ILogger<Simpl
             throw new InvalidOperationException($"Cannot modify system role '{roleTemplate.Name}'");
         }
 
+        // If caller passed empty/null name, keep existing
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            _logger.LogDebug("Empty or null name provided for update of role ID {Id}; preserving existing name '{ExistingName}'", id, roleTemplate.Name);
+            name = roleTemplate.Name; // preserve
+        }
+
         // Check if new name conflicts with existing role (only if name is changing)
         if (roleTemplate.Name != name)
         {
