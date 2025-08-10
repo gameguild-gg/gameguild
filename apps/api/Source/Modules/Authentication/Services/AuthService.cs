@@ -165,89 +165,134 @@ namespace GameGuild.Modules.Authentication {
 
       if (string.IsNullOrWhiteSpace(request.RefreshToken)) throw new UnauthorizedAccessException("Invalid refresh token");
 
-      // Validate existing refresh token (active & not expired)
-      var existing = await context.RefreshTokens
-        .Where(rt => rt.Token == request.RefreshToken)
-        .FirstOrDefaultAsync();
+      // We make refresh rotation idempotent: if two parallel calls try to rotate the same
+      // token, only the first will create a new token; the others will detect the existing
+      // replacement and return it instead of failing / creating multiple chains.
+      const int maxAttempts = 2; // initial try + one concurrency fallback
+      for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          // Load existing token inside loop (may change after concurrency failure)
+          var existing = await context.RefreshTokens
+            .Where(rt => rt.Token == request.RefreshToken)
+            .FirstOrDefaultAsync();
 
-      if (existing == null || existing.IsRevoked || existing.ExpiresAt <= DateTime.UtcNow) {
-        logger.LogWarning("Refresh token rejected (not found / revoked / expired)");
-        throw new UnauthorizedAccessException("Invalid refresh token");
-      }
+          if (existing == null) {
+            logger.LogWarning("Refresh token rejected (not found)");
+            throw new UnauthorizedAccessException("Invalid refresh token");
+          }
 
-      var user = await context.Users.FindAsync(existing.UserId);
-      if (user == null) throw new UnauthorizedAccessException("User not found");
+            // If already rotated by another request: return replacement if still active
+          if (existing.IsRevoked && existing.ReplacedByToken is not null) {
+            var replacement = await context.RefreshTokens
+              .FirstOrDefaultAsync(rt => rt.Token == existing.ReplacedByToken);
+            if (replacement != null && !replacement.IsRevoked && replacement.ExpiresAt > DateTime.UtcNow) {
+              logger.LogInformation("Refresh token already rotated by another request (attempt {Attempt})", attempt);
 
-      var tenantId = request.TenantId; // optional override
+              var userAlready = await context.Users.FindAsync(existing.UserId) ?? throw new UnauthorizedAccessException("User not found");
+              var userDtoAlready = new UserDto { Id = userAlready.Id, Username = userAlready.Name, Email = userAlready.Email };
+              var rolesAlready = new[] { "User" }; // TODO: actual roles
 
-      var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-      var roles = new[] { "User" }; // TODO: actual roles
+              int accessMinutesAlready = int.Parse(
+                configuration["Jwt:ExpirationMinutes"] ?? configuration["Jwt:ExpiryInMinutes"] ?? "60"
+              );
+              var newAccessTokenAlready = jwtTokenService.GenerateAccessToken(userDtoAlready, rolesAlready);
+              var newAccessTokenExpiresAtAlready = DateTime.UtcNow.AddMinutes(accessMinutesAlready);
 
-      IEnumerable<Claim>? tenantClaims = null;
-      if (tenantId.HasValue) {
-        var permittedTenants = await tenantAuthService.GetUserTenantsAsync(user);
-        if (permittedTenants.Any(t => t.TenantId.HasValue && t.TenantId.Value == tenantId.Value)) {
-          tenantClaims = await tenantAuthService.GetTenantClaimsAsync(user, tenantId.Value);
-        } else {
-          // If requested tenant not accessible, ignore it
-          tenantId = null;
+              var responseAlready = new SignInResponseDto {
+                AccessToken = newAccessTokenAlready,
+                RefreshToken = replacement.Token,
+                ExpiresAt = replacement.ExpiresAt,
+                AccessTokenExpiresAt = newAccessTokenExpiresAtAlready,
+                RefreshTokenExpiresAt = replacement.ExpiresAt,
+                User = userDtoAlready,
+              };
+              responseAlready = await tenantAuthService.EnhanceWithTenantDataAsync(responseAlready, userAlready, request.TenantId);
+              return responseAlready;
+            }
+          }
+
+          if (existing.IsRevoked || existing.ExpiresAt <= DateTime.UtcNow) {
+            logger.LogWarning("Refresh token rejected (revoked / expired)");
+            throw new UnauthorizedAccessException("Invalid refresh token");
+          }
+
+          var user = await context.Users.FindAsync(existing.UserId) ?? throw new UnauthorizedAccessException("User not found");
+
+          var tenantId = request.TenantId; // optional override
+          IEnumerable<Claim>? tenantClaims = null;
+          if (tenantId.HasValue) {
+            var permittedTenants = await tenantAuthService.GetUserTenantsAsync(user);
+            if (permittedTenants.Any(t => t.TenantId.HasValue && t.TenantId.Value == tenantId.Value)) {
+              tenantClaims = await tenantAuthService.GetTenantClaimsAsync(user, tenantId.Value);
+            } else {
+              tenantId = null; // ignore inaccessible tenant
+            }
+          }
+
+          // Config
+          int accessMinutes = int.Parse(
+            configuration["Jwt:ExpirationMinutes"] ?? configuration["Jwt:ExpiryInMinutes"] ?? "60"
+          );
+          int refreshDays = int.Parse(
+            configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7"
+          );
+
+          var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
+          var roles = new[] { "User" }; // TODO: actual roles
+
+          var newAccessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
+          var newRefreshTokenValue = jwtTokenService.GenerateRefreshToken();
+          var newAccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessMinutes);
+          var newRefreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshDays);
+
+          // Rotate (mark revoked)
+          existing.IsRevoked = true;
+          existing.RevokedAt = DateTime.UtcNow;
+          existing.ReplacedByToken = newRefreshTokenValue;
+
+          // Persist new refresh token
+          var newRefreshTokenEntity = new RefreshToken {
+            UserId = user.Id,
+            Token = newRefreshTokenValue,
+            ExpiresAt = newRefreshTokenExpiresAt,
+            CreatedByIp = "0.0.0.0",
+            IsRevoked = false,
+          };
+          context.RefreshTokens.Add(newRefreshTokenEntity);
+
+          // Maintenance
+          var cutoff = DateTime.UtcNow.AddDays(-30);
+          var stale = await context.RefreshTokens
+            .Where(rt => rt.UserId == user.Id && rt.ExpiresAt < cutoff)
+            .ToListAsync();
+          if (stale.Count > 0) context.RefreshTokens.RemoveRange(stale);
+
+          await context.SaveChangesAsync();
+
+          var signInResponse = new SignInResponseDto {
+            AccessToken = newAccessToken,
+            RefreshToken = newRefreshTokenValue,
+            ExpiresAt = newRefreshTokenExpiresAt,
+            AccessTokenExpiresAt = newAccessTokenExpiresAt,
+            RefreshTokenExpiresAt = newRefreshTokenExpiresAt,
+            User = userDto,
+            TenantId = tenantId,
+          };
+          signInResponse = await tenantAuthService.EnhanceWithTenantDataAsync(signInResponse, user, tenantId);
+          return signInResponse;
+        }
+        catch (DbUpdateConcurrencyException ex) when (attempt < maxAttempts) {
+          logger.LogWarning(ex, "Concurrency conflict rotating refresh token (attempt {Attempt}) - retrying", attempt);
+          // Clear tracked entities to avoid stale state before retry
+          foreach (var entry in context.ChangeTracker.Entries().ToList()) entry.State = EntityState.Detached;
+          await Task.Delay(25); // small backoff
+          continue; // retry loop
         }
       }
 
-      // Use unified config keys (support both old & new names for backward compatibility)
-      int accessMinutes = int.Parse(
-        configuration["Jwt:ExpirationMinutes"] ??
-        configuration["Jwt:ExpiryInMinutes"] ??
-        "60"
-      );
-      int refreshDays = int.Parse(
-        configuration["Jwt:RefreshTokenExpirationDays"] ??
-        configuration["Jwt:RefreshTokenExpiryInDays"] ??
-        "7"
-      );
-
-      var newAccessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
-      var newRefreshTokenValue = jwtTokenService.GenerateRefreshToken();
-      var newAccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessMinutes);
-      var newRefreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshDays);
-
-      // Rotate: revoke old
-      existing.IsRevoked = true;
-      existing.RevokedAt = DateTime.UtcNow;
-      existing.ReplacedByToken = newRefreshTokenValue;
-
-      // Persist new refresh token
-      var newRefreshTokenEntity = new RefreshToken {
-        UserId = user.Id,
-        Token = newRefreshTokenValue,
-        ExpiresAt = newRefreshTokenExpiresAt,
-        CreatedByIp = "0.0.0.0", // TODO: capture actual IP
-        IsRevoked = false,
-      };
-      context.RefreshTokens.Add(newRefreshTokenEntity);
-
-      // Optional maintenance: prune old expired tokens for this user (simple heuristic)
-      var stale = await context.RefreshTokens
-        .Where(rt => rt.UserId == user.Id && rt.ExpiresAt < DateTime.UtcNow.AddDays(-30))
-        .ToListAsync();
-      if (stale.Count > 0) context.RefreshTokens.RemoveRange(stale);
-
-      await context.SaveChangesAsync();
-
-      // Enrich with tenant availability
-      var signInResponse = new SignInResponseDto {
-        AccessToken = newAccessToken,
-        RefreshToken = newRefreshTokenValue,
-        ExpiresAt = newRefreshTokenExpiresAt, // backward compatibility field
-        AccessTokenExpiresAt = newAccessTokenExpiresAt,
-        RefreshTokenExpiresAt = newRefreshTokenExpiresAt,
-        User = userDto,
-        TenantId = tenantId,
-      };
-
-      signInResponse = await tenantAuthService.EnhanceWithTenantDataAsync(signInResponse, user, tenantId);
-
-      return signInResponse;
+      // If we reach here, concurrency did not resolve
+      logger.LogError("Failed to rotate refresh token after {Attempts} attempts", maxAttempts);
+      throw new UnauthorizedAccessException("Could not refresh token at this time");
     }
 
     public async Task RevokeRefreshTokenAsync(string token, string ipAddress) {

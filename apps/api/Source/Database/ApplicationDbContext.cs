@@ -233,6 +233,35 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<ProgramWishlist> ProgramWishlists { get; set; }
 
+  protected override void OnModelCreating(ModelBuilder modelBuilder) {
+    base.OnModelCreating(modelBuilder);
+
+    // Apply all entity configurations from the assembly
+    modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+    // NOTE: do not add fluent api configurations here, they should be in the same file of the entity. On the entity, use notations for simple configurations, and fluent API for complex ones.
+
+    // Configure ITenantable entities (this logic needs to stay in OnModelCreating)
+    foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+                                           .Where(t => typeof(ITenantable).IsAssignableFrom(t.ClrType))) {
+      modelBuilder.Entity(entityType.ClrType)
+                  .HasOne(typeof(Tenant).Name)
+                  .WithMany()
+                  .HasForeignKey("TenantId")
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
+    }
+
+    // Configure base entity properties for all entities
+    modelBuilder.ConfigureBaseEntities();
+
+    // Configure soft delete global query filters
+    modelBuilder.ConfigureSoftDelete();
+
+    // Configure inheritance strategies for content hierarchy
+    ConfigureInheritanceStrategies(modelBuilder);
+  }
+
   /// <summary>
   /// Automatically update timestamps when saving changes
   /// </summary>
@@ -274,60 +303,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         entity.Version++;
       }
     }
-  }
-
-  /// <summary>
-  /// Configure the model and apply entity configurations
-  /// </summary>
-  protected override void OnModelCreating(ModelBuilder modelBuilder) {
-    base.OnModelCreating(modelBuilder);
-
-    // Apply all entity configurations from current assembly
-    modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
-    // Configure ITenantable entities (this logic needs to stay in OnModelCreating)
-    foreach (var entityType in modelBuilder.Model.GetEntityTypes()
-                                           .Where(t => typeof(ITenantable).IsAssignableFrom(t.ClrType))) {
-      modelBuilder.Entity(entityType.ClrType)
-                  .HasOne(typeof(Tenant).Name)
-                  .WithMany()
-                  .HasForeignKey("TenantId")
-                  .IsRequired(false)
-                  .OnDelete(DeleteBehavior.SetNull);
-    }
-
-    // Configure base entity properties for all entities
-    modelBuilder.ConfigureBaseEntities();
-
-    // Configure soft delete global query filters
-    modelBuilder.ConfigureSoftDelete();
-
-    // Configure inheritance strategies
-    ConfigureInheritanceStrategies(modelBuilder);
-
-    // Ensure RefreshToken is properly configured
-    modelBuilder.Entity<RefreshToken>(entity => {
-      entity.ToTable("RefreshTokens");
-      entity.HasKey(rt => rt.Id);
-      entity.Property(rt => rt.Token)
-            .IsRequired()
-            .HasMaxLength(500);
-      entity.Property(rt => rt.UserId)
-            .IsRequired();
-      entity.Property(rt => rt.ExpiresAt)
-            .IsRequired();
-      entity.Property(rt => rt.CreatedByIp)
-            .HasMaxLength(45); // IPv6 max length
-      entity.Property(rt => rt.RevokedByIp)
-            .HasMaxLength(45);
-      
-      // Add index for performance
-      entity.HasIndex(rt => rt.Token)
-            .IsUnique();
-      entity.HasIndex(rt => rt.UserId);
-      entity.HasIndex(rt => rt.ExpiresAt);
-    });
-
   }
 
   /// <summary>

@@ -47,6 +47,7 @@ public class TestingLabPermissionController : ControllerBase
         var testingLabTemplates = allTemplates
             .Select(t => new TestingLabRoleTemplate
             {
+                Id = t.Id,
                 Name = t.Name,
                 Description = t.Description,
                 IsSystemRole = t.IsSystemRole,
@@ -390,6 +391,7 @@ public class TestingLabPermissionController : ControllerBase
     {
         return new TestingLabRoleTemplate
         {
+            Id = template.Id,
             Name = template.Name,
             Description = template.Description,
             IsSystemRole = template.IsSystemRole,
@@ -466,6 +468,7 @@ public class TestingLabPermissionsDto
 
 public class TestingLabRoleTemplate
 {
+    public Guid Id { get; set; } // Added so clients can perform update/delete operations
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public bool IsSystemRole { get; set; }
