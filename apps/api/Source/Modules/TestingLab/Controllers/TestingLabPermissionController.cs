@@ -117,26 +117,49 @@ public class TestingLabPermissionController : ControllerBase
     /// <summary>
     /// Update an existing TestingLab role template
     /// </summary>
-    [HttpPut("role-templates/{id}")]
-    public async Task<ActionResult<TestingLabRoleTemplate>> UpdateTestingLabRoleTemplate(Guid id, [FromBody] UpdateTestingLabRoleRequest request)
+    [HttpPut("role-templates/{idOrName}")]
+    public async Task<ActionResult<TestingLabRoleTemplate>> UpdateTestingLabRoleTemplate(string idOrName, [FromBody] UpdateTestingLabRoleRequest request)
     {
         try
         {
-            _logger.LogInformation("Updating role template with ID: '{Id}', Request name: '{RequestName}', Description: '{Description}'", 
-                id, request.Name, request.Description);
-                
-            var permissionTemplates = BuildPermissionTemplates(request.Permissions);
-            
-            RoleTemplate template;
-            
-            // Use the ID-based service method
-            template = await _permissionService.UpdateRoleTemplateAsync(
-                id,
-                request.Name ?? string.Empty,
-                request.Description,
-                permissionTemplates);
+            _logger.LogInformation("Updating role template with identifier: '{Identifier}', Request name: '{RequestName}', Description: '{Description}'", 
+                idOrName, request.Name, request.Description);
 
-            _logger.LogInformation("Admin user {UserId} updated TestingLab role template with ID '{Id}'", GetCurrentUserId(), id);
+            var permissionTemplates = BuildPermissionTemplates(request.Permissions);
+
+            RoleTemplate template;
+            if (Guid.TryParse(idOrName, out var idGuid))
+            {
+                var existing = await _permissionService.GetRoleTemplateAsync(idGuid);
+                if (existing == null)
+                {
+                    _logger.LogWarning("Role template with ID '{Id}' not found for update", idGuid);
+                    return NotFound($"Role template with ID '{idGuid}' not found");
+                }
+                var targetName = string.IsNullOrWhiteSpace(request.Name) ? existing.Name : request.Name!.Trim();
+                template = await _permissionService.UpdateRoleTemplateAsync(idGuid, targetName, request.Description, permissionTemplates);
+                _logger.LogInformation("Admin user {UserId} updated TestingLab role template with ID '{Id}'", GetCurrentUserId(), idGuid);
+            }
+            else
+            {
+                var currentName = idOrName;
+                var existing = await _permissionService.GetRoleTemplateAsync(currentName);
+                if (existing == null)
+                {
+                    _logger.LogWarning("Role template with name '{Name}' not found for update", currentName);
+                    return NotFound($"Role template '{currentName}' not found");
+                }
+                var newName = string.IsNullOrWhiteSpace(request.Name) ? currentName : request.Name!.Trim();
+                if (newName != currentName)
+                {
+                    template = await _permissionService.UpdateRoleTemplateAsync(currentName, newName, request.Description, permissionTemplates);
+                }
+                else
+                {
+                    template = await _permissionService.UpdateRoleTemplateAsync(currentName, request.Description, permissionTemplates);
+                }
+                _logger.LogInformation("Admin user {UserId} updated TestingLab role template with name '{Name}'", GetCurrentUserId(), currentName);
+            }
             
             return Ok(MapToTestingLabRoleTemplate(template));
         }
@@ -149,18 +172,48 @@ public class TestingLabPermissionController : ControllerBase
     /// <summary>
     /// Delete a TestingLab role template
     /// </summary>
-    [HttpDelete("role-templates/{id}")]
-    public async Task<ActionResult> DeleteTestingLabRoleTemplate(Guid id)
+    [HttpDelete("role-templates/{idOrName}")]
+    public async Task<ActionResult> DeleteTestingLabRoleTemplate(string idOrName)
     {
         try
         {
-            var deleted = await _permissionService.DeleteRoleTemplateAsync(id);
+            _logger.LogInformation("Attempting to delete TestingLab role template identifier '{Identifier}'", idOrName);
+            bool deleted;
+            if (Guid.TryParse(idOrName, out var idGuid))
+            {
+                deleted = await _permissionService.DeleteRoleTemplateAsync(idGuid);
+                if (!deleted) return NotFound($"Role template with ID '{idGuid}' not found");
+                _logger.LogInformation("Admin user {UserId} deleted TestingLab role template with ID '{Id}'", GetCurrentUserId(), idGuid);
+            }
+            else
+            {
+                deleted = await _permissionService.DeleteRoleTemplateAsync(idOrName);
+                if (!deleted) return NotFound($"Role template '{idOrName}' not found");
+                _logger.LogInformation("Admin user {UserId} deleted TestingLab role template with name '{Name}'", GetCurrentUserId(), idOrName);
+            }
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Delete a TestingLab role template by name (legacy compatibility for clients that don't yet have Ids)
+    /// </summary>
+    [HttpDelete("role-templates/by-name/{name}")]
+    public async Task<ActionResult> DeleteTestingLabRoleTemplateByName(string name)
+    {
+        try
+        {
+            _logger.LogInformation("Attempting to delete TestingLab role template by name '{Name}'", name);
+            var deleted = await _permissionService.DeleteRoleTemplateAsync(name);
             if (!deleted)
             {
-                return NotFound($"Role template with ID '{id}' not found");
+                return NotFound($"Role template with name '{name}' not found");
             }
-
-            _logger.LogInformation("Admin user {UserId} deleted TestingLab role template with ID '{Id}'", GetCurrentUserId(), id);
+            _logger.LogInformation("Admin user {UserId} deleted TestingLab role template named '{Name}'", GetCurrentUserId(), name);
             return NoContent();
         }
         catch (InvalidOperationException ex)

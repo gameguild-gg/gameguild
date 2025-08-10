@@ -755,19 +755,28 @@ export function TestingLabSettings() {
 
   const handleEditRole = (role: RoleTemplate) => {
     // Allow editing of all roles, including system roles
+    console.log('handleEditRole called with role:', role);
+    console.log('Role permission templates:', role.permissionTemplates);
+    
     setEditingRole(role);
     setOriginalRoleId(role.id); // Store the original ID for API calls
     setOriginalRoleName(role.name); // Store the original name for comparison
+    
+    const convertedPermissions = convertAPIPermissionsToForm(role.permissionTemplates || []);
+    console.log('Converted permissions:', convertedPermissions);
+    
     setRoleFormData({
       name: role.name,
       description: role.description,
-      permissions: convertAPIPermissionsToForm(role.permissionTemplates || []),
+      permissions: convertedPermissions,
     });
     setIsRoleDialogOpen(true);
   };
 
   const handleDeleteRole = async (roleId: string) => {
+    console.log('handleDeleteRole called with roleId:', roleId);
     const role = roles.find(r => r.id === roleId);
+    console.log('Found role:', role);
     // Allow deletion of all roles, including system roles
 
     if (!role) {
@@ -776,6 +785,7 @@ export function TestingLabSettings() {
     }
 
     try {
+      console.log('Calling deleteRoleTemplateAction with role.id:', role.id);
       await deleteRoleTemplateAction(role.id);
       setRoles(roles.filter(r => r.id !== roleId));
       toast.success('Role deleted successfully');
@@ -2228,7 +2238,7 @@ interface RolesSettingsProps {
 
   onEditRole: (role: RoleTemplate) => void;
 
-  onDeleteRole: (roleName: string) => void;
+  onDeleteRole: (roleId: string) => void; // expects GUID id
 }
 
 function RolesSettings({ roles, onCreateRole, onEditRole, onDeleteRole }: RolesSettingsProps) {
@@ -2310,7 +2320,7 @@ function RolesSettings({ roles, onCreateRole, onEditRole, onDeleteRole }: RolesS
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={ () => onDeleteRole(role.name) }
+                          onClick={ () => onDeleteRole(role.id) }
                         >
                           <Trash2 className="h-4 w-4"/>
                         </Button>
