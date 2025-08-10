@@ -106,50 +106,108 @@ export async function googleIdTokenSignIn(request: GoogleSignInRequest): Promise
 
 export async function refreshAccessToken(refreshToken: string): Promise<RefreshTokenResponse> {
   try {
-    console.log('Attempting to refresh token with:', {
+    if (!refreshToken || refreshToken.trim() === '') {
+      throw new Error('Refresh token is empty or null');
+    }
+
+    console.log('🔄 Attempting token refresh:', {
       url: `${environment.apiBaseUrl}/api/auth/refresh`,
-      refreshToken: refreshToken ? `${refreshToken.substring(0, 10)}...` : 'null'
+      refreshTokenLength: refreshToken.length,
+      refreshTokenPreview: `${refreshToken.substring(0, 10)}...`
     });
+
+    const requestBody = { RefreshToken: refreshToken.trim() };
+    console.log('🔄 Request body prepared:', { RefreshToken: `${refreshToken.substring(0, 10)}...` });
 
     const response = await fetch(`${environment.apiBaseUrl}/api/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
-      body: JSON.stringify({ RefreshToken: refreshToken }),
+      body: JSON.stringify(requestBody),
     });
 
-    console.log('Refresh token response status:', response.status, response.statusText);
+    console.log('🔄 Refresh response received:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      contentType: response.headers.get('content-type')
+    });
 
     if (!response.ok) {
       let errorDetails = '';
+      let errorData: any = null;
+      
       try {
-        const errorData = await response.json();
-        errorDetails = JSON.stringify(errorData);
-      } catch {
-        errorDetails = await response.text();
+        const contentType = response.headers.get('content-type');
+        if (contentType?.includes('application/json')) {
+          errorData = await response.json();
+          errorDetails = JSON.stringify(errorData, null, 2);
+        } else {
+          errorDetails = await response.text();
+        }
+      } catch (parseError) {
+        errorDetails = `Failed to parse error response: ${parseError}`;
       }
 
-      console.error('Refresh token API error:', {
+      console.error('❌ Refresh token API error:', {
         status: response.status,
         statusText: response.statusText,
-        details: errorDetails
+        details: errorDetails,
+        errorData
       });
 
-      throw new Error(`Refresh failed: ${response.status} ${response.statusText} - ${errorDetails}`);
+      // Provide specific error messages based on status codes
+      if (response.status === 401) {
+        throw new Error(`Refresh token is invalid or expired`);
+      } else if (response.status === 400) {
+        throw new Error(`Invalid refresh request: ${errorData?.detail || errorDetails}`);
+      } else if (response.status >= 500) {
+        throw new Error(`Server error during token refresh: ${response.status}`);
+      } else {
+        throw new Error(`Token refresh failed: ${response.status} ${response.statusText}`);
+      }
     }
 
-    const data = await response.json();
-    console.log('Refresh token response data:', {
+    let data: RefreshTokenResponse;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('❌ Failed to parse refresh response JSON:', parseError);
+      throw new Error('Invalid JSON response from refresh endpoint');
+    }
+
+    // Validate the response structure
+    if (!data.accessToken || !data.refreshToken) {
+      console.error('❌ Invalid refresh response structure:', {
+        hasAccessToken: !!data.accessToken,
+        hasRefreshToken: !!data.refreshToken,
+        hasExpiresAt: !!data.expiresAt,
+        data: { ...data, accessToken: data.accessToken ? 'present' : 'missing', refreshToken: data.refreshToken ? 'present' : 'missing' }
+      });
+      throw new Error('Invalid refresh response: missing required tokens');
+    }
+
+    console.log('✅ Token refresh successful:', {
       hasAccessToken: !!data.accessToken,
       hasRefreshToken: !!data.refreshToken,
-      expiresAt: data.expiresAt
+      expiresAt: data.expiresAt,
+      accessTokenExpiresAt: data.accessTokenExpiresAt,
+      refreshTokenExpiresAt: data.refreshTokenExpiresAt,
+      tenantId: data.tenantId
     });
 
     return data;
   } catch (error) {
-    console.error('Token refresh failed:', error);
-    throw error; // Re-throw the original error instead of wrapping it
+    console.error('❌ Token refresh failed with error:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      refreshTokenPreview: refreshToken ? `${refreshToken.substring(0, 10)}...` : 'null'
+    });
+    
+    // Re-throw the error to be handled by the caller
+    throw error;
   }
 }
 

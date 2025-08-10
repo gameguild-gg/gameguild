@@ -163,52 +163,47 @@ export async function getTestingLabRoleTemplatesAction(): Promise<RoleTemplate[]
     // Convert backend format to frontend format
     const backendTemplates = response.data as any[];
     console.log('Backend templates:', backendTemplates);
-    
-    return backendTemplates.map(template => {
-      // Handle both camelCase (permissions) and PascalCase (Permissions) property names
+
+    const mapTemplate = (template: any, index: number): RoleTemplate => {
       const perms = template.permissions || template.Permissions || {};
-      
+      const id = template.id || template.Id; // expect backend now returns Guid Id
+      if (!id) {
+        // Without a real id, update/delete would fail; log loud so it can be fixed
+        console.warn('Role template missing id from backend payload; update/delete will not work correctly', template);
+      }
       return {
-        id: template.name, // Use name as ID for now
+        id: id ?? template.name ?? `role-${index}`,
         name: template.name,
         description: template.description,
         isSystemRole: template.isSystemRole,
-        userCount: 0, // TODO: Get actual user count from API
+        userCount: 0,
         permissions: {
-          // Sessions
-          canCreateSessions: perms.canCreateSessions || perms.CanCreateSessions || false,
-          canEditSessions: perms.canEditSessions || perms.CanEditSessions || false,
-          canDeleteSessions: perms.canDeleteSessions || perms.CanDeleteSessions || false,
-          canViewSessions: perms.canViewSessions || perms.CanViewSessions || false,
-          
-          // Locations
-          canCreateLocations: perms.canCreateLocations || perms.CanCreateLocations || false,
-          canEditLocations: perms.canEditLocations || perms.CanEditLocations || false,
-          canDeleteLocations: perms.canDeleteLocations || perms.CanDeleteLocations || false,
-          canViewLocations: perms.canViewLocations || perms.CanViewLocations || false,
-          
-          // Feedback
-          canCreateFeedback: perms.canCreateFeedback || perms.CanCreateFeedback || false,
-          canEditFeedback: perms.canEditFeedback || perms.CanEditFeedback || false,
-          canDeleteFeedback: perms.canDeleteFeedback || perms.CanDeleteFeedback || false,
-          canViewFeedback: perms.canViewFeedback || perms.CanViewFeedback || false,
-          canModerateFeedback: perms.canModerateFeedback || perms.CanModerateFeedback || false,
-          
-          // Requests
-          canCreateRequests: perms.canCreateRequests || perms.CanCreateRequests || false,
-          canEditRequests: perms.canEditRequests || perms.CanEditRequests || false,
-          canDeleteRequests: perms.canDeleteRequests || perms.CanDeleteRequests || false,
-          canViewRequests: perms.canViewRequests || perms.CanViewRequests || false,
-          canApproveRequests: perms.canApproveRequests || perms.CanApproveRequests || false,
-          
-          // Participants
-          canManageParticipants: perms.canManageParticipants || perms.CanManageParticipants || false,
-          canViewParticipants: perms.canViewParticipants || perms.CanViewParticipants || false,
+          canCreateSessions: !!(perms.canCreateSessions ?? perms.CanCreateSessions),
+          canEditSessions: !!(perms.canEditSessions ?? perms.CanEditSessions),
+          canDeleteSessions: !!(perms.canDeleteSessions ?? perms.CanDeleteSessions),
+          canViewSessions: !!(perms.canViewSessions ?? perms.CanViewSessions),
+          canCreateLocations: !!(perms.canCreateLocations ?? perms.CanCreateLocations),
+          canEditLocations: !!(perms.canEditLocations ?? perms.CanEditLocations),
+          canDeleteLocations: !!(perms.canDeleteLocations ?? perms.CanDeleteLocations),
+            canViewLocations: !!(perms.canViewLocations ?? perms.CanViewLocations),
+          canCreateFeedback: !!(perms.canCreateFeedback ?? perms.CanCreateFeedback),
+          canEditFeedback: !!(perms.canEditFeedback ?? perms.CanEditFeedback),
+          canDeleteFeedback: !!(perms.canDeleteFeedback ?? perms.CanDeleteFeedback),
+          canViewFeedback: !!(perms.canViewFeedback ?? perms.CanViewFeedback),
+          canModerateFeedback: !!(perms.canModerateFeedback ?? perms.CanModerateFeedback),
+          canCreateRequests: !!(perms.canCreateRequests ?? perms.CanCreateRequests),
+          canEditRequests: !!(perms.canEditRequests ?? perms.CanEditRequests),
+          canDeleteRequests: !!(perms.canDeleteRequests ?? perms.CanDeleteRequests),
+          canViewRequests: !!(perms.canViewRequests ?? perms.CanViewRequests),
+          canApproveRequests: !!(perms.canApproveRequests ?? perms.CanApproveRequests),
+          canManageParticipants: !!(perms.canManageParticipants ?? perms.CanManageParticipants),
+          canViewParticipants: !!(perms.canViewParticipants ?? perms.CanViewParticipants),
         },
-        // Create permissionTemplates array for UI display
         permissionTemplates: createPermissionTemplatesFromPermissions(perms)
       };
-    });
+    };
+
+    return backendTemplates.map(mapTemplate);
   } catch (error) {
     console.error('Error getting role templates:', error);
     if (error instanceof Error) {
@@ -288,7 +283,8 @@ export async function createRoleTemplateAction(roleData: {
 /**
  * Server action to update a role template
  */
-export async function updateRoleTemplateAction(roleName: string, roleData: {
+export async function updateRoleTemplateAction(roleId: string, roleData: {
+  name?: string;
   description: string;
   permissions: any;
 }): Promise<RoleTemplate> {
@@ -303,13 +299,23 @@ export async function updateRoleTemplateAction(roleName: string, roleData: {
     // Convert form permissions to the format expected by backend
     const backendPermissions = convertFormPermissionsToBackendDto(roleData.permissions);
 
+    console.log('Updating role template with data:', {
+      roleId,
+      name: roleData.name,
+      description: roleData.description,
+      permissions: backendPermissions
+    });
+
     const response = await client.put({
-      url: `/api/testing-lab/permissions/role-templates/${encodeURIComponent(roleName)}`,
+      url: `/api/testing-lab/permissions/role-templates/${encodeURIComponent(roleId)}`,
       body: {
+        ...(roleData.name && { name: roleData.name }),
         description: roleData.description,
         permissions: backendPermissions,
       },
     });
+
+    console.log('API Response:', response);
 
     if (response.error) {
       const errorMessage = typeof response.error === 'object' 
@@ -319,8 +325,13 @@ export async function updateRoleTemplateAction(roleName: string, roleData: {
     }
 
     // Revalidate the paths to ensure fresh data on next load
+    revalidatePath('/dashboard/settings/testing-lab');
+    revalidatePath('/settings/testing-lab');
     revalidatePath('/dashboard/testing-lab/settings');
     revalidatePath('/testing-lab/settings');
+    revalidatePath('/', 'layout'); // Revalidate entire layout to clear all caches
+    
+    console.log('Cache revalidated successfully');
 
     return response.data as RoleTemplate;
   } catch (error) {
@@ -341,7 +352,7 @@ export async function updateRoleTemplateAction(roleName: string, roleData: {
 /**
  * Server action to delete a role template
  */
-export async function deleteRoleTemplateAction(roleName: string): Promise<void> {
+export async function deleteRoleTemplateAction(roleId: string): Promise<void> {
   const session = await auth();
   if (!session?.api.accessToken) {
     throw new Error('Authentication required');
@@ -351,7 +362,7 @@ export async function deleteRoleTemplateAction(roleName: string): Promise<void> 
     await configureAuthenticatedClient();
 
     const response = await client.delete({
-      url: `/api/testing-lab/permissions/role-templates/${encodeURIComponent(roleName)}`,
+      url: `/api/testing-lab/permissions/role-templates/${encodeURIComponent(roleId)}`,
     });
 
     if (response.error) {
