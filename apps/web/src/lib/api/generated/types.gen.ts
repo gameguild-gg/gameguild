@@ -5218,6 +5218,7 @@ export type TestingLabPermissionsDto = {
 };
 
 export type TestingLabRoleTemplate = {
+  id?: string;
   name?: string | null;
   description?: string | null;
   isSystemRole?: boolean;
@@ -13084,40 +13085,56 @@ export type PostApiTestingLabPermissionsRoleTemplatesResponses = {
 export type PostApiTestingLabPermissionsRoleTemplatesResponse =
   PostApiTestingLabPermissionsRoleTemplatesResponses[keyof PostApiTestingLabPermissionsRoleTemplatesResponses];
 
-export type DeleteApiTestingLabPermissionsRoleTemplatesByIdData = {
+export type DeleteApiTestingLabPermissionsRoleTemplatesByIdOrNameData = {
   body?: never;
   path: {
-    id: string;
+    idOrName: string;
   };
   query?: never;
-  url: '/api/testing-lab/permissions/role-templates/{id}';
+  url: '/api/testing-lab/permissions/role-templates/{idOrName}';
 };
 
-export type DeleteApiTestingLabPermissionsRoleTemplatesByIdResponses = {
+export type DeleteApiTestingLabPermissionsRoleTemplatesByIdOrNameResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PutApiTestingLabPermissionsRoleTemplatesByIdData = {
+export type PutApiTestingLabPermissionsRoleTemplatesByIdOrNameData = {
   body?: UpdateTestingLabRoleRequest;
   path: {
-    id: string;
+    idOrName: string;
   };
   query?: never;
-  url: '/api/testing-lab/permissions/role-templates/{id}';
+  url: '/api/testing-lab/permissions/role-templates/{idOrName}';
 };
 
-export type PutApiTestingLabPermissionsRoleTemplatesByIdResponses = {
+export type PutApiTestingLabPermissionsRoleTemplatesByIdOrNameResponses = {
   /**
    * OK
    */
   200: TestingLabRoleTemplate;
 };
 
-export type PutApiTestingLabPermissionsRoleTemplatesByIdResponse =
-  PutApiTestingLabPermissionsRoleTemplatesByIdResponses[keyof PutApiTestingLabPermissionsRoleTemplatesByIdResponses];
+export type PutApiTestingLabPermissionsRoleTemplatesByIdOrNameResponse =
+  PutApiTestingLabPermissionsRoleTemplatesByIdOrNameResponses[keyof PutApiTestingLabPermissionsRoleTemplatesByIdOrNameResponses];
+
+export type DeleteApiTestingLabPermissionsRoleTemplatesByNameByNameData = {
+  body?: never;
+  path: {
+    name: string;
+  };
+  query?: never;
+  url: '/api/testing-lab/permissions/role-templates/by-name/{name}';
+};
+
+export type DeleteApiTestingLabPermissionsRoleTemplatesByNameByNameResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
 
 export type GetApiTestingLabPermissionsUsersByUserIdData = {
   body?: never;
