@@ -5,8 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Link } from '@/i18n/navigation';
-import { signInWithGoogle } from '@/lib/auth/auth.actions';
-import { signInWithEmailAndPassword } from '@/lib/auth/auth.actions';
+import { signInWithEmailAndPassword, signInWithGoogle } from '@/lib/auth/auth.actions';
 import { cn } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
 import React, { ComponentPropsWithoutRef, useState } from 'react';
@@ -88,7 +87,7 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                     <Input
                       id="email"
                       type="email"
-                      placeholder="admin@gameguild.local"
+                      placeholder="email@provider.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -102,7 +101,7 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                     <Input
                       id="password"
                       type="password"
-                      placeholder="admin123"
+                      placeholder="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
