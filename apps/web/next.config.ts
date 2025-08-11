@@ -14,19 +14,6 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Explicitly disable automatic redirects that might interfere with auth
-  async redirects() {
-    return [];
-  },
-  // Disable automatic rewrites that might cause issues
-  async rewrites() {
-    return [];
-  },
-  // Configure experimental features for better subdomain handling
-  experimental: {
-    // Disable middleware matcher optimizations that might cause issues
-    optimizeServerReact: false,
-  },
   images: {
     remotePatterns: [
       {

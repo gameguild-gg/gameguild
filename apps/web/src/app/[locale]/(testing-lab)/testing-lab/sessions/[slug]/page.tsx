@@ -1,20 +1,20 @@
-import { SessionDetail } from '@/components/testing-lab/management/sessions/session-detail';
-import { getTestSessionBySlug } from '@/lib/admin';
-import { notFound } from 'next/navigation';
+import React from "react";
+import {notFound} from 'next/navigation';
+import {SessionDetail} from "@/components/testing-lab/sessions/session-detail";
+import {getTestSessionBySlug} from "@/lib";
 
-interface SessionPageProps {
+interface Props {
   params: Promise<{
     slug: string;
   }>;
 }
 
-export default async function SessionPage({ params }: SessionPageProps) {
+export default async function Page({params}: Props): Promise<React.JSX.Element> {
   const { slug } = await params;
-  const session = await getTestSessionBySlug(slug);
 
-  if (!session) {
-    notFound();
-  }
+    const session = await getTestSessionBySlug(slug);
 
-  return <SessionDetail session={session} />;
+    if (!session) notFound();
+
+    return <SessionDetail session={session}/>;
 }
