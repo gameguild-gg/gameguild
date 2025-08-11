@@ -2,10 +2,10 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Edit3, Eye, ArrowRight } from 'lucide-react'
+import { Edit3, Eye, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
-import { Sun, Moon } from 'lucide-react'
+import { Sun, Moon } from "lucide-react"
 
 export default function HomePage() {
   // Estado para modo escuro
@@ -53,8 +53,8 @@ export default function HomePage() {
         {isDark ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-300" />}
       </button>
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="container mx-auto px-4 py-16">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             {/* Header Section */}
             <div className="text-center space-y-6 mb-16">
@@ -68,13 +68,14 @@ export default function HomePage() {
                 </svg>
                 GameGuild Content Platform
               </div>
-              
+
               <h1 className="text-5xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
                 Welcome to <span className="text-blue-600 dark:text-blue-400">GameGuild</span>
               </h1>
-              
+
               <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
-                Create, edit, and preview your game development content with our powerful tools designed for the gaming community.
+                Create, edit, and preview your game development content with our powerful tools designed for the gaming
+                community.
               </p>
             </div>
 
@@ -86,11 +87,10 @@ export default function HomePage() {
                   <div className="mx-auto w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                     <Edit3 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    Content Editor
-                  </CardTitle>
+                  <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Content Editor</CardTitle>
                   <CardDescription className="text-gray-600 dark:text-gray-300 text-base">
-                    Create rich content with our advanced editor featuring text formatting, media, quizzes, and interactive elements
+                    Create rich content with our advanced editor featuring text formatting, media, quizzes, and
+                    interactive elements
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -112,7 +112,7 @@ export default function HomePage() {
                       Project management and auto-save
                     </div>
                   </div>
-                  <Link href="/editor/lexical" className="block">
+                  <Link href="/editor" className="block">
                     <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white group-hover:bg-blue-700 transition-colors duration-300">
                       Start Creating
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
@@ -127,9 +127,7 @@ export default function HomePage() {
                   <div className="mx-auto w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                     <Eye className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    Content Preview
-                  </CardTitle>
+                  <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Content Preview</CardTitle>
                   <CardDescription className="text-gray-600 dark:text-gray-300 text-base">
                     Preview and share your content in a clean, reader-friendly format optimized for your audience
                   </CardDescription>
@@ -153,10 +151,10 @@ export default function HomePage() {
                       Print-friendly layouts
                     </div>
                   </div>
-                  <Link href="/editor/preview" className="block">
-                    <Button 
-                      variant="outline" 
-                      className="w-full border-purple-200 dark:border-purple-700 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900 group-hover:bg-purple-50 dark:group-hover:bg-purple-900 transition-colors duration-300"
+                  <Link href="/preview" className="block">
+                    <Button
+                      variant="outline"
+                      className="w-full border-purple-200 dark:border-purple-700 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900 group-hover:bg-purple-50 dark:group-hover:bg-purple-900 transition-colors duration-300 bg-transparent"
                     >
                       View Content
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
@@ -178,7 +176,7 @@ export default function HomePage() {
                 <span>•</span>
                 <span>Open source</span>
               </div>
-              
+
               <p className="text-gray-400 dark:text-gray-500 text-sm">
                 Empowering the game development community with better content creation tools
               </p>
