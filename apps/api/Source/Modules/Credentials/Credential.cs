@@ -1,0 +1,145 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Common;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
+
+
+namespace GameGuild.Modules.Credentials;
+
+/// <summary>
+/// Represents a user credential (password, API key, OAuth token, etc.)
+/// Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality
+/// </summary>
+[Table("Credentials")]
+[Index(nameof(UserId), nameof(Type))]
+public sealed class Credential : Entity, ITenantable {
+  /// <summary>
+  /// Foreign key to the User entity
+  /// </summary>
+  [Required]
+  public Guid UserId { get; set; }
+
+  /// <summary>
+  /// Navigation property to the User entity
+  /// Relationship is configured via CredentialConfiguration fluent API
+  /// </summary>
+  public User User { get; set; } = null!;
+
+  /// <summary>
+  /// Foreign key to the Tenant entity (optional - for tenant-specific credentials)
+  /// </summary>
+  public Guid? TenantId { get; set; }
+
+  /// <summary>
+  /// Navigation property to the Tenant entity (hide base implementation)
+  /// </summary>
+  [ForeignKey(nameof(TenantId))]
+  public new Tenant? Tenant { get; set; }
+
+  /// <summary>
+  /// Indicates whether this credential is accessible across all tenants
+  /// </summary>
+  [NotMapped]
+  public override bool IsGlobal {
+    get => TenantId == null;
+  }
+
+  /// <summary>
+  /// Type of credential (e.g., "password", "api_key", "oauth_token", "2fa_secret")
+  /// </summary>
+  [Required]
+  [MaxLength(50)]
+  public string Type { get; set; } = string.Empty;
+
+  /// <summary>
+  /// The credential value (hashed password, encrypted token, etc.)
+  /// </summary>
+  [Required]
+  [MaxLength(1000)]
+  public string Value { get; set; } = string.Empty;
+
+  /// <summary>
+  /// Additional metadata for the credential (JSON format)
+  /// Can store salt, algorithm, expiration, etc.
+  /// </summary>
+  [MaxLength(2000)]
+  public string? Metadata { get; set; }
+
+  /// <summary>
+  /// When this credential expires (optional)
+  /// </summary>
+  public DateTime? ExpiresAt { get; set; }
+
+  /// <summary>
+  /// Whether this credential is currently active
+  /// </summary>
+  public bool IsActive { get; set; } = true;
+
+  /// <summary>
+  /// When this credential was last used
+  /// </summary>
+  public DateTime? LastUsedAt { get; set; }
+
+  /// <summary>
+  /// Default parameterless constructor (required by Entity Framework)
+  /// </summary>
+  public Credential() { }
+
+  /// <summary>
+  /// Constructor with user
+  /// </summary>
+  public Credential(User user) { User = user; }
+
+  /// <summary>
+  /// Constructor for partial initialization
+  /// </summary>
+  /// <param name="partial">Partial credential data</param>
+  public Credential(object partial) : base(partial) { }
+
+  /// <summary>
+  /// Constructor for partial initialization with user
+  /// </summary>
+  /// <param name="partial">Partial credential data</param>
+  /// <param name="user"></param>
+  public Credential(object partial, User user) : base(partial) { User = user; }
+
+  /// <summary>
+  /// Check if the credential is expired
+  /// </summary>
+  public bool IsExpired {
+    get => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.UtcNow;
+  }
+
+  /// <summary>
+  /// Check if the credential is valid (active and not expired)
+  /// </summary>
+  public bool IsValid {
+    get => IsActive && !IsExpired && !IsDeleted;
+  }
+
+  /// <summary>
+  /// Mark the credential as used
+  /// </summary>
+  public void MarkAsUsed() {
+    LastUsedAt = DateTime.UtcNow;
+    Touch(); // Update the UpdatedAt timestamp
+  }
+
+  /// <summary>
+  /// Deactivate the credential
+  /// </summary>
+  public void Deactivate() {
+    IsActive = false;
+    Touch();
+  }
+
+  /// <summary>
+  /// Activate the credential
+  /// </summary>
+  public void Activate() {
+    IsActive = true;
+    Touch();
+  }
+}

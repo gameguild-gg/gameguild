@@ -1,0 +1,374 @@
+using GameGuild.Common;
+using GameGuild.Database;
+using GameGuild.Modules.Posts;
+using GameGuild.Modules.Users;
+using GameGuild.Modules.UserProfiles;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Tests.Modules.Posts.Integration;
+
+/// <summary>
+/// Integration tests that verify the complete flow from user creation to post creation
+/// </summary>
+public class PostCreationIntegrationTests : IDisposable
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IDomainEventPublisher _eventPublisher;
+    private readonly IServiceProvider _serviceProvider;
+
+    public PostCreationIntegrationTests()
+    {
+        var services = new ServiceCollection();
+        
+        // Add database context
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+        
+        // Add logging
+        services.AddLogging(builder => builder.AddConsole());
+        
+        // Add domain event infrastructure
+        services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
+        
+        // Add domain event handlers
+        services.AddScoped<UserDomainEventHandler>();
+        services.AddScoped<UserProfileDomainEventHandler>();
+        services.AddScoped<PostCreatedEventHandler>();
+        
+        _serviceProvider = services.BuildServiceProvider();
+        _context = _serviceProvider.GetRequiredService<ApplicationDbContext>();
+        _eventPublisher = _serviceProvider.GetRequiredService<IDomainEventPublisher>();
+    }
+
+    [Fact]
+    public async Task Complete_User_Registration_Flow_Should_Create_Multiple_Posts()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var userProfileId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var userName = "John Game Developer";
+        var email = "john@gamedev.studio";
+        
+        // Create a game development tenant
+        var tenant = new GameGuild.Modules.Tenants.Tenant
+        {
+            Id = tenantId,
+            Name = "Game Development Studio",
+            Slug = "game-dev-studio"
+        };
+        _context.Tenants.Add(tenant);
+        await _context.SaveChangesAsync();
+
+        // Act 1: Simulate user creation
+        var user = new User
+        {
+            Id = userId,
+            Name = userName,
+            Email = email,
+            TenantId = tenantId,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        // Publish UserCreatedEvent
+        var userCreatedEvent = new UserCreatedEvent(userId, email, userName, DateTime.UtcNow);
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var handler = scope.ServiceProvider.GetRequiredService<UserDomainEventHandler>();
+            await handler.Handle(userCreatedEvent, CancellationToken.None);
+        }
+
+        // Act 2: Simulate user profile creation
+        var userProfile = new UserProfile
+        {
+            Id = userProfileId,
+            UserId = userId,
+            DisplayName = userName,
+            GivenName = "John",
+            FamilyName = "Developer",
+            User = user
+        };
+        _context.UserProfiles.Add(userProfile);
+        await _context.SaveChangesAsync();
+
+        // Publish UserProfileCreatedEvent
+        var userProfileCreatedEvent = new UserProfileCreatedEvent(
+            userProfileId, userId, userName, "John", "Developer", DateTime.UtcNow);
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var handler = scope.ServiceProvider.GetRequiredService<UserProfileDomainEventHandler>();
+            await handler.Handle(userProfileCreatedEvent, CancellationToken.None);
+        }
+
+        // Assert
+        var posts = await _context.Posts.Include(p => p.Tenant).ToListAsync();
+        Assert.Equal(2, posts.Count);
+
+        // Check registration post
+        var registrationPost = posts.FirstOrDefault(p => p.PostType == "user_registration");
+        Assert.NotNull(registrationPost);
+        Assert.Equal($"New member joined: {userName}", registrationPost.Title);
+        Assert.Equal(tenantId, registrationPost.Tenant?.Id);
+
+        // Check welcome post
+        var welcomePost = posts.FirstOrDefault(p => p.PostType == "user_signup");
+        Assert.NotNull(welcomePost);
+        Assert.Equal($"Welcome {userName}!", welcomePost.Title);
+        Assert.Equal(tenantId, welcomePost.Tenant?.Id);
+
+        // Verify both posts are system generated and public
+        Assert.All(posts, post =>
+        {
+            Assert.True(post.IsSystemGenerated);
+            Assert.Equal("public", post.Visibility);
+            Assert.Equal(userId, post.AuthorId);
+        });
+    }
+
+    [Fact]
+    public async Task Project_Manager_Registration_Should_Create_Project_Specific_Posts()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var userProfileId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var userName = "Project Manager Pro";
+        var email = "pm@projecthub.com";
+        
+        // Create a project management tenant
+        var tenant = new GameGuild.Modules.Tenants.Tenant
+        {
+            Id = tenantId,
+            Name = "Project Management Hub",
+            Slug = "project-hub"
+        };
+        _context.Tenants.Add(tenant);
+        await _context.SaveChangesAsync();
+
+        // Act: Complete registration flow
+        await SimulateCompleteUserRegistration(userId, userProfileId, tenantId, userName, email);
+
+        // Assert
+        var posts = await _context.Posts.Include(p => p.Tenant).ToListAsync();
+        Assert.Equal(2, posts.Count);
+
+        // Verify posts are associated with project tenant
+        Assert.All(posts, post =>
+        {
+            Assert.Equal(tenantId, post.Tenant?.Id);
+            Assert.Equal("Project Management Hub", post.Tenant?.Name);
+        });
+
+        // Check for project-specific content (future enhancement)
+        var welcomePost = posts.FirstOrDefault(p => p.PostType == "user_signup");
+        Assert.NotNull(welcomePost);
+        Assert.Contains("Welcome to the community", welcomePost.Description);
+    }
+
+    [Fact]
+    public async Task Testing_Lab_Participant_Registration_Should_Create_Testing_Specific_Posts()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var userProfileId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var userName = "QA Testing Expert";
+        var email = "qa@testinglab.com";
+        
+        // Create a testing lab tenant
+        var tenant = new GameGuild.Modules.Tenants.Tenant
+        {
+            Id = tenantId,
+            Name = "Testing Lab Community",
+            Slug = "testing-lab"
+        };
+        _context.Tenants.Add(tenant);
+        await _context.SaveChangesAsync();
+
+        // Act: Complete registration flow
+        await SimulateCompleteUserRegistration(userId, userProfileId, tenantId, userName, email);
+
+        // Assert
+        var posts = await _context.Posts.Include(p => p.Tenant).ToListAsync();
+        Assert.Equal(2, posts.Count);
+
+        // Verify posts are associated with testing lab tenant
+        Assert.All(posts, post =>
+        {
+            Assert.Equal(tenantId, post.Tenant?.Id);
+            Assert.Equal("Testing Lab Community", post.Tenant?.Name);
+        });
+
+        // Check for testing-specific content
+        var registrationPost = posts.FirstOrDefault(p => p.PostType == "user_registration");
+        Assert.NotNull(registrationPost);
+        Assert.Contains("Please welcome our newest member", registrationPost.Description);
+    }
+
+    [Fact]
+    public async Task User_Profile_Update_After_Registration_Should_Create_Activity_Post()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var userProfileId = Guid.NewGuid();
+        var userName = "Game Developer";
+        
+        // Complete initial registration
+        await SimulateCompleteUserRegistration(userId, userProfileId, null, userName, "dev@game.com");
+
+        // Act: Simulate profile update
+        var changes = new Dictionary<string, object>
+        {
+            ["DisplayName"] = "Senior Game Developer",
+            ["Bio"] = "Experienced in Unity and Unreal Engine"
+        };
+
+        var userProfileUpdatedEvent = new UserProfileUpdatedEvent(
+            userProfileId, userId, changes, DateTime.UtcNow, Guid.Empty);
+        
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var handler = scope.ServiceProvider.GetRequiredService<UserProfileDomainEventHandler>();
+            await handler.Handle(userProfileUpdatedEvent, CancellationToken.None);
+        }
+
+        // Assert
+        var posts = await _context.Posts.ToListAsync();
+        Assert.Equal(3, posts.Count); // Registration + Welcome + Profile Update
+
+        var activityPost = posts.FirstOrDefault(p => p.PostType == "profile_update");
+        Assert.NotNull(activityPost);
+        Assert.Equal($"{userName} updated their profile", activityPost.Title);
+        Assert.Contains("updated their display name and updated their bio", activityPost.Description);
+    }
+
+    [Fact]
+    public async Task User_Activation_After_Deactivation_Should_Create_Reactivation_Post()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var userProfileId = Guid.NewGuid();
+        var userName = "Returning User";
+        
+        // Complete initial registration
+        await SimulateCompleteUserRegistration(userId, userProfileId, null, userName, "returning@user.com");
+
+        // Act 1: Simulate user deactivation
+        var userDeactivatedEvent = new UserDeactivatedEvent(userId);
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var handler = scope.ServiceProvider.GetRequiredService<UserDomainEventHandler>();
+            await handler.Handle(userDeactivatedEvent, CancellationToken.None);
+        }
+
+        // Act 2: Simulate user reactivation
+        var userActivatedEvent = new UserActivatedEvent(userId);
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var handler = scope.ServiceProvider.GetRequiredService<UserDomainEventHandler>();
+            await handler.Handle(userActivatedEvent, CancellationToken.None);
+        }
+
+        // Assert
+        var posts = await _context.Posts.ToListAsync();
+        Assert.Equal(4, posts.Count); // Registration + Welcome + Deactivation + Activation
+
+        var deactivationPost = posts.FirstOrDefault(p => p.PostType == "user_deactivation");
+        Assert.NotNull(deactivationPost);
+        Assert.Contains("has deactivated their account", deactivationPost.Description);
+
+        var activationPost = posts.FirstOrDefault(p => p.PostType == "user_activation");
+        Assert.NotNull(activationPost);
+        Assert.Contains("has reactivated their account", activationPost.Description);
+    }
+
+    [Fact]
+    public async Task Multiple_Users_Registration_Should_Create_Separate_Posts()
+    {
+        // Arrange
+        var user1Id = Guid.NewGuid();
+        var user2Id = Guid.NewGuid();
+        var user3Id = Guid.NewGuid();
+
+        // Act: Register multiple users
+        await SimulateCompleteUserRegistration(user1Id, Guid.NewGuid(), null, "Game Dev 1", "dev1@game.com");
+        await SimulateCompleteUserRegistration(user2Id, Guid.NewGuid(), null, "Project Manager", "pm@project.com");
+        await SimulateCompleteUserRegistration(user3Id, Guid.NewGuid(), null, "QA Tester", "qa@test.com");
+
+        // Assert
+        var posts = await _context.Posts.ToListAsync();
+        Assert.Equal(6, posts.Count); // 2 posts per user (registration + welcome)
+
+        // Verify each user has their own posts
+        var user1Posts = posts.Where(p => p.AuthorId == user1Id).ToList();
+        var user2Posts = posts.Where(p => p.AuthorId == user2Id).ToList();
+        var user3Posts = posts.Where(p => p.AuthorId == user3Id).ToList();
+
+        Assert.Equal(2, user1Posts.Count);
+        Assert.Equal(2, user2Posts.Count);
+        Assert.Equal(2, user3Posts.Count);
+
+        // Verify unique content
+        Assert.Contains(user1Posts, p => p.Title.Contains("Game Dev 1"));
+        Assert.Contains(user2Posts, p => p.Title.Contains("Project Manager"));
+        Assert.Contains(user3Posts, p => p.Title.Contains("QA Tester"));
+    }
+
+    private async Task SimulateCompleteUserRegistration(Guid userId, Guid userProfileId, Guid? tenantId, string userName, string email)
+    {
+        // Create user
+        var user = new User
+        {
+            Id = userId,
+            Name = userName,
+            Email = email,
+            TenantId = tenantId,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        // Publish UserCreatedEvent
+        var userCreatedEvent = new UserCreatedEvent(userId, email, userName, DateTime.UtcNow);
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var handler = scope.ServiceProvider.GetRequiredService<UserDomainEventHandler>();
+            await handler.Handle(userCreatedEvent, CancellationToken.None);
+        }
+
+        // Create user profile
+        var userProfile = new UserProfile
+        {
+            Id = userProfileId,
+            UserId = userId,
+            DisplayName = userName,
+            GivenName = userName.Split(' ').FirstOrDefault() ?? userName,
+            FamilyName = userName.Split(' ').LastOrDefault() ?? "",
+            User = user
+        };
+        _context.UserProfiles.Add(userProfile);
+        await _context.SaveChangesAsync();
+
+        // Publish UserProfileCreatedEvent
+        var userProfileCreatedEvent = new UserProfileCreatedEvent(
+            userProfileId, userId, userName, userProfile.GivenName, userProfile.FamilyName, DateTime.UtcNow);
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            var handler = scope.ServiceProvider.GetRequiredService<UserProfileDomainEventHandler>();
+            await handler.Handle(userProfileCreatedEvent, CancellationToken.None);
+        }
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
+        if (_serviceProvider is IDisposable disposableProvider)
+        {
+            disposableProvider.Dispose();
+        }
+    }
+}

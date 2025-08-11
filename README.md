@@ -5,8 +5,8 @@
 ![Last Commit](https://img.shields.io/github/last-commit/gameguild-gg/website)
 ![Contributors](https://img.shields.io/github/contributors/gameguild-gg/website)
 ![Languages](https://img.shields.io/github/languages/top/gameguild-gg/website)
-![Website Uptime 30d](https://status.gameguild.gg/api/badge/1/uptime/720?label=Uptime%20Web%20(30d))
-![Api Uptime 30d](https://status.gameguild.gg/api/badge/3/uptime/720?label=Uptime%20Api%20(30d))
+![Website Uptime 30d](<https://status.gameguild.gg/api/badge/1/uptime/720?label=Uptime%20Web%20(30d)>)
+![Api Uptime 30d](<https://status.gameguild.gg/api/badge/3/uptime/720?label=Uptime%20Api%20(30d)>)
 
 # Game Guild Platform
 
@@ -30,7 +30,7 @@ through in-game purchases or donations.
 1. Install Docker;
 2. install Node.js. I am using version 18, probably other versions will work as well;
 3. Start the database with the command line on the root of the repo `docker-compose up -d adminer`;
-4. Ask a teammate the `.env` files;
+4. Copy `.env.example` to `.env` and modify as needed, or ask a teammate for the `.env` files;
 5. run `npm install` on the root of the repo to install the dependencies;
 6. run `npm run start:both` on the root of the repo to start both front and back-end;
 
@@ -52,7 +52,7 @@ npm -v # should print `10.8.2`
 ```
 
 3. Start the database with the command line on the root of the repo `sudo docker compose up -d adminer`;
-4. Ask a teammate the `.env` files;
+4. Copy `.env.example` to `.env` and modify as needed, or ask a teammate for the `.env` files;
 5. Run `npm install` on the root of the repo to install the dependencies;
 
 6. Two ways to run:
@@ -60,6 +60,24 @@ npm -v # should print `10.8.2`
 - Run `npm run start:both` on the root of the repo to start both front and back-end; or
 
 - Run `npm run start:both` to start back-end and in new terminal, run `npm run dev:web` to start front-end;
+
+## Environment Variables
+
+The project uses environment variables for configuration. A `.env.example` file is provided with all available options:
+
+```bash
+# Copy the example file and modify as needed
+cp .env.example .env
+```
+
+### Key Environment Variables
+
+- **Database**: All database settings default to `postgres/postgres/postgres` for Docker
+- **API**: Runs on port 5000 by default
+- **Web**: Runs on port 3000 by default
+- **Authentication**: JWT and NextAuth secrets with secure defaults
+
+For production deployment, make sure to override sensitive values like passwords and API keys.
 
 ## How You Can Contribute
 
@@ -164,10 +182,11 @@ Icons by [Icons8](https://icons8.com/)
 This project is available under a dual-license model:
 
 1. **Open Source License:** [GNU AGPL v3.0](./LICENSE)
-    - For non-commercial, open-source use or commercial with less than 1000 users.
-    - Must comply with AGPL terms, including providing source code for modifications.
 
-2. **Commercial License:** [Commercial License](./COMMERCIAL_LICENSE.md)
-    - For commercial use exceeding 1000 users.
-    - Contact us for terms on discord.
- 
+- For non-commercial, open-source use or commercial with less than 1000 users.
+- Must comply with AGPL terms, including providing source code for modifications.
+
+2. **Commercial License:** [Commercial License](docs/COMMERCIAL_LICENSE.md)
+
+- For commercial use exceeding 1000 users.
+- Contact us for terms on discord.
