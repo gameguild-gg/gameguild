@@ -36,7 +36,23 @@ export function SessionDetail({ session }: SessionDetailProps) {
   // Safe helpers
   const formatSessionType = (type?: string) => (type ? type.replace(/-/g, ' ') : 'unknown');
   const toArray = (v?: string | string[]) => (Array.isArray(v) ? v : v ? [v] : []);
+  const toLowerString = (v: unknown): string | undefined => {
+    if (typeof v === 'string') return v.toLowerCase();
+    if (Array.isArray(v) && v.length) {
+      const first = v[0] as unknown;
+      if (typeof first === 'string') return first.toLowerCase();
+      if (first && typeof first === 'object' && 'value' in (first as any) && typeof (first as any).value === 'string') return (first as any).value.toLowerCase();
+    }
+    if (v && typeof v === 'object') {
+      if ('value' in (v as any) && typeof (v as any).value === 'string') return (v as any).value.toLowerCase();
+      if ('name' in (v as any) && typeof (v as any).name === 'string') return (v as any).name.toLowerCase();
+    }
+    return undefined;
+  };
+  const normalizeStatus = (status: unknown) => toLowerString(status) ?? 'unknown';
+  const capitalize = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
   const normalizedSessionType = formatSessionType(session.sessionType);
+  const normalizedStatus = normalizeStatus(session.status);
   const sessionDate = new Date(session.sessionDate);
   const spotsLeft = session.maxTesters - session.currentTesters;
   const fillPercentage = (session.currentTesters / session.maxTesters) * 100;
@@ -190,8 +206,8 @@ export function SessionDetail({ session }: SessionDetailProps) {
               <div className="space-y-6 p-3 group-data-[collapsible=icon]:hidden">
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={getStatusColor(session.status) + ' text-sm px-3 py-1'}>
-                      {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+                    <Badge variant="outline" className={getStatusColor(normalizedStatus) + ' text-sm px-3 py-1'}>
+                      {capitalize(normalizedStatus)}
                     </Badge>
                     <Badge variant="outline" className="bg-blue-900/20 text-blue-400 border-blue-700 text-xs px-2 py-1">
                       {session.skillLevel}
@@ -239,10 +255,10 @@ export function SessionDetail({ session }: SessionDetailProps) {
 
                   {/* Join Session Button */}
                   <div className="pt-3">
-                    <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 h-10 group-data-[collapsible=icon]:px-2" disabled={session.status !== 'open'}>
+          <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 h-10 group-data-[collapsible=icon]:px-2" disabled={normalizedStatus !== 'open'}>
                       <Link href={`/testing-lab/sessions/${session.slug}/join`}>
                         <Zap className="mr-2 h-4 w-4 group-data-[collapsible=icon]:mr-0" />
-                        <span className="group-data-[collapsible=icon]:hidden">{session.status === 'open' ? 'Join Session' : 'Session Full'}</span>
+            <span className="group-data-[collapsible=icon]:hidden">{normalizedStatus === 'open' ? 'Join Session' : 'Session Full'}</span>
                       </Link>
                     </Button>
                   </div>
@@ -629,7 +645,7 @@ export function SessionDetail({ session }: SessionDetailProps) {
                 <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-6">
                   <h4 className="text-blue-300 font-semibold mb-4 text-lg">Session Status</h4>
                   <div className="flex items-center gap-3">
-                    <Badge className={getStatusColor(session.status) + ' text-base px-4 py-2'}>{session.status.charAt(0).toUpperCase() + session.status.slice(1)}</Badge>
+                    <Badge className={getStatusColor(normalizedStatus) + ' text-base px-4 py-2'}>{capitalize(normalizedStatus)}</Badge>
                     <span className="text-slate-400 text-base">{spotsLeft > 0 ? `${spotsLeft} spots remaining` : 'Session is full'}</span>
                   </div>
                 </div>
