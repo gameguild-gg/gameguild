@@ -1,41 +1,60 @@
-import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
-import { getProjects, deleteProject, ProjectListItem } from '@/components/legacy/projects/actions';
-import { CreateProjectForm } from '@/components/legacy/projects/create-project-form';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { auth } from '@/auth';
+import { ProjectManagementContent } from '@/components/project/project-management-content';
+import { getProjectsData } from '@/lib/projects/projects.actions';
+import type { Project } from '@/lib/api/generated/types.gen';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
 
-export default async function Page() {
-  const projects: ProjectListItem[] = await getProjects();
+export default async function ProjectsOverviewPage() {
+  const session = await auth();
+
+  // While session is loading or missing token show loading indicator (mirrors old implementation)
+  if (!session?.api.accessToken) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center min-h-64">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading authentication...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  let projects: Project[] = [];
+  let error: string | null = null;
+
+  try {
+    const projectsData = await getProjectsData({ take: 100 });
+    projects = projectsData.projects;
+  } catch (err) {
+    error = err instanceof Error ? err.message : 'Failed to load projects';
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Project Management</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Manage game projects, tools, and libraries across the platform.</p>
+        </div>
+
+        <Alert variant="destructive">
+          <AlertDescription>Failed to load projects: {error}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
-    <DashboardPage>
-      <DashboardPageHeader>
-        <DashboardPageTitle>Projects</DashboardPageTitle>
-        <DashboardPageDescription>Manage your projects</DashboardPageDescription>
-      </DashboardPageHeader>
-      <DashboardPageContent>
-        <div className="flex justify-between mb-4">
-          {/* No callback passed to avoid server->client function prop */}
-          <CreateProjectForm />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((p) => (
-            <div key={p.id} className="border rounded p-4 flex flex-col gap-2 bg-card">
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg"><Link href={`/dashboard/projects/${p.slug}`}>{p.name}</Link></h3>
-                <p className="text-xs text-muted-foreground">Status: {p.status}</p>
-              </div>
-              <div className="flex gap-2">
-                <Link href={`/dashboard/projects/${p.slug}`} className="flex-1">
-                  <Button size="sm" variant="secondary" className="w-full">Edit</Button>
-                </Link>
-                <form action={async () => { 'use server'; await deleteProject(p.id); }} className="flex-1">
-                  <Button size="sm" variant="destructive" className="w-full">Delete</Button>
-                </form>
-              </div>
-            </div>
-          ))}
-        </div>
-      </DashboardPageContent>
-    </DashboardPage>
+    <div className="container mx-auto p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Project Management</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">Manage game projects, tools, and libraries across the platform.</p>
+      </div>
+
+      <ProjectManagementContent initialProjects={projects} />
+    </div>
   );
 }

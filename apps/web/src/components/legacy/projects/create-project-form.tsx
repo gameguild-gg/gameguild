@@ -17,7 +17,7 @@ import { createProject, Project } from '@/components/legacy/projects/actions';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 interface NewProjectFormProps {
-  onProjectCreated?: (project: Project) => void;
+  onProjectCreated: (project: Project) => void;
 }
 
 export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
@@ -56,9 +56,7 @@ export function CreateProjectForm({ onProjectCreated }: NewProjectFormProps) {
       status: 'not-started',
       visibility: formData.visibility === 'public' ? 'Public' : 'Private',
     });
-    if (onProjectCreated) {
-      onProjectCreated(newProject);
-    }
+    onProjectCreated(newProject);
     setIsOpen(false);
     router.push(`/dashboard/projects/${encodeURIComponent(newProject.slug || newProject.id)}`);
   };
