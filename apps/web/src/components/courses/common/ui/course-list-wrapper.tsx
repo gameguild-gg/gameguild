@@ -16,7 +16,7 @@ export const CourseListWrapper = ({ courses }: CourseListWrapperProps): React.JS
   };
 
   const handleEditCourse = (course: Program) => {
-    router.push(`/dashboard/courses/${course.id}/edit`);
+    router.push(`/dashboard/courses/${course.slug}/edit`);
   };
 
   const handleViewCourse = (course: Program) => {
