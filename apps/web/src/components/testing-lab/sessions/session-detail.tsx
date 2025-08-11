@@ -112,13 +112,21 @@ export function SessionDetail({ session }: SessionDetailProps) {
 
   // Control autoplay based on sheet states
   useEffect(() => {
-    if (!carouselApi) return;
+    if (!carouselApi || !autoplayPlugin) return;
 
-    // Access the autoplay plugin directly from our reference
-    if (showGameDetails || showRequirements) {
-      autoplayPlugin.stop();
-    } else {
-      autoplayPlugin.play();
+    // Add safety checks before calling autoplay methods
+    try {
+      if (showGameDetails || showRequirements) {
+        if (autoplayPlugin.stop) {
+          autoplayPlugin.stop();
+        }
+      } else {
+        if (autoplayPlugin.play) {
+          autoplayPlugin.play();
+        }
+      }
+    } catch (error) {
+      console.warn('Autoplay control error:', error);
     }
   }, [carouselApi, showGameDetails, showRequirements, autoplayPlugin]);
 
@@ -357,9 +365,10 @@ export function SessionDetail({ session }: SessionDetailProps) {
             </div>
 
             {/* Full Screen Game Carousel */}
-            <Carousel setApi={setCarouselApi} className="absolute inset-0" plugins={[autoplayPlugin]} opts={{ loop: true }}>
-              <CarouselContent>
-                {allGames.map((game, index) => (
+            {allGames.length > 0 ? (
+              <Carousel setApi={setCarouselApi} className="absolute inset-0" plugins={[autoplayPlugin]} opts={{ loop: true }}>
+                <CarouselContent>
+                  {allGames.map((game, index) => (
                   <CarouselItem key={game.id}>
                     <div className="relative h-screen bg-gradient-to-br from-indigo-900/50 via-purple-900/30 to-blue-900/50">
                       {/* Animated Background Pattern */}
@@ -492,6 +501,11 @@ export function SessionDetail({ session }: SessionDetailProps) {
                 ))}
               </CarouselContent>
             </Carousel>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-white text-xl">No games available</div>
+              </div>
+            )}
           </div>
         </SidebarInset>
 
