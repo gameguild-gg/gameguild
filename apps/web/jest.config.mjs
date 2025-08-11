@@ -45,4 +45,4 @@ const config = {
   preset: 'ts-jest/presets/default-esm',
 };
 
-module.exports = config;
+export default config;

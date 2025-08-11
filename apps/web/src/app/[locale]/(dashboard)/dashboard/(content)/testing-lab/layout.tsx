@@ -1,5 +1,6 @@
-import type { Metadata } from 'next';
+import type { Metadata }            from 'next';
 import React, { PropsWithChildren } from 'react';
+
 
 export const metadata: Metadata = {
   title: 'Testing Lab | Game Guild',
