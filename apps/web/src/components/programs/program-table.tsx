@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Program } from '@/lib/programs/programs.actions';
+import { Program } from '@/lib/api/generated/types.gen';
 import { Clock, Eye, DollarSign, Calendar, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow, parseISO } from 'date-fns';
@@ -79,17 +79,17 @@ export function ProgramTable({ programs }: ProgramTableProps) {
                 <TableCell className="py-2">
                   <div>
                     <div className="font-medium text-slate-200 line-clamp-1">{program.title}</div>
-                    {program.shortDescription && <div className="text-sm text-slate-400 line-clamp-1 mt-0.5">{program.shortDescription}</div>}
-                    {program.tags && program.tags.length > 0 && (
+                    {program.description && <div className="text-sm text-slate-400 line-clamp-1 mt-0.5">{program.description}</div>}
+                    {program.skillsProvided && program.skillsProvided.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {program.tags.slice(0, 2).map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
-                            {tag}
+                        {program.skillsProvided.slice(0, 2).map((skill) => (
+                          <Badge key={skill.id} variant="secondary" className="text-xs">
+                            {skill.tag?.name || 'Skill'}
                           </Badge>
                         ))}
-                        {program.tags.length > 2 && (
+                        {program.skillsProvided.length > 2 && (
                           <Badge variant="secondary" className="text-xs">
-                            +{program.tags.length - 2}
+                            +{program.skillsProvided.length - 2}
                           </Badge>
                         )}
                       </div>
@@ -97,17 +97,17 @@ export function ProgramTable({ programs }: ProgramTableProps) {
                   </div>
                 </TableCell>
                 <TableCell className="py-2">
-                  <Badge className={getStatusColor(program.status)}>{program.status}</Badge>
+                  <Badge className={getStatusColor(program.status?.toString() || 'Draft')}>{program.status?.toString() || 'Draft'}</Badge>
                 </TableCell>
                 <TableCell className="py-2">
-                  <Badge className={getVisibilityColor(program.visibility)}>{program.visibility}</Badge>
+                  <Badge className={getVisibilityColor(program.visibility?.toString() || 'Private')}>{program.visibility?.toString() || 'Private'}</Badge>
                 </TableCell>
                 <TableCell className="py-2">
                   <div className="flex items-center gap-1 text-slate-400">
                     {program.difficulty && (
                       <>
                         <Eye className="h-3 w-3" />
-                        <span className="text-sm">{program.difficulty}</span>
+                        <span className="text-sm">{program.difficulty.toString()}</span>
                       </>
                     )}
                     {!program.difficulty && <span className="text-sm">-</span>}
@@ -116,19 +116,19 @@ export function ProgramTable({ programs }: ProgramTableProps) {
                 <TableCell className="py-2">
                   <div className="flex items-center gap-1 text-slate-400">
                     <Clock className="h-3 w-3" />
-                    <span className="text-sm">{formatDuration(program.duration)}</span>
+                    <span className="text-sm">{formatDuration(program.estimatedHours ? program.estimatedHours * 60 : undefined)}</span>
                   </div>
                 </TableCell>
                 <TableCell className="py-2">
                   <div className="flex items-center gap-1 text-slate-400">
                     <DollarSign className="h-3 w-3" />
-                    <span className="text-sm">{formatPrice(program.price, program.currency)}</span>
+                    <span className="text-sm">Free</span>
                   </div>
                 </TableCell>
                 <TableCell className="py-2">
                   <div className="flex items-center gap-1 text-slate-400">
                     <Calendar className="h-3 w-3" />
-                    <span className="text-sm">{formatDistanceToNow(parseISO(program.createdAt), { addSuffix: true })}</span>
+                    <span className="text-sm">{program.createdAt ? formatDistanceToNow(parseISO(program.createdAt), { addSuffix: true }) : '-'}</span>
                   </div>
                 </TableCell>
                 <TableCell className="py-2">
