@@ -45,9 +45,6 @@ public record GetProjectByIdQuery : IRequest<Project?> {
 
   public bool IncludeCollaborators { get; init; } = true;
 
-  // New: include project versions collection
-  public bool IncludeVersions { get; init; } = true;
-
   public bool IncludeStatistics { get; init; } = false;
 }
 
@@ -62,9 +59,6 @@ public record GetProjectBySlugQuery : IRequest<Project?> {
   public bool IncludeReleases { get; init; } = true;
 
   public bool IncludeCollaborators { get; init; } = true;
-
-  // New: include project versions collection
-  public bool IncludeVersions { get; init; } = true;
 }
 
 /// <summary>
