@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Code, Palette, Layers, Headphones } from 'lucide-react';
-import { CourseArea } from '@/lib/courses/course-enhanced.types';
+import { ProgramCategory as CourseArea } from '@/lib/api/generated/types.gen';
 
 interface CourseAreaFilterProps {
   selectedAreas: CourseArea[];
@@ -11,22 +11,22 @@ interface CourseAreaFilterProps {
 }
 
 const areaItems: { value: CourseArea; label: string }[] = [
-  { value: 'programming', label: 'Programming' },
-  { value: 'art', label: 'Art' },
-  { value: 'design', label: 'Design' },
-  { value: 'audio', label: 'Audio' },
+  { value: CourseArea.PROGRAMMING, label: 'Programming' },
+  { value: CourseArea.DESIGN, label: 'Design' },
+  { value: CourseArea.CREATIVE_ARTS, label: 'Creative Arts' },
+  { value: CourseArea.OTHER, label: 'Other' },
 ];
 
 export function CourseAreaFilter({ selectedAreas, onToggleArea }: CourseAreaFilterProps) {
   const getAreaIcon = (area: CourseArea | 'all') => {
     switch (area) {
-      case 'programming':
+      case CourseArea.PROGRAMMING:
         return <Code className="h-4 w-4 text-blue-400" />;
-      case 'art':
+      case CourseArea.CREATIVE_ARTS:
         return <Palette className="h-4 w-4 text-purple-400" />;
-      case 'design':
+      case CourseArea.DESIGN:
         return <Layers className="h-4 w-4 text-green-400" />;
-      case 'audio':
+      case CourseArea.OTHER:
         return <Headphones className="h-4 w-4 text-yellow-400" />;
       default:
         return <Code className="h-4 w-4 text-slate-400" />;
@@ -36,8 +36,8 @@ export function CourseAreaFilter({ selectedAreas, onToggleArea }: CourseAreaFilt
   const getDisplayText = (selected: CourseArea[]) => {
     if (selected.length === 0) return 'All Areas';
     if (selected.length === 1) {
-      const item = areaItems.find((i) => i.value === selected[0]);
-      return item?.label || selected[0];
+  const item = areaItems.find((i) => i.value === selected[0]);
+  return item?.label || 'Category';
     }
     return `${selected.length} selected`;
   };
