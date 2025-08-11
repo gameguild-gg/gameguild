@@ -1,7 +1,7 @@
 name: "🐞 Bug Report"
 description: "File a new bug report to help us improve GameGuild, prioritize your report with an attached bounty."
 title: "[Bug]: "
-labels: ["bug", "triage"]
+labels: [ "bug", "triage" ]
 type: bug
 body:
   - type: markdown
@@ -70,7 +70,7 @@ body:
       label: "Additional Information"
       description: "Provide any other relevant details about the issue."
       placeholder: "Additional context or observations."
-      
+
   - type: textarea
     attributes:
       label: "🛠️ Possible Solution (Optional)"

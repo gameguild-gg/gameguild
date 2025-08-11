@@ -1,0 +1,51 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Common;
+using GameGuild.Modules.Credentials;
+using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Tenants;
+using Microsoft.EntityFrameworkCore;
+
+
+namespace GameGuild.Modules.Users;
+
+[Table("Users")]
+[Index(nameof(Email), IsUnique = true)]
+public sealed class User : Entity {
+  [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
+
+  [Required]
+  [EmailAddress]
+  [MaxLength(255)]
+  public string Email { get; set; } = string.Empty;
+
+  public bool IsActive { get; set; } = true;
+
+  /// <summary>
+  /// Total wallet balance including pending/frozen funds
+  /// </summary>
+  [Column(TypeName = "decimal(10,2)")]
+  public decimal Balance { get; set; }
+
+  /// <summary>
+  /// Available balance that can be spent (excludes frozen/pending funds)
+  /// </summary>
+  [Column(TypeName = "decimal(10,2)")]
+  public decimal AvailableBalance { get; set; }
+
+  /// <summary>
+  /// Navigation property to user credentials
+  /// </summary>
+  public ICollection<Credential> Credentials { get; set; } = new List<Credential>();
+
+  /// <summary>
+  /// Default constructor
+  /// </summary>
+  public User() { }
+
+  /// <summary>
+  /// Constructor for partial initialization
+  /// </summary>
+  /// <param name="partial">Partial user data</param>
+  public User(object partial) : base(partial) { }
+}
