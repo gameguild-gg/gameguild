@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from '@/i18n/navigation';
-import { useCallback, useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 
 export default function JoinModal() {
   const router = useRouter();
