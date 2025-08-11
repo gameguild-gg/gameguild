@@ -33,6 +33,10 @@ export function SessionDetail({ session }: SessionDetailProps) {
       stopOnFocusIn: true,
     }),
   );
+  // Safe helpers
+  const formatSessionType = (type?: string) => (type ? type.replace(/-/g, ' ') : 'unknown');
+  const toArray = (v?: string | string[]) => (Array.isArray(v) ? v : v ? [v] : []);
+  const normalizedSessionType = formatSessionType(session.sessionType);
   const sessionDate = new Date(session.sessionDate);
   const spotsLeft = session.maxTesters - session.currentTesters;
   const fillPercentage = (session.currentTesters / session.maxTesters) * 100;
@@ -46,8 +50,8 @@ export function SessionDetail({ session }: SessionDetailProps) {
       description: session.description,
       genre: ['Action', 'Adventure'], // Default genres
       status: 'primary' as const,
-      testingFocus: [session.sessionType.replace('-', ' ')],
-      platforms: session.platform,
+  testingFocus: [normalizedSessionType],
+  platforms: toArray(session.platform),
     },
     ...(session.featuredGames || []),
   ];
@@ -423,7 +427,7 @@ export function SessionDetail({ session }: SessionDetailProps) {
                                 Platforms
                               </h4>
                               <div className="flex flex-wrap gap-2">
-                                {(('platforms' in game ? game.platforms : 'platform' in game ? game.platform : session.platform) as string[]).map((platform: string) => (
+                                {toArray(('platforms' in game ? (game as any).platforms : 'platform' in game ? (game as any).platform : session.platform) as string | string[]).map((platform: string) => (
                                   <Badge key={platform} variant="outline" className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 text-green-300 border-green-600/50 text-sm px-3 py-1">
                                     {platform}
                                   </Badge>
@@ -507,13 +511,17 @@ export function SessionDetail({ session }: SessionDetailProps) {
                     <div className="bg-slate-800/30 rounded-lg p-5 border border-slate-700/30">
                       <h4 className="text-white font-semibold mb-4 text-lg">Platforms</h4>
                       <div className="space-y-2">
-                        {(('platforms' in allGames[currentGameIndex] ? allGames[currentGameIndex].platforms : 'platform' in allGames[currentGameIndex] ? allGames[currentGameIndex].platform : session.platform) as string[]).map(
-                          (platform: string) => (
-                            <span key={platform} className="block text-sm text-green-300 bg-green-900/30 px-3 py-2 rounded-md border border-green-700/30">
-                              {platform}
-                            </span>
-                          ),
-                        )}
+                        {toArray(
+                          'platforms' in allGames[currentGameIndex]
+                            ? (allGames[currentGameIndex] as any).platforms
+                            : 'platform' in allGames[currentGameIndex]
+                              ? (allGames[currentGameIndex] as any).platform
+                              : session.platform,
+                        ).map((platform: string) => (
+                          <span key={platform} className="block text-sm text-green-300 bg-green-900/30 px-3 py-2 rounded-md border border-green-700/30">
+                            {platform}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -535,7 +543,7 @@ export function SessionDetail({ session }: SessionDetailProps) {
                     <div className="space-y-4 text-sm text-slate-300">
                       <div className="flex justify-between items-center py-2 border-b border-slate-700/30">
                         <span className="font-medium">Session Type:</span>
-                        <span className="text-blue-300 capitalize font-medium">{session.sessionType.replace('-', ' ')}</span>
+                        <span className="text-blue-300 capitalize font-medium">{normalizedSessionType}</span>
                       </div>
                       <div className="flex justify-between items-center py-2 border-b border-slate-700/30">
                         <span className="font-medium">Duration:</span>
@@ -570,7 +578,7 @@ export function SessionDetail({ session }: SessionDetailProps) {
                 <div className="bg-slate-800/30 rounded-lg p-6 border border-slate-700/30">
                   <h3 className="text-xl font-bold text-white mb-6">Session Requirements</h3>
                   <div className="space-y-4">
-                    {session.requirements.map((requirement, index) => (
+                    {(session.requirements ?? []).map((requirement, index) => (
                       <div key={index} className="flex items-start gap-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
                         <div className="w-3 h-3 bg-blue-400 rounded-full mt-2 flex-shrink-0" />
                         <span className="text-slate-300 text-base leading-relaxed">{requirement}</span>
@@ -602,7 +610,7 @@ export function SessionDetail({ session }: SessionDetailProps) {
                       <Target className="h-6 w-6 text-purple-400 mt-1 flex-shrink-0" />
                       <div>
                         <p className="font-semibold text-white mb-2">Focus</p>
-                        <p className="leading-relaxed">Primary focus will be on {session.sessionType.replace('-', ' ')} testing</p>
+                        <p className="leading-relaxed">Primary focus will be on {normalizedSessionType} testing</p>
                       </div>
                     </div>
 
