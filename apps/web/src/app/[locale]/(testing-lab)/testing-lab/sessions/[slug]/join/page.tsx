@@ -1,9 +1,10 @@
-import { JoinProcessModal } from '@/components/testing-lab/join/join-process-modal';
+import React from "react";
+import {JoinProcessModal} from "@/components/testing-lab/join/join-process-modal";
 
-export default function JoinPage() {
+export default async function Page(): Promise<React.JSX.Element> {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <JoinProcessModal />
-    </div>
+      <>
+          <JoinProcessModal/>
+      </>
   );
 }

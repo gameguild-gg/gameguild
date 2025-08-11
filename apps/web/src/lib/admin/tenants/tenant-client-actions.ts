@@ -99,6 +99,15 @@ export async function updateTenantClient(tenantId: string, prevState: ActionResu
 }
 
 /**
+ * Update tenant via form submission without needing to bind the tenant ID at hook init.
+ * This avoids the stale parameter issue when using useActionState with a dynamic tenant.
+ */
+export async function updateTenantFormClient(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+  const tenantId = (formData.get('tenantId') as string) || '';
+  return updateTenantClient(tenantId, prevState, formData);
+}
+
+/**
  * Delete a tenant - client action wrapper
  */
 export async function deleteTenantClient(tenantId: string): Promise<ActionResult> {

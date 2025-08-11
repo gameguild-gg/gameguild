@@ -51,9 +51,7 @@ public class ProjectQueryHandlers :
 
       if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 
-      if (request.Status.HasValue) {
-        query = query.Where(p => p.Status == request.Status.Value);
-      }
+      if (request.Status.HasValue) { query = query.Where(p => p.Status == request.Status.Value); }
 
       if (request.Visibility.HasValue) { query = query.Where(p => p.Visibility == request.Visibility.Value); }
 
@@ -99,18 +97,11 @@ public class ProjectQueryHandlers :
                           .Where(p => p.Id == request.ProjectId && p.DeletedAt == null);
 
       // Include related data if requested
-      if (request.IncludeTeam) {
-        query = query.Include(p => p.Collaborators);
-      }
-      if (request.IncludeReleases) {
-        query = query.Include(p => p.Releases);
-      }
-      if (request.IncludeCollaborators) {
-        query = query.Include(p => p.Collaborators);
-      }
-      if (request.IncludeVersions) {
-        query = query.Include(p => p.Versions);
-      }
+      if (request.IncludeTeam) { query = query.Include(p => p.Collaborators); }
+
+      if (request.IncludeReleases) { query = query.Include(p => p.Releases); }
+
+      if (request.IncludeCollaborators) { query = query.Include(p => p.Collaborators); }
 
       // Always include basic relations
       query = query.Include(p => p.CreatedBy)
@@ -144,18 +135,11 @@ public class ProjectQueryHandlers :
                           .Where(p => p.Slug == request.Slug && p.DeletedAt == null);
 
       // Include related data if requested
-      if (request.IncludeTeam) {
-        query = query.Include(p => p.Collaborators);
-      }
-      if (request.IncludeReleases) {
-        query = query.Include(p => p.Releases);
-      }
-      if (request.IncludeCollaborators) {
-        query = query.Include(p => p.Collaborators);
-      }
-      if (request.IncludeVersions) {
-        query = query.Include(p => p.Versions);
-      }
+      if (request.IncludeTeam) { query = query.Include(p => p.Collaborators); }
+
+      if (request.IncludeReleases) { query = query.Include(p => p.Releases); }
+
+      if (request.IncludeCollaborators) { query = query.Include(p => p.Collaborators); }
 
       // Always include basic relations
       query = query.Include(p => p.CreatedBy)
@@ -178,9 +162,7 @@ public class ProjectQueryHandlers :
       var query = _context.Projects
                           .Where(p => p.CategoryId == request.CategoryId && p.DeletedAt == null);
 
-      if (request.Status.HasValue) {
-        query = query.Where(p => p.Status == request.Status.Value);
-      }
+      if (request.Status.HasValue) { query = query.Where(p => p.Status == request.Status.Value); }
 
       query = ApplyAccessControl(query);
       query = query.Include(p => p.Collaborators)
@@ -226,9 +208,7 @@ public class ProjectQueryHandlers :
       var query = _context.Projects
                           .Where(p => p.Status == request.Status && p.DeletedAt == null);
 
-      if (request.Type.HasValue) {
-        query = query.Where(p => p.Type == request.Type.Value);
-      }
+      if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 
       query = ApplyAccessControl(query);
       query = query.Include(p => p.CreatedBy)
@@ -273,18 +253,13 @@ public class ProjectQueryHandlers :
       }
 
       // Apply filters
-      if (request.Type.HasValue) {
-        query = query.Where(p => p.Type == request.Type.Value);
-      }
-      if (request.CategoryId.HasValue) {
-        query = query.Where(p => p.CategoryId == request.CategoryId.Value);
-      }
-      if (request.Status.HasValue) {
-        query = query.Where(p => p.Status == request.Status.Value);
-      }
-      if (request.Visibility.HasValue) {
-        query = query.Where(p => p.Visibility == request.Visibility.Value);
-      }
+      if (request.Type.HasValue) query = query.Where(p => p.Type == request.Type.Value);
+
+      if (request.CategoryId.HasValue) query = query.Where(p => p.CategoryId == request.CategoryId.Value);
+
+      if (request.Status.HasValue) query = query.Where(p => p.Status == request.Status.Value);
+
+      if (request.Visibility.HasValue) query = query.Where(p => p.Visibility == request.Visibility.Value);
 
       query = ApplyAccessControl(query);
       query = ApplySorting(query, request.SortBy, request.SortDirection);
@@ -317,10 +292,9 @@ public class ProjectQueryHandlers :
       var query = _context.Projects
                           .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published);
 
-      if (request.Type.HasValue) {
-        query = query.Where(p => p.Type == request.Type.Value);
-      }
-      // Popularity scoring placeholder (views, likes, downloads)
+      if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
+
+      // TODO: Implement popularity scoring based on views, likes, downloads
       query = ApplyAccessControl(query);
       query = query.Include(p => p.CreatedBy)
                    .Include(p => p.Category)
@@ -341,9 +315,7 @@ public class ProjectQueryHandlers :
       var query = _context.Projects
                           .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published);
 
-      if (request.Type.HasValue) {
-        query = query.Where(p => p.Type == request.Type.Value);
-      }
+      if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 
       query = ApplyAccessControl(query);
       query = query.Include(p => p.CreatedBy)
@@ -365,10 +337,9 @@ public class ProjectQueryHandlers :
       var query = _context.Projects
                           .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published);
 
-      if (request.Type.HasValue) {
-        query = query.Where(p => p.Type == request.Type.Value);
-      }
-      // Featured projects placeholder (flag not yet implemented)
+      if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
+
+      // TODO: Add featured flag to Project model
       query = ApplyAccessControl(query);
       query = query.Include(p => p.CreatedBy)
                    .Include(p => p.Category)
@@ -423,7 +394,8 @@ public class ProjectQueryHandlers :
   /// Get project statistics
   /// </summary>
   private Task<ProjectStatistics> GetProjectStatistics(Guid projectId, CancellationToken cancellationToken, DateTime? fromDate = null, DateTime? toDate = null) {
-    // Statistics calculation placeholder. Would query related tables for views, downloads, likes, etc.
+    // TODO: Implement actual statistics calculation
+    // This would typically involve querying related tables for views, downloads, likes, etc.
     return Task.FromResult(new ProjectStatistics {
       ProjectId = projectId,
       FollowerCount = 0,
