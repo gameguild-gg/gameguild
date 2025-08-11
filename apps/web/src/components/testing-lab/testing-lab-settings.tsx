@@ -12,7 +12,9 @@ import { Switch }                                                               
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow }                                                      from '@/components/ui/table';
 import { Textarea }                                                                                                           from '@/components/ui/textarea';
 import type { LocationStatus, TestingLocation as ApiTestingLocation, UserRoleAssignment as GeneratedUserRoleAssignment, User } from '@/lib/api/generated/types.gen';
-import { convertAPIPermissionsToForm, convertFormPermissionsToAPI, RoleTemplate as APIRoleTemplate } from '@/lib/api/testing-lab-permissions';
+import { CollaboratorsSettings } from './sections/collaborators-settings';
+// Legacy permission conversion utilities imported previously have been removed to avoid dual models.
+// We now rely exclusively on aggregated boolean permissions returned by server actions in actions/testing-lab-roles.
 import { RoleTemplate } from '@/actions/testing-lab-roles';
 
 // Helper to map aggregated API permissions (role.permissions) to form permission shape
@@ -310,9 +312,14 @@ const initialRoleFormData: RoleFormData = {
   },
 };
 
-export function TestingLabSettings() {
+import { useRouter, usePathname } from 'next/navigation';
+import { GeneralSettings, GeneralSettingsState } from './sections/general-settings';
+
+export function TestingLabSettings({ initialSection = 'general' }: { initialSection?: string }) {
+  const router = useRouter();
+  const pathname = usePathname();
   // Navigation state
-  const [ currentSection, setCurrentSection ] = useState('general');
+  const [ currentSection, setCurrentSection ] = useState(initialSection);
 
   // Data states
   const [locations, setLocations] = useState<TestingLocation[]>([]);
@@ -341,7 +348,7 @@ export function TestingLabSettings() {
   const [isLoading, setIsLoading] = useState(false);
 
   // General settings state
-  const [ generalSettings, setGeneralSettings ] = useState({
+  const [ generalSettings, setGeneralSettings ] = useState<GeneralSettingsState>({
     labName: 'Testing Lab',
     description: 'Primary game testing facility',
     timezone: 'UTC',
@@ -359,6 +366,16 @@ export function TestingLabSettings() {
     { id: 'locations', label: 'Locations', icon: MapPin },
     { id: 'roles', label: 'Roles & Permissions', icon: Shield },
   ];
+
+  const handleNavigate = (sectionId: string) => {
+    setCurrentSection(sectionId);
+    if (!pathname) return;
+    // Ensure base always ends with /settings
+    const settingsIndex = pathname.indexOf('/settings');
+    if (settingsIndex === -1) return; // unexpected, abort
+    const base = pathname.substring(0, settingsIndex + '/settings'.length);
+    try { router.push(`${base}/${sectionId}`); } catch {}
+  };
 
   // Load locations and managers on component mount
   useEffect(() => {
@@ -421,22 +438,10 @@ export function TestingLabSettings() {
             address: '456 Innovation Boulevard, Tech City, TC 12346',
             maxTestersCapacity: 15,
             maxProjectsCapacity: 5,
-            equipmentAvailable: 'iOS/Android Devices, Tablets, Emulators',
-            status: 0, // Active
-            createdAt: '2024-01-16T10:00:00Z',
-            updatedAt: '2024-01-16T10:00:00Z',
-          },
-          {
-            id: '3',
-            name: 'Console Testing Room',
-            description: 'Dedicated console gaming testing space',
-            address: '789 Gaming Plaza, Tech City, TC 12347',
-            maxTestersCapacity: 12,
-            maxProjectsCapacity: 4,
-            equipmentAvailable: 'PlayStation 5, Xbox Series X/S, Nintendo Switch',
-            status: 1, // Maintenance
-            createdAt: '2024-01-17T10:00:00Z',
-            updatedAt: '2024-01-17T10:00:00Z',
+            equipmentAvailable: 'Mobile Devices, Tablets, Network Simulation Tools',
+            status: 0,
+            createdAt: '2024-01-20T10:00:00Z',
+            updatedAt: '2024-01-20T10:00:00Z',
           },
         ];
         setLocations(mockLocations);
@@ -446,55 +451,17 @@ export function TestingLabSettings() {
     }
   };
 
+  // Placeholder manager loader (API not yet implemented)
   const loadManagers = async () => {
     try {
-      // Get all users and filter for those with testing lab roles
-      const allUsers = await getUsers();
-      const allRoleAssignments = await getTestingLabUserRoleAssignmentsAction();
-      
-      // Transform users to TestingLabManager format based on role assignments
-      const managers: TestingLabManager[] = allUsers
-        .filter(user => {
-          // Include users that have any testing lab role assignment
-          return allRoleAssignments.some(assignment => assignment.userId === user.id);
-        })
-        .map(user => {
-          const userAssignments = allRoleAssignments.filter(assignment => assignment.userId === user.id);
-          const primaryRole = userAssignments[0]?.roleName || 'Viewer';
-          
-          // Map role names to simplified roles
-          let role: 'Admin' | 'Manager' | 'Coordinator' | 'Viewer' = 'Viewer';
-          if (primaryRole.includes('Admin')) role = 'Admin';
-          else if (primaryRole.includes('Manager')) role = 'Manager';
-          else if (primaryRole.includes('Coordinator')) role = 'Coordinator';
-          
-          return {
-            id: user.id!,
-            userId: user.id!,
-            email: user.email || '',
-            firstName: user.name?.split(' ')[0] || '',
-            lastName: user.name?.split(' ').slice(1).join(' ') || '',
-            role,
-            permissions: {
-              canManageLocations: role === 'Admin',
-              canScheduleSessions: ['Admin', 'Manager', 'Coordinator'].includes(role),
-              canManageUsers: role === 'Admin',
-              canViewReports: ['Admin', 'Manager'].includes(role),
-              canModifySettings: role === 'Admin',
-            },
-            assignedLocations: [], // Will need to get location-specific assignments
-            status: userAssignments.some(assignment => assignment.isActive) ? 'Active' as const : 'Inactive' as const,
-            createdAt: user.createdAt || new Date().toISOString(),
-            updatedAt: user.updatedAt || user.createdAt || new Date().toISOString(),
-          };
-        });
-      
-      setManagers(managers);
-    } catch (error) {
-      console.error('Failed to load managers:', error);
-      toast.error('Failed to load testing lab managers');
+      // If an API becomes available, replace this placeholder
+      return; // keep existing state (demo/manually managed)
+    } catch (e) {
+      console.error('Failed to load managers (placeholder):', e);
     }
   };
+
+  // GeneralSettings extracted to sections/general-settings.tsx
 
   const loadRoles = async () => {
     try {
@@ -549,7 +516,7 @@ export function TestingLabSettings() {
     }
   };
 
-  const saveGeneralSettings = async (settings: typeof generalSettings) => {
+  const saveGeneralSettings = async (settings: GeneralSettingsState) => {
     try {
       await updateTestingLabSettings({
         labName: settings.labName,
@@ -793,16 +760,9 @@ export function TestingLabSettings() {
     console.log('role.permissions:', role.permissions);
     console.log('role.permissionTemplates:', role.permissionTemplates);
     
-    // Prefer aggregated permissions over display list (permissionTemplates) because the latter uses prettified labels
-    const permissionsFromAggregate = mapAggregatedPermissionsToForm(role.permissions);
-    console.log('Mapped permissions from aggregate:', permissionsFromAggregate);
-    
-    // Fallback: if aggregate object missing (legacy), try to derive from permissionTemplates
-    const fallbackFromTemplates = () => {
-      try { return convertAPIPermissionsToForm(role.permissionTemplates || []); } catch { return permissionsFromAggregate; }
-    };
-    const finalPerms = permissionsFromAggregate || fallbackFromTemplates();
-    console.log('Final permissions for form:', finalPerms);
+  // Map aggregated permissions object to form shape (single source of truth)
+  const finalPerms = mapAggregatedPermissionsToForm(role.permissions);
+  console.log('Mapped permissions from aggregate (single model):', finalPerms);
 
     setEditingRole(role);
     setOriginalRoleId(role.id);
@@ -986,7 +946,7 @@ export function TestingLabSettings() {
               return (
                 <button
                   key={ item.id }
-                  onClick={ () => setCurrentSection(item.id) }
+                  onClick={ () => handleNavigate(item.id) }
                   className={ `w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${
                     isActive
                     ? 'bg-primary text-primary-foreground'
@@ -1551,553 +1511,8 @@ export function TestingLabSettings() {
 // Individual Settings Components
 
 // General Settings Component
-interface GeneralSettingsProps {
-  generalSettings: any;
+// General settings component removed (now imported)
 
-  setGeneralSettings: (settings: any) => void;
-
-  saveGeneralSettings: (settings: any) => Promise<void>;
-}
-
-function GeneralSettings({ generalSettings, setGeneralSettings, saveGeneralSettings }: GeneralSettingsProps) {
-  const handleSettingChange = (key: string, value: any) => {
-    setGeneralSettings({ ...generalSettings, [key]: value });
-  };
-
-  const handleSave = () => {
-    saveGeneralSettings(generalSettings);
-  };
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-2xl font-bold mb-2">General</h3>
-        <p className="text-muted-foreground">
-          Manage general settings for your Testing Lab.
-        </p>
-      </div>
-
-      <Separator/>
-
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Lab Information</CardTitle>
-            <CardDescription>
-              Basic information about your testing laboratory
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="labName">Lab Name</Label>
-                <Input
-                  id="labName"
-                  value={ generalSettings.labName }
-                  onChange={ (e) => handleSettingChange('labName', e.target.value) }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="timezone">Timezone</Label>
-                <Select
-                  value={ generalSettings.timezone }
-                  onValueChange={ (value) => handleSettingChange('timezone', value) }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="UTC">UTC</SelectItem>
-                    
-                    {/* Americas */}
-                    <SelectItem value="America/New_York">America/New_York (EST/EDT)</SelectItem>
-                    <SelectItem value="America/Chicago">America/Chicago (CST/CDT)</SelectItem>
-                    <SelectItem value="America/Denver">America/Denver (MST/MDT)</SelectItem>
-                    <SelectItem value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</SelectItem>
-                    <SelectItem value="America/Phoenix">America/Phoenix (MST)</SelectItem>
-                    <SelectItem value="America/Anchorage">America/Anchorage (AKST/AKDT)</SelectItem>
-                    <SelectItem value="Pacific/Honolulu">Pacific/Honolulu (HST)</SelectItem>
-                    <SelectItem value="America/Toronto">America/Toronto (EST/EDT)</SelectItem>
-                    <SelectItem value="America/Vancouver">America/Vancouver (PST/PDT)</SelectItem>
-                    <SelectItem value="America/Mexico_City">America/Mexico_City (CST/CDT)</SelectItem>
-                    <SelectItem value="America/Sao_Paulo">America/Sao_Paulo (BRT/BRST)</SelectItem>
-                    <SelectItem value="America/Buenos_Aires">America/Buenos_Aires (ART)</SelectItem>
-                    <SelectItem value="America/Lima">America/Lima (PET)</SelectItem>
-                    <SelectItem value="America/Bogota">America/Bogota (COT)</SelectItem>
-                    <SelectItem value="America/Caracas">America/Caracas (VET)</SelectItem>
-                    <SelectItem value="America/Santiago">America/Santiago (CLT/CLST)</SelectItem>
-                    
-                    {/* Europe */}
-                    <SelectItem value="Europe/London">Europe/London (GMT/BST)</SelectItem>
-                    <SelectItem value="Europe/Dublin">Europe/Dublin (GMT/IST)</SelectItem>
-                    <SelectItem value="Europe/Paris">Europe/Paris (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Berlin">Europe/Berlin (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Rome">Europe/Rome (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Madrid">Europe/Madrid (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Amsterdam">Europe/Amsterdam (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Brussels">Europe/Brussels (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Vienna">Europe/Vienna (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Zurich">Europe/Zurich (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Prague">Europe/Prague (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Warsaw">Europe/Warsaw (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Stockholm">Europe/Stockholm (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Oslo">Europe/Oslo (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Copenhagen">Europe/Copenhagen (CET/CEST)</SelectItem>
-                    <SelectItem value="Europe/Helsinki">Europe/Helsinki (EET/EEST)</SelectItem>
-                    <SelectItem value="Europe/Athens">Europe/Athens (EET/EEST)</SelectItem>
-                    <SelectItem value="Europe/Istanbul">Europe/Istanbul (TRT)</SelectItem>
-                    <SelectItem value="Europe/Moscow">Europe/Moscow (MSK)</SelectItem>
-                    <SelectItem value="Europe/Kiev">Europe/Kiev (EET/EEST)</SelectItem>
-                    <SelectItem value="Europe/Bucharest">Europe/Bucharest (EET/EEST)</SelectItem>
-                    <SelectItem value="Europe/Sofia">Europe/Sofia (EET/EEST)</SelectItem>
-                    
-                    {/* Asia */}
-                    <SelectItem value="Asia/Tokyo">Asia/Tokyo (JST)</SelectItem>
-                    <SelectItem value="Asia/Seoul">Asia/Seoul (KST)</SelectItem>
-                    <SelectItem value="Asia/Shanghai">Asia/Shanghai (CST)</SelectItem>
-                    <SelectItem value="Asia/Hong_Kong">Asia/Hong_Kong (HKT)</SelectItem>
-                    <SelectItem value="Asia/Singapore">Asia/Singapore (SGT)</SelectItem>
-                    <SelectItem value="Asia/Bangkok">Asia/Bangkok (ICT)</SelectItem>
-                    <SelectItem value="Asia/Manila">Asia/Manila (PHT)</SelectItem>
-                    <SelectItem value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur (MYT)</SelectItem>
-                    <SelectItem value="Asia/Jakarta">Asia/Jakarta (WIB)</SelectItem>
-                    <SelectItem value="Asia/Ho_Chi_Minh">Asia/Ho_Chi_Minh (ICT)</SelectItem>
-                    <SelectItem value="Asia/Mumbai">Asia/Mumbai (IST)</SelectItem>
-                    <SelectItem value="Asia/Kolkata">Asia/Kolkata (IST)</SelectItem>
-                    <SelectItem value="Asia/Dhaka">Asia/Dhaka (BDT)</SelectItem>
-                    <SelectItem value="Asia/Karachi">Asia/Karachi (PKT)</SelectItem>
-                    <SelectItem value="Asia/Dubai">Asia/Dubai (GST)</SelectItem>
-                    <SelectItem value="Asia/Tehran">Asia/Tehran (IRST/IRDT)</SelectItem>
-                    <SelectItem value="Asia/Jerusalem">Asia/Jerusalem (IST/IDT)</SelectItem>
-                    <SelectItem value="Asia/Riyadh">Asia/Riyadh (AST)</SelectItem>
-                    <SelectItem value="Asia/Baghdad">Asia/Baghdad (AST)</SelectItem>
-                    <SelectItem value="Asia/Tashkent">Asia/Tashkent (UZT)</SelectItem>
-                    <SelectItem value="Asia/Almaty">Asia/Almaty (ALMT)</SelectItem>
-                    <SelectItem value="Asia/Novosibirsk">Asia/Novosibirsk (NOVT)</SelectItem>
-                    <SelectItem value="Asia/Vladivostok">Asia/Vladivostok (VLAT)</SelectItem>
-                    
-                    {/* Africa */}
-                    <SelectItem value="Africa/Cairo">Africa/Cairo (EET)</SelectItem>
-                    <SelectItem value="Africa/Johannesburg">Africa/Johannesburg (SAST)</SelectItem>
-                    <SelectItem value="Africa/Lagos">Africa/Lagos (WAT)</SelectItem>
-                    <SelectItem value="Africa/Nairobi">Africa/Nairobi (EAT)</SelectItem>
-                    <SelectItem value="Africa/Casablanca">Africa/Casablanca (WET/WEST)</SelectItem>
-                    <SelectItem value="Africa/Tunis">Africa/Tunis (CET)</SelectItem>
-                    <SelectItem value="Africa/Algiers">Africa/Algiers (CET)</SelectItem>
-                    <SelectItem value="Africa/Addis_Ababa">Africa/Addis_Ababa (EAT)</SelectItem>
-                    <SelectItem value="Africa/Dar_es_Salaam">Africa/Dar_es_Salaam (EAT)</SelectItem>
-                    <SelectItem value="Africa/Kampala">Africa/Kampala (EAT)</SelectItem>
-                    
-                    {/* Oceania */}
-                    <SelectItem value="Australia/Sydney">Australia/Sydney (AEST/AEDT)</SelectItem>
-                    <SelectItem value="Australia/Melbourne">Australia/Melbourne (AEST/AEDT)</SelectItem>
-                    <SelectItem value="Australia/Brisbane">Australia/Brisbane (AEST)</SelectItem>
-                    <SelectItem value="Australia/Perth">Australia/Perth (AWST)</SelectItem>
-                    <SelectItem value="Australia/Adelaide">Australia/Adelaide (ACST/ACDT)</SelectItem>
-                    <SelectItem value="Australia/Darwin">Australia/Darwin (ACST)</SelectItem>
-                    <SelectItem value="Pacific/Auckland">Pacific/Auckland (NZST/NZDT)</SelectItem>
-                    <SelectItem value="Pacific/Fiji">Pacific/Fiji (FJT/FJST)</SelectItem>
-                    <SelectItem value="Pacific/Tahiti">Pacific/Tahiti (TAHT)</SelectItem>
-                    <SelectItem value="Pacific/Guam">Pacific/Guam (ChST)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={ generalSettings.description }
-                onChange={ (e) => handleSettingChange('description', e.target.value) }
-                placeholder="Describe your testing lab..."
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Session Settings</CardTitle>
-            <CardDescription>
-              Default settings for testing sessions
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="defaultDuration">Default Session Duration (minutes)</Label>
-                <Input
-                  id="defaultDuration"
-                  type="number"
-                  value={ generalSettings.defaultSessionDuration }
-                  onChange={ (e) => handleSettingChange('defaultSessionDuration', parseInt(e.target.value)) }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="maxSessions">Max Simultaneous Sessions</Label>
-                <Input
-                  id="maxSessions"
-                  type="number"
-                  value={ generalSettings.maxSimultaneousSessions }
-                  onChange={ (e) => handleSettingChange('maxSimultaneousSessions', parseInt(e.target.value)) }
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Access Control</CardTitle>
-            <CardDescription>
-              Control how users can access and join testing sessions
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Allow Public Signups</Label>
-                <p className="text-sm text-muted-foreground">
-                  Allow anyone to sign up for testing sessions
-                </p>
-              </div>
-              <Switch
-                checked={ generalSettings.allowPublicSignups }
-                onCheckedChange={ (value) => handleSettingChange('allowPublicSignups', value) }
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Require Approval</Label>
-                <p className="text-sm text-muted-foreground">
-                  Require manager approval for new testing participants
-                </p>
-              </div>
-              <Switch
-                checked={ generalSettings.requireApproval }
-                onCheckedChange={ (value) => handleSettingChange('requireApproval', value) }
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Enable Notifications</Label>
-                <p className="text-sm text-muted-foreground">
-                  Send email notifications for session updates
-                </p>
-              </div>
-              <Switch
-                checked={ generalSettings.enableNotifications }
-                onCheckedChange={ (value) => handleSettingChange('enableNotifications', value) }
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex justify-end">
-          <Button onClick={handleSave}>
-            Save Settings
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Collaborators Settings Component (consolidates team members and role assignments)
-interface CollaboratorsSettingsProps {
-  managers: TestingLabManager[];
-
-  roles: RoleTemplate[];
-
-  userRoles: UserRoleAssignment[];
-
-  locations: TestingLocation[];
-
-  onCreateManager: () => void;
-
-  onEditManager: (manager: TestingLabManager) => void;
-
-  onDeleteManager: (managerId: string) => void;
-
-  onEditRole: (role: RoleTemplate) => void;
-
-  onAssignRole: () => void;
-
-  onRemoveRole: (userId: string, roleName: string) => void;
-}
-
-// Enhanced collaborator type that includes location-specific roles
-interface CollaboratorWithLocationRoles {
-  id: string;
-
-  userId: string;
-
-  email: string;
-
-  firstName: string;
-
-  lastName: string;
-
-  locationRoles: Array<{
-    locationId: string;
-    locationName: string;
-    roleName: string;
-    isActive: boolean;
-    assignedAt?: string;
-  }>;
-
-  status: 'Active' | 'Inactive';
-
-  createdAt?: string;
-}
-
-function CollaboratorsSettings({
-  managers,
-  roles,
-  userRoles,
-  locations,
-  onCreateManager,
-  onEditManager,
-  onDeleteManager,
-  onEditRole,
-  onAssignRole,
-  onRemoveRole,
-}: CollaboratorsSettingsProps) {
-
-  // Consolidate managers and user roles into enhanced collaborator format
-  const getCollaborators = (): CollaboratorWithLocationRoles[] => {
-    const collaboratorMap = new Map<string, CollaboratorWithLocationRoles>();
-
-    // Add managers first
-    managers.forEach(manager => {
-      collaboratorMap.set(manager.userId, {
-        id: manager.id,
-        userId: manager.userId,
-        email: manager.email,
-        firstName: manager.firstName,
-        lastName: manager.lastName,
-        locationRoles: [],
-        status: manager.status,
-        createdAt: manager.createdAt,
-      });
-
-      // Add location-specific assignments from manager data
-      manager.assignedLocations.forEach(locationId => {
-        const location = locations.find(l => l.id === locationId);
-        if (location) {
-          collaboratorMap.get(manager.userId)?.locationRoles.push({
-            locationId: locationId,
-            locationName: location.name || `Location ${ locationId }`,
-            roleName: manager.role,
-            isActive: manager.status === 'Active',
-            assignedAt: manager.createdAt,
-          });
-        }
-      });
-    });
-
-    // Add user role assignments
-    userRoles.forEach(userRole => {
-      if (!collaboratorMap.has(userRole.userId || '')) {
-        // Create new collaborator entry
-        collaboratorMap.set(userRole.userId || '', {
-          id: userRole.id || '',
-          userId: userRole.userId || '',
-          email: `user-${ userRole.userId }@example.com`, // Placeholder
-          firstName: 'Unknown',
-          lastName: 'User',
-          locationRoles: [],
-          status: userRole.isActive ? 'Active' : 'Inactive',
-          createdAt: userRole.createdAt,
-        });
-      }
-
-      const collaborator = collaboratorMap.get(userRole.userId || '');
-      if (collaborator && userRole.roleName) {
-        // Since UserRoleAssignment doesn't have location constraints yet,
-        // we'll assign roles to all available locations for now
-        // In a real implementation, you'd check for location constraints
-        if (locations.length > 0) {
-          locations.forEach(location => {
-            collaborator.locationRoles.push({
-              locationId: location.id || '',
-              locationName: location.name || 'Unknown Location',
-              roleName: userRole.roleName || '',
-              isActive: userRole.isActive,
-              assignedAt: userRole.createdAt,
-            });
-          });
-        }
-      }
-    });
-
-    return Array.from(collaboratorMap.values());
-  };
-
-  const collaborators = getCollaborators();
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-2xl font-bold mb-2">Collaborators</h3>
-        <p className="text-muted-foreground">
-          Manage collaborators and their location-specific roles in the Testing Lab.
-        </p>
-      </div>
-
-      <Separator/>
-
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Collaborators & Role Assignments
-              <div className="flex gap-2">
-                <Button onClick={ onAssignRole } variant="outline" size="sm" className="flex items-center gap-2">
-                  <UserCheck className="h-4 w-4"/>
-                  Assign Role
-                </Button>
-                <Button onClick={ onCreateManager } className="flex items-center gap-2">
-                  <UserPlus className="h-4 w-4"/>
-                  Add Collaborator
-                </Button>
-              </div>
-            </CardTitle>
-            <CardDescription>
-              View and manage collaborators with their location-specific role assignments
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            { collaborators.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Collaborator</TableHead>
-                    <TableHead>Location Assignments</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  { collaborators.map((collaborator) => (
-                    <TableRow key={ collaborator.id }>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{ collaborator.firstName } { collaborator.lastName }</div>
-                          <div className="text-sm text-muted-foreground">{ collaborator.email }</div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          { collaborator.locationRoles.length > 0 ? (
-                            collaborator.locationRoles.map((locationRole, index) => {
-                              // Determine colors based on role type and location
-                              let leftColor: 'blue' | 'purple' | 'orange' | 'teal' = 'blue';
-                              let rightColor: 'green' | 'indigo' | 'pink' | 'yellow' = 'green';
-
-                              // Vary location colors based on location name/id to add visual distinction
-                              const locationHash = locationRole.locationId.length;
-                              if (locationHash % 4 === 0) {
-                                leftColor = 'blue';
-                              } else if (locationHash % 4 === 1) {
-                                leftColor = 'teal';
-                              } else if (locationHash % 4 === 2) {
-                                leftColor = 'orange';
-                              } else {
-                                leftColor = 'purple';
-                              }
-
-                              if (locationRole.roleName.includes('Admin')) {
-                                rightColor = 'pink';
-                              } else if (locationRole.roleName.includes('Manager')) {
-                                rightColor = 'indigo';
-                              } else if (locationRole.roleName.includes('Coordinator')) {
-                                rightColor = 'yellow';
-                              } else {
-                                rightColor = 'green';
-                              }
-
-                              return (
-                                <DualColorChip
-                                  key={`${collaborator.id}-${locationRole.locationId}-${locationRole.roleName}`}
-                                  leftText={ locationRole.locationName }
-                                  rightText={ locationRole.roleName }
-                                  isActive={ locationRole.isActive }
-                                  leftColor={ leftColor }
-                                  rightColor={ rightColor }
-                                  size="sm"
-                                  tooltip={ `${ locationRole.locationName } → ${ locationRole.roleName }${ locationRole.assignedAt ? ` | Assigned: ${ new Date(locationRole.assignedAt).toLocaleDateString() }` : '' }${ !locationRole.isActive
-                                                                                                                                                                                                                         ? ' | Status: Inactive'
-                                                                                                                                                                                                                         : '' }` }
-                                />
-                              );
-                            })
-                          ) : (
-                              <span className="text-sm text-muted-foreground">No location assignments</span>
-                            ) }
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={ collaborator.status === 'Active' ? 'default' : 'secondary' }>
-                          { collaborator.status }
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={ () => {
-                              const manager = managers.find(m => m.userId === collaborator.userId);
-                              if (manager) onEditManager(manager);
-                            } }
-                            title="Edit collaborator"
-                          >
-                            <Edit className="h-4 w-4"/>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={ () => onDeleteManager(collaborator.id) }
-                            title="Remove collaborator"
-                          >
-                            <Trash2 className="h-4 w-4"/>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={ () => {
-                              // Remove all roles for this user
-                              collaborator.locationRoles.forEach(locationRole => {
-                                onRemoveRole(collaborator.userId, locationRole.roleName);
-                              });
-                            } }
-                            title="Remove all roles"
-                          >
-                            <UserMinus className="h-4 w-4"/>
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )) }
-                </TableBody>
-              </Table>
-            ) : (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4"/>
-                  <p className="text-muted-foreground mb-4">No collaborators found</p>
-                  <Button onClick={ onCreateManager } className="flex items-center gap-2">
-                    <UserPlus className="h-4 w-4"/>
-                    Add First Collaborator
-                  </Button>
-                </div>
-              ) }
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
 
 // Locations Settings Component
 interface LocationsSettingsProps {
