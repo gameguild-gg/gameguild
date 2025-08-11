@@ -28,10 +28,6 @@ export function TestingLabLandingSection({ testSessions }: TestingLabLandingProp
               Back to Home
             </Link>
           </Button>
-
-          <Button asChild variant="ghost" className="bg-slate-900/20 backdrop-blur-md border border-slate-700/50 text-slate-200 hover:text-white hover:bg-slate-800/30 hover:border-slate-600/50 transition-all duration-200">
-            <Link href="/testing-lab/permissions">Manage Permissions</Link>
-          </Button>
         </div>
       </div>
       <main className="flex flex-col flex-1 items-center justify-center relative z-10">

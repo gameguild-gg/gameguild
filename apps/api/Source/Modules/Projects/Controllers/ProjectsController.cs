@@ -79,7 +79,6 @@ public class ProjectsController : ControllerBase {
     [FromQuery] bool includeTeam = true,
     [FromQuery] bool includeReleases = true,
     [FromQuery] bool includeCollaborators = true,
-    [FromQuery] bool includeVersions = true,
     [FromQuery] bool includeStatistics = false
   ) {
     var query = new GetProjectByIdQuery {
@@ -87,7 +86,6 @@ public class ProjectsController : ControllerBase {
       IncludeTeam = includeTeam,
       IncludeReleases = includeReleases,
       IncludeCollaborators = includeCollaborators,
-      IncludeVersions = includeVersions,
       IncludeStatistics = includeStatistics,
     };
 
@@ -107,16 +105,9 @@ public class ProjectsController : ControllerBase {
     string slug,
     [FromQuery] bool includeTeam = true,
     [FromQuery] bool includeReleases = true,
-  [FromQuery] bool includeCollaborators = true,
-  [FromQuery] bool includeVersions = true
+    [FromQuery] bool includeCollaborators = true
   ) {
-    var query = new GetProjectBySlugQuery {
-      Slug = slug,
-      IncludeTeam = includeTeam,
-      IncludeReleases = includeReleases,
-      IncludeCollaborators = includeCollaborators,
-      IncludeVersions = includeVersions,
-    };
+    var query = new GetProjectBySlugQuery { Slug = slug, IncludeTeam = includeTeam, IncludeReleases = includeReleases, IncludeCollaborators = includeCollaborators };
 
     var project = await _mediator.Send(query);
 
