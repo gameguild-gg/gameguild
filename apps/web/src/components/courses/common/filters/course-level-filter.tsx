@@ -3,30 +3,30 @@
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Star, Zap, Crown, Skull } from 'lucide-react';
-import { CourseLevel, CourseLevelName } from '@/lib/courses/course-enhanced.types';
+import { ProgramDifficulty as CourseLevel } from '@/lib/api/generated/types.gen';
 
 interface CourseLevelFilterProps {
   selectedLevels: CourseLevel[];
   onToggleLevel: (level: CourseLevel) => void;
 }
 
-const levelItems: { value: CourseLevel; label: CourseLevelName }[] = [
-  { value: 1, label: 'Beginner' },
-  { value: 2, label: 'Intermediate' },
-  { value: 3, label: 'Advanced' },
-  { value: 4, label: 'Arcane' },
+const levelItems: { value: CourseLevel; label: string }[] = [
+  { value: CourseLevel.BEGINNER, label: 'Beginner' },
+  { value: CourseLevel.INTERMEDIATE, label: 'Intermediate' },
+  { value: CourseLevel.ADVANCED, label: 'Advanced' },
+  { value: CourseLevel.EXPERT, label: 'Expert' },
 ];
 
 export function CourseLevelFilter({ selectedLevels, onToggleLevel }: CourseLevelFilterProps) {
   const getLevelIcon = (level: CourseLevel | 'all') => {
     switch (level) {
-      case 1:
+      case CourseLevel.BEGINNER:
         return <Star className="h-4 w-4 text-green-400" />;
-      case 2:
+      case CourseLevel.INTERMEDIATE:
         return <Zap className="h-4 w-4 text-yellow-400" />;
-      case 3:
+      case CourseLevel.ADVANCED:
         return <Crown className="h-4 w-4 text-orange-400" />;
-      case 4:
+      case CourseLevel.EXPERT:
         return <Skull className="h-4 w-4 text-red-400" />;
       default:
         return <Star className="h-4 w-4 text-slate-400" />;
@@ -37,7 +37,7 @@ export function CourseLevelFilter({ selectedLevels, onToggleLevel }: CourseLevel
     if (selected.length === 0) return 'All Levels';
     if (selected.length === 1) {
       const item = levelItems.find((i) => i.value === selected[0]);
-      return item?.label || `Level ${selected[0]}`;
+      return item?.label || 'Level';
     }
     return `${selected.length} selected`;
   };
