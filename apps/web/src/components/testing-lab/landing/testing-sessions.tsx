@@ -9,18 +9,18 @@ import { SessionNavigation } from '@/components/testing-lab/landing/session-navi
 import { TestSession } from '@/lib/admin';
 
 interface TestingLabSessionsProps {
-  testSessions: TestSession[];
+  sessions: TestSession[];
 }
 
-export const TestingSessions = ({ testSessions }: TestingLabSessionsProps): React.JSX.Element => (
-  <TestingLabFilterProvider sessions={testSessions}>
+export const TestingSessions = ({ sessions }: TestingLabSessionsProps): React.JSX.Element => (
+  <TestingLabFilterProvider sessions={sessions}>
     <div className="flex flex-col flex-1">
       <div className="container mx-auto px-4 py-8">
         {/* Navigation */}
         <SessionNavigation />
 
         {/* Header */}
-        <TestingSessionsHeader sessionCount={testSessions.length} />
+        <TestingSessionsHeader sessionCount={sessions.length} />
 
         {/* Main Content with Filters */}
         <TestingSessionsContent />

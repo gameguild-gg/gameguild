@@ -5,7 +5,7 @@ import { PostFilters } from './post-filters';
 import { PostsList } from './posts-list';
 import { CreatePostForm } from './create-post-form';
 import { fetchPostsAction } from '@/lib/feed/server-actions';
-import type { FeedFilters } from '@/lib/feed/types';
+import type { FeedFilters } from '@/lib/feed';
 
 interface CommunityFeedServerProps {
   searchParams?: {

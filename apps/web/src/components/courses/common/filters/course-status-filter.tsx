@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown, FileText, Eye, Archive } from 'lucide-react';
-import { CourseStatus } from '@/lib/courses/course-enhanced.types';
+import { ContentStatus as CourseStatus } from '@/lib/api/generated/types.gen';
 
 interface CourseStatusFilterProps {
   selectedStatuses: CourseStatus[];
@@ -11,19 +11,19 @@ interface CourseStatusFilterProps {
 }
 
 const statusItems: { value: CourseStatus; label: string }[] = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'published', label: 'Published' },
-  { value: 'archived', label: 'Archived' },
+  { value: CourseStatus.DRAFT, label: 'Draft' },
+  { value: CourseStatus.PUBLISHED, label: 'Published' },
+  { value: CourseStatus.ARCHIVED, label: 'Archived' },
 ];
 
 export function CourseStatusFilter({ selectedStatuses, onToggleStatus }: CourseStatusFilterProps) {
   const getStatusIcon = (status: CourseStatus | 'all') => {
     switch (status) {
-      case 'draft':
+      case CourseStatus.DRAFT:
         return <FileText className="h-4 w-4 text-yellow-400" />;
-      case 'published':
+      case CourseStatus.PUBLISHED:
         return <Eye className="h-4 w-4 text-green-400" />;
-      case 'archived':
+      case CourseStatus.ARCHIVED:
         return <Archive className="h-4 w-4 text-red-400" />;
       default:
         return <FileText className="h-4 w-4 text-slate-400" />;
@@ -34,7 +34,7 @@ export function CourseStatusFilter({ selectedStatuses, onToggleStatus }: CourseS
     if (selected.length === 0) return 'All Status';
     if (selected.length === 1) {
       const item = statusItems.find((i) => i.value === selected[0]);
-      return item?.label || selected[0];
+      return item?.label || 'Status';
     }
     return `${selected.length} selected`;
   };
@@ -76,7 +76,7 @@ export function CourseStatusFilter({ selectedStatuses, onToggleStatus }: CourseS
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-slate-900/80 backdrop-blur-xl border border-slate-600/30 rounded-xl shadow-2xl shadow-black/50">
-        <DropdownMenuItem onClick={() => handleToggleStatus('all')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
+  <DropdownMenuItem onClick={() => handleToggleStatus('all')} className="text-slate-200 hover:bg-white/5 focus:bg-white/10 transition-all duration-200 backdrop-blur-sm rounded-lg mx-1 my-0.5">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-slate-400" />
             <span>All Status</span>

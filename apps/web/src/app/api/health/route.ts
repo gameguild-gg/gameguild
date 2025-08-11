@@ -1,12 +1,7 @@
-import { after, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function GET(): Promise<NextResponse> {
-  after(() => {
-    // This is a placeholder for any cleanup or finalization logic
-    // that you might want to run after the request is processed.
-    // Currently, it does nothing.
-  });
 
+export const GET = async (): Promise<NextResponse> => {
   try {
     return NextResponse.json(
       {
@@ -28,4 +23,4 @@ export async function GET(): Promise<NextResponse> {
       { status: 503 },
     );
   }
-}
+};

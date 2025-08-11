@@ -4,7 +4,14 @@ import { useActionState, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Tenant } from '@/lib/api/generated/types.gen';
-import { createTenantClient, updateTenantClient, deleteTenantClient } from '@/lib/admin/tenants/tenant-client-actions';
+import { createTenantClient, updateTenantClient, updateTenantFormClient, deleteTenantClient } from '@/lib/admin/tenants/tenant-client-actions';
+import {
+  activateTenantAction,
+  deactivateTenantAction,
+  permanentDeleteTenantAction,
+  getTenantStatisticsAction,
+  searchTenantsAction,
+} from '@/lib/admin/tenants/tenants.actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,7 +31,32 @@ interface TenantManagementContentProps {
 
 export function TenantManagementContent({ initialTenants, isAdmin = false }: TenantManagementContentProps) {
   const router = useRouter();
-  const [tenants] = useState<Tenant[]>(initialTenants);
+  const [tenants, setTenants] = useState<Tenant[]>(initialTenants);
+  const [stats, setStats] = useState<any>(null);
+  const [search, setSearch] = useState('');
+  const [searching, setSearching] = useState(false);
+  // Fetch statistics on mount
+  useEffect(() => {
+    getTenantStatisticsAction().then((res) => setStats(res.data || null));
+  }, []);
+
+  // Search/filter tenants
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearching(true);
+    try {
+  const res = await searchTenantsAction({ query: { searchTerm: search }, url: '/api/tenants/search' });
+      setTenants(res.data || []);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  // Reset search
+  const handleResetSearch = async () => {
+    setSearch('');
+    setTenants(initialTenants);
+  };
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -33,7 +65,26 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
 
   // Server action states
   const [createState, createFormAction, isCreatingTenant] = useActionState(createTenantClient, { success: false });
-  const [updateState, updateFormAction, isUpdatingTenant] = useActionState(updateTenantClient.bind(null, editingTenant?.id || ''), { success: false });
+  // Use form based dynamic update action to avoid stale bound tenantId
+  const [updateState, updateFormAction, isUpdatingTenant] = useActionState(updateTenantFormClient, { success: false });
+
+  // --- Action handlers must be defined before JSX return for scope ---
+  const handlePermanentDelete = async (tenantId: string) => {
+    await permanentDeleteTenantAction({ path: { id: tenantId }, url: '/api/tenants/{id}/permanent' });
+    setTenantToDelete(null);
+    setIsDeleteDialogOpen(false);
+    refreshData();
+  };
+
+  const handleActivate = async (tenantId: string) => {
+    await activateTenantAction({ path: { id: tenantId }, url: '/api/tenants/{id}/activate' });
+    refreshData();
+  };
+
+  const handleDeactivate = async (tenantId: string) => {
+    await deactivateTenantAction({ path: { id: tenantId }, url: '/api/tenants/{id}/deactivate' });
+    refreshData();
+  };
 
   const refreshData = useCallback(async () => {
     setIsRefreshing(true);
@@ -60,6 +111,22 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
   }, [updateState.success, refreshData]);
 
   const handleDelete = async (tenantId: string) => {
+  const handlePermanentDelete = async (tenantId: string) => {
+    await permanentDeleteTenantAction({ path: { id: tenantId }, url: '/api/tenants/{id}/permanent' });
+    setTenantToDelete(null);
+    setIsDeleteDialogOpen(false);
+    refreshData();
+  };
+
+  const handleActivate = async (tenantId: string) => {
+    await activateTenantAction({ path: { id: tenantId }, url: '/api/tenants/{id}/activate' });
+    refreshData();
+  };
+
+  const handleDeactivate = async (tenantId: string) => {
+    await deactivateTenantAction({ path: { id: tenantId }, url: '/api/tenants/{id}/deactivate' });
+    refreshData();
+  };
     const result = await deleteTenantClient(tenantId);
     if (result.success) {
       setTenantToDelete(null);
@@ -78,7 +145,33 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Statistics */}
+      {stats && (
+        <Card className="mb-4">
+          <CardHeader>
+            <CardTitle>Tenant Statistics</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-6">
+              <div><span className="font-bold">Total:</span> {stats.totalTenants ?? '-'}</div>
+              <div><span className="font-bold">Active:</span> {stats.activeTenants ?? '-'}</div>
+              <div><span className="font-bold">Deleted:</span> {stats.deletedTenants ?? '-'}</div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Search/filter */}
+      <form onSubmit={handleSearch} className="flex items-center gap-2 mb-2">
+        <Input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search tenants..."
+          className="max-w-xs"
+        />
+        <Button type="submit" size="sm" disabled={searching}>Search</Button>
+        <Button type="button" size="sm" variant="outline" onClick={handleResetSearch} disabled={!search}>Reset</Button>
+      </form>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Building className="h-6 w-6 text-blue-600" />
@@ -194,6 +287,17 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
+                            {tenant.isActive ? (
+                              <DropdownMenuItem onClick={() => handleDeactivate(tenant.id || '')}>
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Deactivate
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem onClick={() => handleActivate(tenant.id || '')}>
+                                <Building className="h-4 w-4 mr-2" />
+                                Activate
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               onClick={() => {
                                 if (tenant.id) {
@@ -204,7 +308,14 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
                               className="text-red-600"
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
+                              Soft Delete
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handlePermanentDelete(tenant.id || '')}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Permanent Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -227,6 +338,8 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
               <DialogDescription>Update tenant information and settings.</DialogDescription>
             </DialogHeader>
             <form action={updateFormAction}>
+              {/* Hidden field to carry current tenant id for server action */}
+              <input type="hidden" name="tenantId" value={editingTenant.id} />
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="edit-name">Tenant Name *</Label>
