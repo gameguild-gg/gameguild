@@ -112,7 +112,7 @@ export default function HomePage() {
                       Project management and auto-save
                     </div>
                   </div>
-                  <Link href="/editor" className="block">
+                  <Link href="/editor/lexical" className="block">
                     <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white group-hover:bg-blue-700 transition-colors duration-300">
                       Start Creating
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
@@ -151,7 +151,7 @@ export default function HomePage() {
                       Print-friendly layouts
                     </div>
                   </div>
-                  <Link href="/preview" className="block">
+                  <Link href="/editor/preview" className="block">
                     <Button
                       variant="outline"
                       className="w-full border-purple-200 dark:border-purple-700 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900 group-hover:bg-purple-50 dark:group-hover:bg-purple-900 transition-colors duration-300 bg-transparent"

@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Save, HardDrive } from "lucide-react"
+import { Save, HardDrive, Eye, Home } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import { Sun, Moon } from "lucide-react"
+import Link from "next/link"
 import type { LexicalEditor } from "lexical"
 import { OpenProjectDialog } from "@/components/editor/ui/editor/open-project-dialog"
 import { CreateProjectDialog } from "@/components/editor/ui/editor/create-project-dialog"
@@ -868,6 +869,21 @@ export default function Page() {
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto dark:text-gray-300">
               Use our powerful editor to create engaging content with rich formatting, media, quizzes, and more
             </p>
+            <div className="flex items-center gap-4">
+              <Link href="/editor">
+                <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                  <Home className="w-4 h-4" />
+                  Home
+                </Button>
+              </Link>
+
+              <Link href="/editor/preview/">
+                <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                  <Eye className="w-4 h-4" />
+                  Full Preview
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {/* Project Management Toolbar */}

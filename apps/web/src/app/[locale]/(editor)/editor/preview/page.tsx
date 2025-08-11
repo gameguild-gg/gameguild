@@ -205,14 +205,14 @@ export default function PreviewPage() {
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <Link href="/">
+                  <Link href="/editor">
                     <Button variant="outline" size="sm" className="gap-2 bg-transparent">
                       <Home className="w-4 h-4" />
                       Home
                     </Button>
                   </Link>
 
-                  <Link href="/editor">
+                  <Link href="/editor/lexical">
                     <Button variant="outline" size="sm" className="gap-2 bg-transparent">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
