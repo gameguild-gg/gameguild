@@ -1,109 +1,192 @@
-version: "3.8"
-
 name: game-guild
-
-networks:
-  game-guild-network:
 
 services:
   api:
     build:
-      dockerfile: DockerfileApi
+      context: ./apps/api
+      dockerfile: Dockerfile
     container_name: api
     image: game-guild-api
     restart: always
     ports:
-      - "8080:8080"
+      - "${API_PORT:-5000}:5000"
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_DATABASE=postgres
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=postgres
+      # Database Configuration
+      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING:-Host=postgres;Port=5432;Database=postgres;Username=postgres;Password=postgres;}
+      - DATABASE__HOST=${DATABASE__HOST:-postgres}
+      - DATABASE__PORT=${DATABASE__PORT:-5432}
+      - DATABASE__DATABASE=${DATABASE__DATABASE:-postgres}
+      - DATABASE__USERNAME=${DATABASE__USERNAME:-postgres}
+      - DATABASE__PASSWORD=${DATABASE__PASSWORD:-postgres}
+      # Application Environment
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ASPNETCORE_URLS=http://+:5000
+      # JWT Configuration
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-game-guild-production-jwt-secret-key-must-be-at-least-32-characters-long-and-secure}
+      - JWT_ISSUER=${JWT_ISSUER:-GameGuild.API}
+      - JWT_AUDIENCE=${JWT_AUDIENCE:-GameGuild.Users}
+      # OAuth Configuration
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      # Documentation
+      - DOCUMENTATION_ENABLED=${DOCUMENTATION_ENABLED:-true}
+      # Cloudflare Dynamic DNS Configuration
+      - CLOUDFLARE_DYNAMIC_DNS__ENABLED=${CLOUDFLARE_DYNAMIC_DNS__ENABLED:-false}
+      - CLOUDFLARE_DYNAMIC_DNS__API_TOKEN=${CLOUDFLARE_DYNAMIC_DNS__API_TOKEN:-}
+      - CLOUDFLARE_DYNAMIC_DNS__ZONE_ID=${CLOUDFLARE_DYNAMIC_DNS__ZONE_ID:-}
+      - CLOUDFLARE_DYNAMIC_DNS__INTERVAL_MINUTES=${CLOUDFLARE_DYNAMIC_DNS__INTERVAL_MINUTES:-5}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__TYPE:-A}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__NAME:-coolify}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__TTL:-300}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__0__PROXIED:-true}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__TYPE:-A}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__NAME:-dev}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__TTL:-300}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__1__PROXIED:-true}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__TYPE:-A}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__NAME:-dev-api}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__TTL:-300}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__2__PROXIED:-true}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__TYPE:-A}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__NAME:-minio}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__TTL:-300}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__3__PROXIED:-true}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TYPE=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TYPE:-A}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__NAME=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__NAME:-console-minio}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TTL=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__TTL:-300}
+      - CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__PROXIED=${CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__4__PROXIED:-true}
+      # CORS Configuration
+      - CORS__ALLOWED_ORIGINS__0=${CORS__ALLOWED_ORIGINS__0:-https://web.gameguild.gg}
+      - CORS__ALLOWED_ORIGINS__1=${CORS__ALLOWED_ORIGINS__1:-https://www.gameguild.gg}
+      - CORS__ALLOWED_ORIGINS__2=${CORS__ALLOWED_ORIGINS__2:-https://gameguild.gg}
+      - CORS__ALLOW_CREDENTIALS=${CORS__ALLOW_CREDENTIALS:-true}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     links:
       - postgres
-    # expose postgres to api
-    networks:
-      - game-guild-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://$(hostname):5000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   web:
     build:
-      dockerfile: DockerfileWeb
-    container_name: web
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        # Build-time variables (bundled into client-side code)
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
+        - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL:-http://localhost:3000}
     image: game-guild-web
+    container_name: web
     restart: always
     ports:
-      - "3000:3000"
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      # Next.js Configuration
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
+      - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
+      # NextAuth Configuration
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-nextauth-production-secret-key-change-this-for-production-use}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - AUTH_TRUST_HOST=${AUTH_TRUST_HOST:-true}
+      # Node.js Environment
+      - NODE_ENV=${NODE_ENV:-production}
     depends_on:
-      - api
-    networks:
-      - game-guild-network
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://$(hostname):3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   postgres:
     image: postgres
     container_name: postgres
     restart: always
-    environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      TZ: 'GMT'
-      PGTZ: 'GMT'
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres:/data/postgres
-    networks:
-      - game-guild-network
-  
-  minio:
-    image: minio/minio
-    container_name: minio
-    restart: always
-    ports:
-      - "9000:9000"
-      - "9090:9090"
+      - "${DB_PORT:-5432}:5432"
     environment:
-      MINIO_ROOT_USER: minio-user
-      MINIO_ROOT_PASSWORD: minio-password
-      MINIO_UPDATE: off
-    entrypoint: >
-      /bin/sh -c '
-        isAlive() { curl -sf http://127.0.0.1:9000/minio/health/live; }    # check if Minio is alive
-        minio $0 "$@" --quiet & echo $! > /tmp/minio.pid                   # start Minio in the background
-        while ! isAlive; do sleep 0.1; done                                # wait until Minio is alive
-        mc alias set minio http://127.0.0.1:9000 minio-user minio-password # setup Minio client
-        mc mb minio/gameguild || true                                      # create a test bucket
-        mc anonymous set public minio/gameguild                            # make the test bucket public
-        mc admin accesskey create minio/ --access-key minio --secret-key minio-password # create access token 
-        kill -s INT $(cat /tmp/minio.pid) && rm /tmp/minio.pid             # stop Minio
-        while isAlive; do sleep 0.1; done                                  # wait until Minio is stopped
-        exec minio $0 "$@"                                                 # start Minio in the foreground
-      '
-    command: server /data --json --console-address ":9090"
+      # PostgreSQL Configuration - Let Coolify manage these
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      TZ: ${TZ:-UTC}
+      PGTZ: ${PGTZ:-UTC}
     volumes:
-      - minio-data:/data
+      # Database persistence
+      - postgres:/var/lib/postgresql/data
+    command: >
+      postgres
+      -c listen_addresses='*'
+      -c max_connections=200
     healthcheck:
-      test: [ 'CMD', 'curl', '-f', 'http://127.0.0.1:9000/minio/health/live' ]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}",
+        ]
       interval: 10s
-      start_period: 10s
-#      start_interval: 1s
-    security_opt: ['no-new-privileges:true']
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8081:8080
-    depends_on:
-      - postgres
-    networks:
-      - game-guild-network
+#  minio:
+#    image: minio/minio
+#    container_name: minio
+#    restart: always
+#    ports:
+#      - "9000:9000"
+#      - "9090:9090"
+#    environment:
+#      MINIO_ROOT_USER: minio-user
+#      MINIO_ROOT_PASSWORD: minio-password
+#      MINIO_UPDATE: off
+#    entrypoint: >
+#      /bin/sh -c '
+#        isAlive() { curl -sf http://127.0.0.1:9000/minio/health/live; }    # check if Minio is alive
+#        minio $0 "$@" --quiet & echo $! > /tmp/minio.pid                   # start Minio in the background
+#        while ! isAlive; do sleep 0.1; done                                # wait until Minio is alive
+#        mc alias set minio http://127.0.0.1:9000 minio-user minio-password # setup Minio client
+#        mc mb minio/gameguild || true                                      # create a test bucket
+#        mc anonymous set public minio/gameguild                            # make the test bucket public
+#        mc admin accesskey create minio/ --access-key minio --secret-key minio-password # create access token
+#        kill -s INT $(cat /tmp/minio.pid) && rm /tmp/minio.pid             # stop Minio
+#        while isAlive; do sleep 0.1; done                                  # wait until Minio is stopped
+#        exec minio $0 "$@"                                                 # start Minio in the foreground
+#      '
+#    command: server /data --json --console-address ":9090"
+#    volumes:
+#      - minio-data:/data
+#    healthcheck:
+#      test: [ 'CMD', 'curl', '-f', 'http://127.0.0.1:9000/minio/health/live' ]
+#      interval: 10s
+#      start_period: 10s
+#    #      start_interval: 1s
+#    security_opt: [ 'no-new-privileges:true' ]
+
+# Database Administration (optional - uncomment to enable)
+# adminer:
+#   image: adminer:4.8.1
+#   container_name: adminer
+#   restart: always
+#   ports:
+#     - '8080:8080'
+#   environment:
+#     ADMINER_DEFAULT_SERVER: postgres
+#   depends_on:
+#     postgres:
+#       condition: service_healthy
 
 volumes:
-  minio-data:
-    driver: local
+  #  minio-data:
+  #    driver: local
   postgres:
+    name: postgres
     driver: local

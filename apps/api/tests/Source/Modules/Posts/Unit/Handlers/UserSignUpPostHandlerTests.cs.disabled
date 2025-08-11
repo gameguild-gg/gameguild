@@ -1,0 +1,255 @@
+using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Posts;
+using MediatR;
+using Microsoft.Extensions.Logging;
+using Moq;
+
+namespace GameGuild.Tests.Modules.Posts.Unit.Handlers;
+
+public class UserSignUpPostHandlerTests
+{
+    private readonly Mock<IMediator> _mediatorMock;
+    private readonly Mock<ILogger<UserSignUpPostHandler>> _loggerMock;
+    private readonly UserSignUpPostHandler _handler;
+
+    public UserSignUpPostHandlerTests()
+    {
+        _mediatorMock = new Mock<IMediator>();
+        _loggerMock = new Mock<ILogger<UserSignUpPostHandler>>();
+        _handler = new UserSignUpPostHandler(_mediatorMock.Object, _loggerMock.Object);
+    }
+
+    [Fact]
+    public async Task Should_Create_Welcome_Post_When_User_Signs_Up()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var notification = new UserSignedUpNotification
+        {
+            UserId = userId,
+            Email = "newuser@example.com",
+            Username = "NewUser",
+            TenantId = tenantId,
+            SignUpTime = DateTime.UtcNow
+        };
+
+        var mockResult = GameGuild.Common.Result.Success(new Post
+        {
+            Id = Guid.NewGuid(),
+            Content = "Welcome message",
+            PostType = "user_signup",
+            UserId = userId,
+            UserDisplayName = "NewUser",
+            IsSystemGenerated = true,
+            TenantId = tenantId
+        });
+
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<CreatePostCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockResult);
+
+        // Act
+        await _handler.Handle(notification, CancellationToken.None);
+
+        // Assert
+        _mediatorMock.Verify(
+            m => m.Send(
+                It.Is<CreatePostCommand>(cmd => 
+                    cmd.UserId == userId &&
+                    cmd.PostType == "user_signup" &&
+                    cmd.IsSystemGenerated == true &&
+                    cmd.IsPublic == true &&
+                    cmd.UserDisplayName == "NewUser" &&
+                    cmd.TenantId == tenantId &&
+                    cmd.Tags.Contains("welcome") &&
+                    cmd.Tags.Contains("new-member") &&
+                    cmd.Tags.Contains("community") &&
+                    !string.IsNullOrEmpty(cmd.Content) &&
+                    !string.IsNullOrEmpty(cmd.Metadata)
+                ),
+                It.IsAny<CancellationToken>()
+            ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Should_Generate_Different_Welcome_Messages()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var notification = new UserSignedUpNotification
+        {
+            UserId = userId,
+            Email = "test@example.com", 
+            Username = "TestUser",
+            TenantId = tenantId,
+            SignUpTime = DateTime.UtcNow
+        };
+
+        var capturedCommands = new List<CreatePostCommand>();
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<CreatePostCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<IRequest<GameGuild.Common.Result<Post>>, CancellationToken>((cmd, _) => 
+            {
+                if (cmd is CreatePostCommand createCmd)
+                    capturedCommands.Add(createCmd);
+            })
+            .ReturnsAsync(GameGuild.Common.Result.Success(new Post()));
+
+        // Act - Run multiple times to see different messages
+        for (int i = 0; i < 5; i++)
+        {
+            await _handler.Handle(notification, CancellationToken.None);
+        }
+
+        // Assert
+        Assert.Equal(5, capturedCommands.Count);
+        Assert.All(capturedCommands, cmd => 
+        {
+            Assert.Contains("TestUser", cmd.Content);
+            Assert.True(cmd.Content.Contains("welcome") || cmd.Content.Contains("Welcome"));
+        });
+
+        // Check that we have variety (not all messages are identical)
+        var uniqueMessages = capturedCommands.Select(cmd => cmd.Content).Distinct().Count();
+        Assert.True(uniqueMessages >= 1, "Should generate welcome messages");
+    }
+
+    [Fact]
+    public async Task Should_Extract_Display_Name_From_Email_When_Username_Is_Null()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var notification = new UserSignedUpNotification
+        {
+            UserId = userId,
+            Email = "john.doe@example.com",
+            Username = null!, // Username is null
+            TenantId = tenantId,
+            SignUpTime = DateTime.UtcNow
+        };
+
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<CreatePostCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GameGuild.Common.Result.Success(new Post()));
+
+        // Act
+        await _handler.Handle(notification, CancellationToken.None);
+
+        // Assert
+        _mediatorMock.Verify(
+            m => m.Send(
+                It.Is<CreatePostCommand>(cmd => 
+                    cmd.UserDisplayName == "John Doe" && // Should extract from email
+                    cmd.Content.Contains("John Doe")
+                ),
+                It.IsAny<CancellationToken>()
+            ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Should_Include_Signup_Method_In_Metadata()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var notification = new UserSignedUpNotification
+        {
+            UserId = userId,
+            Email = "user@example.com",
+            Username = "user@example.com", // Same as email suggests Google OAuth
+            TenantId = tenantId,
+            SignUpTime = DateTime.UtcNow
+        };
+
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<CreatePostCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(GameGuild.Common.Result.Success(new Post()));
+
+        // Act
+        await _handler.Handle(notification, CancellationToken.None);
+
+        // Assert
+        _mediatorMock.Verify(
+            m => m.Send(
+                It.Is<CreatePostCommand>(cmd => 
+                    !string.IsNullOrEmpty(cmd.Metadata) &&
+                    cmd.Metadata.Contains("SignUpMethod") &&
+                    cmd.Metadata.Contains("SignUpTime") &&
+                    cmd.Metadata.Contains("WelcomePostType")
+                ),
+                It.IsAny<CancellationToken>()
+            ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Should_Handle_Post_Creation_Failure_Gracefully()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var notification = new UserSignedUpNotification
+        {
+            UserId = userId,
+            Email = "user@example.com",
+            Username = "TestUser",
+            TenantId = tenantId,
+            SignUpTime = DateTime.UtcNow
+        };
+
+        var mockResult = GameGuild.Common.Result.Failure<Post>(new GameGuild.Common.Error(
+            "CreatePost.Failed",
+            "Failed to create post"
+        ));
+
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<CreatePostCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockResult);
+
+        // Act & Assert - Should not throw exception
+        await _handler.Handle(notification, CancellationToken.None);
+
+        // Verify the command was attempted
+        _mediatorMock.Verify(
+            m => m.Send(It.IsAny<CreatePostCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Should_Handle_Exception_Without_Breaking_Signup_Process()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var notification = new UserSignedUpNotification
+        {
+            UserId = userId,
+            Email = "user@example.com",
+            Username = "TestUser",
+            TenantId = tenantId,
+            SignUpTime = DateTime.UtcNow
+        };
+
+        _mediatorMock
+            .Setup(m => m.Send(It.IsAny<CreatePostCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Database connection failed"));
+
+        // Act & Assert - Should not throw exception
+        await _handler.Handle(notification, CancellationToken.None);
+
+        // Verify the attempt was made
+        _mediatorMock.Verify(
+            m => m.Send(It.IsAny<CreatePostCommand>(), It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+}

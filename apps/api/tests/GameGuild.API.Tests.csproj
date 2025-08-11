@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>GameGuild.Tests</RootNamespace>
+    
+    <!-- Disable analyzers for test projects to reduce noise -->
+    <RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    
+    <!-- Suppress common test-specific analyzer warnings as fallback -->
+    <NoWarn>$(NoWarn);CA1707;CA2007;IDE0058;IDE0011;CA2234;CA1869;CA1063;CA1816;CA1311;CA1304;CA1307;S1172;CA2213;IDE0060;IDE0305;CA1852;CA2000;CA1001;IDE0090;IDE0052;IDE0051;CA2201;IDE0290</NoWarn>
+    
+    <!-- Keep important warnings for tests -->
+    <WarningsAsErrors></WarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Test Framework - Using xUnit instead of NUnit to match main project -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk"/>
+    <PackageReference Include="coverlet.collector"/>
+    <PackageReference Include="xunit"/>
+    <PackageReference Include="xunit.runner.visualstudio"/>
+
+
+    <!-- Entity Framework for testing -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory"/>
+
+    <!-- Testing utilities -->
+    <PackageReference Include="Moq"/>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing"/>
+
+    <!-- Authentication testing -->
+    <PackageReference Include="BCrypt.Net-Next"/>
+
+    <!-- ASP.NET Core dependencies for test helpers -->
+    <PackageReference Include="Microsoft.Extensions.Configuration"/>
+    <PackageReference Include="Microsoft.Extensions.Logging"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GameGuild.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Source\Tests\"/>
+  </ItemGroup>
+
+</Project>

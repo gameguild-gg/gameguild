@@ -1,0 +1,245 @@
+using GameGuild.Database;
+using GameGuild.Modules.Posts;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Tests.Modules.Posts.Integration;
+
+/// <summary>
+/// Service integration tests for PostAnnouncementService
+/// </summary>
+public class PostAnnouncementServiceTests : IDisposable
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IPostAnnouncementService _announcementService;
+    private readonly IServiceProvider _serviceProvider;
+
+    public PostAnnouncementServiceTests()
+    {
+        var services = new ServiceCollection();
+        
+        // Add database context
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
+        
+        // Add logging
+        services.AddLogging(builder => builder.AddConsole());
+        
+        // Add the service under test
+        services.AddScoped<IPostAnnouncementService, PostAnnouncementService>();
+        
+        _serviceProvider = services.BuildServiceProvider();
+        _context = _serviceProvider.GetRequiredService<ApplicationDbContext>();
+        _announcementService = _serviceProvider.GetRequiredService<IPostAnnouncementService>();
+    }
+
+    [Fact]
+    public async Task CreateSystemAnnouncementAsync_Should_Create_System_Announcement_Post()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var authorId = Guid.NewGuid();
+        var title = "Maintenance Scheduled";
+        var message = "System maintenance will occur this weekend";
+        var priority = "high";
+
+        // Act
+        var result = await _announcementService.CreateSystemAnnouncementAsync(
+            tenantId, authorId, title, message, priority);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(title, result.Title);
+        Assert.Contains(message, result.Description);
+        Assert.Equal("system_announcement", result.PostType);
+        Assert.Equal(priority, result.Priority);
+        Assert.Equal(tenantId, result.TenantId);
+        Assert.Equal(authorId, result.AuthorId);
+        Assert.True(result.IsSystemGenerated);
+        Assert.Equal("public", result.Visibility);
+
+        // Verify it's saved to database
+        var savedPost = await _context.Posts.FindAsync(result.Id);
+        Assert.NotNull(savedPost);
+        Assert.Equal(title, savedPost.Title);
+    }
+
+    [Fact]
+    public async Task CreateMilestoneCelebrationAsync_Should_Create_Milestone_Post()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var authorId = Guid.NewGuid();
+        var milestoneName = "1000 Users Reached";
+        var description = "We've officially hit 1000 registered users!";
+        var achievementDate = DateTime.UtcNow.AddDays(-1);
+
+        // Act
+        var result = await _announcementService.CreateMilestoneCelebrationAsync(
+            tenantId, authorId, milestoneName, description, achievementDate);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal($"🎉 Milestone Achieved: {milestoneName}", result.Title);
+        Assert.Contains("celebration", result.Description);
+        Assert.Contains(description, result.Description);
+        Assert.Equal("milestone_celebration", result.PostType);
+        Assert.Equal(tenantId, result.TenantId);
+        Assert.Equal(authorId, result.AuthorId);
+        Assert.True(result.IsSystemGenerated);
+
+        // Verify metadata contains achievement date
+        Assert.NotNull(result.Metadata);
+        Assert.Contains("achievementDate", result.Metadata);
+    }
+
+    [Fact]
+    public async Task CreateCommunityUpdateAsync_Should_Create_Community_Update_Post()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var authorId = Guid.NewGuid();
+        var title = "New Features Available";
+        var content = "Check out our latest improvements to the platform";
+        var targetAudience = "all_members";
+
+        // Act
+        var result = await _announcementService.CreateCommunityUpdateAsync(
+            tenantId, authorId, title, content, targetAudience);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal($"📢 Community Update: {title}", result.Title);
+        Assert.Contains(content, result.Description);
+        Assert.Equal("community_update", result.PostType);
+        Assert.Equal(targetAudience, result.TargetAudience);
+        Assert.Equal(tenantId, result.TenantId);
+        Assert.Equal(authorId, result.AuthorId);
+        Assert.True(result.IsSystemGenerated);
+        Assert.Equal("public", result.Visibility);
+    }
+
+    [Fact]
+    public async Task CreateSystemAnnouncementAsync_With_Low_Priority_Should_Set_Correct_Metadata()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var authorId = Guid.NewGuid();
+        var title = "Minor Update";
+        var message = "Small bug fixes applied";
+        var priority = "low";
+
+        // Act
+        var result = await _announcementService.CreateSystemAnnouncementAsync(
+            tenantId, authorId, title, message, priority);
+
+        // Assert
+        Assert.Equal("low", result.Priority);
+        Assert.NotNull(result.Metadata);
+        
+        // Low priority posts might have different handling
+        Assert.Contains("priority", result.Metadata);
+    }
+
+    [Fact]
+    public async Task CreateMilestoneCelebrationAsync_Should_Include_Achievement_Date_In_Metadata()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var authorId = Guid.NewGuid();
+        var milestoneName = "Project Completed";
+        var description = "Successfully delivered the alpha version";
+        var achievementDate = new DateTime(2024, 1, 15, 10, 30, 0);
+
+        // Act
+        var result = await _announcementService.CreateMilestoneCelebrationAsync(
+            tenantId, authorId, milestoneName, description, achievementDate);
+
+        // Assert
+        Assert.NotNull(result.Metadata);
+        Assert.Contains("achievementDate", result.Metadata);
+        Assert.Contains("2024-01-15", result.Metadata);
+    }
+
+    [Fact]
+    public async Task CreateCommunityUpdateAsync_With_Specific_Audience_Should_Set_Target_Correctly()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var authorId = Guid.NewGuid();
+        var title = "Developer Tools Update";
+        var content = "New debugging features for developers";
+        var targetAudience = "developers";
+
+        // Act
+        var result = await _announcementService.CreateCommunityUpdateAsync(
+            tenantId, authorId, title, content, targetAudience);
+
+        // Assert
+        Assert.Equal("developers", result.TargetAudience);
+        Assert.Equal($"📢 Community Update: {title}", result.Title);
+        Assert.Contains("debugging features", result.Description);
+    }
+
+    [Fact]
+    public async Task Multiple_Announcements_Should_All_Be_Saved()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var authorId = Guid.NewGuid();
+
+        // Act
+        var announcement1 = await _announcementService.CreateSystemAnnouncementAsync(
+            tenantId, authorId, "First Announcement", "First message", "medium");
+
+        var milestone1 = await _announcementService.CreateMilestoneCelebrationAsync(
+            tenantId, authorId, "First Milestone", "First achievement", DateTime.UtcNow);
+
+        var update1 = await _announcementService.CreateCommunityUpdateAsync(
+            tenantId, authorId, "First Update", "First community update", "all_members");
+
+        // Assert
+        var allPosts = await _context.Posts.Where(p => p.TenantId == tenantId).ToListAsync();
+        Assert.Equal(3, allPosts.Count);
+
+        var systemAnnouncement = allPosts.First(p => p.PostType == "system_announcement");
+        var milestone = allPosts.First(p => p.PostType == "milestone_celebration");
+        var communityUpdate = allPosts.First(p => p.PostType == "community_update");
+
+        Assert.Equal(announcement1.Id, systemAnnouncement.Id);
+        Assert.Equal(milestone1.Id, milestone.Id);
+        Assert.Equal(update1.Id, communityUpdate.Id);
+    }
+
+    [Fact]
+    public async Task Service_Should_Handle_Null_Or_Empty_Parameters_Gracefully()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var authorId = Guid.NewGuid();
+
+        // Act & Assert - System announcement with empty message
+        var announcement = await _announcementService.CreateSystemAnnouncementAsync(
+            tenantId, authorId, "Valid Title", "", "low");
+        
+        Assert.NotNull(announcement);
+        Assert.Equal("Valid Title", announcement.Title);
+
+        // Community update with null target audience should default
+        var update = await _announcementService.CreateCommunityUpdateAsync(
+            tenantId, authorId, "Another Update", "Valid content", null);
+        
+        Assert.NotNull(update);
+        // Should handle null target audience gracefully
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
+        if (_serviceProvider is IDisposable disposableProvider)
+        {
+            disposableProvider.Dispose();
+        }
+    }
+}

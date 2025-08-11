@@ -1,0 +1,78 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production builds
+.next/
+out/
+dist/
+build/
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# Nuxt.js build / generate output
+.nuxt/
+
+# Gatsby files
+.cache/
+public/
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Lock files (these are auto-generated and should not be formatted)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Minified files
+*.min.js
+*.min.css
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Note: We intentionally don't ignore generated files in src/lib/api/generated/
+# so they get formatted consistently after generation 

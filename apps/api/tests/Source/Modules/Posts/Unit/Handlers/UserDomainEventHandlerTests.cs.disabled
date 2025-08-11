@@ -1,0 +1,336 @@
+using GameGuild.Common;
+using GameGuild.Database;
+using GameGuild.Modules.Posts;
+using GameGuild.Modules.Users;
+using GameGuild.Modules.UserProfiles;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
+
+namespace GameGuild.Tests.Modules.Posts.Unit.Handlers;
+
+/// <summary>
+/// Tests for UserDomainEventHandler that listens to User events and creates posts
+/// </summary>
+public class UserDomainEventHandlerTests : IDisposable
+{
+    private readonly ApplicationDbContext _context;
+    private readonly Mock<ILogger<UserDomainEventHandler>> _loggerMock;
+    private readonly Mock<IDomainEventPublisher> _eventPublisherMock;
+    private readonly UserDomainEventHandler _handler;
+
+    public UserDomainEventHandlerTests()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+        
+        _context = new ApplicationDbContext(options);
+        _loggerMock = new Mock<ILogger<UserDomainEventHandler>>();
+        _eventPublisherMock = new Mock<IDomainEventPublisher>();
+        
+        _handler = new UserDomainEventHandler(_context, _loggerMock.Object, _eventPublisherMock.Object);
+    }
+
+    [Fact]
+    public async Task Handle_UserCreatedEvent_Should_Create_Registration_Post()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var userName = "John Doe";
+        var userEmail = "john.doe@example.com";
+        
+        // Create a tenant
+        var tenant = new GameGuild.Modules.Tenants.Tenant
+        {
+            Id = tenantId,
+            Name = "Test Tenant",
+            Slug = "test-tenant"
+        };
+        _context.Tenants.Add(tenant);
+
+        // Create a user
+        var user = new User
+        {
+            Id = userId,
+            Name = userName,
+            Email = userEmail,
+            TenantId = tenantId,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var userCreatedEvent = new UserCreatedEvent(userId, userEmail, userName, DateTime.UtcNow);
+
+        // Act
+        await _handler.Handle(userCreatedEvent, CancellationToken.None);
+
+        // Assert
+        var posts = await _context.Posts.ToListAsync();
+        Assert.Single(posts);
+
+        var post = posts.First();
+        Assert.Equal($"New member joined: {userName}", post.Title);
+        Assert.Contains($"Please welcome our newest member, {userName}!", post.Description);
+        Assert.Equal("user_registration", post.PostType);
+        Assert.Equal(userId, post.AuthorId);
+        Assert.True(post.IsSystemGenerated);
+        Assert.Equal("public", post.Visibility);
+        Assert.Equal(tenantId, post.Tenant?.Id);
+
+        // Verify event was published
+        _eventPublisherMock.Verify(
+            x => x.PublishAsync(It.IsAny<PostCreatedEvent>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_UserActivatedEvent_Should_Create_Activation_Post()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var userName = "Jane Smith";
+        var displayName = "Jane S.";
+        
+        // Create user with profile
+        var user = new User
+        {
+            Id = userId,
+            Name = userName,
+            Email = "jane@example.com",
+            CreatedAt = DateTime.UtcNow
+        };
+        
+        var userProfile = new UserProfile
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            DisplayName = displayName,
+            User = user
+        };
+        
+        user.UserProfile = userProfile;
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var userActivatedEvent = new UserActivatedEvent(userId);
+
+        // Act
+        await _handler.Handle(userActivatedEvent, CancellationToken.None);
+
+        // Assert
+        var posts = await _context.Posts.ToListAsync();
+        Assert.Single(posts);
+
+        var post = posts.First();
+        Assert.Equal($"{displayName} is now active", post.Title);
+        Assert.Contains($"{displayName} has reactivated their account", post.Description);
+        Assert.Equal("user_activation", post.PostType);
+        Assert.Equal(userId, post.AuthorId);
+        Assert.True(post.IsSystemGenerated);
+    }
+
+    [Fact]
+    public async Task Handle_UserDeactivatedEvent_Should_Create_Farewell_Post()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var userName = "Bob Wilson";
+        
+        var user = new User
+        {
+            Id = userId,
+            Name = userName,
+            Email = "bob@example.com",
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var userDeactivatedEvent = new UserDeactivatedEvent(userId);
+
+        // Act
+        await _handler.Handle(userDeactivatedEvent, CancellationToken.None);
+
+        // Assert
+        var posts = await _context.Posts.ToListAsync();
+        Assert.Single(posts);
+
+        var post = posts.First();
+        Assert.Equal($"Farewell to {userName}", post.Title);
+        Assert.Contains($"{userName} has deactivated their account", post.Description);
+        Assert.Equal("user_deactivation", post.PostType);
+        Assert.Equal(userId, post.AuthorId);
+        Assert.True(post.IsSystemGenerated);
+    }
+
+    [Fact]
+    public async Task Handle_UserCreatedEvent_Should_Handle_Missing_User_Gracefully()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var userCreatedEvent = new UserCreatedEvent(userId, "test@example.com", "Test User", DateTime.UtcNow);
+
+        // Act & Assert - Should not throw
+        await _handler.Handle(userCreatedEvent, CancellationToken.None);
+
+        // Verify no posts were created
+        var posts = await _context.Posts.ToListAsync();
+        Assert.Empty(posts);
+
+        // Verify error was logged
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("not found")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_UserCreatedEvent_For_Game_Developer_Should_Create_Special_Post()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var userName = "Game Dev Studio";
+        
+        // Create a game development tenant
+        var tenant = new GameGuild.Modules.Tenants.Tenant
+        {
+            Id = tenantId,
+            Name = "Game Development Hub",
+            Slug = "game-dev-hub"
+        };
+        _context.Tenants.Add(tenant);
+
+        var user = new User
+        {
+            Id = userId,
+            Name = userName,
+            Email = "dev@gamedev.com",
+            TenantId = tenantId,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var userCreatedEvent = new UserCreatedEvent(userId, "dev@gamedev.com", userName, DateTime.UtcNow);
+
+        // Act
+        await _handler.Handle(userCreatedEvent, CancellationToken.None);
+
+        // Assert
+        var posts = await _context.Posts.ToListAsync();
+        Assert.Single(posts);
+
+        var post = posts.First();
+        Assert.Equal($"New member joined: {userName}", post.Title);
+        Assert.Contains("Please welcome our newest member", post.Description);
+        Assert.Equal("user_registration", post.PostType);
+        Assert.Equal(tenantId, post.Tenant?.Id);
+    }
+
+    [Fact]
+    public async Task Handle_UserCreatedEvent_For_Project_Manager_Should_Create_Project_Post()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var userName = "Project Manager Pro";
+        
+        // Create a project management tenant
+        var tenant = new GameGuild.Modules.Tenants.Tenant
+        {
+            Id = tenantId,
+            Name = "Project Management Hub",
+            Slug = "project-hub"
+        };
+        _context.Tenants.Add(tenant);
+
+        var user = new User
+        {
+            Id = userId,
+            Name = userName,
+            Email = "pm@projects.com",
+            TenantId = tenantId,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var userCreatedEvent = new UserCreatedEvent(userId, "pm@projects.com", userName, DateTime.UtcNow);
+
+        // Act
+        await _handler.Handle(userCreatedEvent, CancellationToken.None);
+
+        // Assert
+        var posts = await _context.Posts.ToListAsync();
+        Assert.Single(posts);
+
+        var post = posts.First();
+        Assert.Equal($"New member joined: {userName}", post.Title);
+        Assert.Contains("Please welcome our newest member", post.Description);
+        Assert.Equal("user_registration", post.PostType);
+        Assert.Equal(tenantId, post.Tenant?.Id);
+        
+        // Verify the post is associated with the project tenant
+        Assert.Equal("Project Management Hub", post.Tenant?.Name);
+    }
+
+    [Fact]
+    public async Task Handle_UserCreatedEvent_For_Testing_Lab_Should_Create_Testing_Post()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var userName = "QA Testing Expert";
+        
+        // Create a testing lab tenant
+        var tenant = new GameGuild.Modules.Tenants.Tenant
+        {
+            Id = tenantId,
+            Name = "Testing Lab",
+            Slug = "testing-lab"
+        };
+        _context.Tenants.Add(tenant);
+
+        var user = new User
+        {
+            Id = userId,
+            Name = userName,
+            Email = "qa@testinglab.com",
+            TenantId = tenantId,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        var userCreatedEvent = new UserCreatedEvent(userId, "qa@testinglab.com", userName, DateTime.UtcNow);
+
+        // Act
+        await _handler.Handle(userCreatedEvent, CancellationToken.None);
+
+        // Assert
+        var posts = await _context.Posts.ToListAsync();
+        Assert.Single(posts);
+
+        var post = posts.First();
+        Assert.Equal($"New member joined: {userName}", post.Title);
+        Assert.Contains("Please welcome our newest member", post.Description);
+        Assert.Equal("user_registration", post.PostType);
+        Assert.Equal(tenantId, post.Tenant?.Id);
+        
+        // Verify the post is associated with the testing lab tenant
+        Assert.Equal("Testing Lab", post.Tenant?.Name);
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
+    }
+}

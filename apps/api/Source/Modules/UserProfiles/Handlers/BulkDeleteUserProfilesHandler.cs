@@ -1,0 +1,61 @@
+using GameGuild.Common;
+using GameGuild.Database;
+using Microsoft.EntityFrameworkCore;
+
+
+namespace GameGuild.Modules.UserProfiles;
+
+/// <summary>
+/// Handler for bulk deleting user profiles
+/// </summary>
+public class BulkDeleteUserProfilesHandler(ApplicationDbContext context, ILogger<BulkDeleteUserProfilesHandler> logger) : ICommandHandler<BulkDeleteUserProfilesCommand, Common.Result<int>> {
+  public async Task<Common.Result<int>> Handle(BulkDeleteUserProfilesCommand request, CancellationToken cancellationToken) {
+    try {
+      var userProfileIds = request.UserProfileIds.ToList();
+
+      if (userProfileIds.Count == 0) return Result.Success(0);
+
+      var userProfiles = await context.Resources.OfType<UserProfile>().Where(up => userProfileIds.Contains(up.Id) && up.DeletedAt == null).ToListAsync(cancellationToken);
+
+      if (userProfiles.Count == 0) {
+        logger.LogWarning(
+          "No active user profiles found for bulk deletion with IDs: {UserProfileIds}",
+          string.Join(", ", userProfileIds)
+        );
+
+        return Result.Success(0);
+      }
+
+      var deletedCount = 0;
+      var now = DateTime.UtcNow;
+
+      foreach (var userProfile in userProfiles) {
+        if (request.SoftDelete) {
+          userProfile.DeletedAt = now;
+          userProfile.UpdatedAt = now;
+        }
+        else { context.Resources.Remove(userProfile); }
+
+        deletedCount++;
+      }
+
+      await context.SaveChangesAsync(cancellationToken);
+
+      logger.LogInformation(
+        "Bulk {DeleteType} deleted {Count} user profiles. Reason: {Reason}",
+        request.SoftDelete ? "soft" : "hard",
+        deletedCount,
+        request.Reason ?? "Not specified"
+      );
+
+      return Result.Success(deletedCount);
+    }
+    catch (Exception ex) {
+      logger.LogError(ex, "Error during bulk delete of user profiles");
+
+      return Result.Failure<int>(
+        Common.Error.Failure("UserProfile.BulkDeleteFailed", "Failed to bulk delete user profiles")
+      );
+    }
+  }
+}

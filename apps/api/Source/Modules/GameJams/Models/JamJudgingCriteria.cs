@@ -1,0 +1,17 @@
+using System.ComponentModel.DataAnnotations;
+using GameGuild.Common;
+
+
+namespace GameGuild.Modules.GameJams.Models {
+  public class JamJudgingCriteria : Entity {
+    [Required] public Guid JamId { get; set; }
+
+    [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+
+    public decimal Weight { get; set; } = 1.0m;
+
+    [Required] public int MaxScore { get; set; } = 5;
+  }
+}

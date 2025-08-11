@@ -1,0 +1,74 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Common;
+using GameGuild.Modules.Products;
+using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
+
+
+namespace GameGuild.Modules.Subscriptions.Models;
+
+[Table("user_subscriptions")]
+[Index(nameof(UserId))]
+[Index(nameof(Status))]
+[Index(nameof(SubscriptionPlanId))]
+[Index(nameof(CurrentPeriodStart))]
+[Index(nameof(CurrentPeriodEnd))]
+[Index(nameof(NextBillingAt))]
+[Index(nameof(ExternalSubscriptionId))]
+public class UserSubscription : Entity {
+  public Guid UserId { get; set; }
+
+  public Guid SubscriptionPlanId { get; set; }
+
+  public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Active;
+
+  /// <summary>
+  /// External subscription ID from payment provider (Stripe, PayPal, etc.)
+  /// </summary>
+  [MaxLength(255)]
+  public string? ExternalSubscriptionId { get; set; }
+
+  /// <summary>
+  /// Current billing period start date
+  /// </summary>
+  public DateTime CurrentPeriodStart { get; set; }
+
+  /// <summary>
+  /// Current billing period end date
+  /// </summary>
+  public DateTime CurrentPeriodEnd { get; set; }
+
+  /// <summary>
+  /// Date when the subscription was canceled (null if not canceled)
+  /// </summary>
+  public DateTime? CanceledAt { get; set; }
+
+  /// <summary>
+  /// Date when the subscription will end (null if indefinite)
+  /// </summary>
+  public DateTime? EndsAt { get; set; }
+
+  /// <summary>
+  /// Date when the trial period ends (null if no trial)
+  /// </summary>
+  public DateTime? TrialEndsAt { get; set; }
+
+  /// <summary>
+  /// Last successful payment date
+  /// </summary>
+  public DateTime? LastPaymentAt { get; set; }
+
+  /// <summary>
+  /// Next scheduled billing date
+  /// </summary>
+  public DateTime? NextBillingAt { get; set; }
+
+  // Navigation properties
+  [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;
+
+  [ForeignKey(nameof(SubscriptionPlanId))]
+  public virtual ProductSubscriptionPlan SubscriptionPlan { get; set; } = null!;
+
+  public virtual ICollection<UserProduct> UserProducts { get; set; } = new List<UserProduct>();
+}
