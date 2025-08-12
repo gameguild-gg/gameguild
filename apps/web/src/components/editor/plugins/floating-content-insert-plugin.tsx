@@ -33,6 +33,7 @@ import {
   UserPlus,
   Video,
   Youtube,
+  GitBranch,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -61,6 +62,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { extractYouTubeVideoId } from "../nodes/youtube-node"
 import type { SpotifyData } from "../nodes/spotify-node"
 import { extractSpotifyInfo } from "../nodes/spotify-node"
+import type { MermaidData } from "../nodes/mermaid-node"
 
 // Image insertion mode: 0 = both upload and URL, 1 = only upload, 2 = only URL
 const IMAGE_INSERTION_MODE = 0
@@ -97,6 +99,7 @@ export const INSERT_SOURCE_COMMAND = createCommand("INSERT_SOURCE_COMMAND")
 export const INSERT_YOUTUBE_COMMAND = createCommand<YouTubeData>("INSERT_YOUTUBE_COMMAND")
 export const INSERT_SPOTIFY_COMMAND = createCommand<SpotifyData>("INSERT_SPOTIFY_COMMAND")
 export const INSERT_SOURCE_CODE_COMMAND = createCommand("INSERT_SOURCE_CODE_COMMAND")
+export const INSERT_MERMAID_COMMAND = createCommand<MermaidData>("INSERT_MERMAID_COMMAND")
 
 export function FloatingContentInsertPlugin() {
   const [editor] = useLexicalComposerContext()
@@ -434,6 +437,20 @@ export function FloatingContentInsertPlugin() {
       label: "Source Code",
       action: () => {
         editor.dispatchCommand(INSERT_SOURCE_CODE_COMMAND, undefined)
+        setShowMenu(false)
+      },
+    },
+    {
+      icon: GitBranch,
+      label: "Mermaid Diagram",
+      action: () => {
+        editor.dispatchCommand(INSERT_MERMAID_COMMAND, {
+          code: "",
+          type: "flowchart",
+          title: "",
+          caption: "",
+          size: 100,
+        })
         setShowMenu(false)
       },
     },

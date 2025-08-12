@@ -75,6 +75,9 @@ import { SpotifyPlugin } from "./plugins/spotify-plugin"
 import { SourceCodeNode } from "./nodes/source-code-node"
 import { SourceCodePlugin } from "./plugins/source-code-plugin"
 
+import { MermaidNode } from "./nodes/mermaid-node"
+import { MermaidPlugin } from "./plugins/mermaid-plugin"
+
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import {
   $getSelection,
@@ -133,7 +136,8 @@ function StructureDeleteConfirmPlugin() {
           node.getType() === "button" ||
           node.getType() === "callout" ||
           node.getType() === "divider" ||
-          node.getType() === "header",
+          node.getType() === "header" ||
+          node.getType() === "mermaid",
       )
 
       if (hasStructuralNodes) {
@@ -155,7 +159,8 @@ function StructureDeleteConfirmPlugin() {
                 node.getType() === "button" ||
                 node.getType() === "callout" ||
                 node.getType() === "divider" ||
-                node.getType() === "header"
+                node.getType() === "header" ||
+                node.getType() === "mermaid"
               ) {
                 node.remove()
               }
@@ -194,7 +199,8 @@ function StructureDeleteConfirmPlugin() {
             node.getType() === "button" ||
             node.getType() === "callout" ||
             node.getType() === "divider" ||
-            node.getType() === "header",
+            node.getType() === "header" ||
+            node.getType() === "mermaid"
         )
 
         if (hasStructuralNodes) {
@@ -216,7 +222,8 @@ function StructureDeleteConfirmPlugin() {
                   node.getType() === "button" ||
                   node.getType() === "callout" ||
                   node.getType() === "divider" ||
-                  node.getType() === "header"
+                  node.getType() === "header" ||
+                  node.getType() === "mermaid"
                 ) {
                   node.remove()
                 }
@@ -290,6 +297,7 @@ const initialConfig = {
     YouTubeNode, // Add YouTubeNode here
     SpotifyNode, // Add SpotifyNode here
     SourceCodeNode, // Add SourceCodeNode here
+    MermaidNode,
   ],
   theme: {
     text: {
@@ -394,6 +402,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             <SpotifyPlugin />
             <CodePlugin />
             <SourceCodePlugin />
+            <MermaidPlugin />
             <OnChangePlugin
               onChange={(editorState) => {
                 if (onChange) {

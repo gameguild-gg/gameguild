@@ -21,6 +21,7 @@ import { PreviewSourceCode } from "@/components/editor/plugins/preview-component
 import { PreviewCallout } from "@/components/editor/plugins/preview-components/preview-callout"
 import { PreviewButton } from "@/components/editor/plugins/preview-components/preview-button"
 import { PreviewText } from "@/components/editor/plugins/preview-components/preview-text"
+import { PreviewMermaid } from "@/components/editor/plugins/preview-components/preview-mermaid"
 
 interface PreviewRendererProps {
   serializedState: SerializedEditorState
@@ -120,6 +121,13 @@ export function PreviewRenderer({
     if (node.type === "text") {
       return <PreviewText key={node.version} node={node} />
     }
+
+    // For Mermaid diagrams
+    if (node.type === "mermaid") {
+      return <PreviewMermaid key={node.version} data={node.data} />
+    }
+
+    
 
     // For paragraphs and other block elements
     if (node.children) {
@@ -278,3 +286,4 @@ export function PreviewRenderer({
     </div>
   )
 }
+
