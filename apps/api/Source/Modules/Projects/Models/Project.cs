@@ -5,6 +5,8 @@ using GameGuild.Modules.Contents;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
+using HotChocolate; // GraphQL attributes
+using HotChocolate.Types;
 
 
 namespace GameGuild.Modules.Projects;
@@ -25,6 +27,7 @@ public sealed class Project : Content {
   /// <summary>
   /// Short description (max 500 chars)
   /// </summary>
+  [GraphQLDescription("Short description (max 500 chars).")]
   [MaxLength(500)]
   public string? ShortDescription { get; set; }
 
@@ -136,6 +139,7 @@ public sealed class Project : Content {
   /// <summary>
   /// Computed property: Is the project active
   /// </summary>
+  [GraphQLIgnore]
   [NotMapped]
   public bool IsActive {
     get => Status == ContentStatus.Published && DeletedAt == null;
@@ -144,6 +148,7 @@ public sealed class Project : Content {
   /// <summary>
   /// Computed property: Latest version
   /// </summary>
+  [GraphQLIgnore]
   [NotMapped]
   public ProjectVersion? LatestVersion {
     get => Versions.OrderByDescending(v => v.CreatedAt).FirstOrDefault();
@@ -152,6 +157,7 @@ public sealed class Project : Content {
   /// <summary>
   /// Computed property: Number of followers
   /// </summary>
+  [GraphQLIgnore]
   [NotMapped]
   public int FollowerCount {
     get => Followers.Count;
@@ -160,6 +166,7 @@ public sealed class Project : Content {
   /// <summary>
   /// Computed property: Average rating from feedback
   /// </summary>
+  [GraphQLIgnore]
   [NotMapped]
   public decimal? AverageRating {
     get =>
@@ -171,6 +178,7 @@ public sealed class Project : Content {
   /// <summary>
   /// Computed property: Total feedback count
   /// </summary>
+  [GraphQLIgnore]
   [NotMapped]
   public int FeedbackCount {
     get => Feedbacks.Count(f => f.Status == ContentStatus.Published);
@@ -179,6 +187,7 @@ public sealed class Project : Content {
   /// <summary>
   /// Computed property: Whether the project is part of active jams
   /// </summary>
+  [GraphQLIgnore]
   [NotMapped]
   public bool IsInJam {
     get => JamSubmissions.Count != 0;
@@ -187,6 +196,7 @@ public sealed class Project : Content {
   /// <summary>
   /// Computed property: Number of teams working on this project
   /// </summary>
+  [GraphQLIgnore]
   [NotMapped]
   public int TeamCount {
     get => Teams.Count(team => team.IsActive);
