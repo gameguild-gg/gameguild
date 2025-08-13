@@ -1,3 +1,12 @@
+## [2.0.1](https://github.com/gameguild-gg/gameguild/compare/v2.0.0...v2.0.1) (2025-08-13)
+
+
+### Bug Fixes
+
+* **contributors:** horizontal scroll ([03122b4](https://github.com/gameguild-gg/gameguild/commit/03122b42f707db0f0bad9a550acd225d877b558a))
+* **header:** add drop shadow to the logo ([4b9e21f](https://github.com/gameguild-gg/gameguild/commit/4b9e21feb72ae583ed6d9283bd6bd2eb6bc5dfd6))
+* **header:** in small screens ([f65e9d5](https://github.com/gameguild-gg/gameguild/commit/f65e9d573c83527c14d8830d2c5759071d2989d6))
+
 # [2.0.0](https://github.com/gameguild-gg/gameguild/compare/v1.21.8...v2.0.0) (2025-08-12)
 
 
