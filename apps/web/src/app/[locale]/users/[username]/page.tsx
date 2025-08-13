@@ -14,7 +14,7 @@ interface UserProfilePageProps {
 }
 
 export default async function UserProfilePage({ params }: UserProfilePageProps) {
-  const { username } = params;
+  const { username } = await params;
   
   try {
     const user = await getUserByUsername(username);
@@ -112,7 +112,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
 
 // Generate metadata for SEO
 export async function generateMetadata({ params }: UserProfilePageProps) {
-  const { username } = params;
+  const { username } = await params;
   
   try {
     const user = await getUserByUsername(username);
