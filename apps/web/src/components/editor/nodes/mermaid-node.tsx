@@ -24,7 +24,10 @@ import type { JSX } from "react/jsx-runtime"
 
 export interface MermaidData {
   code: string
-  type: "flowchart" | "class" | "sequence"
+  type: "flowchart" | "class" | "sequence" | "state" | "er" | "gantt" | "pie" | "gitgraph" | "mindmap" | "journey" | "timeline" | "quadrantChart" | "requirement" | "c4Context" | "c4Container" | "c4Component" | "c4Dynamic" | "c4Deployment"
+  direction?: "TD" | "TB" | "BT" | "RL"
+  theme?: "default" | "dark" | "forest" | "neutral"
+  fontFamily?: string
   title?: string
   caption?: string
   size?: number

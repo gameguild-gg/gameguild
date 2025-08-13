@@ -4,7 +4,7 @@ import type React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { GitBranch, FileText, Users, ArrowRight } from "lucide-react"
+import { GitBranch, FileText, Users, ArrowRight, Activity, Database, PieChart } from "lucide-react"
 import type { MermaidData } from "@/components/editor/nodes/mermaid-node"
 
 interface Template {
@@ -69,6 +69,69 @@ const templates: Template[] = [
     D-->>S: User Valid
     S-->>U: Login Success`,
   },
+  {
+    type: "state",
+    title: "State Diagram",
+    description: "Model system states and transitions between them",
+    icon: Activity,
+    preview: "Idle → Active → Complete",
+    code: `stateDiagram-v2
+    [*] --> Idle
+    Idle --> Active : start
+    Active --> Processing : process
+    Processing --> Complete : finish
+    Processing --> Error : fail
+    Error --> Idle : retry
+    Complete --> [*]`,
+  },
+  {
+    type: "er",
+    title: "Entity Relationship",
+    description: "Design database schemas with entities and relationships",
+    icon: Database,
+    preview: "User ||--o{ Order : places",
+    code: `erDiagram
+    USER {
+        int id PK
+        string name
+        string email
+        date created_at
+    }
+    ORDER {
+        int id PK
+        int user_id FK
+        decimal total
+        date order_date
+    }
+    PRODUCT {
+        int id PK
+        string name
+        decimal price
+        int stock
+    }
+    ORDER_ITEM {
+        int order_id FK
+        int product_id FK
+        int quantity
+        decimal price
+    }
+    
+    USER ||--o{ ORDER : places
+    ORDER ||--o{ ORDER_ITEM : contains
+    PRODUCT ||--o{ ORDER_ITEM : included_in`,
+  },
+  {
+    type: "pie",
+    title: "Pie Chart",
+    description: "Display data proportions and percentages visually",
+    icon: PieChart,
+    preview: "Frontend: 40% | Backend: 35% | DevOps: 25%",
+    code: `pie title Development Time Distribution
+    "Frontend Development" : 40
+    "Backend Development" : 35
+    "DevOps & Infrastructure" : 15
+    "Testing & QA" : 10`,
+  },
 ]
 
 interface MermaidTemplateSelectorProps {
@@ -84,7 +147,7 @@ export function MermaidTemplateSelector({ onSelect, onCancel }: MermaidTemplateS
         <p className="text-gray-600">Select a template to get started with your Mermaid diagram</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl mx-auto">
         {templates.map((template) => {
           const IconComponent = template.icon
           return (
