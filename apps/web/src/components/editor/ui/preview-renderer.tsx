@@ -1,6 +1,4 @@
 "use client"
-
-import type React from "react"
 import type { SerializedEditorState } from "lexical"
 
 // Import all preview components
@@ -22,6 +20,12 @@ import { PreviewCallout } from "@/components/editor/plugins/preview-components/p
 import { PreviewButton } from "@/components/editor/plugins/preview-components/preview-button"
 import { PreviewText } from "@/components/editor/plugins/preview-components/preview-text"
 import { PreviewMermaid } from "@/components/editor/plugins/preview-components/preview-mermaid"
+import { PreviewParagraph } from "@/components/editor/plugins/preview-components/preview-paragraph"
+import { PreviewQuote } from "@/components/editor/plugins/preview-components/preview-quote"
+import { PreviewList } from "@/components/editor/plugins/preview-components/preview-list"
+import { PreviewListItem } from "@/components/editor/plugins/preview-components/preview-list-item"
+import { PreviewLink } from "@/components/editor/plugins/preview-components/preview-link"
+import { PreviewHeading } from "@/components/editor/plugins/preview-components/preview-heading"
 
 interface PreviewRendererProps {
   serializedState: SerializedEditorState
@@ -36,227 +40,142 @@ export function PreviewRenderer({
   projectName,
   className = "prose prose-stone dark:prose-invert max-w-none",
 }: PreviewRendererProps) {
-  const renderNode = (node: any) => {
+  const renderNode = (node: any, index = 0, parentPath = "") => {
+    // Create unique key using path and index
+    const uniqueKey = `${parentPath}-${node.type}-${index}-${node.version || 0}`
+
     // Handle quiz nodes
     if (node.type === "quiz") {
-      return <PreviewQuiz key={node.version} node={node} />
+      return <PreviewQuiz key={uniqueKey} node={node} />
     }
 
     // Handle image nodes
     if (node.type === "image") {
-      return <PreviewImage key={node.version} node={node} />
+      return <PreviewImage key={uniqueKey} node={node} />
     }
 
     // Handle gallery nodes
     if (node.type === "gallery") {
-      return <PreviewGallery key={node.version} node={node} />
+      return <PreviewGallery key={uniqueKey} node={node} />
     }
 
     // Handle markdown nodes
     if (node.type === "markdown") {
-      return <PreviewMarkdown key={node.version} node={node} />
+      return <PreviewMarkdown key={uniqueKey} node={node} />
     }
 
     // Handle HTML nodes
     if (node.type === "html") {
-      return <PreviewHTML key={node.version} node={node} />
+      return <PreviewHTML key={uniqueKey} node={node} />
     }
 
     // Handle video nodes
     if (node.type === "video") {
-      return <PreviewVideo key={node.version} node={node} />
+      return <PreviewVideo key={uniqueKey} node={node} />
     }
 
     // Handle audio nodes
     if (node.type === "audio") {
-      return <PreviewAudio key={node.version} node={node} />
+      return <PreviewAudio key={uniqueKey} node={node} />
     }
 
     // Handle header nodes
     if (node.type === "header") {
-      return <PreviewHeader key={node.version} node={node} />
+      return <PreviewHeader key={uniqueKey} node={node} />
     }
 
     // Handle divider nodes
     if (node.type === "divider") {
-      return <PreviewDivider key={node.version} node={node} />
+      return <PreviewDivider key={uniqueKey} node={node} />
     }
 
     // Handle button nodes
     if (node.type === "button") {
-      return <PreviewButton key={node.version} node={node} />
+      return <PreviewButton key={uniqueKey} node={node} />
     }
 
     // Handle callout nodes
     if (node.type === "callout") {
-      return <PreviewCallout key={node.version} node={node} />
+      return <PreviewCallout key={uniqueKey} node={node} />
     }
 
     // Handle presentation nodes
     if (node.type === "presentation") {
-      return <PreviewPresentation key={node.version} node={node} />
+      return <PreviewPresentation key={uniqueKey} node={node} />
     }
 
     // Handle source nodes
     if (node.type === "source") {
-      return <PreviewSource key={node.version} node={node} />
+      return <PreviewSource key={uniqueKey} node={node} />
     }
 
     // Handle YouTube nodes
     if (node.type === "youtube") {
-      return <PreviewYouTube key={node.version} node={node} />
+      return <PreviewYouTube key={uniqueKey} node={node} />
     }
 
     // Handle Spotify nodes
     if (node.type === "spotify") {
-      return <PreviewSpotify key={node.version} node={node} />
+      return <PreviewSpotify key={uniqueKey} node={node} />
     }
 
     // Handle source code nodes
     if (node.type === "source-code") {
-      return <PreviewSourceCode key={node.version} node={node} />
+      return <PreviewSourceCode key={uniqueKey} node={node} />
     }
 
     // For text content - now using the new component
     if (node.type === "text") {
-      return <PreviewText key={node.version} node={node} />
+      return <PreviewText key={uniqueKey} node={node} />
     }
 
     // For Mermaid diagrams
     if (node.type === "mermaid") {
-      return <PreviewMermaid key={node.version} data={node.data} />
+      return <PreviewMermaid key={uniqueKey} data={node.data} />
     }
 
-    
-
-    // For paragraphs and other block elements
     if (node.children) {
-      const children = node.children.map((child: any) => renderNode(child))
+      const children = node.children.map((child: any, childIndex: number) => renderNode(child, childIndex, uniqueKey))
+
       switch (node.type) {
         case "paragraph":
-          const paragraphClasses = ["my-4"]
-          if (node.format === "left") paragraphClasses.push("text-left")
-          else if (node.format === "center") paragraphClasses.push("text-center")
-          else if (node.format === "right") paragraphClasses.push("text-right")
-          else if (node.format === "justify") paragraphClasses.push("text-justify")
-
-          // Always use <p> tag for paragraphs
           return (
-            <p key={node.version} className={paragraphClasses.join(" ")}>
+            <PreviewParagraph key={uniqueKey} node={node}>
               {children}
-            </p>
+            </PreviewParagraph>
           )
         case "quote":
           return (
-            <blockquote key={node.version} className="border-l-4 border-muted pl-4 italic my-4">
+            <PreviewQuote key={uniqueKey} node={node}>
               {children}
-            </blockquote>
+            </PreviewQuote>
           )
         case "list":
-          const ListTag = node.listType === "bullet" ? "ul" : "ol"
-          const listClass = node.listType === "bullet" ? "list-disc list-inside" : "list-decimal list-inside"
           return (
-            <ListTag key={node.version} className={`${listClass} my-4`}>
+            <PreviewList key={uniqueKey} node={node}>
               {children}
-            </ListTag>
+            </PreviewList>
           )
         case "listitem":
-          const listItemClasses = ["my-1"]
-          if (node.format === "left") listItemClasses.push("text-left")
-          else if (node.format === "center") listItemClasses.push("text-center")
-          else if (node.format === "right") listItemClasses.push("text-right")
-          else if (node.format === "justify") listItemClasses.push("text-justify")
           return (
-            <li key={node.version} className={listItemClasses.join(" ")}>
+            <PreviewListItem key={uniqueKey} node={node}>
               {children}
-            </li>
+            </PreviewListItem>
           )
         case "link":
           return (
-            <a
-              key={node.version}
-              href={node.url}
-              className="text-primary hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <PreviewLink key={uniqueKey} node={node}>
               {children}
-            </a>
+            </PreviewLink>
           )
         case "heading":
-          const headingClasses = ["font-bold my-4"]
-          if (node.format === "left") headingClasses.push("text-left")
-          else if (node.format === "center") headingClasses.push("text-center")
-          else if (node.format === "right") headingClasses.push("text-right")
-          else if (node.format === "justify") headingClasses.push("text-justify")
-
-          // Get inline styles from the node if they exist
-          const headingStyles: React.CSSProperties = {}
-          if (node.style) {
-                const styleString = node.style
-                const styleRules = styleString.split(";").filter((rule: string) => rule.trim())
-
-                styleRules.forEach((rule: { split: (arg0: string) => { (): any; new(): any; map: { (arg0: (s: any) => any): [any, any]; new(): any } } }) => {
-                const [property, value] = rule.split(":").map((s: string) => s.trim())
-                if (property && value) {
-                    const camelCaseProperty = property.replace(/-([a-z])/g, (match: any, letter: string) => letter.toUpperCase())
-                    headingStyles[camelCaseProperty as keyof React.CSSProperties] = value
-                }
-                })
-            }
-
-          switch (node.tag) {
-            case "h1":
-            case 1:
-              return (
-                <h1 key={node.version} className={`text-4xl ${headingClasses.join(" ")}`} style={headingStyles}>
-                  {children}
-                </h1>
-              )
-            case "h2":
-            case 2:
-              return (
-                <h2 key={node.version} className={`text-3xl ${headingClasses.join(" ")}`} style={headingStyles}>
-                  {children}
-                </h2>
-              )
-            case "h3":
-            case 3:
-              return (
-                <h3 key={node.version} className={`text-2xl ${headingClasses.join(" ")}`} style={headingStyles}>
-                  {children}
-                </h3>
-              )
-            case "h4":
-            case 4:
-              return (
-                <h4 key={node.version} className={`text-xl ${headingClasses.join(" ")}`} style={headingStyles}>
-                  {children}
-                </h4>
-              )
-            case "h5":
-            case 5:
-              return (
-                <h5 key={node.version} className={`text-lg ${headingClasses.join(" ")}`} style={headingStyles}>
-                  {children}
-                </h5>
-              )
-            case "h6":
-            case 6:
-              return (
-                <h6 key={node.version} className={`text-base ${headingClasses.join(" ")}`} style={headingStyles}>
-                  {children}
-                </h6>
-              )
-            default:
-              return (
-                <h2 key={node.version} className={`text-3xl ${headingClasses.join(" ")}`} style={headingStyles}>
-                  {children}
-                </h2>
-              )
-          }
+          return (
+            <PreviewHeading key={uniqueKey} node={node}>
+              {children}
+            </PreviewHeading>
+          )
         default:
-          return <div key={node.version}>{children}</div>
+          return <div key={uniqueKey}>{children}</div>
       }
     }
 
@@ -282,8 +201,7 @@ export function PreviewRenderer({
           </div>
         </div>
       )}
-      {serializedState.root.children.map((node: any) => renderNode(node))}
+      {serializedState.root.children.map((node: any, index: number) => renderNode(node, index, "root"))}
     </div>
   )
 }
-
