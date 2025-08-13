@@ -1,13 +1,13 @@
 import React from 'react';
 import Image from 'next/image';
 import { Card } from '@/components/ui/card';
-import { Contributor } from '@/lib/contributors';
+import { EnhancedContributor } from '@/lib/integrations/github';
 import { ContributorStats } from './contributor-stats';
 import { numberToAbbreviation } from '@/lib/utils';
 import { Award, Trophy } from 'lucide-react';
 
 interface ContributorLeaderboardCardProps {
-  contributor: Contributor;
+  contributor: EnhancedContributor;
   rank: number;
   showMedal?: boolean;
 }
@@ -58,7 +58,7 @@ export const ContributorLeaderboardCard: React.FC<ContributorLeaderboardCardProp
 
       {/* Avatar and Name */}
       <div className="flex items-center gap-4 mb-4 mt-4">
-        <Image src={contributor.avatar_url} alt={contributor.name || contributor.login} width={64} height={64} className="rounded-full" />
+        <Image src={contributor.avatar_url || ''} alt={contributor.name || contributor.login || 'Contributor'} width={64} height={64} className="rounded-full" />
         <div>
           <h3 className="text-xl font-bold text-white">{contributor.name || contributor.login}</h3>
           <p className="text-slate-400">@{contributor.login}</p>
