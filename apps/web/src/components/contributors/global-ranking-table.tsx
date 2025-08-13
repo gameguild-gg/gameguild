@@ -54,13 +54,13 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
         </div>
 
         {/* Table Header */}
-        <div className="grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr] gap-6 px-6 py-3 bg-slate-800/70 text-sm text-slate-400 font-medium uppercase tracking-wide border-b border-slate-700/70">
+        <div className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr] gap-3 md:gap-6 px-4 md:px-6 py-3 bg-slate-800/70 text-sm text-slate-400 font-medium uppercase tracking-wide border-b border-slate-700/70">
           <div>Rank</div>
           <div>Contributor</div>
           <div className="text-right">Commits</div>
-          <div className="text-right">Additions</div>
-          <div className="text-right">Deletions</div>
-          <div className="text-right">Total Changes</div>
+          <div className="text-right hidden md:block">Additions</div>
+          <div className="text-right hidden md:block">Deletions</div>
+          <div className="text-right hidden md:block">Total Changes</div>
         </div>
 
         {/* Table Body */}
@@ -76,7 +76,7 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
             return (
               <div
                 key={contributor.login}
-                className={`grid grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr] gap-6 px-6 py-3 items-center transition-all duration-300 cursor-pointer ${colorClasses.bg} ${colorClasses.border ? `border-l-4 ${colorClasses.border}` : ''}`}
+                className={`grid grid-cols-[auto_1fr_auto] md:grid-cols-[0.5fr_2fr_1fr_1fr_1fr_1fr] gap-3 md:gap-6 px-4 md:px-6 py-3 items-center transition-all duration-300 cursor-pointer ${colorClasses.bg} ${colorClasses.border ? `border-l-4 ${colorClasses.border}` : ''}`}
               >
                 {/* Rank */}
                 <div className="flex items-center gap-3">
@@ -86,7 +86,7 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
                 {/* User */}
                 <div className="flex items-center gap-3">
                   <div className="relative">
-                    <Image src={contributor.avatar_url} alt={contributor.name || contributor.login} width={40} height={40} className="rounded-full ring-2 ring-slate-600/50" />
+                    <Image src={contributor.avatar_url || ''} alt={contributor.name || contributor.login || 'Contributor'} width={40} height={40} className="rounded-full ring-2 ring-slate-600/50" />
                     {rank <= 3 && <div className={`absolute -top-1 -right-1 w-4 h-4 ${colorClasses.rankBg} rounded-full border-2 border-slate-800`}></div>}
                   </div>
                   <div>
@@ -99,13 +99,13 @@ export const GlobalRankingTable: React.FC<GlobalRankingTableProps> = ({ contribu
                 <div className="text-blue-400 font-semibold text-right">{numberToAbbreviation(commits)}</div>
 
                 {/* Additions */}
-                <div className="text-green-400 font-semibold text-right">+{numberToAbbreviation(additions)}</div>
+                <div className="text-green-400 font-semibold text-right hidden md:block">+{numberToAbbreviation(additions)}</div>
 
                 {/* Deletions */}
-                <div className="text-red-400 font-semibold text-right">-{numberToAbbreviation(deletions)}</div>
+                <div className="text-red-400 font-semibold text-right hidden md:block">-{numberToAbbreviation(deletions)}</div>
 
                 {/* Total Changes */}
-                <div className="text-purple-400 font-semibold text-right">{numberToAbbreviation(totalChanges)}</div>
+                <div className="text-purple-400 font-semibold text-right hidden md:block">{numberToAbbreviation(totalChanges)}</div>
               </div>
             );
           })}
