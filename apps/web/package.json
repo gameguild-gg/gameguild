@@ -15,9 +15,9 @@
     "lint": "next lint --fix"
   },
   "dependencies": {
-    "@apollo/client": "^3.11.8",
+    "@apollo/client": "^3.13.9",
     "@hookform/resolvers": "^5.1.1",
-  "@lexical/code": "^0.33.1",
+    "@lexical/code": "^0.33.1",
     "@lexical/link": "^0.33.1",
     "@lexical/list": "^0.33.1",
     "@lexical/markdown": "^0.33.1",
