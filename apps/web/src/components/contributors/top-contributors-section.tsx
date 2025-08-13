@@ -1,9 +1,9 @@
 import React from 'react';
-import { Contributor } from '@/lib/contributors';
+import { EnhancedContributor } from '@/lib/integrations/github';
 import { ContributorLeaderboardCard } from './contributor-leaderboard-card';
 
 interface TopContributorsSectionProps {
-  contributors: Contributor[];
+  contributors: EnhancedContributor[];
   topCount?: number;
 }
 
@@ -19,24 +19,24 @@ export const TopContributorsSection: React.FC<TopContributorsSectionProps> = ({ 
       </div>
 
       {/* Top 3 Contributors - Podium Layout */}
-      <div className="flex items-end justify-center gap-12 mb-12 relative min-h-[320px]">
-        {/* 2nd Place - Left */}
-        {topContributors[1] && (
-          <div className="transform translate-y-16">
-            <ContributorLeaderboardCard key={topContributors[1].login} contributor={topContributors[1]} rank={2} showMedal={true} />
-          </div>
-        )}
-
-        {/* 1st Place - Center (Elevated) */}
+      <div className="flex flex-col md:flex-row items-center md:items-end justify-center gap-6 md:gap-12 mb-12 relative min-h-[320px]">
+        {/* 1st Place - First on mobile, Center on desktop */}
         {topContributors[0] && (
-          <div className="transform translate-y-0 z-10 scale-110">
+          <div className="transform translate-y-0 z-10 md:scale-110 md:order-2">
             <ContributorLeaderboardCard key={topContributors[0].login} contributor={topContributors[0]} rank={1} showMedal={true} />
           </div>
         )}
 
-        {/* 3rd Place - Right */}
+        {/* 2nd Place - Second on mobile, Left on desktop */}
+        {topContributors[1] && (
+          <div className="transform md:translate-y-16 md:order-1">
+            <ContributorLeaderboardCard key={topContributors[1].login} contributor={topContributors[1]} rank={2} showMedal={true} />
+          </div>
+        )}
+
+        {/* 3rd Place - Third on mobile, Right on desktop */}
         {topContributors[2] && (
-          <div className="transform translate-y-16">
+          <div className="transform md:translate-y-16 md:order-3">
             <ContributorLeaderboardCard key={topContributors[2].login} contributor={topContributors[2]} rank={3} showMedal={true} />
           </div>
         )}
