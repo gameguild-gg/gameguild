@@ -297,12 +297,13 @@ export async function getUserByUsername(username: string, includeDeleted = false
     throw new Error(`Failed to search for user: ${response.error}`);
   }
 
-  const data = response.data as { data: User[]; total: number };
-  
-  // Find exact username match (case-insensitive)
-  const exactMatch = data.data.find(user => 
-    user.username && user.username.toLowerCase() === username.toLowerCase()
-  );
-  
-  return exactMatch || null;
+  // Our API returns a paged result shape
+  const paged = response.data as PagedResult<User> | { items?: User[]; totalCount?: number } | undefined;
+  const items = (paged && (paged as any).items) as User[] | undefined;
+
+  if (!items || items.length === 0) return null;
+
+  // Prefer exact username match when present
+  const exact = items.find(u => u.username?.toLowerCase() === username.toLowerCase());
+  return exact || items[0] || null;
 }
