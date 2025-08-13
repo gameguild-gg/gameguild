@@ -6,7 +6,7 @@ export interface TestResult {
   expected: string
 }
 
-export type TestType = "simple" | "inout" | "predicate"
+export type TestType = "custom" | "function" | "console"
 
 export interface TestRunnerOptions {
   fileId: string

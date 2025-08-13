@@ -119,3 +119,37 @@ export interface LanguageSettingsDialogProps {
   isAutocompleteEnabled?: boolean
   setIsAutocompleteEnabled?: (enabled: boolean) => void
 }
+
+export interface FileTabsProps {
+  files: CodeFile[]
+  activeFileId: string
+  onFileSelect: (fileId: string) => void
+  onFileClose?: (fileId: string) => void
+  onFileRename?: (fileId: string, newName: string) => void
+  readonly?: boolean
+  isDarkTheme?: boolean
+}
+
+export interface NewFileDialogProps {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: (fileName: string, language: LanguageType) => void
+  existingFileNames: string[]
+}
+
+export interface RenameFileDialogProps {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: (newName: string) => void
+  currentName: string
+  existingFileNames: string[]
+}
+
+export interface LanguageConfig {
+  name: string
+  extensions: string[]
+  monacoLanguage: string
+  highlightLanguage: string
+  supportsExecution?: boolean
+  defaultTemplate?: string
+}

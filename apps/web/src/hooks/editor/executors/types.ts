@@ -7,13 +7,14 @@ import type { CodeFile, ProgrammingLanguage } from "@/components/editor/ui/sourc
 
 // Add this near the top of the file, after any imports:
 
-
+/*
 export interface Executor {
   isCompiled: any
   stop: any
   handleCommand: any
   execute(fileId: string, context: ExecutionContext): Promise<ExecutionResult>
 }
+*/
 
 declare global {
   interface Window {
@@ -50,3 +51,5 @@ export interface LanguageExecutor {
   handleCommand?: (command: string, context: ExecutionContext) => boolean
 }
 
+
+export type Executor = LanguageExecutor

@@ -122,7 +122,13 @@ export class ApiClient {
     } catch (error) {
       clearTimeout(timeoutId)
 
-      if (retries > 0 && error.name !== "AbortError") {
+      if (
+        retries > 0 &&
+        typeof error === "object" &&
+        error !== null &&
+        "name" in error &&
+        (error as { name?: string }).name !== "AbortError"
+      ) {
         if (syncConfigData.debugMode) {
           console.log(`API retry ${this.config.retries - retries + 1}/${this.config.retries} for ${url}`)
         }
@@ -159,7 +165,10 @@ export class ApiClient {
       const syncConfigData = syncConfig.getConfig()
 
       if (syncConfigData.debugMode) {
-        console.warn("⚠️ Sync Warning: Failed to fetch projects metadata:", error.message)
+        console.warn(
+          "⚠️ Sync Warning: Failed to fetch projects metadata:",
+          (error instanceof Error ? error.message : String(error))
+        )
       } else {
         console.warn("Sync: Server unavailable for metadata fetch")
       }
@@ -192,7 +201,10 @@ export class ApiClient {
       const syncConfigData = syncConfig.getConfig()
 
       if (syncConfigData.debugMode) {
-        console.warn(`⚠️ Sync Warning: Failed to fetch project ${id}:`, error.message)
+        console.warn(
+          `⚠️ Sync Warning: Failed to fetch project ${id}:`,
+          error instanceof Error ? error.message : String(error)
+        )
       }
 
       return null
@@ -216,10 +228,13 @@ export class ApiClient {
       const syncConfigData = syncConfig.getConfig()
 
       if (syncConfigData.debugMode) {
-        console.warn("⚠️ Sync Warning: Failed to create project:", error.message)
+        console.warn(
+          "⚠️ Sync Warning: Failed to create project:",
+          error instanceof Error ? error.message : String(error)
+        )
       }
 
-      return { success: false, message: error.message }
+      return { success: false, message: error instanceof Error ? error.message : String(error) }
     }
   }
 
@@ -240,10 +255,13 @@ export class ApiClient {
       const syncConfigData = syncConfig.getConfig()
 
       if (syncConfigData.debugMode) {
-        console.warn("⚠️ Sync Warning: Failed to update project:", error.message)
+        console.warn(
+          "⚠️ Sync Warning: Failed to update project:",
+          error instanceof Error ? error.message : String(error)
+        )
       }
 
-      return { success: false, message: error.message }
+      return { success: false, message: error instanceof Error ? error.message : String(error) }
     }
   }
 
@@ -263,10 +281,13 @@ export class ApiClient {
       const syncConfigData = syncConfig.getConfig()
 
       if (syncConfigData.debugMode) {
-        console.warn("⚠️ Sync Warning: Failed to delete project:", error.message)
+        console.warn(
+          "⚠️ Sync Warning: Failed to delete project:",
+          error instanceof Error ? error.message : String(error)
+        )
       }
 
-      return { success: false, message: error.message }
+      return { success: false, message: error instanceof Error ? error.message : String(error) }
     }
   }
 
@@ -287,7 +308,10 @@ export class ApiClient {
       const syncConfigData = syncConfig.getConfig()
 
       if (syncConfigData.debugMode) {
-        console.warn(`⚠️ Sync Warning: Failed to check hash for project ${id}:`, error.message)
+        console.warn(
+          `⚠️ Sync Warning: Failed to check hash for project ${id}:`,
+          error instanceof Error ? error.message : String(error)
+        )
       }
 
       return { needsUpdate: false }
