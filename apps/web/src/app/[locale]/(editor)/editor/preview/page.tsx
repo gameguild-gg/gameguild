@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
-import { Sun, Moon, Eye, Home } from "lucide-react"
+import { Eye, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { OpenProjectDialogPreview } from "@/components/editor/ui/preview/open-project-dialog-preview"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import Link from "next/link"
 import { PreviewRenderer } from "@/components/editor/ui/preview-renderer"
+import { useTheme } from "@/lib/context/theme-context"
 
 interface ProjectData {
   id: string
@@ -31,38 +32,7 @@ export default function PreviewPage() {
   const [availableTags, setAvailableTags] = useState<Array<{ name: string; usageCount: number }>>([])
   const [isDbInitialized, setIsDbInitialized] = useState(false)
 
-  // Dark mode state
-  const [isDark, setIsDark] = useState(
-    typeof window !== "undefined" ? document.documentElement.classList.contains("dark") : false,
-  )
-
-  // Toggle theme
-  const toggleTheme = () => {
-    if (typeof window === "undefined") return
-    const root = document.documentElement
-    if (root.classList.contains("dark")) {
-      root.classList.remove("dark")
-      setIsDark(false)
-      localStorage.setItem("theme", "light")
-    } else {
-      root.classList.add("dark")
-      setIsDark(true)
-      localStorage.setItem("theme", "dark")
-    }
-  }
-
-  // Sync with localStorage
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    const saved = localStorage.getItem("theme")
-    if (saved === "dark") {
-      document.documentElement.classList.add("dark")
-      setIsDark(true)
-    } else if (saved === "light") {
-      document.documentElement.classList.remove("dark")
-      setIsDark(false)
-    }
-  }, [])
+  const { theme } = useTheme()
 
   const dbStorage = useRef<EnhancedStorageAdapter>(new EnhancedStorageAdapter())
 
@@ -175,45 +145,42 @@ export default function PreviewPage() {
   const serializedState = getSerializedState()
 
   return (
-    <>
-      {/* Theme toggle button */}
-      <button
-        onClick={toggleTheme}
-        className="fixed top-4 right-4 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-2 shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        aria-label="Toggle light/dark mode"
-        type="button"
-      >
-        {isDark ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-300" />}
-      </button>
-
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="container mx-auto py-10">
         <div className="mx-auto max-w-4xl space-y-8">
           {/* Header Section */}
           <div className="text-center space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-200 text-sm font-medium">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-sm font-medium">
               <Eye className="w-4 h-4" />
               Preview Mode
             </div>
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Content Preview</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto dark:text-gray-300">
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               View your projects as they would appear to readers
             </p>
           </div>
 
-          {/* Navigation and Project Management */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <Link href="/editor">
-                    <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
                       <Home className="w-4 h-4" />
                       Home
                     </Button>
                   </Link>
 
                   <Link href="/editor/lexical">
-                    <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           strokeLinecap="round"
@@ -241,7 +208,7 @@ export default function PreviewPage() {
               </div>
 
               {currentProject && (
-                <div className="flex items-center justify-between pt-4 border-t dark:border-gray-700">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-500 dark:text-gray-400">Currently viewing:</span>
@@ -254,7 +221,7 @@ export default function PreviewPage() {
                         {currentProject.tags.slice(0, 3).map((tag) => (
                           <span
                             key={tag}
-                            className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                            className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300"
                           >
                             {tag}
                           </span>
@@ -275,8 +242,7 @@ export default function PreviewPage() {
             </div>
           </div>
 
-          {/* Preview Content */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
             <div className="p-6 px-12 py-12">
               {currentProject && serializedState ? (
                 <PreviewRenderer
@@ -289,7 +255,11 @@ export default function PreviewPage() {
                   <Eye className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No Project Selected</h3>
                   <p className="text-gray-500 dark:text-gray-400 mb-6">Choose a project to preview its content</p>
-                  <Button onClick={() => setOpenDialogOpen(true)} disabled={!isDbInitialized}>
+                  <Button
+                    onClick={() => setOpenDialogOpen(true)}
+                    disabled={!isDbInitialized}
+                    className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
+                  >
                     Open Project
                   </Button>
                 </div>
@@ -299,21 +269,21 @@ export default function PreviewPage() {
 
           {/* Help Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-            <div className="p-4 bg-green-50 dark:bg-green-900 rounded-lg">
+            <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
               <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">Preview Mode</h3>
-              <p className="text-sm text-green-700 dark:text-green-200">
+              <p className="text-sm text-green-700 dark:text-green-300">
                 View your content exactly as readers will see it
               </p>
             </div>
-            <div className="p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
               <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Read-Only View</h3>
-              <p className="text-sm text-blue-700 dark:text-blue-200">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
                 Content is displayed in read-only mode for optimal viewing
               </p>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }

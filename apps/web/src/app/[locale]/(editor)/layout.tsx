@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "sonner"
+import { ThemeProvider } from "@/lib/context/theme-context"
+import { TopMenu } from "@/components/editor/top-menu"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -43,8 +45,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        {children}
-        <Toaster position="top-right" />
+        <ThemeProvider>
+          <TopMenu />
+          <main className="pt-16 container mx-auto py-10">{children}</main>
+          <Toaster position="top-right" />
+        </ThemeProvider>
       </body>
     </html>
   )

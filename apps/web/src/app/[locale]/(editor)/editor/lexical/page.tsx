@@ -16,6 +16,7 @@ import { CreateProjectDialog } from "@/components/editor/ui/editor/create-projec
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/ui/editor/save-as-dialog"
+import { useTheme } from "@/lib/context/theme-context"
 
 interface ProjectData {
   id: string
@@ -68,38 +69,7 @@ export default function Page() {
   const [totalStorageUsed, setTotalStorageUsed] = useState<number>(0)
   const setLoadingRef = useRef<((loading: boolean) => void) | null>(null)
 
-  // Estado para modo escuro
-  const [isDark, setIsDark] = useState(
-    typeof window !== "undefined" ? document.documentElement.classList.contains("dark") : false,
-  )
-
-  // Alternar tema
-  const toggleTheme = () => {
-    if (typeof window === "undefined") return
-    const root = document.documentElement
-    if (root.classList.contains("dark")) {
-      root.classList.remove("dark")
-      setIsDark(false)
-      localStorage.setItem("theme", "light")
-    } else {
-      root.classList.add("dark")
-      setIsDark(true)
-      localStorage.setItem("theme", "dark")
-    }
-  }
-
-  // Sincronizar com localStorage (opcional)
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    const saved = localStorage.getItem("theme")
-    if (saved === "dark") {
-      document.documentElement.classList.add("dark")
-      setIsDark(true)
-    } else if (saved === "light") {
-      document.documentElement.classList.remove("dark")
-      setIsDark(false)
-    }
-  }, [])
+  const { theme } = useTheme()
 
   // Storage limit system
   const [storageLimit, setStorageLimit] = useState<number | null>(100) // null = unlimited, number = MB limit
@@ -841,16 +811,6 @@ export default function Page() {
 
   return (
     <>
-      {/* Botão de alternância no topo direito */}
-      <button
-        onClick={toggleTheme}
-        className="fixed top-4 right-4 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-full p-2 shadow hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-        aria-label="Alternar modo claro/escuro"
-        type="button"
-      >
-        {isDark ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-gray-300" />}
-      </button>
-
       <div className="container mx-auto py-10">
         <div className="mx-auto max-w-4xl space-y-8">
           {/* Header Section */}
