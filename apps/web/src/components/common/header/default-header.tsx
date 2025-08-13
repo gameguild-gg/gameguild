@@ -1,15 +1,15 @@
 'use client';
 
-import React, { PropsWithChildren, useState } from 'react';
-import Image from 'next/image';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import Link from 'next/link';
+import React, { PropsWithChildren, useState } from 'react';
 
+import { UserProfile } from '@/components/common/header/common/ui/user-profile';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { NavigationMenuLink } from '@radix-ui/react-navigation-menu';
-import { UserProfile } from '@/components/common/header/common/ui/user-profile';
 
 type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>;
 
@@ -28,16 +28,7 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
       <div className="container mx-auto px-4 flex justify-between items-center py-4">
         <div className="flex space-x-2 md:space-x-8 items-center">
           <Image src="/assets/images/logo-text-2.png" width={135} height={46} className="my-auto mx-[10px] flex-shrink-0 drop-shadow-[0_0_2px_rgba(255,255,255,0.8)] filter" alt="Logo" />
-          {/* Mobile Menu Button */}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="md:hidden text-slate-200 hover:text-white hover:bg-white/5"
-            onClick={toggleMobileMenu}
-          >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
-          
+
           {/* Desktop Navigation */}
           <NavigationMenu className="hidden md:flex">
             <NavigationMenuList>
@@ -98,30 +89,45 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
         </div>
         <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
           {/*<NotificationDropdown />*/}
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="lg"
+            className="md:hidden text-slate-200 hover:text-white hover:bg-white/5 flex items-center justify-center p-1"
+            onClick={toggleMobileMenu}
+          >
+            <div className="relative w-12 h-12 flex items-center justify-center">
+              <Menu className={`absolute h-20 w-20 transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'opacity-0 rotate-180 scale-75' : 'opacity-100 rotate-0 scale-100'
+                }`} />
+              <X className={`absolute h-20 w-20 transition-all duration-300 ease-in-out ${isMobileMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 rotate-180 scale-75'
+                }`} />
+            </div>
+          </Button>
           <UserProfile />
         </div>
         {children}
       </div>
 
       {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border-t border-white/20 dark:border-slate-600/50">
-          <div className="container mx-auto px-4 py-4 space-y-2">
-            <Link href="/docs" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
-              Getting started
-            </Link>
-            <Link href="/courses" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
-              Courses
-            </Link>
-            <Link href="/jobs" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
-              Jobs
-            </Link>
-            <Link href="/blog" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
-              Blogs
-            </Link>
-          </div>
+      <div className={`md:hidden bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border-t border-white/20 dark:border-slate-600/50 transition-all duration-300 ease-in-out overflow-hidden ${isMobileMenuOpen
+          ? 'max-h-96 opacity-100 transform translate-y-0'
+          : 'max-h-0 opacity-0 transform -translate-y-2'
+        }`}>
+        <div className="container mx-auto px-4 py-4 space-y-2">
+          <Link href="/docs" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            Getting started
+          </Link>
+          <Link href="/courses" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            Courses
+          </Link>
+          <Link href="/jobs" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            Jobs
+          </Link>
+          <Link href="/blog" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            Blogs
+          </Link>
         </div>
-      )}
+      </div>
 
       {/* Bottom Beautiful Border */}
       <div className="h-px bg-gradient-to-r from-transparent via-white/20 dark:via-slate-400/30 to-transparent"></div>
