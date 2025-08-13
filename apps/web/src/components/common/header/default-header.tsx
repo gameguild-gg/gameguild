@@ -27,7 +27,7 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
 
       <div className="container mx-auto px-4 flex justify-between items-center py-4">
         <div className="flex space-x-2 md:space-x-8 items-center">
-          <Image src="/assets/images/logo-text-2.png" width={135} height={46} className="my-auto mx-[10px] flex-shrink-0" alt="Logo" />
+          <Image src="/assets/images/logo-text-2.png" width={135} height={46} className="my-auto mx-[10px] flex-shrink-0 drop-shadow-[0_0_2px_rgba(255,255,255,0.8)] filter" alt="Logo" />
           {/* Mobile Menu Button */}
           <Button 
             variant="ghost" 
