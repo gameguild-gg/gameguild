@@ -7,6 +7,7 @@ export interface User {
   id: string;
   version?: number;
   name: string;
+  username: string;
   email: string;
   isActive: boolean;
   balance: number;
@@ -275,4 +276,33 @@ export async function bulkDeactivateUsers(userIds: string[], reason?: string): P
   }
 
   return response.data as BulkOperationResult;
+}
+
+/**
+ * Get a user by username
+ */
+export async function getUserByUsername(username: string, includeDeleted = false): Promise<User | null> {
+  await configureAuthenticatedClient();
+
+  const response = await client.get({
+    url: `/api/users/search`,
+    query: { 
+      searchTerm: username,
+      includeDeleted,
+      take: 1
+    },
+  });
+
+  if (response.error) {
+    throw new Error(`Failed to search for user: ${response.error}`);
+  }
+
+  const data = response.data as { data: User[]; total: number };
+  
+  // Find exact username match (case-insensitive)
+  const exactMatch = data.data.find(user => 
+    user.username && user.username.toLowerCase() === username.toLowerCase()
+  );
+  
+  return exactMatch || null;
 }
