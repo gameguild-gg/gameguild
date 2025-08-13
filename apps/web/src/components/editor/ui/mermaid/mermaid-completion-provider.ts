@@ -10,6 +10,12 @@ function detectDiagramType(code: string): string {
   if (firstLine.startsWith("statediagram")) return "state"
   if (firstLine.startsWith("erdiagram")) return "er"
   if (firstLine.startsWith("pie")) return "pie"
+  if (firstLine.startsWith("gitgraph")) return "gitgraph"
+  if (firstLine.startsWith("requirementdiagram")) return "requirement"
+  if (firstLine.startsWith("architecture")) return "architecture"
+  if (firstLine.startsWith("c4context")) return "c4context"
+  if (firstLine.startsWith("timeline")) return "timeline"
+  if (firstLine.startsWith("mindmap")) return "mindmap"
 
   return "unknown"
 }
@@ -54,6 +60,24 @@ function getContextualSuggestions(
         break
       case "pie":
         suggestions.push(...pieCompletions(monaco, range))
+        break
+      case "gitgraph":
+        suggestions.push(...gitgraphCompletions(monaco, range))
+        break
+      case "requirement":
+        suggestions.push(...requirementCompletions(monaco, range))
+        break
+      case "architecture":
+        suggestions.push(...architectureCompletions(monaco, range))
+        break
+      case "c4context":
+        suggestions.push(...c4contextCompletions(monaco, range))
+        break
+      case "timeline":
+        suggestions.push(...timelineCompletions(monaco, range))
+        break
+      case "mindmap":
+        suggestions.push(...mindmapCompletions(monaco, range))
         break
     }
 
@@ -126,6 +150,407 @@ const getDiagramTypeCompletions = (
     documentation: "Create a pie chart",
     range,
     sortText: "6",
+  },
+  {
+    label: "gitGraph",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText:
+      'gitGraph\n    commit id: "${1:Initial commit}"\n    branch ${2:develop}\n    checkout ${2:develop}\n    commit id: "${3:Add feature}"\n    checkout main\n    merge ${2:develop}',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create a git graph diagram",
+    range,
+    sortText: "7",
+  },
+  {
+    label: "requirementDiagram",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText:
+      "requirementDiagram\n    requirement ${1:test_req} {\n        id: ${2:1}\n        text: ${3:the test text.}\n        risk: ${4:high}\n        verifymethod: ${5:test}\n    }",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create a requirement diagram",
+    range,
+    sortText: "8",
+  },
+  {
+    label: "architecture-beta",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText:
+      "architecture-beta\n    group ${1:api}(cloud)[${2:API Layer}]\n    service ${3:db}(database)[${4:Database}] in ${1:api}\n    service ${5:web}(browser)[${6:Web App}]\n    ${5:web}:R -- L:${3:db}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create an architecture diagram",
+    range,
+    sortText: "9",
+  },
+  {
+    label: "C4Context",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText:
+      'C4Context\n    title ${1:System Context diagram}\n    \n    Person(${2:user}, "${3:User}", "${4:A user of the system}")\n    System(${5:system}, "${6:System}", "${7:Description of system}")\n    System_Ext(${8:external}, "${9:External System}", "${10:External system description}")\n    \n    Rel(${2:user}, ${5:system}, "${11:Uses}")',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create a C4 Context diagram",
+    range,
+    sortText: "10",
+  },
+  {
+    label: "timeline",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText:
+      "timeline\n    title ${1:Timeline Title}\n    \n    ${2:2021} : ${3:Event 1}\n    ${4:2022} : ${5:Event 2}\n           : ${6:Event 3}\n    ${7:2023} : ${8:Event 4}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create a timeline diagram",
+    range,
+    sortText: "11",
+  },
+  {
+    label: "mindmap",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText:
+      "mindmap\n  root((${1:Central Topic}))\n    ${2:Branch 1}\n      ${3:Sub-branch 1}\n      ${4:Sub-branch 2}\n    ${5:Branch 2}\n      ${6:Sub-branch 3}\n        ${7:Detail 1}\n        ${8:Detail 2}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create a mindmap diagram",
+    range,
+    sortText: "12",
+  },
+]
+
+const c4contextCompletions = (
+  monaco: typeof import("monaco-editor"),
+  range: import("monaco-editor").IRange,
+): languages.CompletionItem[] => [
+  {
+    label: "Person",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: 'Person(${1:id}, "${2:Name}", "${3:Description}")',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define a person/user",
+    range,
+  },
+  {
+    label: "Person_Ext",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: 'Person_Ext(${1:id}, "${2:Name}", "${3:Description}")',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define an external person/user",
+    range,
+  },
+  {
+    label: "System",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: 'System(${1:id}, "${2:Name}", "${3:Description}")',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define a system",
+    range,
+  },
+  {
+    label: "System_Ext",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: 'System_Ext(${1:id}, "${2:Name}", "${3:Description}")',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define an external system",
+    range,
+  },
+  {
+    label: "Rel",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: 'Rel(${1:from}, ${2:to}, "${3:Label}")',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define a relationship",
+    range,
+  },
+  {
+    label: "BiRel",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: 'BiRel(${1:from}, ${2:to}, "${3:Label}")',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define a bidirectional relationship",
+    range,
+  },
+  {
+    label: "title",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "title ${1:Diagram Title}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Set diagram title",
+    range,
+  },
+]
+
+const timelineCompletions = (
+  monaco: typeof import("monaco-editor"),
+  range: import("monaco-editor").IRange,
+): languages.CompletionItem[] => [
+  {
+    label: "title",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "title ${1:Timeline Title}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Set timeline title",
+    range,
+  },
+  {
+    label: "section",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "section ${1:Section Name}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create a timeline section",
+    range,
+  },
+  {
+    label: "year event",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText: "${1:2024} : ${2:Event description}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Add a year with event",
+    range,
+  },
+  {
+    label: "multiple events",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText: "${1:2024} : ${2:Event 1}\n       : ${3:Event 2}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Add multiple events in same year",
+    range,
+  },
+]
+
+const mindmapCompletions = (
+  monaco: typeof import("monaco-editor"),
+  range: import("monaco-editor").IRange,
+): languages.CompletionItem[] => [
+  {
+    label: "root",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "root((${1:Central Topic}))",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define the root node",
+    range,
+  },
+  {
+    label: "branch",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText: "${1:Branch Name}\n  ${2:Sub-branch}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Add a branch with sub-branch",
+    range,
+  },
+  {
+    label: "icon",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText: "::icon(${1:fa fa-book})",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Add an icon to a node",
+    range,
+  },
+  {
+    label: "multi-line",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText: "${1:Branch}<br/>${2:Second line}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create multi-line text",
+    range,
+  },
+]
+
+// Git Graph specific completions
+const gitgraphCompletions = (
+  monaco: typeof import("monaco-editor"),
+  range: import("monaco-editor").IRange,
+): languages.CompletionItem[] => [
+  {
+    label: "commit",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: 'commit id: "${1:commit message}"',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create a commit",
+    range,
+  },
+  {
+    label: "branch",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "branch ${1:branch_name}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create a new branch",
+    range,
+  },
+  {
+    label: "checkout",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "checkout ${1:branch_name}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Switch to a branch",
+    range,
+  },
+  {
+    label: "merge",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "merge ${1:branch_name}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Merge a branch",
+    range,
+  },
+  {
+    label: "cherry-pick",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: 'cherry-pick id: "${1:commit_id}"',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Cherry-pick a commit",
+    range,
+  },
+  {
+    label: "tag",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: 'tag: "${1:tag_name}"',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Add a tag",
+    range,
+  },
+]
+
+// Requirement Diagram specific completions
+const requirementCompletions = (
+  monaco: typeof import("monaco-editor"),
+  range: import("monaco-editor").IRange,
+): languages.CompletionItem[] => [
+  {
+    label: "requirement",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText:
+      "requirement ${1:req_name} {\n    id: ${2:1}\n    text: ${3:requirement text}\n    risk: ${4:high}\n    verifymethod: ${5:test}\n}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define a requirement",
+    range,
+  },
+  {
+    label: "functionalRequirement",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText:
+      "functionalRequirement ${1:func_req} {\n    id: ${2:1.1}\n    text: ${3:functional requirement text}\n    risk: ${4:medium}\n    verifymethod: ${5:inspection}\n}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define a functional requirement",
+    range,
+  },
+  {
+    label: "performanceRequirement",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText:
+      "performanceRequirement ${1:perf_req} {\n    id: ${2:1.2}\n    text: ${3:performance requirement text}\n    risk: ${4:low}\n    verifymethod: ${5:demonstration}\n}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define a performance requirement",
+    range,
+  },
+  {
+    label: "element",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "element ${1:element_name} {\n    type: ${2:simulation}\n}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define an element",
+    range,
+  },
+  {
+    label: "satisfies",
+    kind: monaco.languages.CompletionItemKind.Operator,
+    insertText: "${1:req1} - satisfies -> ${2:element}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Satisfies relationship",
+    range,
+  },
+  {
+    label: "derives",
+    kind: monaco.languages.CompletionItemKind.Operator,
+    insertText: "${1:req1} - derives -> ${2:req2}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Derives relationship",
+    range,
+  },
+  {
+    label: "refines",
+    kind: monaco.languages.CompletionItemKind.Operator,
+    insertText: "${1:req1} - refines -> ${2:req2}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Refines relationship",
+    range,
+  },
+]
+
+// Architecture Diagram specific completions
+const architectureCompletions = (
+  monaco: typeof import("monaco-editor"),
+  range: import("monaco-editor").IRange,
+): languages.CompletionItem[] => [
+  {
+    label: "group",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "group ${1:group_name}(${2:cloud})[${3:Group Label}]",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define a group",
+    range,
+  },
+  {
+    label: "service",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "service ${1:service_name}(${2:server})[${3:Service Label}]",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define a service",
+    range,
+  },
+  {
+    label: "service in group",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText: "service ${1:service_name}(${2:database})[${3:Service Label}] in ${4:group_name}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define a service within a group",
+    range,
+  },
+  {
+    label: "junction",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "junction ${1:junction_name}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define a junction",
+    range,
+  },
+  {
+    label: "connection",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText: "${1:service1}:${2:R} -- ${3:L}:${4:service2}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Connect services (R=Right, L=Left, T=Top, B=Bottom)",
+    range,
+  },
+  {
+    label: "cloud",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "cloud",
+    documentation: "Cloud icon type",
+    range,
+  },
+  {
+    label: "server",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "server",
+    documentation: "Server icon type",
+    range,
+  },
+  {
+    label: "database",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "database",
+    documentation: "Database icon type",
+    range,
+  },
+  {
+    label: "browser",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "browser",
+    documentation: "Browser icon type",
+    range,
+  },
+  {
+    label: "phone",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "phone",
+    documentation: "Phone icon type",
+    range,
   },
 ]
 

@@ -4,7 +4,21 @@ import type React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { GitBranch, FileText, Users, ArrowRight, Activity, Database, PieChart } from "lucide-react"
+import {
+  GitBranch,
+  FileText,
+  Users,
+  ArrowRight,
+  Activity,
+  Database,
+  PieChart,
+  GitCommit,
+  FileCheck,
+  Building,
+  Layers,
+  Clock,
+  Brain,
+} from "lucide-react"
 import type { MermaidData } from "@/components/editor/nodes/mermaid-node"
 
 interface Template {
@@ -132,6 +146,168 @@ const templates: Template[] = [
     "DevOps & Infrastructure" : 15
     "Testing & QA" : 10`,
   },
+  {
+    type: "gitgraph",
+    title: "Git Graph",
+    description: "Visualize git branching strategies and commit history",
+    icon: GitCommit,
+    preview: "main ← feature → hotfix",
+    code: `gitGraph
+    commit id: "Initial commit"
+    branch develop
+    checkout develop
+    commit id: "Add feature A"
+    commit id: "Add feature B"
+    checkout main
+    merge develop
+    commit id: "Release v1.0"
+    branch hotfix
+    checkout hotfix
+    commit id: "Fix critical bug"
+    checkout main
+    merge hotfix
+    commit id: "Release v1.0.1"`,
+  },
+  {
+    type: "requirement",
+    title: "Requirement Diagram",
+    description: "Model system requirements and their relationships",
+    icon: FileCheck,
+    preview: "Requirement → Element → Verification",
+    code: `requirementDiagram
+    requirement test_req {
+        id: 1
+        text: the test text.
+        risk: high
+        verifymethod: test
+    }
+    
+    functionalRequirement test_req2 {
+        id: 1.1
+        text: the second test text.
+        risk: low
+        verifymethod: inspection
+    }
+    
+    performanceRequirement test_req3 {
+        id: 1.2
+        text: the third test text.
+        risk: medium
+        verifymethod: demonstration
+    }
+    
+    element test_entity {
+        type: simulation
+    }
+    
+    test_req - satisfies -> test_entity
+    test_req2 - derives -> test_req
+    test_req3 - refines -> test_req2`,
+  },
+  {
+    type: "architecture",
+    title: "Architecture Diagram",
+    description: "Design system architecture and component relationships",
+    icon: Building,
+    preview: "Frontend ↔ API ↔ Database",
+    code: `architecture-beta
+    group api(cloud)[API Layer]
+    
+    service db(database)[Database] in api
+    service cache(disk)[Cache] in api
+    service auth(server)[Auth Service] in api
+    
+    group frontend(cloud)[Frontend]
+    service web(browser)[Web App] in frontend
+    service mobile(phone)[Mobile App] in frontend
+    
+    group external(cloud)[External Services]
+    service payment(server)[Payment Gateway] in external
+    service email(server)[Email Service] in external
+    
+    web:R -- L:auth
+    mobile:R -- L:auth
+    auth:R -- L:db
+    auth:R -- L:cache
+    auth:R -- L:payment
+    auth:R -- L:email`,
+  },
+  {
+    type: "c4context",
+    title: "C4 Context",
+    description: "Model system context with users, systems and relationships",
+    icon: Layers,
+    preview: "Person → System → External System",
+    code: `C4Context
+    title System Context diagram for Internet Banking System
+    
+    Person(customerA, "Banking Customer A", "A customer of the bank, with personal bank accounts.")
+    Person(customerB, "Banking Customer B")
+    Person_Ext(customerC, "Banking Customer C", "desc")
+    
+    Person(customerD, "Banking Customer D", "A customer of the bank, <br/> with personal bank accounts.")
+    
+    System(SystemAA, "Internet Banking System", "Allows customers to view information about their bank accounts, and make payments.")
+    
+    System_Ext(SystemE, "Mainframe Banking System", "Stores all of the core banking information about customers, accounts, transactions, etc.")
+    
+    System_Ext(SystemC, "E-mail system", "The internal Microsoft Exchange e-mail system.")
+    System_Ext(SystemD, "ATM", "Allows customers to withdraw cash.")
+    
+    Rel(customerA, SystemAA, "Uses")
+    Rel(SystemAA, SystemE, "Uses")
+    Rel(SystemAA, SystemC, "Sends e-mails", "SMTP")
+    Rel(customerC, SystemD, "Withdraws cash", "ATM")`,
+  },
+  {
+    type: "timeline",
+    title: "Timeline",
+    description: "Create chronological sequences and project timelines",
+    icon: Clock,
+    preview: "2021 → 2022 → 2023 → 2024",
+    code: `timeline
+    title History of Social Media Platform
+    
+    2002 : LinkedIn
+    2003 : MySpace
+    2004 : Facebook
+         : Google
+    2005 : Youtube
+    2006 : Twitter
+    2007 : FourSquare
+    2008 : Github
+    2010 : Instagram
+    2011 : Snapchat
+    2012 : Discord
+    2013 : Slack
+         : Telegram
+    2016 : TikTok
+    2017 : Mastodon`,
+  },
+  {
+    type: "mindmap",
+    title: "Mindmap",
+    description: "Organize ideas and concepts in a hierarchical structure",
+    icon: Brain,
+    preview: "Central Idea → Branch 1 → Branch 2",
+    code: `mindmap
+  root((mindmap))
+    Origins
+      Long history
+      ::icon(fa fa-book)
+      Popularisation
+        British popular psychology author Tony Buzan
+    Research
+      On effectiveness<br/>and features
+      On Automatic creation
+        Uses
+            Creative techniques
+            Strategic planning
+            Argument mapping
+    Tools
+      Pen and paper
+      Mermaid`,
+  },
 ]
 
 interface MermaidTemplateSelectorProps {
@@ -141,13 +317,13 @@ interface MermaidTemplateSelectorProps {
 
 export function MermaidTemplateSelector({ onSelect, onCancel }: MermaidTemplateSelectorProps) {
   return (
-    <div className="p-6 border-b bg-gray-50">
+    <div className="p-6 border-b bg-gray-50 max-h-[80vh] overflow-y-auto">
       <div className="text-center mb-6">
         <h3 className="text-lg font-semibold mb-2">Choose a Diagram Template</h3>
         <p className="text-gray-600">Select a template to get started with your Mermaid diagram</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto">
         {templates.map((template) => {
           const IconComponent = template.icon
           return (
