@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - run: git config --global --add safe.directory '*'
 
@@ -24,23 +24,39 @@ jobs:
           path: "**/node_modules"
           key: node-${{ hashFiles('**/package-lock.json') }}
 
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "9.0.x"
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "22"
 
-      - run: npm install
+      - run: cd apps/web ; npm install
         name: Install dependencies
 
-      - run: npm run build
+      - run: cd apps/web ; npm run build
         name: Build
 
-      - run: sudo apt-get install -y ffmpeg gource
+      - run: cd apps/api ; dotnet build "GameGuild.csproj" -c Release
+        name: Build API
+
+      - run: cd apps/api ; dotnet publish "GameGuild.csproj" -c Release
+        name: Publish API
+
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y --fix-missing ffmpeg gource
         name: Install ffmpeg and gource
+
+      - name: Make gource script executable
+        run: chmod +x ./contributors/gource.sh
 
       - name: Run headless gource
         uses: coactions/setup-xvfb@v1
         with:
-          run: npm run gource
+          run: ./contributors/gource.sh
 
       - name: Publish
         uses: peaceiris/actions-gh-pages@v3
@@ -49,20 +65,16 @@ jobs:
           publish_dir: ./contributors
           force_orphan: true
 
-      - name: Generate Git Stats
-        run: npm run git-stats
-
       - name: Semantic Release
         id: semantic
-        uses: cycjimmy/semantic-release-action@v2
+        uses: cycjimmy/semantic-release-action@v4
         with:
-          semantic_version: 19.0.2
+          semantic_version: 23.0.0
           extra_plugins: |
             @semantic-release/changelog@6.0.2
             @semantic-release/git@10.0.1
             @semantic-release/commit-analyzer@9.0.2
             @semantic-release/github@8.0.7
-            @semantic-release/npm@9.0.1
             @semantic-release/release-notes-generator@10.0.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
