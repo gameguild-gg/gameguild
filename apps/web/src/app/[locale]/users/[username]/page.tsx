@@ -1,10 +1,31 @@
 import { notFound } from 'next/navigation';
 import { getUserByUsername } from '@/lib/api/users';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Calendar, Mail, User } from 'lucide-react';
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Progress } from "@/components/ui/progress"
+import Image from "next/image"
+import {
+  Github,
+  Twitter,
+  Linkedin,
+  Globe,
+  MapPin,
+  Calendar,
+  Star,
+  Users,
+  Trophy,
+  Gamepad2,
+  Code,
+  Palette,
+  Settings,
+  MessageSquare,
+  Heart,
+  Share2,
+  ExternalLink,
+} from "lucide-react"
 
 interface UserProfilePageProps {
   params: {
@@ -28,79 +49,397 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
       notFound();
     }
 
+    // Extract display name and initials from user data
+    const displayName = user.name || username;
+    const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+    const joinDate = new Date(user.createdAt);
+
     return (
-      <div className="container mx-auto py-8 px-4">
-        <div className="max-w-4xl mx-auto">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={`/avatars/${user.username}.png`} alt={user.name} />
-                  <AvatarFallback className="text-lg">
-                    {user.name?.charAt(0)?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="space-y-2">
-                  <div>
-                    <h1 className="text-2xl font-bold">{user.name}</h1>
-                    <p className="text-muted-foreground">@{user.username}</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant={user.isActive ? 'default' : 'secondary'}>
-                      {user.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <Separator />
-                
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Profile Information</span>
+      <div className="flex flex-col min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+        {/* Cover Image */}
+        <div className="relative h-80 md:h-96 overflow-hidden">
+          <Image 
+            src="/placeholder.svg?height=384&width=1200" 
+            alt="Profile Cover" 
+            className="w-full h-full object-cover"
+            width={1200}
+            height={384}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20" />
+          <div className="absolute inset-0 flex items-end">
+            <div className="max-w-7xl mx-auto w-full px-6 pb-6">
+              {/* Profile Info - Left Side */}
+              <div className="flex items-end justify-between gap-8">
+                <div className="flex items-end gap-4">
+                  <Avatar className="w-20 h-20 border-4 border-purple-500/30 shadow-2xl">
+                    <AvatarImage src={`/avatars/${username}.png`} />
+                    <AvatarFallback className="text-lg bg-gradient-to-br from-purple-600 to-pink-600 text-white">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="space-y-2 flex-1">
+                    <h1 className="text-2xl font-bold text-white">{displayName}</h1>
+                    <p className="text-purple-300">Game Developer & Community Member</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary" className="bg-purple-600/20 text-purple-300 border-purple-500/30">
+                        <Code className="w-3 h-3 mr-1" />
+                        Developer
+                      </Badge>
+                      <Badge variant="secondary" className="bg-pink-600/20 text-pink-300 border-pink-500/30">
+                        <Palette className="w-3 h-3 mr-1" />
+                        Creator
+                      </Badge>
+                      <Badge variant="secondary" className="bg-blue-600/20 text-blue-300 border-blue-500/30">
+                        <Gamepad2 className="w-3 h-3 mr-1" />
+                        Gamer
+                      </Badge>
                     </div>
-                    <div className="pl-6 space-y-1">
-                      <p className="text-sm">
-                        <span className="font-medium">Name:</span> {user.name}
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-medium">Username:</span> @{user.username}
-                      </p>
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-400 mt-2">
+                      <div className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        Member Location
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        Joined {joinDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        Active member
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Member Since</span>
-                    </div>
-                    <div className="pl-6">
-                      <p className="text-sm">
-                        {new Date(user.createdAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Message
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-purple-500/30 text-purple-300 hover:bg-purple-600/10 bg-transparent"
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        Follow
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-purple-500/30 text-purple-300 hover:bg-purple-600/10 bg-transparent"
+                      >
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Share
+                      </Button>
                     </div>
                   </div>
                 </div>
 
-                <Separator />
-                
-                <div className="text-center text-muted-foreground">
-                  <p className="text-sm">
-                    This is a public profile page for {user.name}. 
-                    Additional profile information may be available to authenticated users.
-                  </p>
+                {/* Small Stats Cards - Right Side */}
+                <div className="hidden md:flex gap-3">
+                  <div className="bg-slate-800/70 border border-purple-500/20 rounded-lg p-3 text-center backdrop-blur-sm">
+                    <Trophy className="w-5 h-5 text-yellow-500 mx-auto mb-1" />
+                    <div className="text-lg font-bold text-white">42</div>
+                    <div className="text-xs text-gray-400">Points</div>
+                  </div>
+                  <div className="bg-slate-800/70 border border-purple-500/20 rounded-lg p-3 text-center backdrop-blur-sm">
+                    <Star className="w-5 h-5 text-purple-400 mx-auto mb-1" />
+                    <div className="text-lg font-bold text-white">4.7</div>
+                    <div className="text-xs text-gray-400">Rating</div>
+                  </div>
+                  <div className="bg-slate-800/70 border border-purple-500/20 rounded-lg p-3 text-center backdrop-blur-sm">
+                    <Gamepad2 className="w-5 h-5 text-pink-400 mx-auto mb-1" />
+                    <div className="text-lg font-bold text-white">7</div>
+                    <div className="text-xs text-gray-400">Games</div>
+                  </div>
+                  <div className="bg-slate-800/70 border border-purple-500/20 rounded-lg p-3 text-center backdrop-blur-sm">
+                    <Heart className="w-5 h-5 text-red-400 mx-auto mb-1" />
+                    <div className="text-lg font-bold text-white">1.2k</div>
+                    <div className="text-xs text-gray-400">Likes</div>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+        </div>
+
+        {/* Profile Section */}
+        <div className="flex-1">
+          <div className="relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10" />
+            <div className="relative max-w-7xl mx-auto px-6 py-8">
+              <div className="space-y-4">
+                <p className="text-gray-300">
+                  Community member and game enthusiast. Part of the Game Guild community since {joinDate.getFullYear()}.
+                  Active participant in discussions and collaborative projects.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="max-w-7xl mx-auto px-6 py-8">
+            <Tabs defaultValue="portfolio" className="space-y-6">
+              <TabsList className="bg-slate-800/50 border-purple-500/20">
+                <TabsTrigger value="portfolio" className="data-[state=active]:bg-purple-600">
+                  Portfolio
+                </TabsTrigger>
+                <TabsTrigger value="skills" className="data-[state=active]:bg-purple-600">
+                  Skills
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="data-[state=active]:bg-purple-600">
+                  Activity
+                </TabsTrigger>
+                <TabsTrigger value="about" className="data-[state=active]:bg-purple-600">
+                  About
+                </TabsTrigger>
+              </TabsList>
+
+            <TabsContent value="portfolio" className="space-y-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Featured Project */}
+                <Card className="md:col-span-2 lg:col-span-2 bg-slate-800/50 border-purple-500/20 overflow-hidden">
+                  <div className="relative h-48 bg-gradient-to-br from-purple-600 to-pink-600">
+                    <Image
+                      src="/placeholder.svg?height=192&width=400"
+                      alt="Featured Project"
+                      className="w-full h-full object-cover"
+                      width={400}
+                      height={192}
+                    />
+                    <Badge className="absolute top-4 left-4 bg-yellow-600 text-yellow-100">Featured</Badge>
+                  </div>
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-bold text-white mb-2">Community Project</h3>
+                    <p className="text-gray-300 mb-4">
+                      A showcase of community contributions and collaborative work within the Game Guild platform.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <Badge variant="outline" className="border-purple-500/30 text-purple-300">
+                        Community
+                      </Badge>
+                      <Badge variant="outline" className="border-purple-500/30 text-purple-300">
+                        Collaborative
+                      </Badge>
+                      <Badge variant="outline" className="border-purple-500/30 text-purple-300">
+                        Open Source
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-sm text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <Star className="w-4 h-4" />
+                          4.5
+                        </span>
+                        <span>Community project</span>
+                      </div>
+                      <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        View Project
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Other Projects */}
+                {[
+                  { name: "Game Mod", tech: "Community", rating: 4.2 },
+                  { name: "Tool Script", tech: "Utility", rating: 4.0 },
+                  { name: "Guide Content", tech: "Educational", rating: 4.6 },
+                ].map((project, index) => (
+                  <Card key={index} className="bg-slate-800/50 border-purple-500/20 overflow-hidden">
+                    <div className="relative h-32 bg-gradient-to-br from-slate-700 to-slate-600">
+                      <Image
+                        src={`/placeholder.svg?height=128&width=300`}
+                        alt={project.name}
+                        className="w-full h-full object-cover"
+                        width={300}
+                        height={128}
+                      />
+                    </div>
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold text-white mb-2">{project.name}</h4>
+                      <Badge variant="outline" className="border-purple-500/30 text-purple-300 mb-3">
+                        {project.tech}
+                      </Badge>
+                      <div className="flex items-center justify-between text-sm text-gray-400">
+                        <span className="flex items-center gap-1">
+                          <Star className="w-3 h-3" />
+                          {project.rating}
+                        </span>
+                        <span>Community</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="skills" className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card className="bg-slate-800/50 border-purple-500/20">
+                  <CardHeader>
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Code className="w-5 h-5 text-purple-400" />
+                      Technical Skills
+                    </h3>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {[
+                      { name: "Game Development", level: 75 },
+                      { name: "Community Management", level: 85 },
+                      { name: "Content Creation", level: 70 },
+                      { name: "Project Management", level: 65 },
+                    ].map((skill, index) => (
+                      <div key={index}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-gray-300">{skill.name}</span>
+                          <span className="text-purple-400">{skill.level}%</span>
+                        </div>
+                        <Progress value={skill.level} className="h-2" />
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-slate-800/50 border-purple-500/20">
+                  <CardHeader>
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Settings className="w-5 h-5 text-pink-400" />
+                      Tools & Platforms
+                    </h3>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {[
+                      { name: "Discord", level: 90 },
+                      { name: "GitHub", level: 80 },
+                      { name: "Game Guild Platform", level: 95 },
+                      { name: "Community Tools", level: 85 },
+                    ].map((skill, index) => (
+                      <div key={index}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="text-gray-300">{skill.name}</span>
+                          <span className="text-pink-400">{skill.level}%</span>
+                        </div>
+                        <Progress value={skill.level} className="h-2" />
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="bg-slate-800/50 border-purple-500/20">
+                <CardHeader>
+                  <h3 className="text-lg font-semibold text-white">Specializations</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-3">
+                    {[
+                      "Community Building",
+                      "Game Testing",
+                      "Content Creation",
+                      "Collaboration",
+                      "Project Documentation",
+                      "User Experience",
+                      "Team Coordination",
+                      "Creative Problem Solving",
+                    ].map((spec, index) => (
+                      <Badge key={index} variant="outline" className="border-purple-500/30 text-purple-300">
+                        {spec}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="activity" className="space-y-6">
+              <div className="space-y-4">
+                {[
+                  { action: "Joined", item: "Game Development Discussion", time: "2 hours ago", type: "community" },
+                  { action: "Shared", item: "Helpful Game Design Resource", time: "1 day ago", type: "share" },
+                  { action: "Commented on", item: "Community Project Proposal", time: "2 days ago", type: "comment" },
+                  { action: "Participated in", item: "Weekly Community Event", time: "3 days ago", type: "event" },
+                  { action: "Created", item: "New Discussion Thread", time: "1 week ago", type: "create" },
+                ].map((activity, index) => (
+                  <Card key={index} className="bg-slate-800/50 border-purple-500/20">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={`/avatars/${username}.png`} />
+                          <AvatarFallback className="bg-purple-600 text-white text-xs">{initials}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <p className="text-gray-300">
+                            <span className="text-white font-medium">{displayName}</span> {activity.action}{" "}
+                            <span className="text-purple-400">{activity.item}</span>
+                          </p>
+                          <p className="text-sm text-gray-500">{activity.time}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="about" className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card className="bg-slate-800/50 border-purple-500/20">
+                  <CardHeader>
+                    <h3 className="text-lg font-semibold text-white">About {displayName}</h3>
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-gray-300">
+                    <p>
+                      Welcome to {displayName}&apos;s profile! This community member has been part of Game Guild since {joinDate.getFullYear()}, 
+                      contributing to various discussions and projects within our gaming community.
+                    </p>
+                    <p>
+                      As an active member of Game Guild, {displayName} participates in community events, shares knowledge, 
+                      and collaborates on exciting gaming projects with fellow community members.
+                    </p>
+                    <p>
+                      Feel free to connect and explore the various projects and contributions this member has shared 
+                      with the Game Guild community.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-slate-800/50 border-purple-500/20">
+                  <CardHeader>
+                    <h3 className="text-lg font-semibold text-white">Community Stats</h3>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-3 p-2 rounded-lg">
+                      <Calendar className="w-5 h-5 text-purple-400" />
+                      <div>
+                        <div className="text-sm text-gray-400">Member Since</div>
+                        <div className="text-white">{joinDate.toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'long',
+                          day: 'numeric'
+                        })}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-2 rounded-lg">
+                      <Users className="w-5 h-5 text-green-400" />
+                      <div>
+                        <div className="text-sm text-gray-400">Status</div>
+                        <div className="text-white">Active Member</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-2 rounded-lg">
+                      <Trophy className="w-5 h-5 text-yellow-400" />
+                      <div>
+                        <div className="text-sm text-gray-400">Community Level</div>
+                        <div className="text-white">Contributor</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </div>
     );
