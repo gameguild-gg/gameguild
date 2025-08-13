@@ -66,15 +66,15 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
             height={384}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20" />
           <div className="absolute inset-0 flex items-end">
             <div className="max-w-7xl mx-auto w-full px-6 pb-6">
               {/* Profile Info - Left Side */}
               <div className="flex items-end justify-between gap-8">
                 <div className="flex items-end gap-4">
-                  <Avatar className="w-20 h-20 border-4 border-purple-500/30 shadow-2xl">
+                  <Avatar className="w-28 h-28 border-4 border-purple-500/30 shadow-2xl">
                     <AvatarImage src={`/avatars/${username}.png`} />
-                    <AvatarFallback className="text-lg bg-gradient-to-br from-purple-600 to-pink-600 text-white">
+                    <AvatarFallback className="text-lg bg-gradient-to-br from-indigo-600 to-blue-600 text-white">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
@@ -82,16 +82,16 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                     <h1 className="text-2xl font-bold text-white">{displayName}</h1>
                     <p className="text-purple-300">Game Developer & Community Member</p>
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary" className="bg-purple-600/20 text-purple-300 border-purple-500/30">
-                        <Code className="w-3 h-3 mr-1" />
+                      <Badge className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 text-blue-200 backdrop-blur-sm">
+                        <Code className="w-3 h-3" />
                         Developer
                       </Badge>
-                      <Badge variant="secondary" className="bg-pink-600/20 text-pink-300 border-pink-500/30">
-                        <Palette className="w-3 h-3 mr-1" />
+                      <Badge className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-400/30 text-purple-200 backdrop-blur-sm">
+                        <Palette className="w-3 h-3" />
                         Creator
                       </Badge>
-                      <Badge variant="secondary" className="bg-blue-600/20 text-blue-300 border-blue-500/30">
-                        <Gamepad2 className="w-3 h-3 mr-1" />
+                      <Badge className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-400/30 text-emerald-200 backdrop-blur-sm">
+                        <Gamepad2 className="w-3 h-3" />
                         Gamer
                       </Badge>
                     </div>
@@ -110,14 +110,14 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 mt-3">
-                      <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                      <Button size="sm" className="px-4 py-2 bg-gradient-to-r from-blue-600/80 to-purple-600/80 text-white rounded-lg hover:from-blue-700/80 hover:to-purple-700/80 transition-all duration-300 font-medium shadow-lg border border-white/10 backdrop-blur-sm">
                         <MessageSquare className="w-4 h-4 mr-2" />
                         Message
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-purple-500/30 text-purple-300 hover:bg-purple-600/10 bg-transparent"
+                        className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-white/20 text-white rounded-lg hover:from-purple-500/30 hover:to-blue-500/30 hover:border-white/30 transition-all duration-300 font-medium backdrop-blur-sm shadow-lg"
                       >
                         <Users className="w-4 h-4 mr-2" />
                         Follow
@@ -125,7 +125,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-purple-500/30 text-purple-300 hover:bg-purple-600/10 bg-transparent"
+                        className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-white/20 text-white rounded-lg hover:from-purple-500/30 hover:to-blue-500/30 hover:border-white/30 transition-all duration-300 font-medium backdrop-blur-sm shadow-lg"
                       >
                         <Share2 className="w-4 h-4 mr-2" />
                         Share
@@ -136,22 +136,22 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
 
                 {/* Small Stats Cards - Right Side */}
                 <div className="hidden md:flex gap-3">
-                  <div className="bg-slate-800/70 border border-purple-500/20 rounded-lg p-3 text-center backdrop-blur-sm">
+                  <div className="bg-gradient-to-br from-yellow-500/10 to-transparent border border-yellow-400/30 rounded-lg p-3 text-center backdrop-blur-sm shadow-lg">
                     <Trophy className="w-5 h-5 text-yellow-500 mx-auto mb-1" />
                     <div className="text-lg font-bold text-white">42</div>
                     <div className="text-xs text-gray-400">Points</div>
                   </div>
-                  <div className="bg-slate-800/70 border border-purple-500/20 rounded-lg p-3 text-center backdrop-blur-sm">
+                  <div className="bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-400/30 rounded-lg p-3 text-center backdrop-blur-sm shadow-lg">
                     <Star className="w-5 h-5 text-purple-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-white">4.7</div>
                     <div className="text-xs text-gray-400">Rating</div>
                   </div>
-                  <div className="bg-slate-800/70 border border-purple-500/20 rounded-lg p-3 text-center backdrop-blur-sm">
-                    <Gamepad2 className="w-5 h-5 text-pink-400 mx-auto mb-1" />
+                  <div className="bg-gradient-to-br from-sky-500/10 to-transparent border border-sky-400/30 rounded-lg p-3 text-center backdrop-blur-sm shadow-lg">
+                    <Gamepad2 className="w-5 h-5 text-sky-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-white">7</div>
                     <div className="text-xs text-gray-400">Games</div>
                   </div>
-                  <div className="bg-slate-800/70 border border-purple-500/20 rounded-lg p-3 text-center backdrop-blur-sm">
+                  <div className="bg-gradient-to-br from-red-500/10 to-transparent border border-red-400/30 rounded-lg p-3 text-center backdrop-blur-sm shadow-lg">
                     <Heart className="w-5 h-5 text-red-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-white">1.2k</div>
                     <div className="text-xs text-gray-400">Likes</div>
@@ -165,7 +165,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
         {/* Profile Section */}
         <div className="flex-1">
           <div className="relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-pink-600/10" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10" />
             <div className="relative max-w-7xl mx-auto px-6 py-8">
               <div className="space-y-4">
                 <p className="text-gray-300">
@@ -198,7 +198,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Featured Project */}
                 <Card className="md:col-span-2 lg:col-span-2 bg-slate-800/50 border-purple-500/20 overflow-hidden">
-                  <div className="relative h-48 bg-gradient-to-br from-purple-600 to-pink-600">
+                  <div className="relative h-48 bg-gradient-to-br from-blue-600 to-purple-600">
                     <Image
                       src="/placeholder.svg?height=192&width=400"
                       alt="Featured Project"
@@ -214,13 +214,13 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                       A showcase of community contributions and collaborative work within the Game Guild platform.
                     </p>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="outline" className="border-purple-500/30 text-purple-300">
+                      <Badge className="rounded-full bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-400/30 text-white px-3 py-1 backdrop-blur-sm shadow-md">
                         Community
                       </Badge>
-                      <Badge variant="outline" className="border-purple-500/30 text-purple-300">
+                      <Badge className="rounded-full bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-400/30 text-white px-3 py-1 backdrop-blur-sm shadow-md">
                         Collaborative
                       </Badge>
-                      <Badge variant="outline" className="border-purple-500/30 text-purple-300">
+                      <Badge className="rounded-full bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-400/30 text-white px-3 py-1 backdrop-blur-sm shadow-md">
                         Open Source
                       </Badge>
                     </div>
@@ -232,7 +232,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                         </span>
                         <span>Community project</span>
                       </div>
-                      <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                      <Button size="sm" className="px-4 py-2 bg-gradient-to-r from-blue-600/80 to-purple-600/80 text-white rounded-lg hover:from-blue-700/80 hover:to-purple-700/80 transition-all duration-300 font-medium shadow-lg border border-white/10 backdrop-blur-sm">
                         <ExternalLink className="w-4 h-4 mr-2" />
                         View Project
                       </Button>
@@ -258,7 +258,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                     </div>
                     <CardContent className="p-4">
                       <h4 className="font-semibold text-white mb-2">{project.name}</h4>
-                      <Badge variant="outline" className="border-purple-500/30 text-purple-300 mb-3">
+                      <Badge className="rounded-full bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-400/30 text-white px-3 py-1 mb-3 backdrop-blur-sm shadow-md">
                         {project.tech}
                       </Badge>
                       <div className="flex items-center justify-between text-sm text-gray-400">
@@ -304,7 +304,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                 <Card className="bg-slate-800/50 border-purple-500/20">
                   <CardHeader>
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <Settings className="w-5 h-5 text-pink-400" />
+                      <Settings className="w-5 h-5 text-indigo-400" />
                       Tools & Platforms
                     </h3>
                   </CardHeader>
@@ -318,7 +318,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                       <div key={index}>
                         <div className="flex justify-between text-sm mb-1">
                           <span className="text-gray-300">{skill.name}</span>
-                          <span className="text-pink-400">{skill.level}%</span>
+                          <span className="text-indigo-400">{skill.level}%</span>
                         </div>
                         <Progress value={skill.level} className="h-2" />
                       </div>
@@ -343,7 +343,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                       "Team Coordination",
                       "Creative Problem Solving",
                     ].map((spec, index) => (
-                      <Badge key={index} variant="outline" className="border-purple-500/30 text-purple-300">
+                      <Badge key={index} className="rounded-full bg-gradient-to-r from-purple-500/15 to-blue-500/15 border border-purple-400/25 text-white px-3 py-1 backdrop-blur-sm shadow-sm">
                         {spec}
                       </Badge>
                     ))}
