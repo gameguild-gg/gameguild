@@ -30,6 +30,9 @@ type EnhancedContributor = Contributor & {
 // Create an Octokit instance
 const createOctokit = () => {
   const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    console.warn('GITHUB_TOKEN environment variable not set. GitHub API requests may be rate limited.');
+  }
   return new Octokit({
     auth: token,
     userAgent: 'GameGuild-Website',
@@ -44,14 +47,18 @@ const octokit = createOctokit().rest;
 const fetchGitHubContributors = unstable_cache(
   async (repo: string = GITHUB_REPO): Promise<Contributor[]> => {
     try {
+      console.log(`Fetching contributors from ${GITHUB_OWNER}/${repo}...`);
       const { data: contributors } = await octokit.repos.listContributors({
         owner: GITHUB_OWNER,
         repo: repo,
         per_page: 100,
       });
+      console.log(`GitHub API returned ${contributors.length} contributors`);
 
       // Filter out bots and unwanted contributors
-      return contributors.filter((contributor) => contributor.login !== 'semantic-release-bot' && contributor.login !== 'dependabot[bot]' && contributor.login !== 'github-actions[bot]' && contributor.login !== 'LMD9977') as Contributor[];
+      const filteredContributors = contributors.filter((contributor) => contributor.login !== 'semantic-release-bot' && contributor.login !== 'dependabot[bot]' && contributor.login !== 'github-actions[bot]' && contributor.login !== 'LMD9977') as Contributor[];
+      console.log(`Filtered to ${filteredContributors.length} user contributors`);
+      return filteredContributors;
     } catch (error) {
       console.error('Error fetching GitHub contributors:', error);
       return [];
@@ -281,15 +288,20 @@ const getCachedBranchesCount = unstable_cache(
  */
 export async function getContributors(): Promise<EnhancedContributor[]> {
   try {
+    console.log('=== Starting getContributors function ===');
     // Fetch basic contributor data
     const contributors = await fetchGitHubContributors();
+    console.log(`Found ${contributors.length} contributors`);
 
     if (contributors.length === 0) {
+      console.log('No contributors found, returning empty array');
       return [];
     }
 
     // Fetch detailed stats
+    console.log('Fetching contributor stats...');
     const stats = await fetchContributorStats();
+    console.log(`Found stats for ${stats.length} contributors`);
 
     // Enhance contributors with additional data
     const enhancedContributors: EnhancedContributor[] = await Promise.all(
@@ -335,9 +347,18 @@ export async function getContributors(): Promise<EnhancedContributor[]> {
       return scoreB - scoreA;
     });
 
+    console.log('Enhanced contributors:', enhancedContributors.map(c => ({
+      login: c.login,
+      contributions: c.contributions,
+      total_commits: c.total_commits,
+      additions: c.additions,
+      deletions: c.deletions
+    })));
+
+    console.log('=== getContributors function completed successfully ===');
     return enhancedContributors;
   } catch (error) {
-    console.error('Error getting contributors:', error);
+    console.error('=== Error in getContributors function ===', error);
     return [];
   }
 }
