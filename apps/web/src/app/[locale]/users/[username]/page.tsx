@@ -68,11 +68,11 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20" />
           {/* Actions: top-right */}
-      <div className="absolute top-4 right-6 z-10 flex gap-2">
+          <div className="absolute top-4 right-6 z-20 flex gap-2">
             <Button
               size="sm"
               variant="outline"
-              className="px-4 py-2 bg-gradient-to-r from-blue-500/50 to-purple-500/50 border border-white/50 text-white rounded-lg ring-1 ring-white/30 hover:from-blue-500/60 hover:to-purple-500/60 hover:border-white/60 transition-all duration-300 font-semibold backdrop-blur-lg backdrop-saturate-150 shadow-2xl focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none drop-shadow-lg"
+              className="px-5 py-2.5 bg-blue-600/80 border-2 border-blue-400/70 text-white rounded-xl ring-1 ring-blue-300/50 hover:bg-blue-600/90 hover:border-blue-400/80 hover:ring-blue-300/60 transition-all duration-300 font-semibold backdrop-blur-2xl backdrop-saturate-150 backdrop-brightness-90 backdrop-contrast-125 shadow-2xl focus-visible:ring-2 focus-visible:ring-blue-300/70 focus-visible:outline-none drop-shadow-lg"
             >
               <MessageSquare className="w-4 h-4 mr-2" />
               Message
@@ -80,7 +80,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
             <Button
               size="sm"
               variant="outline"
-              className="px-4 py-2 bg-gradient-to-r from-purple-500/50 to-blue-500/50 border border-white/50 text-white rounded-lg ring-1 ring-white/30 hover:from-purple-500/60 hover:to-blue-500/60 hover:border-white/60 transition-all duration-300 font-semibold backdrop-blur-lg backdrop-saturate-150 shadow-2xl focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none drop-shadow-lg"
+              className="px-5 py-2.5 bg-purple-600/80 border-2 border-purple-400/70 text-white rounded-xl ring-1 ring-purple-300/50 hover:bg-purple-600/90 hover:border-purple-400/80 hover:ring-purple-300/60 transition-all duration-300 font-semibold backdrop-blur-2xl backdrop-saturate-150 backdrop-brightness-90 backdrop-contrast-125 shadow-2xl focus-visible:ring-2 focus-visible:ring-purple-300/70 focus-visible:outline-none drop-shadow-lg"
             >
               <Users className="w-4 h-4 mr-2" />
               Follow
@@ -88,7 +88,7 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
             <Button
               size="sm"
               variant="outline"
-              className="px-4 py-2 bg-gradient-to-r from-purple-500/50 to-blue-500/50 border border-white/50 text-white rounded-lg ring-1 ring-white/30 hover:from-purple-500/60 hover:to-blue-500/60 hover:border-white/60 transition-all duration-300 font-semibold backdrop-blur-lg backdrop-saturate-150 shadow-2xl focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none drop-shadow-lg"
+              className="px-5 py-2.5 bg-indigo-600/80 border-2 border-indigo-400/70 text-white rounded-xl ring-1 ring-indigo-300/50 hover:bg-indigo-600/90 hover:border-indigo-400/80 hover:ring-indigo-300/60 transition-all duration-300 font-semibold backdrop-blur-2xl backdrop-saturate-150 backdrop-brightness-90 backdrop-contrast-125 shadow-2xl focus-visible:ring-2 focus-visible:ring-indigo-300/70 focus-visible:outline-none drop-shadow-lg"
             >
               <Share2 className="w-4 h-4 mr-2" />
               Share
