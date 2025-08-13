@@ -67,6 +67,33 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20" />
+          {/* Actions: top-right */}
+      <div className="absolute top-4 right-6 z-10 flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="px-4 py-2 bg-gradient-to-r from-blue-500/50 to-purple-500/50 border border-white/50 text-white rounded-lg ring-1 ring-white/30 hover:from-blue-500/60 hover:to-purple-500/60 hover:border-white/60 transition-all duration-300 font-semibold backdrop-blur-lg backdrop-saturate-150 shadow-2xl focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none drop-shadow-lg"
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Message
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="px-4 py-2 bg-gradient-to-r from-purple-500/50 to-blue-500/50 border border-white/50 text-white rounded-lg ring-1 ring-white/30 hover:from-purple-500/60 hover:to-blue-500/60 hover:border-white/60 transition-all duration-300 font-semibold backdrop-blur-lg backdrop-saturate-150 shadow-2xl focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none drop-shadow-lg"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Follow
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="px-4 py-2 bg-gradient-to-r from-purple-500/50 to-blue-500/50 border border-white/50 text-white rounded-lg ring-1 ring-white/30 hover:from-purple-500/60 hover:to-blue-500/60 hover:border-white/60 transition-all duration-300 font-semibold backdrop-blur-lg backdrop-saturate-150 shadow-2xl focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:outline-none drop-shadow-lg"
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Share
+            </Button>
+          </div>
           <div className="absolute inset-0 flex items-end">
             <div className="max-w-7xl mx-auto w-full px-6 pb-6">
               {/* Profile Info - Left Side */}
@@ -109,52 +136,31 @@ export default async function UserProfilePage({ params }: UserProfilePageProps) 
                         Active member
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      <Button size="sm" className="px-4 py-2 bg-gradient-to-r from-blue-600/80 to-purple-600/80 text-white rounded-lg hover:from-blue-700/80 hover:to-purple-700/80 transition-all duration-300 font-medium shadow-lg border border-white/10 backdrop-blur-sm">
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Message
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-white/20 text-white rounded-lg hover:from-purple-500/30 hover:to-blue-500/30 hover:border-white/30 transition-all duration-300 font-medium backdrop-blur-sm shadow-lg"
-                      >
-                        <Users className="w-4 h-4 mr-2" />
-                        Follow
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-white/20 text-white rounded-lg hover:from-purple-500/30 hover:to-blue-500/30 hover:border-white/30 transition-all duration-300 font-medium backdrop-blur-sm shadow-lg"
-                      >
-                        <Share2 className="w-4 h-4 mr-2" />
-                        Share
-                      </Button>
-                    </div>
+                    
                   </div>
                 </div>
 
                 {/* Small Stats Cards - Right Side */}
                 <div className="hidden md:flex gap-3">
-                  <div className="bg-gradient-to-br from-yellow-500/10 to-transparent border border-yellow-400/30 rounded-lg p-3 text-center backdrop-blur-sm shadow-lg">
+                  <div className="bg-gradient-to-br from-yellow-500/25 to-transparent border border-yellow-400/40 rounded-lg p-4 text-center backdrop-blur-md shadow-xl">
                     <Trophy className="w-5 h-5 text-yellow-500 mx-auto mb-1" />
                     <div className="text-lg font-bold text-white">42</div>
-                    <div className="text-xs text-gray-400">Points</div>
+                    <div className="text-xs text-slate-300">Points</div>
                   </div>
-                  <div className="bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-400/30 rounded-lg p-3 text-center backdrop-blur-sm shadow-lg">
+                  <div className="bg-gradient-to-br from-purple-500/25 to-transparent border border-purple-400/40 rounded-lg p-4 text-center backdrop-blur-md shadow-xl">
                     <Star className="w-5 h-5 text-purple-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-white">4.7</div>
-                    <div className="text-xs text-gray-400">Rating</div>
+                    <div className="text-xs text-slate-300">Rating</div>
                   </div>
-                  <div className="bg-gradient-to-br from-sky-500/10 to-transparent border border-sky-400/30 rounded-lg p-3 text-center backdrop-blur-sm shadow-lg">
+                  <div className="bg-gradient-to-br from-sky-500/25 to-transparent border border-sky-400/40 rounded-lg p-4 text-center backdrop-blur-md shadow-xl">
                     <Gamepad2 className="w-5 h-5 text-sky-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-white">7</div>
-                    <div className="text-xs text-gray-400">Games</div>
+                    <div className="text-xs text-slate-300">Games</div>
                   </div>
-                  <div className="bg-gradient-to-br from-red-500/10 to-transparent border border-red-400/30 rounded-lg p-3 text-center backdrop-blur-sm shadow-lg">
+                  <div className="bg-gradient-to-br from-red-500/25 to-transparent border border-red-400/40 rounded-lg p-4 text-center backdrop-blur-md shadow-xl">
                     <Heart className="w-5 h-5 text-red-400 mx-auto mb-1" />
                     <div className="text-lg font-bold text-white">1.2k</div>
-                    <div className="text-xs text-gray-400">Likes</div>
+                    <div className="text-xs text-slate-300">Likes</div>
                   </div>
                 </div>
               </div>
