@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/gameguild-gg/gameguild/compare/v2.0.3...v2.0.4) (2025-08-13)
+
+
+### Bug Fixes
+
+* **contributors:** better alignment or contributors cards ([d303043](https://github.com/gameguild-gg/gameguild/commit/d30304378d15d7dbb10da334b2dc7bf9cedd4624))
+
 ## [2.0.3](https://github.com/gameguild-gg/gameguild/compare/v2.0.2...v2.0.3) (2025-08-13)
 
 
