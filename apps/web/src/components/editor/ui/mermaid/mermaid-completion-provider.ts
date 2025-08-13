@@ -16,6 +16,10 @@ function detectDiagramType(code: string): string {
   if (firstLine.startsWith("c4context")) return "c4context"
   if (firstLine.startsWith("timeline")) return "timeline"
   if (firstLine.startsWith("mindmap")) return "mindmap"
+  if (firstLine.startsWith("xychart-beta")) return "xyChart"
+  if (firstLine.startsWith("radar-beta")) return "radar"
+  if (firstLine.startsWith("quadrantchart")) return "quadrant"
+  if (firstLine.startsWith("sankey-beta")) return "sankey"
 
   return "unknown"
 }
@@ -79,6 +83,18 @@ function getContextualSuggestions(
       case "mindmap":
         suggestions.push(...mindmapCompletions(monaco, range))
         break
+      case "xyChart":
+        suggestions.push(...xyChartCompletions(monaco, range))
+        break
+      case "radar":
+        suggestions.push(...radarCompletions(monaco, range))
+        break
+      case "quadrant":
+        suggestions.push(...quadrantCompletions(monaco, range))
+        break
+      case "sankey":
+        suggestions.push(...sankeyCompletions(monaco, range))
+        break
     }
 
     // Add only common suggestions (comments), not diagram types
@@ -90,6 +106,158 @@ function getContextualSuggestions(
 
   return suggestions
 }
+
+const xyChartCompletions = (
+  monaco: typeof import("monaco-editor"),
+  range: import("monaco-editor").IRange,
+): languages.CompletionItem[] => [
+  {
+    label: "title",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: 'title "${1:Chart Title}"',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Set chart title",
+    range,
+  },
+  {
+    label: "x-axis",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "x-axis [${1:Jan, Feb, Mar, Apr, May}]",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define X-axis labels",
+    range,
+  },
+  {
+    label: "y-axis",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: 'y-axis "${1:Revenue}" ${2:0} --> ${3:1000}',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define Y-axis with range",
+    range,
+  },
+  {
+    label: "bar",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "bar [${1:100, 200, 300, 400, 500}]",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Add bar chart data",
+    range,
+  },
+  {
+    label: "line",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "line [${1:100, 200, 300, 400, 500}]",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Add line chart data",
+    range,
+  },
+]
+
+const radarCompletions = (
+  monaco: typeof import("monaco-editor"),
+  range: import("monaco-editor").IRange,
+): languages.CompletionItem[] => [
+  {
+    label: "title",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "title ${1:Radar Chart Title}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Set radar chart title",
+    range,
+  },
+  {
+    label: "data point",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText: '"${1:Category}" : ${2:0.8}',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Add data point (value between 0 and 1)",
+    range,
+  },
+]
+
+const quadrantCompletions = (
+  monaco: typeof import("monaco-editor"),
+  range: import("monaco-editor").IRange,
+): languages.CompletionItem[] => [
+  {
+    label: "title",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "title ${1:Quadrant Chart Title}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Set quadrant chart title",
+    range,
+  },
+  {
+    label: "x-axis",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "x-axis ${1:Low} --> ${2:High}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define X-axis labels",
+    range,
+  },
+  {
+    label: "y-axis",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "y-axis ${1:Low} --> ${2:High}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define Y-axis labels",
+    range,
+  },
+  {
+    label: "quadrant-1",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "quadrant-1 ${1:We should expand}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Label for quadrant 1 (top-right)",
+    range,
+  },
+  {
+    label: "quadrant-2",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "quadrant-2 ${1:Need to promote}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Label for quadrant 2 (top-left)",
+    range,
+  },
+  {
+    label: "quadrant-3",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "quadrant-3 ${1:Re-evaluate}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Label for quadrant 3 (bottom-left)",
+    range,
+  },
+  {
+    label: "quadrant-4",
+    kind: monaco.languages.CompletionItemKind.Keyword,
+    insertText: "quadrant-4 ${1:May be improved}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Label for quadrant 4 (bottom-right)",
+    range,
+  },
+  {
+    label: "data point",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText: "${1:Item A}: [${2:0.3}, ${3:0.6}]",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Add data point with coordinates [x, y]",
+    range,
+  },
+]
+
+const sankeyCompletions = (
+  monaco: typeof import("monaco-editor"),
+  range: import("monaco-editor").IRange,
+): languages.CompletionItem[] => [
+  {
+    label: "flow",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText: "${1:Source},${2:Target},${3:100}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Define flow from source to target with value",
+    range,
+  },
+]
 
 // Suggestions only for diagram types (first line)
 const getDiagramTypeCompletions = (
@@ -210,6 +378,46 @@ const getDiagramTypeCompletions = (
     documentation: "Create a mindmap diagram",
     range,
     sortText: "12",
+  },
+  {
+    label: "xychart-beta",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText:
+      'xychart-beta\n    title "${1:Sales Revenue}"\n    x-axis [${2:Jan, Feb, Mar, Apr, May}]\n    y-axis "${3:Revenue}" ${4:0} --> ${5:1000}\n    bar [${6:100, 200, 300, 400, 500}]',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create an XY chart",
+    range,
+    sortText: "13",
+  },
+  {
+    label: "radar-beta",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText:
+      'radar\n    title ${1:Skills Assessment}\n    "${2:Communication}" : ${3:0.8}\n    "${4:Problem Solving}" : ${5:0.9}\n    "${6:Technical Skills}" : ${7:0.7}',
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create a radar chart",
+    range,
+    sortText: "14",
+  },
+  {
+    label: "quadrantChart",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText:
+      "quadrantChart\n    title ${1:Reach and influence}\n    x-axis ${2:Low Reach} --> ${3:High Reach}\n    y-axis ${4:Low Influence} --> ${5:High Influence}\n    quadrant-1 ${6:We should expand}\n    quadrant-2 ${7:Need to promote}\n    quadrant-3 ${8:Re-evaluate}\n    quadrant-4 ${9:May be improved}\n    ${10:Campaign A}: [${11:0.3}, ${12:0.6}]",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create a quadrant chart",
+    range,
+    sortText: "15",
+  },
+  {
+    label: "sankey-beta",
+    kind: monaco.languages.CompletionItemKind.Snippet,
+    insertText:
+      "sankey-beta\n    ${1:Source A},${2:Target A},${3:100}\n    ${4:Source B},${5:Target B},${6:200}\n    ${2:Target A},${7:Final Target},${8:150}",
+    insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+    documentation: "Create a sankey diagram",
+    range,
+    sortText: "16",
   },
 ]
 

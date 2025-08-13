@@ -55,6 +55,9 @@ export const mermaidTokensProvider: languages.IMonarchLanguage = {
     "C4Context", // Added C4 Context support
     "C4Container",
     "C4Component",
+    "xychart-beta", // Added XY Chart support
+    "radar-beta", // Added Radar Chart support
+    "sankey-beta", // Added Sankey Diagram support
 
     // Directions
     "TD",
@@ -200,6 +203,20 @@ export const mermaidTokensProvider: languages.IMonarchLanguage = {
 
     "root",
     "icon",
+
+    "x-axis",
+    "y-axis",
+    "bar",
+    "line",
+
+    "radar",
+
+    "quadrant-1",
+    "quadrant-2",
+    "quadrant-3",
+    "quadrant-4",
+
+    "sankey",
   ],
 
   operators: [
@@ -256,7 +273,7 @@ export const mermaidTokensProvider: languages.IMonarchLanguage = {
 
       // Diagram type declarations
       [
-        /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|gitGraph|mindmap|timeline|quadrantChart|requirement|requirementDiagram|architecture|architecture-beta|c4Context|c4Container|c4Component|c4Dynamic|c4Deployment|C4Context|C4Container|C4Component)\b/,
+        /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|gitGraph|mindmap|timeline|quadrantChart|requirement|requirementDiagram|architecture|architecture-beta|c4Context|c4Container|c4Component|c4Dynamic|c4Deployment|C4Context|C4Container|C4Component|xychart-beta|radar-beta|sankey-beta)\b/,
         "keyword.diagram",
       ],
 
@@ -265,7 +282,7 @@ export const mermaidTokensProvider: languages.IMonarchLanguage = {
 
       // Keywords
       [
-        /\b(subgraph|end|participant|actor|activate|deactivate|note|over|left|right|of|loop|alt|else|opt|par|and|critical|break|rect|autonumber|class|namespace|interface|abstract|enum|public|private|protected|static|final|state|fork|join|choice|entity|relationship|title|dateFormat|axisFormat|section|excludes|includes|todayMarker|journey|commit|branch|checkout|merge|requirementDiagram|requirement|functionalRequirement|performanceRequirement|interfaceRequirement|physicalRequirement|designConstraint|element|satisfies|derives|refines|traces|verifies|contains|copies|risk|verifymethod|test|inspection|analysis|demonstration|architecture|architecture-beta|group|service|junction|cloud|server|database|browser|phone|disk|person|external|Person|Person_Ext|System|System_Ext|SystemDb|SystemQueue|Container|Container_Ext|ContainerDb|ContainerQueue|Component|ComponentDb|ComponentQueue|Rel|BiRel|Rel_Up|Rel_Down|Rel_Left|Rel_Right|root|icon)\b/,
+        /\b(subgraph|end|participant|actor|activate|deactivate|note|over|left|right|of|loop|alt|else|opt|par|and|critical|break|rect|autonumber|class|namespace|interface|abstract|enum|public|private|protected|static|final|state|fork|join|choice|entity|relationship|title|dateFormat|axisFormat|section|excludes|includes|todayMarker|journey|commit|branch|checkout|merge|requirementDiagram|requirement|functionalRequirement|performanceRequirement|interfaceRequirement|physicalRequirement|designConstraint|element|satisfies|derives|refines|traces|verifies|contains|copies|risk|verifymethod|test|inspection|analysis|demonstration|architecture|architecture-beta|group|service|junction|cloud|server|database|browser|phone|disk|person|external|Person|Person_Ext|System|System_Ext|SystemDb|SystemQueue|Container|Container_Ext|ContainerDb|ContainerQueue|Component|ComponentDb|ComponentQueue|Rel|BiRel|Rel_Up|Rel_Down|Rel_Left|Rel_Right|root|icon|x-axis|y-axis|bar|line|radar|quadrant-1|quadrant-2|quadrant-3|quadrant-4|sankey)\b/,
         "keyword",
       ],
 
@@ -338,8 +355,22 @@ export const mermaidTokensProvider: languages.IMonarchLanguage = {
       [/^\s*\d{4}\s*:/, "number.timeline.year"],
       [/^\s*section\s+.+/, "keyword.timeline.section"],
 
-      [/^\s*root$$\(.+$$\)/, "keyword.mindmap.root"],
+      [/^\s*root$$$$.+$$$$/, "keyword.mindmap.root"],
       [/::icon$$[^)]+$$/, "string.mindmap.icon"],
+
+      [/^xychart-beta/, "keyword.xychart"],
+      [/^\s*(x-axis|y-axis)\s+/, "keyword.xychart.axis"],
+      [/^\s*(bar|line)\s+/, "keyword.xychart.type"],
+
+      [/^radar-beta/, "keyword.radar"],
+      [/^\s*"[^"]+"\s*:\s*\d*\.?\d+/, "string.radar.data"],
+
+      [/^quadrantChart/, "keyword.quadrant"],
+      [/^\s*(quadrant-[1-4])\s+/, "keyword.quadrant.section"],
+      [/^\s*[A-Za-z\s]+:\s*\[\d*\.?\d+,\s*\d*\.?\d+\]/, "string.quadrant.point"],
+
+      [/^sankey-beta/, "keyword.sankey"],
+      [/^[^,]+,[^,]+,\d+(\.\d+)?/, "string.sankey.flow"],
     ],
 
     string_double: [
@@ -395,6 +426,16 @@ export const mermaidTheme = {
     { token: "keyword.timeline.section", foreground: "6f42c1", fontStyle: "bold" },
     { token: "keyword.mindmap.root", foreground: "d73a49", fontStyle: "bold" },
     { token: "string.mindmap.icon", foreground: "22863a" },
+    { token: "keyword.xychart", foreground: "d73a49", fontStyle: "bold" },
+    { token: "keyword.xychart.axis", foreground: "6f42c1", fontStyle: "bold" },
+    { token: "keyword.xychart.type", foreground: "005cc5" },
+    { token: "keyword.radar", foreground: "d73a49", fontStyle: "bold" },
+    { token: "string.radar.data", foreground: "22863a" },
+    { token: "keyword.quadrant", foreground: "d73a49", fontStyle: "bold" },
+    { token: "keyword.quadrant.section", foreground: "6f42c1", fontStyle: "bold" },
+    { token: "string.quadrant.point", foreground: "22863a" },
+    { token: "keyword.sankey", foreground: "d73a49", fontStyle: "bold" },
+    { token: "string.sankey.flow", foreground: "22863a" },
   ],
   colors: {
     "editor.background": "#ffffff",

@@ -90,7 +90,7 @@ export class MermaidValidator {
       },
       {
         pattern:
-          /^(?!.*(?:flowchart|graph|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|requirementDiagram|architecture|C4Context|timeline|mindmap))/i,
+          /^(?!.*(?:flowchart|graph|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|requirementDiagram|architecture|C4Context|timeline|mindmap|xychart-beta|radar-beta|quadrantChart|sankey-beta))/i,
         message: "Missing diagram type declaration (e.g., flowchart TD, sequenceDiagram, etc.)",
       },
       {

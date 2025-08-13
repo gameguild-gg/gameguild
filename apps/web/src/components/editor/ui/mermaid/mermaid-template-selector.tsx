@@ -18,6 +18,10 @@ import {
   Layers,
   Clock,
   Brain,
+  BarChart3,
+  Radar,
+  Grid3X3,
+  Workflow,
 } from "lucide-react"
 import type { MermaidData } from "@/components/editor/nodes/mermaid-node"
 
@@ -307,6 +311,75 @@ const templates: Template[] = [
     Tools
       Pen and paper
       Mermaid`,
+  },
+  {
+    type: "xyChart",
+    title: "XY Chart",
+    description: "Create scatter plots and line charts with X-Y coordinates",
+    icon: BarChart3,
+    preview: "X-axis → Y-axis data points",
+    code: `xychart-beta
+    title "Sales Revenue"
+    x-axis [Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec]
+    y-axis "Revenue (in $)" 4000 --> 11000
+    bar [5000, 6000, 7500, 8200, 9500, 10500, 11000, 10200, 9200, 8500, 7000, 6000]
+    line [5000, 6000, 7500, 8200, 9500, 10500, 11000, 10200, 9200, 8500, 7000, 6000]`,
+  },
+  {
+    type: "radar",
+    title: "Radar Chart",
+    description: "Display multivariate data in a circular format",
+    icon: Radar,
+    preview: "Skills assessment radar",
+    code: `radar-beta
+    axis m["Math"], s["Science"], e["English"]
+    axis h["History"], g["Geography"], a["Art"]
+    curve a["Alice"]{85, 90, 80, 70, 75, 90}
+    curve b["Bob"]{70, 75, 85, 80, 90, 85}
+
+    max 100
+    min 0`,
+  },
+  {
+    type: "quadrant",
+    title: "Quadrant Chart",
+    description: "Categorize items into four quadrants for analysis",
+    icon: Grid3X3,
+    preview: "High/Low Impact vs Effort matrix",
+    code: `quadrantChart
+    title Reach and influence
+    x-axis Low Reach --> High Reach
+    y-axis Low Influence --> High Influence
+    quadrant-1 We should expand
+    quadrant-2 Need to promote
+    quadrant-3 Re-evaluate
+    quadrant-4 May be improved
+    Campaign A: [0.3, 0.6]
+    Campaign B: [0.45, 0.23]
+    Campaign C: [0.57, 0.69]
+    Campaign D: [0.78, 0.34]
+    Campaign E: [0.40, 0.34]`,
+  },
+  {
+    type: "sankey",
+    title: "Sankey Diagram",
+    description: "Show flow quantities between different stages or categories",
+    icon: Workflow,
+    preview: "Source → Flow → Destination",
+    code: `sankey-beta
+    Agricultural 'waste',Bio-conversion,124.729
+    Bio-conversion,Liquid,0.597
+    Bio-conversion,Losses,26.862
+    Bio-conversion,Solid,280.322
+    Bio-conversion,Gas,81.144
+    Biofuel imports,Liquid,35
+    Biomass imports,Solid,35
+    Coal imports,Coal,11.606
+    Coal reserves,Coal,63.965
+    Coal,Solid,75.571
+    District heating,Industry,10.639
+    District heating,Heating and cooling - commercial,22.505
+    District heating,Heating and cooling - homes,46.184`,
   },
 ]
 
