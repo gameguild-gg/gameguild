@@ -101,7 +101,7 @@ export function GitHubProjectStats({ repositoryData }: GitHubProjectStatsProps) 
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-400/50 to-transparent"></div>
 
         {/* Centered content container */}
-        <div className="max-w-7xl mx-auto relative p-8 md:p-12">
+        <div className="container mx-auto relative px-4 py-8 md:px-6 md:py-12">
           {/* Command line header */}
           <div className="mb-8">
             <div className="text-slate-400 text-sm font-mono mb-6">gh pulse --year 2024 --repo gameguild-gg/gameguild</div>
