@@ -17,7 +17,7 @@
     "lint": "next lint --fix"
   },
   "dependencies": {
-    "@apollo/client": "^3.11.8",
+    "@apollo/client": "^3.13.9",
     "@graphql-typed-document-node/core": "^3.2.0",
     "@hookform/resolvers": "^5.1.1",
     "@lexical/code": "^0.33.1",

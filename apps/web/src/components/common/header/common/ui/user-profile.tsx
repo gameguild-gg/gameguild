@@ -1,14 +1,25 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { Settings, User } from 'lucide-react';
-import { auth } from '@/auth';
+import { useSession } from 'next-auth/react';
 import { UserProfileMenu } from './user-profile-menu';
 
-export const UserProfile = async (): Promise<React.JSX.Element> => {
-  const session = await auth();
+export const UserProfile = (): React.JSX.Element => {
+  const { data: session, status } = useSession();
+
+  // Show loading state
+  if (status === 'loading') {
+    return (
+      <div className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 bg-gray-200 animate-pulse">
+        Loading...
+      </div>
+    );
+  }
 
   // Return login button if not authenticated
-  if (!session || !session.user) {
+  if (status === 'unauthenticated' || !session || !session.user) {
     return (
       <Link
         href="/sign-in"
