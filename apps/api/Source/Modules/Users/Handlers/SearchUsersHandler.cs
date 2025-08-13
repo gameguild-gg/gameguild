@@ -2,6 +2,7 @@
 using GameGuild.Database;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL; // For EF.Functions.ILike
 
 
 namespace GameGuild.Modules.Users;
@@ -19,8 +20,13 @@ public class SearchUsersHandler(ApplicationDbContext context) : IRequestHandler<
     if (request.IsActive.HasValue) query = query.Where(user => user.IsActive == request.IsActive.Value);
 
     if (!string.IsNullOrWhiteSpace(request.SearchTerm)) {
-      var searchLower = request.SearchTerm.ToLower();
-      query = query.Where(user => user.Name.Contains(searchLower, StringComparison.CurrentCultureIgnoreCase) || user.Email.Contains(searchLower, StringComparison.CurrentCultureIgnoreCase));
+      // Use ILIKE for case-insensitive search in PostgreSQL and include username matching
+      var term = $"%{request.SearchTerm.Trim()}%";
+      query = query.Where(user =>
+        EF.Functions.ILike(user.Name, term) ||
+        EF.Functions.ILike(user.Email, term) ||
+        EF.Functions.ILike(user.Username, term)
+      );
     }
 
     if (request.MinBalance.HasValue) query = query.Where(u => u.Balance >= request.MinBalance.Value);
