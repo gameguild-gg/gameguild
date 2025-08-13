@@ -382,21 +382,21 @@ export function SlidePlayer({
           {/* Header */}
           {showHeader && title && (
             <div className="bg-gray-100 dark:bg-gray-800 p-2 flex items-center justify-between">
-              <h3 className="text-sm font-medium truncate">{title}</h3>
-              <div className="flex items-center gap-2">
+              <span className="text-sm font-medium truncate">{title}</span>
+              <span className="flex items-center gap-2">
                 {slideInfo.length > 0 && (
-                  <div className="flex gap-1">
+                  <span className="flex gap-1">
                     {slideInfo.map((info, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">
                         {info}
                       </Badge>
                     ))}
-                  </div>
+                  </span>
                 )}
                 <span className="text-xs text-muted-foreground">
                   {currentSlideIndex + 1} / {slides.length}
                 </span>
-              </div>
+              </span>
             </div>
           )}
 
@@ -494,22 +494,25 @@ export function SlidePlayer({
 
                         {/* Slide info indicators */}
                         {info.length > 0 && (
-                          <div className="absolute top-0 right-0 flex gap-0.5 p-0.5">
+                          <span className="absolute top-0 right-0 flex gap-0.5 p-0.5">
                             {slide.images && slide.images.length > 0 && (
-                              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" title="Has images" />
+                              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full block" title="Has images" />
                             )}
                             {slide.shapes && slide.shapes.length > 0 && (
-                              <div className="w-1.5 h-1.5 bg-green-500 rounded-full" title="Has shapes" />
+                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full block" title="Has shapes" />
                             )}
                             {slide.notes && slide.notes.trim() && (
-                              <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" title="Has notes" />
+                              <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full block" title="Has notes" />
                             )}
-                          </div>
+                          </span>
                         )}
 
                         {/* Edited indicator */}
                         {(slide.filters || slide.imageSize) && (
-                          <div className="absolute bottom-0 left-0 w-2 h-2 bg-orange-500 rounded-tr-sm" title="Edited" />
+                          <span
+                            className="absolute bottom-0 left-0 w-2 h-2 bg-orange-500 rounded-tr-sm block"
+                            title="Edited"
+                          />
                         )}
                       </div>
                     </button>
@@ -606,22 +609,25 @@ export function SlidePlayer({
 
                               {/* Slide info indicators */}
                               {info.length > 0 && (
-                                <div className="absolute top-0 right-0 flex gap-0.5 p-0.5">
+                                <span className="absolute top-0 right-0 flex gap-0.5 p-0.5">
                                   {slide.images && slide.images.length > 0 && (
-                                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full" title="Has images" />
+                                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full block" title="Has images" />
                                   )}
                                   {slide.shapes && slide.shapes.length > 0 && (
-                                    <div className="w-1.5 h-1.5 bg-green-400 rounded-full" title="Has shapes" />
+                                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full block" title="Has shapes" />
                                   )}
                                   {slide.notes && slide.notes.trim() && (
-                                    <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full" title="Has notes" />
+                                    <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full block" title="Has notes" />
                                   )}
-                                </div>
+                                </span>
                               )}
 
                               {/* Edited indicator */}
                               {(slide.filters || slide.imageSize) && (
-                                <div className="absolute bottom-0 left-0 w-2 h-2 bg-orange-400 rounded-tr-sm" title="Edited" />
+                                <span
+                                  className="absolute bottom-0 left-0 w-2 h-2 bg-orange-400 rounded-tr-sm block"
+                                  title="Edited"
+                                />
                               )}
                             </div>
                           </button>
