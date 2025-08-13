@@ -30,8 +30,18 @@ public class BulkCreateUsersHandler(
           continue;
         }
 
+        // Generate unique username from name using slugify
+        var baseUsername = userDto.Name.ToSlugCase();
+        var existingUsernames = await context.Users
+                                             .Where(u => u.Username.StartsWith(baseUsername))
+                                             .Select(u => u.Username)
+                                             .ToListAsync(cancellationToken);
+
+        var uniqueUsername = SlugCase.GenerateUnique(userDto.Name, existingUsernames, 50);
+
         var user = new User {
           Name = userDto.Name,
+          Username = uniqueUsername,
           Email = userDto.Email,
           IsActive = userDto.IsActive,
           Balance = userDto.InitialBalance,
