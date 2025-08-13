@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameGuild.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250812013522_AddUsernameToUser")]
-    partial class AddUsernameToUser
+    [Migration("20250812024658_AddUsernameColumn")]
+    partial class AddUsernameColumn
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

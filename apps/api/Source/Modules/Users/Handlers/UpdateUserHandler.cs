@@ -34,16 +34,37 @@ public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserH
       changes["Name"] = new { From = user.Name, To = request.Name };
       user.Name = request.Name;
 
-      // Regenerate username when name changes
-      var baseUsername = request.Name.ToSlugCase();
-      var existingUsernames = await context.Users
-                                           .Where(u => u.Username.StartsWith(baseUsername) && u.Id != user.Id)
-                                           .Select(u => u.Username)
-                                           .ToListAsync(cancellationToken);
+      // Regenerate username when name changes (only if Username is not explicitly provided)
+      if (request.Username == null) {
+        var baseUsername = request.Name.ToSlugCase();
+        var existingUsernames = await context.Users
+                                             .Where(u => u.Username.StartsWith(baseUsername) && u.Id != user.Id)
+                                             .Select(u => u.Username)
+                                             .ToListAsync(cancellationToken);
 
-      var uniqueUsername = SlugCase.GenerateUnique(request.Name, existingUsernames, 50);
-      changes["Username"] = new { From = user.Username, To = uniqueUsername };
-      user.Username = uniqueUsername;
+        var uniqueUsername = SlugCase.GenerateUnique(request.Name, existingUsernames, 50);
+        changes["Username"] = new { From = user.Username, To = uniqueUsername };
+        user.Username = uniqueUsername;
+      }
+    }
+
+    // Handle explicit username updates
+    if (request.Username != null && user.Username != request.Username) {
+      // Check for username uniqueness
+      var existingUser = await context.Users
+                                      .FirstOrDefaultAsync(u => u.Username == request.Username && u.Id != request.UserId, cancellationToken);
+
+      if (existingUser != null) {
+        throw new InvalidOperationException($"Username {request.Username} is already in use");
+      }
+
+      // Validate username format (should be slug-like)
+      if (!SlugCase.IsValidSlug(request.Username)) {
+        throw new InvalidOperationException($"Username {request.Username} is not in a valid format. Use lowercase letters, numbers, and hyphens only.");
+      }
+
+      changes["Username"] = new { From = user.Username, To = request.Username };
+      user.Username = request.Username;
     }
 
     if (request.Email != null && user.Email != request.Email) {
