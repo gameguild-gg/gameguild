@@ -74,12 +74,12 @@ export function HorizontalRoadmap() {
     },
   ];
 
-  const currentMilestone = milestones.find((m) => m.id === selectedMilestone) || milestones[4];
+  const currentMilestone = milestones.find((m) => m.id === selectedMilestone) || milestones[4] || milestones[0];
 
   return (
     <section className="w-full py-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Centered content container */}
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-full mb-4">
