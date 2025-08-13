@@ -1,4 +1,4 @@
-                    # GameGuild Licensing
+# GameGuild Licensing
 
 GameGuild is licensed under a **dual licensing model**:
 
