@@ -1,9 +1,11 @@
-import { ApolloClient, HttpLink, InMemoryCache, ApolloLink, from, NormalizedCacheObject } from '@apollo/client';
+import { ApolloClient, InMemoryCache, ApolloLink, from, NormalizedCacheObject } from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
+import { BatchHttpLink } from '@apollo/client/link/batch-http';
+import { setContext } from '@apollo/client/link/context';
 import { environment } from '@/configs/environment';
 
 // Endpoint (HotChocolate default is /graphql)
-const GRAPHQL_ENDPOINT = `${environment.apiBaseUrl.replace(/\/$/, '')}/graphql`;
+const GRAPHQL_ENDPOINT = (process.env.NEXT_PUBLIC_GRAPHQL_URL?.trim() || `${environment.apiBaseUrl.replace(/\/$/, '')}/graphql`);
 
 let browserClient: ApolloClient<NormalizedCacheObject> | null = null;
 
@@ -20,29 +22,40 @@ function createClient() {
     return forward(operation);
   });
 
-  const authLink = new ApolloLink((operation, forward) => {
-    // Example: attach auth header from localStorage/session if available
-    // Adjust integration with next-auth session or cookies as needed.
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        operation.setContext(({ headers = {} }) => ({
-          headers: {
-            ...headers,
-            Authorization: `Bearer ${token}`,
-          },
-        }));
+  const authLink = setContext(async (_, { headers }) => {
+    // Inject JWT from cookies on the server, or localStorage on the client.
+    let token: string | null = null;
+  if (typeof window === 'undefined') {
+      try {
+        // Import only on server to avoid bundling for client.
+    const { cookies } = await import('next/headers');
+    const cookieStore = await cookies();
+    token = cookieStore.get('access_token')?.value ?? null;
+      } catch {
+        token = null;
+      }
+    } else {
+      try {
+        token = localStorage.getItem('access_token');
+      } catch {
+        token = null;
       }
     }
-    return forward(operation);
+    return {
+      headers: {
+        ...headers,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    };
   });
 
-  const httpLink = new HttpLink({ uri: GRAPHQL_ENDPOINT, credentials: 'include' });
+  const httpLink = new BatchHttpLink({ uri: GRAPHQL_ENDPOINT, credentials: 'include' });
 
   return new ApolloClient({
     name: 'game-guild-web',
     version: '1.0',
-    link: from([errorLink, authLink, httpLink]),
+    ssrMode: typeof window === 'undefined',
+    link: from([errorLink, authLink as unknown as ApolloLink, httpLink as unknown as ApolloLink]),
     cache: new InMemoryCache({}),
     connectToDevTools: typeof window !== 'undefined',
     defaultOptions: {

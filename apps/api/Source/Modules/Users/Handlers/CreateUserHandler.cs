@@ -1,3 +1,4 @@
+using GameGuild.Common;
 using GameGuild.Database;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -20,11 +21,21 @@ public class CreateUserHandler(
 
     if (existingUser != null) throw new InvalidOperationException($"User with email {request.Email} already exists");
 
+    // Generate unique username from name using slugify
+    var baseUsername = request.Name.ToSlugCase();
+    var existingUsernames = await context.Users
+                                         .Where(u => u.Username.StartsWith(baseUsername))
+                                         .Select(u => u.Username)
+                                         .ToListAsync(cancellationToken);
+
+    var uniqueUsername = SlugCase.GenerateUnique(request.Name, existingUsernames, 50);
+
     // Normalize negative balance to zero - business rule
     var normalizedBalance = Math.Max(0, request.InitialBalance);
 
     var user = new User {
       Name = request.Name,
+      Username = uniqueUsername,
       Email = request.Email,
       IsActive = request.IsActive,
       Balance = normalizedBalance,
