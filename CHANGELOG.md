@@ -1,3 +1,11 @@
+## [2.0.3](https://github.com/gameguild-gg/gameguild/compare/v2.0.2...v2.0.3) (2025-08-13)
+
+
+### Bug Fixes
+
+* **contributors:** improve numbers and links on contributors ([8b59735](https://github.com/gameguild-gg/gameguild/commit/8b59735a5070fa43ec481cfda80c9cef5fe537d0))
+* **license:** add dual license identifier so GH capture its properly [skip ci] ([3877922](https://github.com/gameguild-gg/gameguild/commit/3877922cf020b9b4d8c88a2b823bb539f17af25d))
+
 ## [2.0.2](https://github.com/gameguild-gg/gameguild/compare/v2.0.1...v2.0.2) (2025-08-13)
 
 
