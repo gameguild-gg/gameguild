@@ -705,7 +705,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
             </TabsList>
 
             <TabsContent value="images" className="space-y-4 flex-1 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 {images.map((image) => (
                   <div key={image.id} className="space-y-2">
                     <div
