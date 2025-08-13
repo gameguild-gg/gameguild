@@ -532,9 +532,9 @@ public static class DependencyInjection {
       ["Projects"] = b => {
         SafeAddGraphQLTypes(
           b,
-          new[] { ("ProjectQueries", typeof(Modules.Projects.ProjectQueries)), ("ProjectMutations", typeof(Modules.Projects.ProjectMutations)), ("ProjectType", typeof(GameGuild.Modules.Projects.ProjectType)) },
+          new[] { ("ProjectQueries", typeof(Modules.Projects.ProjectQueries)), ("ProjectMutations", typeof(Modules.Projects.ProjectMutations)), ("ProjectPermissionsResolvers", typeof(GameGuild.Modules.Projects.ProjectPermissionsResolvers)) },
           logger,
-          isExtension: new[] { true, true, false }
+          isExtension: new[] { true, true, true }
         );
       },
     };
