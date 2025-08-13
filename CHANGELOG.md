@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/gameguild-gg/gameguild/compare/v2.0.1...v2.0.2) (2025-08-13)
+
+
+### Bug Fixes
+
+* **header:** fix header collapsible menu ([66cdfd8](https://github.com/gameguild-gg/gameguild/commit/66cdfd8045da56888c630ca169d93507d6a6edab))
+
 ## [2.0.1](https://github.com/gameguild-gg/gameguild/compare/v2.0.0...v2.0.1) (2025-08-13)
 
 
