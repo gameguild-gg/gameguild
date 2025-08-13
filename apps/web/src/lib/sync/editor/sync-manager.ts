@@ -92,7 +92,11 @@ export class SyncManager {
     } catch (error) {
       // Don't throw error, just log warning when sync is enabled
       if (syncConfig.getConfig().debugMode) {
-        console.warn("⚠️ Sync Warning: Failed to fetch server metadata:", error.message)
+        if (error instanceof Error) {
+          console.warn("⚠️ Sync Warning: Failed to fetch server metadata:", error.message)
+        } else {
+          console.warn("⚠️ Sync Warning: Failed to fetch server metadata:", String(error))
+        }
       } else {
         console.warn("Sync: Server unavailable, working offline")
       }
@@ -115,7 +119,11 @@ export class SyncManager {
       return project
     } catch (error) {
       if (syncConfig.getConfig().debugMode) {
-        console.warn("⚠️ Sync Warning: Failed to download project:", error.message)
+        if (error instanceof Error) {
+          console.warn("⚠️ Sync Warning: Failed to download project:", error.message)
+        } else {
+          console.warn("⚠️ Sync Warning: Failed to download project:", error)
+        }
       }
       return null
     }
@@ -141,7 +149,11 @@ export class SyncManager {
       return null
     } catch (error) {
       if (syncConfig.getConfig().debugMode) {
-        console.warn("⚠️ Sync Warning: Failed to check project sync status:", error.message)
+        if (error instanceof Error) {
+          console.warn("⚠️ Sync Warning: Failed to check project sync status:", error.message)
+        } else {
+          console.warn("⚠️ Sync Warning: Failed to check project sync status:", String(error))
+        }
       }
       return null
     }

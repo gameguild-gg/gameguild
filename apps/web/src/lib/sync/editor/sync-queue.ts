@@ -302,7 +302,13 @@ export class SyncQueue {
         // For now, just mark as completed
         await this.markAsCompleted(item.id)
       } catch (error) {
-        await this.markAsFailed(item.id, error.message)
+        let errorMessage = "Unknown error"
+        if (error instanceof Error) {
+          errorMessage = error.message
+        } else if (typeof error === "string") {
+          errorMessage = error
+        }
+        await this.markAsFailed(item.id, errorMessage)
       }
     }
 

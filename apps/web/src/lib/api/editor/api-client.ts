@@ -29,7 +29,7 @@ interface ApiConfig {
 
 export class ApiClient {
   private config: ApiConfig
-  private isOnline: boolean = navigator.onLine
+  private isOnline: boolean = typeof window !== "undefined" ? navigator.onLine : true
 
   constructor(config: Partial<ApiConfig> = {}) {
     const syncConfigData = syncConfig.getConfig()
@@ -41,20 +41,22 @@ export class ApiClient {
       ...config,
     }
 
-    // Monitor online status
-    window.addEventListener("online", () => {
-      this.isOnline = true
-      if (syncConfigData.debugMode) {
-        console.log("API Client: Back online")
-      }
-    })
+    if (typeof window !== "undefined") {
+      // Monitor online status
+      window.addEventListener("online", () => {
+        this.isOnline = true
+        if (syncConfigData.debugMode) {
+          console.log("API Client: Back online")
+        }
+      })
 
-    window.addEventListener("offline", () => {
-      this.isOnline = false
-      if (syncConfigData.debugMode) {
-        console.log("API Client: Gone offline")
-      }
-    })
+      window.addEventListener("offline", () => {
+        this.isOnline = false
+        if (syncConfigData.debugMode) {
+          console.log("API Client: Gone offline")
+        }
+      })
+    }
 
     // Listen for config changes
     syncConfig.onConfigChange((newConfig) => {
