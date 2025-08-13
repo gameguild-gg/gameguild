@@ -24,6 +24,8 @@ public class UserType : ObjectType<User> {
     // User-specific Properties
     descriptor.Field(u => u.Name).Description("The name of the user.");
 
+    descriptor.Field(u => u.Username).Description("The unique username/handle of the user.");
+
     descriptor.Field(u => u.Email).Description("The email address of the user.");
 
     descriptor.Field(u => u.IsActive).Description("Indicates whether the user is active.");
