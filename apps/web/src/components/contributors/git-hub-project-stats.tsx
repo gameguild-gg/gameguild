@@ -5,8 +5,9 @@ import type { Issue, PullRequest, Repository } from '@/lib/integrations/github';
 interface ProjectStat {
   icon: React.ReactNode;
   label: string;
-  value: string;
+  value: string | React.ReactNode;
   change?: string;
+  link?: string;
 }
 
 interface RepoData {
@@ -18,10 +19,10 @@ interface RepoData {
   data: {
     issues: Issue[];
     pulls: PullRequest[];
-    releases: Repository[];
-    branches: Repository[];
-    contributors: Repository[];
-    license: Repository;
+    releases: { id: number; name: string | null; tag_name: string; published_at: string | null; download_count: number; }[];
+    branches: any[];
+    contributors: any[];
+    license: any;
   };
 }
 
@@ -38,8 +39,14 @@ export function GitHubProjectStats({ repositoryData }: GitHubProjectStatsProps) 
   };
 
   // Calculate stats from real data with safe fallbacks
-  const openIssues = repositoryData.data.issues?.filter((issue) => issue.state === 'open').length || 0;
+  // Filter out pull requests from issues (GitHub API includes PRs in issues endpoint)
+  const actualIssues = repositoryData.data.issues?.filter((issue) => !issue.pull_request) || [];
+  const openIssues = actualIssues.filter((issue) => issue.state === 'open').length;
+  const closedIssues = actualIssues.filter((issue) => issue.state === 'closed').length;
   const mergedPulls = repositoryData.data.pulls?.filter((pr) => pr.state === 'closed' && pr.merged_at).length || 0;
+
+  // GitHub repository URLs
+  const GITHUB_REPO_URL = 'https://github.com/gameguild-gg/gameguild';
 
   // Stats using real GitHub data
   const topRowStats: ProjectStat[] = [
@@ -47,21 +54,25 @@ export function GitHubProjectStats({ repositoryData }: GitHubProjectStatsProps) 
       icon: <Users className="size-4" />,
       label: 'Contributors',
       value: formatNumber(repositoryData.totalContributors),
+      link: `${GITHUB_REPO_URL}/graphs/contributors`,
     },
     {
       icon: <GitPullRequest className="size-4" />,
       label: 'Pull Requests',
       value: formatNumber(repositoryData.totalPulls),
+      link: `${GITHUB_REPO_URL}/pulls?q=is%3Apr`,
+    },
+    {
+      icon: <Eye className="size-4" />,
+      label: 'Open Issues',
+      value: formatNumber(openIssues),
+      link: `${GITHUB_REPO_URL}/issues?q=is%3Aopen+is%3Aissue`,
     },
     {
       icon: <AlertCircle className="size-4" />,
-      label: 'Issues',
-      value: formatNumber(repositoryData.totalIssues),
-    },
-    {
-      icon: <GitBranch className="size-4" />,
-      label: 'Branches',
-      value: formatNumber(repositoryData.totalBranches),
+      label: 'Closed Issues',
+      value: formatNumber(closedIssues),
+      link: `${GITHUB_REPO_URL}/issues?q=is%3Aclosed+is%3Aissue`,
     },
   ];
 
@@ -70,21 +81,35 @@ export function GitHubProjectStats({ repositoryData }: GitHubProjectStatsProps) 
       icon: <FileText className="size-4" />,
       label: 'Releases',
       value: formatNumber(repositoryData.totalReleases),
+      link: `${GITHUB_REPO_URL}/releases`,
     },
     {
-      icon: <Eye className="size-4" />,
-      label: 'Open Issues',
-      value: formatNumber(openIssues),
+      icon: <GitBranch className="size-4" />,
+      label: 'Branches',
+      value: formatNumber(repositoryData.totalBranches),
+      link: `${GITHUB_REPO_URL}/branches`,
     },
     {
       icon: <GitPullRequest className="size-4" />,
       label: 'Merged PRs',
       value: formatNumber(mergedPulls),
+      link: `${GITHUB_REPO_URL}/pulls?q=is%3Apr+is%3Amerged`,
     },
     {
       icon: <Shield className="size-4" />,
-      label: 'License',
-      value: repositoryData.data.license?.name?.split(' ')[0] || 'MIT',
+      label: 'Dual License',
+      value: (
+        <div className="flex items-center gap-2">
+          <img 
+             src="https://upload.wikimedia.org/wikipedia/commons/0/06/AGPLv3_Logo.svg" 
+             alt="AGPL v3" 
+             className="h-4 w-auto bg-white rounded px-1"
+           />
+          <span className="text-xs">+</span>
+          <span className="text-xs bg-blue-600 text-white px-1 py-0.5 rounded font-semibold">💼</span>
+        </div>
+      ),
+      link: `${GITHUB_REPO_URL}/blob/main/LICENSE.md`,
     },
   ];
 
@@ -115,7 +140,18 @@ export function GitHubProjectStats({ repositoryData }: GitHubProjectStatsProps) 
                   <span className="text-slate-400 text-sm">{stat.icon}</span>
                   <span className="text-slate-400 text-sm">{stat.label}</span>
                 </div>
-                <div className="text-white text-3xl md:text-4xl font-bold mb-1">{stat.value}</div>
+                {stat.link ? (
+                  <a
+                    href={stat.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white text-3xl md:text-4xl font-bold mb-1 hover:text-blue-400 transition-colors duration-200 cursor-pointer inline-block"
+                  >
+                    {stat.value}
+                  </a>
+                ) : (
+                  <div className="text-white text-3xl md:text-4xl font-bold mb-1">{stat.value}</div>
+                )}
                 {stat.change && <div className="text-slate-400 text-xs">{stat.change}</div>}
               </div>
             ))}
@@ -129,7 +165,18 @@ export function GitHubProjectStats({ repositoryData }: GitHubProjectStatsProps) 
                   <span className="text-slate-400 text-sm">{stat.icon}</span>
                   <span className="text-slate-400 text-sm">{stat.label}</span>
                 </div>
-                <div className="text-white text-3xl md:text-4xl font-bold mb-1">{stat.value}</div>
+                {stat.link ? (
+                  <a
+                    href={stat.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white text-3xl md:text-4xl font-bold mb-1 hover:text-blue-400 transition-colors duration-200 cursor-pointer inline-block"
+                  >
+                    {stat.value}
+                  </a>
+                ) : (
+                  <div className="text-white text-3xl md:text-4xl font-bold mb-1">{stat.value}</div>
+                )}
                 {stat.change && <div className="text-slate-400 text-xs">{stat.change}</div>}
               </div>
             ))}
