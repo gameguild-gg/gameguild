@@ -1,5 +1,4 @@
 import React from 'react';
-import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/common/ui/dashboard-page';
 import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
 import ProgramEditForm from '@/components/programs/program-edit-form';
 import { updateProgram } from '@/lib/content-management/programs/programs.actions';
@@ -28,44 +27,43 @@ export default async function CourseDetailsPage({ params }: PageProps) {
   }
 
   return (
-    <DashboardPage>
-      <DashboardPageHeader>
-        <DashboardPageTitle>Course Details</DashboardPageTitle>
-        <DashboardPageDescription>Update basic course information.</DashboardPageDescription>
-      </DashboardPageHeader>
-      <DashboardPageContent>
-        {program ? (
-          <div className="space-y-6">
-            <ProgramEditForm program={program} onSubmit={onSubmit} />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Course Details</h1>
+        <p className="text-muted-foreground">Update basic course information.</p>
+      </div>
+      
+      {program ? (
+        <div className="space-y-6">
+          <ProgramEditForm program={program} onSubmit={onSubmit} />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Metadata</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
-                <div>
-                  <div className="font-medium text-foreground">Slug</div>
-                  <div>{program.slug || '—'}</div>
-                </div>
-                <div>
-                  <div className="font-medium text-foreground">Category</div>
-                  <div>{program.category ?? '—'}</div>
-                </div>
-                <div>
-                  <div className="font-medium text-foreground">Difficulty</div>
-                  <div>{program.difficulty ?? '—'}</div>
-                </div>
-                <div>
-                  <div className="font-medium text-foreground">Estimated Hours</div>
-                  <div>{program.estimatedHours ?? '—'}</div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          <div className="text-muted-foreground">Program not found.</div>
-        )}
-      </DashboardPageContent>
-    </DashboardPage>
+          <Card>
+            <CardHeader>
+              <CardTitle>Metadata</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+              <div>
+                <div className="font-medium text-foreground">Slug</div>
+                <div>{program.slug || '—'}</div>
+              </div>
+              <div>
+                <div className="font-medium text-foreground">Category</div>
+                <div>{program.category ?? '—'}</div>
+              </div>
+              <div>
+                <div className="font-medium text-foreground">Difficulty</div>
+                <div>{program.difficulty ?? '—'}</div>
+              </div>
+              <div>
+                <div className="font-medium text-foreground">Estimated Hours</div>
+                <div>{program.estimatedHours ?? '—'}</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <div className="text-muted-foreground">Program not found.</div>
+      )}
+    </div>
   );
 }

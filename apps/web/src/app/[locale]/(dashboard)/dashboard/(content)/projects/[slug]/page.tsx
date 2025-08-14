@@ -1,21 +1,97 @@
-"use client";
+"use client"
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Activity, AlertCircle, BookText, CheckCircle2, Download, Eye, MessageSquare, TrendingUp } from 'lucide-react';
+import type React from "react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import {
+  BookText,
+  CheckCircle2,
+  Download,
+  Eye,
+  MessageSquare,
+  type LucideIcon,
+  DollarSign,
+  AlertCircle,
+  TrendingUp,
+  Activity,
+} from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 
-export default function ProjectOverviewPage(): React.JSX.Element {
-  // Placeholder content until wired to real data
-  const readyPct = 60;
-  const recentActivity: Array<{ id: string; type: 'devlog' | 'feedback'; title?: string; author?: string; comment?: string; content?: string; createdAt: number }> = [];
+export default function ProjectOverviewPage() {
+  // Placeholder data - this would come from project context or props in real app
+  const project = {
+    title: "My Game Project",
+    visibility: "public",
+    releaseStatus: "beta",
+    devlogs: [],
+    feedback: [],
+    versions: [],
+    description: "",
+    platforms: [],
+    coverUrl: null
+  }
+
+  const readiness = {
+    hasTitle: !!project.title?.trim(),
+    hasCover: !!project.coverUrl,
+    hasDescription: !!project.description && project.description.trim().length > 30,
+    hasPlatforms: !!project.platforms && project.platforms.length > 0,
+    hasBuild: !!project.versions && project.versions.length > 0,
+  }
+  const readyCount = Object.values(readiness).filter(Boolean).length
+  const readyPct = Math.round((readyCount / Object.keys(readiness).length) * 100)
+
+  const recentActivity: Array<{
+    id: string;
+    type: "devlog" | "feedback";
+    title?: string;
+    author?: string;
+    comment?: string;
+    content?: string;
+    createdAt: number;
+  }> = [
+    // Placeholder - would come from real data
+  ]
 
   return (
     <div className="grid gap-8">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Visibility" value={"public"} icon={Eye} subtext={<Badge variant="outline" className="capitalize bg-emerald-500/10 text-emerald-400 border-emerald-500/20">public</Badge>} />
-        <StatCard title="Status" value={"beta"} icon={CheckCircle2} subtext="Ready for players" trend="+12%" />
-        <StatCard title="Revenue (30d)" value="$0.00" icon={TrendingUp} subtext={<span className="text-sm font-medium text-muted-foreground">No data</span>} />
+        <StatCard
+          title="Visibility"
+          value={project.visibility}
+          icon={Eye}
+          subtext={
+            <Badge
+              variant="outline"
+              className={cn(
+                "capitalize",
+                project.visibility === "public" && "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+                project.visibility === "unlisted" && "bg-amber-500/10 text-amber-400 border-amber-500/20",
+                project.visibility === "draft" && "bg-slate-500/10 text-slate-400 border-slate-500/20",
+              )}
+            >
+              {project.visibility}
+            </Badge>
+          }
+        />
+        <StatCard
+          title="Status"
+          value={project.releaseStatus}
+          icon={CheckCircle2}
+          subtext="Ready for players"
+          trend="+12%"
+        />
+        <StatCard
+          title="Revenue (30d)"
+          value="$0.00"
+          icon={DollarSign}
+          subtext={
+            <span className="text-sm font-medium text-muted-foreground flex items-center">
+              No data
+            </span>
+          }
+        />
         <StatCard title="Downloads (30d)" value="0" icon={Download} subtext="No recent downloads" trend="0%" />
       </div>
 
@@ -32,15 +108,28 @@ export default function ProjectOverviewPage(): React.JSX.Element {
             <div className="space-y-6">
               {recentActivity.length > 0 ? (
                 recentActivity.slice(0, 5).map((item) => (
-                  <div key={item.id} className="flex items-start gap-4 p-4 rounded-lg bg-muted/20 border border-border/30">
+                  <div
+                    key={item.id}
+                    className="flex items-start gap-4 p-4 rounded-lg bg-muted/20 border border-border/30"
+                  >
                     <div className="p-2 bg-primary/10 rounded-full">
-                      {item.type === 'devlog' ? <BookText className="h-4 w-4 text-primary" /> : <MessageSquare className="h-4 w-4 text-primary" />}
+                      {item.type === "devlog" ? (
+                        <BookText className="h-4 w-4 text-primary" />
+                      ) : (
+                        <MessageSquare className="h-4 w-4 text-primary" />
+                      )}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">{item.type === 'devlog' ? item.title : `Feedback from ${item.author}`}</p>
-                      <p className="text-sm text-muted-foreground line-clamp-1 mt-1">{item.type === 'devlog' ? item.content : `"${item.comment}"`}</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {item.type === "devlog" ? item.title : `Feedback from ${item.author}`}
+                      </p>
+                      <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
+                        {item.type === "devlog" ? item.content : `"${item.comment}"`}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground whitespace-nowrap">{new Date(item.createdAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-muted-foreground whitespace-nowrap">
+                      {new Date(item.createdAt || Date.now()).toLocaleDateString()}
+                    </p>
                   </div>
                 ))
               ) : (
@@ -60,21 +149,41 @@ export default function ProjectOverviewPage(): React.JSX.Element {
             <CardTitle>Release Checklist</CardTitle>
             <CardDescription>Steps to get your page ready for the public.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm">
-            <ChecklistItem label="Set a title" done={false} />
-            <ChecklistItem label="Upload a cover image" done={false} />
-            <ChecklistItem label="Write a description" done={false} />
-            <ChecklistItem label="Select platforms" done={false} />
-            <ChecklistItem label="Upload a build" done={false} />
-            <div className="text-xs text-muted-foreground">Progress: {readyPct}%</div>
+          <CardContent className="space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Progress</span>
+                <span className="text-sm text-muted-foreground">{readyPct}%</span>
+              </div>
+              <Progress value={readyPct} className="h-2" />
+            </div>
+            <div className="space-y-4 text-sm">
+              <ChecklistItem label="Set a title" done={readiness.hasTitle} />
+              <ChecklistItem label="Upload a cover image" done={readiness.hasCover} />
+              <ChecklistItem label="Write a description" done={readiness.hasDescription} />
+              <ChecklistItem label="Select platforms" done={readiness.hasPlatforms} />
+              <ChecklistItem label="Upload a build" done={readiness.hasBuild} />
+            </div>
           </CardContent>
         </Card>
       </div>
     </div>
-  );
+  )
 }
 
-function StatCard({ title, value, icon: Icon, subtext, trend }: { title: string; value: string; icon: any; subtext?: React.ReactNode; trend?: string }) {
+function StatCard({
+  title,
+  value,
+  icon: Icon,
+  subtext,
+  trend,
+}: {
+  title: string
+  value: string
+  icon: LucideIcon
+  subtext?: React.ReactNode
+  trend?: string
+}) {
   return (
     <Card className="dark-card">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -89,15 +198,19 @@ function StatCard({ title, value, icon: Icon, subtext, trend }: { title: string;
         {subtext && <div className="mt-2">{subtext}</div>}
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function ChecklistItem({ label, done }: { label: string; done: boolean }) {
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 border border-border/30">
-      {done ? <CheckCircle2 className="h-5 w-5 text-emerald-400 flex-shrink-0" /> : <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0" />}
-      <span className={done ? 'text-foreground' : 'text-muted-foreground'}>{label}</span>
+      {done ? (
+        <CheckCircle2 className="h-5 w-5 text-emerald-400 flex-shrink-0" />
+      ) : (
+        <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0" />
+      )}
+      <span className={cn("transition-colors", done ? "text-foreground" : "text-muted-foreground")}>{label}</span>
     </div>
-  );
+  )
 }
 

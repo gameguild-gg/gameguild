@@ -1,20 +1,21 @@
+"use client"
+
 import React, { PropsWithChildren } from 'react';
-import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/common/ui/dashboard-page';
-import { PropsWithSlugParams } from '@/types';
-import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
+import { useParams } from 'next/navigation';
+import { PageHeader } from '@/components/projects/page-header';
+import { CourseSubNav } from '@/components/courses/course-sub-nav';
 
-export default async function Layout({ children, params }: PropsWithChildren<PropsWithSlugParams>): Promise<React.JSX.Element> {
-  const { slug } = await params;
-  const result = await getProgramBySlugService(slug);
-  const title = result.success && result.data ? result.data.title : slug;
-
+export default function Layout({ children }: PropsWithChildren): React.JSX.Element {
+  const params = useParams();
+  const slug = String((params as any).slug ?? 'current');
+  
   return (
-    <DashboardPage>
-      <DashboardPageHeader>
-        <DashboardPageTitle>Course: {title}</DashboardPageTitle>
-        <DashboardPageDescription>Manage course content and settings</DashboardPageDescription>
-      </DashboardPageHeader>
-      <DashboardPageContent>{children}</DashboardPageContent>
-    </DashboardPage>
+    <div className="flex flex-col min-h-svh">
+      <PageHeader title="Course" />
+      <div className="flex flex-1">
+        <CourseSubNav courseSlug={slug} />
+        <main className="flex-1 p-4 md:p-6 bg-muted/40">{children}</main>
+      </div>
+    </div>
   );
 }
