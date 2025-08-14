@@ -189,6 +189,38 @@ export function OpenProjectDialog({
     }
   }
 
+  const handleDownload = (projectId: string, projectName: string, projectData: string) => {
+    try {
+      // Create blob with lexical data
+      const blob = new Blob([projectData], { type: "application/json" })
+      const url = URL.createObjectURL(blob)
+
+      // Create download link
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `${projectName}.lexical`
+      document.body.appendChild(link)
+      link.click()
+
+      // Cleanup
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast.success("Download iniciado", {
+        description: `Arquivo "${projectName}.lexical" está sendo baixado`,
+        duration: 2500,
+        icon: "📥",
+      })
+    } catch (error) {
+      console.error("Download error:", error)
+      toast.error("Erro no download", {
+        description: "Não foi possível baixar o arquivo. Tente novamente.",
+        duration: 4000,
+        icon: "❌",
+      })
+    }
+  }
+
   return (
     <>
       <Dialog
@@ -254,6 +286,7 @@ export function OpenProjectDialog({
               selectedTags={selectedTags}
               onOpen={handleOpen}
               onDelete={handleConfirmDelete}
+              onDownload={handleDownload} // Added download prop
               showDeleteButton={true}
               openButtonText="Open"
             />
@@ -313,7 +346,8 @@ export function OpenProjectDialog({
         itemName={projectToDelete?.name}
         itemType="projeto"
         onConfirm={handleDelete}
-      />
+        title={""}
+        />
     </>
   )
 }
