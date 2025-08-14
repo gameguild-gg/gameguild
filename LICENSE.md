@@ -1,4 +1,6 @@
-                    # GameGuild Licensing
+SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-GameGuild-Commercial
+
+# GameGuild Licensing
 
 GameGuild is licensed under a **dual licensing model**:
 
@@ -433,8 +435,8 @@ this License without regard to the additional permissions.
 
 When you convey a copy of a covered work, you may at your option
 remove any additional permissions from that copy, or from any part of
-it.  (Additional permissions may be written to require their own
-removal in certain cases when you modify the work.)  You may place
+it. (Additional permissions may be written to require their own
+removal in certain cases when you modify the work.) You may place
 additional permissions on material, added by you to a covered work,
 for which you have or can give appropriate copyright permission.
 
@@ -584,7 +586,7 @@ then you must either (1) cause the Corresponding Source to be so
 available, or (2) arrange to deprive yourself of the benefit of the
 patent license for this particular work, or (3) arrange, in a manner
 consistent with the requirements of this License, to extend the patent
-license to downstream recipients.  "Knowingly relying" means you have
+license to downstream recipients. "Knowingly relying" means you have
 actual knowledge that, but for the patent license, your conveying the
 covered work in a country, or your recipient's use of the covered work
 in a country, would infringe one or more identifiable patents in that

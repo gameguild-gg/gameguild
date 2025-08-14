@@ -1,10 +1,9 @@
-![GitHub Stars](https://img.shields.io/github/stars/gameguild-gg/website?style=social)
-![Version](https://img.shields.io/github/package-json/v/gameguild-gg/website)
-![Repo Size](https://img.shields.io/github/repo-size/gameguild-gg/website)
-![GitHub Issues](https://img.shields.io/github/issues/gameguild-gg/website)
-![Last Commit](https://img.shields.io/github/last-commit/gameguild-gg/website)
-![Contributors](https://img.shields.io/github/contributors/gameguild-gg/website)
-![Languages](https://img.shields.io/github/languages/top/gameguild-gg/website)
+![GitHub Stars](https://img.shields.io/github/stars/gameguild-gg/gameguild?style=social)
+![Repo Size](https://img.shields.io/github/repo-size/gameguild-gg/gameguild)
+![GitHub Issues](https://img.shields.io/github/issues/gameguild-gg/gameguild)
+![Last Commit](https://img.shields.io/github/last-commit/gameguild-gg/gameguild)
+![Contributors](https://img.shields.io/github/contributors/gameguild-gg/gameguild)
+![Languages](https://img.shields.io/github/languages/top/gameguild-gg/gameguild)
 ![Website Uptime 30d](<https://status.gameguild.gg/api/badge/1/uptime/720?label=Uptime%20Web%20(30d)>)
 ![Api Uptime 30d](<https://status.gameguild.gg/api/badge/3/uptime/720?label=Uptime%20Api%20(30d)>)
 
@@ -171,11 +170,11 @@ Icons by [Icons8](https://icons8.com/)
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=gameguild-gg/website&type=Date)](https://star-history.com/#gameguild-gg/website&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=gameguild-gg/gameguild&type=Date)](https://star-history.com/#gameguild-gg/gameguild&Date)
 
 ## Gource
 
-[![Gource](https://gameguild-gg.github.io/website/gource.gif)](https://gameguild-gg.github.io/website/gource.mp4)
+[![Gource](https://gameguild-gg.github.io/gameguild/gource.gif)](https://gameguild-gg.github.io/gameguild/gource.mp4)
 
 ## License
 
