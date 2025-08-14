@@ -28,7 +28,7 @@ export default async function Page(): Promise<React.JSX.Element> {
 
   // Calculate real stats from contributors data
   const totalContributors = contributors.length;
-  const totalParticipated = contributors.filter((contributor) => (contributor.total_commits || 0) > 0).length;
+  const totalParticipated = contributors.filter((contributor) => (contributor.contributions || 0) > 0).length;
 
   return (
     <div className="flex flex-col flex-1 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
