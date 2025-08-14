@@ -5,8 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ProjectSearchFilters } from "@/components/editor/ui/project-dialog/project-search-filters"
 import { ProjectList } from "@/components/editor/ui/project-dialog/project-list"
 import { ProjectPagination } from "@/components/editor/ui/project-dialog/project-pagination"
+import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
 import { FolderOpen, Eye } from "lucide-react"
-import { useState, useEffect } from "react"
 import { toast } from "sonner"
 
 interface ProjectData {
@@ -44,95 +44,32 @@ export function OpenProjectDialogPreview({
   onProjectLoad,
   formatStorageSize,
 }: OpenProjectDialogPreviewProps) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
-  const [totalProjects, setTotalProjects] = useState(0)
-  const [tagFilterMode, setTagFilterMode] = useState<"all" | "any">("any")
-
-  // Filter projects based on search and tags
-  useEffect(() => {
-    const filterProjects = async () => {
-      if (!isDbInitialized) return
-
-      try {
-        let projects: ProjectData[]
-
-        if (searchTerm || selectedTags.length > 0) {
-          projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode)
-        } else {
-          projects = await storageAdapter.list()
-        }
-
-        setTotalProjects(projects.length)
-        setFilteredProjects(projects)
-        setCurrentPage(1) // Reset to first page when filtering
-      } catch (error) {
-        console.error("Failed to filter projects:", error)
-      }
-    }
-
-    filterProjects()
-  }, [searchTerm, selectedTags, isDbInitialized, tagFilterMode, storageAdapter])
+  const {
+    searchTerm,
+    setSearchTerm,
+    selectedTags,
+    setSelectedTags,
+    currentPage,
+    setCurrentPage,
+    itemsPerPage,
+    setItemsPerPage,
+    filteredProjects,
+    totalProjects,
+    tagFilterMode,
+    setTagFilterMode,
+    handleDownload,
+    loadProject,
+  } = useProjectDialog({ isDbInitialized, storageAdapter })
 
   const handleOpen = async (projectId: string) => {
-    try {
-      const projectData = await storageAdapter.load(projectId)
-      if (projectData) {
-        onProjectLoad(projectData)
-        onOpenChange(false)
-        toast.success("Project loaded for preview", {
-          description: `"${projectData.name}" is now being previewed`,
-          duration: 2500,
-          icon: "👁️",
-        })
-      } else {
-        toast.error("Project not found", {
-          description: "Could not locate the project file",
-          duration: 3000,
-          icon: "🔍",
-        })
-      }
-    } catch (error) {
-      console.error("Open error:", error)
-      toast.error("Error opening project", {
-        description: "Could not open the project. Please try again.",
-        duration: 4000,
-        icon: "❌",
-      })
-    }
-  }
-
-  const handleDownload = (projectId: string, projectName: string, projectData: string) => {
-    try {
-      // Create blob with lexical data
-      const blob = new Blob([projectData], { type: "application/json" })
-      const url = URL.createObjectURL(blob)
-
-      // Create download link
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `${projectName}.lexical`
-      document.body.appendChild(link)
-      link.click()
-
-      // Cleanup
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-
-      toast.success("Download started", {
-        description: `File "${projectName}.lexical" is being downloaded`,
+    const projectData = await loadProject(projectId)
+    if (projectData) {
+      onProjectLoad(projectData)
+      onOpenChange(false)
+      toast.success("Project loaded for preview", {
+        description: `"${projectData.name}" is now being previewed`,
         duration: 2500,
-        icon: "📥",
-      })
-    } catch (error) {
-      console.error("Download error:", error)
-      toast.error("Download error", {
-        description: "Could not download the file. Please try again.",
-        duration: 4000,
-        icon: "❌",
+        icon: "👁️",
       })
     }
   }
@@ -150,45 +87,55 @@ export function OpenProjectDialogPreview({
           Open Project
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl min-w-xl max-h-[80vh]" onInteractOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
+      <DialogContent
+        className="max-w-2xl min-w-xl h-[80vh] flex flex-col overflow-hidden"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Open Project for Preview</DialogTitle>
           <p className="text-sm text-muted-foreground">Select a project to preview its content</p>
         </DialogHeader>
-        <div className="space-y-4">
-          <ProjectSearchFilters
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            selectedTags={selectedTags}
-            onTagsChange={setSelectedTags}
-            availableTags={availableTags}
-            tagFilterMode={tagFilterMode}
-            onTagFilterModeChange={setTagFilterMode}
-            itemsPerPage={itemsPerPage}
-            onItemsPerPageChange={setItemsPerPage}
-          />
 
-          <ProjectList
-            projects={filteredProjects}
-            currentPage={currentPage}
-            itemsPerPage={itemsPerPage}
-            searchTerm={searchTerm}
-            selectedTags={selectedTags}
-            onOpen={handleOpen}
-            onDownload={handleDownload} // Added download prop
-            showDeleteButton={false}
-            openButtonText="Preview"
-            openButtonIcon={<Eye className="w-4 h-4" />}
-          />
+        <div className="flex-1 min-h-0 flex flex-col space-y-4">
+          <div className="flex-shrink-0">
+            <ProjectSearchFilters
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+              availableTags={availableTags}
+              tagFilterMode={tagFilterMode}
+              onTagFilterModeChange={setTagFilterMode}
+              itemsPerPage={itemsPerPage}
+              onItemsPerPageChange={setItemsPerPage}
+            />
+          </div>
 
-          <ProjectPagination
-            currentPage={currentPage}
-            totalProjects={totalProjects}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-          />
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <ProjectList
+              projects={filteredProjects}
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              searchTerm={searchTerm}
+              selectedTags={selectedTags}
+              onOpen={handleOpen}
+              onDownload={handleDownload}
+              showDeleteButton={false}
+              openButtonText="Preview"
+              openButtonIcon={<Eye className="w-4 h-4" />}
+            />
+          </div>
 
-          <div className="flex justify-end items-center pt-4 border-t dark:border-gray-700">
+          <div className="flex-shrink-0 h-12 flex items-center justify-center">
+            <ProjectPagination
+              currentPage={currentPage}
+              totalProjects={totalProjects}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+
+          <div className="flex justify-end items-center pt-4 border-t dark:border-gray-700 flex-shrink-0 h-16">
             <Button variant="outline" onClick={() => onOpenChange(false)} className="bg-transparent">
               Close
             </Button>

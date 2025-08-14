@@ -8,8 +8,9 @@ import { DeleteConfirmDialog } from "@/components/editor/ui/delete-confirm-dialo
 import { ProjectSearchFilters } from "@/components/editor/ui/project-dialog/project-search-filters"
 import { ProjectList } from "@/components/editor/ui/project-dialog/project-list"
 import { ProjectPagination } from "@/components/editor/ui/project-dialog/project-pagination"
+import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
 import { FolderOpen } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 import type { LexicalEditor } from "lexical"
 
@@ -69,94 +70,64 @@ export function OpenProjectDialog({
   totalStorageUsed,
   formatStorageSize,
 }: OpenProjectDialogProps) {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
-  const [totalProjects, setTotalProjects] = useState(0)
-  const [tagFilterMode, setTagFilterMode] = useState<"all" | "any">("any")
+  const {
+    searchTerm,
+    setSearchTerm,
+    selectedTags,
+    setSelectedTags,
+    currentPage,
+    setCurrentPage,
+    itemsPerPage,
+    setItemsPerPage,
+    filteredProjects,
+    totalProjects,
+    tagFilterMode,
+    setTagFilterMode,
+    handleDownload,
+    loadProject,
+  } = useProjectDialog({ isDbInitialized, storageAdapter })
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null)
 
-  // Filter projects based on search and tags
-  useEffect(() => {
-    const filterProjects = async () => {
-      if (!isDbInitialized) return
-
-      try {
-        let projects: ProjectData[]
-
-        if (searchTerm || selectedTags.length > 0) {
-          projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode)
-        } else {
-          projects = await storageAdapter.list()
-        }
-
-        setTotalProjects(projects.length)
-        setFilteredProjects(projects)
-        setCurrentPage(1) // Reset to first page when filtering
-      } catch (error) {
-        console.error("Failed to filter projects:", error)
-      }
-    }
-
-    filterProjects()
-  }, [searchTerm, selectedTags, isDbInitialized, tagFilterMode, storageAdapter])
-
   const handleOpen = async (projectId: string) => {
-    try {
-      const projectData = await storageAdapter.load(projectId)
-      if (projectData && editorRef.current) {
-        try {
-          // Ativar o estado de carregamento
-          if (setLoadingRef.current) {
-            setLoadingRef.current(true)
-          }
-
-          const editorState = editorRef.current.parseEditorState(projectData.data)
-          editorRef.current.setEditorState(editorState)
-
-          // Aguardar um pouco para que os nós sejam renderizados
-          await new Promise((resolve) => setTimeout(resolve, 100))
-
-          // Desativar o estado de carregamento
-          if (setLoadingRef.current) {
-            setLoadingRef.current(false)
-          }
-
-          onProjectLoad(projectData)
-          onOpenChange(false)
-          toast.success("Projeto carregado", {
-            description: `"${projectData.name}" foi aberto com sucesso`,
-            duration: 2500,
-            icon: "📂",
-          })
-        } catch (error) {
-          // Desativar o estado de carregamento em caso de erro
-          if (setLoadingRef.current) {
-            setLoadingRef.current(false)
-          }
-          toast.error("Erro ao carregar projeto", {
-            description: "O arquivo do projeto está corrompido ou em formato inválido",
-            duration: 4000,
-            icon: "❌",
-          })
+    const projectData = await loadProject(projectId)
+    if (projectData && editorRef.current) {
+      try {
+        // Ativar o estado de carregamento
+        if (setLoadingRef.current) {
+          setLoadingRef.current(true)
         }
-      } else {
-        toast.error("Projeto não encontrado", {
-          description: "Não foi possível localizar o arquivo do projeto",
-          duration: 3000,
-          icon: "🔍",
+
+        const editorState = editorRef.current.parseEditorState(projectData.data)
+        editorRef.current.setEditorState(editorState)
+
+        // Aguardar um pouco para que os nós sejam renderizados
+        await new Promise((resolve) => setTimeout(resolve, 100))
+
+        // Desativar o estado de carregamento
+        if (setLoadingRef.current) {
+          setLoadingRef.current(false)
+        }
+
+        onProjectLoad(projectData)
+        onOpenChange(false)
+        toast.success("Projeto carregado", {
+          description: `"${projectData.name}" foi aberto com sucesso`,
+          duration: 2500,
+          icon: "📂",
+        })
+      } catch (error) {
+        // Desativar o estado de carregamento em caso de erro
+        if (setLoadingRef.current) {
+          setLoadingRef.current(false)
+        }
+        toast.error("Erro ao carregar projeto", {
+          description: "O arquivo do projeto está corrompido ou em formato inválido",
+          duration: 4000,
+          icon: "❌",
         })
       }
-    } catch (error) {
-      console.error("Open error:", error)
-      toast.error("Erro ao abrir projeto", {
-        description: "Não foi possível abrir o projeto. Tente novamente.",
-        duration: 4000,
-        icon: "❌",
-      })
     }
   }
 
@@ -189,38 +160,6 @@ export function OpenProjectDialog({
     }
   }
 
-  const handleDownload = (projectId: string, projectName: string, projectData: string) => {
-    try {
-      // Create blob with lexical data
-      const blob = new Blob([projectData], { type: "application/json" })
-      const url = URL.createObjectURL(blob)
-
-      // Create download link
-      const link = document.createElement("a")
-      link.href = url
-      link.download = `${projectName}.lexical`
-      document.body.appendChild(link)
-      link.click()
-
-      // Cleanup
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-
-      toast.success("Download iniciado", {
-        description: `Arquivo "${projectName}.lexical" está sendo baixado`,
-        duration: 2500,
-        icon: "📥",
-      })
-    } catch (error) {
-      console.error("Download error:", error)
-      toast.error("Erro no download", {
-        description: "Não foi possível baixar o arquivo. Tente novamente.",
-        duration: 4000,
-        icon: "❌",
-      })
-    }
-  }
-
   return (
     <>
       <Dialog
@@ -235,8 +174,11 @@ export function OpenProjectDialog({
             Open
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl min-w-xl max-h-[80vh]" onInteractOutside={(e) => e.preventDefault()}>
-          <DialogHeader>
+        <DialogContent
+          className="max-w-2xl w-full h-[80vh] overflow-hidden flex flex-col"
+          onInteractOutside={(e) => e.preventDefault()}
+        >
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>{isFirstTime ? "Welcome! Choose an Option" : "Open Project"}</DialogTitle>
             {isFirstTime && (
               <p className="text-sm text-muted-foreground">
@@ -244,21 +186,24 @@ export function OpenProjectDialog({
               </p>
             )}
           </DialogHeader>
-          <div className="space-y-4">
-            <ProjectSearchFilters
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedTags={selectedTags}
-              onTagsChange={setSelectedTags}
-              availableTags={availableTags}
-              tagFilterMode={tagFilterMode}
-              onTagFilterModeChange={setTagFilterMode}
-              itemsPerPage={itemsPerPage}
-              onItemsPerPageChange={setItemsPerPage}
-            />
+
+          <div className="flex flex-col flex-1 min-h-0 space-y-4">
+            <div className="flex-shrink-0">
+              <ProjectSearchFilters
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                selectedTags={selectedTags}
+                onTagsChange={setSelectedTags}
+                availableTags={availableTags}
+                tagFilterMode={tagFilterMode}
+                onTagFilterModeChange={setTagFilterMode}
+                itemsPerPage={itemsPerPage}
+                onItemsPerPageChange={setItemsPerPage}
+              />
+            </div>
 
             {isStorageNearLimit() && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-700 rounded-lg mb-4">
+              <div className="p-3 bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-700 rounded-lg flex-shrink-0">
                 <div className="flex items-center gap-2 mb-1">
                   <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
                     <path
@@ -278,27 +223,31 @@ export function OpenProjectDialog({
               </div>
             )}
 
-            <ProjectList
-              projects={filteredProjects}
-              currentPage={currentPage}
-              itemsPerPage={itemsPerPage}
-              searchTerm={searchTerm}
-              selectedTags={selectedTags}
-              onOpen={handleOpen}
-              onDelete={handleConfirmDelete}
-              onDownload={handleDownload} // Added download prop
-              showDeleteButton={true}
-              openButtonText="Open"
-            />
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <ProjectList
+                projects={filteredProjects}
+                currentPage={currentPage}
+                itemsPerPage={itemsPerPage}
+                searchTerm={searchTerm}
+                selectedTags={selectedTags}
+                onOpen={handleOpen}
+                onDelete={handleConfirmDelete}
+                onDownload={handleDownload}
+                showDeleteButton={true}
+                openButtonText="Open"
+              />
+            </div>
 
-            <ProjectPagination
-              currentPage={currentPage}
-              totalProjects={totalProjects}
-              itemsPerPage={itemsPerPage}
-              onPageChange={setCurrentPage}
-            />
+            <div className="flex-shrink-0 h-12 flex items-center justify-center">
+              <ProjectPagination
+                currentPage={currentPage}
+                totalProjects={totalProjects}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
 
-            <div className="flex justify-between items-center pt-4 border-t dark:border-gray-700">
+            <div className="flex justify-between items-center pt-4 border-t dark:border-gray-700 flex-shrink-0 h-16">
               {isStorageNearLimit() ? (
                 <div className="flex flex-col">
                   <Button variant="ghost" disabled className="gap-2 opacity-50 cursor-not-allowed">

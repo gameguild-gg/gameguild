@@ -12,10 +12,6 @@ interface ProjectPaginationProps {
 export function ProjectPagination({ currentPage, totalProjects, itemsPerPage, onPageChange }: ProjectPaginationProps) {
   const totalPages = Math.ceil(totalProjects / itemsPerPage)
 
-  if (totalPages <= 1) {
-    return null
-  }
-
   return (
     <div className="flex items-center justify-between mt-4 pt-4 border-t dark:border-gray-700">
       <div className="text-sm text-gray-500 dark:text-gray-400">
