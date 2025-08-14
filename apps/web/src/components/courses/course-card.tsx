@@ -1,157 +1,172 @@
-'use client';
+"use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { ArrowRight, Clock, Star, Users } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from "next/image";
+import Link from "next/link";
+import { Clock, Users, Star, BookOpen } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import type { Program } from "@/lib/api/generated/types.gen";
+import { ProgramDifficulty, ContentStatus } from "@/lib/api/generated/types.gen";
+import { cn } from "@/lib/utils";
 
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  level: 'Beginner' | 'Intermediate' | 'Advanced';
-  duration: string;
-  enrolledStudents: number;
-  rating: number;
-  price: number;
-  image: string;
-  slug: string;
-  instructor: {
-    name: string;
-    avatar: string;
+export function CourseCard({ course, viewMode = "grid" }: { course: Program; viewMode?: "grid" | "list" }) {
+  const updated = course.updatedAt ? new Date(course.updatedAt).toLocaleDateString() : 'N/A';
+
+  const statusColors = {
+    published: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    draft: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    archived: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+    under_review: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   };
-  isEnrolled?: boolean;
-  progress?: number;
-  certification?: boolean;
-}
 
-interface CourseCardProps {
-  course: Course;
-  variant?: 'default' | 'compact' | 'featured';
-}
+  const levelColors = {
+    beginner: "bg-green-500/10 text-green-400",
+    intermediate: "bg-blue-500/10 text-blue-400",
+    advanced: "bg-purple-500/10 text-purple-400",
+    expert: "bg-red-500/10 text-red-400",
+  };
 
-export function CourseCard({ course, variant = 'default' }: CourseCardProps) {
-  if (variant === 'compact') {
+  // Map our Program type to display values
+  const getStatusDisplay = (status?: ContentStatus): keyof typeof statusColors => {
+    switch (status) {
+      case ContentStatus.PUBLISHED: return 'published';
+      case ContentStatus.ARCHIVED: return 'archived';
+      case ContentStatus.UNDER_REVIEW: return 'under_review';
+      case ContentStatus.DRAFT:
+      default: return 'draft';
+    }
+  };
+  
+  const getDifficultyLevel = (difficulty?: ProgramDifficulty): keyof typeof levelColors => {
+    switch (difficulty) {
+      case ProgramDifficulty.BEGINNER: return 'beginner';
+      case ProgramDifficulty.INTERMEDIATE: return 'intermediate';
+      case ProgramDifficulty.ADVANCED: return 'advanced';
+      case ProgramDifficulty.EXPERT: return 'expert';
+      default: return 'beginner';
+    }
+  };
+
+  const status = getStatusDisplay(course.status);
+  const level = getDifficultyLevel(course.difficulty);
+
+  if (viewMode === "list") {
     return (
-      <Card className="hover:shadow-md transition-shadow">
-        <CardContent className="p-4">
-          <div className="flex gap-3">
-            <Image
-              src={course.image}
-              alt={course.title}
-              width={64}
-              height={64}
-              className="w-16 h-16 rounded object-cover"
-              onError={(e) => {
-                e.currentTarget.src = 'https://placehold.co/64x64/1f2937/ffffff?text=Course';
-              }}
-            />
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm line-clamp-1">{course.title}</h3>
-              <p className="text-xs text-muted-foreground">{course.instructor.name}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                  <span className="text-xs">{course.rating}</span>
+      <Link href={`/dashboard/courses/${course.slug}`} className="block">
+        <Card className="hover:shadow-xl transition-all duration-200 cursor-pointer">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-6">
+              <div className="relative w-32 h-20 bg-muted/20 rounded-lg overflow-hidden flex-shrink-0">
+                <Image
+                  src={course.thumbnail || "/placeholder.svg?height=80&width=128&query=course%20cover"}
+                  alt={`${course.title} cover`}
+                  fill
+                  className="object-cover"
+                  sizes="128px"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="font-semibold text-foreground truncate">{course.title}</h3>
+                  <Badge variant="outline" className={cn("capitalize", statusColors[status])}>
+                    {status}
+                  </Badge>
+                  <Badge variant="secondary" className={cn("capitalize", levelColors[level])}>
+                    {level}
+                  </Badge>
                 </div>
-                <span className="text-xs font-medium">${course.price}</span>
+                <p className="text-sm text-muted-foreground line-clamp-1 mb-3">
+                  {course.description}
+                </p>
+                <div className="flex items-center gap-6 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {course.estimatedHours || 0}h
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    0 students
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                    N/A
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <BookOpen className="w-3 h-3" />
+                    0 modules
+                  </span>
+                  <span className="text-muted-foreground">Updated {updated}</span>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-sm font-semibold text-emerald-400">Free</span>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Link>
     );
   }
 
   return (
-    <Card className={`group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden ${variant === 'featured' ? 'border-primary' : ''}`}>
-      <CardHeader className="p-0">
-        <div className="relative">
-          <Image
-            src={course.image}
-            alt={course.title}
-            width={400}
-            height={225}
-            className="w-full h-48 object-cover"
-            onError={(e) => {
-              e.currentTarget.src = 'https://placehold.co/400x225/1f2937/ffffff?text=Course+Image';
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-          <div className="absolute top-4 left-4 flex gap-2">
-            <Badge variant="secondary">{course.category}</Badge>
-            {course.certification && <Badge className="bg-green-500">Certified</Badge>}
-          </div>
-
-          <div className="absolute bottom-4 right-4">
-            <Button size="sm" asChild>
-              <Link href={`/courses/${course.slug}`}>
-                View Course
-                <ArrowRight className="h-3 w-3 ml-1" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-3">
-          <Badge variant="outline" className="text-xs">
-            {course.level}
-          </Badge>
-          <div className="flex items-center gap-1 text-sm">
-            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-            <span>{course.rating}</span>
-          </div>
-        </div>
-
-        <h3 className="text-xl font-semibold mb-3 line-clamp-2">{course.title}</h3>
-
-        <p className="text-sm text-muted-foreground mb-4 line-clamp-3">{course.description}</p>
-
-        <div className="flex items-center gap-3 mb-4">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={course.instructor.avatar} />
-            <AvatarFallback>{course.instructor.name[0]}</AvatarFallback>
-          </Avatar>
-          <span className="text-sm font-medium">{course.instructor.name}</span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-4 text-xs">
-          <div className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            <span>{course.duration}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            <span>{course.enrolledStudents.toLocaleString()}</span>
-          </div>
-        </div>
-
-        {course.isEnrolled && course.progress !== undefined && (
-          <div className="mb-4">
-            <div className="flex justify-between text-xs mb-1">
-              <span>Progress</span>
-              <span>{course.progress}%</span>
+    <Link href={`/dashboard/courses/${course.slug}`} className="block">
+      <Card className="group hover:shadow-xl transition-all duration-200 cursor-pointer">
+        <CardHeader className="p-0">
+          <div className="relative w-full h-48 bg-muted/20 rounded-t-lg overflow-hidden">
+            <Image
+              src={course.thumbnail || "/placeholder.svg?height=192&width=384&query=course%20cover"}
+              alt={`${course.title} cover`}
+              fill
+              className="object-cover transition-transform group-hover:scale-105"
+              sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 33vw"
+            />
+            <div className="absolute top-3 right-3 flex gap-2">
+              <Badge variant="outline" className={cn("capitalize", statusColors[status])}>
+                {status}
+              </Badge>
             </div>
-            <div className="w-full bg-secondary rounded-full h-2">
-              <div className="bg-primary h-2 rounded-full transition-all duration-300" style={{ width: `${course.progress}%` }} />
+            <div className="absolute top-3 left-3">
+              <Badge variant="secondary" className={cn("capitalize", levelColors[level])}>
+                {level}
+              </Badge>
             </div>
           </div>
-        )}
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="mb-3">
+            <CardTitle className="text-lg font-semibold text-foreground line-clamp-2 mb-2">{course.title}</CardTitle>
+            <CardDescription className="text-muted-foreground line-clamp-2">
+              {course.description}
+            </CardDescription>
+          </div>
 
-        <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold">${course.price}</div>
-          <Button asChild>
-            <Link href={`/courses/${course.slug}`}>{course.isEnrolled ? 'Continue' : 'Enroll Now'}</Link>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {course.estimatedHours || 0}h
+              </span>
+              <span className="flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                0
+              </span>
+              <span className="flex items-center gap-1">
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                N/A
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-muted-foreground">Category: {course.category || 'General'}</span>
+            <div className="text-right">
+              <span className="text-sm font-semibold text-emerald-400">Free</span>
+            </div>
+          </div>
+
+          <div className="text-xs text-muted-foreground">Updated {updated}</div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
