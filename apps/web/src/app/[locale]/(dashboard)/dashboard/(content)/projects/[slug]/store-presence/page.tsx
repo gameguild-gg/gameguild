@@ -1,12 +1,12 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function VersionsPage(): React.JSX.Element {
+export default function StorePresencePage(): React.JSX.Element {
   return (
     <Card className="dark-card">
       <CardHeader>
-        <CardTitle>Versions & Builds</CardTitle>
-        <CardDescription>Manage and upload new builds for your players.</CardDescription>
+        <CardTitle>Store Presence</CardTitle>
+        <CardDescription>Manage how your project appears in stores.</CardDescription>
       </CardHeader>
       <CardContent>Coming soon.</CardContent>
     </Card>
