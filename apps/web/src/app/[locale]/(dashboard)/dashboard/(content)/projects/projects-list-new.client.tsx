@@ -32,26 +32,26 @@ export function ProjectsListClient({ initialProjects, onCreate }: { initialProje
   }, [projects, searchQuery, statusFilter]);
 
   const getStatusBadge = (status: any) => {
-    const key = status?.toString();
-    const map: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+    const statusKey = status?.toString() || '0';
+    const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
       '0': { label: 'Draft', variant: 'outline' },
       '1': { label: 'Published', variant: 'default' },
       '2': { label: 'Archived', variant: 'secondary' },
     };
-    const info = (key && map[key]) || { label: 'Unknown', variant: 'outline' as const };
+    const info = statusMap[statusKey] || statusMap['0'];
     return <Badge variant={info.variant}>{info.label}</Badge>;
   };
 
   const ProjectCard = ({ project }: { project: Project }) => (
     <Link href={`./${project.slug ?? project.id}`}> 
       <Card className="dark-card group hover:shadow-xl transition-all duration-200 cursor-pointer">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <CardTitle className="text-lg font-semibold truncate">{project.title}</CardTitle>
-            {project.shortDescription ? (
-              <CardDescription className="line-clamp-2">{project.shortDescription}</CardDescription>
-            ) : null}
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <CardTitle className="text-lg font-semibold truncate">{project.title}</CardTitle>
+              {project.shortDescription ? (
+                <CardDescription className="line-clamp-2">{project.shortDescription}</CardDescription>
+              ) : null}
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 {project.category && <span className="inline-flex items-center gap-1"><Tag className="h-3 w-3" />{(project.category as any)?.toString?.() ?? String(project.category)}</span>}
                 {project.developmentStatus && <span className="inline-flex items-center gap-1">{String(project.developmentStatus)}</span>}
@@ -62,16 +62,16 @@ export function ProjectsListClient({ initialProjects, onCreate }: { initialProje
                   <span className="inline-flex items-center gap-1"><Star className="h-3 w-3" />{project.averageRating.toFixed(1)}</span>
                 )}
               </div>
+            </div>
+            {getStatusBadge(project.status)}
           </div>
-          {getStatusBadge(project.status)}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{(project as any).type?.toString?.() ?? 'Project'}</span>
-          <span className="whitespace-nowrap">{project.createdAt ? new Date((project as any).createdAt).toLocaleDateString() : ''}</span>
-        </div>
-      </CardContent>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{(project as any).type?.toString?.() ?? 'Project'}</span>
+            <span className="whitespace-nowrap">{project.createdAt ? new Date((project as any).createdAt).toLocaleDateString() : ''}</span>
+          </div>
+        </CardContent>
       </Card>
     </Link>
   );
@@ -174,44 +174,6 @@ export function ProjectsListClient({ initialProjects, onCreate }: { initialProje
           </div>
         </div>
       </div>
-
-      {filtered.length > 0 ? (
-        <div className={viewMode === "grid" ? "grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-4"}>
-          {filtered.map((project) => (
-            viewMode === "grid" ? (
-              <ProjectCard key={project.id} project={project} />
-            ) : (
-              <ProjectRow key={project.id} project={project} />
-            )
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center text-center py-20">
-          <div className="p-4 bg-muted/20 rounded-full mb-6">
-            <Plus className="h-12 w-12 text-muted-foreground" />
-          </div>
-          <h3 className="text-xl font-semibold mb-2">No projects found</h3>
-          <p className="text-muted-foreground mb-6 max-w-md">
-            {searchQuery || statusFilter !== "all"
-              ? "Try adjusting your search or filters"
-              : "Create your first project to get started"}
-          </p>
-          {onCreate ? (
-            <CreateProjectDialog action={onCreate}>
-              <Button variant="secondary" size="sm">
-                <Plus className="h-4 w-4 mr-2" /> New Project
-              </Button>
-            </CreateProjectDialog>
-          ) : (
-            <Button variant="secondary" size="sm" disabled>
-              <Plus className="h-4 w-4 mr-2" /> New Project
-            </Button>
-          )}
-        </div>
-      )}
-    </>
-  );
-}
 
       {filtered.length > 0 ? (
         <div className={viewMode === "grid" ? "grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-4"}>
