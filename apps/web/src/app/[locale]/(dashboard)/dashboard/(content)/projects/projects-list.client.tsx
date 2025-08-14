@@ -52,6 +52,16 @@ export function ProjectsListClient({ initialProjects, onCreate }: { initialProje
             {project.shortDescription ? (
               <CardDescription className="line-clamp-2">{project.shortDescription}</CardDescription>
             ) : null}
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                {project.category && <span className="inline-flex items-center gap-1"><Tag className="h-3 w-3" />{(project.category as any)?.toString?.() ?? String(project.category)}</span>}
+                {project.developmentStatus && <span className="inline-flex items-center gap-1">{String(project.developmentStatus)}</span>}
+                {typeof project.followerCount === 'number' && (
+                  <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" />{project.followerCount}</span>
+                )}
+                {typeof project.averageRating === 'number' && (
+                  <span className="inline-flex items-center gap-1"><Star className="h-3 w-3" />{project.averageRating.toFixed(1)}</span>
+                )}
+              </div>
           </div>
           {getStatusBadge(project.status)}
         </div>
@@ -59,7 +69,7 @@ export function ProjectsListClient({ initialProjects, onCreate }: { initialProje
       <CardContent>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{(project as any).type?.toString?.() ?? 'Project'}</span>
-          <span>{project.createdAt ? new Date((project as any).createdAt).toLocaleDateString() : ''}</span>
+          <span className="whitespace-nowrap">{project.createdAt ? new Date((project as any).createdAt).toLocaleDateString() : ''}</span>
         </div>
       </CardContent>
       </Card>
@@ -79,6 +89,16 @@ export function ProjectsListClient({ initialProjects, onCreate }: { initialProje
               {project.shortDescription ? (
                 <p className="text-sm text-muted-foreground line-clamp-1 mt-1">{project.shortDescription}</p>
               ) : null}
+              <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                {project.category && <span className="inline-flex items-center gap-1"><Tag className="h-3 w-3" />{(project.category as any)?.toString?.() ?? String(project.category)}</span>}
+                {project.developmentStatus && <span>{String(project.developmentStatus)}</span>}
+                {typeof project.followerCount === 'number' && (
+                  <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" />{project.followerCount}</span>
+                )}
+                {typeof project.averageRating === 'number' && (
+                  <span className="inline-flex items-center gap-1"><Star className="h-3 w-3" />{project.averageRating.toFixed(1)}</span>
+                )}
+              </div>
             </div>
             <div className="text-xs text-muted-foreground whitespace-nowrap">
               {project.createdAt ? new Date((project as any).createdAt).toLocaleDateString() : ''}
@@ -97,10 +117,17 @@ export function ProjectsListClient({ initialProjects, onCreate }: { initialProje
             <h1 className="text-2xl font-semibold text-foreground">Projects</h1>
             <p className="text-sm text-muted-foreground">Manage your game projects</p>
           </div>
-          {/* Placeholder for future create drawer/button */}
-          <Button variant="secondary" size="sm" disabled>
-            <Plus className="h-4 w-4 mr-2" /> New Project
-          </Button>
+          {onCreate ? (
+            <CreateProjectDialog action={onCreate}>
+              <Button variant="secondary" size="sm">
+                <Plus className="h-4 w-4 mr-2" /> New Project
+              </Button>
+            </CreateProjectDialog>
+          ) : (
+            <Button variant="secondary" size="sm" disabled>
+              <Plus className="h-4 w-4 mr-2" /> New Project
+            </Button>
+          )}
         </div>
 
         <div className="flex items-center justify-between px-6 pb-4">
