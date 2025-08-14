@@ -105,6 +105,38 @@ export function OpenProjectDialogPreview({
     }
   }
 
+  const handleDownload = (projectId: string, projectName: string, projectData: string) => {
+    try {
+      // Create blob with lexical data
+      const blob = new Blob([projectData], { type: "application/json" })
+      const url = URL.createObjectURL(blob)
+
+      // Create download link
+      const link = document.createElement("a")
+      link.href = url
+      link.download = `${projectName}.lexical`
+      document.body.appendChild(link)
+      link.click()
+
+      // Cleanup
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+
+      toast.success("Download started", {
+        description: `File "${projectName}.lexical" is being downloaded`,
+        duration: 2500,
+        icon: "📥",
+      })
+    } catch (error) {
+      console.error("Download error:", error)
+      toast.error("Download error", {
+        description: "Could not download the file. Please try again.",
+        duration: 4000,
+        icon: "❌",
+      })
+    }
+  }
+
   return (
     <Dialog
       open={open}
@@ -143,6 +175,7 @@ export function OpenProjectDialogPreview({
             searchTerm={searchTerm}
             selectedTags={selectedTags}
             onOpen={handleOpen}
+            onDownload={handleDownload} // Added download prop
             showDeleteButton={false}
             openButtonText="Preview"
             openButtonIcon={<Eye className="w-4 h-4" />}
