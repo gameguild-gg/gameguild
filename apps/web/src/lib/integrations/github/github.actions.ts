@@ -158,8 +158,16 @@ const getCachedContributorsBatch = unstable_cache(
         per_page: perPage,
       });
 
+      // Filter out bots and unwanted contributors (same as fetchGitHubContributors)
+      const filteredContributors = contributors.filter((contributor) => 
+        contributor.login !== 'semantic-release-bot' && 
+        contributor.login !== 'dependabot[bot]' && 
+        contributor.login !== 'github-actions[bot]' && 
+        contributor.login !== 'LMD9977'
+      );
+
       // Return only essential data to minimize size
-      return contributors.map((contributor: Contributor) => ({
+      return filteredContributors.map((contributor: Contributor) => ({
         login: contributor.login,
         id: contributor.id,
         avatar_url: contributor.avatar_url,
@@ -175,17 +183,35 @@ const getCachedContributorsBatch = unstable_cache(
   { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-contributors-batch'] },
 );
 
-// Cache releases info (small data)
+// Cache releases info (with pagination to get all releases)
 const getCachedReleases = unstable_cache(
   async () => {
     try {
-      const { data: releases } = await octokit.repos.listReleases({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        per_page: 10,
-      });
+      let allReleases: RestEndpointMethodTypes['repos']['listReleases']['response']['data'] = [];
+      let page = 1;
+      let hasMore = true;
 
-      return releases.map((release: RestEndpointMethodTypes['repos']['listReleases']['response']['data'][0]) => ({
+      while (hasMore && page <= 50) { // Limit to 5000 releases max (50 pages * 100)
+        const response = await octokit.repos.listReleases({
+          owner: GITHUB_OWNER,
+          repo: GITHUB_REPO,
+          per_page: 100,
+          page: page,
+        });
+
+        if (response.data.length === 0) {
+          hasMore = false;
+        } else {
+          allReleases = allReleases.concat(response.data);
+          page++;
+          
+          if (response.data.length < 100) {
+            hasMore = false;
+          }
+        }
+      }
+
+      return allReleases.map((release: RestEndpointMethodTypes['repos']['listReleases']['response']['data'][0]) => ({
         id: release.id,
         name: release.name,
         tag_name: release.tag_name,
@@ -220,46 +246,81 @@ const getCachedLanguages = unstable_cache(
   { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-languages'] },
 );
 
-// Cache issues count (small data)
-const getCachedIssuesCount = unstable_cache(
+// Cache issues data (with actual issue objects)
+const getCachedIssues = unstable_cache(
   async () => {
     try {
-      // Get total count from response headers if available
-      const response = await octokit.issues.listForRepo({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        state: 'all',
-        per_page: 100,
-      });
+      let allIssues: Issue[] = [];
+      let page = 1;
+      let hasMore = true;
 
-      return response.data.length;
+      while (hasMore && page <= 10) { // Limit to 1000 issues max
+        const response = await octokit.issues.listForRepo({
+          owner: GITHUB_OWNER,
+          repo: GITHUB_REPO,
+          state: 'all',
+          per_page: 100,
+          page: page,
+        });
+
+        if (response.data.length === 0) {
+          hasMore = false;
+        } else {
+          allIssues = allIssues.concat(response.data);
+          page++;
+          
+          if (response.data.length < 100) {
+            hasMore = false;
+          }
+        }
+      }
+
+      return allIssues;
     } catch (error) {
-      console.error('Error fetching issues count:', error);
-      return 0;
+      console.error('Error fetching issues:', error);
+      return [];
     }
   },
-  ['issues-count'],
+  ['issues-data'],
   { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-issues'] },
 );
 
-// Cache pulls count (small data)
-const getCachedPullsCount = unstable_cache(
+// Cache pulls data (with actual pull request objects)
+const getCachedPulls = unstable_cache(
   async () => {
     try {
-      const response = await octokit.pulls.list({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        state: 'all',
-        per_page: 100,
-      });
+      let allPulls: PullRequest[] = [];
+      let page = 1;
+      let hasMore = true;
 
-      return response.data.length;
+      while (hasMore && page <= 10) { // Limit to 1000 pulls max
+        const response = await octokit.pulls.list({
+          owner: GITHUB_OWNER,
+          repo: GITHUB_REPO,
+          state: 'all',
+          per_page: 100,
+          page: page,
+        });
+
+        if (response.data.length === 0) {
+          hasMore = false;
+        } else {
+          allPulls = allPulls.concat(response.data);
+          page++;
+          
+          if (response.data.length < 100) {
+            hasMore = false;
+          }
+        }
+      }
+
+      return allPulls;
     } catch (error) {
-      console.error('Error fetching pulls count:', error);
-      return 0;
+      console.error('Error fetching pulls:', error);
+      return [];
     }
   },
-  ['pulls-count'],
+  ['pulls-data'],
   { revalidate: CACHE_REVALIDATE_SECONDS, tags: ['github-pulls'] },
 );
 
@@ -289,14 +350,43 @@ const getCachedBranchesCount = unstable_cache(
 export async function getContributors(): Promise<EnhancedContributor[]> {
   try {
     console.log('=== Starting getContributors function ===');
-    // Fetch basic contributor data
-    const contributors = await fetchGitHubContributors();
-    console.log(`Found ${contributors.length} contributors`);
+    
+    // Fetch all contributors with pagination
+    const allContributors = [];
+    let page = 1;
+    let hasMore = true;
 
-    if (contributors.length === 0) {
+    while (hasMore && page <= 10) {
+      // Limit to first 1000 contributors (10 pages * 100)
+      try {
+        const batch = await getCachedContributorsBatch(page, 100);
+
+        if (batch.length === 0) {
+          hasMore = false;
+        } else {
+          allContributors.push(...batch);
+          page++;
+
+          // If we got less than 100, we've reached the end
+          if (batch.length < 100) {
+            hasMore = false;
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching contributors page ${page}:`, error);
+        hasMore = false;
+      }
+    }
+    
+    console.log(`Found ${allContributors.length} contributors across ${page - 1} pages`);
+
+    if (allContributors.length === 0) {
       console.log('No contributors found, returning empty array');
       return [];
     }
+    
+    // Convert to full Contributor type for compatibility
+    const contributors = allContributors as Contributor[];
 
     // Fetch detailed stats
     console.log('Fetching contributor stats...');
@@ -328,6 +418,13 @@ export async function getContributors(): Promise<EnhancedContributor[]> {
             additions += week.a || 0;
             deletions += week.d || 0;
           });
+        } else {
+          // Fallback: use contributions count as total commits when detailed stats aren't available
+          totalCommits = contributor.contributions || 0;
+          // Use more realistic estimates based on typical GitHub repository statistics
+          // Average commit adds ~25 lines and deletes ~5 lines
+          additions = Math.floor((contributor.contributions || 0) * 25);
+          deletions = Math.floor((contributor.contributions || 0) * 5);
         }
 
         return {
@@ -404,12 +501,12 @@ export async function getRepositoryStats(repo: string = 'website'): Promise<Repo
 export async function getCachedContributors() {
   try {
     // Get all the cached parts in parallel
-    const [repoInfo, releases, languages, issuesCount, pullsCount, branchesCount] = await Promise.all([
+    const [repoInfo, releases, languages, issues, pulls, branchesCount] = await Promise.all([
       getCachedRepoInfo(),
       getCachedReleases(),
       getCachedLanguages(),
-      getCachedIssuesCount(),
-      getCachedPullsCount(),
+      getCachedIssues(),
+      getCachedPulls(),
       getCachedBranchesCount(),
     ]);
 
@@ -446,11 +543,13 @@ export async function getCachedContributors() {
       contributors: allContributors,
       stats: {
         totalContributors: allContributors.length,
-        totalIssues: issuesCount,
-        totalPulls: pullsCount,
+        totalIssues: issues.length,
+        totalPulls: pulls.length,
         totalBranches: branchesCount,
         totalReleases: releases.length,
       },
+      issues: issues,
+      pulls: pulls,
       releases: releases,
       languages: languages,
       meta: {
@@ -475,8 +574,8 @@ export const getGitHubRepositoryData = async () => {
       totalBranches: repoData.stats.totalBranches,
       totalContributors: repoData.stats.totalContributors,
       data: {
-        issues: [], // Empty array to avoid cache issues
-        pulls: [], // Empty array to avoid cache issues
+        issues: repoData.issues || [],
+        pulls: repoData.pulls || [],
         releases: repoData.releases,
         branches: [], // Empty array to avoid cache issues
         contributors: repoData.contributors,
