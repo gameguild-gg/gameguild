@@ -2,17 +2,18 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Search, Filter, Grid3X3, List, Plus } from 'lucide-react';
+import { Search, Filter, Grid3X3, List, Plus, Star, Users, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Project } from '@/lib/api/generated/types.gen';
+import CreateProjectDialog from '../../../../../../components/projects/create-project-dialog';
 
 type ViewMode = 'grid' | 'list';
 
-export function ProjectsListClient({ initialProjects }: { initialProjects: Project[] }) {
+export function ProjectsListClient({ initialProjects, onCreate }: { initialProjects: Project[]; onCreate?: (formData: FormData) => Promise<void> }) {
   const [projects] = React.useState<Project[]>(initialProjects);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<'all' | '0' | '1' | '2'>('all');
