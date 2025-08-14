@@ -63,15 +63,19 @@ export default function CourseCard({ course, onClick }: CourseCardProps) {
         )}
 
         <div className="flex flex-wrap gap-1 mb-4">
-          {course.tools.slice(0, 3).map((tool) => (
-            <Badge key={tool} variant="outline" className="text-xs">
-              {tool}
-            </Badge>
-          ))}
-          {course.tools.length > 3 && (
-            <Badge variant="outline" className="text-xs">
-              +{course.tools.length - 3} more
-            </Badge>
+          {course.tools && course.tools.length > 0 && (
+            <>
+              {course.tools.slice(0, 3).map((tool) => (
+                <Badge key={tool} variant="outline" className="text-xs">
+                  {tool}
+                </Badge>
+              ))}
+              {course.tools.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{course.tools.length - 3} more
+                </Badge>
+              )}
+            </>
           )}
         </div>
 

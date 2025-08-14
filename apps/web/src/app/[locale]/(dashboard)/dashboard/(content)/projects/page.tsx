@@ -1,6 +1,6 @@
 import React from 'react';
 import { auth } from '@/auth';
-import { getProjectsData } from '@/lib/projects/projects.actions';
+import { getProjectsData, createProject as createProjectLegacy } from '@/lib/projects/projects.actions';
 import type { Project } from '@/lib/api/generated/types.gen';
 import { ProjectsListClient } from './projects-list.client';
 import { Loader2 } from 'lucide-react';
@@ -27,5 +27,12 @@ export default async function Page(): Promise<React.JSX.Element> {
     // keep empty list
   }
 
-  return <ProjectsListClient initialProjects={projects} />;
+  async function createProject(formData: FormData) {
+    'use server';
+    const title = String(formData.get('title') || 'New Project');
+    const shortDescription = String(formData.get('shortDescription') || '');
+    await createProjectLegacy({ title, shortDescription, visibility: 0 });
+  }
+
+  return <ProjectsListClient initialProjects={projects} onCreate={createProject} />;
 }
