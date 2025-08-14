@@ -1,12 +1,12 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function VersionsPage(): React.JSX.Element {
+export default function AchievementsPage(): React.JSX.Element {
   return (
     <Card className="dark-card">
       <CardHeader>
-        <CardTitle>Versions & Builds</CardTitle>
-        <CardDescription>Manage and upload new builds for your players.</CardDescription>
+        <CardTitle>Achievements</CardTitle>
+        <CardDescription>Design and manage achievements.</CardDescription>
       </CardHeader>
       <CardContent>Coming soon.</CardContent>
     </Card>
