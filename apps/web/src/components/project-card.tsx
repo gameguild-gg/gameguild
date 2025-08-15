@@ -26,7 +26,7 @@ export function ProjectCard({ project, viewMode = "grid" }: { project: GameProje
 
   if (viewMode === "list") {
     return (
-      <Link href={`/projects/${project.id}`} className="block">
+      <Link href={`/projects/${project.slug}`} className="block">
         <Card className="dark-card hover:shadow-xl transition-all duration-200 cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-center gap-6">
@@ -73,7 +73,7 @@ export function ProjectCard({ project, viewMode = "grid" }: { project: GameProje
   }
 
   return (
-    <Link href={`/projects/${project.id}`} className="block">
+    <Link href={`/projects/${project.slug}`} className="block">
       <Card className="dark-card group hover:shadow-xl transition-all duration-200 cursor-pointer">
         <CardHeader className="p-0">
           <div className="relative w-full h-48 bg-muted/20 rounded-t-lg overflow-hidden">
