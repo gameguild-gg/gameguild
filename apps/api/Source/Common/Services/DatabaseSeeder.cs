@@ -41,6 +41,9 @@ public class DatabaseSeeder(
       // Check if mock data seeding should be skipped (e.g., during tests)
       var skipMockData = Environment.GetEnvironmentVariable("SKIP_MOCK_DATA_SEEDING") == "true";
       
+      // Fix existing projects without slugs
+      await FixProjectsWithoutSlugsAsync();
+      
       if (!skipMockData) {
         await SeedSampleCoursesAsync();
         await SeedSampleTracksAsync();
@@ -1156,6 +1159,7 @@ public class DatabaseSeeder(
     var mockProjects = new[] {
       new Project {
         Title = "Space Explorer Demo",
+        Slug = "Space Explorer Demo".ToSlugCase(),
         Description = "A 3D space exploration game where players navigate through different planets and collect resources. Features stunning visuals and engaging gameplay mechanics.",
         ShortDescription = "Explore the universe in this immersive 3D space adventure game.",
         Type = Common.ProjectType.Game,
@@ -1170,6 +1174,7 @@ public class DatabaseSeeder(
       },
       new Project {
         Title = "Puzzle Quest Test Game",
+        Slug = "Puzzle Quest Test Game".ToSlugCase(),
         Description = "A challenging puzzle game that combines classic match-3 mechanics with RPG elements. Players solve puzzles to progress through an epic adventure.",
         ShortDescription = "Match-3 puzzle game with RPG elements and epic storyline.",
         Type = Common.ProjectType.Game,
@@ -1183,6 +1188,7 @@ public class DatabaseSeeder(
       },
       new Project {
         Title = "Racing Simulator Demo",
+        Slug = "Racing Simulator Demo".ToSlugCase(),
         Description = "Realistic racing simulator with authentic physics, detailed car models, and multiple racing tracks from around the world.",
         ShortDescription = "Realistic racing simulation with authentic physics and detailed tracks.",
         Type = Common.ProjectType.Game,
@@ -1197,6 +1203,7 @@ public class DatabaseSeeder(
       },
       new Project {
         Title = "Strategy War Test",
+        Slug = "Strategy War Test".ToSlugCase(),
         Description = "Turn-based strategy game where players build armies, manage resources, and conquer territories in a medieval fantasy setting.",
         ShortDescription = "Medieval fantasy turn-based strategy with army building and conquest.",
         Type = Common.ProjectType.Game,
@@ -1210,6 +1217,7 @@ public class DatabaseSeeder(
       },
       new Project {
         Title = "Retro Platformer Demo",
+        Slug = "Retro Platformer Demo".ToSlugCase(),
         Description = "Classic 2D platformer inspired by the golden age of gaming. Features pixel art graphics, challenging levels, and nostalgic gameplay.",
         ShortDescription = "Classic 2D platformer with pixel art and challenging gameplay.",
         Type = Common.ProjectType.Game,
@@ -1244,6 +1252,38 @@ public class DatabaseSeeder(
 
     await context.SaveChangesAsync();
     logger.LogInformation("Mock projects seeded successfully with {ProjectCount} projects", mockProjects.Length);
+  }
+
+  public async Task FixProjectsWithoutSlugsAsync() {
+    logger.LogInformation("Fixing projects without slugs...");
+
+    // Find projects that don't have slugs (null or empty)
+    var projectsWithoutSlugs = await context.Set<Project>()
+                                            .Where(p => string.IsNullOrEmpty(p.Slug) && p.DeletedAt == null)
+                                            .ToListAsync();
+
+    if (!projectsWithoutSlugs.Any()) {
+      logger.LogInformation("All projects already have slugs, skipping fix");
+      return;
+    }
+
+    logger.LogInformation("Found {ProjectCount} projects without slugs, generating them...", projectsWithoutSlugs.Count);
+
+    foreach (var project in projectsWithoutSlugs) {
+      // Generate slug from title
+      var baseSlug = project.Title.ToSlugCase();
+      
+      // Ensure slug is unique
+      var existingSlugCount = await context.Set<Project>()
+                                           .Where(p => p.Slug.StartsWith(baseSlug) && p.DeletedAt == null && p.Id != project.Id)
+                                           .CountAsync();
+
+      project.Slug = existingSlugCount > 0 ? $"{baseSlug}-{existingSlugCount + 1}" : baseSlug;
+      project.UpdatedAt = DateTime.UtcNow;
+    }
+
+    await context.SaveChangesAsync();
+    logger.LogInformation("Fixed {ProjectCount} projects without slugs", projectsWithoutSlugs.Count);
   }
 
   public async Task SeedMockTestingLocationsAsync() {
