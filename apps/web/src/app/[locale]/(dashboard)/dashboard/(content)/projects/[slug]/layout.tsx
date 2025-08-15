@@ -8,11 +8,13 @@ import { ProjectProvider } from '@/components/projects/project-context';
 import { getProjectBySlugService } from '@/lib/content-management/projects/projects.service';
 import { transformProjectToGameProject } from '@/lib/content-management/projects/projects.utils';
 import type { GameProject } from '@/lib/types';
+import type { Project } from '@/lib/api/generated/types.gen';
 
 export default function ProjectDetailLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const slug = String((params as any).slug ?? 'current');
-  const [project, setProject] = React.useState<GameProject | undefined>();
+  const [project, setProject] = React.useState<Project | undefined>();
+  const [transformedProject, setTransformedProject] = React.useState<GameProject | undefined>();
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -22,8 +24,9 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
         const result = await getProjectBySlugService(slug);
         
         if (result.success && result.data) {
-          const transformedProject = transformProjectToGameProject(result.data);
-          setProject(transformedProject);
+          const transformed = transformProjectToGameProject(result.data);
+          setProject(result.data);
+          setTransformedProject(transformed);
         } else {
           notFound();
         }
@@ -53,7 +56,7 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
     );
   }
 
-  if (!project) {
+  if (!project || !transformedProject) {
     notFound();
   }
 
@@ -61,7 +64,7 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
     <ProjectProvider project={project}>
       <div className="flex flex-col min-h-svh">
         <PageHeader title={project.title} />
-        <ProjectSubNav project={project} />
+        <ProjectSubNav projectId={project.slug || project.id || ''} />
         <div className="flex flex-1">
           <main className="flex-1 p-4 md:p-6 bg-muted/40">
             {children}
