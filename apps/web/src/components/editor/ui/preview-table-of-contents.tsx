@@ -1,7 +1,9 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
-import { List, ChevronRight } from "lucide-react"
+import { List, ChevronRight, ChevronDown, Settings } from "lucide-react"
 
 interface HeadingItem {
   id: string
@@ -15,9 +17,14 @@ interface PreviewTableOfContentsProps {
   className?: string
 }
 
+type DisplayMode = "h1h2" | "h1h2h3" | "all"
+
 export function PreviewTableOfContents({ serializedState, className = "" }: PreviewTableOfContentsProps) {
   const [headings, setHeadings] = useState<HeadingItem[]>([])
   const [activeHeading, setActiveHeading] = useState<string>("")
+  const [displayMode, setDisplayMode] = useState<DisplayMode>("h1h2h3") // Default to option 2
+  const [expandedHeadings, setExpandedHeadings] = useState<Set<string>>(new Set())
+  const [showModeSelector, setShowModeSelector] = useState(false)
 
   // Extract headings from lexical data
   useEffect(() => {
@@ -101,6 +108,53 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
     }
   }
 
+  const shouldShowHeading = (heading: HeadingItem, index: number): boolean => {
+    if (displayMode === "all") return true
+
+    const maxLevel = displayMode === "h1h2" ? 2 : 3
+
+    if (heading.level <= maxLevel) return true
+
+    // Check if any parent heading is expanded
+    for (let i = index - 1; i >= 0; i--) {
+      const parentHeading = headings[i]
+      if (parentHeading.level < heading.level) {
+        if (parentHeading.level <= maxLevel && expandedHeadings.has(parentHeading.id)) {
+          return true
+        }
+        break
+      }
+    }
+
+    return false
+  }
+
+  const hasExpandableChildren = (heading: HeadingItem, index: number): boolean => {
+    if (displayMode === "all") return false
+
+    const maxLevel = displayMode === "h1h2" ? 2 : 3
+    if (heading.level > maxLevel) return false
+
+    for (let i = index + 1; i < headings.length; i++) {
+      const nextHeading = headings[i]
+      if (nextHeading.level <= heading.level) break
+      if (nextHeading.level > maxLevel) return true
+    }
+
+    return false
+  }
+
+  const toggleExpanded = (headingId: string, event: React.MouseEvent) => {
+    event.stopPropagation()
+    const newExpanded = new Set(expandedHeadings)
+    if (newExpanded.has(headingId)) {
+      newExpanded.delete(headingId)
+    } else {
+      newExpanded.add(headingId)
+    }
+    setExpandedHeadings(newExpanded)
+  }
+
   if (headings.length === 0) {
     return (
       <div
@@ -122,38 +176,118 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
       className={`bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm ${className}`}
     >
       <div className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <List className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">Table of Contents</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <List className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Table of Contents</h3>
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() => setShowModeSelector(!showModeSelector)}
+              className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              title="Display options"
+            >
+              <Settings className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+            </button>
+
+            {showModeSelector && (
+              <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-48">
+                <div className="p-2 space-y-1">
+                  <button
+                    onClick={() => {
+                      setDisplayMode("h1h2")
+                      setShowModeSelector(false)
+                      setExpandedHeadings(new Set())
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      displayMode === "h1h2"
+                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                    }`}
+                  >
+                    H1 & H2 only
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDisplayMode("h1h2h3")
+                      setShowModeSelector(false)
+                      setExpandedHeadings(new Set())
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      displayMode === "h1h2h3"
+                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                    }`}
+                  >
+                    H1, H2 & H3
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDisplayMode("all")
+                      setShowModeSelector(false)
+                      setExpandedHeadings(new Set())
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                      displayMode === "all"
+                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                    }`}
+                  >
+                    Show all
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <nav className="space-y-1">
-          {headings.map((heading) => (
-            <button
-              key={heading.id}
-              onClick={() => scrollToHeading(heading.id)}
-              className={`
-                w-full text-left px-3 py-2 rounded-lg text-sm transition-colors
-                hover:bg-gray-100 dark:hover:bg-gray-800
-                ${
-                  activeHeading === heading.id
-                    ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-2 border-blue-500"
-                    : "text-gray-700 dark:text-gray-300"
-                }
-              `}
-              style={{
-                paddingLeft: `${Math.max(0.75, heading.level * 0.5)}rem`,
-                marginLeft: `${(heading.level - 1) * 0.5}rem`,
-              }}
-            >
-              <div className="flex items-center gap-2">
-                {heading.level > 1 && (
-                  <ChevronRight className="w-3 h-3 text-gray-400 dark:text-gray-500 flex-shrink-0" />
-                )}
-                <span className="truncate">{heading.text}</span>
+          {headings.map((heading, index) => {
+            if (!shouldShowHeading(heading, index)) return null
+
+            const hasChildren = hasExpandableChildren(heading, index)
+            const isExpanded = expandedHeadings.has(heading.id)
+
+            return (
+              <div key={heading.id} className="relative">
+                <button
+                  onClick={() => scrollToHeading(heading.id)}
+                  className={`
+                    w-full text-left px-3 py-2 rounded-lg text-sm transition-colors
+                    hover:bg-gray-100 dark:hover:bg-gray-800
+                    ${
+                      activeHeading === heading.id
+                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-2 border-blue-500"
+                        : "text-gray-700 dark:text-gray-300"
+                    }
+                  `}
+                  style={{
+                    paddingLeft: `${Math.max(0.75, heading.level * 0.5)}rem`,
+                    marginLeft: `${(heading.level - 1) * 0.5}rem`,
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    {hasChildren ? (
+                      <div
+                        onClick={(e) => toggleExpanded(heading.id, e)}
+                        className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors cursor-pointer"
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                        ) : (
+                          <ChevronRight className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                        )}
+                      </div>
+                    ) : heading.level > 1 ? (
+                      <ChevronRight className="w-3 h-3 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                    ) : null}
+                    <span className="truncate">{heading.text}</span>
+                  </div>
+                </button>
               </div>
-            </button>
-          ))}
+            )
+          })}
         </nav>
       </div>
     </div>
