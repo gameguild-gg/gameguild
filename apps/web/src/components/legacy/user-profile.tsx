@@ -168,7 +168,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">My Projects</h2>
             <Button asChild>
-              <Link href="/projects/new">Create New Project</Link>
+              <Link href={`/dashboard/projects/create`}>Create New Project</Link>
             </Button>
           </div>
 
