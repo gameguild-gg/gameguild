@@ -1,4 +1,3 @@
-import { auth } from '@/auth';
 import { routing } from '@/i18n/routing';
 import createMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
@@ -20,9 +19,6 @@ export function middleware(request: NextRequest) {
   // Examples: dev.gameguild.gg (subdomain), gameguild.gg (main domain), localhost:3000 (not subdomain)
   const isSubdomain = hostname.split('.').length > 2 && !hostname.startsWith('localhost') && !hostname.startsWith('127.0.0.1');
   
-  // Get tenant ID from auth session and create request with tenant headers
-  const tenantId = request.auth?.tenantId || request.auth?.currentTenant?.id;
-  
   // Subdomain handling for any subdomain (dev, staging, prod, etc.)
   if (isSubdomain) {
     const url = request.nextUrl.clone();
@@ -37,6 +33,32 @@ export function middleware(request: NextRequest) {
         request.nextUrl.pathname = `/${locale}${url.pathname}`;
       }
     }
+  }
+
+  // Custom rewrites: support legacy paths like /projects and /projects/:slug
+  // Map them to the dashboard route while preserving locale prefix semantics
+  const pathname = request.nextUrl.pathname;
+  const localePattern = '(?:en|pt-BR)';
+  // Match: /projects or /:locale/projects
+  const projectsIndexRegex = new RegExp(`^\/(?:${localePattern}\/)?projects\/?$`);
+  // Match: /projects/:slug or /:locale/projects/:slug
+  const projectsSlugRegex = new RegExp(`^\/(?:(${localePattern})\/)?projects\/([^\/]+)\/?$`);
+
+  if (projectsIndexRegex.test(pathname)) {
+    const url = request.nextUrl.clone();
+    // Keep current path's locale if present or cookie/default
+    const hasLocaleInPath = new RegExp(`^\/(${localePattern})\/`).test(pathname);
+    url.pathname = `${hasLocaleInPath && locale !== 'en' ? `/${locale}` : ''}/dashboard/projects`;
+    return NextResponse.redirect(url);
+  }
+
+  const slugMatch = pathname.match(projectsSlugRegex);
+  if (slugMatch) {
+    const url = request.nextUrl.clone();
+    const slug = slugMatch[2];
+    const pathHasLocale = !!slugMatch[1];
+    url.pathname = `${pathHasLocale && locale !== 'en' ? `/${locale}` : ''}/dashboard/projects/${slug}`;
+    return NextResponse.redirect(url);
   }
 
   // Handle internationalization routing
