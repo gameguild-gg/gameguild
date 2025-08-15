@@ -1,16 +1,6 @@
 "use client"
 
 import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-
-import { useCallback, useEffect, useRef, useState } from "react"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import {
-  $getSelection,
-  $isRangeSelection,
-  FORMAT_TEXT_COMMAND,
-  SELECTION_CHANGE_COMMAND,
-  FORMAT_ELEMENT_COMMAND,
-} from "lexical"
 import {
   Bold,
   Italic,
@@ -27,7 +17,18 @@ import {
   TextCursorInput,
   Check,
   Underline,
+  Strikethrough,
+  Type,
 } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import {
+  $getSelection,
+  $isRangeSelection,
+  FORMAT_TEXT_COMMAND,
+  SELECTION_CHANGE_COMMAND,
+  FORMAT_ELEMENT_COMMAND,
+} from "lexical"
 import { $createHeadingNode, $isHeadingNode, type HeadingTagType, $createQuoteNode } from "@lexical/rich-text"
 import { $setBlocksType } from "@lexical/selection"
 import {
@@ -59,9 +60,11 @@ export function FloatingTextFormatToolbarPlugin() {
   const [isBold, setIsBold] = useState(false)
   const [isItalic, setIsItalic] = useState(false)
   const [isUnderline, setIsUnderline] = useState(false)
+  const [isStrikethrough, setIsStrikethrough] = useState(false)
   const [isSubscript, setIsSubscript] = useState(false)
   const [isSuperscript, setIsSuperscript] = useState(false)
   const [isCode, setIsCode] = useState(false)
+  const [currentCaseFormat, setCurrentCaseFormat] = useState<"uppercase" | "lowercase" | "capitalize" | null>(null)
   const [selectedElementKey, setSelectedElementKey] = useState<string | null>(null)
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
   const [currentHeadingLevel, setCurrentHeadingLevel] = useState<HeadingTagType | null>(null)
@@ -88,19 +91,38 @@ export function FloatingTextFormatToolbarPlugin() {
       setIsSuperscript(false)
       setIsCode(false)
       setIsUnderline(false)
+      setIsStrikethrough(false)
+      setCurrentCaseFormat(null)
       return
     }
 
     setIsBold(selection.hasFormat("bold"))
     setIsItalic(selection.hasFormat("italic"))
     setIsUnderline(selection.hasFormat("underline"))
+    setIsStrikethrough(selection.hasFormat("strikethrough"))
     setIsSubscript(selection.hasFormat("subscript"))
     setIsSuperscript(selection.hasFormat("superscript"))
     setIsCode(selection.hasFormat("code"))
 
+    if (selection.getNodes().length > 0) {
+      const firstNode = selection.getNodes()[0]
+      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+
+      if (style.includes("text-transform: uppercase")) {
+        setCurrentCaseFormat("uppercase")
+      } else if (style.includes("text-transform: lowercase")) {
+        setCurrentCaseFormat("lowercase")
+      } else if (style.includes("text-transform: capitalize")) {
+        setCurrentCaseFormat("capitalize")
+      } else {
+        setCurrentCaseFormat(null)
+      }
+    } else {
+      setCurrentCaseFormat(null)
+    }
+
     setIsText(selection.getTextContent().length > 0)
 
-    // Check current heading level
     const anchorNode = selection.anchor.getNode()
     const element = anchorNode.getKey() === "root" ? anchorNode : anchorNode.getTopLevelElementOrThrow()
     if ($isHeadingNode(element)) {
@@ -109,7 +131,6 @@ export function FloatingTextFormatToolbarPlugin() {
       setCurrentHeadingLevel(null)
     }
 
-    // Check if current selection is a quote
     const parentElement = anchorNode.getParent()
     if (parentElement && parentElement.getType() === "quote") {
       setIsQuote(true)
@@ -117,10 +138,8 @@ export function FloatingTextFormatToolbarPlugin() {
       setIsQuote(false)
     }
 
-    // Get current font family
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
-      // Ensure the node has getStyle and explicitly convert its result to string
       const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
       const fontFamilyMatch = style.match(/font-family:\s*([^;]+)/)
       if (fontFamilyMatch) {
@@ -129,10 +148,9 @@ export function FloatingTextFormatToolbarPlugin() {
         setCurrentFontFamily("")
       }
     } else {
-      setCurrentFontFamily("") // Reset if no nodes are selected
+      setCurrentFontFamily("")
     }
 
-    // Get current font size
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
       const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
@@ -146,7 +164,6 @@ export function FloatingTextFormatToolbarPlugin() {
       setCurrentFontSize("")
     }
 
-    // Get current text color
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
       const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
@@ -160,7 +177,6 @@ export function FloatingTextFormatToolbarPlugin() {
       setCurrentTextColor("")
     }
 
-    // Get current background color
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
       const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
@@ -174,7 +190,6 @@ export function FloatingTextFormatToolbarPlugin() {
       setCurrentBackgroundColor("")
     }
 
-    // Get current alignment using getFormat()
     if (selection) {
       const element = anchorNode.getTopLevelElementOrThrow()
       setCurrentAlignment(element.getFormat())
@@ -182,7 +197,6 @@ export function FloatingTextFormatToolbarPlugin() {
       setCurrentAlignment("")
     }
 
-    // Get current list type
     const parentElementList = anchorNode.getParent()
     if (parentElementList && parentElementList.getType() === "list") {
       setCurrentListType(parentElementList.getListType())
@@ -195,9 +209,8 @@ export function FloatingTextFormatToolbarPlugin() {
     const rect = range?.getBoundingClientRect()
 
     if (rect) {
-      // Calculate position immediately, even without toolbarRef
-      const toolbarHeight = 60 // Updated toolbar height
-      const toolbarWidth = 240 // Updated toolbar width
+      const toolbarHeight = 60
+      const toolbarWidth = 240
 
       setPosition({
         top: rect.top - toolbarHeight - 12,
@@ -224,6 +237,52 @@ export function FloatingTextFormatToolbarPlugin() {
         const text = selection.getTextContent()
         setSelectedText(text)
         setShowLinkDialog(true)
+      }
+    })
+  }, [editor])
+
+    const applyCaseFormat = useCallback(
+    (caseType: "uppercase" | "lowercase" | "capitalize") => {
+      editor.update(() => {
+        const selection = $getSelection()
+        if ($isRangeSelection(selection)) {
+          const currentStyle = selection.getNodes()[0]?.getStyle?.() || ""
+          const cleanStyle = currentStyle
+            .replace(/text-transform:\s*[^;]+;?/g, "")
+            .replace(/;;/g, ";")
+            .replace(/^;|;$/g, "")
+
+          const newStyle = cleanStyle ? `${cleanStyle}; text-transform: ${caseType}` : `text-transform: ${caseType}`
+
+          selection.getNodes().forEach((node) => {
+            if (node.setStyle) {
+              node.setStyle(newStyle)
+            }
+          })
+
+          setCurrentCaseFormat(caseType)
+        }
+      })
+    },
+    [editor],
+  )
+
+  const removeCaseFormat = useCallback(() => {
+    editor.update(() => {
+      const selection = $getSelection()
+      if ($isRangeSelection(selection)) {
+        selection.getNodes().forEach((node) => {
+          if (node.getStyle && node.setStyle) {
+            const currentStyle = node.getStyle()
+            const cleanStyle = currentStyle
+              .replace(/text-transform:\s*[^;]+;?/g, "")
+              .replace(/;;/g, ";")
+              .replace(/^;|;$/g, "")
+
+            node.setStyle(cleanStyle)
+          }
+        })
+        setCurrentCaseFormat(null)
       }
     })
   }, [editor])
@@ -262,7 +321,6 @@ export function FloatingTextFormatToolbarPlugin() {
             }
           }}
         >
-          {/* Dropdown: Formatação (Text Formatting) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -318,6 +376,19 @@ export function FloatingTextFormatToolbarPlugin() {
               <DropdownMenuItem
                 onSelect={(e) => e.preventDefault()}
                 onClick={() => {
+                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")
+                  setTimeout(() => {
+                    editor.getEditorState().read(() => updateToolbar())
+                  }, 0)
+                }}
+              >
+                <Strikethrough className="mr-2 h-5 w-5" />
+                <span>Strikethrough</span>
+                {isStrikethrough && <Check className="ml-auto h-5 w-5" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(e) => e.preventDefault()}
+                onClick={() => {
                   editor.dispatchCommand(FORMAT_TEXT_COMMAND, "subscript")
                   editor.getEditorState().read(() => updateToolbar())
                 }}
@@ -326,6 +397,71 @@ export function FloatingTextFormatToolbarPlugin() {
                 <span>Subscript</span>
                 {isSubscript && <Check className="ml-auto h-5 w-5" />}
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Type className="mr-2 h-5 w-5" />
+                  <span>Caixa</span>
+                  {currentCaseFormat && <Check className="ml-auto h-5 w-5" />}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent side="right" align="start">
+                  <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Transformar Texto</div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onSelect={(e) => e.preventDefault()}
+                    onClick={() => {
+                      if (currentCaseFormat === "uppercase") {
+                        removeCaseFormat()
+                      } else {
+                        applyCaseFormat("uppercase")
+                      }
+                    }}
+                  >
+                    <span className="mr-2 font-bold">AA</span>
+                    <span>MAIÚSCULAS</span>
+                    {currentCaseFormat === "uppercase" && <Check className="ml-auto h-5 w-5" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onSelect={(e) => e.preventDefault()}
+                    onClick={() => {
+                      if (currentCaseFormat === "lowercase") {
+                        removeCaseFormat()
+                      } else {
+                        applyCaseFormat("lowercase")
+                      }
+                    }}
+                  >
+                    <span className="mr-2 font-bold">aa</span>
+                    <span>minúsculas</span>
+                    {currentCaseFormat === "lowercase" && <Check className="ml-auto h-5 w-5" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onSelect={(e) => e.preventDefault()}
+                    onClick={() => {
+                      if (currentCaseFormat === "capitalize") {
+                        removeCaseFormat()
+                      } else {
+                        applyCaseFormat("capitalize")
+                      }
+                    }}
+                  >
+                    <span className="mr-2 font-bold">Aa</span>
+                    <span>Primeira Maiúscula</span>
+                    {currentCaseFormat === "capitalize" && <Check className="ml-auto h-5 w-5" />}
+                  </DropdownMenuItem>
+                  {currentCaseFormat && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={removeCaseFormat}>
+                        <span className="mr-2 font-bold">×</span>
+                        <span>Remover Formatação</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={(e) => e.preventDefault()}
                 onClick={() => {
@@ -351,7 +487,6 @@ export function FloatingTextFormatToolbarPlugin() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Dropdown: Estilo (Style) - Font Family, Font Size, Text Color */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -388,7 +523,6 @@ export function FloatingTextFormatToolbarPlugin() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Dropdown: Estrutura (Structure) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -396,7 +530,7 @@ export function FloatingTextFormatToolbarPlugin() {
                 size="icon"
                 className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
               >
-                <AlignLeft className="h-5 w-5" /> {/* Using AlignLeft as a generic icon for structure */}
+                <AlignLeft className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-auto">
@@ -404,14 +538,14 @@ export function FloatingTextFormatToolbarPlugin() {
               <DropdownMenuSeparator />
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
-                  <AlignLeft className="mr-2 h-5 w-5" /> {/* Usando AlignLeft como ícone para Títulos */}
+                  <AlignLeft className="mr-2 h-5 w-5" />
                   <span>Headings {currentHeadingLevel ? `(${currentHeadingLevel.toUpperCase()})` : "(Paragraph)"}</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent side="right" align="start">
                   <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Heading Levels</div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()} // Prevent closing
+                    onSelect={(e) => e.preventDefault()}
                     onClick={() => {
                       editor.update(() => {
                         const selection = $getSelection()
@@ -424,7 +558,7 @@ export function FloatingTextFormatToolbarPlugin() {
                     <span className="text-2xl font-bold">H1 - Large Heading</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()} // Prevent closing
+                    onSelect={(e) => e.preventDefault()}
                     onClick={() => {
                       editor.update(() => {
                         const selection = $getSelection()
@@ -437,7 +571,7 @@ export function FloatingTextFormatToolbarPlugin() {
                     <span className="text-xl font-bold">H2 - Medium Heading</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()} // Prevent closing
+                    onSelect={(e) => e.preventDefault()}
                     onClick={() => {
                       editor.update(() => {
                         const selection = $getSelection()
@@ -450,7 +584,7 @@ export function FloatingTextFormatToolbarPlugin() {
                     <span className="text-lg font-bold">H3 - Small Heading</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()} // Prevent closing
+                    onSelect={(e) => e.preventDefault()}
                     onClick={() => {
                       editor.update(() => {
                         const selection = $getSelection()
@@ -463,7 +597,7 @@ export function FloatingTextFormatToolbarPlugin() {
                     <span className="text-base font-bold">H4 - Extra Small</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()} // Prevent closing
+                    onSelect={(e) => e.preventDefault()}
                     onClick={() => {
                       editor.update(() => {
                         const selection = $getSelection()
@@ -476,7 +610,7 @@ export function FloatingTextFormatToolbarPlugin() {
                     <span className="text-sm font-bold">H5 - Tiny</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()} // Prevent closing
+                    onSelect={(e) => e.preventDefault()}
                     onClick={() => {
                       editor.update(() => {
                         const selection = $getSelection()
@@ -490,12 +624,11 @@ export function FloatingTextFormatToolbarPlugin() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()} // Prevent closing
+                    onSelect={(e) => e.preventDefault()}
                     onClick={() => {
                       editor.update(() => {
                         const selection = $getSelection()
                         if ($isRangeSelection(selection)) {
-                          // Convert to normal paragraph
                           $setBlocksType(selection, () => $createParagraphNode())
                         }
                       })
@@ -504,16 +637,14 @@ export function FloatingTextFormatToolbarPlugin() {
                     <span className="text-base">Paragraph - Normal Text</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()} // Prevent closing
+                    onSelect={(e) => e.preventDefault()}
                     onClick={() => {
                       editor.update(() => {
                         const selection = $getSelection()
                         if ($isRangeSelection(selection)) {
                           const selectedText = selection.getTextContent()
                           if (selectedText) {
-                            // Wrap selected text in <q> tags for short quote
-                            const quotedText = `"${selectedText}"`
-                            selection.insertText(quotedText)
+                            selection.insertText(`"${selectedText}"`)
                           }
                         }
                       })
@@ -522,12 +653,11 @@ export function FloatingTextFormatToolbarPlugin() {
                     <span className="text-base italic">Short Quote - Inline Citation</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()} // Prevent closing
+                    onSelect={(e) => e.preventDefault()}
                     onClick={() => {
                       editor.update(() => {
                         const selection = $getSelection()
                         if ($isRangeSelection(selection)) {
-                          // Convert to blockquote
                           $setBlocksType(selection, () => $createQuoteNode())
                         }
                       })
@@ -625,7 +755,7 @@ export function FloatingTextFormatToolbarPlugin() {
                 updateToolbar={updateToolbar}
                 showCurrentType={true}
               />
-              <DropdownMenuSeparator /> {/* Mantenha este separador se houver outras opções após o alinhamento */}
+              <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => {
                   editor.update(() => {
@@ -646,7 +776,6 @@ export function FloatingTextFormatToolbarPlugin() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Dropdown: Inserir (Insert) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -654,7 +783,7 @@ export function FloatingTextFormatToolbarPlugin() {
                 size="icon"
                 className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
               >
-                <TextCursorInput className="h-5 w-5" /> {/* Using TextCursorInput as a generic icon for insert */}
+                <TextCursorInput className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-48">

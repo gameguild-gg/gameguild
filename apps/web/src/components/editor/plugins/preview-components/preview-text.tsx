@@ -12,19 +12,23 @@ export function PreviewText({ node }: PreviewTextProps) {
   // Get inline styles from the node
   const inlineStyles: React.CSSProperties = {}
   if (node.style) {
-        // Parse the style string and convert to React CSSProperties
-        const styleString = node.style
-        const styleRules = styleString.split(";").filter((rule: string) => rule.trim())
+    // Parse the style string and convert to React CSSProperties
+    const styleString = node.style
+    const styleRules = styleString.split(";").filter((rule: string) => rule.trim())
 
-        styleRules.forEach((rule: { split: (arg0: string) => { (): any; new(): any; map: { (arg0: (s: any) => any): [any, any]; new(): any } } }) => {
+    styleRules.forEach(
+      (rule: {
+        split: (arg0: string) => { (): any; new (): any; map: { (arg0: (s: any) => any): [any, any]; new (): any } }
+      }) => {
         const [property, value] = rule.split(":").map((s: string) => s.trim())
         if (property && value) {
-            // Convert CSS property names to camelCase for React
-            const camelCaseProperty = property.replace(/-([a-z])/g, (match: any, letter: string) => letter.toUpperCase())
-            inlineStyles[camelCaseProperty as keyof React.CSSProperties] = value
+          // Convert CSS property names to camelCase for React
+          const camelCaseProperty = property.replace(/-([a-z])/g, (match: any, letter: string) => letter.toUpperCase())
+          inlineStyles[camelCaseProperty as keyof React.CSSProperties] = value
         }
-        })
-    }
+      },
+    )
+  }
 
   // Apply text formatting
   if (node.format) {
@@ -44,12 +48,20 @@ export function PreviewText({ node }: PreviewTextProps) {
         </em>
       )
     }
-    if (node.format & 4) {
+    if (node.format & 8) {
       // Underline (format flag 4)
       textContent = (
         <u key={`underline-${node.version || Math.random()}`} style={inlineStyles}>
           {textContent}
         </u>
+      )
+    }
+    if (node.format & 4) {
+      // Strikethrough (format flag 8)
+      textContent = (
+        <s key={`strikethrough-${node.version || Math.random()}`} style={inlineStyles}>
+          {textContent}
+        </s>
       )
     }
     if (node.format & 32) {

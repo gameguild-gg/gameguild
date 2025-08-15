@@ -304,6 +304,7 @@ const initialConfig = {
       bold: "font-bold",
       italic: "italic",
       underline: "underline",
+      strikethrough: "line-through",
     },
     paragraph: "my-2",
     heading: {
