@@ -61,7 +61,7 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
   }
 
   return (
-    <ProjectProvider project={project}>
+    <ProjectProvider project={transformedProject}>
       <div className="flex flex-col min-h-svh">
         <PageHeader title={project.title} />
         <ProjectSubNav projectId={project.slug || project.id || ''} />

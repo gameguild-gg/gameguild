@@ -2,26 +2,25 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Store, Sparkles, Download, MessageSquare, BookText, Trophy, Award, TestTube, Users } from 'lucide-react';
+import { LayoutDashboard, Store, Sparkles, Download, MessageSquare, Trophy, TestTube, Users, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function ProjectSubNav({ projectId }: { projectId: string }) {
   const pathname = usePathname();
   // Compute base path up to and including the slug so locale and parent segments are preserved
   const slugIndex = pathname.indexOf(`/${projectId}`);
-  const basePath = slugIndex >= 0 ? pathname.slice(0, slugIndex + projectId.length + 1) : `/project/${projectId}`;
+  const basePath = slugIndex >= 0 ? pathname.slice(0, slugIndex + projectId.length + 1) : `/dashboard/projects/${projectId}`;
 
   const navItems = [
     { href: basePath, label: 'Overview', icon: LayoutDashboard },
     { href: `${basePath}/store-presence`, label: 'Store Presence', icon: Store },
     { href: `${basePath}/distribution`, label: 'Distribution', icon: Sparkles },
     { href: `${basePath}/versions`, label: 'Versions', icon: Download },
-    { href: `${basePath}/achievements`, label: 'Achievements', icon: Award },
     { href: `${basePath}/testing`, label: 'Testing Sessions', icon: TestTube },
-    { href: `${basePath}/feedback`, label: 'Feedback', icon: MessageSquare },
-    { href: `${basePath}/devlog`, label: 'Devlog', icon: BookText },
+    { href: `${basePath}/feedbacks`, label: 'Feedbacks', icon: MessageSquare },
     { href: `${basePath}/game-jams`, label: 'Game Jams', icon: Trophy },
     { href: `${basePath}/team`, label: 'Team', icon: Users },
+    { href: `${basePath}/settings`, label: 'Settings', icon: Settings },
   ];
 
   return (
