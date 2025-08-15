@@ -1,7 +1,5 @@
-'use client';
+// Server Component
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import React from 'react';
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/common/ui/dashboard-page';
 import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
@@ -80,57 +78,4 @@ export default async function CourseDeliveryPage({ params }: PageProps) {
     </DashboardPage>
   );
 }
-                              <Button variant="ghost" size="sm" onClick={() => removeSession(session.id)} className="text-destructive hover:text-destructive">
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No sessions scheduled yet.</p>
-                    <p className="text-sm">Add your first session to get started.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
 
-          {/* Preview Section */}
-          <Card className="shadow-lg border-border bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">👁️ Student Preview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="p-6 bg-muted/30 rounded-lg border-2 border-dashed">
-                <h3 className="font-semibold mb-2">How students will see this course:</h3>
-                <div className="space-y-2 text-sm">
-                  <p>
-                    <strong>Delivery:</strong> {selectedMode?.label}
-                  </p>
-                  <p>
-                    <strong>Format:</strong> {selectedMode?.description}
-                  </p>
-                  {state.delivery.sessions.length > 0 && (
-                    <p>
-                      <strong>Sessions:</strong> {state.delivery.sessions.length} scheduled sessions
-                    </p>
-                  )}
-                  {state.enrollment.enrollmentWindow && (
-                    <p>
-                      <strong>Enrollment:</strong> {state.enrollment.enrollmentWindow.opensAt ? `Opens ${format(state.enrollment.enrollmentWindow.opensAt, 'MMM d, yyyy')}` : 'Open enrollment'}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
-}
