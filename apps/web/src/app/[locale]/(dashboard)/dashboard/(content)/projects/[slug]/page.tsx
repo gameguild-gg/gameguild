@@ -18,6 +18,8 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { StatCard } from "@/components/dashboard/common/ui/stat-card"
+import { ChecklistItem } from "@/components/dashboard/common/ui/checklist-item"
 
 export default function ProjectOverviewPage() {
   const project = useProject()
@@ -49,7 +51,7 @@ export default function ProjectOverviewPage() {
       '1': { label: 'public', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
       '2': { label: 'unlisted', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' }
     }
-    return statusMap[status?.toString()] ?? statusMap['0']
+    return statusMap[status?.toString()] || statusMap['0']
   }
 
   const statusInfo = getStatusDisplay(project.visibility || project.status)
@@ -162,49 +164,6 @@ export default function ProjectOverviewPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
-  )
-}
-
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  subtext,
-  trend,
-}: {
-  title: string
-  value: string
-  icon: LucideIcon
-  subtext?: React.ReactNode
-  trend?: string
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-baseline gap-2">
-          <div className="text-2xl font-bold capitalize text-foreground">{value}</div>
-          {trend && <span className="text-xs text-emerald-400 font-medium">{trend}</span>}
-        </div>
-        {subtext && <div className="mt-2">{subtext}</div>}
-      </CardContent>
-    </Card>
-  )
-}
-
-function ChecklistItem({ label, done }: { label: string; done: boolean }) {
-  return (
-    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/10 border border-border/30">
-      {done ? (
-        <CheckCircle2 className="h-5 w-5 text-emerald-400 flex-shrink-0" />
-      ) : (
-        <AlertCircle className="h-5 w-5 text-amber-400 flex-shrink-0" />
-      )}
-      <span className={cn("transition-colors", done ? "text-foreground" : "text-muted-foreground")}>{label}</span>
     </div>
   )
 }
