@@ -43,7 +43,7 @@ export function ProjectsListClient({ initialProjects, onCreate }: { initialProje
   };
 
   const ProjectCard = ({ project }: { project: Project }) => (
-    <Link href={`./${project.slug ?? project.id}`}> 
+    <Link href={`/dashboard/projects/${project.slug ?? project.id}`}> 
       <Card className="dark-card group hover:shadow-xl transition-all duration-200 cursor-pointer">
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
@@ -174,44 +174,6 @@ export function ProjectsListClient({ initialProjects, onCreate }: { initialProje
           </div>
         </div>
       </div>
-
-      {filtered.length > 0 ? (
-        <div className={viewMode === "grid" ? "grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-4"}>
-          {filtered.map((project) => (
-            viewMode === "grid" ? (
-              <ProjectCard key={project.id} project={project} />
-            ) : (
-              <ProjectRow key={project.id} project={project} />
-            )
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center text-center py-20">
-          <div className="p-4 bg-muted/20 rounded-full mb-6">
-            <Plus className="h-12 w-12 text-muted-foreground" />
-          </div>
-          <h3 className="text-xl font-semibold mb-2">No projects found</h3>
-          <p className="text-muted-foreground mb-6 max-w-md">
-            {searchQuery || statusFilter !== "all"
-              ? "Try adjusting your search or filters"
-              : "Create your first project to get started"}
-          </p>
-          {onCreate ? (
-            <CreateProjectDialog action={onCreate}>
-              <Button variant="secondary" size="sm">
-                <Plus className="h-4 w-4 mr-2" /> New Project
-              </Button>
-            </CreateProjectDialog>
-          ) : (
-            <Button variant="secondary" size="sm" disabled>
-              <Plus className="h-4 w-4 mr-2" /> New Project
-            </Button>
-          )}
-        </div>
-      )}
-    </>
-  );
-}
 
       {filtered.length > 0 ? (
         <div className={viewMode === "grid" ? "grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "space-y-4"}>

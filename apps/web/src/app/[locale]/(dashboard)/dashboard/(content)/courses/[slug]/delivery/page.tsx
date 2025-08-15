@@ -15,8 +15,18 @@ interface PageProps {
 
 export default async function CourseDeliveryPage({ params }: PageProps) {
   const { slug } = await params;
-  const result = await getProgramBySlugService(slug);
-  const program = result.success ? result.data : null;
+  let program: any = null;
+  let loadError: string | null = null;
+  try {
+    const result = await getProgramBySlugService(slug);
+    if (result.success && result.data) {
+      program = result.data;
+    } else {
+      loadError = result.error || 'Program not found';
+    }
+  } catch (e) {
+    loadError = e instanceof Error ? e.message : 'Failed to load program';
+  }
 
   async function schedule(formData: FormData) {
     'use server';
@@ -33,7 +43,9 @@ export default async function CourseDeliveryPage({ params }: PageProps) {
         <DashboardPageDescription>Configure course availability and publication schedule.</DashboardPageDescription>
       </DashboardPageHeader>
       <DashboardPageContent>
-        {program ? (
+        {loadError && !program ? (
+          <div className="text-red-600 dark:text-red-400">{loadError}</div>
+        ) : program ? (
           <div className="space-y-6">
             <Card>
               <CardHeader>

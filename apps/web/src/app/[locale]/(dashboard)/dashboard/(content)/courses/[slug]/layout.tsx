@@ -57,7 +57,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!course) return null
+  if (!course) {
+    notFound()
+  }
 
   return (
     <CourseProvider course={course}>

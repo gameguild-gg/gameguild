@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,8 @@ function slugify(text: string) {
 export function ProjectCreateDrawer({ className }: { className?: string }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
+  const params = useParams();
+  const locale = typeof params?.locale === 'string' ? params.locale : 'en';
   const [title, setTitle] = React.useState("");
   const [slug, setSlug] = React.useState("");
   const [description, setDescription] = React.useState("");
@@ -42,7 +44,7 @@ export function ProjectCreateDrawer({ className }: { className?: string }) {
     e.preventDefault();
     
     // Navigate to create page for now
-    router.push('/dashboard/projects/create');
+  router.push(`/${locale}/dashboard/projects/create`);
     setOpen(false);
   };
 
