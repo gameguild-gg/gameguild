@@ -9,7 +9,7 @@ export function ProjectSubNav({ projectId }: { projectId: string }) {
   const pathname = usePathname();
   // Compute base path up to and including the slug so locale and parent segments are preserved
   const slugIndex = pathname.indexOf(`/${projectId}`);
-  const basePath = slugIndex >= 0 ? pathname.slice(0, slugIndex + projectId.length + 1) : pathname;
+  const basePath = slugIndex >= 0 ? pathname.slice(0, slugIndex + projectId.length + 1) : `/project/${projectId}`;
 
   const navItems = [
     { href: basePath, label: 'Overview', icon: LayoutDashboard },
