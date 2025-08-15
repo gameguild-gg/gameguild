@@ -1107,7 +1107,12 @@ export default function Page() {
 
                   <CreateProjectDialog
                     open={createDialogOpen}
-                    onOpenChange={setCreateDialogOpen}
+                    onOpenChange={(open) => {
+                      setCreateDialogOpen(open)
+                      if (!open) {
+                        setOpenDialogOpen(true)
+                      }
+                    }}
                     isDbInitialized={isDbInitialized}
                     storageAdapter={storageAdapter}
                     availableTags={availableTags}
