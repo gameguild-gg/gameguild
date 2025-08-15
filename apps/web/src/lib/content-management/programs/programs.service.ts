@@ -2,6 +2,7 @@
 
 import { getProgramById, getProgramWithContent, getPrograms, getPublishedPrograms, getProgramBySlug } from './programs.actions';
 import { Program } from '@/lib/api/generated/types.gen';
+import type { Course } from '@/lib/types';
 
 /**
  * Get a program by slug
