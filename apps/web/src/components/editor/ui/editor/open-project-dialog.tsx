@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { DeleteConfirmDialog } from "@/components/editor/ui/delete-confirm-dialog"
@@ -9,10 +8,11 @@ import { ProjectSearchFilters } from "@/components/editor/ui/project-dialog/proj
 import { ProjectList } from "@/components/editor/ui/project-dialog/project-list"
 import { ProjectPagination } from "@/components/editor/ui/project-dialog/project-pagination"
 import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
-import { FolderOpen } from "lucide-react"
+import { FolderOpen, Upload } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import type { LexicalEditor } from "lexical"
+import { ImportProjectDialog } from "./import-project-dialog"
 
 interface ProjectData {
   id: string
@@ -89,12 +89,12 @@ export function OpenProjectDialog({
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
 
   const handleOpen = async (projectId: string) => {
     const projectData = await loadProject(projectId)
     if (projectData && editorRef.current) {
       try {
-        // Ativar o estado de carregamento
         if (setLoadingRef.current) {
           setLoadingRef.current(true)
         }
@@ -102,10 +102,8 @@ export function OpenProjectDialog({
         const editorState = editorRef.current.parseEditorState(projectData.data)
         editorRef.current.setEditorState(editorState)
 
-        // Aguardar um pouco para que os nós sejam renderizados
         await new Promise((resolve) => setTimeout(resolve, 100))
 
-        // Desativar o estado de carregamento
         if (setLoadingRef.current) {
           setLoadingRef.current(false)
         }
@@ -118,7 +116,6 @@ export function OpenProjectDialog({
           icon: "📂",
         })
       } catch (error) {
-        // Desativar o estado de carregamento em caso de erro
         if (setLoadingRef.current) {
           setLoadingRef.current(false)
         }
@@ -129,6 +126,18 @@ export function OpenProjectDialog({
         })
       }
     }
+  }
+
+  const handleImportProject = (projectData: { id: string; name: string; tags: string[] }) => {
+    handleOpen(projectData.id)
+  }
+
+  const generateProjectId = () => {
+    return Date.now().toString() + Math.random().toString(36).substr(2, 9)
+  }
+
+  const isStorageAtLimit = () => {
+    return isStorageNearLimit()
   }
 
   const handleConfirmDelete = (projectId: string, projectName: string) => {
@@ -248,34 +257,48 @@ export function OpenProjectDialog({
             </div>
 
             <div className="flex justify-between items-center pt-4 border-t dark:border-gray-700 flex-shrink-0 h-16">
-              {isStorageNearLimit() ? (
-                <div className="flex flex-col">
-                  <Button variant="ghost" disabled className="gap-2 opacity-50 cursor-not-allowed">
+              <div className="flex gap-2">
+                {isStorageNearLimit() ? (
+                  <div className="flex flex-col">
+                    <Button variant="ghost" disabled className="gap-2 opacity-50 cursor-not-allowed">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Novo Projeto
+                    </Button>
+                    <span className="text-xs text-red-600 dark:text-red-400 mt-1">
+                      Armazenamento quase cheio ({getStorageUsagePercentage().toFixed(1)}%)
+                    </span>
+                  </div>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      onOpenChange(false)
+                      onCreateNew()
+                    }}
+                    className="gap-2"
+                    disabled={!isDbInitialized}
+                  >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    Novo Projeto
+                    Create New
                   </Button>
-                  <span className="text-xs text-red-600 dark:text-red-400 mt-1">
-                    Armazenamento quase cheio ({getStorageUsagePercentage().toFixed(1)}%)
-                  </span>
-                </div>
-              ) : (
+                )}
                 <Button
                   variant="ghost"
                   onClick={() => {
                     onOpenChange(false)
-                    onCreateNew()
+                    setImportDialogOpen(true)
                   }}
                   className="gap-2"
                   disabled={!isDbInitialized}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Create New
+                  <Upload className="w-4 h-4" />
+                  Import Project
                 </Button>
-              )}
+              </div>
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}
@@ -296,7 +319,26 @@ export function OpenProjectDialog({
         itemType="projeto"
         onConfirm={handleDelete}
         title={""}
-        />
+      />
+
+      <ImportProjectDialog
+        open={importDialogOpen}
+        onOpenChange={(open) => {
+          setImportDialogOpen(open)
+          if (!open) {
+            onOpenChange(true)
+          }
+        }}
+        isDbInitialized={isDbInitialized}
+        storageAdapter={storageAdapter}
+        availableTags={availableTags}
+        onProjectCreate={onProjectLoad}
+        onProjectsListUpdate={onProjectsListUpdate}
+        onAvailableTagsUpdate={() => {}} // This would need to be passed from parent if needed
+        isStorageAtLimit={isStorageAtLimit}
+        generateProjectId={generateProjectId}
+        onOpenProject={handleImportProject}
+      />
     </>
   )
 }

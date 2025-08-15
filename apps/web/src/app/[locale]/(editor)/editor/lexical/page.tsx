@@ -640,6 +640,28 @@ export default function Page() {
 
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(false)
 
+  const handleSaveRef = useRef(handleSave)
+
+  useEffect(() => {
+    // Update the ref when handleSave changes
+    handleSaveRef.current = handleSave
+  })
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === "s") {
+        event.preventDefault() // Prevent browser's default save dialog
+        handleSaveRef.current()
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [])
+
   // Auto-save functionality
   useEffect(() => {
     if (!autoSaveEnabled || !currentProjectId || !editorState || !isDbInitialized) return
