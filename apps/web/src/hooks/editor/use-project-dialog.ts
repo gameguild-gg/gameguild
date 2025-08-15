@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import JSZip from "jszip"
 
 interface ProjectData {
   id: string
@@ -67,16 +68,42 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     filterProjects()
   }, [searchTerm, selectedTags, isDbInitialized, tagFilterMode, storageAdapter])
 
-  const handleDownload = (projectId: string, projectName: string, projectData: string) => {
+  const handleDownload = async (
+    projectId: string,
+    projectName: string,
+    projectData: string,
+    projectTags: string[],
+    createdAt: string,
+    updatedAt: string,
+  ) => {
     try {
-      // Create blob with lexical data
-      const blob = new Blob([projectData], { type: "application/json" })
-      const url = URL.createObjectURL(blob)
+      const zip = new JSZip()
+
+      // Add the lexical file with .gglexical extension
+      zip.file(`${projectName}.gglexical`, projectData)
+
+      // Create index.json with project metadata
+      const metadata = {
+        id: projectId,
+        name: projectName,
+        tags: projectTags,
+        size: new Blob([projectData]).size,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+        version: "1.0",
+        type: "gg-lexical-project",
+      }
+
+      zip.file("index.json", JSON.stringify(metadata, null, 2))
+
+      // Generate zip file
+      const zipBlob = await zip.generateAsync({ type: "blob" })
+      const url = URL.createObjectURL(zipBlob)
 
       // Create download link
       const link = document.createElement("a")
       link.href = url
-      link.download = `${projectName}.lexical`
+      link.download = `gg-lexical-editor-${projectName}.zip`
       document.body.appendChild(link)
       link.click()
 
@@ -85,14 +112,14 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
       URL.revokeObjectURL(url)
 
       toast.success("Download started", {
-        description: `File "${projectName}.lexical" is being downloaded`,
+        description: `Folder "gg-lexical-editor-${projectName}.zip" is being downloaded`,
         duration: 2500,
         icon: "📥",
       })
     } catch (error) {
       console.error("Download error:", error)
       toast.error("Download error", {
-        description: "Could not download the file. Please try again.",
+        description: "Could not download the project folder. Please try again.",
         duration: 4000,
         icon: "❌",
       })

@@ -25,7 +25,14 @@ interface ProjectListProps {
   selectedTags: string[]
   onOpen: (projectId: string) => void
   onDelete?: (projectId: string, projectName: string) => void
-  onDownload?: (projectId: string, projectName: string, projectData: string) => void
+  onDownload?: (
+    projectId: string,
+    projectName: string,
+    projectData: string,
+    projectTags: string[],
+    createdAt: string,
+    updatedAt: string,
+  ) => void
   showDeleteButton?: boolean
   openButtonText?: string
   openButtonIcon?: React.ReactNode
@@ -64,7 +71,14 @@ export function ProjectList({
 
   const handleDownloadConfirm = () => {
     if (downloadDialog.project && onDownload) {
-      onDownload(downloadDialog.project.id, downloadDialog.project.name, downloadDialog.project.data)
+      onDownload(
+        downloadDialog.project.id,
+        downloadDialog.project.name,
+        downloadDialog.project.data,
+        downloadDialog.project.tags,
+        downloadDialog.project.createdAt,
+        downloadDialog.project.updatedAt,
+      )
     }
     setDownloadDialog({ open: false, project: null })
   }
@@ -151,7 +165,7 @@ export function ProjectList({
                     size="sm"
                     onClick={() => handleDownloadClick(project)}
                     className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 px-2"
-                    title="Download lexical file"
+                    title="Download project folder"
                   >
                     <Download className="w-4 h-4" />
                   </Button>
@@ -175,10 +189,11 @@ export function ProjectList({
       <DownloadConfirmDialog
         open={downloadDialog.open}
         onOpenChange={(open) => setDownloadDialog({ open, project: null })}
-        fileName={`${downloadDialog.project?.name || "project"}.lexical`}
+        fileName={`gg-lexical-editor-${downloadDialog.project?.name || "project"}.zip`}
         fileSize={formatSize(downloadDialog.project?.size || 0)}
         lastModified={downloadDialog.project ? new Date(downloadDialog.project.updatedAt).toLocaleDateString() : ""}
         onConfirm={handleDownloadConfirm}
+        project={downloadDialog.project}
       />
     </>
   )
