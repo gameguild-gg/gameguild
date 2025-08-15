@@ -8,6 +8,7 @@ import { OpenProjectDialogPreview } from "@/components/editor/ui/preview/open-pr
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import Link from "next/link"
 import { PreviewRenderer } from "@/components/editor/ui/preview-renderer"
+import { PreviewTableOfContents } from "@/components/editor/ui/preview-table-of-contents"
 import { useTheme } from "@/lib/context/theme-context"
 
 interface ProjectData {
@@ -36,7 +37,6 @@ export default function PreviewPage() {
 
   const dbStorage = useRef<EnhancedStorageAdapter>(new EnhancedStorageAdapter())
 
-  // Initialize IndexedDB and load tags
   useEffect(() => {
     const initDB = async () => {
       try {
@@ -65,7 +65,6 @@ export default function PreviewPage() {
     }
   }
 
-  // Format storage size
   const formatStorageSize = (sizeInKB: number): string => {
     const sizeInMB = sizeInKB / 1024
     const sizeInGB = sizeInMB / 1024
@@ -130,7 +129,6 @@ export default function PreviewPage() {
     setCurrentProject(projectData)
   }
 
-  // Parse the project data for preview
   const getSerializedState = (): SerializedEditorState | null => {
     if (!currentProject) return null
 
@@ -147,8 +145,7 @@ export default function PreviewPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="container mx-auto py-10">
-        <div className="mx-auto max-w-4xl space-y-8">
-          {/* Header Section */}
+        <div className={`mx-auto space-y-8 ${currentProject && serializedState ? "max-w-7xl" : "max-w-4xl"}`}>
           <div className="text-center space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-sm font-medium">
               <Eye className="w-4 h-4" />
@@ -164,7 +161,7 @@ export default function PreviewPage() {
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <Link href="/editor">
+                  <Link href="/">
                     <Button
                       variant="outline"
                       size="sm"
@@ -175,7 +172,7 @@ export default function PreviewPage() {
                     </Button>
                   </Link>
 
-                  <Link href="/editor/lexical">
+                  <Link href="/editor">
                     <Button
                       variant="outline"
                       size="sm"
@@ -242,15 +239,29 @@ export default function PreviewPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-            <div className="p-6 px-12 py-12">
-              {currentProject && serializedState ? (
-                <PreviewRenderer
-                  serializedState={serializedState}
-                  showHeader={true}
-                  projectName={currentProject.name}
-                />
-              ) : (
+          {currentProject && serializedState ? (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              <div className="lg:col-span-3">
+                <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+                  <div className="p-6 px-12 py-12">
+                    <PreviewRenderer
+                      serializedState={serializedState}
+                      showHeader={true}
+                      projectName={currentProject.name}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:col-span-1">
+                <div className="sticky top-24">
+                  <PreviewTableOfContents serializedState={serializedState} />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+              <div className="p-6 px-12 py-12">
                 <div className="text-center py-16">
                   <Eye className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No Project Selected</h3>
@@ -263,11 +274,10 @@ export default function PreviewPage() {
                     Open Project
                   </Button>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Help Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
             <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800">
               <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">Preview Mode</h3>

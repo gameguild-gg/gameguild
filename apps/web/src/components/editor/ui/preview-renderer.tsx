@@ -40,6 +40,8 @@ export function PreviewRenderer({
   projectName,
   className = "prose prose-stone dark:prose-invert max-w-none",
 }: PreviewRendererProps) {
+  let headingCounter = 0
+
   const renderNode = (node: any, index = 0, parentPath = "") => {
     // Create unique key using path and index
     const uniqueKey = `${parentPath}-${node.type}-${index}-${node.version || 0}`
@@ -169,8 +171,10 @@ export function PreviewRenderer({
             </PreviewLink>
           )
         case "heading":
+          const currentHeadingIndex = headingCounter++
+          console.log("[v0] Rendering heading with index:", currentHeadingIndex)
           return (
-            <PreviewHeading key={uniqueKey} node={node}>
+            <PreviewHeading key={uniqueKey} node={node} index={currentHeadingIndex}>
               {children}
             </PreviewHeading>
           )
