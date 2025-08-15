@@ -17,6 +17,7 @@ export function CourseSubNav({ courseSlug }: { courseSlug: string }) {
     { href: `${basePath}/pricing`, label: "Pricing", icon: DollarSign },
     { href: `${basePath}/certificates`, label: "Certificates", icon: Award },
     { href: `${basePath}/media`, label: "Media", icon: ImageIcon },
+    { href: `${basePath}/team`, label: "Team", icon: Users },
     { href: `${basePath}/settings`, label: "Settings", icon: Settings },
   ]
 
