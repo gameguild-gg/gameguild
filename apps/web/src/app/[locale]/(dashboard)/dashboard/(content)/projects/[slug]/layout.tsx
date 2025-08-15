@@ -5,21 +5,25 @@ import { notFound, useParams } from 'next/navigation';
 import { PageHeader } from '@/components/projects/page-header';
 import { ProjectSubNav } from '@/components/projects/project-sub-nav';
 import { ProjectProvider } from '@/components/projects/project-context';
-import { getProjectBySlug } from '@/lib/projects/projects.actions';
-import type { Project } from '@/lib/api/generated/types.gen';
+import { getProjectBySlugService } from '@/lib/content-management/projects/projects.service';
+import { transformProjectToGameProject } from '@/lib/content-management/projects/projects.utils';
+import type { GameProject } from '@/lib/types';
 
 export default function ProjectDetailLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const slug = String((params as any).slug ?? 'current');
-  const [project, setProject] = React.useState<Project | undefined>();
+  const [project, setProject] = React.useState<GameProject | undefined>();
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     const loadProject = async () => {
       try {
-        const projectData = await getProjectBySlug(slug);
-        if (projectData) {
-          setProject(projectData);
+        setLoading(true);
+        const result = await getProjectBySlugService(slug);
+        
+        if (result.success && result.data) {
+          const transformedProject = transformProjectToGameProject(result.data);
+          setProject(transformedProject);
         } else {
           notFound();
         }
@@ -50,16 +54,18 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
   }
 
   if (!project) {
-    return null;
+    notFound();
   }
 
   return (
     <ProjectProvider project={project}>
       <div className="flex flex-col min-h-svh">
-        <PageHeader title={project.title || "Project"} />
+        <PageHeader title={project.title} />
+        <ProjectSubNav project={project} />
         <div className="flex flex-1">
-          <ProjectSubNav projectId={slug} />
-          <main className="flex-1 p-4 md:p-6 bg-muted/40">{children}</main>
+          <main className="flex-1 p-4 md:p-6 bg-muted/40">
+            {children}
+          </main>
         </div>
       </div>
     </ProjectProvider>
