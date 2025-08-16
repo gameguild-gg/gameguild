@@ -57,6 +57,12 @@ export const CreateCourseForm = (): React.JSX.Element => {
         throw new Error('Slug is required');
       }
 
+      console.log('Submitting form with data:', {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        slug: formData.slug.trim()
+      });
+
       const result = await createProgram({
         body: {
           title: formData.title.trim(),
@@ -77,23 +83,28 @@ export const CreateCourseForm = (): React.JSX.Element => {
 
       // Check if the result has an error
       if (result.error) {
-        const errorMessage = (result.error as any)?.message || 'An error occurred while creating the course';
+        const errorMessage = typeof result.error === 'string' 
+          ? result.error 
+          : (result.error as any)?.message || JSON.stringify(result.error) || 'An error occurred while creating the course';
+        console.error('Error from API:', errorMessage);
         throw new Error(errorMessage);
       }
 
       if (result.data) {
         // Success! Redirect to the created course using slug
         const slug = result.data.slug || formData.slug;
+        console.log('Course created successfully, redirecting to:', `/dashboard/courses/${slug}`);
         router.push(`/dashboard/courses/${slug}`);
       } else {
-        throw new Error('Failed to create course');
+        console.error('No data returned from API');
+        throw new Error('Failed to create course - no data returned from server');
       }
     } catch (err) {
       console.error('Error creating course:', err);
 
       // Handle different types of errors
       if (err instanceof Error) {
-        if (err.message.includes('Authentication required') || err.message.includes('401')) {
+        if (err.message.includes('Authentication required') || err.message.includes('no access token') || err.message.includes('401')) {
           setError('Please sign in to create a course. Redirecting to sign-in page...');
           setTimeout(() => {
             router.push('/sign-in');
@@ -102,11 +113,15 @@ export const CreateCourseForm = (): React.JSX.Element => {
           setError('You do not have permission to create courses. Please contact an administrator.');
         } else if (err.message.includes('409') || err.message.includes('Conflict')) {
           setError('A course with this title or slug already exists. Please choose a different title.');
+        } else if (err.message.includes('fetch failed') || err.message.includes('ECONNREFUSED') || err.message.includes('connection')) {
+          setError('Unable to connect to the server. Please ensure the API server is running and try again.');
+        } else if (err.message.includes('Failed to create course - no data returned from server')) {
+          setError('The course creation request completed, but no response was received. Please check if the course was created successfully.');
         } else {
-          setError(err.message || 'An unexpected error occurred while creating the course.');
+          setError(`Course creation failed: ${err.message}`);
         }
       } else {
-        setError('An unexpected error occurred while creating the course.');
+        setError('An unexpected error occurred while creating the course. Please try again.');
       }
     } finally {
       setIsSubmitting(false);
