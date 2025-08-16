@@ -11,8 +11,13 @@ namespace GameGuild.Modules.Users;
 
 [Table("Users")]
 [Index(nameof(Email), IsUnique = true)]
+[Index(nameof(Username), IsUnique = true)]
 public sealed class User : Entity {
   [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
+
+  [Required]
+  [MaxLength(50)]
+  public string Username { get; set; } = string.Empty;
 
   [Required]
   [EmailAddress]

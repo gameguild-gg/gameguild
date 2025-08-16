@@ -7,6 +7,7 @@ export interface User {
   id: string;
   version?: number;
   name: string;
+  username: string;
   email: string;
   isActive: boolean;
   balance: number;
@@ -275,4 +276,61 @@ export async function bulkDeactivateUsers(userIds: string[], reason?: string): P
   }
 
   return response.data as BulkOperationResult;
+}
+
+/**
+ * Get a user by username (public version, no authentication required)
+ */
+export async function getUserByUsername(username: string, includeDeleted = false): Promise<User | null> {
+  try {
+    // Try using the public client first (for public profiles)
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/search?searchTerm=${encodeURIComponent(username)}&includeDeleted=${includeDeleted}&take=1`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.warn('Public user search requires authentication, falling back to authenticated client');
+        // Fallback to authenticated client if needed
+        await configureAuthenticatedClient();
+        
+        const authResponse = await client.get({
+          url: `/api/users/search`,
+          query: { 
+            searchTerm: username,
+            includeDeleted,
+            take: 1
+          },
+        });
+
+        if (authResponse.error) {
+          throw new Error(`Failed to search for user: ${authResponse.error}`);
+        }
+
+        const paged = authResponse.data as PagedResult<User> | { items?: User[]; totalCount?: number } | undefined;
+        const items = (paged && (paged as any).items) as User[] | undefined;
+
+        if (!items || items.length === 0) return null;
+
+        const exact = items.find(u => u.username?.toLowerCase() === username.toLowerCase());
+        return exact || items[0] || null;
+      }
+      throw new Error(`Failed to search for user: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json() as PagedResult<User> | { items?: User[]; totalCount?: number } | undefined;
+    const items = (data && (data as any).items) as User[] | undefined;
+
+    if (!items || items.length === 0) return null;
+
+    // Prefer exact username match when present
+    const exact = items.find(u => u.username?.toLowerCase() === username.toLowerCase());
+    return exact || items[0] || null;
+  } catch (error) {
+    console.error('Error in getUserByUsername:', error);
+    throw error;
+  }
 }

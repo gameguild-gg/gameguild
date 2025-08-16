@@ -5644,6 +5644,11 @@ namespace GameGuild.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<int>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
@@ -5664,6 +5669,9 @@ namespace GameGuild.Migrations
                     b.HasIndex("TenantId");
 
                     b.HasIndex("UpdatedAt");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });

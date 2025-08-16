@@ -245,6 +245,11 @@ export type ActivityGradeDto = {
   readonly hasGradingDetails?: boolean;
 };
 
+export type AddCertificateTagDto = {
+  tagId: string;
+  relationshipType: CertificateTagRelationshipType;
+};
+
 export type AddCollaboratorRequest = {
   email?: string | null;
   permissions?: Array<PermissionType> | null;
@@ -853,6 +858,21 @@ export type CreateActivityGradeDto = {
   grade?: number;
   feedback?: string | null;
   gradingDetails?: string | null;
+};
+
+export type CreateCertificateDto = {
+  name: string;
+  description?: string | null;
+  type: CertificateType;
+  completionPercentage?: number;
+  minimumGrade?: number | null;
+  requiresFeedback?: boolean;
+  requiresRating?: boolean;
+  minimumRating?: number | null;
+  validityDays?: number | null;
+  verificationMethod?: VerificationMethod;
+  certificateTemplate?: string | null;
+  isActive?: boolean;
 };
 
 export type CreateContentDto = {
@@ -5520,6 +5540,22 @@ export type UpdateAttendanceDto = {
   attendanceStatus?: AttendanceStatus;
 };
 
+export type UpdateCertificateDto = {
+  id: string;
+  name: string;
+  description?: string | null;
+  type: CertificateType;
+  completionPercentage?: number;
+  minimumGrade?: number | null;
+  requiresFeedback?: boolean;
+  requiresRating?: boolean;
+  minimumRating?: number | null;
+  validityDays?: number | null;
+  verificationMethod?: VerificationMethod;
+  certificateTemplate?: string | null;
+  isActive?: boolean;
+};
+
 export type UpdateCollaboratorRequest = {
   permissions?: Array<PermissionType> | null;
   expiresAt?: string | null;
@@ -10015,6 +10051,119 @@ export type GetApiProgramByIdProductsResponses = {
 };
 
 export type GetApiProgramByIdProductsResponse = GetApiProgramByIdProductsResponses[keyof GetApiProgramByIdProductsResponses];
+
+export type GetApiProgramsByProgramIdCertificatesData = {
+  body?: never;
+  path: {
+    programId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/certificates';
+};
+
+export type GetApiProgramsByProgramIdCertificatesResponses = {
+  /**
+   * OK
+   */
+  200: Array<Certificate>;
+};
+
+export type GetApiProgramsByProgramIdCertificatesResponse =
+  GetApiProgramsByProgramIdCertificatesResponses[keyof GetApiProgramsByProgramIdCertificatesResponses];
+
+export type PostApiProgramsByProgramIdCertificatesData = {
+  body?: CreateCertificateDto;
+  path: {
+    programId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/certificates';
+};
+
+export type PostApiProgramsByProgramIdCertificatesResponses = {
+  /**
+   * OK
+   */
+  200: Certificate;
+};
+
+export type PostApiProgramsByProgramIdCertificatesResponse =
+  PostApiProgramsByProgramIdCertificatesResponses[keyof PostApiProgramsByProgramIdCertificatesResponses];
+
+export type DeleteApiProgramsByProgramIdCertificatesByCertificateIdData = {
+  body?: never;
+  path: {
+    programId: string;
+    certificateId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/certificates/{certificateId}';
+};
+
+export type DeleteApiProgramsByProgramIdCertificatesByCertificateIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PutApiProgramsByProgramIdCertificatesByCertificateIdData = {
+  body?: UpdateCertificateDto;
+  path: {
+    programId: string;
+    certificateId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/certificates/{certificateId}';
+};
+
+export type PutApiProgramsByProgramIdCertificatesByCertificateIdResponses = {
+  /**
+   * OK
+   */
+  200: Certificate;
+};
+
+export type PutApiProgramsByProgramIdCertificatesByCertificateIdResponse =
+  PutApiProgramsByProgramIdCertificatesByCertificateIdResponses[keyof PutApiProgramsByProgramIdCertificatesByCertificateIdResponses];
+
+export type PostApiProgramsByProgramIdCertificatesByCertificateIdTagsData = {
+  body?: AddCertificateTagDto;
+  path: {
+    programId: string;
+    certificateId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/certificates/{certificateId}/tags';
+};
+
+export type PostApiProgramsByProgramIdCertificatesByCertificateIdTagsResponses = {
+  /**
+   * OK
+   */
+  200: CertificateTag;
+};
+
+export type PostApiProgramsByProgramIdCertificatesByCertificateIdTagsResponse =
+  PostApiProgramsByProgramIdCertificatesByCertificateIdTagsResponses[keyof PostApiProgramsByProgramIdCertificatesByCertificateIdTagsResponses];
+
+export type DeleteApiProgramsByProgramIdCertificatesByCertificateIdTagsByTagIdData = {
+  body?: never;
+  path: {
+    programId: string;
+    certificateId: string;
+    tagId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/certificates/{certificateId}/tags/{tagId}';
+};
+
+export type DeleteApiProgramsByProgramIdCertificatesByCertificateIdTagsByTagIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
 
 export type GetApiProgramsByProgramIdContentData = {
   body?: never;

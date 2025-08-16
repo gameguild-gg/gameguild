@@ -1,5 +1,5 @@
-import React, { PropsWithChildren } from 'react';
+import React from 'react';
 
-export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

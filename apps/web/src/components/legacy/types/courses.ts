@@ -4,7 +4,7 @@ export interface Course {
   description: string;
   area: CourseArea;
   level: CourseLevel;
-  tools: string[];
+  tools?: string[]; // Made optional to handle cases where tools might be undefined
   progress?: number;
   image: string;
   slug: string;
