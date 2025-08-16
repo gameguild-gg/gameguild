@@ -1,17 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import CourseList from './course-list';
 import type { Course } from '@/components/legacy/types/courses';
 
 export default function CourseListWrapper({ courses }: { courses: Course[] }) {
-  const categories = Array.from(new Set(courses.map((c) => c.area)));
+  // Ensure courses is an array and filter out invalid entries using useMemo to prevent re-renders
+  const validCourses = useMemo(() => 
+    Array.isArray(courses) ? courses.filter(course => course && course.id && course.area) : []
+  , [courses]);
+  
+  const categories = Array.from(new Set(validCourses.map((c) => c.area)));
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [filtered, setFiltered] = useState(courses);
+  const [filtered, setFiltered] = useState(validCourses);
+
+  // Update filtered courses when validCourses changes
+  useEffect(() => {
+    setFiltered(selectedCategory === 'All' ? validCourses : validCourses.filter((c) => c.area === selectedCategory));
+  }, [validCourses, selectedCategory]);
 
   function handleFilter(cat: string) {
     setSelectedCategory(cat);
-    setFiltered(cat === 'All' ? courses : courses.filter((c) => c.area === cat));
+    setFiltered(cat === 'All' ? validCourses : validCourses.filter((c) => c.area === cat));
   }
 
   return (
