@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Search, Grid3X3, List, BookOpen } from "lucide-react"
+import { Search, Grid3X3, List, BookOpen, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -9,6 +9,7 @@ import { CourseCard } from "@/components/course-card"
 import type { Course } from "@/lib/types"
 import { getAllProgramsService } from "@/lib/content-management/programs/programs.service"
 import { transformProgramToCourse } from "@/lib/content-management/programs/programs.utils"
+import Link from "next/link"
 
 export default function CoursesPage() {
   const [courses, setCourses] = React.useState<Course[]>([])
@@ -84,6 +85,12 @@ export default function CoursesPage() {
             <h1 className="text-3xl font-bold tracking-tight">Courses</h1>
             <p className="text-muted-foreground">Discover and enroll in educational programs</p>
           </div>
+          <Link href="/dashboard/courses/create">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Course
+            </Button>
+          </Link>
         </div>
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -108,6 +115,12 @@ export default function CoursesPage() {
             <h1 className="text-3xl font-bold tracking-tight">Courses</h1>
             <p className="text-muted-foreground">Discover and enroll in educational programs</p>
           </div>
+          <Link href="/dashboard/courses/create">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Course
+            </Button>
+          </Link>
         </div>
         
         <div className="text-center py-12">
@@ -129,6 +142,12 @@ export default function CoursesPage() {
           <h1 className="text-3xl font-bold tracking-tight">Courses</h1>
           <p className="text-muted-foreground">Discover and enroll in educational programs</p>
         </div>
+        <Link href="/dashboard/courses/create">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Course
+          </Button>
+        </Link>
       </div>
 
       {/* Search and Filter Bar */}
@@ -219,7 +238,13 @@ export default function CoursesPage() {
         <div className="text-center py-12">
           <BookOpen className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No courses found</h3>
-          <p className="text-gray-500">Try adjusting your search or filter criteria.</p>
+          <p className="text-gray-500 mb-6">Try adjusting your search or filter criteria, or create your first course.</p>
+          <Link href="/dashboard/courses/create">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Course
+            </Button>
+          </Link>
         </div>
       ) : (
         <div className={`grid gap-6 ${viewMode === "grid" ? "md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
