@@ -5,10 +5,12 @@ export default async function Page(): Promise<React.JSX.Element> {
   return (
     <DashboardPage>
       <DashboardPageHeader>
-        <DashboardPageTitle>Course</DashboardPageTitle>
-        <DashboardPageDescription></DashboardPageDescription>
+        <DashboardPageTitle>Project Feedbacks</DashboardPageTitle>
+        <DashboardPageDescription>View and manage feedback submitted to this project.</DashboardPageDescription>
       </DashboardPageHeader>
-      <DashboardPageContent></DashboardPageContent>
+      <DashboardPageContent>
+        <div className="text-center text-muted-foreground py-10">No feedbacks yet.</div>
+      </DashboardPageContent>
     </DashboardPage>
   );
 }
