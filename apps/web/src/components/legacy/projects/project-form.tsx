@@ -170,7 +170,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
         // await uploadImages();
         break;
     }
-    router.push(`/project/${project.slug}`);
+  router.push(`/[locale]/(dashboard)/dashboard/(content)/projects/${project.slug}`);
   };
 
   // return (
