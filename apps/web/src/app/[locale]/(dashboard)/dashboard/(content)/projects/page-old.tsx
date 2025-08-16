@@ -1,0 +1,57 @@
+import React from 'react';
+import { auth } from '@/auth';
+import { getProjectsData, createProject as createProjectLegacy } from '@/lib/projects/projects.actions';
+import type { Project } from '@/lib/api/generated/types.gen';
+import { ProjectsListClient } from './projects-list.client';
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
+import { Loader2 } from 'lucide-react';
+
+export default async function ProjectsPage(): Promise<React.JSX.Element> {
+  const session = await auth();
+
+  if (!session?.api.accessToken) {
+    return (
+      <DashboardPage>
+        <DashboardPageHeader>
+          <DashboardPageTitle>Projects</DashboardPageTitle>
+          <DashboardPageDescription>Manage your game projects</DashboardPageDescription>
+        </DashboardPageHeader>
+        <DashboardPageContent>
+          <div className="flex min-h-svh items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading authentication...</p>
+            </div>
+          </div>
+        </DashboardPageContent>
+      </DashboardPage>
+    );
+  }
+
+  let projects: Project[] = [];
+  try {
+    const data = await getProjectsData({ take: 100 });
+    projects = data.projects;
+  } catch (e) {
+    // keep empty list
+  }
+
+  async function createProject(formData: FormData) {
+    'use server';
+    const title = String(formData.get('title') || 'New Project');
+    const shortDescription = String(formData.get('shortDescription') || '');
+    await createProjectLegacy({ title, shortDescription, visibility: 0 });
+  }
+
+  return (
+    <DashboardPage>
+      <DashboardPageHeader>
+        <DashboardPageTitle>Projects</DashboardPageTitle>
+        <DashboardPageDescription>Manage your game projects</DashboardPageDescription>
+      </DashboardPageHeader>
+      <DashboardPageContent>
+        <ProjectsListClient initialProjects={projects} onCreate={createProject} />
+      </DashboardPageContent>
+    </DashboardPage>
+  );
+}

@@ -22,6 +22,13 @@ public class UpdateUserInput {
   public string? Name { get; set; }
 
   /// <summary>
+  /// The user's unique username/handle
+  /// </summary>
+  [StringLength(50, MinimumLength = 1, ErrorMessage = "Username must be between 1 and 50 characters")]
+  [GraphQLDescription("The user's unique username/handle")]
+  public string? Username { get; set; }
+
+  /// <summary>
   /// The user's email address
   /// </summary>
   [EmailAddress(ErrorMessage = "Invalid email address format")]

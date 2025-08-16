@@ -102,11 +102,27 @@ import { revalidateTag } from 'next/cache';
  * Get all programs with optional filtering
  */
 export async function getPrograms(data?: GetApiProgramData) {
-  await configureAuthenticatedClient();
+  try {
+    await configureAuthenticatedClient();
 
-  return getApiProgram({
-    query: data?.query,
-  });
+    return getApiProgram({
+      query: data?.query,
+    });
+  } catch (error) {
+    console.error('Error in getPrograms:', error);
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Authentication required') || error.message.includes('no access token')) {
+        throw new Error('Please sign in to access courses');
+      }
+      if (error.message.includes('fetch failed') || error.message.includes('ECONNREFUSED')) {
+        throw new Error('Unable to connect to server. Please check if the API is running.');
+      }
+      throw error;
+    }
+    
+    throw new Error('Failed to load courses');
+  }
 }
 
 /**

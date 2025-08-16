@@ -23,7 +23,12 @@ interface ErrorEntry {
 function useErrorBoundaryContext() {
   return {
     reportError: (error: Error, errorInfo?: { componentStack?: string }, boundaryId?: string, level?: string) => {
-      console.error('Error reported:', { error, errorInfo, boundaryId, level });
+      // Only log if error has content
+      if (error && (error.message || error.stack || error.name)) {
+        console.error('Error reported:', { error, errorInfo, boundaryId, level });
+      } else {
+        console.warn('Empty or invalid error object passed to reportError:', error);
+      }
     },
     state: {
       globalConfig: {
@@ -47,6 +52,12 @@ export const Error = ({ error, reset, children }: PropsWithChildren<ErrorProps>)
   const { reportError, state, clearAllErrors } = useErrorBoundaryContext();
 
   useEffect(() => {
+    // Check if error is empty or invalid before reporting
+    if (!error || (typeof error === 'object' && Object.keys(error).length === 0)) {
+      console.error('Empty error object received in error boundary:', error);
+      return;
+    }
+
     // Report the error to the error boundary context
     reportError(error, { componentStack: error.stack || '' }, 'error-page', 'page');
 
