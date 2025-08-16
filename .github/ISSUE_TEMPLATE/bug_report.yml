@@ -1,7 +1,7 @@
 name: "🐞 Bug Report"
 description: "File a new bug report to help us improve GameGuild, prioritize your report with an attached bounty."
 title: "[Bug]: "
-labels: [ "bug", "triage" ]
+labels: ["bug", "triage"]
 type: bug
 body:
   - type: markdown
@@ -35,10 +35,11 @@ body:
       required: true
 
   - type: input
+    id: route_url
     attributes:
-      label: "Example URL"
+      label: "Route URL"
       description: "Provide a URL demonstrating the issue, if applicable. Or the route URL where the issue occurs."
-      placeholder: "https://gameguild.gg/route"
+      placeholder: "https://gameguild.gg/the_route_goes_here"
 
   - type: input
     attributes:
@@ -87,4 +88,4 @@ body:
     attributes:
       label: "🚧 Workarounds (Optional)"
       description: "If you have found any workarounds or fixes for this issue, please share them here."
-      placeholder: "Describe any workarounds or fixes here."    
+      placeholder: "Describe any workarounds or fixes here."
