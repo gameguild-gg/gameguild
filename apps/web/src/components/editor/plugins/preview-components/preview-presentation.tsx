@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import type { SerializedPresentationNode } from "../../nodes/presentation-node"
-import { SlidePlayer } from "../../ui/slide-player"
+import { SlidePlayer } from "../../extras/slide-player"
 
 export function PreviewPresentation({ node }: { node: SerializedPresentationNode }) {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)

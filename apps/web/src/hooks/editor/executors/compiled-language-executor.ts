@@ -1,6 +1,6 @@
-import type { ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
+import type { ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
 import type { ExecutionContext, ExecutionResult, LanguageExecutor } from "./types"
-import { getFileContent } from "@/components/editor/ui/source-code/utils"
+import { getFileContent } from "@/components/editor/extras/source-code/utils"
 
 export abstract class CompiledLanguageExecutor implements LanguageExecutor {
   handleCommand?: ((command: string, context: ExecutionContext) => boolean) | undefined

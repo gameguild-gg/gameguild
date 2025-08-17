@@ -1,6 +1,6 @@
-import type { ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
+import type { ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
 import type { ExecutionResult, ExecutionContext, LanguageExecutor } from "./types"
-import { getFileContent } from "@/components/editor/ui/source-code/utils"
+import { getFileContent } from "@/components/editor/extras/source-code/utils"
 
 class TypeScriptExecutor implements LanguageExecutor {
   private isExecutionCancelled = false

@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef, useContext } from "react"
 import { Code, Play, Settings } from "lucide-react"
-import type { EditMenuOption } from "@/components/editor/ui/content-edit-menu"
-import type { CodeFile, LanguageType, ProgrammingLanguage } from "../ui/source-code/types"
-import { SourceCodeRenderer } from "../ui/source-code/source-code-renderer"
+import type { EditMenuOption } from "@/components/editor/extras/content-edit-menu"
+import type { CodeFile, LanguageType, ProgrammingLanguage } from "../extras/source-code/types"
+import { SourceCodeRenderer } from "../extras/source-code/source-code-renderer"
 import { EditorLoadingContext } from "../lexical-editor"
 
 // Import hooks

@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { ProjectSearchFilters } from "@/components/editor/ui/project-dialog/project-search-filters"
-import { ProjectList } from "@/components/editor/ui/project-dialog/project-list"
-import { ProjectPagination } from "@/components/editor/ui/project-dialog/project-pagination"
+import { ProjectSearchFilters } from "@/components/editor/extras/project-dialog/project-search-filters"
+import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
+import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
 import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
 import { FolderOpen, Eye } from "lucide-react"
 import { toast } from "sonner"

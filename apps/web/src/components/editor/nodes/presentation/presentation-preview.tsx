@@ -1,7 +1,7 @@
 "use client"
 import { LayoutGrid, FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { SlidePlayer } from "@/components/editor/ui/slide-player"
+import { SlidePlayer } from "@/components/editor/extras/slide-player"
 import type { Slide } from "./types"
 
 interface PresentationPreviewProps {

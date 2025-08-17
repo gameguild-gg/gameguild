@@ -9,7 +9,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { ColorPalette } from "@/components/editor/ui/color-palette"
+import { ColorPalette } from "@/components/editor/extras/color-palette"
 
 interface BackgroundColorMenuComponentProps {
   editor: any

@@ -1,4 +1,4 @@
-import type { CodeFile, ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
+import type { CodeFile, ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
 // Replace the above line with the correct import or define CodeFile here if missing:
 
 // Add global type definitions for the prompt and confirm flags

@@ -18,8 +18,8 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Edit, Trash2, ZoomIn, ZoomOut, RotateCcw, Maximize2, X } from "lucide-react"
-import { MermaidEditor } from "@/components/editor/ui/mermaid/mermaid-editor"
-import { ContentEditMenu } from "@/components/editor/ui/content-edit-menu"
+import { MermaidEditor } from "@/components/editor/extras/mermaid/mermaid-editor"
+import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import type { JSX } from "react/jsx-runtime"
 
 export interface MermaidData {

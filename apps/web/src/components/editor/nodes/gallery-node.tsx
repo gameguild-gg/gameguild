@@ -10,8 +10,8 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { ImageIcon, Plus, Trash2, Check, Crop, Maximize, Settings, Type } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/ui/media-upload-dialog"
-import { ContentEditMenu, type EditMenuOption } from "@/components/editor/ui/content-edit-menu"
+import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/extras/media-upload-dialog"
+import { ContentEditMenu, type EditMenuOption } from "@/components/editor/extras/content-edit-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"

@@ -7,7 +7,7 @@ import { useContext } from "react"
 import { EditorLoadingContext } from "../lexical-editor"
 
 // Import types
-import type { CodeFile, LanguageType, ProgrammingLanguage } from "../ui/source-code/types"
+import type { CodeFile, LanguageType, ProgrammingLanguage } from "../extras/source-code/types"
 import { SourceCodeCore } from "./source-code-core"
 
 // Add global type declarations

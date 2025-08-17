@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { CompressionSettingsDialog, type CompressionSettings } from "@/components/editor/ui/compression-settings-dialog"
+import { CompressionSettingsDialog, type CompressionSettings } from "@/components/editor/extras/compression-settings-dialog"
 import { WebPConverter } from "@/lib/editor/webp-converter"
 
 export interface MediaUploadResult {

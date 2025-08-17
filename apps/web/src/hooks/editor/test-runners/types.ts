@@ -1,4 +1,4 @@
-import type { CodeFile, ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
+import type { CodeFile, ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
 
 export interface TestResult {
   passed: boolean

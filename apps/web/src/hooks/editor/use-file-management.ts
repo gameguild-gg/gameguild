@@ -3,8 +3,8 @@
 import type React from "react"
 
 import { useState, useRef } from "react"
-import type { CodeFile, LanguageType } from "@/components/editor/ui/source-code/types"
-import { getExtension, getExtensionForLanguage, getLanguageFromExtension } from "@/components/editor/ui/source-code/utils"
+import type { CodeFile, LanguageType } from "@/components/editor/extras/source-code/types"
+import { getExtension, getExtensionForLanguage, getLanguageFromExtension } from "@/components/editor/extras/source-code/utils"
 
 interface UseFileManagementProps {
   files: CodeFile[]

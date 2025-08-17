@@ -10,11 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/ui/media-upload-dialog"
-import { SlidePlayer } from "@/components/editor/ui/slide-player"
+import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/extras/media-upload-dialog"
+import { SlidePlayer } from "@/components/editor/extras/slide-player"
 import type { Slide, SlideTheme, TransitionEffect } from "./types"
-import { DeleteConfirmDialog } from "@/components/editor/ui/delete-confirm-dialog"
-import { SlideEditDialog } from "@/components/editor/ui/slide-edit-dialog"
+import { DeleteConfirmDialog } from "@/components/editor/extras/delete-confirm-dialog"
+import { SlideEditDialog } from "@/components/editor/extras/slide-edit-dialog"
 
 interface PresentationSettingsProps {
   title: string

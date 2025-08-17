@@ -2,8 +2,8 @@
 
 import type { SerializedQuizNode } from "../../nodes/quiz-node"
 import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
-import { QuizWrapper } from "../../ui/quiz/quiz-wrapper"
-import { QuizDisplay } from "../../ui/quiz/quiz-display"
+import { QuizWrapper } from "../../extras/quiz/quiz-wrapper"
+import { QuizDisplay } from "../../extras/quiz/quiz-display"
 import { Button } from "@/components/ui/button"
 import { RotateCcw } from 'lucide-react'
 

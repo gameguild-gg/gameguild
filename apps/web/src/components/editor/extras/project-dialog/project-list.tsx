@@ -5,7 +5,7 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { FolderOpen, Trash2, Download } from "lucide-react"
-import { DownloadConfirmDialog } from "@/components/editor/ui/download-confirm-dialog"
+import { DownloadConfirmDialog } from "@/components/editor/extras/download-confirm-dialog"
 
 interface ProjectData {
   id: string

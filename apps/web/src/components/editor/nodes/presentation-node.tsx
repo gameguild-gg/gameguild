@@ -6,11 +6,11 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { Edit, Expand, LayoutGrid } from 'lucide-react'
 
 import { Button } from "@/components/ui/button"
-import { ContentEditMenu, type EditMenuOption } from "@/components/editor/ui/content-edit-menu"
-import { SlidePlayer } from "@/components/editor/ui/slide-player"
+import { ContentEditMenu, type EditMenuOption } from "@/components/editor/extras/content-edit-menu"
+import { SlidePlayer } from "@/components/editor/extras/slide-player"
 import type { JSX } from "react/jsx-runtime"
 import { EditorLoadingContext } from "../lexical-editor"
-import type { MediaUploadResult } from "@/components/editor/ui/media-upload-dialog"
+import type { MediaUploadResult } from "@/components/editor/extras/media-upload-dialog"
 
 // Import the componentized parts
 import type { PresentationData, Slide, SlideTheme, TransitionEffect, ParseProgress } from "./presentation/types"

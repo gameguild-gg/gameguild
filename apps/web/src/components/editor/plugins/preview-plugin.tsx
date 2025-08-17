@@ -7,7 +7,7 @@ import type { SerializedEditorState } from "lexical"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { PreviewRenderer } from "@/components/editor/ui/preview-renderer"
+import { PreviewRenderer } from "@/components/editor/extras/preview-renderer"
 
 export function PreviewPlugin() {
   const [editor] = useLexicalComposerContext()

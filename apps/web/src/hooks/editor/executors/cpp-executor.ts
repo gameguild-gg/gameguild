@@ -1,4 +1,4 @@
-import type { ProgrammingLanguage } from "@/components/editor/ui/source-code/types"
+import type { ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
 import type { ExecutionContext, ExecutionResult, LanguageExecutor } from "./types"
 
 class CPPExecutor implements LanguageExecutor {

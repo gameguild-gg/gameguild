@@ -1,5 +1,5 @@
 import type { SerializedCalloutNode } from "../../nodes/callout-node"
-import { Callout as UICallout } from "../../ui/callout"
+import { Callout as UICallout } from "../../extras/callout"
 
 export function PreviewCallout({ node }: { node: SerializedCalloutNode }) {
   if (!node?.data) {

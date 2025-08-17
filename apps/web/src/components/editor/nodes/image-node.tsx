@@ -6,11 +6,11 @@ import { $getNodeByKey } from "lexical"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import { Move, Type } from "lucide-react"
 
-import { ImageSizeControl } from "@/components/editor/ui/image-size-control"
-import { CaptionInput } from "@/components/editor/ui/caption-input"
+import { ImageSizeControl } from "@/components/editor/extras/image-size-control"
+import { CaptionInput } from "@/components/editor/extras/caption-input"
 import { Button } from "@/components/ui/button"
 import { X } from "lucide-react"
-import { ContentEditMenu, type EditMenuOption } from "@/components/editor/ui/content-edit-menu"
+import { ContentEditMenu, type EditMenuOption } from "@/components/editor/extras/content-edit-menu"
 
 export interface ImageData {
   src: string
