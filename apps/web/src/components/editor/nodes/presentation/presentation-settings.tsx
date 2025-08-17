@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/extras/media-upload-dialog"
 import { SlidePlayer } from "@/components/editor/extras/slide-player"
 import type { Slide, SlideTheme, TransitionEffect } from "./types"
-import { DeleteConfirmDialog } from "@/components/editor/extras/delete-confirm-dialog"
+import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
 import { SlideEditDialog } from "@/components/editor/extras/slide-edit-dialog"
 
 interface PresentationSettingsProps {

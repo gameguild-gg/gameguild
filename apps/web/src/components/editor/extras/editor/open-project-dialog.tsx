@@ -3,7 +3,7 @@
 import type React from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { DeleteConfirmDialog } from "@/components/editor/extras/delete-confirm-dialog"
+import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
 import { ProjectSearchFilters } from "@/components/editor/extras/project-dialog/project-search-filters"
 import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
 import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
