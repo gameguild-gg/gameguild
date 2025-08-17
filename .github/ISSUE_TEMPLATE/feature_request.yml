@@ -1,7 +1,7 @@
 name: 💎 Feature Request
 description: "Propose a new feature, service, or improvement, prioritize your request with an attached bounty."
 title: "[Enhancement]: "
-labels: [ "enhancement", "triage" ]
+labels: ["enhancement", "triage"]
 type: feature
 body:
   - type: markdown
@@ -24,6 +24,13 @@ body:
         - Improvement
     validations:
       required: true
+
+  - type: input
+    id: route_url
+    attributes:
+      label: "Route URL"
+      description: "Provide a URL demonstrating the issue, if applicable. Or the route URL where the issue occurs."
+      placeholder: "https://gameguild.gg/the_route_goes_here"
 
   - type: textarea
     attributes:
