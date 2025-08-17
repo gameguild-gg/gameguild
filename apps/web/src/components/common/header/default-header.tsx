@@ -32,22 +32,7 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
           {/* Desktop Navigation */}
           <NavigationMenu className="hidden md:flex">
             <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-200 hover:text-blue-300 transition-colors duration-300 bg-transparent hover:bg-white/5 backdrop-blur-sm">Getting started</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
-                    <ListItem href="/docs" title="Introduction">
-                      Re-usable components built using Radix UI and Tailwind CSS.
-                    </ListItem>
-                    <ListItem href="/docs/installation" title="Installation">
-                      How to install dependencies and structure your app.
-                    </ListItem>
-                    <ListItem href="/docs/primitives/typography" title="Typography">
-                      Styles for headings, paragraphs, lists...etc
-                    </ListItem>
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="text-slate-200 hover:text-purple-300 transition-colors duration-300 bg-transparent hover:bg-white/5 backdrop-blur-sm">Courses</NavigationMenuTrigger>
                 <NavigationMenuContent>
@@ -114,9 +99,7 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
           : 'max-h-0 opacity-0 transform -translate-y-2'
         }`}>
         <div className="container mx-auto px-4 py-4 space-y-2">
-          <Link href="/docs" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
-            Getting started
-          </Link>
+
           <Link href="/courses" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
             Courses
           </Link>
