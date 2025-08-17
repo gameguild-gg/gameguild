@@ -7,7 +7,7 @@ import { Edit, Expand, LayoutGrid } from 'lucide-react'
 
 import { Button } from "@/components/ui/button"
 import { ContentEditMenu, type EditMenuOption } from "@/components/editor/extras/content-edit-menu"
-import { SlidePlayer } from "@/components/editor/extras/slide-player"
+import { SlidePlayer } from "@/components/editor/extras/presentation/slide-player"
 import type { JSX } from "react/jsx-runtime"
 import { EditorLoadingContext } from "../lexical-editor"
 import type { MediaUploadResult } from "@/components/editor/extras/media-upload-dialog"

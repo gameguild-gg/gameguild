@@ -4,8 +4,8 @@ import { ChevronLeft, ChevronRight, Expand, X, LayoutGrid } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import type { Slide, TransitionEffect, SlideTheme } from "../nodes/presentation/types"
-import { SlideRenderer } from "../nodes/presentation/slide-renderer"
+import type { Slide, TransitionEffect, SlideTheme } from "../../nodes/presentation/types"
+import { SlideRenderer } from "../../nodes/presentation/slide-renderer"
 
 interface SlidePlayerProps {
   slides: Slide[]

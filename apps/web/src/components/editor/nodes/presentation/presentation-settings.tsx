@@ -11,10 +11,10 @@ import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/extras/media-upload-dialog"
-import { SlidePlayer } from "@/components/editor/extras/slide-player"
+import { SlidePlayer } from "@/components/editor/extras/presentation/slide-player"
 import type { Slide, SlideTheme, TransitionEffect } from "./types"
 import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
-import { SlideEditDialog } from "@/components/editor/extras/slide-edit-dialog"
+import { SlideEditDialog } from "@/components/editor/extras/presentation/slide-edit-dialog"
 
 interface PresentationSettingsProps {
   title: string
