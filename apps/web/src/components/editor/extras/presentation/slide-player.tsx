@@ -1,6 +1,6 @@
 "use client"
-import { useState, useEffect, useRef, useCallback } from "react"
-import { ChevronLeft, ChevronRight, Expand, X, LayoutGrid } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import { ChevronLeft, ChevronRight, Expand, X, LayoutGrid } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -68,10 +68,14 @@ export function SlidePlayer({
   isEditing = false,
   className,
 }: SlidePlayerProps) {
+  const instanceId = useMemo(() => `slide-player-${Math.random().toString(36).substr(2, 9)}`, [])
+
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<HTMLDivElement>(null)
+
+  const [isActiveFullscreenInstance, setIsActiveFullscreenInstance] = useState(false)
 
   // Memoize navigation functions to ensure stability for event listeners
   const handlePrevSlide = useCallback(() => {
@@ -94,9 +98,15 @@ export function SlidePlayer({
   useEffect(() => {
     const handleFullscreenChange = () => {
       const fullscreenElement = !!document.fullscreenElement
-      setIsFullscreen(fullscreenElement)
-      if (!fullscreenElement && onExitFullscreen) {
-        onExitFullscreen()
+      const isThisInstanceFullscreen = document.fullscreenElement === playerRef.current
+
+      if (isThisInstanceFullscreen || (!fullscreenElement && isFullscreen)) {
+        setIsFullscreen(fullscreenElement)
+        setIsActiveFullscreenInstance(isThisInstanceFullscreen)
+
+        if (!fullscreenElement && onExitFullscreen) {
+          onExitFullscreen()
+        }
       }
     }
 
@@ -104,7 +114,7 @@ export function SlidePlayer({
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange)
     }
-  }, [onExitFullscreen])
+  }, [onExitFullscreen, isFullscreen, instanceId])
 
   // Handle auto-advance
   useEffect(() => {
@@ -137,7 +147,7 @@ export function SlidePlayer({
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (isFullscreen) {
+      if (isFullscreen && isActiveFullscreenInstance) {
         switch (event.key) {
           case "ArrowLeft":
             event.preventDefault()
@@ -149,8 +159,10 @@ export function SlidePlayer({
             break
           case "Escape":
             event.preventDefault()
-            if (document.fullscreenElement) {
-              document.exitFullscreen()
+            if (document.fullscreenElement === playerRef.current) {
+              document.exitFullscreen().catch((err) => {
+                console.error(`[${instanceId}] Error exiting fullscreen:`, err)
+              })
             }
             break
         }
@@ -161,7 +173,7 @@ export function SlidePlayer({
     return () => {
       document.removeEventListener("keydown", handleKeyDown)
     }
-  }, [isFullscreen, handlePrevSlide, handleNextSlide])
+  }, [isFullscreen, isActiveFullscreenInstance, handlePrevSlide, handleNextSlide, instanceId])
 
   // Handle mouse position for bottom bar in fullscreen
   const [showBottomBar, setShowBottomBar] = useState(false)
@@ -169,7 +181,7 @@ export function SlidePlayer({
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
-      if (isFullscreen) {
+      if (isFullscreen && isActiveFullscreenInstance) {
         const windowHeight = window.innerHeight
         const bottomThreshold = windowHeight - 50 // 50px from bottom
         setMouseY(event.clientY)
@@ -177,42 +189,49 @@ export function SlidePlayer({
       }
     }
 
-    if (isFullscreen) {
+    if (isFullscreen && isActiveFullscreenInstance) {
       document.addEventListener("mousemove", handleMouseMove)
       return () => {
         document.removeEventListener("mousemove", handleMouseMove)
       }
     }
-  }, [isFullscreen])
+  }, [isFullscreen, isActiveFullscreenInstance, instanceId])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isFullscreen && showBottomBar) {
+      if (isFullscreen && isActiveFullscreenInstance && showBottomBar) {
         const target = event.target as HTMLElement
-        const bottomBar = document.querySelector("[data-bottom-bar]")
+        const bottomBar = document.querySelector(`[data-bottom-bar="${instanceId}"]`)
         if (bottomBar && !bottomBar.contains(target)) {
           setShowBottomBar(false)
         }
       }
     }
 
-    if (isFullscreen) {
+    if (isFullscreen && isActiveFullscreenInstance) {
       document.addEventListener("click", handleClickOutside)
       return () => {
         document.removeEventListener("click", handleClickOutside)
       }
     }
-  }, [isFullscreen, showBottomBar])
+  }, [isFullscreen, isActiveFullscreenInstance, showBottomBar, instanceId])
 
   const toggleFullscreen = () => {
-    if (!isFullscreen && playerRef.current) {
+    if (!document.fullscreenElement && playerRef.current) {
       if (playerRef.current.requestFullscreen) {
-        playerRef.current.requestFullscreen()
-        if (onFullscreen) onFullscreen()
+        playerRef.current
+          .requestFullscreen()
+          .then(() => {
+            setIsActiveFullscreenInstance(true)
+            if (onFullscreen) onFullscreen()
+          })
+          .catch((err) => {
+            console.error(`[${instanceId}] Error entering fullscreen:`, err)
+          })
       }
-    } else if (isFullscreen && document.fullscreenElement) {
+    } else if (document.fullscreenElement === playerRef.current) {
       document.exitFullscreen().catch((err) => {
-        console.error("Error exiting fullscreen:", err)
+        console.error(`[${instanceId}] Error exiting fullscreen:`, err)
       })
     }
   }
@@ -220,7 +239,7 @@ export function SlidePlayer({
   // Get thumbnail style for slide with custom settings
   const getThumbnailStyle = (slide: Slide) => {
     const hasCustomImageSettings = slide.filters || slide.imageSize
-    
+
     if (slide.theme === "image" && slide.backgroundImage) {
       if (hasCustomImageSettings) {
         // Apply custom filters and sizing to thumbnail
@@ -232,7 +251,7 @@ export function SlidePlayer({
           hueRotate: 0,
           opacity: 100,
         }
-        
+
         const imageSize = slide.imageSize || {
           width: 100,
           height: 100,
@@ -256,7 +275,7 @@ export function SlidePlayer({
         }
       }
     }
-    
+
     // Default solid background based on theme
     switch (slide.theme) {
       case "light":
@@ -531,7 +550,13 @@ export function SlidePlayer({
               variant="ghost"
               size="icon"
               className="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white rounded-full h-10 w-10 z-50 opacity-80 hover:opacity-100 transition-opacity"
-              onClick={() => document.exitFullscreen()}
+              onClick={() => {
+                if (document.fullscreenElement === playerRef.current) {
+                  document.exitFullscreen().catch((err) => {
+                    console.error(`[${instanceId}] Error exiting fullscreen:`, err)
+                  })
+                }
+              }}
             >
               <X className="h-5 w-5" />
             </Button>
@@ -573,7 +598,7 @@ export function SlidePlayer({
             {/* Bottom slide navigation bar */}
             {showThumbnails && (
               <div
-                data-bottom-bar
+                data-bottom-bar={instanceId}
                 className={`absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm transition-transform duration-300 z-40 ${
                   showBottomBar ? "translate-y-0" : "translate-y-full"
                 }`}
