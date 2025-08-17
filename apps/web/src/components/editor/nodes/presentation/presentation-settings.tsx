@@ -1,7 +1,9 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
-import { Upload, Plus, Trash2, ChevronUp, ChevronDown, Settings, FileText, ImageIcon, Edit } from 'lucide-react'
+import { Plus, Trash2, ChevronUp, ChevronDown, FileText, ImageIcon, Edit, GripVertical, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,7 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/extras/media-upload-dialog"
 import { SlidePlayer } from "@/components/editor/extras/presentation/slide-player"
-import type { Slide, SlideTheme, TransitionEffect } from "./types"
+import type { Slide, TransitionEffect } from "./types"
 import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
 import { SlideEditDialog } from "@/components/editor/extras/presentation/slide-edit-dialog"
 
@@ -71,34 +73,28 @@ export function PresentationSettings({
   onImportPresentation,
   onImportImages,
 }: PresentationSettingsProps) {
-  const [activeTab, setActiveTab] = useState("mode")
+  const [activeTab, setActiveTab] = useState("assembly")
   const [selectedMode, setSelectedMode] = useState<"import" | "create" | null>(null)
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [showImageDialog, setShowImageDialog] = useState(false)
   const [localSlides, setLocalSlides] = useState<Slide[]>([])
+  const [mediaItems, setMediaItems] = useState<MediaUploadResult[]>([])
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
   const [deleteSlideId, setDeleteSlideId] = useState<string | null>(null)
   const [slideToDelete, setSlideToDelete] = useState<Slide | null>(null)
   const [editSlideId, setEditSlideId] = useState<string | null>(null)
   const [slideToEdit, setSlideToEdit] = useState<Slide | null>(null)
+  const [draggedItem, setDraggedItem] = useState<{ type: "media" | "slide"; id: string } | null>(null)
 
-  // Sincronizar slides locais com os slides da prop
   useEffect(() => {
-    // Verificar se slides existe e é um array
-    if (slides && Array.isArray(slides)) {
-      setLocalSlides(slides)
-      
-      // Detectar modo baseado nos dados existentes
-      if (slides.length > 0) {
-        if (hasPresentation) {
-          setSelectedMode("import")
-        } else if (isImageSlideshow) {
-          setSelectedMode("create")
-        }
+    setLocalSlides(slides)
+
+    if (slides.length > 0) {
+      if (hasPresentation) {
+        setSelectedMode("import")
+      } else if (isImageSlideshow) {
+        setSelectedMode("create")
       }
-    } else {
-      // Se slides não existe ou não é um array, inicializar como array vazio
-      setLocalSlides([])
     }
   }, [slides, hasPresentation, isImageSlideshow])
 
@@ -111,7 +107,7 @@ export function PresentationSettings({
     setShowImportDialog(true)
   }
 
-  const handleAddImages = () => {
+  const handleAddMediaItems = () => {
     setShowImageDialog(true)
   }
 
@@ -121,27 +117,14 @@ export function PresentationSettings({
   }
 
   const handleImportImagesResult = (results: MediaUploadResult | MediaUploadResult[]) => {
-    // Garantir que sempre temos um array
     const resultsArray = Array.isArray(results) ? results : [results]
-    
-    const newSlides: Slide[] = resultsArray.map((result, index) => ({
-      id: `image-slide-${Date.now()}-${index}`,
-      title: `Slide ${localSlides.length + index + 1}`,
-      content: "",
-      layout: "full-image" as const,
-      theme: "image" as const,
-      backgroundImage: result.data,
-      notes: "",
-    }))
-
-    const updatedSlides = [...localSlides, ...newSlides]
-    setLocalSlides(updatedSlides)
-    setSlides(updatedSlides)
+    const updatedMedia = [...mediaItems, ...resultsArray]
+    setMediaItems(updatedMedia)
     setShowImageDialog(false)
   }
 
   const handleDeleteSlide = (slideId: string) => {
-    const slide = localSlides.find(s => s.id === slideId)
+    const slide = localSlides.find((s) => s.id === slideId)
     if (slide) {
       setSlideToDelete(slide)
       setDeleteSlideId(slideId)
@@ -150,7 +133,7 @@ export function PresentationSettings({
 
   const confirmDeleteSlide = () => {
     if (deleteSlideId) {
-      const updatedSlides = localSlides.filter(slide => slide.id !== deleteSlideId)
+      const updatedSlides = localSlides.filter((slide) => slide.id !== deleteSlideId)
       setLocalSlides(updatedSlides)
       setSlides(updatedSlides)
       setDeleteSlideId(null)
@@ -159,7 +142,7 @@ export function PresentationSettings({
   }
 
   const handleMoveSlide = (slideId: string, direction: "up" | "down") => {
-    const currentIndex = localSlides.findIndex(slide => slide.id === slideId)
+    const currentIndex = localSlides.findIndex((slide) => slide.id === slideId)
     if (currentIndex === -1) return
 
     const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1
@@ -168,13 +151,13 @@ export function PresentationSettings({
     const updatedSlides = [...localSlides]
     const [movedSlide] = updatedSlides.splice(currentIndex, 1)
     updatedSlides.splice(newIndex, 0, movedSlide)
-    
+
     setLocalSlides(updatedSlides)
     setSlides(updatedSlides)
   }
 
   const handleEditSlide = (slideId: string) => {
-    const slide = localSlides.find(s => s.id === slideId)
+    const slide = localSlides.find((s) => s.id === slideId)
     if (slide) {
       setSlideToEdit(slide)
       setEditSlideId(slideId)
@@ -182,22 +165,18 @@ export function PresentationSettings({
   }
 
   const handleSaveSlideEdit = (editedSlide: Slide) => {
-    const updatedSlides = localSlides.map(slide => 
-      slide.id === editedSlide.id ? editedSlide : slide
-    )
+    const updatedSlides = localSlides.map((slide) => (slide.id === editedSlide.id ? editedSlide : slide))
     setLocalSlides(updatedSlides)
     setSlides(updatedSlides)
     setEditSlideId(null)
     setSlideToEdit(null)
   }
 
-  // Get thumbnail style for slide with custom settings
   const getThumbnailStyle = (slide: Slide) => {
     const hasCustomImageSettings = slide.filters || slide.imageSize
-    
+
     if (slide.theme === "image" && slide.backgroundImage) {
       if (hasCustomImageSettings) {
-        // Apply custom filters and sizing to thumbnail
         const filters = slide.filters || {
           brightness: 100,
           contrast: 100,
@@ -206,7 +185,7 @@ export function PresentationSettings({
           hueRotate: 0,
           opacity: 100,
         }
-        
+
         const imageSize = slide.imageSize || {
           width: 100,
           height: 100,
@@ -221,7 +200,6 @@ export function PresentationSettings({
           filter: `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%) blur(${Math.max(0, filters.blur * 0.5)}px) hue-rotate(${filters.hueRotate}deg) opacity(${filters.opacity}%)`,
         }
       } else {
-        // Default background image style
         return {
           backgroundImage: `url(${slide.backgroundImage})`,
           backgroundSize: "cover",
@@ -230,8 +208,7 @@ export function PresentationSettings({
         }
       }
     }
-    
-    // Default solid background based on theme
+
     switch (slide.theme) {
       case "light":
         return { backgroundColor: "white" }
@@ -251,186 +228,203 @@ export function PresentationSettings({
   const isContentTabDisabled = !selectedMode
   const isSettingsTabDisabled = !selectedMode || localSlides.length === 0
 
+  const handleDragStart = (e: React.DragEvent, type: "media" | "slide", id: string) => {
+    setDraggedItem({ type, id })
+    e.dataTransfer.effectAllowed = "move"
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+  }
+
+  const handleDropToSlides = (e: React.DragEvent) => {
+    e.preventDefault()
+    if (!draggedItem) return
+
+    if (draggedItem.type === "media") {
+      const mediaItem = mediaItems.find((item) => item.name === draggedItem.id)
+      if (mediaItem) {
+        const newSlide: Slide = {
+          id: `slide-${Date.now()}-${Math.random()}`,
+          title: `Slide ${localSlides.length + 1}`,
+          content: "",
+          layout: "full-image" as const,
+          theme: "image" as const,
+          backgroundImage: mediaItem.data,
+          notes: "",
+        }
+
+        const updatedSlides = [...localSlides, newSlide]
+        const updatedMedia = mediaItems.filter((item) => item.name !== draggedItem.id)
+
+        setLocalSlides(updatedSlides)
+        setSlides(updatedSlides)
+        setMediaItems(updatedMedia)
+      }
+    }
+    setDraggedItem(null)
+  }
+
+  const handleDropToMedia = (e: React.DragEvent) => {
+    e.preventDefault()
+    if (!draggedItem) return
+
+    if (draggedItem.type === "slide") {
+      const slide = localSlides.find((s) => s.id === draggedItem.id)
+      if (slide && slide.theme === "image" && slide.backgroundImage) {
+        const mediaItem: MediaUploadResult = {
+          type: "file",
+          data: slide.backgroundImage,
+          name: slide.title || "Untitled",
+          size: 0,
+        }
+
+        const updatedMedia = [...mediaItems, mediaItem]
+        const updatedSlides = localSlides.filter((s) => s.id !== draggedItem.id)
+
+        setMediaItems(updatedMedia)
+        setLocalSlides(updatedSlides)
+        setSlides(updatedSlides)
+      }
+    }
+    setDraggedItem(null)
+  }
+
   return (
-    <div className="space-y-6 p-6 rounded-lg border">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+    <div className="h-[80vh] flex flex-col space-y-6 p-6 rounded-lg border">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="mode" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Mode {localSlides.length > 0 && `(${localSlides.length} slides)`}
-          </TabsTrigger>
-          <TabsTrigger value="content" disabled={isContentTabDisabled} className="flex items-center gap-2">
+          <TabsTrigger value="assembly" className="flex items-center gap-2">
             <ImageIcon className="h-4 w-4" />
-            Content
+            Media Assembly
           </TabsTrigger>
-          <TabsTrigger value="settings" disabled={isSettingsTabDisabled} className="flex items-center gap-2">
+          <TabsTrigger value="slide-editing" disabled={localSlides.length === 0} className="flex items-center gap-2">
+            <Edit className="h-4 w-4" />
+            Slide Editing {localSlides.length > 0 && `(${localSlides.length})`}
+          </TabsTrigger>
+          <TabsTrigger
+            value="presentation-editing"
+            disabled={localSlides.length === 0}
+            className="flex items-center gap-2"
+          >
             <Settings className="h-4 w-4" />
-            Settings
+            Presentation Settings
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="mode" className="space-y-4">
-          <div className="text-center space-y-4">
-            <h3 className="text-lg font-semibold">Choose Presentation Mode</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button
-                variant={selectedMode === "import" ? "default" : "outline"}
-                className="h-24 flex flex-col items-center justify-center gap-2"
-                onClick={() => handleModeSelect("import")}
-              >
-                <Upload className="h-6 w-6" />
-                <div>
-                  <div className="font-medium">Import Presentation</div>
-                  <div className="text-xs text-muted-foreground">Upload .pptx, .odp, or .json files</div>
-                </div>
-              </Button>
-              <Button
-                variant={selectedMode === "create" ? "default" : "outline"}
-                className="h-24 flex flex-col items-center justify-center gap-2"
-                onClick={() => handleModeSelect("create")}
-              >
-                <Plus className="h-6 w-6" />
-                <div>
-                  <div className="font-medium">Create Presentation</div>
-                  <div className="text-xs text-muted-foreground">Build slideshow from images</div>
-                </div>
-              </Button>
-            </div>
+        <TabsContent value="assembly" className="flex-1 flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Assemble Your Presentation</h3>
+            <Button onClick={handleAddMediaItems} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add Media
+            </Button>
           </div>
-        </TabsContent>
 
-        <TabsContent value="content" className="space-y-4">
-          {selectedMode === "import" && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold mb-4">Import Presentation</h3>
-                {localSlides.length === 0 ? (
-                  <Button onClick={handleImportPresentation} className="flex items-center gap-2">
-                    <Upload className="h-4 w-4" />
-                    Import Presentation File
-                  </Button>
-                ) : (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        {localSlides.length} slides imported
-                      </span>
-                      <Button variant="outline" size="sm" onClick={handleImportPresentation}>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Import Another
-                      </Button>
-                    </div>
-                    
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {localSlides.map((slide, index) => (
-                        <div key={slide.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                          <div 
-                            className="w-16 h-12 rounded flex items-center justify-center text-xs overflow-hidden relative"
-                            style={getThumbnailStyle(slide)}
-                          >
-                            {slide.theme === "image" && slide.backgroundImage && (
-                              <div className="absolute inset-0 bg-black/20"></div>
-                            )}
-                            <span className="relative z-10 text-white font-medium drop-shadow-sm">
-                              {index + 1}
-                            </span>
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium">{slide.title || `Slide ${index + 1}`}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {slide.layout} layout
-                              {(slide.filters || slide.imageSize) && " • edited"}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditSlide(slide.id)}
-                              title="Edit slide"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMoveSlide(slide.id, "up")}
-                              disabled={index === 0}
-                            >
-                              <ChevronUp className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMoveSlide(slide.id, "down")}
-                              disabled={index === localSlides.length - 1}
-                            >
-                              <ChevronDown className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteSlide(slide.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+          <div className="flex-1 grid grid-cols-2 gap-4 min-h-0">
+            <div
+              className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4 flex flex-col"
+              onDragOver={handleDragOver}
+              onDrop={handleDropToMedia}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <ImageIcon className="h-5 w-5" />
+                <h4 className="font-medium">Media Library</h4>
+                <span className="text-sm text-muted-foreground">({mediaItems.length} items)</span>
+              </div>
+
+              <div className="flex-1 space-y-2 overflow-y-auto min-h-0">
+                {mediaItems.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center text-center text-muted-foreground">
+                    <div>
+                      <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No media items</p>
+                      <p className="text-xs">Add media or drag slides here</p>
                     </div>
                   </div>
+                ) : (
+                  mediaItems.map((item, index) => (
+                    <div
+                      key={`${item.name}-${index}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, "media", item.name || `item-${index}`)}
+                      className="flex items-center gap-3 p-3 border rounded-lg cursor-move hover:bg-muted/50 transition-colors"
+                    >
+                      <GripVertical className="h-4 w-4 text-muted-foreground" />
+                      <div
+                        className="w-12 h-8 rounded overflow-hidden bg-muted flex-shrink-0"
+                        style={{
+                          backgroundImage: `url(${item.data})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">{item.name || "Untitled"}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {item.size ? `${Math.round(item.size / 1024)}KB` : "Unknown size"}
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setMediaItems(mediaItems.filter((_, i) => i !== index))}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))
                 )}
               </div>
             </div>
-          )}
 
-          {selectedMode === "create" && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold mb-4">Create Image Slideshow</h3>
-                <Button onClick={handleAddImages} className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Images
-                </Button>
+            <div
+              className="border-2 border-dashed border-primary/25 rounded-lg p-4 flex flex-col"
+              onDragOver={handleDragOver}
+              onDrop={handleDropToSlides}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="h-5 w-5" />
+                <h4 className="font-medium">Slide Sequence</h4>
+                <span className="text-sm text-muted-foreground">({localSlides.length} slides)</span>
               </div>
 
-              {localSlides.length > 0 && (
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {localSlides.map((slide, index) => (
-                    <div key={slide.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                      <div 
-                        className="w-16 h-12 rounded overflow-hidden relative"
+              <div className="flex-1 space-y-2 overflow-y-auto min-h-0">
+                {localSlides.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center text-center text-muted-foreground">
+                    <div>
+                      <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No slides yet</p>
+                      <p className="text-xs">Drag media items here</p>
+                    </div>
+                  </div>
+                ) : (
+                  localSlides.map((slide, index) => (
+                    <div
+                      key={slide.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, "slide", slide.id)}
+                      className="flex items-center gap-3 p-3 border rounded-lg cursor-move hover:bg-muted/50 transition-colors"
+                    >
+                      <GripVertical className="h-4 w-4 text-muted-foreground" />
+                      <div className="text-sm font-medium text-muted-foreground w-6">{index + 1}</div>
+                      <div
+                        className="w-12 h-8 rounded overflow-hidden relative flex-shrink-0"
                         style={getThumbnailStyle(slide)}
                       >
-                        {!slide.backgroundImage && (
-                          <div className="w-full h-full flex items-center justify-center text-xs bg-muted">
-                            {index + 1}
-                          </div>
-                        )}
                         {slide.theme === "image" && slide.backgroundImage && (
-                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                            <span className="text-white font-medium text-xs drop-shadow-sm">
-                              {index + 1}
-                            </span>
-                          </div>
+                          <div className="absolute inset-0 bg-black/20"></div>
                         )}
                       </div>
-                      <div className="flex-1">
-                        <div className="font-medium">{slide.title}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">{slide.title || `Slide ${index + 1}`}</div>
                         <div className="text-xs text-muted-foreground">
-                          Image slide
+                          {slide.layout} layout
                           {(slide.filters || slide.imageSize) && " • edited"}
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditSlide(slide.id)}
-                          title="Edit slide"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -447,20 +441,16 @@ export function PresentationSettings({
                         >
                           <ChevronDown className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteSlide(slide.id)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteSlide(slide.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  ))
+                )}
+              </div>
             </div>
-          )}
+          </div>
 
           {isImporting && (
             <div className="space-y-2">
@@ -476,84 +466,18 @@ export function PresentationSettings({
           )}
         </TabsContent>
 
-        <TabsContent value="settings" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Presentation Settings</h3>
-              
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter presentation title"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="transition">Transition Effect</Label>
-                <Select value={transitionEffect} onValueChange={setTransitionEffect}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="fade">Fade</SelectItem>
-                    <SelectItem value="slide">Slide</SelectItem>
-                    <SelectItem value="zoom">Zoom</SelectItem>
-                    <SelectItem value="flip">Flip</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="auto-advance"
-                  checked={autoAdvance}
-                  onCheckedChange={(checked) => {
-                    setAutoAdvance(checked);
-                    setAutoAdvanceLoop(checked); // Automaticamente marca/desmarca o loop
-                  }}
-                />
-                <Label htmlFor="auto-advance">Auto-advance slides</Label>
-              </div>
-
-              {autoAdvance && (
-                <div className="space-y-2 ml-6">
-                  <Label htmlFor="delay">Delay (seconds)</Label>
-                  <Input
-                    id="delay"
-                    type="number"
-                    min="1"
-                    max="60"
-                    value={autoAdvanceDelay}
-                    onChange={(e) => setAutoAdvanceDelay(Number(e.target.value))}
-                  />
-                </div>
-              )}
-
-              {/* Este é o novo local para o switch de loop, fora do condicional autoAdvance */}
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="loop"
-                  checked={autoAdvanceLoop}
-                  onCheckedChange={setAutoAdvanceLoop}
-                />
-                <Label htmlFor="loop">Loop presentation</Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="show-controls"
-                  checked={showControls}
-                  onCheckedChange={setShowControls}
-                />
-                <Label htmlFor="show-controls">Show player controls</Label>
-              </div>
+        <TabsContent value="slide-editing" className="flex-1 flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Edit Individual Slides</h3>
+            <div className="text-sm text-muted-foreground">
+              {localSlides.length} slide{localSlides.length !== 1 ? "s" : ""}
             </div>
+          </div>
 
+          <div className="flex-1 grid grid-cols-2 gap-6 min-h-0">
+            {/* Left column: Slide Player */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Preview</h3>
+              <h4 className="font-medium">Preview</h4>
               {localSlides.length > 0 && (
                 <div className="border rounded-lg overflow-hidden">
                   <SlidePlayer
@@ -561,22 +485,209 @@ export function PresentationSettings({
                     title={title}
                     currentSlideIndex={currentSlideIndex}
                     onSlideChange={setCurrentSlideIndex}
-                    autoAdvance={false} // Disable auto-advance in preview
+                    autoAdvance={false}
+                    autoAdvanceDelay={autoAdvanceDelay}
+                    autoAdvanceLoop={autoAdvanceLoop}
+                    transitionEffect={transitionEffect}
+                    showControls={true}
+                    showThumbnails={true}
+                    showHeader={true}
+                    showFullscreenButton={false}
+                    theme="light"
+                    customThemeColor={null}
+                    size="md"
+                    isPresenting={false}
+                    isEditing={true}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Right column: Slide List and Edit Controls */}
+            <div className="space-y-4">
+              <h4 className="font-medium">Slide List</h4>
+              <div className="flex-1 space-y-2 overflow-y-auto min-h-0 border rounded-lg p-4">
+                {localSlides.map((slide, index) => (
+                  <div
+                    key={slide.id}
+                    className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
+                      currentSlideIndex === index ? "bg-primary/10 border-primary" : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="text-sm font-medium text-muted-foreground w-6">{index + 1}</div>
+                    <div
+                      className="w-12 h-8 rounded overflow-hidden relative flex-shrink-0 cursor-pointer"
+                      style={getThumbnailStyle(slide)}
+                      onClick={() => setCurrentSlideIndex(index)}
+                    >
+                      {slide.theme === "image" && slide.backgroundImage && (
+                        <div className="absolute inset-0 bg-black/20"></div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">{slide.title || `Slide ${index + 1}`}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {slide.layout} layout
+                        {(slide.filters || slide.imageSize) && " • edited"}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => handleEditSlide(slide.id)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleMoveSlide(slide.id, "up")}
+                        disabled={index === 0}
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleMoveSlide(slide.id, "down")}
+                        disabled={index === localSlides.length - 1}
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDeleteSlide(slide.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="presentation-editing" className="flex-1 flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Presentation Settings</h3>
+            <div className="text-sm text-muted-foreground">Configure global presentation options</div>
+          </div>
+
+          <div className="flex-1 grid grid-cols-2 gap-6 min-h-0">
+            {/* Left column: Slide Player */}
+            <div className="space-y-4">
+              <h4 className="font-medium">Live Preview</h4>
+              {localSlides.length > 0 && (
+                <div className="border rounded-lg overflow-hidden">
+                  <SlidePlayer
+                    slides={localSlides}
+                    title={title}
+                    currentSlideIndex={currentSlideIndex}
+                    onSlideChange={setCurrentSlideIndex}
+                    autoAdvance={autoAdvance}
                     autoAdvanceDelay={autoAdvanceDelay}
                     autoAdvanceLoop={autoAdvanceLoop}
                     transitionEffect={transitionEffect}
                     showControls={showControls}
-                    showThumbnails={false}
-                    showHeader={false}
-                    showFullscreenButton={false}
+                    showThumbnails={true}
+                    showHeader={true}
+                    showFullscreenButton={true}
                     theme="light"
                     customThemeColor={null}
-                    size="sm"
+                    size="md"
                     isPresenting={false}
                     isEditing={false}
                   />
                 </div>
               )}
+            </div>
+
+            {/* Right column: Presentation Settings */}
+            <div className="space-y-4 overflow-y-auto">
+              <h4 className="font-medium">Global Settings</h4>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Presentation Title</Label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter presentation title"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="transition">Transition Effect</Label>
+                  <Select value={transitionEffect} onValueChange={setTransitionEffect}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fade">Fade</SelectItem>
+                      <SelectItem value="slide">Slide</SelectItem>
+                      <SelectItem value="zoom">Zoom</SelectItem>
+                      <SelectItem value="flip">Flip</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="auto-advance"
+                      checked={autoAdvance}
+                      onCheckedChange={(checked) => {
+                        setAutoAdvance(checked)
+                        setAutoAdvanceLoop(checked)
+                      }}
+                    />
+                    <Label htmlFor="auto-advance">Auto-advance slides</Label>
+                  </div>
+
+                  {autoAdvance && (
+                    <div className="space-y-2 ml-6">
+                      <Label htmlFor="delay">Delay (seconds)</Label>
+                      <Input
+                        id="delay"
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={autoAdvanceDelay}
+                        onChange={(e) => setAutoAdvanceDelay(Number(e.target.value))}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="loop" checked={autoAdvanceLoop} onCheckedChange={setAutoAdvanceLoop} />
+                    <Label htmlFor="loop">Loop presentation</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox id="show-controls" checked={showControls} onCheckedChange={setShowControls} />
+                    <Label htmlFor="show-controls">Show player controls</Label>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Presentation Summary</Label>
+                  <div className="p-3 border rounded-lg bg-muted/50">
+                    <div className="text-sm space-y-1">
+                      <div>
+                        <strong>Slides:</strong> {localSlides.length}
+                      </div>
+                      <div>
+                        <strong>Transition:</strong> {transitionEffect}
+                      </div>
+                      <div>
+                        <strong>Auto-advance:</strong> {autoAdvance ? `Yes (${autoAdvanceDelay}s)` : "No"}
+                      </div>
+                      <div>
+                        <strong>Loop:</strong> {autoAdvanceLoop ? "Yes" : "No"}
+                      </div>
+                      <div>
+                        <strong>Controls:</strong> {showControls ? "Visible" : "Hidden"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </TabsContent>
@@ -600,57 +711,57 @@ export function PresentationSettings({
           }
         }}
         title="Excluir Slide"
-        itemName={slideToDelete?.title || `Slide ${localSlides.findIndex(s => s.id === deleteSlideId) + 1}`}
+        itemName={slideToDelete?.title || `Slide ${localSlides.findIndex((s) => s.id === deleteSlideId) + 1}`}
         itemType="slide"
         onConfirm={confirmDeleteSlide}
         confirmText="Excluir Slide"
         cancelText="Cancelar"
       />
 
-    <div className="z-[30]">
-      <MediaUploadDialog
-        open={showImportDialog}
-        onOpenChange={setShowImportDialog}
-        onMediaSelected={handleImportPresentationResult}
-        title="Import Presentation"
-        mode={0}
-        acceptTypes=".pptx,.odp,.json,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.oasis.opendocument.presentation,application/json"
-        urlPlaceholder="https://example.com/presentation.pptx"
-        uploadLabel="Select a presentation file"
-        urlLabel="Enter presentation URL"
-        maxSizeKB={51200}
-      />
-    </div>
+      <div className="z-[30]">
+        <MediaUploadDialog
+          open={showImportDialog}
+          onOpenChange={setShowImportDialog}
+          onMediaSelected={handleImportPresentationResult}
+          title="Import Presentation"
+          mode={0}
+          acceptTypes=".pptx,.odp,.json,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.oasis.opendocument.presentation,application/json"
+          urlPlaceholder="https://example.com/presentation.pptx"
+          uploadLabel="Select a presentation file"
+          urlLabel="Enter presentation URL"
+          maxSizeKB={51200}
+        />
+      </div>
 
-    <div className="z-[30]">
-      <MediaUploadDialog
-        open={showImageDialog}
-        onOpenChange={setShowImageDialog}
-        onMediaSelected={handleImportImagesResult}
-        title="Add Images to Slideshow"
-        mode={0}
-        acceptTypes="image/*"
-        urlPlaceholder="https://example.com/image.png"
-        uploadLabel="Select images for your slideshow"
-        urlLabel="Enter image URL"
-        maxSizeKB={5120}
-        multiple={true}
-      />
-    </div>
+      <div className="z-[30]">
+        <MediaUploadDialog
+          open={showImageDialog}
+          onOpenChange={setShowImageDialog}
+          onMediaSelected={handleImportImagesResult}
+          title="Add Media Items"
+          mode={0}
+          acceptTypes="image/*"
+          urlPlaceholder="https://example.com/image.png"
+          uploadLabel="Select media files"
+          urlLabel="Enter media URL"
+          maxSizeKB={5120}
+          multiple={true}
+        />
+      </div>
 
-    <div className="z-[10]">
-      <SlideEditDialog
-        open={editSlideId !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditSlideId(null)
-            setSlideToEdit(null)
-          }
-        }}
-        slide={slideToEdit}
-        onSave={handleSaveSlideEdit}
-      />
+      <div className="z-[10]">
+        <SlideEditDialog
+          open={editSlideId !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditSlideId(null)
+              setSlideToEdit(null)
+            }
+          }}
+          slide={slideToEdit}
+          onSave={handleSaveSlideEdit}
+        />
+      </div>
     </div>
-  </div>
-)
+  )
 }
