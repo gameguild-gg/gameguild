@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
-import { ChevronLeft, ChevronRight, Expand, X, LayoutGrid } from "lucide-react"
+import { ChevronLeft, ChevronRight, Expand, X, LayoutGrid, Play, Pause } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -72,12 +72,13 @@ export function SlidePlayer({
 
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const [isAutoAdvancePaused, setIsAutoAdvancePaused] = useState(false)
+  const [isUIHidden, setIsUIHidden] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const playerRef = useRef<HTMLDivElement>(null)
 
   const [isActiveFullscreenInstance, setIsActiveFullscreenInstance] = useState(false)
 
-  // Memoize navigation functions to ensure stability for event listeners
   const handlePrevSlide = useCallback(() => {
     if (currentSlideIndex > 0) {
       onSlideChange(currentSlideIndex - 1)
@@ -94,7 +95,6 @@ export function SlidePlayer({
     }
   }, [currentSlideIndex, onSlideChange, autoAdvanceLoop, slides.length])
 
-  // Handle fullscreen mode
   useEffect(() => {
     const handleFullscreenChange = () => {
       const fullscreenElement = !!document.fullscreenElement
@@ -116,11 +116,10 @@ export function SlidePlayer({
     }
   }, [onExitFullscreen, isFullscreen, instanceId])
 
-  // Handle auto-advance
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null
 
-    if (autoAdvance && !isEditing && slides.length > 0 && !isFullscreen) {
+    if (autoAdvance && !isEditing && slides.length > 0 && !isAutoAdvancePaused) {
       timer = setTimeout(() => {
         if (currentSlideIndex < slides.length - 1) {
           onSlideChange(currentSlideIndex + 1)
@@ -140,14 +139,19 @@ export function SlidePlayer({
     currentSlideIndex,
     slides.length,
     isEditing,
-    isFullscreen,
     onSlideChange,
+    isAutoAdvancePaused,
   ])
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isFullscreen && isActiveFullscreenInstance) {
+        if (event.ctrlKey && event.key === "h") {
+          event.preventDefault()
+          setIsUIHidden((prev) => !prev)
+          return
+        }
+
         switch (event.key) {
           case "ArrowLeft":
             event.preventDefault()
@@ -175,7 +179,6 @@ export function SlidePlayer({
     }
   }, [isFullscreen, isActiveFullscreenInstance, handlePrevSlide, handleNextSlide, instanceId])
 
-  // Handle mouse position for bottom bar in fullscreen
   const [showBottomBar, setShowBottomBar] = useState(false)
   const [mouseY, setMouseY] = useState(0)
 
@@ -236,13 +239,15 @@ export function SlidePlayer({
     }
   }
 
-  // Get thumbnail style for slide with custom settings
+  const toggleAutoAdvancePause = useCallback(() => {
+    setIsAutoAdvancePaused((prev) => !prev)
+  }, [])
+
   const getThumbnailStyle = (slide: Slide) => {
     const hasCustomImageSettings = slide.filters || slide.imageSize
 
     if (slide.theme === "image" && slide.backgroundImage) {
       if (hasCustomImageSettings) {
-        // Apply custom filters and sizing to thumbnail
         const filters = slide.filters || {
           brightness: 100,
           contrast: 100,
@@ -266,7 +271,6 @@ export function SlidePlayer({
           filter: `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturation}%) blur(${Math.max(0, filters.blur * 0.5)}px) hue-rotate(${filters.hueRotate}deg) opacity(${filters.opacity}%)`,
         }
       } else {
-        // Default background image style
         return {
           backgroundImage: `url(${slide.backgroundImage})`,
           backgroundSize: "cover",
@@ -276,7 +280,6 @@ export function SlidePlayer({
       }
     }
 
-    // Default solid background based on theme
     switch (slide.theme) {
       case "light":
         return { backgroundColor: "white" }
@@ -398,7 +401,6 @@ export function SlidePlayer({
         }}
       >
         <div className={`rounded-lg overflow-hidden border shadow-sm ${getThemeColor()}`}>
-          {/* Header */}
           {showHeader && title && (
             <div className="bg-gray-100 dark:bg-gray-800 p-2 flex items-center justify-between">
               <span className="text-sm font-medium truncate">{title}</span>
@@ -419,7 +421,6 @@ export function SlidePlayer({
             </div>
           )}
 
-          {/* Main slide area */}
           <div
             className={cn(
               "relative transition-all duration-500",
@@ -449,13 +450,15 @@ export function SlidePlayer({
               <SlideRenderer slide={currentSlide} customThemeColor={customThemeColor} />
             </div>
 
-            {/* Navigation controls */}
             {showControls && slides.length > 1 && !isPresenting && (
               <>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full h-8 w-8 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className={cn(
+                    "absolute left-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full h-8 w-8 z-20 opacity-0 group-hover:opacity-100 transition-opacity",
+                    isUIHidden && "opacity-0 pointer-events-none",
+                  )}
                   onClick={handlePrevSlide}
                   disabled={!autoAdvanceLoop && currentSlideIndex === 0}
                 >
@@ -464,16 +467,29 @@ export function SlidePlayer({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full h-8 w-8 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className={cn(
+                    "absolute right-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full h-8 w-8 z-20 opacity-0 group-hover:opacity-100 transition-opacity",
+                    isUIHidden && "opacity-0 pointer-events-none",
+                  )}
                   onClick={handleNextSlide}
                   disabled={!autoAdvanceLoop && currentSlideIndex === slides.length - 1}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
+                {autoAdvance && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 left-2 bg-black/20 hover:bg-black/40 text-white rounded-full h-8 w-8 z-20 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={toggleAutoAdvancePause}
+                    title={isAutoAdvancePaused ? "Resume auto-advance" : "Pause auto-advance"}
+                  >
+                    {isAutoAdvancePaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                  </Button>
+                )}
               </>
             )}
 
-            {/* Fullscreen button */}
             {showFullscreenButton && !isPresenting && (
               <Button
                 variant="ghost"
@@ -486,7 +502,6 @@ export function SlidePlayer({
             )}
           </div>
 
-          {/* Thumbnails */}
           {showThumbnails && !isPresenting && (
             <div className={`p-2 overflow-x-auto ${getThemeColor()}`}>
               <div className="flex gap-2">
@@ -511,7 +526,6 @@ export function SlidePlayer({
                           <span className="text-xs font-medium text-white drop-shadow-sm">{index + 1}</span>
                         </div>
 
-                        {/* Slide info indicators */}
                         {info.length > 0 && (
                           <span className="absolute top-0 right-0 flex gap-0.5 p-0.5">
                             {slide.images && slide.images.length > 0 && (
@@ -526,7 +540,6 @@ export function SlidePlayer({
                           </span>
                         )}
 
-                        {/* Edited indicator */}
                         {(slide.filters || slide.imageSize) && (
                           <span
                             className="absolute bottom-0 left-0 w-2 h-2 bg-orange-500 rounded-tr-sm block"
@@ -542,14 +555,15 @@ export function SlidePlayer({
           )}
         </div>
 
-        {/* Fullscreen presentation mode */}
         {isFullscreen && (
-          <div className="fixed inset-0 bg-black z-50 flex flex-col">
-            {/* Exit fullscreen button */}
+          <div className={cn("fixed inset-0 bg-black z-50 flex flex-col", isUIHidden && "cursor-none")}>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white rounded-full h-10 w-10 z-50 opacity-80 hover:opacity-100 transition-opacity"
+              className={cn(
+                "absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white rounded-full h-10 w-10 z-50 opacity-80 hover:opacity-100 transition-opacity",
+                isUIHidden && "opacity-0 pointer-events-none",
+              )}
               onClick={() => {
                 if (document.fullscreenElement === playerRef.current) {
                   document.exitFullscreen().catch((err) => {
@@ -564,13 +578,15 @@ export function SlidePlayer({
             <div className="flex-1 flex items-center justify-center relative">
               <SlideRenderer slide={currentSlide} customThemeColor={customThemeColor} />
 
-              {/* Navigation arrows in fullscreen */}
               {showControls && slides.length > 1 && (
                 <>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute left-8 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full h-12 w-12 z-40 opacity-60 hover:opacity-100 transition-opacity"
+                    className={cn(
+                      "absolute left-8 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full h-12 w-12 z-40 opacity-60 hover:opacity-100 transition-opacity",
+                      isUIHidden && "opacity-0 pointer-events-none",
+                    )}
                     onClick={handlePrevSlide}
                     disabled={!autoAdvanceLoop && currentSlideIndex === 0}
                   >
@@ -579,7 +595,10 @@ export function SlidePlayer({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute right-8 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full h-12 w-12 z-40 opacity-60 hover:opacity-100 transition-opacity"
+                    className={cn(
+                      "absolute right-8 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full h-12 w-12 z-40 opacity-60 hover:opacity-100 transition-opacity",
+                      isUIHidden && "opacity-0 pointer-events-none",
+                    )}
                     onClick={handleNextSlide}
                     disabled={!autoAdvanceLoop && currentSlideIndex === slides.length - 1}
                   >
@@ -589,25 +608,36 @@ export function SlidePlayer({
               )}
             </div>
 
-            {/* Hidden clickable area at bottom */}
             <div
               className="absolute bottom-0 left-0 right-0 h-[50px] z-30"
               onMouseEnter={() => setShowBottomBar(true)}
             />
 
-            {/* Bottom slide navigation bar */}
             {showThumbnails && (
               <div
                 data-bottom-bar={instanceId}
-                className={`absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm transition-transform duration-300 z-40 ${
-                  showBottomBar ? "translate-y-0" : "translate-y-full"
-                }`}
+                className={cn(
+                  "absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm transition-transform duration-300 z-40",
+                  showBottomBar ? "translate-y-0" : "translate-y-full",
+                  isUIHidden && "opacity-0 pointer-events-none",
+                )}
               >
                 <div className="p-4">
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <span className="text-white text-sm">
                       {currentSlideIndex + 1} / {slides.length}
                     </span>
+                    {autoAdvance && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="ml-4 bg-white/10 hover:bg-white/20 text-white rounded h-6 px-2"
+                        onClick={toggleAutoAdvancePause}
+                        title={isAutoAdvancePaused ? "Resume auto-advance" : "Pause auto-advance"}
+                      >
+                        {isAutoAdvancePaused ? <Play className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+                      </Button>
+                    )}
                   </div>
                   <div className="flex justify-center">
                     <div className="flex gap-2 overflow-x-auto max-w-4xl">
@@ -632,7 +662,6 @@ export function SlidePlayer({
                                 <span className="text-xs font-medium text-white drop-shadow-sm">{index + 1}</span>
                               </div>
 
-                              {/* Slide info indicators */}
                               {info.length > 0 && (
                                 <span className="absolute top-0 right-0 flex gap-0.5 p-0.5">
                                   {slide.images && slide.images.length > 0 && (
@@ -647,7 +676,6 @@ export function SlidePlayer({
                                 </span>
                               )}
 
-                              {/* Edited indicator */}
                               {(slide.filters || slide.imageSize) && (
                                 <span
                                   className="absolute bottom-0 left-0 w-2 h-2 bg-orange-400 rounded-tr-sm block"

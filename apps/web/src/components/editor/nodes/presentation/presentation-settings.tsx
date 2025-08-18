@@ -85,6 +85,7 @@ export function PresentationSettings({
   const [editSlideId, setEditSlideId] = useState<string | null>(null)
   const [slideToEdit, setSlideToEdit] = useState<Slide | null>(null)
   const [draggedItem, setDraggedItem] = useState<{ type: "media" | "slide"; id: string } | null>(null)
+  const [dragOverSlideIndex, setDragOverSlideIndex] = useState<number | null>(null)
 
   useEffect(() => {
     setLocalSlides(slides)
@@ -238,7 +239,7 @@ export function PresentationSettings({
     e.dataTransfer.dropEffect = "move"
   }
 
-  const handleDropToSlides = (e: React.DragEvent) => {
+  const handleDropToSlides = (e: React.DragEvent, targetIndex?: number) => {
     e.preventDefault()
     if (!draggedItem) return
 
@@ -247,7 +248,7 @@ export function PresentationSettings({
       if (mediaItem) {
         const newSlide: Slide = {
           id: `slide-${Date.now()}-${Math.random()}`,
-          title: `Slide ${localSlides.length + 1}`,
+          title: mediaItem.name || `Slide ${localSlides.length + 1}`,
           content: "",
           layout: "full-image" as const,
           theme: "image" as const,
@@ -255,15 +256,34 @@ export function PresentationSettings({
           notes: "",
         }
 
-        const updatedSlides = [...localSlides, newSlide]
+        const updatedSlides = [...localSlides]
+        if (targetIndex !== undefined) {
+          updatedSlides.splice(targetIndex, 0, newSlide)
+        } else {
+          updatedSlides.push(newSlide)
+        }
+
         const updatedMedia = mediaItems.filter((item) => item.name !== draggedItem.id)
 
         setLocalSlides(updatedSlides)
         setSlides(updatedSlides)
         setMediaItems(updatedMedia)
       }
+    } else if (draggedItem.type === "slide") {
+      // Handle slide reordering
+      const draggedSlideIndex = localSlides.findIndex((s) => s.id === draggedItem.id)
+      if (draggedSlideIndex !== -1 && targetIndex !== undefined && targetIndex !== draggedSlideIndex) {
+        const updatedSlides = [...localSlides]
+        const [draggedSlide] = updatedSlides.splice(draggedSlideIndex, 1)
+        const insertIndex = targetIndex > draggedSlideIndex ? targetIndex - 1 : targetIndex
+        updatedSlides.splice(insertIndex, 0, draggedSlide)
+
+        setLocalSlides(updatedSlides)
+        setSlides(updatedSlides)
+      }
     }
     setDraggedItem(null)
+    setDragOverSlideIndex(null)
   }
 
   const handleDropToMedia = (e: React.DragEvent) => {
@@ -289,6 +309,23 @@ export function PresentationSettings({
       }
     }
     setDraggedItem(null)
+  }
+
+  const handleMoveAllToSlides = () => {
+    const newSlides: Slide[] = mediaItems.map((item, index) => ({
+      id: `slide-${Date.now()}-${Math.random()}-${index}`,
+      title: item.name || `Slide ${localSlides.length + index + 1}`,
+      content: "",
+      layout: "full-image" as const,
+      theme: "image" as const,
+      backgroundImage: item.data,
+      notes: "",
+    }))
+
+    const updatedSlides = [...localSlides, ...newSlides]
+    setLocalSlides(updatedSlides)
+    setSlides(updatedSlides)
+    setMediaItems([]) // Clear media items after moving all
   }
 
   return (
@@ -332,6 +369,17 @@ export function PresentationSettings({
                 <ImageIcon className="h-5 w-5" />
                 <h4 className="font-medium">Media Library</h4>
                 <span className="text-sm text-muted-foreground">({mediaItems.length} items)</span>
+                {mediaItems.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleMoveAllToSlides}
+                    className="ml-auto flex items-center gap-1 bg-transparent"
+                  >
+                    <ChevronDown className="h-3 w-3" />
+                    Move All
+                  </Button>
+                )}
               </div>
 
               <div className="flex-1 space-y-2 overflow-y-auto min-h-0">
@@ -382,7 +430,7 @@ export function PresentationSettings({
             <div
               className="border-2 border-dashed border-primary/25 rounded-lg p-4 flex flex-col"
               onDragOver={handleDragOver}
-              onDrop={handleDropToSlides}
+              onDrop={(e) => handleDropToSlides(e)}
             >
               <div className="flex items-center gap-2 mb-4">
                 <FileText className="h-5 w-5" />
@@ -405,7 +453,15 @@ export function PresentationSettings({
                       key={slide.id}
                       draggable
                       onDragStart={(e) => handleDragStart(e, "slide", slide.id)}
-                      className="flex items-center gap-3 p-3 border rounded-lg cursor-move hover:bg-muted/50 transition-colors"
+                      onDragOver={(e) => {
+                        e.preventDefault()
+                        setDragOverSlideIndex(index)
+                      }}
+                      onDragLeave={() => setDragOverSlideIndex(null)}
+                      onDrop={(e) => handleDropToSlides(e, index)}
+                      className={`flex items-center gap-3 p-3 border rounded-lg cursor-move hover:bg-muted/50 transition-colors ${
+                        dragOverSlideIndex === index ? "border-primary bg-primary/5" : ""
+                      }`}
                     >
                       <GripVertical className="h-4 w-4 text-muted-foreground" />
                       <div className="text-sm font-medium text-muted-foreground w-6">{index + 1}</div>

@@ -426,7 +426,7 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
        )}
 
        {/* Edit menu */}
-       {showMenu && !isPresenting && slides.length > 0 && <ContentEditMenu options={editMenuOptions} />}
+       {!isPresenting && <ContentEditMenu options={editMenuOptions} />}
      </div>
    )
  }
