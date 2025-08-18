@@ -1,3 +1,11 @@
+# [2.3.0](https://github.com/gameguild-gg/gameguild/compare/v2.2.0...v2.3.0) (2025-08-18)
+
+
+### Features
+
+* add GitHub issue modal to Terms of Service, Privacy, and Cookies links ([cc47342](https://github.com/gameguild-gg/gameguild/commit/cc473429cffb2d87599e0df0f1591fa3389e7236))
+* update licenses page to fetch from GitHub API with caching and remove SPDX identifier ([7065633](https://github.com/gameguild-gg/gameguild/commit/706563356ab5bdb8171135a30f4157d0c8cfc251))
+
 # [2.2.0](https://github.com/gameguild-gg/gameguild/compare/v2.1.0...v2.2.0) (2025-08-18)
 
 
