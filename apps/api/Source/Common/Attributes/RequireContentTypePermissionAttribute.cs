@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using GameGuild.Common.Results;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions;
 using Microsoft.AspNetCore.Mvc;
@@ -41,6 +42,8 @@ public class RequireContentTypePermissionAttribute<T>(PermissionType requiredPer
     var hasPermission =
       await permissionService.HasContentTypePermissionAsync(userId, tenantId, contentTypeName, requiredPermission);
 
-    if (!hasPermission) context.Result = new ForbidResult();
+    if (!hasPermission) {
+      context.Result = new PermissionDeniedResult(requiredPermission.ToString(), $"{contentTypeName} content type");
+    }
   }
 }
