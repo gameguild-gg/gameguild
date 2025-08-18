@@ -40,7 +40,16 @@ const navSections: NavSection[] = [
       { href: '/tutorials', label: 'Tutorials' },
       { href: '/support', label: 'Support' },
       { href: '/api', label: 'API Reference' },
+    ],
+  },
+  {
+    title: 'Institutional',
+    color: 'blue',
+    links: [
       { href: '/contributors', label: 'Contributors' },
+      { href: '/licenses', label: 'Licenses' },
+      { href: '/terms-of-service', label: 'Terms of Service' },
+      { href: '/polices/privacy', label: 'Privacy' },
     ],
   },
 ];
@@ -62,7 +71,7 @@ const colorClasses = {
 
 export function NavigationLinks() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
       {navSections.map((section) => (
         <div key={section.title} className="min-w-0">
           <h3 className={`font-semibold mb-4 ${colorClasses[section.color].header} text-base lg:text-lg`}>{section.title}</h3>
