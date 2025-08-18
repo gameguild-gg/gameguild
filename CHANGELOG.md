@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/gameguild-gg/gameguild/compare/v2.4.0...v2.4.1) (2025-08-18)
+
+
+### Bug Fixes
+
+* update AGPL v3 license link to point to LICENSE instead of LICENSE.md ([1ab28e7](https://github.com/gameguild-gg/gameguild/commit/1ab28e718339ff8a3e31ff48132dc6fca74a1d9a))
+
 # [2.4.0](https://github.com/gameguild-gg/gameguild/compare/v2.3.0...v2.4.0) (2025-08-18)
 
 
