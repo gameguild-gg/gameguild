@@ -83,16 +83,24 @@ export const CreateCourseForm = (): React.JSX.Element => {
 
       // Check if the result has an error
       if (result.error) {
-        // Handle 403 Forbidden specifically
-        if (result.error && typeof result.error === 'object' && Object.keys(result.error).length === 0) {
-          // Empty error object usually indicates a 403 permission error
-          console.error('Permission denied: User does not have permission to create courses');
-          throw new Error('You do not have permission to create courses. Please contact an administrator to grant you the necessary permissions.');
+        let errorMessage = 'An error occurred while creating the course';
+        
+        // Handle the improved error structure from createProgram
+        if (typeof result.error === 'object' && result.error !== null) {
+          if ('message' in result.error && typeof result.error.message === 'string') {
+            errorMessage = result.error.message;
+          } else if ('detail' in result.error && typeof result.error.detail === 'string') {
+            errorMessage = result.error.detail;
+          } else if (Object.keys(result.error).length === 0) {
+            // Empty error object fallback
+            errorMessage = 'You do not have permission to create courses. Please contact an administrator.';
+          } else {
+            errorMessage = JSON.stringify(result.error);
+          }
+        } else if (typeof result.error === 'string') {
+          errorMessage = result.error;
         }
         
-        const errorMessage = typeof result.error === 'string' 
-          ? result.error 
-          : (result.error as any)?.message || JSON.stringify(result.error) || 'An error occurred while creating the course';
         console.error('Error from API:', errorMessage);
         throw new Error(errorMessage);
       }
@@ -111,21 +119,19 @@ export const CreateCourseForm = (): React.JSX.Element => {
 
       // Handle different types of errors
       if (err instanceof Error) {
+        // Check for specific error patterns that need special handling
         if (err.message.includes('Authentication required') || err.message.includes('no access token') || err.message.includes('401')) {
           setError('Please sign in to create a course. Redirecting to sign-in page...');
           setTimeout(() => {
             router.push('/sign-in');
           }, 2000);
-        } else if (err.message.includes('403') || err.message.includes('Forbidden')) {
-          setError('You do not have permission to create courses. Please contact an administrator.');
-        } else if (err.message.includes('409') || err.message.includes('Conflict')) {
-          setError('A course with this title or slug already exists. Please choose a different title.');
         } else if (err.message.includes('fetch failed') || err.message.includes('ECONNREFUSED') || err.message.includes('connection')) {
           setError('Unable to connect to the server. Please ensure the API server is running and try again.');
         } else if (err.message.includes('Failed to create course - no data returned from server')) {
           setError('The course creation request completed, but no response was received. Please check if the course was created successfully.');
         } else {
-          setError(`Course creation failed: ${err.message}`);
+          // Use the specific error message from the API
+          setError(err.message);
         }
       } else {
         setError('An unexpected error occurred while creating the course. Please try again.');
