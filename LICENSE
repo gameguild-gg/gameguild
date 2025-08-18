@@ -1,7 +1,5 @@
 # GameGuild Dual License
 
-SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-GameGuild-Commercial
-
 GameGuild is licensed under a **dual licensing model**:
 
 - **AGPL-3.0+** for open source use
@@ -29,8 +27,8 @@ GameGuild is licensed under a **dual licensing model**:
 
 This project is available under the **GNU Affero General Public License v3.0 or later**.
 
-- **Full AGPL v3 text**: See [LICENSE-AGPLv3](LICENSE-AGPLv3) file
-- **Online**: https://www.gnu.org/licenses/agpl-3.0.html
+- **Full AGPL v3 text or the repository**: See [LICENSE-AGPLv3](https://github.com/gameguild-gg/gameguild/blob/main/LICENSE-AGPLv3) file
+- **Online**: [agpl-3.0](https://www.gnu.org/licenses/agpl-3.0.html)
 - **Learn more about AGPL v3**: [GNU AGPL v3 Guide](https://www.gnu.org/licenses/quick-guide-gplv3.html)
 - **GNU Licenses FAQ**: [https://www.gnu.org/licenses/gpl-faq.html](https://www.gnu.org/licenses/gpl-faq.html)
 

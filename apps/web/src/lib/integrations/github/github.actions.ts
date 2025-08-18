@@ -612,5 +612,59 @@ export async function getLicenseContent(): Promise<{ content: string; name: stri
   }
 }
 
+/**
+ * Get multiple license files from GitHub API with caching
+ */
+const getCachedLicensesFromGitHub = unstable_cache(
+  async (): Promise<Array<{ content: string; name: string; filename: string }>> => {
+    const licenses = [];
+    
+    try {
+      // Get LICENSE file (dual licensing explanation)
+      const { data: licenseFile } = await octokit.repos.getContent({
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+        path: 'LICENSE',
+      });
+      
+      if ('content' in licenseFile) {
+        const licenseContent = Buffer.from(licenseFile.content, 'base64').toString('utf8');
+        licenses.push({
+          content: licenseContent,
+          name: 'GameGuild Dual License',
+          filename: 'LICENSE'
+        });
+      }
+      
+      // Get LICENSE-AGPLv3 file (full AGPL text)
+      const { data: agplFile } = await octokit.repos.getContent({
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+        path: 'LICENSE-AGPLv3',
+      });
+      
+      if ('content' in agplFile) {
+        const agplContent = Buffer.from(agplFile.content, 'base64').toString('utf8');
+        licenses.push({
+          content: agplContent,
+          name: 'GNU Affero General Public License v3.0',
+          filename: 'LICENSE-AGPLv3'
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error fetching license files from GitHub:', error);
+    }
+    
+    return licenses;
+  },
+  ['github-licenses'],
+  { revalidate: 604800, tags: ['github-licenses'] } // 1 week cache (604800 seconds)
+);
+
+export async function getLicensesFromGitHub(): Promise<Array<{ content: string; name: string; filename: string }>> {
+  return getCachedLicensesFromGitHub();
+}
+
 // Re-export types for convenience
 export type { Contributor, EnhancedContributor, GitHubCommitStat, Repository, Issue, PullRequest };
