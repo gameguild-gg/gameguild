@@ -419,12 +419,11 @@ export async function getContributors(): Promise<EnhancedContributor[]> {
             deletions += week.d || 0;
           });
         } else {
-          // Fallback: use contributions count as total commits when detailed stats aren't available
-          totalCommits = contributor.contributions || 0;
-          // Use more realistic estimates based on typical GitHub repository statistics
-          // Average commit adds ~25 lines and deletes ~5 lines
-          additions = Math.floor((contributor.contributions || 0) * 25);
-          deletions = Math.floor((contributor.contributions || 0) * 5);
+          // Show explicit error when detailed stats aren't available
+          totalCommits = 0;
+          additions = 0;
+          deletions = 0;
+          console.error(`Failed to fetch contributor stats for ${contributor.login}: GitHub API returned incomplete data`);
         }
 
         return {
@@ -664,6 +663,41 @@ const getCachedLicensesFromGitHub = unstable_cache(
 
 export async function getLicensesFromGitHub(): Promise<Array<{ content: string; name: string; filename: string }>> {
   return getCachedLicensesFromGitHub();
+}
+
+// Cache invalidation function to force refresh of contributor data
+export async function invalidateContributorCache(): Promise<{ success: boolean; message: string }> {
+  'use server';
+  
+  try {
+    const { revalidateTag } = await import('next/cache');
+    
+    // Invalidate all GitHub-related cache tags
+    revalidateTag('github-contributors');
+    revalidateTag('github-stats');
+    revalidateTag('github-contributors-batch');
+    revalidateTag('github-user');
+    revalidateTag('github-repo-info');
+    revalidateTag('github-releases');
+    revalidateTag('github-languages');
+    revalidateTag('github-issues');
+    revalidateTag('github-pulls');
+    revalidateTag('github-branches');
+    revalidateTag('github-repo-stats');
+    
+    console.log('GitHub contributor cache invalidated successfully');
+    
+    return {
+      success: true,
+      message: 'Contributor cache refreshed successfully. The updated calculations will be reflected on the next page load.'
+    };
+  } catch (error) {
+    console.error('Error invalidating contributor cache:', error);
+    return {
+      success: false,
+      message: 'Failed to refresh contributor cache'
+    };
+  }
 }
 
 // Re-export types for convenience
