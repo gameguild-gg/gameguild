@@ -110,7 +110,7 @@ export async function getPrograms(data?: GetApiProgramData) {
     });
   } catch (error) {
     console.error('Error in getPrograms:', error);
-    
+
     if (error instanceof Error) {
       if (error.message.includes('Authentication required') || error.message.includes('no access token')) {
         throw new Error('Please sign in to access courses');
@@ -120,7 +120,7 @@ export async function getPrograms(data?: GetApiProgramData) {
       }
       throw error;
     }
-    
+
     throw new Error('Failed to load courses');
   }
 }
@@ -131,12 +131,12 @@ export async function getPrograms(data?: GetApiProgramData) {
 export async function createProgram(data?: PostApiProgramData) {
   try {
     console.log('createProgram called with data:', data?.body);
-    
+
     await configureAuthenticatedClient();
     console.log('Client configured successfully');
 
     console.log('Creating program with data:', data?.body);
-    
+
     const result = await postApiProgram({
       body: data?.body,
     });
@@ -149,6 +149,19 @@ export async function createProgram(data?: PostApiProgramData) {
       errorType: result.error ? typeof result.error : null,
       error: result.error
     });
+
+    // Check for permission errors (403 Forbidden)
+    if (result.response && result.response.status === 403) {
+      console.error('Permission denied: User lacks required permissions to create programs');
+      return {
+        data: null,
+        error: {
+          message: 'You do not have permission to create courses. Please contact an administrator to grant you the necessary permissions.',
+          status: 403,
+          type: 'permission_denied'
+        }
+      };
+    }
 
     // Revalidate programs cache
     revalidateTag('programs');
