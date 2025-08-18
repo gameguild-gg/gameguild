@@ -1,3 +1,10 @@
+## [2.5.1](https://github.com/gameguild-gg/gameguild/compare/v2.5.0...v2.5.1) (2025-08-18)
+
+
+### Bug Fixes
+
+* Add global user permission fallback in PermissionService ([b62cd81](https://github.com/gameguild-gg/gameguild/commit/b62cd8136fa0b7aed41e6ac6c11ae2b83b0779c6))
+
 # [2.5.0](https://github.com/gameguild-gg/gameguild/compare/v2.4.2...v2.5.0) (2025-08-18)
 
 
