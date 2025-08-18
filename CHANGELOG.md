@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/gameguild-gg/gameguild/compare/v2.3.0...v2.4.0) (2025-08-18)
+
+
+### Features
+
+* fix post-login UI state update and add password visibility toggle ([8e8c677](https://github.com/gameguild-gg/gameguild/commit/8e8c67776b36ad8e5fbc074710668af1d544b9ef))
+
 # [2.3.0](https://github.com/gameguild-gg/gameguild/compare/v2.2.0...v2.3.0) (2025-08-18)
 
 
