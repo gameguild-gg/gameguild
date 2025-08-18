@@ -3,6 +3,7 @@ import { WebVitals }                         from '@/components/analytics';
 import { ConditionalAnalytics, InitializeGoogleConsent } from '@/components/analytics/conditional-analytics';
 import { ErrorBoundaryProvider }             from '@/components/common/errors/error-boundary-provider';
 import { ApolloClientProvider }              from '@/components/providers/apollo-provider';
+import { GitHubIssueProvider }               from '@/components/providers/github-issue-provider';
 import { TenantProvider }                    from '@/components/tenant';
 import { ThemeProvider }                     from '@/components/theme';
 import { Toaster }                           from '@/components/ui/sonner';
@@ -68,6 +69,7 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
                     <TenantProvider initialState={ { currentTenant: session?.currentTenant, availableTenants: session?.availableTenants } }>
                       {/*TODO: Move this to a better place*/ }
                       {/*<ThemeToggle />*/ }
+                      <GitHubIssueProvider />
                       { children }
                       {/*TODO: Move this to a better place*/ }
                       {/*<FeedbackFloatingButton />*/ }
