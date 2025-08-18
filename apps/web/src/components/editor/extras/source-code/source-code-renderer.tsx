@@ -341,10 +341,59 @@ export function SourceCodeRenderer({
     testCases,
   })
 
-  // useEffect to handle the initial configuration dialog
   useEffect(() => {
+    // Check if configuration data exists in the data object
+    const configData = data as any // Type assertion to access nested properties
+
+    if (configData.hasConfiguredSettings !== undefined) {
+      console.log("[v0] Found hasConfiguredSettings:", configData.hasConfiguredSettings)
+      setHasConfiguredSettings(configData.hasConfiguredSettings)
+    }
+
+    if (configData.allowedLanguages) {
+      console.log("[v0] Found allowedLanguages:", configData.allowedLanguages)
+      setAllowedLanguages(configData.allowedLanguages)
+    }
+
+    if (configData.activeEnvironments) {
+      console.log("[v0] Found activeEnvironments:", configData.activeEnvironments)
+      setActiveEnvironments(configData.activeEnvironments)
+    }
+
+    // Also check if the configuration is nested deeper in the data structure
+    if (!configData.hasConfiguredSettings && configData.data) {
+      const nestedData = configData.data
+      if (nestedData.hasConfiguredSettings !== undefined) {
+        console.log("[v0] Found nested hasConfiguredSettings:", nestedData.hasConfiguredSettings)
+        setHasConfiguredSettings(nestedData.hasConfiguredSettings)
+      }
+
+      if (nestedData.allowedLanguages) {
+        console.log("[v0] Found nested allowedLanguages:", nestedData.allowedLanguages)
+        setAllowedLanguages(nestedData.allowedLanguages)
+      }
+
+      if (nestedData.activeEnvironments) {
+        console.log("[v0] Found nested activeEnvironments:", nestedData.activeEnvironments)
+        setActiveEnvironments(nestedData.activeEnvironments)
+      }
+    }
+  }, [data, setHasConfiguredSettings, setAllowedLanguages, setActiveEnvironments])
+
+  useEffect(() => {
+    console.log(
+      "[v0] Checking if should show language dialog - isEditing:",
+      isEditing,
+      "hasConfiguredSettings:",
+      hasConfiguredSettings,
+    )
+
+    // Only show the dialog if we're editing AND settings are not configured
     if (isEditing && !hasConfiguredSettings) {
+      console.log("[v0] Showing language configuration dialog")
       setShowLanguagesDialog(true)
+    } else {
+      console.log("[v0] Not showing language dialog - already configured")
     }
   }, [isEditing, hasConfiguredSettings, setShowLanguagesDialog])
 
@@ -613,9 +662,6 @@ export function SourceCodeRenderer({
             testResults={testResults}
             runTests={executeTests}
             addSolutionTemplate={addSolutionTemplate}
-            addCustomTestFiles={(testIndex: number) => {
-              createCustomTestFiles(testIndex, selectedLanguage)
-            }}
             setIsEditing={setIsEditing}
             allowedLanguages={allowedLanguages}
             activeEnvironments={activeEnvironments}
