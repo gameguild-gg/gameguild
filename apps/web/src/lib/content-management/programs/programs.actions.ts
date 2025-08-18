@@ -150,15 +150,49 @@ export async function createProgram(data?: PostApiProgramData) {
       error: result.error
     });
 
-    // Check for permission errors (403 Forbidden)
-    if (result.response && result.response.status === 403) {
-      console.error('Permission denied: User lacks required permissions to create programs');
+    // Check for errors in the response
+    if (result.error || (result.response && !result.response.ok)) {
+      let errorMessage = 'An unexpected error occurred';
+      let errorStatus = result.response?.status || 500;
+      let errorType = 'unknown_error';
+
+      // Extract detailed error message from the API response
+      if (result.error) {
+        if (typeof result.error === 'string') {
+          errorMessage = result.error;
+        } else if (typeof result.error === 'object' && result.error !== null) {
+          // Handle ProblemDetails format from .NET API
+          if ('detail' in result.error && typeof result.error.detail === 'string') {
+            errorMessage = result.error.detail;
+          } else if ('message' in result.error && typeof result.error.message === 'string') {
+            errorMessage = result.error.message;
+          } else if ('title' in result.error && typeof result.error.title === 'string') {
+            errorMessage = result.error.title;
+          } else {
+            // Fallback: stringify the error object
+            errorMessage = JSON.stringify(result.error);
+          }
+        }
+      }
+
+      // Determine error type based on status code
+      if (errorStatus === 403) {
+        errorType = 'permission_denied';
+        console.error('Permission denied:', errorMessage);
+      } else if (errorStatus === 401) {
+        errorType = 'authentication_required';
+      } else if (errorStatus === 409) {
+        errorType = 'conflict';
+      } else if (errorStatus === 400) {
+        errorType = 'validation_error';
+      }
+
       return {
         data: null,
         error: {
-          message: 'You do not have permission to create courses. Please contact an administrator to grant you the necessary permissions.',
-          status: 403,
-          type: 'permission_denied'
+          message: errorMessage,
+          status: errorStatus,
+          type: errorType
         }
       };
     }

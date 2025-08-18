@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using GameGuild.Common.Results;
 using GameGuild.Common.Services;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions;
@@ -57,7 +58,7 @@ public class RequireTenantPermissionAttribute(PermissionType requiredPermission)
     }
 
     if (!hasPermission) {
-      context.Result = new ForbidResult();
+      context.Result = new PermissionDeniedResult(requiredPermission.ToString());
     }
   }
 }

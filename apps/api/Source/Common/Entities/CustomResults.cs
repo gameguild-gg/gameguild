@@ -1,10 +1,12 @@
-﻿namespace GameGuild.Common;
+using Microsoft.AspNetCore.Http;
+
+namespace GameGuild.Common;
 
 public static class CustomResults {
   public static IResult Problem(Result result) {
     if (result.IsSuccess) throw new InvalidOperationException();
 
-    return Results.Problem(
+    return Microsoft.AspNetCore.Http.Results.Problem(
       title: GetTitle(result.Error),
       detail: GetDetail(result.Error),
       type: GetType(result.Error.Type),
