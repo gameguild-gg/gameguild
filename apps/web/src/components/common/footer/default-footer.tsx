@@ -5,14 +5,16 @@ import { CommunityInfo } from './common/ui/community-info';
 import { NavigationLinks } from './common/ui/navigation-links';
 import { SocialMediaLinks } from './common/ui/social-media-links';
 import { LegalLinks } from '@/components/common/footer/common/ui/legal-links';
-import { Github, MessageSquare, Twitter, Youtube } from 'lucide-react';
+import { Github, Twitter, Youtube, LucideIcon } from 'lucide-react';
+import { FaDiscord } from 'react-icons/fa';
+import { IconType } from 'react-icons';
 
 type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>;
 
 const socialLinks = [
   {
-    href: 'https://discord.gg/gameguild',
-    icon: MessageSquare,
+    href: 'https://discord.gg/9CdJeQ2XKB',
+    icon: FaDiscord,
     label: 'Discord',
     hoverColor: 'hover:border-indigo-400/50 hover:shadow-indigo-500/10',
     iconHover: 'group-hover:text-indigo-400',
