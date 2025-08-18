@@ -1,3 +1,16 @@
+# [2.2.0](https://github.com/gameguild-gg/gameguild/compare/v2.1.0...v2.2.0) (2025-08-18)
+
+
+### Bug Fixes
+
+* improve GitHub license detection ([0b89092](https://github.com/gameguild-gg/gameguild/commit/0b890926afe7ead5e43592f129857fa3d0346463))
+* remove note from LICENSE file to restore GitHub AGPL detection ([ccf5b16](https://github.com/gameguild-gg/gameguild/commit/ccf5b1608a7a81cf3b1e224d5b72b6ac53dbbee3))
+
+
+### Features
+
+* restructure licensing with separate license files ([26467b6](https://github.com/gameguild-gg/gameguild/commit/26467b67d6cdb8bc066b4b29193a8f9e23a2bd57))
+
 # [2.1.0](https://github.com/gameguild-gg/gameguild/compare/v2.0.4...v2.1.0) (2025-08-18)
 
 
