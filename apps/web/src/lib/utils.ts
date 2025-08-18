@@ -7,8 +7,14 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Converts a number to an abbreviated format (e.g., 1000 -> 1K, 1000000 -> 1M)
+ * Returns "err" for 0 values to indicate API failures
  */
 export function numberToAbbreviation(num: number): string {
+  // Show explicit error for 0 values (indicates API failure)
+  if (num === 0) {
+    return 'err';
+  }
+
   if (num < 1000) {
     return num.toString();
   }
