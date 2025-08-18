@@ -76,16 +76,16 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
                     <ListItem href="/licenses" title="Licenses">
                       View our open source licenses and legal information.
                     </ListItem>
-                    <ListItem href="/terms-of-service" title="Terms of Service">
+                    <ListItem href="#" title="Terms of Service">
                       Read our terms and conditions of use.
                     </ListItem>
-                    <ListItem href="/polices/privacy" title="Privacy">
+                    <ListItem href="#" title="Privacy">
                       Learn about our privacy policy and data protection.
                     </ListItem>
-                    <ListItem href="/contact" title="Contact">
+                    <ListItem href="#" title="Contact">
                       Get in touch with our team for support or inquiries.
                     </ListItem>
-                    <ListItem href="/about" title="About Us">
+                    <ListItem href="#" title="About Us">
                       Discover our mission, vision, and company story.
                     </ListItem>
                   </ul>
@@ -139,16 +139,16 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
             <Link href="/licenses" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
               Licenses
             </Link>
-            <Link href="/terms-of-service" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            <Link href="#" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer" data-github-issue="true" data-route="/terms-of-service" onClick={(e) => e.preventDefault()}>
               Terms of Service
             </Link>
-            <Link href="/polices/privacy" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            <Link href="#" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer" data-github-issue="true" data-route="/polices/privacy" onClick={(e) => e.preventDefault()}>
               Privacy
             </Link>
-            <Link href="/contact" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            <Link href="#" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer" data-github-issue="true" data-route="/contact" onClick={(e) => e.preventDefault()}>
               Contact
             </Link>
-            <Link href="/about" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            <Link href="#" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer" data-github-issue="true" data-route="/about" onClick={(e) => e.preventDefault()}>
               About Us
             </Link>
           </div>
@@ -163,6 +163,32 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
 };
 
 const ListItem = React.forwardRef<React.ElementRef<'a'>, React.ComponentPropsWithoutRef<'a'>>(({ className, title, children, ...props }, ref) => {
+  // Add GitHub modal for specific links
+  const linksWithGitHubModal = ['Terms of Service', 'Contact', 'Privacy', 'About Us'];
+  const shouldShowGitHubModal = linksWithGitHubModal.includes(title || '');
+  
+  // Map titles to their actual routes for the GitHub Issue Modal
+  const routeMap: Record<string, string> = {
+    'Terms of Service': '/terms-of-service',
+    'Privacy': '/polices/privacy',
+    'Contact': '/contact',
+    'About Us': '/about'
+  };
+  
+  const additionalProps = shouldShowGitHubModal ? {
+    'data-github-issue': 'true',
+    'data-route': routeMap[title || ''] || props.href || '#'
+  } : {};
+  
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (shouldShowGitHubModal) {
+      e.preventDefault();
+    }
+    if (props.onClick) {
+      props.onClick(e);
+    }
+  };
+  
   return (
     <li>
       <NavigationMenuLink asChild>
@@ -173,6 +199,8 @@ const ListItem = React.forwardRef<React.ElementRef<'a'>, React.ComponentPropsWit
             className,
           )}
           {...props}
+          {...additionalProps}
+          onClick={handleClick}
         >
           <div className="text-sm font-medium leading-none text-blue-300">{title}</div>
           <p className="line-clamp-2 text-sm leading-snug text-slate-300">{children}</p>
