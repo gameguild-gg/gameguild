@@ -130,7 +130,10 @@ export async function getPrograms(data?: GetApiProgramData) {
  */
 export async function createProgram(data?: PostApiProgramData) {
   try {
+    console.log('createProgram called with data:', data?.body);
+    
     await configureAuthenticatedClient();
+    console.log('Client configured successfully');
 
     console.log('Creating program with data:', data?.body);
     
@@ -138,6 +141,7 @@ export async function createProgram(data?: PostApiProgramData) {
       body: data?.body,
     });
 
+    console.log('Raw API response:', result);
     console.log('API response result:', {
       hasData: !!result.data,
       hasError: !!result.error,
@@ -156,6 +160,16 @@ export async function createProgram(data?: PostApiProgramData) {
     };
   } catch (error) {
     console.error('Error in createProgram:', error);
+
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        cause: error.cause
+      });
+    }
 
     // Return a serializable error object instead of throwing
     return {

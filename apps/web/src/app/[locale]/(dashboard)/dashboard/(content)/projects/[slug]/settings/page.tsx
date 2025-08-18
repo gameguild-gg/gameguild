@@ -1,16 +1,16 @@
 import React from 'react';
-import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function Page(): React.JSX.Element {
   return (
-    <DashboardPage>
-      <DashboardPageHeader>
-        <DashboardPageTitle>Your Testing Lab Settings</DashboardPageTitle>
-        <DashboardPageDescription>Configure your testing lab preferences and notifications</DashboardPageDescription>
-      </DashboardPageHeader>
-      <DashboardPageContent>
-        <div className="text-center text-muted-foreground">Settings functionality coming soon...</div>
-      </DashboardPageContent>
-    </DashboardPage>
+    <Card className="dark-card">
+      <CardHeader>
+        <CardTitle>Project Settings</CardTitle>
+        <CardDescription>Configure visibility, categories, and integrations.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="text-center text-muted-foreground py-10">Settings coming soon…</div>
+      </CardContent>
+    </Card>
   );
 }
