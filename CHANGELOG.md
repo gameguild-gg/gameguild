@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/gameguild-gg/gameguild/compare/v2.4.2...v2.5.0) (2025-08-18)
+
+
+### Features
+
+* replace ForbidResult with custom PermissionDeniedResult for better error messaging ([bc4d002](https://github.com/gameguild-gg/gameguild/commit/bc4d002705c9717eeb9d28405e3eb04eccde9983))
+
 ## [2.4.2](https://github.com/gameguild-gg/gameguild/compare/v2.4.1...v2.4.2) (2025-08-18)
 
 
