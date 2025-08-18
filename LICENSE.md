@@ -1,0 +1,70 @@
+# GameGuild Dual License
+
+SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-GameGuild-Commercial
+
+GameGuild is licensed under a **dual licensing model**:
+
+- **AGPL-3.0+** for open source use
+- **Commercial License** for proprietary use
+
+## How to Choose Your License
+
+### Use the AGPL v3 License if:
+
+- You are using GameGuild for personal, educational, or non-commercial purposes
+- You are developing an open source project and can comply with AGPL v3 requirements
+- You are willing to make your source code available under AGPL v3
+
+### Use the Commercial License if:
+
+- You are using GameGuild in a commercial product or service
+- You cannot or do not want to comply with AGPL v3 copyleft requirements
+- You need proprietary use without source code disclosure obligations
+
+**Need help deciding?** Contact us at [contact@gameguild.gg](mailto:contact@gameguild.gg) for licensing guidance.
+
+---
+
+## Open Source License
+
+This project is available under the **GNU Affero General Public License v3.0 or later**.
+
+- **Full AGPL v3 text**: See [LICENSE](LICENSE) file
+- **Online**: https://www.gnu.org/licenses/agpl-3.0.html
+- **Learn more about AGPL v3**: [GNU AGPL v3 Guide](https://www.gnu.org/licenses/quick-guide-gplv3.html)
+- **GNU Licenses FAQ**: [https://www.gnu.org/licenses/gpl-faq.html](https://www.gnu.org/licenses/gpl-faq.html)
+
+---
+
+## Commercial License
+
+For commercial use, GameGuild offers a separate commercial license.
+
+- **Full commercial license text**: See [LICENSE-COMMERCIAL](LICENSE-COMMERCIAL) file
+- **Commercial license inquiries**: [contact@gameguild.gg](mailto:contact@gameguild.gg)
+
+---
+
+## Contact & Resources
+
+### Commercial License Inquiries
+
+- **Email**: [contact@gameguild.gg](mailto:contact@gameguild.gg)
+- **Website**: [https://gameguild.gg/contact](https://gameguild.gg/contact)
+
+### Project Links
+
+- **Website**: [https://gameguild.gg](https://gameguild.gg)
+- **Source Code**: [https://github.com/gameguild-gg/website](https://github.com/gameguild-gg/website)
+- **Issues & Support**: [https://github.com/gameguild-gg/website/issues](https://github.com/gameguild-gg/website/issues)
+- **Contributing Guidelines**: [https://github.com/gameguild-gg/website/blob/main/docs/CONTRIBUTING.md](https://github.com/gameguild-gg/website/blob/main/docs/CONTRIBUTING.md)
+- **Open Collective**: [Open Collective Link - To be updated]
+
+---
+
+## Copyright Notice
+
+**GameGuild Platform**  
+Copyright (C) 2023-2025 [GameGuild.gg](https://gameguild.gg)
+
+This program is dual-licensed under AGPL-3.0+ and a commercial license. See the respective license files for full terms.
