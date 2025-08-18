@@ -1,5 +1,5 @@
 // This is sample data structured for the sidebar
-import { BookOpen, Building2, FileText, LayoutDashboard, MessageSquare, Package, Settings, Users } from 'lucide-react';
+import { BookOpen, Building2, FileText, LayoutDashboard, MessageSquare, Package, Settings, Users, TestTube } from 'lucide-react';
 
 export const navigationData = {
   primary: [

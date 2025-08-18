@@ -17,7 +17,7 @@ const navSections: NavSection[] = [
       { href: '/courses', label: 'Courses' },
       { href: '/jobs', label: 'Job Board' },
       { href: '/community', label: 'Community' },
-      { href: '/games', label: 'Games' },
+      { href: '/testing-lab', label: 'Game Testing Lab' },
       { href: '/jams', label: 'Game Jams' },
     ],
   },
@@ -40,7 +40,7 @@ const navSections: NavSection[] = [
       { href: '/tutorials', label: 'Tutorials' },
       { href: '/support', label: 'Support' },
       { href: '/api', label: 'API Reference' },
-      { href: '/old/contributors', label: 'Contributors' },
+      { href: '/contributors', label: 'Contributors' },
     ],
   },
 ];
@@ -67,17 +67,45 @@ export function NavigationLinks() {
         <div key={section.title} className="min-w-0">
           <h3 className={`font-semibold mb-4 ${colorClasses[section.color].header} text-base lg:text-lg`}>{section.title}</h3>
           <ul className="space-y-2 text-sm text-slate-400">
-            {section.links.map((link) => (
-              <li key={link.href} className="flex items-start">
-                <span className="text-slate-500 mr-2 mt-1.5 flex-shrink-0">•</span>
-                <Link
-                  href={link.href}
-                  className={`${colorClasses[section.color].hover} transition-colors duration-300 block py-1 leading-relaxed break-words`}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            {section.links.map((link) => {
+              // Add GitHub modal for specific links
+              const linksWithGitHubModal = [
+                'Game Jams', 
+                'Community', 
+                'Blog', 
+                'Careers', 
+                'News', 
+                'Contact', 
+                'Documentation', 
+                'Tutorials', 
+                'Support', 
+                'API Reference'
+              ];
+              const shouldShowGitHubModal = linksWithGitHubModal.includes(link.label);
+              
+              return (
+                <li key={link.href} className="flex items-start">
+                  <span className="text-slate-500 mr-2 mt-1.5 flex-shrink-0">•</span>
+                  {shouldShowGitHubModal ? (
+                    <a
+                      href={link.href}
+                      className={`${colorClasses[section.color].hover} transition-colors duration-300 block py-1 leading-relaxed break-words cursor-pointer`}
+                      data-github-issue="true"
+                      data-route={link.href}
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className={`${colorClasses[section.color].hover} transition-colors duration-300 block py-1 leading-relaxed break-words`}
+                    >
+                      {link.label}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </div>
       ))}

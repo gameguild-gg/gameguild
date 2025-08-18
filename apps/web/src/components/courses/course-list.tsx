@@ -1,5 +1,5 @@
-import CourseCard from './course-card-list';
-import type { Course } from '@/components/legacy/types/courses';
+import { CourseCard } from './course-card';
+import type { Course } from '@/lib/types';
 
 export default function CourseList({ courses }: { courses: Course[] }) {
   // Filter out any invalid courses

@@ -119,7 +119,6 @@
 
   body {
     @apply bg-background text-foreground;
-    @apply flex flex-col;
   }
 
   html,
