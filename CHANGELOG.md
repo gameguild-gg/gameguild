@@ -1,3 +1,59 @@
+# [2.1.0](https://github.com/gameguild-gg/gameguild/compare/v2.0.4...v2.1.0) (2025-08-18)
+
+
+### Bug Fixes
+
+* **apps/api:** Add slug generation for projects and fix existing projects without slugs ([cb1481f](https://github.com/gameguild-gg/gameguild/commit/cb1481f0e555224107bc7027ad12e0e32f2ee26c))
+* **apps/web/src/components/courses/forms/create-course-form.tsx:** Improve error handling and logging in create course form submission ([8bf2b7d](https://github.com/gameguild-gg/gameguild/commit/8bf2b7d9c3f3abdd0adaa0bff82484445fa9e1aa))
+* **apps/web:** Add safety checks and error handling for autoplay ([bfb28dc](https://github.com/gameguild-gg/gameguild/commit/bfb28dc8013d94c6d466f31a501fefdaba889962))
+* **apps/web:** Use fallback project ID in project card links and fix sub-nav base path ([2740583](https://github.com/gameguild-gg/gameguild/commit/2740583b883ae8312a9528d3f41a14c4cfc01f82))
+* **apps/web:** Use project slug in ProjectCard links instead of ID ([8f31892](https://github.com/gameguild-gg/gameguild/commit/8f31892fd8ac6a4b5b1b4cd9ece62a7a1749f27a))
+* **courses:** Implement better validation for tools in course cards ([46f19b4](https://github.com/gameguild-gg/gameguild/commit/46f19b47c5cbcd6a701ec8d4bdabceb7b3103c59))
+* **projects:** Refactor project list to support creation and display enhancements ([521b6a5](https://github.com/gameguild-gg/gameguild/commit/521b6a592277d31da022a4779358de794e392000))
+
+
+### Features
+
+* **apps/api:** Add AddCertificateTagDto for managing certificate tags ([5f3f79d](https://github.com/gameguild-gg/gameguild/commit/5f3f79d30ca97b7e767ba918a2c096510cdc1227))
+* **apps/api:** Add CertificateDtoMappings for entity to DTO conversion ([c0da78d](https://github.com/gameguild-gg/gameguild/commit/c0da78d00f8422b2848cdeaa39da7980e238c3d9))
+* **apps/api:** Add CreateCertificateDto and UpdateCertificateDto for certificate data transfer ([514a898](https://github.com/gameguild-gg/gameguild/commit/514a898a54629b9a4bc1c3af09183fc8130a2354))
+* **apps/api:** Add unique username field with auto-generation support ([a9d9557](https://github.com/gameguild-gg/gameguild/commit/a9d95575f51768e4a6b7252ca4f1914fab0a9e83))
+* **apps/api:** Add username migration files ([4cf5c99](https://github.com/gameguild-gg/gameguild/commit/4cf5c998df85ebf2a25462bac45204bb549c216a))
+* **apps/api:** Implement ProgramCertificatesController for managing certificates ([35961fa](https://github.com/gameguild-gg/gameguild/commit/35961fa2c060ac0aa522a137dbb34aa39bbbcff8))
+* **apps/api:** Implement unique username migration and update handler ([6f61680](https://github.com/gameguild-gg/gameguild/commit/6f61680b4b308249291cbefbef034b830c8c7408))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/courses/page.tsx:** Add Create Course button to courses list page ([c4fa719](https://github.com/gameguild-gg/gameguild/commit/c4fa7190e70ffde931cbc1015f3f9c51875d3e25))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/distribution/page.tsx:** Implement Distribution page with channels and promotion cards ([95a68b8](https://github.com/gameguild-gg/gameguild/commit/95a68b8d7ff826d1743f77f93d47cd05ca45cb8f))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/feedbacks/page.tsx:** Add feedbacks page with message for no feedback yet ([8989246](https://github.com/gameguild-gg/gameguild/commit/89892468d22f058cd9d26a4700fdd226a7fd33ca))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/game-jams/page.tsx:** Add Game Jams page with empty participations message ([102e10e](https://github.com/gameguild-gg/gameguild/commit/102e10e2ef91e4eb93209acf8b334c7c84dfebed))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/settings/page.tsx:** Replace project testing lab settings placeholder with project settings card ([ba500e7](https://github.com/gameguild-gg/gameguild/commit/ba500e756460c68aaa02a77b408f3f3549aaee52))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/store-presence/page.tsx:** Add editable store presence page with basic info and media asset sections ([7f7c258](https://github.com/gameguild-gg/gameguild/commit/7f7c25867e89279f20144f61af71806b6bab6276))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/team/page.tsx:** Implement team page displaying team members with avatars and roles ([0971dd2](https://github.com/gameguild-gg/gameguild/commit/0971dd232a3fef1473ba31e9e5432dd472971e39))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/testing/page.tsx:** Add testing sessions page with table and new session button ([be6cd96](https://github.com/gameguild-gg/gameguild/commit/be6cd96f488f9e1372e4f8f4b95472ca31219e5b))
+* **apps/web/users:** Add top-right profile action buttons ([a445f66](https://github.com/gameguild-gg/gameguild/commit/a445f6606c5095c146d6b83cfc0266d3a5b773ba))
+* **apps/web:** Add CourseCard component with default and compact views ([8f06574](https://github.com/gameguild-gg/gameguild/commit/8f0657491cc476875e5c3455237d3d44cc5324ea))
+* **apps/web:** Add legacy redirects and update routing ([b1793de](https://github.com/gameguild-gg/gameguild/commit/b1793def0a55f69749947e06357e30a7ea157db9))
+* **apps/web:** Add legacy route rewrites for projects ([c125822](https://github.com/gameguild-gg/gameguild/commit/c125822f8b4dc256559dafa2baf89120626490b4))
+* **apps/web:** Add project route layout with context provider and navigation ([3aa53cf](https://github.com/gameguild-gg/gameguild/commit/3aa53cf8555133d6470a70aad85f62113a83fc53))
+* **apps/web:** Add Store Presence page for managing project store info and media ([a9b2d6a](https://github.com/gameguild-gg/gameguild/commit/a9b2d6a44fa1f34f280857d30e0ee52c5934e9ac))
+* **apps/web:** Add Team page to manage and invite project members ([6d15edd](https://github.com/gameguild-gg/gameguild/commit/6d15eddfc363543b129de0ce332ce955e2f58d2f))
+* **apps/web:** Add user profile page with username lookup ([3729b58](https://github.com/gameguild-gg/gameguild/commit/3729b58047c160838fe544e62b312f14f07c383a))
+* **apps/web:** Add Versions page to manage game builds and show upload history ([ed8d846](https://github.com/gameguild-gg/gameguild/commit/ed8d8460f16c122ef450b18b9669e010c6721235))
+* **apps/web:** Enhance user lookup with auth fallback ([d4d5985](https://github.com/gameguild-gg/gameguild/commit/d4d59853663257bc271ec29a38b951ddeba43e0e))
+* **apps/web:** Implement CourseCard for program details in list and grid view ([d635b75](https://github.com/gameguild-gg/gameguild/commit/d635b753f2f01633a3a1a22a6dfe91e33764dda0))
+* **apps/web:** Implement detailed project overview page with stats and activities ([279299c](https://github.com/gameguild-gg/gameguild/commit/279299c05c1d9491a31df4c83ab491ed6817ed02))
+* **apps/web:** Integrate content management API for projects ([723761f](https://github.com/gameguild-gg/gameguild/commit/723761f4dc2884831eae988a638f5a178f0e150b))
+* **apps/web:** Update courses and projects dashboard pages ([97ff75d](https://github.com/gameguild-gg/gameguild/commit/97ff75dd5cfe248402547ab8e978ea3f3eee3778))
+* **apps:** Update GraphQL resolvers, schema and client auth ([4a43e4f](https://github.com/gameguild-gg/gameguild/commit/4a43e4f7c2248bdc732a2dcf2db262516a109f80))
+* **content-management/programs:** Add program-to-course transformation utility ([9176960](https://github.com/gameguild-gg/gameguild/commit/91769608cdb310f16d575ec37e1a52062a88a4db))
+* **courses:** Add course card and filtering mechanisms ([0ce270f](https://github.com/gameguild-gg/gameguild/commit/0ce270f17980a1f68cc2f7531809d31ca9811fa1))
+* **courses:** Create initial course page with mock data ([5185c7e](https://github.com/gameguild-gg/gameguild/commit/5185c7ec35936fed60be0278283949ef744746b4))
+* **github-issues-modal:** add a new modal to allow users to report issues directly to github ([fb1f976](https://github.com/gameguild-gg/gameguild/commit/fb1f976cd9b8139d79fb12e68311db10460d6941))
+* implement fail-safe GraphQL codegen to prevent build failures ([3b19128](https://github.com/gameguild-gg/gameguild/commit/3b191282948898da60c3a2100a45a41972c11c3e))
+* **local-db:** Implement local storage for game projects and courses ([20a3fd7](https://github.com/gameguild-gg/gameguild/commit/20a3fd7c6cad160270580912ec7a08897ff0ad41))
+* **projects:** Integrate new project management dialog in projects page ([881be20](https://github.com/gameguild-gg/gameguild/commit/881be209354da36187f75910a4e88de5e2c35dac))
+* **types:** Define Course and related types for course management ([a5861cb](https://github.com/gameguild-gg/gameguild/commit/a5861cb67d0a745f47ea49cbca964e2c846b653c))
+* **users:** Improve search matching and profile redirection ([c6d42d0](https://github.com/gameguild-gg/gameguild/commit/c6d42d06c28bc8fcafd6b063406d902bcbaa2781))
+
 ## [2.0.4](https://github.com/gameguild-gg/gameguild/compare/v2.0.3...v2.0.4) (2025-08-13)
 
 
