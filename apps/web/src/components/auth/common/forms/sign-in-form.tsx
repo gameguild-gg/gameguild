@@ -8,7 +8,9 @@ import { Link } from '@/i18n/navigation';
 import { signInWithEmailAndPassword, signInWithGoogle } from '@/lib/auth/auth.actions';
 import { cn } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
+import { Eye, EyeOff } from 'lucide-react';
 import React, { ComponentPropsWithoutRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
 
 // import { useAuthError } from '@/lib/hooks/useAuthError';
 
@@ -17,10 +19,12 @@ import React, { ComponentPropsWithoutRef, useState } from 'react';
 export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'div'>) => {
   // const { hasError, error } = useAuthError();
   const searchParams = useSearchParams();
+  const { update } = useSession();
   const [loading, setLoading] = useState(false);
   const [emailPasswordLoading, setEmailPasswordLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Check for authentication errors from URL params
@@ -30,6 +34,8 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
     setLoading(true);
     try {
       await signInWithGoogle();
+      // Force session update to immediately reflect authentication state
+      await update();
     } catch (error) {
       console.error('Sign-in error:', error);
     } finally {
@@ -44,6 +50,8 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
 
     try {
       await signInWithEmailAndPassword(email, password);
+      // Force session update to immediately reflect authentication state
+      await update();
       // Successful sign-in will redirect automatically
     } catch (error) {
       console.error('Email/password sign-in error:', error);
@@ -98,15 +106,30 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                     <Label htmlFor="password" className="text-slate-300">
                       Password
                     </Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="bg-slate-800/50 border-slate-600 text-white placeholder-slate-400 focus:border-purple-400 transition-colors"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="bg-slate-800/50 border-slate-600 text-white placeholder-slate-400 focus:border-purple-400 transition-colors pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-slate-400 hover:text-slate-300"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                     <div className="flex justify-end">
                       <Link href="#" className="text-sm text-slate-400 hover:text-blue-400 transition-colors underline-offset-4 hover:underline">
                         Forgot your password?
