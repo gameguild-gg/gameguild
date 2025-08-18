@@ -50,11 +50,17 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-200 hover:text-green-300 transition-colors duration-300 bg-transparent hover:bg-white/5 backdrop-blur-sm">Jobs</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-slate-200 hover:text-green-300 transition-colors duration-300 bg-transparent hover:bg-white/5 backdrop-blur-sm">Testing Lab</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
-                    <ListItem href="/jobs" title="Job Board">
-                      Find and apply for jobs.
+                    <ListItem href="/testing-lab" title="Testing Lab">
+                      Access the game testing platform and submit feedback.
+                    </ListItem>
+                    <ListItem href="/testing-lab/sessions" title="Testing Sessions">
+                      View and join active testing sessions.
+                    </ListItem>
+                    <ListItem href="/dashboard/testing-lab/overview" title="Testing Overview">
+                      Manage testing lab dashboard and analytics.
                     </ListItem>
                   </ul>
                 </NavigationMenuContent>
@@ -103,8 +109,8 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
           <Link href="/courses" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
             Courses
           </Link>
-          <Link href="/jobs" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
-            Jobs
+          <Link href="/testing-lab" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            Testing Lab
           </Link>
           <Link href="/blog" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
             Blogs

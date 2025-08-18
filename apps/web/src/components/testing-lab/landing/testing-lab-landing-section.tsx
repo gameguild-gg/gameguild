@@ -23,7 +23,7 @@ export function TestingLabLandingSection({ testSessions }: TestingLabLandingProp
         {/* Navigation */}
         <div className="flex items-center justify-between gap-4 mb-8">
           <Button asChild variant="ghost" className="bg-slate-900/20 backdrop-blur-md border border-slate-700/50 text-slate-200 hover:text-white hover:bg-slate-800/30 hover:border-slate-600/50 transition-all duration-200">
-            <Link href="/apps/web/public">
+            <Link href="/">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Home
             </Link>
