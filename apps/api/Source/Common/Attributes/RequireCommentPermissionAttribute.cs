@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using GameGuild.Common.Results;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions;
@@ -53,6 +54,6 @@ public class RequireCommentPermissionAttribute(PermissionType requiredPermission
         requiredPermission
       );
 
-    if (!hasPermission) context.Result = new ForbidResult();
+    if (!hasPermission) context.Result = new PermissionDeniedResult(requiredPermission.ToString());
   }
 }
