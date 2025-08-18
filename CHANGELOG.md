@@ -1,3 +1,10 @@
+## [2.4.2](https://github.com/gameguild-gg/gameguild/compare/v2.4.1...v2.4.2) (2025-08-18)
+
+
+### Bug Fixes
+
+* improve GitHub API error handling and data display ([071a85e](https://github.com/gameguild-gg/gameguild/commit/071a85e3400b6d5c2642ee64ba933ab70e356610))
+
 ## [2.4.1](https://github.com/gameguild-gg/gameguild/compare/v2.4.0...v2.4.1) (2025-08-18)
 
 
