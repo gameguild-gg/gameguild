@@ -27,7 +27,7 @@ type EnhancedContributor = Contributor & {
   total_commits?: number;
 };
 
-// Create an Octokit instance
+// Create an Octokit instance with timeout configuration
 const createOctokit = () => {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
@@ -36,10 +36,19 @@ const createOctokit = () => {
   return new Octokit({
     auth: token,
     userAgent: 'GameGuild-Website',
+    request: {
+      timeout: 30000, // 30 seconds timeout
+      retries: 3,
+      retryAfter: 2,
+    },
   });
 };
 
 const octokit = createOctokit().rest;
+
+/**
+ * Removed hardcoded fallback data - errors should be visible, not hidden
+ */
 
 /**
  * Fetch contributors from GitHub API with filtering
@@ -48,11 +57,23 @@ const fetchGitHubContributors = unstable_cache(
   async (repo: string = GITHUB_REPO): Promise<Contributor[]> => {
     try {
       console.log(`Fetching contributors from ${GITHUB_OWNER}/${repo}...`);
-      const { data: contributors } = await octokit.repos.listContributors({
-        owner: GITHUB_OWNER,
-        repo: repo,
-        per_page: 100,
+      
+      const result = await retryWithBackoff(async () => {
+        const response = await octokit.repos.listContributors({
+          owner: GITHUB_OWNER,
+          repo: repo,
+          per_page: 100,
+        });
+        return response;
       });
+
+      const { data: contributors } = result;
+      
+      if (!contributors || !Array.isArray(contributors)) {
+        console.warn('No contributors data received from GitHub API');
+        return [];
+      }
+      
       console.log(`GitHub API returned ${contributors.length} contributors`);
 
       // Filter out bots and unwanted contributors
@@ -61,6 +82,21 @@ const fetchGitHubContributors = unstable_cache(
       return filteredContributors;
     } catch (error) {
       console.error('Error fetching GitHub contributors:', error);
+      
+      // Enhanced error logging
+      if (error && typeof error === 'object') {
+        const errorObj = error as any;
+        if (errorObj.status) {
+          console.error(`GitHub API returned status: ${errorObj.status}`);
+        }
+        if (errorObj.message) {
+          console.error(`Error message: ${errorObj.message}`);
+        }
+        if (errorObj.documentation_url) {
+          console.error(`Documentation: ${errorObj.documentation_url}`);
+        }
+      }
+      
       return [];
     }
   },
@@ -69,19 +105,74 @@ const fetchGitHubContributors = unstable_cache(
 );
 
 /**
+ * Retry function with exponential backoff
+ */
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      
+      // Check for connection timeout errors
+      const errorObj = error as any;
+      const isTimeoutError = error && typeof error === 'object' && 
+        ('code' in errorObj && errorObj.code === 'UND_ERR_CONNECT_TIMEOUT') ||
+        ('message' in errorObj && typeof errorObj.message === 'string' && errorObj.message.includes('Connect Timeout Error'));
+      
+      // Don't retry on certain error types (but do retry timeouts)
+      if (error && typeof error === 'object' && 'status' in errorObj && !isTimeoutError) {
+        const status = (error as any).status;
+        if (status === 401 || status === 403 || status === 404) {
+          throw error; // Don't retry auth or not found errors
+        }
+      }
+      
+      if (attempt === maxRetries) {
+        console.error(`All ${maxRetries + 1} attempts failed. Last error:`, lastError);
+        throw lastError;
+      }
+      
+      // Longer delays for timeout errors
+      const timeoutMultiplier = isTimeoutError ? 3 : 1;
+      const delay = baseDelay * Math.pow(2, attempt) * timeoutMultiplier + Math.random() * 1000;
+      
+      console.log(`Attempt ${attempt + 1} failed${isTimeoutError ? ' (timeout)' : ''}, retrying in ${Math.round(delay)}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError!;
+}
+
+/**
  * Fetch detailed user information from GitHub API
  */
 const fetchUserDetails = unstable_cache(
   async (username: string): Promise<Partial<Contributor>> => {
     try {
-      const { data: user } = await octokit.users.getByUsername({
-        username,
+      const result = await retryWithBackoff(async () => {
+        const { data: user } = await octokit.users.getByUsername({
+          username,
+        });
+        return user as Partial<Contributor>;
       });
-
-      return user as Partial<Contributor>;
+      
+      return result;
     } catch (error) {
       console.error(`Error fetching user details for ${username}:`, error);
-      return {};
+      
+      // Return basic info if we can't fetch details
+      return {
+        login: username,
+        avatar_url: `https://github.com/${username}.png`,
+      };
     }
   },
   ['github-user-details'],
@@ -89,27 +180,56 @@ const fetchUserDetails = unstable_cache(
 );
 
 /**
- * Fetch commit statistics for contributors
+ * Fetch commit statistics for contributors with proper 202 handling
  */
 const fetchContributorStats = unstable_cache(
   async (repo: string = GITHUB_REPO): Promise<GitHubCommitStat[]> => {
     try {
-      const { data: stats } = await octokit.repos.getContributorsStats({
-        owner: GITHUB_OWNER,
-        repo: repo,
-      });
+      console.log(`Fetching contributor stats for ${GITHUB_OWNER}/${repo}...`);
+      
+      const result = await retryWithBackoff(async () => {
+        const response = await octokit.repos.getContributorsStats({
+          owner: GITHUB_OWNER,
+          repo: repo,
+        });
 
-      // GitHub API sometimes returns 202 (Accepted) while computing stats
+        // GitHub API returns 202 (Accepted) while computing stats
+        if (response.status === 202) {
+          console.log('GitHub is computing contributor stats, waiting...');
+          throw new Error('Stats being computed, retry needed');
+        }
+
+        return response;
+      }, 5, 2000); // More retries and longer delay for stats computation
+
+      const { data: stats } = result;
+
+      // Validate the response data
       if (!stats || !Array.isArray(stats)) {
-        console.warn('Contributor stats not ready or unavailable');
+        console.warn('Contributor stats not ready or unavailable after retries');
         return [];
       }
 
+      console.log(`Successfully fetched stats for ${stats.length} contributors`);
+      
       // Ensure we return the properly typed array
       return stats as GitHubCommitStat[];
     } catch (error) {
-      console.error('Error fetching contributor stats:', error);
-      return [];
+      console.error('GitHub API Error - Contributor Stats:', error);
+      
+      // Log detailed error information for debugging
+      if (error && typeof error === 'object') {
+        const errorObj = error as any;
+        console.error('Error details:', {
+          status: errorObj.status,
+          message: errorObj.message,
+          code: errorObj.code,
+          name: errorObj.name
+        });
+      }
+      
+      // Re-throw the error instead of hiding it with fallback data
+      throw new Error(`Failed to fetch contributor statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
   ['github-contributor-stats'],
@@ -120,27 +240,43 @@ const fetchContributorStats = unstable_cache(
 const getCachedRepoInfo = unstable_cache(
   async () => {
     try {
-      const { data: repo } = await octokit.repos.get({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-      });
+      const result = await retryWithBackoff(async () => {
+        const { data: repo } = await octokit.repos.get({
+          owner: GITHUB_OWNER,
+          repo: GITHUB_REPO,
+        });
+        return repo;
+      }, 5, 2000);
 
       return {
-        name: repo.name,
-        description: repo.description,
-        stars: repo.stargazers_count,
-        forks: repo.forks_count,
-        watchers: repo.watchers_count,
-        openIssues: repo.open_issues_count,
-        language: repo.language,
-        createdAt: repo.created_at,
-        updatedAt: repo.updated_at,
-        defaultBranch: repo.default_branch,
-        homepage: repo.homepage,
+        name: result.name,
+        description: result.description,
+        stars: result.stargazers_count,
+        forks: result.forks_count,
+        watchers: result.watchers_count,
+        openIssues: result.open_issues_count,
+        language: result.language,
+        createdAt: result.created_at,
+        updatedAt: result.updated_at,
+        defaultBranch: result.default_branch,
+        homepage: result.homepage,
       };
     } catch (error) {
-      console.error('Error fetching repo info:', error);
-      throw error;
+      console.error('GitHub API Error - Repository Info:', error);
+      
+      // Log detailed error information for debugging
+      if (error && typeof error === 'object') {
+        const errorObj = error as any;
+        console.error('Error details:', {
+          status: errorObj.status,
+          message: errorObj.message,
+          code: errorObj.code,
+          name: errorObj.name
+        });
+      }
+      
+      // Re-throw the error instead of hiding it with fallback data
+      throw new Error(`Failed to fetch repository information: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
   ['repo-info'],
@@ -151,12 +287,15 @@ const getCachedRepoInfo = unstable_cache(
 const getCachedContributorsBatch = unstable_cache(
   async (page: number = 1, perPage: number = 100) => {
     try {
-      const { data: contributors } = await octokit.repos.listContributors({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-        page: page,
-        per_page: perPage,
-      });
+      const contributors = await retryWithBackoff(async () => {
+        const { data: contributors } = await octokit.repos.listContributors({
+          owner: GITHUB_OWNER,
+          repo: GITHUB_REPO,
+          page: page,
+          per_page: perPage,
+        });
+        return contributors;
+      }, 5, 2000);
 
       // Filter out bots and unwanted contributors (same as fetchGitHubContributors)
       const filteredContributors = contributors.filter((contributor) => 
@@ -175,8 +314,21 @@ const getCachedContributorsBatch = unstable_cache(
         type: contributor.type,
       }));
     } catch (error) {
-      console.error(`Error fetching contributors page ${page}:`, error);
-      return [];
+      console.error(`GitHub API Error - Contributors Page ${page}:`, error);
+      
+      // Log detailed error information for debugging
+      if (error && typeof error === 'object') {
+        const errorObj = error as any;
+        console.error('Error details:', {
+          status: errorObj.status,
+          message: errorObj.message,
+          code: errorObj.code,
+          name: errorObj.name
+        });
+      }
+      
+      // Re-throw the error instead of hiding it with fallback data
+      throw new Error(`Failed to fetch contributors page ${page}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
   ['contributors-batch'],
@@ -187,29 +339,32 @@ const getCachedContributorsBatch = unstable_cache(
 const getCachedReleases = unstable_cache(
   async () => {
     try {
-      let allReleases: RestEndpointMethodTypes['repos']['listReleases']['response']['data'] = [];
-      let page = 1;
-      let hasMore = true;
+      const allReleases = await retryWithBackoff(async () => {
+        let releases: RestEndpointMethodTypes['repos']['listReleases']['response']['data'] = [];
+        let page = 1;
+        let hasMore = true;
 
-      while (hasMore && page <= 50) { // Limit to 5000 releases max (50 pages * 100)
-        const response = await octokit.repos.listReleases({
-          owner: GITHUB_OWNER,
-          repo: GITHUB_REPO,
-          per_page: 100,
-          page: page,
-        });
+        while (hasMore && page <= 50) { // Limit to 5000 releases max (50 pages * 100)
+          const response = await octokit.repos.listReleases({
+            owner: GITHUB_OWNER,
+            repo: GITHUB_REPO,
+            per_page: 100,
+            page: page,
+          });
 
-        if (response.data.length === 0) {
-          hasMore = false;
-        } else {
-          allReleases = allReleases.concat(response.data);
-          page++;
-          
-          if (response.data.length < 100) {
+          if (response.data.length === 0) {
             hasMore = false;
+          } else {
+            releases = releases.concat(response.data);
+            page++;
+            
+            if (response.data.length < 100) {
+              hasMore = false;
+            }
           }
         }
-      }
+        return releases;
+      }, 5, 2000);
 
       return allReleases.map((release: RestEndpointMethodTypes['repos']['listReleases']['response']['data'][0]) => ({
         id: release.id,
@@ -219,8 +374,21 @@ const getCachedReleases = unstable_cache(
         download_count: release.assets?.reduce((sum: number, asset: RestEndpointMethodTypes['repos']['listReleases']['response']['data'][0]['assets'][0]) => sum + asset.download_count, 0) || 0,
       }));
     } catch (error) {
-      console.error('Error fetching releases:', error);
-      return [];
+      console.error('GitHub API Error - Releases:', error);
+      
+      // Log detailed error information for debugging
+      if (error && typeof error === 'object') {
+        const errorObj = error as any;
+        console.error('Error details:', {
+          status: errorObj.status,
+          message: errorObj.message,
+          code: errorObj.code,
+          name: errorObj.name
+        });
+      }
+      
+      // Re-throw the error instead of hiding it with fallback data
+      throw new Error(`Failed to fetch releases: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
   ['releases'],
@@ -231,15 +399,31 @@ const getCachedReleases = unstable_cache(
 const getCachedLanguages = unstable_cache(
   async () => {
     try {
-      const { data: languages } = await octokit.repos.listLanguages({
-        owner: GITHUB_OWNER,
-        repo: GITHUB_REPO,
-      });
+      const languages = await retryWithBackoff(async () => {
+        const { data: languages } = await octokit.repos.listLanguages({
+          owner: GITHUB_OWNER,
+          repo: GITHUB_REPO,
+        });
+        return languages;
+      }, 5, 2000);
 
       return languages;
     } catch (error) {
-      console.error('Error fetching languages:', error);
-      return {};
+      console.error('GitHub API Error - Languages:', error);
+      
+      // Log detailed error information for debugging
+      if (error && typeof error === 'object') {
+        const errorObj = error as any;
+        console.error('Error details:', {
+          status: errorObj.status,
+          message: errorObj.message,
+          code: errorObj.code,
+          name: errorObj.name
+        });
+      }
+      
+      // Re-throw the error instead of hiding it with fallback data
+      throw new Error(`Failed to fetch languages: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
   ['languages'],
@@ -250,35 +434,51 @@ const getCachedLanguages = unstable_cache(
 const getCachedIssues = unstable_cache(
   async () => {
     try {
-      let allIssues: Issue[] = [];
-      let page = 1;
-      let hasMore = true;
+      const allIssues = await retryWithBackoff(async () => {
+        let issues: Issue[] = [];
+        let page = 1;
+        let hasMore = true;
 
-      while (hasMore && page <= 10) { // Limit to 1000 issues max
-        const response = await octokit.issues.listForRepo({
-          owner: GITHUB_OWNER,
-          repo: GITHUB_REPO,
-          state: 'all',
-          per_page: 100,
-          page: page,
-        });
+        while (hasMore && page <= 10) { // Limit to 1000 issues max
+          const response = await octokit.issues.listForRepo({
+            owner: GITHUB_OWNER,
+            repo: GITHUB_REPO,
+            state: 'all',
+            per_page: 100,
+            page: page,
+          });
 
-        if (response.data.length === 0) {
-          hasMore = false;
-        } else {
-          allIssues = allIssues.concat(response.data);
-          page++;
-          
-          if (response.data.length < 100) {
+          if (response.data.length === 0) {
             hasMore = false;
+          } else {
+            issues = issues.concat(response.data);
+            page++;
+            
+            if (response.data.length < 100) {
+              hasMore = false;
+            }
           }
         }
-      }
+        return issues;
+      }, 5, 2000);
 
       return allIssues;
     } catch (error) {
-      console.error('Error fetching issues:', error);
-      return [];
+      console.error('GitHub API Error - Issues:', error);
+      
+      // Log detailed error information for debugging
+      if (error && typeof error === 'object') {
+        const errorObj = error as any;
+        console.error('Error details:', {
+          status: errorObj.status,
+          message: errorObj.message,
+          code: errorObj.code,
+          name: errorObj.name
+        });
+      }
+      
+      // Re-throw the error instead of hiding it with fallback data
+      throw new Error(`Failed to fetch issues: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
   ['issues-data'],
@@ -316,8 +516,21 @@ const getCachedPulls = unstable_cache(
 
       return allPulls;
     } catch (error) {
-      console.error('Error fetching pulls:', error);
-      return [];
+      console.error('GitHub API Error - Pulls:', error);
+      
+      // Log detailed error information for debugging
+      if (error && typeof error === 'object') {
+        const errorObj = error as any;
+        console.error('Error details:', {
+          status: errorObj.status,
+          message: errorObj.message,
+          code: errorObj.code,
+          name: errorObj.name
+        });
+      }
+      
+      // Re-throw the error instead of hiding it with fallback data
+      throw new Error(`Failed to fetch pull requests: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
   ['pulls-data'],
@@ -336,8 +549,21 @@ const getCachedBranchesCount = unstable_cache(
 
       return branches.length;
     } catch (error) {
-      console.error('Error fetching branches count:', error);
-      return 0;
+      console.error('GitHub API Error - Branches:', error);
+      
+      // Log detailed error information for debugging
+      if (error && typeof error === 'object') {
+        const errorObj = error as any;
+        console.error('Error details:', {
+          status: errorObj.status,
+          message: errorObj.message,
+          code: errorObj.code,
+          name: errorObj.name
+        });
+      }
+      
+      // Re-throw the error instead of hiding it with fallback data
+      throw new Error(`Failed to fetch branches: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
   ['branches-count'],
@@ -396,43 +622,62 @@ export async function getContributors(): Promise<EnhancedContributor[]> {
     // Enhance contributors with additional data
     const enhancedContributors: EnhancedContributor[] = await Promise.all(
       contributors.map(async (contributor) => {
-        // Skip if login is undefined
-        if (!contributor.login) {
-          return contributor;
+        try {
+          // Skip if login is undefined
+          if (!contributor.login) {
+            return contributor;
+          }
+
+          // Get user details
+          const userDetails = await fetchUserDetails(contributor.login);
+
+          // Find stats for this contributor
+          const contributorStats = stats.find((stat) => stat.author?.login === contributor.login);
+
+          // Calculate total additions and deletions
+          let additions = 0;
+          let deletions = 0;
+          let totalCommits = 0;
+
+          if (contributorStats && contributorStats.weeks && Array.isArray(contributorStats.weeks)) {
+            // Use the total field for accurate commit count
+            totalCommits = contributorStats.total || 0;
+            
+            // Sum up additions and deletions from all weeks
+            contributorStats.weeks.forEach((week) => {
+              additions += week.a || 0;
+              deletions += week.d || 0;
+            });
+            
+            console.log(`Stats for ${contributor.login}: commits=${totalCommits}, additions=${additions}, deletions=${deletions}`);
+          } else {
+            console.warn(`No detailed stats available for ${contributor.login}, using fallback data`);
+            
+            // Fallback: use contributions count as approximate commits
+            totalCommits = contributor.contributions || 0;
+            additions = 0;
+            deletions = 0;
+          }
+
+          return {
+            ...contributor,
+            ...userDetails,
+            additions,
+            deletions,
+            total_commits: totalCommits,
+          };
+        } catch (error) {
+          console.error(`Error processing contributor ${contributor.login}:`, error);
+          
+          // Return basic contributor info even if enhancement fails
+          return {
+            ...contributor,
+            total_commits: contributor.contributions || 0,
+            additions: 0,
+            deletions: 0,
+            avatar_url: contributor.avatar_url || `https://github.com/${contributor.login}.png`,
+          };
         }
-
-        // Get user details
-        const userDetails = await fetchUserDetails(contributor.login);
-
-        // Find stats for this contributor
-        const contributorStats = stats.find((stat) => stat.author?.login === contributor.login);
-
-        // Calculate total additions and deletions
-        let additions = 0;
-        let deletions = 0;
-        let totalCommits = 0;
-
-        if (contributorStats) {
-          totalCommits = contributorStats.total;
-          contributorStats.weeks.forEach((week) => {
-            additions += week.a || 0;
-            deletions += week.d || 0;
-          });
-        } else {
-          // Show explicit error when detailed stats aren't available
-          totalCommits = 0;
-          additions = 0;
-          deletions = 0;
-          console.error(`Failed to fetch contributor stats for ${contributor.login}: GitHub API returned incomplete data`);
-        }
-
-        return {
-          ...contributor,
-          ...userDetails,
-          additions,
-          deletions,
-          total_commits: totalCommits,
-        };
       }),
     );
 
@@ -443,19 +688,29 @@ export async function getContributors(): Promise<EnhancedContributor[]> {
       return scoreB - scoreA;
     });
 
-    console.log('Enhanced contributors:', enhancedContributors.map(c => ({
-      login: c.login,
-      contributions: c.contributions,
-      total_commits: c.total_commits,
-      additions: c.additions,
-      deletions: c.deletions
-    })));
+    console.log('Enhanced contributors summary:');
+    enhancedContributors.forEach(contributor => {
+      console.log(`  ${contributor.login}: ${contributor.total_commits} commits, ${contributor.additions} additions, ${contributor.deletions} deletions`);
+    });
 
     console.log('=== getContributors function completed successfully ===');
     return enhancedContributors;
   } catch (error) {
-    console.error('=== Error in getContributors function ===', error);
-    return [];
+    console.error('=== GitHub API Error in getContributors function ===', error);
+    
+    // Log detailed error information for debugging
+    if (error && typeof error === 'object') {
+      const errorObj = error as any;
+      console.error('Error details:', {
+        status: errorObj.status,
+        message: errorObj.message,
+        code: errorObj.code,
+        name: errorObj.name
+      });
+    }
+    
+    // Re-throw the error instead of hiding it with fallback data
+    throw new Error(`Failed to fetch contributors: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 

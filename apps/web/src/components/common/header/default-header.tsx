@@ -66,6 +66,32 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
                 </NavigationMenuContent>
               </NavigationMenuItem>
 
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="text-slate-200 hover:text-blue-300 transition-colors duration-300 bg-transparent hover:bg-white/5 backdrop-blur-sm">Institutional</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
+                    <ListItem href="/contributors" title="Contributors">
+                      Meet the people who make this platform possible.
+                    </ListItem>
+                    <ListItem href="/licenses" title="Licenses">
+                      View our open source licenses and legal information.
+                    </ListItem>
+                    <ListItem href="/terms-of-service" title="Terms of Service">
+                      Read our terms and conditions of use.
+                    </ListItem>
+                    <ListItem href="/polices/privacy" title="Privacy">
+                      Learn about our privacy policy and data protection.
+                    </ListItem>
+                    <ListItem href="/contact" title="Contact">
+                      Get in touch with our team for support or inquiries.
+                    </ListItem>
+                    <ListItem href="/about" title="About Us">
+                      Discover our mission, vision, and company story.
+                    </ListItem>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+
             </NavigationMenuList>
           </NavigationMenu>
         </div>
@@ -92,7 +118,7 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
 
       {/* Mobile Menu */}
       <div className={`md:hidden bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border-t border-white/20 dark:border-slate-600/50 transition-all duration-300 ease-in-out overflow-hidden ${isMobileMenuOpen
-          ? 'max-h-96 opacity-100 transform translate-y-0'
+          ? 'max-h-[32rem] opacity-100 transform translate-y-0'
           : 'max-h-0 opacity-0 transform -translate-y-2'
         }`}>
         <div className="container mx-auto px-4 py-4 space-y-2">
@@ -103,6 +129,29 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
           <Link href="/testing-lab" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
             Testing Lab
           </Link>
+          
+          {/* Institutional Links */}
+          <div className="border-t border-white/20 pt-2 mt-4">
+            <div className="text-xs text-slate-400 px-3 py-1 uppercase tracking-wider">Institutional</div>
+            <Link href="/contributors" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+              Contributors
+            </Link>
+            <Link href="/licenses" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+              Licenses
+            </Link>
+            <Link href="/terms-of-service" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+              Terms of Service
+            </Link>
+            <Link href="/polices/privacy" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+              Privacy
+            </Link>
+            <Link href="/contact" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+              Contact
+            </Link>
+            <Link href="/about" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+              About Us
+            </Link>
+          </div>
 
         </div>
       </div>
