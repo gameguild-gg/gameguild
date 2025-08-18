@@ -83,6 +83,13 @@ export const CreateCourseForm = (): React.JSX.Element => {
 
       // Check if the result has an error
       if (result.error) {
+        // Handle 403 Forbidden specifically
+        if (result.error && typeof result.error === 'object' && Object.keys(result.error).length === 0) {
+          // Empty error object usually indicates a 403 permission error
+          console.error('Permission denied: User does not have permission to create courses');
+          throw new Error('You do not have permission to create courses. Please contact an administrator to grant you the necessary permissions.');
+        }
+        
         const errorMessage = typeof result.error === 'string' 
           ? result.error 
           : (result.error as any)?.message || JSON.stringify(result.error) || 'An error occurred while creating the course';
