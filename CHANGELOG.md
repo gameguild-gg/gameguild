@@ -1,3 +1,11 @@
+## [2.5.2](https://github.com/gameguild-gg/gameguild/compare/v2.5.1...v2.5.2) (2025-08-19)
+
+
+### Bug Fixes
+
+* **editor:** callout component ([439c983](https://github.com/gameguild-gg/gameguild/commit/439c98377fd3c434841746a4e3ded451d0d72d2e))
+* **web:** new packages ([7f4f7e5](https://github.com/gameguild-gg/gameguild/commit/7f4f7e5f09d625e66c93a9bd3f966458fc6b6b9e))
+
 ## [2.5.1](https://github.com/gameguild-gg/gameguild/compare/v2.5.0...v2.5.1) (2025-08-18)
 
 
