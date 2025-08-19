@@ -17,7 +17,7 @@ interface UserProfileProps {
 // Transform backend User to display format
 const transformUserData = (user: User) => ({
   id: user.id,
-  username: user.name, // Use name as username since that's what we have
+  username: (user as any).username || user.name?.toLowerCase().replace(/\s+/g, '') || 'user', // Use actual username if available, fallback to transformed name
   name: user.name,
   email: user.email,
   avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
