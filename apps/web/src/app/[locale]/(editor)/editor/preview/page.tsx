@@ -232,8 +232,6 @@ export default function PreviewPage() {
                   <div className="p-6 px-12 py-12">
                     <PreviewRenderer
                       serializedState={serializedState as any}
-                      showHeader={true}
-                      projectName={currentProject.name}
                     />
                   </div>
                 </div>
