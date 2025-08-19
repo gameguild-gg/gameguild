@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react';
 import { getApiUsersById } from '@/lib/api/generated';
 import { createClient } from '@/lib/api/generated/client';
 import { environment } from '@/configs/environment';
-import { UserResponseDto } from '@/lib/api/generated/types.gen';
+import type { UserResponseDto } from '@/lib/api/generated/types.gen';
 
 interface MenuItem {
   label: string;
@@ -20,19 +20,9 @@ interface MenuItem {
   external?: boolean;
 }
 
-interface UserData {
-  id?: string;
-  name?: string;
-  email?: string;
-  image?: string;
-  displayName?: string;
-  role?: string;
-  subscription?: string;
-}
-
-export default function UserProfileDropdown() {
-  const { data: session, status } = useSession();
-  const [userData, setUserData] = useState<UserData | null>(null);
+export function UserProfileDropdown() {
+  const { data: session } = useSession();
+  const [userData, setUserData] = useState<UserResponseDto | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Fetch user data from CMS backend
@@ -65,29 +55,12 @@ export default function UserProfileDropdown() {
         });
 
         if (result && result.data) {
-          const cmsUser = result.data as UserResponseDto;
-          setUserData({
-            id: cmsUser.id,
-            name: cmsUser.name || session.user?.name || 'User',
-            email: cmsUser.email || session.user?.email || '',
-            image: session.user?.image || '',
-            displayName: cmsUser.name || session.user?.name || 'User',
-            role: 'Game Developer', // Default role, could be enhanced with role data from backend
-            subscription: 'Free Trial', // Default subscription, could be enhanced with subscription data
-          });
+          setUserData(result.data);
         }
       } catch (error) {
         console.error('Failed to fetch user data:', error);
-        // Fallback to session data
-        setUserData({
-          id: session.user?.id,
-          name: session.user?.name || 'User',
-          email: session.user?.email || '',
-          image: session.user?.image || '',
-          displayName: session.user?.name || 'User',
-          role: 'Game Developer',
-          subscription: 'Free Trial',
-        });
+        // Fallback to null - we'll handle this in the UI
+        setUserData(null);
       } finally {
         setLoading(false);
       }
@@ -175,8 +148,8 @@ export default function UserProfileDropdown() {
     );
   }
 
-  // Generate username from name for profile URL
-  const username = userData.name?.toLowerCase().replace(/\s+/g, '') || 'user';
+  // Use actual username for profile URL instead of transforming the display name
+  const username = userData.username || userData.name?.toLowerCase().replace(/\s+/g, '') || 'user';
 
   const menuItems: MenuItem[] = [
     {
@@ -186,7 +159,7 @@ export default function UserProfileDropdown() {
     },
     {
       label: 'Subscription',
-      value: userData.subscription,
+      value: userData.subscriptionType || 'Free',
       href: '/subscription',
       icon: <CreditCard className="w-4 h-4" />,
       external: false,
@@ -208,7 +181,7 @@ export default function UserProfileDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar className="h-9 w-9 cursor-pointer">
-          <AvatarImage src={userData.image} alt={`${userData.name} avatar`} />
+          <AvatarImage src={session.user?.image || ''} alt={`${userData.name} avatar`} />
           <AvatarFallback className="bg-zinc-800 text-zinc-200 font-medium">{userData.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
@@ -217,8 +190,8 @@ export default function UserProfileDropdown() {
           <div className="relative px-6 pt-12 pb-6 bg-white dark:bg-zinc-900">
             <div className="flex items-center gap-4 mb-8">
               <div className="relative shrink-0">
-                {userData.image ? (
-                  <Image src={userData.image} alt={userData.name || 'User'} width={72} height={72} className="rounded-full ring-4 ring-white dark:ring-zinc-900 object-cover" />
+                {session.user?.image ? (
+                  <Image src={session.user.image} alt={userData.name || 'User'} width={72} height={72} className="rounded-full ring-4 ring-white dark:ring-zinc-900 object-cover" />
                 ) : (
                   <div className="w-[72px] h-[72px] rounded-full ring-4 ring-white dark:ring-zinc-900 bg-zinc-800 flex items-center justify-center text-2xl font-bold text-zinc-200">{userData.name?.charAt(0).toUpperCase() || 'U'}</div>
                 )}
@@ -227,8 +200,8 @@ export default function UserProfileDropdown() {
 
               {/* Profile Info */}
               <div className="flex-1">
-                <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">{userData.displayName}</h2>
-                <p className="text-zinc-600 dark:text-zinc-400">{userData.role}</p>
+                <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100">{userData.name}</h2>
+                <p className="text-zinc-600 dark:text-zinc-400">{userData.role || 'Game Developer'}</p>
                 <p className="text-sm text-zinc-500 dark:text-zinc-500">{userData.email}</p>
               </div>
             </div>

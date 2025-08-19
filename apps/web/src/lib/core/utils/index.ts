@@ -4,7 +4,9 @@ import { twMerge } from 'tailwind-merge';
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
 export const numberToAbbreviation = (number: number): string => {
-  if (!number || number === 0) return '0';
+  // Show explicit error for 0 values (indicates API failure)
+  if (number === 0) return 'err';
+  if (!number) return '0';
 
   const absoluteNumber = Math.abs(number);
   const sign = number < 0 ? '-' : '';

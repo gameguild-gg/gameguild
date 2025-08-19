@@ -1,3 +1,46 @@
+## [2.5.1](https://github.com/gameguild-gg/gameguild/compare/v2.5.0...v2.5.1) (2025-08-18)
+
+
+### Bug Fixes
+
+* Add global user permission fallback in PermissionService ([b62cd81](https://github.com/gameguild-gg/gameguild/commit/b62cd8136fa0b7aed41e6ac6c11ae2b83b0779c6))
+
+# [2.5.0](https://github.com/gameguild-gg/gameguild/compare/v2.4.2...v2.5.0) (2025-08-18)
+
+
+### Features
+
+* replace ForbidResult with custom PermissionDeniedResult for better error messaging ([bc4d002](https://github.com/gameguild-gg/gameguild/commit/bc4d002705c9717eeb9d28405e3eb04eccde9983))
+
+## [2.4.2](https://github.com/gameguild-gg/gameguild/compare/v2.4.1...v2.4.2) (2025-08-18)
+
+
+### Bug Fixes
+
+* improve GitHub API error handling and data display ([071a85e](https://github.com/gameguild-gg/gameguild/commit/071a85e3400b6d5c2642ee64ba933ab70e356610))
+
+## [2.4.1](https://github.com/gameguild-gg/gameguild/compare/v2.4.0...v2.4.1) (2025-08-18)
+
+
+### Bug Fixes
+
+* update AGPL v3 license link to point to LICENSE instead of LICENSE.md ([1ab28e7](https://github.com/gameguild-gg/gameguild/commit/1ab28e718339ff8a3e31ff48132dc6fca74a1d9a))
+
+# [2.4.0](https://github.com/gameguild-gg/gameguild/compare/v2.3.0...v2.4.0) (2025-08-18)
+
+
+### Features
+
+* fix post-login UI state update and add password visibility toggle ([8e8c677](https://github.com/gameguild-gg/gameguild/commit/8e8c67776b36ad8e5fbc074710668af1d544b9ef))
+
+# [2.3.0](https://github.com/gameguild-gg/gameguild/compare/v2.2.0...v2.3.0) (2025-08-18)
+
+
+### Features
+
+* add GitHub issue modal to Terms of Service, Privacy, and Cookies links ([cc47342](https://github.com/gameguild-gg/gameguild/commit/cc473429cffb2d87599e0df0f1591fa3389e7236))
+* update licenses page to fetch from GitHub API with caching and remove SPDX identifier ([7065633](https://github.com/gameguild-gg/gameguild/commit/706563356ab5bdb8171135a30f4157d0c8cfc251))
+
 # [2.2.0](https://github.com/gameguild-gg/gameguild/compare/v2.1.0...v2.2.0) (2025-08-18)
 
 

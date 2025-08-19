@@ -1232,11 +1232,11 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
 
 interface UserDetailPageRouteProps {
   params: Promise<{
-    id: string;
+    username: string;
   }>;
 }
 
 export default function UserDetailPageRoute({ params }: UserDetailPageRouteProps) {
-  const { id } = use(params);
-  return <UserDetailPage userId={id} />;
+  const { username } = use(params);
+  return <UserDetailPage userId={username} />;
 }

@@ -35,6 +35,7 @@ const providers: Provider[] = [
           id: response.user.id,
           email: response.user.email,
           name: response.user.username,
+          username: response.user.username,
           // Store auth tokens in the user object for JWT callback
           accessToken: response.accessToken,
           refreshToken: response.refreshToken,
@@ -135,7 +136,7 @@ export const authConfig: NextAuthConfig = {
         }
 
         token.id = user.id;
-        token.username = user.name || '';
+        token.username = user.username || user.name || '';
         token.email = user.email || '';
 
         // Set profile picture URL with priority: Google OAuth picture > DiceBear generated
