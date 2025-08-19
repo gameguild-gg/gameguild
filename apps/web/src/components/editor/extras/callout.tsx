@@ -1,5 +1,5 @@
 "use client"
-import React from "react";
+import React from "react"
 import { cn } from "@/lib/utils"
 import {
   AlertCircle,
@@ -29,8 +29,8 @@ export type CalloutType =
   | "example"
   | "quote"
 
-export interface CalloutProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title" | "content"> {
-  calloutTitle?: React.ReactNode
+export interface CalloutProps extends React.HTMLAttributes<HTMLDivElement> {
+  title?: React.ReactNode
   content?: React.ReactNode
   type?: CalloutType
 }
@@ -66,26 +66,28 @@ const typeToLabel = {
 }
 
 const typeToIcon = {
-  note: Info,
-  abstract: FileText,
-  info: Info,
-  tip: Flame,
-  success: CheckCircle,
-  question: HelpCircle,
-  warning: AlertTriangle,
-  failure: AlertCircle,
-  danger: Skull,
-  bug: Bug,
-  example: List,
-  quote: Quote,
+  note: <Info className="h-5 w-5 mr-2" />,
+  abstract: <FileText className="h-5 w-5 mr-2" />,
+  info: <Info className="h-5 w-5 mr-2" />,
+  tip: <Flame className="h-5 w-5 mr-2" />,
+  success: <CheckCircle className="h-5 w-5 mr-2" />,
+  question: <HelpCircle className="h-5 w-5 mr-2" />,
+  warning: <AlertTriangle className="h-5 w-5 mr-2" />,
+  failure: <AlertCircle className="h-5 w-5 mr-2" />,
+  danger: <Skull className="h-5 w-5 mr-2" />,
+  bug: <Bug className="h-5 w-5 mr-2" />,
+  example: <List className="h-5 w-5 mr-2" />,
+  quote: <Quote className="h-5 w-5 mr-2" />,
 }
 
-export function Callout({ className, type = "note", calloutTitle, content, ...props }: CalloutProps) {
+export function Callout({ className, type = "note", title, content, ...props }: CalloutProps) {
   return (
     <div className={cn("rounded-md border p-4 text-sm", calloutVariants[type], className)} {...props}>
       <div className="font-medium flex items-center gap-1.5">
-        {React.createElement(typeToIcon[type], { className: "h-5 w-5 mr-2" })}
-        {calloutTitle || typeToLabel[type]}
+        {React.cloneElement(typeToIcon[type] as React.ReactElement, {
+          className: "h-5 w-5 mr-2",
+        })}
+        {title || typeToLabel[type]}
       </div>
       {content && <div className="mt-2 bg-background rounded-md p-2 text-foreground">{content}</div>}
     </div>

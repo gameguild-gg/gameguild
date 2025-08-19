@@ -7,7 +7,7 @@ export function PreviewCallout({ node }: { node: SerializedCalloutNode }) {
     return null
   }
 
-  const { calloutTitle, content, type } = node.data
+  const { title, content, type } = node.data
 
-  return <UICallout calloutTitle={calloutTitle} content={content} type={type} />
+  return <UICallout title={title} content={content} type={type} />
 }
