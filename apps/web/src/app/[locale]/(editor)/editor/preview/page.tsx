@@ -65,19 +65,6 @@ export default function PreviewPage() {
     }
   }
 
-  const formatStorageSize = (sizeInKB: number): string => {
-    const sizeInMB = sizeInKB / 1024
-    const sizeInGB = sizeInMB / 1024
-
-    if (sizeInGB >= 1) {
-      return `${sizeInGB.toFixed(1)}GB`
-    } else if (sizeInMB >= 1) {
-      return `${sizeInMB.toFixed(1)}MB`
-    } else {
-      return `${sizeInKB.toFixed(1)}KB`
-    }
-  }
-
   const storageAdapter = {
     load: async (id: string): Promise<ProjectData | null> => {
       if (!isDbInitialized) {
@@ -199,7 +186,6 @@ export default function PreviewPage() {
                     storageAdapter={storageAdapter}
                     availableTags={availableTags}
                     onProjectLoad={handleProjectLoad}
-                    formatStorageSize={formatStorageSize}
                   />
                 </div>
               </div>
