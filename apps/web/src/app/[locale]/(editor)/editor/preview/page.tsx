@@ -245,7 +245,7 @@ export default function PreviewPage() {
                 <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
                   <div className="p-6 px-12 py-12">
                     <PreviewRenderer
-                      serializedState={serializedState}
+                      serializedState={serializedState as any}
                       showHeader={true}
                       projectName={currentProject.name}
                     />
