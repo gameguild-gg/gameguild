@@ -305,9 +305,8 @@ export function OpenProjectDialog({
         onProjectsListUpdate={onProjectsListUpdate}
         onAvailableTagsUpdate={() => { } } // Isso precisaria ser passado do componente pai, se necessário
         generateProjectId={generateProjectId}
-        onOpenProject={handleImportProject} isStorageAtLimit={function (): boolean {
-          throw new Error("Function not implemented.")
-        } }      />
+        onOpenProject={handleImportProject}
+        />
     </>
   )
 }
