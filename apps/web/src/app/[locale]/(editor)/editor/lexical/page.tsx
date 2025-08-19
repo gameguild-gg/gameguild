@@ -2,13 +2,10 @@
 
 import { Editor } from "@/components/editor/lexical-editor"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
 import { Save, HardDrive, Eye, Home } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
-import { Sun, Moon } from "lucide-react"
 import Link from "next/link"
 import type { LexicalEditor } from "lexical"
 import { OpenProjectDialog } from "@/components/editor/extras/editor/open-project-dialog"
@@ -37,12 +34,6 @@ function generateProjectId(): string {
   return "proj_" + Date.now().toString(36) + "_" + Math.random().toString(36).substr(2, 9)
 }
 
-// IndexedDB configuration
-const DB_NAME = "GGEditorDB"
-const DB_VERSION = 1
-const STORE_NAME = "projects"
-const TAGS_STORE_NAME = "tags"
-
 // Função para estimar o tamanho dos dados em KB
 function estimateSize(data: string): number {
   return new Blob([data]).size / 1024
@@ -69,13 +60,7 @@ export default function Page() {
   const [totalStorageUsed, setTotalStorageUsed] = useState<number>(0)
   const setLoadingRef = useRef<((loading: boolean) => void) | null>(null)
 
-  const { theme } = useTheme()
 
-
-
-  // Replace this line:
-  // const dbStorage = useRef<IndexedDBStorage>(new IndexedDBStorage())
-  // With this:
   const dbStorage = useRef<EnhancedStorageAdapter>(new EnhancedStorageAdapter())
   const [isDbInitialized, setIsDbInitialized] = useState(false)
 
@@ -93,20 +78,8 @@ export default function Page() {
 
   const [projectTags, setProjectTags] = useState<string[]>([])
   const [availableTags, setAvailableTags] = useState<Array<{ name: string; usageCount: number }>>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
-  const [totalProjects, setTotalProjects] = useState(0)
 
-  const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
-
-  // Add new state for tag search
-  const [tagSearchInput, setTagSearchInput] = useState("")
-
-  const [tagFilterMode, setTagFilterMode] = useState<"all" | "any">("any")
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
@@ -122,7 +95,6 @@ export default function Page() {
         setIsDbInitialized(true)
         await loadSavedProjectsList()
         await loadAvailableTags()
-        await updateStorageInfo()
       } catch (error) {
         console.error("Failed to initialize IndexedDB:", error)
         toast.error("Storage error", {
@@ -152,18 +124,6 @@ export default function Page() {
     }
   }, [editorState])
 
-  // Atualizar informações de armazenamento
-  const updateStorageInfo = async () => {
-    if (!isDbInitialized) return
-
-    try {
-      const storageInfo = await dbStorage.current.getStorageInfo()
-      setTotalStorageUsed(storageInfo.totalSize)
-    } catch (error) {
-      console.error("Error updating storage info:", error)
-    }
-  }
-
   const storageAdapter = {
     save: async (id: string, name: string, data: string, tags: string[] = []) => {
       if (!id || !name || !data) {
@@ -180,7 +140,6 @@ export default function Page() {
 
       try {
         await dbStorage.current.save(id, name, data, tags)
-        await updateStorageInfo()
         console.log(`Saved project "${name}" (${id}) successfully`)
       } catch (error) {
         console.error("Failed to save project:", error)
@@ -209,7 +168,6 @@ export default function Page() {
 
       try {
         await dbStorage.current.delete(id)
-        await updateStorageInfo()
       } catch (error) {
         console.error("Failed to delete project:", error)
         throw error
@@ -278,30 +236,6 @@ export default function Page() {
       console.error("Failed to load tags:", error)
     }
   }
-
-  useEffect(() => {
-    const filterProjects = async () => {
-      if (!isDbInitialized) return
-
-      try {
-        let projects: ProjectData[]
-
-        if (searchTerm || selectedTags.length > 0) {
-          projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode)
-        } else {
-          projects = await storageAdapter.list()
-        }
-
-        setTotalProjects(projects.length)
-        setFilteredProjects(projects)
-        setCurrentPage(1) // Reset to first page when filtering
-      } catch (error) {
-        console.error("Failed to filter projects:", error)
-      }
-    }
-
-    filterProjects()
-  }, [searchTerm, selectedTags, savedProjects, isDbInitialized, tagFilterMode])
 
   // Add this useEffect after the existing ones:
   useEffect(() => {
@@ -482,65 +416,6 @@ export default function Page() {
       console.error("Save as error:", error)
       toast.error("Error creating project", {
         description: "Could not create project. Please try again.",
-        duration: 4000,
-        icon: "❌",
-      })
-    }
-  }
-
-  const handleOpen = async (projectId: string) => {
-    try {
-      const projectData = await storageAdapter.load(projectId)
-      if (projectData && editorRef.current) {
-        try {
-          // Ativar o estado de carregamento
-          if (setLoadingRef.current) {
-            setLoadingRef.current(true)
-          }
-
-          const editorState = editorRef.current.parseEditorState(projectData.data)
-          editorRef.current.setEditorState(editorState)
-
-          // Aguardar um pouco para que os nós sejam renderizados
-          await new Promise((resolve) => setTimeout(resolve, 100))
-
-          // Desativar o estado de carregamento
-          if (setLoadingRef.current) {
-            setLoadingRef.current(false)
-          }
-
-          setCurrentProjectId(projectData.id)
-          setCurrentProjectName(projectData.name)
-          setProjectTags(projectData.tags || [])
-          setOpenDialogOpen(false)
-          setIsFirstTime(false) // Mark as no longer first time
-          toast.success("Project loaded", {
-            description: `"${projectData.name}" was opened successfully`,
-            duration: 2500,
-            icon: "📂",
-          })
-        } catch (error) {
-          // Desativar o estado de carregamento em caso de erro
-          if (setLoadingRef.current) {
-            setLoadingRef.current(false)
-          }
-          toast.error("Error loading project", {
-            description: "The project file is corrupt or in an invalid format",
-            duration: 4000,
-            icon: "❌",
-          })
-        }
-      } else {
-        toast.error("Project not found", {
-          description: "Unable to locate project file",
-          duration: 3000,
-          icon: "🔍",
-        })
-      }
-    } catch (error) {
-      console.error("Open error:", error)
-      toast.error("Error opening project", {
-        description: "Could not open project. Please try again",
         duration: 4000,
         icon: "❌",
       })
