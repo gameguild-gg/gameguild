@@ -28,7 +28,7 @@ export function CourseCard({ course, viewMode = 'grid' }: { course: Course; view
 
   if (viewMode === 'list') {
     return (
-      <Link href={`/courses/${course.slug}`} className="absolute inset-0" aria-label={`Open ${course.title}`}>
+      <Link href={`/courses/${course.slug}/content`} className="absolute inset-0" aria-label={`Open ${course.title}`}>
         <Card className="relative hover:shadow-xl transition-all duration-200 cursor-pointer">
           <CardContent className="p-6">
             <div className="flex items-center gap-6">
@@ -136,7 +136,7 @@ export function CourseCard({ course, viewMode = 'grid' }: { course: Course; view
         <div className="text-xs text-muted-foreground">Updated {updated}</div>
       </CardContent>
       {/* Clickable overlay link */}
-      <Link href={`/courses/${course.slug}`} className="absolute inset-0" aria-label={`Open ${course.title}`} />
+      <Link href={`/courses/${course.slug}/content`} className="absolute inset-0" aria-label={`Open ${course.title}`} />
     </Card>
   );
 }
