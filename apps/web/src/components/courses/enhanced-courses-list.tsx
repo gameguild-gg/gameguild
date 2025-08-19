@@ -9,13 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BookOpen, Calendar, Filter, GraduationCap, MoreHorizontal, Plus, RefreshCw, Search, TrendingUp, Users, Zap } from 'lucide-react';
 import { getCourseData } from '@/lib/courses/actions';
-import { EnhancedCourse } from '@/lib/courses/courses-enhanced.context';
+import type { Program } from '@/lib/api/generated/types.gen';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ViewModeToggle } from '@/components/common/filters/view-mode-toggle';
 import Link from 'next/link';
 
 export function EnhancedCoursesList() {
-  const [courses, setCourses] = useState<EnhancedCourse[]>([]);
+  const [courses, setCourses] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [areaFilter, setAreaFilter] = useState<string>('all');
@@ -30,7 +30,7 @@ export function EnhancedCoursesList() {
     try {
       setLoading(true);
       const data = await getCourseData();
-      setCourses(data.courses);
+      setCourses(data.programs);
     } catch (error) {
       console.error('Error fetching courses:', error);
       setCourses([]);
@@ -159,7 +159,7 @@ export function EnhancedCoursesList() {
                 </div>
                 <BookOpen className="h-8 w-8 text-blue-400" />
               </div>
-              <p className="text-blue-400/60 text-xs mt-2">{courses.filter((c) => c.status === 'published').length} published</p>
+              <p className="text-blue-400/60 text-xs mt-2">{courses.filter((c) => c.status === 'Published').length} published</p>
             </CardContent>
           </Card>
 
@@ -184,9 +184,9 @@ export function EnhancedCoursesList() {
                   <p className="text-3xl font-bold text-foreground">
                     {courses.length > 0
                       ? Math.round(
-                          (courses.reduce((acc, c) => acc + (c.analytics?.completions || 0), 0) /
+                          (courses.reduce((acc, c) => acc + (c.currentEnrollments || 0), 0) /
                             Math.max(
-                              courses.reduce((acc, c) => acc + (c.enrollmentCount || 0), 0),
+                              courses.reduce((acc, c) => acc + (c.currentEnrollments || 0), 0),
                               1,
                             )) *
                             100,
@@ -206,7 +206,7 @@ export function EnhancedCoursesList() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-orange-400 text-sm font-medium">Avg Rating</p>
-                  <p className="text-3xl font-bold text-foreground">{courses.length > 0 ? (courses.reduce((acc, c) => acc + (c.analytics?.averageRating || 0), 0) / courses.length).toFixed(1) : '0.0'}</p>
+                  <p className="text-3xl font-bold text-foreground">{courses.length > 0 ? (courses.reduce((acc, c) => acc + (c.rating || 0), 0) / courses.length).toFixed(1) : '0.0'}</p>
                 </div>
                 <GraduationCap className="h-8 w-8 text-orange-400" />
               </div>
@@ -311,7 +311,7 @@ export function EnhancedCoursesList() {
                       </TableCell>
                       <TableCell className="text-foreground">{course.enrollmentCount || 0}</TableCell>
                       <TableCell>
-                        <Badge variant={course.status === 'published' ? 'default' : 'secondary'}>{course.status}</Badge>
+                        <Badge variant={course.status === 'Published' ? 'default' : 'secondary'}>{course.status}</Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground">{formatDate(course.updatedAt)}</TableCell>
                     </TableRow>
@@ -323,7 +323,7 @@ export function EnhancedCoursesList() {
         ) : viewMode === 'row' ? (
           <div className="space-y-4">
             {filteredCourses.map((course) => (
-              <Link key={course.id} href={`/dashboard/courses/${course.slug}`}>
+              <Link key={course.id} href={`/courses/${course.slug}/content`}>
                 <Card className="bg-card/50 border-border backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
@@ -342,12 +342,12 @@ export function EnhancedCoursesList() {
                               <Badge className={getLevelColor(course.level)} variant="outline">
                                 {getLevelText(course.level)}
                               </Badge>
-                              <Badge variant={course.status === 'published' ? 'default' : 'secondary'}>{course.status}</Badge>
+                              <Badge variant={course.status === 'Published' ? 'default' : 'secondary'}>{course.status}</Badge>
                             </div>
                             <div className="flex items-center gap-6 text-sm text-muted-foreground">
                               <div className="flex items-center gap-1">
                                 <Users className="h-4 w-4" />
-                                {course.enrollmentCount || 0} students
+                                {course.currentEnrollments || 0} students
                               </div>
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-4 w-4" />
@@ -355,7 +355,7 @@ export function EnhancedCoursesList() {
                               </div>
                               <div className="flex items-center gap-1">
                                 <Zap className="h-4 w-4" />
-                                {course.estimatedHours || 0}h estimated
+                                {course.duration || 0}h estimated
                               </div>
                             </div>
                           </div>
@@ -385,7 +385,7 @@ export function EnhancedCoursesList() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCourses.map((course) => (
-              <Link key={course.id} href={`/dashboard/courses/${course.slug}`}>
+              <Link key={course.id} href={`/courses/${course.slug}/content`}>
                 <Card className="bg-card/50 border-border backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
@@ -416,7 +416,7 @@ export function EnhancedCoursesList() {
                       <Badge className={getLevelColor(course.level)} variant="outline">
                         {getLevelText(course.level)}
                       </Badge>
-                      <Badge variant={course.status === 'published' ? 'default' : 'secondary'}>{course.status}</Badge>
+                      <Badge variant={course.status === 'Published' ? 'default' : 'secondary'}>{course.status}</Badge>
                     </div>
 
                     <div className="space-y-2 text-sm text-muted-foreground">
@@ -425,14 +425,14 @@ export function EnhancedCoursesList() {
                           <Users className="h-4 w-4" />
                           Students
                         </span>
-                        <span className="font-medium text-foreground">{course.enrollmentCount || 0}</span>
+                        <span className="font-medium text-foreground">{course.currentEnrollments || 0}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1">
                           <Zap className="h-4 w-4" />
                           Duration
                         </span>
-                        <span className="font-medium text-foreground">{course.estimatedHours || 0}h</span>
+                        <span className="font-medium text-foreground">{course.duration || 0}h</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1">

@@ -22,6 +22,7 @@ import week12LocalLlm from './python/chapters/week12/local-llm.md';
 import pythonSyllabus from './python/syllabus.md';
 
 // AI4Games Course Imports
+import ai4gamesExtraLecture from './ai4games/chapters/extras/llms.md';
 import ai4gamesWeek01Lecture from './ai4games/chapters/week01/lecture.md';
 import ai4gamesWeek01Readings from './ai4games/chapters/week01/readings.md';
 import ai4gamesWeek02Lecture from './ai4games/chapters/week02/lecture.md';
@@ -41,6 +42,7 @@ import ai4gamesWeek11Assignment from './ai4games/chapters/week11/assignment.md';
 import ai4gamesWeek11Board from './ai4games/chapters/week11/board.md';
 import ai4gamesWeek12Lecture from './ai4games/chapters/week12/lecture.md';
 import ai4gamesWeek13Lecture from './ai4games/chapters/week13/lecture.md';
+
 import ai4gamesSyllabus from './ai4games/syllabus.md';
 
 // Portfolio Course Imports
@@ -74,8 +76,9 @@ import portfolioSyllabus from './portfolio/syllabus.md';
 // Mock user for the creator
 const mockUser = {
     id: '1',
-    name: 'Game Guild Instructor',
-    email: 'instructor@gameguild.com',
+    name: 'Alexandre Tolstenko',
+    username: 'tolstenko',
+    email: 'atolstenko@champlain.edu',
     isActive: true,
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
@@ -296,6 +299,7 @@ export const pythonSyllabusContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
+    slug: 'python-syllabus',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -318,6 +322,7 @@ export const pythonWeek01Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
+    slug: 'introduction-to-python',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -340,6 +345,7 @@ export const pythonWeek02Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
+    slug: 'python-basics',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -362,6 +368,7 @@ export const pythonWeek03Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
+    slug: 'functions-and-math',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -384,6 +391,7 @@ export const pythonWeek04Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 105,
     visibility: 1, // Published
+    slug: 'conditionals-and-loops',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -406,6 +414,7 @@ export const pythonWeek05ListsContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
+    slug: 'lists-and-data-structures',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -428,6 +437,7 @@ export const pythonWeek05Exercise01Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
+    slug: 'exercise-two-sum',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -450,6 +460,7 @@ export const pythonWeek05Exercise02Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
+    slug: 'exercise-search-insert-position',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -472,6 +483,7 @@ export const pythonWeek06Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
+    slug: 'advanced-loops',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -494,6 +506,7 @@ export const pythonWeek07Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
+    slug: 'nested-loops',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -516,6 +529,7 @@ export const pythonWeek10DictionariesContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
+    slug: 'dictionaries-and-sets',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -538,6 +552,7 @@ export const pythonWeek10SetsContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 105,
     visibility: 1, // Published
+    slug: 'sets-and-operations',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -560,6 +575,7 @@ export const pythonWeek11Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
+    slug: 'files-and-exceptions',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -582,6 +598,7 @@ export const pythonWeek12Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
+    slug: 'apis-and-web-services',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -604,6 +621,7 @@ export const pythonWeek12LocalLlmContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
+    slug: 'local-llms-ollama',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -627,6 +645,7 @@ export const pythonWeek04BooleanOperationsContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
+    slug: 'boolean-operations',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -649,6 +668,7 @@ export const pythonWeek04SwitchContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
+    slug: 'switch-statements',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -672,6 +692,7 @@ export const pythonWeek05SetsContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
+    slug: 'sets-data-structure',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -700,6 +721,7 @@ export const pythonWeek05TuplesContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'tuples-immutability',
 };
 
 // AI4Games Course Content
@@ -723,6 +745,7 @@ export const ai4gamesSyllabusContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'ai4games-syllabus',
 };
 
 export const ai4gamesWeek01Content: ProgramContent = {
@@ -745,6 +768,7 @@ export const ai4gamesWeek01Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'random-and-noise',
 };
 
 export const ai4gamesWeek01ReadingsContent: ProgramContent = {
@@ -767,6 +791,7 @@ export const ai4gamesWeek01ReadingsContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'random-noise-readings',
 };
 
 export const ai4gamesWeek02Content: ProgramContent = {
@@ -789,6 +814,7 @@ export const ai4gamesWeek02Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'wave-function-collapse',
 };
 
 export const ai4gamesWeek02PcgContent: ProgramContent = {
@@ -811,6 +837,7 @@ export const ai4gamesWeek02PcgContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'procedural-content-generation',
 };
 
 export const ai4gamesWeek03Content: ProgramContent = {
@@ -833,6 +860,7 @@ export const ai4gamesWeek03Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'ai-engines-pathfinding',
 };
 
 export const ai4gamesWeek03AstarContent: ProgramContent = {
@@ -855,6 +883,7 @@ export const ai4gamesWeek03AstarContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'astar-pathfinding',
 };
 
 export const ai4gamesWeek04Content: ProgramContent = {
@@ -877,6 +906,7 @@ export const ai4gamesWeek04Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'goap-planning',
 };
 
 export const ai4gamesWeek04AssignmentContent: ProgramContent = {
@@ -899,6 +929,7 @@ export const ai4gamesWeek04AssignmentContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'goap-assignment',
 };
 
 export const ai4gamesWeek05Content: ProgramContent = {
@@ -921,6 +952,7 @@ export const ai4gamesWeek05Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'dynamic-goap-cpp',
 };
 
 export const ai4gamesWeek05CsharpContent: ProgramContent = {
@@ -943,6 +975,7 @@ export const ai4gamesWeek05CsharpContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'dynamic-goap-csharp',
 };
 
 // Additional AI4Games Content
@@ -966,6 +999,7 @@ export const ai4gamesWeek06Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'advanced-ai-techniques',
 };
 
 export const ai4gamesWeek07Content: ProgramContent = {
@@ -988,6 +1022,7 @@ export const ai4gamesWeek07Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'behavior-trees',
 };
 
 export const ai4gamesWeek08Content: ProgramContent = {
@@ -1010,6 +1045,7 @@ export const ai4gamesWeek08Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'machine-learning-games',
 };
 
 export const ai4gamesWeek09Content: ProgramContent = {
@@ -1032,6 +1068,7 @@ export const ai4gamesWeek09Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'neural-networks-games',
 };
 
 export const ai4gamesWeek10Content: ProgramContent = {
@@ -1054,6 +1091,7 @@ export const ai4gamesWeek10Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'reinforcement-learning',
 };
 
 export const ai4gamesWeek11AssignmentContent: ProgramContent = {
@@ -1076,6 +1114,7 @@ export const ai4gamesWeek11AssignmentContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'advanced-ai-assignment',
 };
 
 export const ai4gamesWeek11BoardContent: ProgramContent = {
@@ -1098,6 +1137,7 @@ export const ai4gamesWeek11BoardContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'board-game-ai',
 };
 
 export const ai4gamesWeek12Content: ProgramContent = {
@@ -1120,6 +1160,7 @@ export const ai4gamesWeek12Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'ai-optimization',
 };
 
 export const ai4gamesWeek13Content: ProgramContent = {
@@ -1142,6 +1183,30 @@ export const ai4gamesWeek13Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'final-ai-project',
+};
+
+export const ai4gamesExtraContent: ProgramContent = {
+    id: 'ai4games-extra',
+    programId: ai4gamesProgram.id!,
+    parentId: undefined,
+    title: 'Extra Content LLMs History',
+    description: 'History of LLMs',
+    type: 0, // Page
+    body: ai4gamesExtraLecture,
+    sortOrder: 21,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: ai4gamesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'llms-history',
 };
 
 // Portfolio Course Content
@@ -1165,6 +1230,7 @@ export const portfolioSyllabusContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'portfolio-syllabus',
 };
 
 export const portfolioWeek01Lecture01Content: ProgramContent = {
@@ -1187,6 +1253,7 @@ export const portfolioWeek01Lecture01Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'introduction-portfolio-development',
 };
 
 export const portfolioWeek01Assignment01Content: ProgramContent = {
@@ -1209,6 +1276,7 @@ export const portfolioWeek01Assignment01Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'first-portfolio-assignment',
 };
 
 export const portfolioWeek01Assignment02Content: ProgramContent = {
@@ -1231,6 +1299,7 @@ export const portfolioWeek01Assignment02Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'second-portfolio-assignment',
 };
 
 export const portfolioWeek02Lecture02Content: ProgramContent = {
@@ -1253,6 +1322,7 @@ export const portfolioWeek02Lecture02Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'portfolio-planning',
 };
 
 export const portfolioWeek02Assignment03Content: ProgramContent = {
@@ -1275,6 +1345,7 @@ export const portfolioWeek02Assignment03Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'portfolio-planning-assignment',
 };
 
 export const portfolioWeek02Assignment04Content: ProgramContent = {
@@ -1297,6 +1368,7 @@ export const portfolioWeek02Assignment04Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'advanced-portfolio-assignment',
 };
 
 export const portfolioWeek03LectureContent: ProgramContent = {
@@ -1319,6 +1391,7 @@ export const portfolioWeek03LectureContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'content-creation',
 };
 
 export const portfolioWeek03Assignment05Content: ProgramContent = {
@@ -1341,6 +1414,7 @@ export const portfolioWeek03Assignment05Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'content-creation-assignment',
 };
 
 export const portfolioWeek04LectureContent: ProgramContent = {
@@ -1363,6 +1437,7 @@ export const portfolioWeek04LectureContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'design-principles',
 };
 
 export const portfolioWeek04Assignment06Content: ProgramContent = {
@@ -1385,6 +1460,7 @@ export const portfolioWeek04Assignment06Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'design-principles-assignment',
 };
 
 export const portfolioWeek05LectureContent: ProgramContent = {
@@ -1407,6 +1483,7 @@ export const portfolioWeek05LectureContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'technical-implementation',
 };
 
 export const portfolioWeek05Assignment07Content: ProgramContent = {
@@ -1429,6 +1506,7 @@ export const portfolioWeek05Assignment07Content: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'technical-implementation-assignment',
 };
 
 export const portfolioWeek05ActivityContent: ProgramContent = {
@@ -1451,6 +1529,7 @@ export const portfolioWeek05ActivityContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'hands-on-activity',
 };
 
 export const portfolioWeek06LectureContent: ProgramContent = {
@@ -1473,6 +1552,7 @@ export const portfolioWeek06LectureContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'deployment-hosting',
 };
 
 export const portfolioWeek06AssignmentContent: ProgramContent = {
@@ -1495,6 +1575,7 @@ export const portfolioWeek06AssignmentContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'deployment-assignment',
 };
 
 export const portfolioWeek07LectureContent: ProgramContent = {
@@ -1517,6 +1598,7 @@ export const portfolioWeek07LectureContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'seo-analytics',
 };
 
 export const portfolioWeek07AssignmentContent: ProgramContent = {
@@ -1539,6 +1621,7 @@ export const portfolioWeek07AssignmentContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'seo-assignment',
 };
 
 export const portfolioWeek08LectureContent: ProgramContent = {
@@ -1561,6 +1644,7 @@ export const portfolioWeek08LectureContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'performance-optimization',
 };
 
 export const portfolioWeek08AssignmentContent: ProgramContent = {
@@ -1583,6 +1667,7 @@ export const portfolioWeek08AssignmentContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'performance-assignment',
 };
 
 export const portfolioWeek08ActivityContent: ProgramContent = {
@@ -1605,6 +1690,7 @@ export const portfolioWeek08ActivityContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'performance-activity',
 };
 
 export const portfolioWeek09LectureContent: ProgramContent = {
@@ -1627,6 +1713,7 @@ export const portfolioWeek09LectureContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'advanced-features',
 };
 
 export const portfolioWeek09AssignmentContent: ProgramContent = {
@@ -1649,6 +1736,7 @@ export const portfolioWeek09AssignmentContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'advanced-features-assignment',
 };
 
 export const portfolioWeek10AssignmentContent: ProgramContent = {
@@ -1671,6 +1759,7 @@ export const portfolioWeek10AssignmentContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'final-assignment',
 };
 
 export const portfolioWeek11LectureContent: ProgramContent = {
@@ -1693,6 +1782,7 @@ export const portfolioWeek11LectureContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'portfolio-review',
 };
 
 export const portfolioWeek11ActivityContent: ProgramContent = {
@@ -1715,6 +1805,7 @@ export const portfolioWeek11ActivityContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'final-activity',
 };
 
 // Update relationships
@@ -1761,6 +1852,7 @@ ai4gamesProgram.programContents = [
     ai4gamesWeek11BoardContent,
     ai4gamesWeek12Content,
     ai4gamesWeek13Content,
+    ai4gamesExtraContent
 ];
 
 portfolioProgram.programContents = [
@@ -1889,4 +1981,31 @@ export function getAllPrograms(): Program[] {
 // Helper function to get all products
 export function getAllProducts(): Product[] {
     return mockProducts;
-} 
+}
+
+export function getProgramContentBySlug(programSlug: string, contentPath: string[]): ProgramContent | null {
+    const program = getProgramBySlug(programSlug);
+    if (!program) {
+        console.log('🔍 Program not found:', programSlug);
+        return null;
+    }
+
+    console.log('🔍 Searching for content:', { programSlug, contentPath, programContentsCount: program.programContents?.length });
+    console.log('🔍 Available slugs:', program.programContents?.map(item => ({ slug: item.slug, parent: item.parent, parentId: item.parentId })));
+
+    // first level search on all program contents where the parent is null or undefined
+    let content: ProgramContent | null = program.programContents?.find(item => (item.parent === null || item.parent === undefined) && item.slug === contentPath[0]) || null;
+    
+    console.log('🔍 First level search result:', content ? { slug: content.slug, title: content.title } : 'Not found');
+
+    // if nested, search in children iteracivelly up to the last item in the path
+    if (contentPath.length > 1) {
+        for (const slug of contentPath.slice(1)) {
+            content = content?.children?.find(item => item.slug === slug) || null;
+            if (!content) {
+                return null;
+            }
+        }
+    }
+    return content;
+}

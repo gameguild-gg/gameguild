@@ -520,7 +520,7 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ sl
                           <Card key={course.id} className={`bg-gray-800/50 border-gray-700 hover:bg-gray-800 transition-all duration-200 group ${course.isReal ? 'cursor-pointer' : 'cursor-default'}`}>
                             <CardContent className="p-6">
                               {course.isReal && course.slug ? (
-                                <Link href={`/courses/${course.slug}`} className="block">
+                                <Link href={`/courses/${course.slug}/content`} className="block">
                                   <div className="flex items-start gap-4">
                                     <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
                                       <Image src={course.image} alt={course.title} fill className="object-cover" />
