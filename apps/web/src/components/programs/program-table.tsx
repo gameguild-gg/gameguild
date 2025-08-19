@@ -140,7 +140,7 @@ export function ProgramTable({ programs }: ProgramTableProps) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link href={`/courses/${program.slug || program.id}`}>View Details</Link>
+                        <Link href={`/courses/${program.slug || program.id}/content`}>View Details</Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link href={`/dashboard/courses/${program.slug || program.id}/edit`}>Edit Program</Link>
