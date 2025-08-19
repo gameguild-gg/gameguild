@@ -1,3 +1,10 @@
+## [2.5.3](https://github.com/gameguild-gg/gameguild/compare/v2.5.2...v2.5.3) (2025-08-19)
+
+
+### Bug Fixes
+
+* remove /dashboard prefix from course and program viewing links ([95c3fea](https://github.com/gameguild-gg/gameguild/commit/95c3feacffefe2d01aa70a701c43d5cc2c363fa6))
+
 ## [2.5.2](https://github.com/gameguild-gg/gameguild/compare/v2.5.1...v2.5.2) (2025-08-19)
 
 
