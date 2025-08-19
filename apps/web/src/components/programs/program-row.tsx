@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Program } from '@/lib/programs/programs.actions';
+import { Program } from '@/lib/api/generated/types.gen';
 import { Clock, Eye, DollarSign, Calendar, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -56,14 +56,14 @@ export function ProgramRow({ program }: ProgramRowProps) {
   };
 
   return (
-    <Link href={`/dashboard/courses/${program.slug || program.id}`}>
+    <Link href={`/courses/${program.slug || program.id}/content`}>
       <Card className="group overflow-hidden border-slate-700/50 bg-slate-800/30 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:border-slate-600/50 cursor-pointer">
         <CardContent className="p-3">
           <div className="flex items-start gap-3">
             {/* Thumbnail */}
             <div className="relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-slate-700/50">
-              {program.imageUrl || program.thumbnail ? (
-                <Image src={program.imageUrl || program.thumbnail || ''} alt={program.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+              {program.thumbnail ? (
+                <Image src={program.thumbnail || ''} alt={program.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <BookOpen className="h-5 w-5 text-slate-400" />
@@ -75,7 +75,7 @@ export function ProgramRow({ program }: ProgramRowProps) {
             <div className="flex-1 space-y-1.5">
               <div>
                 <h3 className="text-base font-semibold text-slate-200 group-hover:text-white transition-colors line-clamp-1">{program.title}</h3>
-                {program.shortDescription && <p className="text-sm text-slate-400 line-clamp-2 mt-0.5">{program.shortDescription}</p>}
+                {program.description && <p className="text-sm text-slate-400 line-clamp-2 mt-0.5">{program.description}</p>}
               </div>
 
               {/* Badges */}
@@ -86,23 +86,23 @@ export function ProgramRow({ program }: ProgramRowProps) {
 
               {/* Metadata */}
               <div className="flex flex-wrap gap-3 text-xs text-slate-400">
-                {program.difficulty && (
+                {(program.difficulty || 'Unknown') && (
                   <div className="flex items-center gap-1">
                     <Eye className="h-3 w-3" />
-                    {program.difficulty}
+                    {program.difficulty || 'Unknown'}
                   </div>
                 )}
 
-                {formatDuration(program.duration) && (
+                {formatDuration(program.estimatedHours ? program.estimatedHours * 60 : undefined) && (
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {formatDuration(program.duration)}
+                    {formatDuration(program.estimatedHours ? program.estimatedHours * 60 : undefined)}
                   </div>
                 )}
 
                 <div className="flex items-center gap-1">
                   <DollarSign className="h-3 w-3" />
-                  {formatPrice(program.price, program.currency)}
+                  {program.productPrograms && program.productPrograms.length > 0 ? 'Paid Program' : 'Free'}
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -111,17 +111,17 @@ export function ProgramRow({ program }: ProgramRowProps) {
                 </div>
               </div>
 
-              {/* Tags */}
-              {program.tags && program.tags.length > 0 && (
+              {/* Skills */}
+              {program.skillsProvided && program.skillsProvided.length > 0 && (
                 <div className="flex flex-wrap gap-1">
-                  {program.tags.slice(0, 4).map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
+                  {program.skillsProvided.slice(0, 4).map((skill) => (
+                    <Badge key={skill.id} variant="secondary" className="text-xs">
+                      {skill.name}
                     </Badge>
                   ))}
-                  {program.tags.length > 4 && (
+                  {program.skillsProvided.length > 4 && (
                     <Badge variant="secondary" className="text-xs">
-                      +{program.tags.length - 4}
+                      +{program.skillsProvided.length - 4}
                     </Badge>
                   )}
                 </div>
