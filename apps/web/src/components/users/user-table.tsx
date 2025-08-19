@@ -49,7 +49,6 @@ export function UserTable({ users }: UserTableProps) {
       await updateUser({
         path: { id: user.id },
         body: { isActive: !user.isActive },
-        url: '/api/users/{id}',
       });
       // The page will revalidate automatically due to the action
     } catch (error) {
@@ -66,7 +65,6 @@ export function UserTable({ users }: UserTableProps) {
       try {
         await deleteUser({
           path: { id: user.id },
-          url: '/api/users/{id}',
         });
         // The page will revalidate automatically due to the action
       } catch (error) {
@@ -83,7 +81,6 @@ export function UserTable({ users }: UserTableProps) {
     try {
       await bulkActivateUsers({
         body: selectedUsers,
-        url: '/api/users/bulk/activate',
       });
       setSelectedUsers([]);
     } catch (error) {
@@ -99,7 +96,6 @@ export function UserTable({ users }: UserTableProps) {
     try {
       await bulkDeactivateUsers({
         body: selectedUsers,
-        url: '/api/users/bulk/deactivate',
       });
       setSelectedUsers([]);
     } catch (error) {
