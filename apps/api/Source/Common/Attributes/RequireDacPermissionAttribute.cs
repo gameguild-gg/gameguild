@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using GameGuild.Common.Results;
 using GameGuild.Common.Services;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions;
@@ -76,7 +77,7 @@ public class RequireDacPermissionAttribute : Attribute, IAsyncAuthorizationFilte
             }
 
             // Permission denied
-            context.Result = new ForbidResult();
+            context.Result = new PermissionDeniedResult(RequiredPermission.ToString());
         }
         catch (Exception ex)
         {

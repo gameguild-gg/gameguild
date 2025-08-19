@@ -48,15 +48,15 @@ const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children,
       <div className="h-0.5 bg-gradient-to-r from-transparent via-slate-600/50 to-transparent"></div>
 
       {/* Main Footer Content */}
-      <div className="container mx-auto max-w-6xl px-4 py-8 lg:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
+      <div className="container mx-auto max-w-7xl px-4 py-8 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-8 lg:gap-12">
           {/* Community Info */}
           <div className="lg:col-span-2">
             <CommunityInfo />
           </div>
 
           {/* Navigation Links */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-4">
             <NavigationLinks />
           </div>
         </div>

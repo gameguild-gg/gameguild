@@ -24,11 +24,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page(): Promise<React.JSX.Element> {
-  const [contributors, repositoryData] = await Promise.all([getContributors(), getGitHubRepositoryData()]);
+  try {
+    const [contributors, repositoryData] = await Promise.all([getContributors(), getGitHubRepositoryData()]);
 
-  // Calculate real stats from contributors data
-  const totalContributors = contributors.length;
-  const totalParticipated = contributors.filter((contributor) => (contributor.contributions || 0) > 0).length;
+    // Calculate real stats from contributors data
+    const totalContributors = contributors.length;
+    const totalParticipated = contributors.filter((contributor) => (contributor.contributions || 0) > 0).length;
 
   return (
     <div className="flex flex-col flex-1 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
@@ -108,4 +109,34 @@ export default async function Page(): Promise<React.JSX.Element> {
       />
     </div>
   );
+  } catch (error) {
+    console.error('Error loading contributors page:', error);
+    
+    return (
+      <div className="flex flex-col flex-1 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-white mb-4">Contributors</h1>
+            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6 max-w-2xl mx-auto">
+              <h2 className="text-xl font-semibold text-red-400 mb-2">GitHub API Error</h2>
+              <p className="text-red-300 mb-4">
+                Unable to load contributor data from GitHub API.
+              </p>
+              <details className="text-left">
+                <summary className="cursor-pointer text-red-400 hover:text-red-300 mb-2">
+                  Error Details
+                </summary>
+                <pre className="bg-red-950/30 p-3 rounded text-sm text-red-200 overflow-auto">
+                  {error instanceof Error ? error.message : String(error)}
+                </pre>
+              </details>
+              <p className="text-gray-400 text-sm mt-4">
+                This error has been logged to the console. Please try refreshing the page or contact support if the issue persists.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
