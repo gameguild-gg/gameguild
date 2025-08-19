@@ -3502,6 +3502,7 @@ export type ProgramContent = {
   maxPoints?: number | null;
   estimatedMinutes?: number | null;
   visibility?: Visibility;
+  slug?: string | null;
   program?: Program;
   parent?: ProgramContent;
   children?: Array<ProgramContent> | null;

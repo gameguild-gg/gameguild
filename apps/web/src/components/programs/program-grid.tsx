@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Program } from '@/lib/programs/programs.actions';
+import { Program } from '@/lib/api/generated/types.gen';
 import { Clock, Eye, DollarSign, Calendar, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -58,12 +58,12 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {programs.map((program) => (
-        <Link key={program.id} href={`/dashboard/courses/${program.slug || program.id}`}>
+        <Link key={program.id} href={`/courses/${program.slug || program.id}/content`}>
           <Card className="group overflow-hidden border-slate-700/50 bg-slate-800/30 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:border-slate-600/50 cursor-pointer">
             <CardHeader className="p-0">
               <div className="relative aspect-video w-full overflow-hidden bg-slate-700/50">
-                {program.imageUrl || program.thumbnail ? (
-                  <Image src={program.imageUrl || program.thumbnail || ''} alt={program.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                {program.thumbnail ? (
+                  <Image src={program.thumbnail} alt={program.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
                     <BookOpen className="h-10 w-10 text-slate-400" />
@@ -80,7 +80,7 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
             <CardContent className="p-3">
               <CardTitle className="line-clamp-2 text-base font-semibold text-slate-200 group-hover:text-white transition-colors">{program.title}</CardTitle>
 
-              {program.shortDescription && <p className="mt-1.5 line-clamp-2 text-sm text-slate-400">{program.shortDescription}</p>}
+              {program.description && <p className="mt-1.5 line-clamp-2 text-sm text-slate-400">{program.description}</p>}
 
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {program.difficulty && (
@@ -90,29 +90,31 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
                   </div>
                 )}
 
-                {formatDuration(program.duration) && (
+                {formatDuration(program.estimatedHours ? program.estimatedHours * 60 : undefined) && (
                   <div className="flex items-center gap-1 text-xs text-slate-400">
                     <Clock className="h-3 w-3" />
-                    {formatDuration(program.duration)}
+                    {formatDuration(program.estimatedHours ? program.estimatedHours * 60 : undefined)}
                   </div>
                 )}
 
-                <div className="flex items-center gap-1 text-xs text-slate-400">
-                  <DollarSign className="h-3 w-3" />
-                  {formatPrice(program.price, program.currency)}
-                </div>
+                {program.productPrograms && program.productPrograms.length > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-slate-400">
+                    <DollarSign className="h-3 w-3" />
+                    Paid Program
+                  </div>
+                )}
               </div>
 
-              {program.tags && program.tags.length > 0 && (
+              {program.skillsProvided && program.skillsProvided.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {program.tags.slice(0, 3).map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
+                  {program.skillsProvided.slice(0, 3).map((skill) => (
+                    <Badge key={skill.id} variant="secondary" className="text-xs">
+                      {skill.name}
                     </Badge>
                   ))}
-                  {program.tags.length > 3 && (
+                  {program.skillsProvided.length > 3 && (
                     <Badge variant="secondary" className="text-xs">
-                      +{program.tags.length - 3}
+                      +{program.skillsProvided.length - 3}
                     </Badge>
                   )}
                 </div>

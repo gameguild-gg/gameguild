@@ -71,6 +71,12 @@ public class ProgramContent : Entity {
 
   public Visibility Visibility { get; set; } = Visibility.Published;
 
+  /// <summary>
+  /// URL-friendly slug for this content
+  /// </summary>
+  [MaxLength(255)]
+  public string? Slug { get; set; }
+
   // Navigation properties
   public virtual Program Program { get; set; } = null!;
 
