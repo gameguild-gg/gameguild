@@ -71,47 +71,7 @@ export default function Page() {
 
   const { theme } = useTheme()
 
-  // Storage limit system
-  const [storageLimit, setStorageLimit] = useState<number | null>(100) // null = unlimited, number = MB limit
-  const [showStorageLimitDialog, setShowStorageLimitDialog] = useState(false)
-  const [newStorageLimit, setNewStorageLimit] = useState("")
 
-  // Calculate storage usage percentage
-  const getStorageUsagePercentage = (): number => {
-    if (!storageLimit) return 0
-    return (totalStorageUsed / 1024 / storageLimit) * 100 // Convert KB to MB
-  }
-
-  // Format storage size with appropriate units
-  const formatStorageSize = (sizeInKB: number): string => {
-    const sizeInMB = sizeInKB / 1024
-    const sizeInGB = sizeInMB / 1024
-
-    if (sizeInGB >= 1) {
-      return `${sizeInGB.toFixed(1)}GB`
-    } else if (sizeInMB >= 1) {
-      return `${sizeInMB.toFixed(1)}MB`
-    } else {
-      return `${sizeInKB.toFixed(1)}KB`
-    }
-  }
-
-  // Check if storage operations should be blocked
-  const isStorageNearLimit = (): boolean => {
-    if (!storageLimit) return false
-    return getStorageUsagePercentage() >= 90
-  }
-
-  const isStorageAtLimit = (): boolean => {
-    if (!storageLimit) return false
-    return getStorageUsagePercentage() >= 100
-  }
-
-  // Get storage limit display
-  const getStorageLimitDisplay = (): string => {
-    if (!storageLimit) return "∞"
-    return `${storageLimit}MB`
-  }
 
   // Replace this line:
   // const dbStorage = useRef<IndexedDBStorage>(new IndexedDBStorage())
@@ -399,15 +359,7 @@ export default function Page() {
       return
     }
 
-    // Check storage limit before saving
-    if (isStorageAtLimit()) {
-      toast.error("Overcrowded storage", {
-        description: "Storage limit reached. Delete projects to free up space.",
-        duration: 5000,
-        icon: "🚫",
-      })
-      return
-    }
+
 
     // Get current editor state if editorState is empty
     let stateToSave = editorState
@@ -438,22 +390,11 @@ export default function Page() {
     try {
       await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags)
 
-      // Check storage usage after save and show appropriate notification
-      const usagePercentage = getStorageUsagePercentage()
-
-      if (storageLimit && usagePercentage >= 90) {
-        toast.warning("Saved Project - Little Space", {
-          description: `"${currentProjectName}" saved. Space remaining: ${(100 - usagePercentage).toFixed(1)}%`,
-          duration: 4000,
-          icon: "⚠️",
-        })
-      } else {
-        toast.success("Project saved successfully", {
-          description: `"${currentProjectName}" was saved in the database.`,
-          duration: 3000,
-          icon: "💾",
-        })
-      }
+      toast.success("Project saved successfully", {
+        description: `"${currentProjectName}" was saved in the database.`,
+        duration: 3000,
+        icon: "💾",
+      })
     } catch (error: any) {
       console.error("Save error:", error)
       toast.error("Error saving", {
@@ -474,15 +415,7 @@ export default function Page() {
       return
     }
 
-    // Check storage limit before saving new project
-    if (isStorageAtLimit()) {
-      toast.error("Storage Full", {
-        description: "Storage limit reached. Delete projects to free up space.",
-        duration: 5000,
-        icon: "🚫",
-      })
-      return
-    }
+
 
     // Check if project with same name already exists
     const existingProjects = await storageAdapter.list()
@@ -540,22 +473,11 @@ export default function Page() {
       setSaveAsDialogOpen(false)
       await loadSavedProjectsList()
 
-      // Check storage usage after save
-      const usagePercentage = getStorageUsagePercentage()
-
-      if (storageLimit && usagePercentage >= 90) {
-        toast.warning("Project created - Little space", {
-          description: `"${newProjectName}" created. Remaining space: ${(100 - usagePercentage).toFixed(1)}%`,
-          duration: 4000,
-          icon: "⚠️",
-        })
-      } else {
-        toast.success("New project created", {
-          description: `"${newProjectName}" was created and saved successfully.`,
-          duration: 3000,
-          icon: "🎉",
-        })
-      }
+      toast.success("New project created", {
+        description: `"${newProjectName}" was created and saved successfully.`,
+        duration: 3000,
+        icon: "🎉",
+      })
     } catch (error: any) {
       console.error("Save as error:", error)
       toast.error("Error creating project", {
@@ -687,52 +609,7 @@ export default function Page() {
     return () => clearTimeout(autoSaveTimer)
   }, [editorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized])
 
-  const handleSetStorageLimit = () => {
-    const limitValue = newStorageLimit.trim()
 
-    if (limitValue === "" || limitValue === "0") {
-      // Remove limit (unlimited)
-      setStorageLimit(null)
-      setNewStorageLimit("")
-      setShowStorageLimitDialog(false)
-      toast.success("Limit removed", {
-        description: "Storage is now unlimited",
-        duration: 3000,
-        icon: "∞",
-      })
-      return
-    }
-
-    const limit = Number.parseFloat(limitValue)
-    if (isNaN(limit) || limit <= 0) {
-      toast.error("Invalid value", {
-        description: "Enter a valid number in MB or leave blank for unlimited",
-        duration: 3000,
-        icon: "❌",
-      })
-      return
-    }
-
-    // Check if current usage exceeds new limit
-    const currentUsageMB = totalStorageUsed / 1024
-    if (currentUsageMB > limit) {
-      toast.error("Very low limit", {
-        description: `Current usage (${formatStorageSize(totalStorageUsed)}) exceeds the proposed limit of ${limit}MB`,
-        duration: 4000,
-        icon: "⚠️",
-      })
-      return
-    }
-
-    setStorageLimit(limit)
-    setNewStorageLimit("")
-    setShowStorageLimitDialog(false)
-    toast.success("Configured limit", {
-      description: `Storage limit set to ${limit}MB`,
-      duration: 3000,
-      icon: "📊",
-    })
-  }
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -937,37 +814,7 @@ export default function Page() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <span className="text-xs text-gray-500 dark:text-gray-300">Storage:</span>
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-100">
-                      {formatStorageSize(totalStorageUsed)}
-                    </span>
-                    <span className="text-xs text-gray-400 dark:text-gray-500">/</span>
-                    <button
-                      onClick={() => setShowStorageLimitDialog(true)}
-                      className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer"
-                    >
-                      {getStorageLimitDisplay()}
-                    </button>
-                    {storageLimit && (
-                      <>
-                        <span className="text-xs text-gray-400 dark:text-gray-500">•</span>
-                        <span
-                          className={`text-xs font-medium ${
-                            getStorageUsagePercentage() >= 90
-                              ? "text-red-600"
-                              : getStorageUsagePercentage() >= 70
-                                ? "text-amber-600"
-                                : "text-green-600"
-                          }`}
-                        >
-                          {getStorageUsagePercentage().toFixed(1)}%
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
+
               </div>
 
               {/* Third Row - Sync Status and Action Buttons */}
@@ -1051,75 +898,9 @@ export default function Page() {
                     onProjectsListUpdate={loadSavedProjectsList}
                     onCreateNew={() => setCreateDialogOpen(true)}
                     currentProjectName={currentProjectName}
-                    isStorageNearLimit={isStorageNearLimit}
-                    getStorageUsagePercentage={getStorageUsagePercentage}
-                    storageLimit={storageLimit}
-                    totalStorageUsed={totalStorageUsed}
-                    formatStorageSize={formatStorageSize}
                   />
 
-                  <Dialog open={showStorageLimitDialog} onOpenChange={setShowStorageLimitDialog}>
-                    <DialogContent className="max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Configure Storage Limit</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="storage-limit">Limit in MB (leave empty for unlimited)</Label>
-                          <Input
-                            id="storage-limit"
-                            type="number"
-                            value={newStorageLimit}
-                            onChange={(e) => setNewStorageLimit(e.target.value)}
-                            placeholder="Ex: 100 (para 100MB)"
-                            onKeyDown={(e) => e.key === "Enter" && handleSetStorageLimit()}
-                            className="mt-1"
-                          />
-                        </div>
 
-                        <div className="p-3 bg-gray-50 rounded-lg space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Current use:</span>
-                            <span className="font-medium">{formatStorageSize(totalStorageUsed)}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Current limit:</span>
-                            <span className="font-medium">{getStorageLimitDisplay()}</span>
-                          </div>
-                          {storageLimit && (
-                            <div className="flex justify-between text-sm">
-                              <span className="text-gray-600">Use:</span>
-                              <span
-                                className={`font-medium ${
-                                  getStorageUsagePercentage() >= 90
-                                    ? "text-red-600"
-                                    : getStorageUsagePercentage() >= 70
-                                      ? "text-amber-600"
-                                      : "text-green-600"
-                                }`}
-                              >
-                                {getStorageUsagePercentage().toFixed(1)}%
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="text-xs text-gray-500 space-y-1">
-                          <p>• Leave blank or enter 0 for unlimited storage</p>
-                          <p>• Values in MB (1024 KB = 1 MB)</p>
-                          <p>• Upon reaching 90%, new project creation will be blocked</p>
-                          <p>• Upon reaching 100%, saving will be blocked</p>
-                        </div>
-
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setShowStorageLimitDialog(false)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={handleSetStorageLimit}>Configuration</Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
 
                   <CreateProjectDialog
                     open={createDialogOpen}
@@ -1150,7 +931,6 @@ export default function Page() {
                     }}
                     onProjectsListUpdate={loadSavedProjectsList}
                     onAvailableTagsUpdate={loadAvailableTags}
-                    isStorageAtLimit={isStorageAtLimit}
                     generateProjectId={generateProjectId}
                   />
                 </div>
