@@ -36,8 +36,7 @@ export default async function CourseContentLayout({ children, params }: CourseCo
   
   try {
     const topLevel = await getTopLevelProgramContent({ 
-      path: { programId: programData.id! }, 
-      url: '/api/programs/{programId}/content/top-level' 
+      path: { programId: programData.id! }
     });
     contentItems = (topLevel?.data as any) ?? [];
     
