@@ -1,10 +1,12 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
-import { createProgramContent, deleteProgramContent, getTopLevelProgramContent, reorderProgramContent } from '@/lib/content-management/programs/programs.actions';
 import type { CreateContentDto, ProgramContent } from '@/lib/api/generated/types.gen';
+import { createProgramContent, deleteProgramContent, getTopLevelProgramContent, reorderProgramContent } from '@/lib/content-management/programs/programs.actions';
+import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
+import { ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 interface PageProps {
@@ -13,39 +15,65 @@ interface PageProps {
 
 export default async function CourseContentPage({ params }: PageProps) {
   const { slug } = await params;
-  const result = await getProgramBySlugService(slug);
-  const program = result.success ? result.data : null;
+
+  const program = await getProgramBySlugService(slug);
+  if (!program.success) {
+    redirect('/dashboard/courses');
+  }
 
   async function addContent(formData: FormData) {
     'use server';
-    if (!program?.id) return;
-    const title = String(formData.get('title') || 'New Page');
-    const description = String(formData.get('description') || '');
-    const body = String(formData.get('body') || '');
-    const payload: CreateContentDto = { title, description, body, type: 0 };
-  await createProgramContent({ path: { id: program.id }, body: payload, url: '/api/program/{id}/content' });
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const body = formData.get('body') as string;
+
+    if (!title || !program.data?.id) return;
+
+    const createData: CreateContentDto = {
+      title,
+      description: description || undefined,
+      body: body || undefined,
+      type: 0, // Page
+      sortOrder: 0,
+      isRequired: false,
+      estimatedMinutes: null,
+    };
+
+    await createProgramContent({
+      path: { id: program.data.id },
+      body: createData,
+      url: '/api/program/{id}/content'
+    });
     redirect(`/dashboard/courses/${slug}/content`);
   }
 
   async function removeContent(formData: FormData) {
     'use server';
-    if (!program?.id) return;
-    const contentId = String(formData.get('contentId') || '');
-    if (!contentId) return;
-  await deleteProgramContent({ path: { id: program.id, contentId }, url: '/api/program/{id}/content/{contentId}' });
+    const contentId = formData.get('contentId') as string;
+    if (!contentId || !program.data?.id) return;
+
+    await deleteProgramContent({
+      path: { id: program.data.id, contentId },
+      url: '/api/program/{id}/content/{contentId}'
+    });
     redirect(`/dashboard/courses/${slug}/content`);
   }
 
   async function moveContent(formData: FormData) {
     'use server';
-    if (!program?.id) return;
-    const orderCsv = String(formData.get('order') || '');
-    const contentIds = orderCsv.split(',').map((s) => s.trim()).filter(Boolean);
-  await reorderProgramContent({ path: { id: program.id }, body: { contentIds }, url: '/api/program/{id}/content/reorder' });
+    const order = formData.get('order') as string;
+    if (!order || !program.data?.id) return;
+
+    const contentIds = order.split(',').map(id => id.trim());
+    await reorderProgramContent({
+      path: { id: program.data.id },
+      body: { contentIds },
+      url: '/api/program/{id}/content/reorder'
+    });
     redirect(`/dashboard/courses/${slug}/content`);
   }
 
-  const topLevel = program?.id ? await getTopLevelProgramContent({ path: { programId: program.id }, url: '/api/programs/{programId}/content/top-level' }) : null;
+  const topLevel = program.data?.id ? await getTopLevelProgramContent({ path: { programId: program.data.id }, url: '/api/programs/{programId}/content/top-level' }) : null;
   const items: ProgramContent[] = (topLevel?.data as any) ?? [];
 
   return (
@@ -76,23 +104,34 @@ export default async function CourseContentPage({ params }: PageProps) {
 
             <div className="space-y-2">
               {items.length === 0 && <div className="text-muted-foreground">No content yet.</div>}
-              {items.map((c, idx) => (
-                <div key={c.id} className="flex items-center justify-between border rounded p-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground font-mono">{idx + 1}</span>
-                    <div>
-                      <div className="font-medium">{c.title}</div>
-                      {c.description && <div className="text-sm text-muted-foreground">{c.description}</div>}
+              {items.map((c, idx) => {
+                // Generate content slug for navigation
+                const contentSlug = c.slug || c.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || c.id;
+
+                return (
+                  <div key={c.id} className="flex items-center justify-between border rounded p-3">
+                    <div className="flex items-center gap-3 flex-1">
+                      <span className="text-sm text-muted-foreground font-mono">{idx + 1}</span>
+                      <div className="flex-1">
+                        <div className="font-medium">{c.title}</div>
+                        {c.description && <div className="text-sm text-muted-foreground">{c.description}</div>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link href={`/courses/${slug}/content/${contentSlug}`}>
+                        <Button variant="ghost" size="sm">
+                          View Content
+                          <ChevronRight className="h-4 w-4 ml-2" />
+                        </Button>
+                      </Link>
+                      <form action={removeContent}>
+                        <input type="hidden" name="contentId" value={c.id || ''} />
+                        <Button type="submit" variant="outline" size="sm">Delete</Button>
+                      </form>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <form action={removeContent}>
-                      <input type="hidden" name="contentId" value={c.id || ''} />
-                      <Button type="submit" variant="outline">Delete</Button>
-                    </form>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {items.length > 1 && (
