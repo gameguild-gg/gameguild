@@ -25,6 +25,7 @@ interface ProjectData {
 }
 
 interface StorageAdapter {
+  save: (id: string, name: string, data: string, tags: string[]) => Promise<void>
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete: (id: string) => Promise<void>
@@ -44,11 +45,6 @@ interface OpenProjectDialogProps {
   onProjectsListUpdate: () => void
   onCreateNew: () => void
   currentProjectName: string
-  isStorageNearLimit: () => boolean
-  getStorageUsagePercentage: () => number
-  storageLimit: number | null
-  totalStorageUsed: number
-  formatStorageSize: (sizeInKB: number) => string
 }
 
 export function OpenProjectDialog({
@@ -64,11 +60,6 @@ export function OpenProjectDialog({
   onProjectsListUpdate,
   onCreateNew,
   currentProjectName,
-  isStorageNearLimit,
-  getStorageUsagePercentage,
-  storageLimit,
-  totalStorageUsed,
-  formatStorageSize,
 }: OpenProjectDialogProps) {
   const {
     searchTerm,
@@ -136,9 +127,7 @@ export function OpenProjectDialog({
     return Date.now().toString() + Math.random().toString(36).substr(2, 9)
   }
 
-  const isStorageAtLimit = () => {
-    return isStorageNearLimit()
-  }
+
 
   const handleConfirmDelete = (projectId: string, projectName: string) => {
     setProjectToDelete({ id: projectId, name: projectName })
@@ -211,26 +200,7 @@ export function OpenProjectDialog({
               />
             </div>
 
-            {isStorageNearLimit() && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-900 border border-amber-200 dark:border-amber-700 rounded-lg flex-shrink-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <svg className="w-4 h-4 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                    Armazenamento quase cheio
-                  </span>
-                </div>
-                <p className="text-xs text-amber-700 dark:text-amber-300">
-                  Uso: {getStorageUsagePercentage().toFixed(1)}% ({formatStorageSize(totalStorageUsed)} de{" "}
-                  {storageLimit}MB). Criação de novos projetos bloqueada para preservar margem de salvamento.
-                </p>
-              </div>
-            )}
+
 
             <div className="flex-1 min-h-0 overflow-hidden">
               <ProjectList
@@ -258,34 +228,20 @@ export function OpenProjectDialog({
 
             <div className="flex justify-between items-center pt-4 border-t dark:border-gray-700 flex-shrink-0 h-16">
               <div className="flex gap-2">
-                {isStorageNearLimit() ? (
-                  <div className="flex flex-col">
-                    <Button variant="ghost" disabled className="gap-2 opacity-50 cursor-not-allowed">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Novo Projeto
-                    </Button>
-                    <span className="text-xs text-red-600 dark:text-red-400 mt-1">
-                      Armazenamento quase cheio ({getStorageUsagePercentage().toFixed(1)}%)
-                    </span>
-                  </div>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      onOpenChange(false)
-                      onCreateNew()
-                    }}
-                    className="gap-2"
-                    disabled={!isDbInitialized}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Create New
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    onOpenChange(false)
+                    onCreateNew()
+                  }}
+                  className="gap-2"
+                  disabled={!isDbInitialized}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Create New
+                </Button>
                 <Button
                   variant="ghost"
                   onClick={() => {
@@ -328,17 +284,30 @@ export function OpenProjectDialog({
           if (!open) {
             onOpenChange(true)
           }
-        }}
+        } }
         isDbInitialized={isDbInitialized}
-        storageAdapter={storageAdapter}
+        storageAdapter={{
+          ...storageAdapter,
+          save: storageAdapter.save // Garante que a propriedade 'save' está presente
+        }}
         availableTags={availableTags}
-        onProjectCreate={onProjectLoad}
+        onProjectCreate={(projectData) => {
+          // Adapta ProjectData para o tipo esperado pelo ImportProjectDialog
+          const { id, name, tags } = projectData
+          onProjectLoad({
+            id, name, tags,
+            data: "",
+            size: 0,
+            createdAt: "",
+            updatedAt: ""
+          })
+        } }
         onProjectsListUpdate={onProjectsListUpdate}
-        onAvailableTagsUpdate={() => {}} // This would need to be passed from parent if needed
-        isStorageAtLimit={isStorageAtLimit}
+        onAvailableTagsUpdate={() => { } } // Isso precisaria ser passado do componente pai, se necessário
         generateProjectId={generateProjectId}
-        onOpenProject={handleImportProject}
-      />
+        onOpenProject={handleImportProject} isStorageAtLimit={function (): boolean {
+          throw new Error("Function not implemented.")
+        } }      />
     </>
   )
 }
