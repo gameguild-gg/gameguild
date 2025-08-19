@@ -15,7 +15,7 @@ import {
   FileText,
 } from "lucide-react"
 
-export type CalloutType =
+export type AdmonitionType =
   | "note"
   | "abstract"
   | "info"
@@ -29,13 +29,13 @@ export type CalloutType =
   | "example"
   | "quote"
 
-export interface CalloutProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface AdmonitionProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: React.ReactNode
   content?: React.ReactNode
-  type?: CalloutType
+  type?: AdmonitionType
 }
 
-const calloutVariants = {
+const admonitionVariants = {
   note: "border-blue-500 bg-blue-900 text-blue-100",
   abstract: "border-sky-500 bg-sky-900 text-sky-100",
   info: "border-cyan-500 bg-cyan-900 text-cyan-100",
@@ -80,9 +80,9 @@ const typeToIcon = {
   quote: <Quote className="h-5 w-5 mr-2" />,
 }
 
-export function Callout({ className, type = "note", title, content, ...props }: CalloutProps) {
+export function Admonition({ className, type = "note", title, content, ...props }: AdmonitionProps) {
   return (
-    <div className={cn("rounded-md border p-4 text-sm", calloutVariants[type], className)} {...props}>
+    <div className={cn("rounded-md border p-4 text-sm", admonitionVariants[type], className)} {...props}>
       <div className="font-medium flex items-center gap-1.5">
         {React.cloneElement(typeToIcon[type] as React.ReactElement, {
           className: "h-5 w-5 mr-2",
