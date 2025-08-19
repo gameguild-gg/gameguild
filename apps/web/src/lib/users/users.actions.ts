@@ -77,7 +77,7 @@ export async function createUser(data?: PostApiUsersData) {
 /**
  * Delete a user by ID
  */
-export async function deleteUser(data: DeleteApiUsersByIdData) {
+export async function deleteUser(data: Omit<DeleteApiUsersByIdData, 'url'>) {
   await configureAuthenticatedClient();
 
   const result = await deleteApiUsersById({
@@ -93,7 +93,7 @@ export async function deleteUser(data: DeleteApiUsersByIdData) {
 /**
  * Get a specific user by ID
  */
-export async function getUserById(data: GetApiUsersByIdData) {
+export async function getUserById(data: Omit<GetApiUsersByIdData, 'url'>) {
   await configureAuthenticatedClient();
 
   return getApiUsersById({
@@ -104,7 +104,7 @@ export async function getUserById(data: GetApiUsersByIdData) {
 /**
  * Update a user by ID
  */
-export async function updateUser(data: PutApiUsersByIdData) {
+export async function updateUser(data: Omit<PutApiUsersByIdData, 'url'>) {
   await configureAuthenticatedClient();
 
   const result = await putApiUsersById({
@@ -137,7 +137,7 @@ export async function restoreUser(data: PostApiUsersByIdRestoreData) {
 /**
  * Update user balance
  */
-export async function updateUserBalance(data: PutApiUsersByIdBalanceData) {
+export async function updateUserBalance(data: Omit<PutApiUsersByIdBalanceData, 'url'>) {
   await configureAuthenticatedClient();
 
   const result = await putApiUsersByIdBalance({
@@ -200,7 +200,7 @@ export async function createUsersBulk(data?: PostApiUsersBulkData) {
 /**
  * Activate users in bulk
  */
-export async function activateUsersBulk(data?: PatchApiUsersBulkActivateData) {
+export async function activateUsersBulk(data?: Omit<PatchApiUsersBulkActivateData, 'url'>) {
   await configureAuthenticatedClient();
 
   const result = await patchApiUsersBulkActivate({
@@ -216,7 +216,7 @@ export async function activateUsersBulk(data?: PatchApiUsersBulkActivateData) {
 /**
  * Deactivate users in bulk
  */
-export async function deactivateUsersBulk(data?: PatchApiUsersBulkDeactivateData) {
+export async function deactivateUsersBulk(data?: Omit<PatchApiUsersBulkDeactivateData, 'url'>) {
   await configureAuthenticatedClient();
 
   const result = await patchApiUsersBulkDeactivate({

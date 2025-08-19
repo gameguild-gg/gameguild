@@ -10,7 +10,7 @@ import { getProjectBySlug } from '@/lib/content-management/projects/projects.act
 export default async function VersionsPage({ params }: { params: { slug: string } }): Promise<React.JSX.Element> {
   const slug = params.slug;
 
-  const projectResp = await getProjectBySlug({ url: '/api/projects/slug/{slug}', path: { slug }, query: { includeCollaborators: false, includeReleases: true, includeTeam: false } });
+  const projectResp = await getProjectBySlug({ path: { slug }, query: { includeCollaborators: false, includeReleases: true, includeTeam: false } });
   const project = (projectResp as any)?.data as { title?: string; versions?: ProjectVersion[] } | undefined;
   const versions: ProjectVersion[] = project?.versions ?? [];
 

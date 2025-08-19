@@ -57,7 +57,7 @@ export async function getTenantsAction(params?: GetApiTenantsData) {
 /**
  * Create a new tenant
  */
-export async function createTenantAction(data: PostApiTenantsData) {
+export async function createTenantAction(data: Omit<PostApiTenantsData, 'url'>) {
   await configureAuthenticatedClient();
   const result = await postApiTenants({
     body: data.body,
@@ -70,7 +70,7 @@ export async function createTenantAction(data: PostApiTenantsData) {
 /**
  * Delete a tenant
  */
-export async function deleteTenantAction(data: DeleteApiTenantsByIdData) {
+export async function deleteTenantAction(data: Omit<DeleteApiTenantsByIdData, 'url'>) {
   await configureAuthenticatedClient();
   const result = await deleteApiTenantsById({
     path: { id: data.path.id },
@@ -84,7 +84,7 @@ export async function deleteTenantAction(data: DeleteApiTenantsByIdData) {
 /**
  * Get a tenant by ID
  */
-export async function getTenantByIdAction(data: GetApiTenantsByIdData) {
+export async function getTenantByIdAction(data: Omit<GetApiTenantsByIdData, 'url'>) {
   await configureAuthenticatedClient();
   const result = await getApiTenantsById({
     path: { id: data.path.id },
@@ -96,7 +96,7 @@ export async function getTenantByIdAction(data: GetApiTenantsByIdData) {
 /**
  * Update a tenant
  */
-export async function updateTenantAction(data: PutApiTenantsByIdData) {
+export async function updateTenantAction(data: Omit<PutApiTenantsByIdData, 'url'>) {
   await configureAuthenticatedClient();
   const result = await putApiTenantsById({
     path: { id: data.path.id },
@@ -159,7 +159,7 @@ export async function getActiveTenantsAction(params?: GetApiTenantsActiveData) {
 /**
  * Search tenants
  */
-export async function searchTenantsAction(params?: GetApiTenantsSearchData) {
+export async function searchTenantsAction(params?: Omit<GetApiTenantsSearchData, 'url'>) {
   await configureAuthenticatedClient();
   const result = await getApiTenantsSearch({
     ...params,
@@ -171,7 +171,7 @@ export async function searchTenantsAction(params?: GetApiTenantsSearchData) {
 /**
  * Get tenant statistics
  */
-export async function getTenantStatisticsAction(params?: GetApiTenantsStatisticsData) {
+export async function getTenantStatisticsAction(params?: Omit<GetApiTenantsStatisticsData, 'url'>) {
   await configureAuthenticatedClient();
   const result = await getApiTenantsStatistics({
     ...params,
@@ -183,7 +183,7 @@ export async function getTenantStatisticsAction(params?: GetApiTenantsStatistics
 /**
  * Restore a deleted tenant
  */
-export async function restoreTenantAction(data: PostApiTenantsByIdRestoreData) {
+export async function restoreTenantAction(data: Omit<PostApiTenantsByIdRestoreData, 'url'>) {
   await configureAuthenticatedClient();
   const result = await postApiTenantsByIdRestore({
     path: { id: data.path.id },
@@ -198,7 +198,7 @@ export async function restoreTenantAction(data: PostApiTenantsByIdRestoreData) {
 /**
  * Permanently delete a tenant
  */
-export async function permanentDeleteTenantAction(data: DeleteApiTenantsByIdPermanentData) {
+export async function permanentDeleteTenantAction(data: Omit<DeleteApiTenantsByIdPermanentData, 'url'>) {
   await configureAuthenticatedClient();
   const result = await deleteApiTenantsByIdPermanent({
     path: { id: data.path.id },
@@ -213,7 +213,7 @@ export async function permanentDeleteTenantAction(data: DeleteApiTenantsByIdPerm
 /**
  * Activate a tenant
  */
-export async function activateTenantAction(data: PostApiTenantsByIdActivateData) {
+export async function activateTenantAction(data: Omit<PostApiTenantsByIdActivateData, 'url'>) {
   await configureAuthenticatedClient();
   const result = await postApiTenantsByIdActivate({
     path: { id: data.path.id },
@@ -228,7 +228,7 @@ export async function activateTenantAction(data: PostApiTenantsByIdActivateData)
 /**
  * Deactivate a tenant
  */
-export async function deactivateTenantAction(data: PostApiTenantsByIdDeactivateData) {
+export async function deactivateTenantAction(data: Omit<PostApiTenantsByIdDeactivateData, 'url'>) {
   await configureAuthenticatedClient();
   const result = await postApiTenantsByIdDeactivate({
     path: { id: data.path.id },
