@@ -16,7 +16,7 @@ import { PreviewSource } from "@/components/editor/plugins/preview-components/pr
 import { PreviewYouTube } from "@/components/editor/plugins/preview-components/preview-youtube"
 import { PreviewSpotify } from "@/components/editor/plugins/preview-components/preview-spotify"
 import { PreviewSourceCode } from "@/components/editor/plugins/preview-components/preview-source-code"
-import { PreviewCallout } from "@/components/editor/plugins/preview-components/preview-callout"
+import { PreviewAdmonition } from "@/components/editor/plugins/preview-components/preview-admonition"
 import { PreviewButton } from "@/components/editor/plugins/preview-components/preview-button"
 import { PreviewText } from "@/components/editor/plugins/preview-components/preview-text"
 import { PreviewMermaid } from "@/components/editor/plugins/preview-components/preview-mermaid"
@@ -96,9 +96,9 @@ export function PreviewRenderer({
       return <PreviewButton key={uniqueKey} node={node} />
     }
 
-    // Handle callout nodes
-    if (node.type === "callout") {
-      return <PreviewCallout key={uniqueKey} node={node} />
+    // Handle admonition nodes
+    if (node.type === "admonition") {
+      return <PreviewAdmonition key={uniqueKey} node={node} />
     }
 
     // Handle presentation nodes
