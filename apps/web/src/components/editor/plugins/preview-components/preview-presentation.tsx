@@ -29,7 +29,7 @@ export function PreviewPresentation({ node }: { node: SerializedPresentationNode
         showControls={showControls}
         showThumbnails={true}
         showHeader={true}
-        showFullscreenButton={false}
+        showFullscreenButton={true}
         theme={theme}
         customThemeColor={node.data.customThemeColor}
         size="lg"
