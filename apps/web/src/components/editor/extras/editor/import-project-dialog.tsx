@@ -35,7 +35,6 @@ interface ImportProjectDialogProps {
   onProjectCreate: (projectData: { id: string; name: string; tags: string[] }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
-  isStorageAtLimit: () => boolean
   generateProjectId: () => string
   onOpenProject?: (projectData: { id: string; name: string; tags: string[] }) => void
 }
@@ -56,7 +55,6 @@ export function ImportProjectDialog({
   onProjectCreate,
   onProjectsListUpdate,
   onAvailableTagsUpdate,
-  isStorageAtLimit,
   generateProjectId,
   onOpenProject,
 }: ImportProjectDialogProps) {
@@ -110,7 +108,7 @@ export function ImportProjectDialog({
         // Find .gglexical or .lexical file and index.json
         Object.keys(zipContent.files).forEach((filename) => {
           const file = zipContent.files[filename]
-          if (!file.dir) {
+          if (file && !file.dir) {
             if (filename.endsWith(".gglexical") || filename.endsWith(".lexical")) {
               lexicalFile = file
             } else if (filename === "index.json") {
@@ -235,15 +233,7 @@ export function ImportProjectDialog({
       return
     }
 
-    // Check storage limit
-    if (isStorageAtLimit()) {
-      toast.error("Storage full", {
-        description: "Storage limit reached. Delete projects to free up space",
-        duration: 5000,
-        icon: "🚫",
-      })
-      return
-    }
+
 
     // Check if project with same name already exists
     const existingProjects = await storageAdapter.list()
