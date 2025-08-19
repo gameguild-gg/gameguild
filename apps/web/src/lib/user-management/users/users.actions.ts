@@ -93,7 +93,7 @@ export async function deleteUser(data: DeleteApiUsersByIdData) {
 /**
  * Get a specific user by ID
  */
-export async function getUserById(data: GetApiUsersByIdData) {
+export async function getUserById(data: Omit<GetApiUsersByIdData, 'url'>) {
   await configureAuthenticatedClient();
 
   const result = await getApiUsersById({

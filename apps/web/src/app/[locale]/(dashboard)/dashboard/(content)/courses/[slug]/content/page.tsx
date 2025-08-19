@@ -41,8 +41,7 @@ export default async function CourseContentPage({ params }: PageProps) {
 
     await createProgramContent({
       path: { id: program.data.id },
-      body: createData,
-      url: '/api/program/{id}/content'
+      body: createData
     });
     redirect(`/dashboard/courses/${slug}/content`);
   }
@@ -53,8 +52,7 @@ export default async function CourseContentPage({ params }: PageProps) {
     if (!contentId || !program.data?.id) return;
 
     await deleteProgramContent({
-      path: { id: program.data.id, contentId },
-      url: '/api/program/{id}/content/{contentId}'
+      path: { id: program.data.id, contentId }
     });
     redirect(`/dashboard/courses/${slug}/content`);
   }
@@ -67,13 +65,12 @@ export default async function CourseContentPage({ params }: PageProps) {
     const contentIds = order.split(',').map(id => id.trim());
     await reorderProgramContent({
       path: { id: program.data.id },
-      body: { contentIds },
-      url: '/api/program/{id}/content/reorder'
+      body: { contentIds }
     });
     redirect(`/dashboard/courses/${slug}/content`);
   }
 
-  const topLevel = program.data?.id ? await getTopLevelProgramContent({ path: { programId: program.data.id }, url: '/api/programs/{programId}/content/top-level' }) : null;
+  const topLevel = program.data?.id ? await getTopLevelProgramContent({ path: { programId: program.data.id } }) : null;
   const items: ProgramContent[] = (topLevel?.data as any) ?? [];
 
   return (
