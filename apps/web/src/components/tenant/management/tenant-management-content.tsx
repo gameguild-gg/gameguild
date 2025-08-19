@@ -45,7 +45,7 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
     e.preventDefault();
     setSearching(true);
     try {
-  const res = await searchTenantsAction({ query: { searchTerm: search }, url: '/api/tenants/search' });
+  const res = await searchTenantsAction({ query: { searchTerm: search } });
       setTenants(res.data || []);
     } finally {
       setSearching(false);
@@ -70,19 +70,19 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
 
   // --- Action handlers must be defined before JSX return for scope ---
   const handlePermanentDelete = async (tenantId: string) => {
-    await permanentDeleteTenantAction({ path: { id: tenantId }, url: '/api/tenants/{id}/permanent' });
+    await permanentDeleteTenantAction({ path: { id: tenantId } });
     setTenantToDelete(null);
     setIsDeleteDialogOpen(false);
     refreshData();
   };
 
   const handleActivate = async (tenantId: string) => {
-    await activateTenantAction({ path: { id: tenantId }, url: '/api/tenants/{id}/activate' });
+    await activateTenantAction({ path: { id: tenantId } });
     refreshData();
   };
 
   const handleDeactivate = async (tenantId: string) => {
-    await deactivateTenantAction({ path: { id: tenantId }, url: '/api/tenants/{id}/deactivate' });
+    await deactivateTenantAction({ path: { id: tenantId } });
     refreshData();
   };
 
@@ -112,19 +112,19 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
 
   const handleDelete = async (tenantId: string) => {
   const handlePermanentDelete = async (tenantId: string) => {
-    await permanentDeleteTenantAction({ path: { id: tenantId }, url: '/api/tenants/{id}/permanent' });
+    await permanentDeleteTenantAction({ path: { id: tenantId } });
     setTenantToDelete(null);
     setIsDeleteDialogOpen(false);
     refreshData();
   };
 
   const handleActivate = async (tenantId: string) => {
-    await activateTenantAction({ path: { id: tenantId }, url: '/api/tenants/{id}/activate' });
+    await activateTenantAction({ path: { id: tenantId } });
     refreshData();
   };
 
   const handleDeactivate = async (tenantId: string) => {
-    await deactivateTenantAction({ path: { id: tenantId }, url: '/api/tenants/{id}/deactivate' });
+    await deactivateTenantAction({ path: { id: tenantId } });
     refreshData();
   };
     const result = await deleteTenantClient(tenantId);

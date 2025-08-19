@@ -1,8 +1,10 @@
 'use server';
 
 import { auth } from '@/auth';
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import { client } from '@/lib/api/generated/client.gen';
+import {
+  postApiModulePermissionsAssignRole,
+  deleteApiModulePermissionsRevokeRole
+} from '@/lib/api/generated/sdk.gen';
 import { getUsers } from '@/lib/api/users';
 import { revalidatePath } from 'next/cache';
 
@@ -31,7 +33,7 @@ export async function getTestingLabUserRoleAssignmentsAction(): Promise<UserRole
   revalidatePath('/testing-lab-settings');
   
   try {
-    await configureAuthenticatedClient();
+
     const allUsers = await getUsers();
     
     // For now, return mock data since the backend endpoint structure is complex
@@ -73,10 +75,7 @@ export async function removeUserRoleAction(userId: string, roleName: string): Pr
   }
   
   try {
-    await configureAuthenticatedClient();
-
-    const response = await client.delete({
-      url: `/api/module-permissions/remove-role`,
+    const response = await deleteApiModulePermissionsRevokeRole({
       body: {
         userId: userId,
         tenantId: session.currentTenant?.id,
@@ -124,10 +123,7 @@ export async function assignUserRoleAction(assignment: {
   }
   
   try {
-    await configureAuthenticatedClient();
-
-    const response = await client.post({
-      url: '/api/module-permissions/assign-role',
+    const response = await postApiModulePermissionsAssignRole({
       body: {
         userId: assignment.userId,
         tenantId: session.currentTenant?.id,
