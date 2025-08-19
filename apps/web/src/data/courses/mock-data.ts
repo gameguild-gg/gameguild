@@ -22,6 +22,7 @@ import week12LocalLlm from './python/chapters/week12/local-llm.md';
 import pythonSyllabus from './python/syllabus.md';
 
 // AI4Games Course Imports
+import ai4gamesExtraLecture from './ai4games/chapters/extras/llms.md';
 import ai4gamesWeek01Lecture from './ai4games/chapters/week01/lecture.md';
 import ai4gamesWeek01Readings from './ai4games/chapters/week01/readings.md';
 import ai4gamesWeek02Lecture from './ai4games/chapters/week02/lecture.md';
@@ -41,6 +42,7 @@ import ai4gamesWeek11Assignment from './ai4games/chapters/week11/assignment.md';
 import ai4gamesWeek11Board from './ai4games/chapters/week11/board.md';
 import ai4gamesWeek12Lecture from './ai4games/chapters/week12/lecture.md';
 import ai4gamesWeek13Lecture from './ai4games/chapters/week13/lecture.md';
+
 import ai4gamesSyllabus from './ai4games/syllabus.md';
 
 // Portfolio Course Imports
@@ -1144,6 +1146,28 @@ export const ai4gamesWeek13Content: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const ai4gamesExtraContent: ProgramContent = {
+    id: 'ai4games-extra',
+    programId: ai4gamesProgram.id!,
+    parentId: undefined,
+    title: 'Extra Content LLMs History',
+    description: 'History of LLMs',
+    type: 0, // Page
+    body: ai4gamesExtraLecture,
+    sortOrder: 21,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: ai4gamesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+}
+
 // Portfolio Course Content
 export const portfolioSyllabusContent: ProgramContent = {
     id: 'portfolio-syllabus',
@@ -1761,6 +1785,7 @@ ai4gamesProgram.programContents = [
     ai4gamesWeek11BoardContent,
     ai4gamesWeek12Content,
     ai4gamesWeek13Content,
+    ai4gamesExtraContent
 ];
 
 portfolioProgram.programContents = [
