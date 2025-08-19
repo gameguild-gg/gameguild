@@ -1,3 +1,11 @@
+# [2.6.0](https://github.com/gameguild-gg/gameguild/compare/v2.5.3...v2.6.0) (2025-08-19)
+
+
+### Features
+
+* add slug field to ProgramContent model ([e124989](https://github.com/gameguild-gg/gameguild/commit/e124989da8afdd60f4393f6475987c02fead65c5))
+* add slug field to ProgramContent model ([b644747](https://github.com/gameguild-gg/gameguild/commit/b644747a50d153be0a1435cc26f5d5da82b6b2da))
+
 ## [2.5.3](https://github.com/gameguild-gg/gameguild/compare/v2.5.2...v2.5.3) (2025-08-19)
 
 
