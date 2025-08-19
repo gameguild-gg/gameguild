@@ -117,7 +117,7 @@ export async function updateProject(data: PutApiProjectsByIdData) {
 /**
  * Get a project by slug
  */
-export async function getProjectBySlug(data: GetApiProjectsSlugBySlugData) {
+export async function getProjectBySlug(data: Omit<GetApiProjectsSlugBySlugData, 'url'>) {
   await configureAuthenticatedClient();
 
   return getApiProjectsSlugBySlug({

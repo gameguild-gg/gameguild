@@ -19,7 +19,7 @@ export default async function CourseMediaPage({ params }: PageProps) {
     'use server';
     if (!program?.id) return;
     const thumbnail = String(formData.get('thumbnail') ?? '');
-    await updateProgram({ path: { id: program.id }, body: { title: undefined, description: undefined, thumbnail }, url: '/api/program/{id}' });
+    await updateProgram({ path: { id: program.id }, body: { title: undefined, description: undefined, thumbnail } });
     redirect(`/dashboard/courses/${slug}/media`);
   }
 

@@ -48,8 +48,7 @@ async function findContentByPath(
       path: { 
         programId,
         parentId: content.id! 
-      },
-      url: '/api/programs/{programId}/content/{parentId}/children'
+      }
     });
     children = (childrenResult?.data as any) ?? [];
   } catch (error) {
@@ -143,8 +142,7 @@ export default async function ContentPage({ params }: PageProps) {
     path: { 
       programId: programData.id,
       parentId: content.id 
-    },
-    url: '/api/programs/{programId}/content/{parentId}/children'
+    }
   }) : { data: [] };
   
   const children: ProgramContentDto[] = (childrenResult?.data as any) ?? [];
@@ -165,8 +163,7 @@ export default async function ContentPage({ params }: PageProps) {
         path: { 
           programId: programData.id,
           parentId: parent.id 
-        },
-        url: '/api/programs/{programId}/content/{parentId}/children'
+        }
       });
       siblings = (siblingsResult?.data as any) ?? [];
       currentIndex = siblings.findIndex(item => item.id === content.id);
@@ -225,7 +222,7 @@ export default async function ContentPage({ params }: PageProps) {
                 )}
                 {typeof content.body !== 'string' && content.body && (
                   <pre className="whitespace-pre-wrap">
-                    {String(content.body) as React.ReactNode}
+                    {String(content.body)}
                   </pre>
                 )}
               </div>
