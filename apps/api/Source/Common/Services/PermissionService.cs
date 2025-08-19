@@ -306,7 +306,7 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
   ) {
     if (string.IsNullOrWhiteSpace(contentTypeName)) return false;
 
-    // Check user-specific content type permission
+    // Check user-specific content type permission for the specific tenant
     var userPermission = await context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
                                                                                     ctp.UserId == userId &&
                                                                                     ctp.TenantId == tenantId &&
@@ -315,7 +315,18 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
                                                                                     (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow)
                          );
 
-    if (userPermission?.HasPermission(permission) == true) return true; // Check tenant default for this content type
+    if (userPermission?.HasPermission(permission) == true) return true;
+
+    // Check global user-specific content type permission (TenantId = null)
+    var globalUserPermission = await context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
+                                                                                          ctp.UserId == userId &&
+                                                                                          ctp.TenantId == null &&
+                                                                                          ctp.ContentType == contentTypeName &&
+                                                                                          ctp.DeletedAt == null &&
+                                                                                          (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow)
+                               );
+
+    if (globalUserPermission?.HasPermission(permission) == true) return true; // Check tenant default for this content type
 
     if (tenantId.HasValue) {
       var tenantDefault = await context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>

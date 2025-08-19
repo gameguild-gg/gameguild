@@ -109,7 +109,7 @@ export function GitHubProjectStats({ repositoryData }: GitHubProjectStatsProps) 
           <span className="text-xs bg-blue-600 text-white px-1 py-0.5 rounded font-semibold">💼</span>
         </div>
       ),
-      link: `${GITHUB_REPO_URL}/blob/main/LICENSE.md`,
+      link: `${GITHUB_REPO_URL}/blob/main/LICENSE`,
     },
   ];
 
@@ -184,7 +184,8 @@ export function GitHubProjectStats({ repositoryData }: GitHubProjectStatsProps) 
 
           {/* Repository Activity Summary */}
           <div className="text-center text-slate-400">
-            <p className="text-sm">Real-time data from GitHub API • Last updated: {new Date().toLocaleDateString()}</p>
+            <p className="text-sm">Real-time data from GitHub API</p>
+            <p className="text-xs text-slate-500 mt-1">Last updated: {new Date().toISOString().slice(0, 16).replace('T', ' ')} UTC</p>
           </div>
         </div>
       </div>

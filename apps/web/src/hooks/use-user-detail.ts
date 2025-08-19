@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getUserById } from '@/lib/user-management/users/users.actions';
+import { getUserByUsername } from '@/lib/api/users';
 import { getUserAchievements } from '@/lib/user-management/achievements/achievements.actions';
 import { getUserProfileByUserId } from '@/lib/user-management/profiles/profiles.actions';
 import type { UserResponseDto } from '@/lib/api/generated/types.gen';
+import type { User } from '@/lib/api/users';
+
+export enum UserIdentifierType {
+  ID = 'id',
+  USERNAME = 'username'
+}
 
 export interface UserDetail extends UserResponseDto {
   // These fields are from the actual API and should be used as-is:
@@ -89,14 +96,131 @@ interface UseUserDetailResult {
   refresh: () => Promise<void>;
 }
 
-export function useUserDetail(userId: string): UseUserDetailResult {
+export function useUserDetail(identifierType: UserIdentifierType, identifier: string): UseUserDetailResult {
   const [user, setUser] = useState<UserDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUser = useCallback(async () => {
-    if (!userId) {
-      setError('User ID is required');
+  // Shared utility to fetch additional user data
+  const fetchAdditionalUserData = async (userId: string) => {
+    const [achievementsResult, profileResult] = await Promise.allSettled([
+      getUserAchievements(userId),
+      getUserProfileByUserId(userId)
+    ]);
+
+    // Process achievements
+    let achievements: UserDetail['achievements'] = [];
+    let achievementStats: UserDetail['achievementStats'] = {
+      totalAchievements: 0,
+      completedAchievements: 0,
+      recentAchievements: 0
+    };
+
+    if (achievementsResult.status === 'fulfilled' && achievementsResult.value.data?.userAchievements) {
+      achievements = achievementsResult.value.data.userAchievements.map(userAchievement => ({
+        id: userAchievement.id || '',
+        name: userAchievement.achievement?.name || 'Unknown Achievement',
+        description: userAchievement.achievement?.description || '',
+        category: userAchievement.achievement?.category || 'General',
+        isCompleted: userAchievement.isCompleted || false,
+        earnedAt: userAchievement.earnedAt,
+        progress: userAchievement.progress || 0
+      }));
+
+      achievementStats = {
+        totalAchievements: achievements.length,
+        completedAchievements: achievements.filter(a => a.isCompleted).length,
+        recentAchievements: achievements.filter(a => {
+          if (!a.earnedAt) return false;
+          const earnedDate = new Date(a.earnedAt);
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          return earnedDate > thirtyDaysAgo;
+        }).length
+      };
+    }
+
+    // Process profile
+    let profile: UserDetail['profile'];
+    if (profileResult.status === 'fulfilled' && profileResult.value.data) {
+      const profileData = profileResult.value.data;
+      profile = {
+        bio: profileData.description || undefined,
+        website: undefined, // Not available in UserProfileResponseDto
+        location: undefined, // Not available in UserProfileResponseDto
+        phone: undefined, // Not available in UserProfileResponseDto
+        organization: undefined, // Not available in UserProfileResponseDto
+        skills: undefined, // Not available in UserProfileResponseDto
+        interests: undefined // Not available in UserProfileResponseDto
+      };
+    }
+
+    return { achievements, profile, achievementStats };
+  };
+
+  // Shared utility to create UserDetail object
+  const createUserDetail = (userResponse: UserResponseDto | User, additionalData: {
+    achievements: UserDetail['achievements'];
+    profile: UserDetail['profile'];
+    achievementStats: UserDetail['achievementStats'];
+  }): UserDetail => {
+    return {
+      ...userResponse,
+      // Handle different user types - UserResponseDto vs User
+      subscriptionType: 'subscriptionType' in userResponse ? userResponse.subscriptionType : undefined,
+      role: 'role' in userResponse ? userResponse.role : undefined,
+      activeSubscription: 'activeSubscription' in userResponse ? userResponse.activeSubscription : undefined,
+      username: 'username' in userResponse ? userResponse.username : undefined,
+      displayName: userResponse.name || userResponse.email?.split('@')[0] || 'Unknown User',
+      avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userResponse.name || userResponse.email || 'User')}`,
+      achievements: additionalData.achievements,
+      profile: additionalData.profile,
+      achievementStats: additionalData.achievementStats,
+      
+      // PLACEHOLDER fields - these are not available in the current API
+      lastActive: undefined,
+      lastLogin: undefined,
+      emailVerified: undefined,
+      mfaEnabled: undefined,
+      ownedObjectsCount: undefined,
+      grantsReceivedCount: undefined,
+      tenantMemberships: undefined,
+      sessions: undefined,
+      activities: undefined,
+      communicationPreferences: undefined,
+    };
+  };
+
+  // Fetch user by ID
+  const fetchUserById = async (userId: string): Promise<UserDetail> => {
+    const userData = await getUserById({
+      path: { id: userId },
+      url: '/api/users/{id}'
+    });
+    
+    if (!userData) {
+      throw new Error('User not found');
+    }
+
+    const additionalData = await fetchAdditionalUserData(userData.id!);
+    return createUserDetail(userData, additionalData);
+  };
+
+  // Fetch user by username
+  const fetchUserByUsername = async (username: string): Promise<UserDetail> => {
+    const userData = await getUserByUsername(username);
+    
+    if (!userData) {
+      throw new Error('User not found');
+    }
+
+    const additionalData = await fetchAdditionalUserData(userData.id!);
+    return createUserDetail(userData, additionalData);
+  };
+
+  const refresh = useCallback(async () => {
+    if (!identifier) {
+      setError('User identifier is required');
       setLoading(false);
       return;
     }
@@ -105,110 +229,27 @@ export function useUserDetail(userId: string): UseUserDetailResult {
       setLoading(true);
       setError(null);
 
-      // Fetch user basic data
-      const userData = await getUserById({
-        path: { id: userId },
-        url: '/api/users/{id}',
-      });
-
-      if (!userData) {
-        setError('User not found');
-        return;
+      let userData: UserDetail;
+      if (identifierType === UserIdentifierType.ID) {
+        userData = await fetchUserById(identifier);
+      } else if (identifierType === UserIdentifierType.USERNAME) {
+        userData = await fetchUserByUsername(identifier);
+      } else {
+        throw new Error('Invalid identifier type');
       }
 
-      // Fetch additional real data in parallel
-      const [achievementsResponse, profileResponse] = await Promise.allSettled([
-        // Fetch user achievements
-        getUserAchievements(userId, { pageSize: 50 }).catch((err) => {
-          console.warn('Failed to fetch user achievements:', err);
-          return null;
-        }),
-
-        // Fetch user profile
-        getUserProfileByUserId(userId).catch((err) => {
-          console.warn('Failed to fetch user profile:', err);
-          return null;
-        }),
-      ]);
-
-      // Process achievements data (use any available data, ignore structure for now)
-      let achievements: UserDetail['achievements'] = undefined;
-      let achievementStats: UserDetail['achievementStats'] = undefined;
-
-      if (achievementsResponse.status === 'fulfilled' && achievementsResponse.value?.data) {
-        const achievementsData = achievementsResponse.value.data;
-        // Note: Using basic structure since exact API response structure is unclear
-        // This will need to be adjusted based on actual API response format
-        achievements = [];
-        achievementStats = {
-          totalAchievements: 0,
-          completedAchievements: 0,
-          recentAchievements: 0,
-        };
-      }
-
-      // Process profile data (use any available data, ignore structure for now)
-      let profile: UserDetail['profile'] = undefined;
-      if (profileResponse.status === 'fulfilled' && profileResponse.value?.data) {
-        // Note: Using basic structure since exact API response structure is unclear
-        // This will need to be adjusted based on actual API response format
-        profile = {};
-      }
-
-      // Transform the API response to our extended UserDetail interface
-      const userDetail: UserDetail = {
-        // Use all the real data from the API
-        ...userData,
-
-        // Add computed/derived fields
-        displayName: userData.name || userData.email || 'Unknown User',
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.id || 'default'}`,
-
-        // Add real data from other endpoints (basic structure for now)
-        achievements,
-        achievementStats,
-        profile,
-
-        // TEMPORARY: Add placeholder values for UI completeness
-        // TODO: Remove these when proper API endpoints are implemented
-        tenantMemberships: userData.role
-          ? [
-              {
-                tenantId: 'default',
-                tenantName: 'Default Tenant',
-                role: userData.role,
-                joinedAt: userData.createdAt || new Date().toISOString(),
-              },
-            ]
-          : undefined,
-
-        // Note: The following fields are NOT set because they don't exist in the API:
-        // - lastActive, lastLogin, emailVerified, mfaEnabled
-        // - ownedObjectsCount, grantsReceivedCount (need project/program APIs)
-        // - sessions, activities, communicationPreferences
-        //
-        // These should either be:
-        // 1. Implemented in the backend API, or
-        // 2. Fetched from separate API endpoints, or
-        // 3. Removed from the UI until available
-      };
-
-      setUser(userDetail);
+      setUser(userData);
     } catch (err) {
       console.error('Error fetching user:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch user details');
+      setError(err instanceof Error ? err.message : 'Failed to fetch user');
     } finally {
       setLoading(false);
     }
-  }, [userId]);
-
-  const refresh = async () => {
-    await fetchUser();
-  };
+  }, [identifierType, identifier]);
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    refresh();
+  }, [identifierType, identifier]);
 
   return {
     user,
