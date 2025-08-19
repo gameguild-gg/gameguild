@@ -11,7 +11,6 @@ export async function getProgramBySlugService(slug: string) {
   try {
     const response = await getProgramBySlug({
       path: { slug },
-      url: '/api/program/slug/{slug}',
     });
 
     if (response.data) {
@@ -32,7 +31,6 @@ export async function getProgramWithContentService(id: string) {
   try {
     const response = await getProgramWithContent({
       path: { id },
-      url: '/api/program/{id}/with-content',
     });
 
     if (response.data) {
@@ -53,7 +51,6 @@ export async function getProgramByIdService(id: string) {
   try {
     const response = await getProgramById({
       path: { id },
-      url: '/api/program/{id}',
     });
 
     if (response.data) {

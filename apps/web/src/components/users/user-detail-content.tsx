@@ -70,7 +70,6 @@ export function UserDetailContent({ user }: UserDetailContentProps) {
           email: formData.email,
           isActive: formData.isActive,
         },
-        url: '/api/users/{id}',
       });
 
       // Update balance separately if changed
@@ -78,7 +77,6 @@ export function UserDetailContent({ user }: UserDetailContentProps) {
         await updateUserBalance({
           path: { id: user.id },
           body: { balance: formData.balance },
-          url: '/api/users/{id}/balance',
         });
       }
 
@@ -99,7 +97,6 @@ export function UserDetailContent({ user }: UserDetailContentProps) {
       await updateUser({
         path: { id: user.id },
         body: { isActive: !user.isActive },
-        url: '/api/users/{id}',
       });
       setFormData((prev) => ({ ...prev, isActive: !prev.isActive }));
       router.refresh();
@@ -118,7 +115,6 @@ export function UserDetailContent({ user }: UserDetailContentProps) {
       try {
         await deleteUser({
           path: { id: user.id },
-          url: '/api/users/{id}',
         });
         router.push('/dashboard/users');
       } catch (error) {
