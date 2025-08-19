@@ -179,16 +179,10 @@ export default function Page() {
   // Force open dialog on first visit
   useEffect(() => {
     if (!isDbInitialized) return
-
-    // Check if it's the first time (no current project and no saved projects)
-    if (isFirstTime && !currentProjectName && savedProjects.length === 0) {
-      setOpenDialogOpen(true)
-    } else if (isFirstTime && savedProjects.length > 0) {
-      // If there are saved projects but no current project, also show dialog
-      setOpenDialogOpen(true)
-    }
+    
     setIsFirstTime(false)
-  }, [savedProjects, currentProjectName, isFirstTime, isDbInitialized])
+    
+  }, [isDbInitialized])
 
   // Atualizar informações de armazenamento sempre que o editor mudar
   useEffect(() => {
