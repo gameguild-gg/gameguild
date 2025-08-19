@@ -9,13 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BookOpen, Calendar, Filter, GraduationCap, MoreHorizontal, Plus, RefreshCw, Search, TrendingUp, Users, Zap } from 'lucide-react';
 import { getCourseData } from '@/lib/courses/actions';
-import { EnhancedCourse } from '@/lib/courses/courses-enhanced.context';
+import { Course } from '@/lib/api/generated/types.gen';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ViewModeToggle } from '@/components/common/filters/view-mode-toggle';
 import Link from 'next/link';
 
 export function EnhancedCoursesList() {
-  const [courses, setCourses] = useState<EnhancedCourse[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [areaFilter, setAreaFilter] = useState<string>('all');
@@ -30,7 +30,7 @@ export function EnhancedCoursesList() {
     try {
       setLoading(true);
       const data = await getCourseData();
-      setCourses(data.courses);
+      setCourses(data);
     } catch (error) {
       console.error('Error fetching courses:', error);
       setCourses([]);
@@ -323,7 +323,7 @@ export function EnhancedCoursesList() {
         ) : viewMode === 'row' ? (
           <div className="space-y-4">
             {filteredCourses.map((course) => (
-              <Link key={course.id} href={`/dashboard/courses/${course.slug}`}>
+              <Link key={course.id} href={`/courses/${course.slug}`}>
                 <Card className="bg-card/50 border-border backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
@@ -385,7 +385,7 @@ export function EnhancedCoursesList() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCourses.map((course) => (
-              <Link key={course.id} href={`/dashboard/courses/${course.slug}`}>
+              <Link key={course.id} href={`/courses/${course.slug}`}>
                 <Card className="bg-card/50 border-border backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">

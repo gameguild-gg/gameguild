@@ -2,7 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Program } from '@/lib/programs/programs.actions';
+import { Program } from '@/lib/api/generated/types.gen';
 import { Clock, Eye, DollarSign, Calendar, BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -58,7 +58,7 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {programs.map((program) => (
-        <Link key={program.id} href={`/dashboard/courses/${program.slug || program.id}`}>
+        <Link key={program.id} href={`/courses/${program.slug || program.id}`}>
           <Card className="group overflow-hidden border-slate-700/50 bg-slate-800/30 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:border-slate-600/50 cursor-pointer">
             <CardHeader className="p-0">
               <div className="relative aspect-video w-full overflow-hidden bg-slate-700/50">
@@ -103,16 +103,16 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
                 </div>
               </div>
 
-              {program.tags && program.tags.length > 0 && (
+              {(program as any).tags && (program as any).tags.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {program.tags.slice(0, 3).map((tag) => (
+                  {(program as any).tags?.slice(0, 3).map((tag: string) => (
                     <Badge key={tag} variant="secondary" className="text-xs">
                       {tag}
                     </Badge>
                   ))}
-                  {program.tags.length > 3 && (
+                  {(program as any).tags?.length > 3 && (
                     <Badge variant="secondary" className="text-xs">
-                      +{program.tags.length - 3}
+                      +{(program as any).tags.length - 3}
                     </Badge>
                   )}
                 </div>
