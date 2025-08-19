@@ -1,25 +1,14 @@
-'use client';
-
-import React from 'react';
 import Link from 'next/link';
 import { Settings, User } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import { UserProfileMenu } from './user-profile-menu';
+import { auth } from '@/auth';
+import { getCurrentUserProfile } from '@/lib/user-profile/user-profile.actions';
 
-export const UserProfile = (): React.JSX.Element => {
-  const { data: session, status } = useSession();
-
-  // Show loading state
-  if (status === 'loading') {
-    return (
-      <div className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 bg-gray-200 animate-pulse">
-        Loading...
-      </div>
-    );
-  }
+export const UserProfile = async (): Promise<React.JSX.Element> => {
+  const session = await auth();
 
   // Return login button if not authenticated
-  if (status === 'unauthenticated' || !session || !session.user) {
+  if (!session || !session.user) {
     return (
       <Link
         href="/sign-in"
@@ -42,8 +31,20 @@ export const UserProfile = (): React.JSX.Element => {
     );
   }
 
-  // Generate username for profile URL
-  const profileUsername = session.user.username?.toLowerCase().replace(/\s+/g, '') || 'user';
+  const userResult = await getCurrentUserProfile();
+  
+  if (!userResult.success || !userResult.data) {
+    return (
+      <div className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 bg-gray-200">
+        Error loading profile
+      </div>
+    );
+  }
+
+  const userData = userResult.data;
+
+  // Use actual username for profile URL instead of transforming the display name
+  const profileUsername = userData?.username || userData?.name?.toLowerCase().replace(/\s+/g, '') || 'user';
 
   // Define menu items
   const menuItems = [
