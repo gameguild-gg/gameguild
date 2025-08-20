@@ -5,7 +5,7 @@ import { ErrorBoundaryProvider }             from '@/components/common/errors/er
 import { ApolloClientProvider }              from '@/components/providers/apollo-provider';
 import { GitHubIssueProvider }               from '@/components/providers/github-issue-provider';
 import { TenantProvider }                    from '@/components/tenant';
-import { ThemeProvider }                     from '@/components/theme';
+import { ThemeProvider }                    from '@/components/theme/theme-provider';
 import { Toaster }                           from '@/components/ui/sonner';
 import { Web3Provider }                      from '@/components/web3';
 import { environment }                       from '@/configs/environment';
@@ -48,40 +48,37 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
   const messages = await getMessages();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body>
-        <WebVitals />
+    <>
+      <WebVitals />
 
-        {/* Initialize Google Consent Mode early */}
-        <InitializeGoogleConsent />
+      {/* Initialize Google Consent Mode early */}
+      <InitializeGoogleConsent />
 
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          {/* Conditional Analytics - only loads when the user consents */}
-          <ConditionalAnalytics />
-          <GoogleAnalytics gaId={environment.googleAnalyticsMeasurementId} />
-          <GoogleTagManager gtmId={environment.googleTagManagerId} />
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <ErrorBoundaryProvider config={{ level: 'page', enableRetry: true, maxRetries: 3, reportToAnalytics: true, isolate: false }}>
-              {/* TODO: If the session has a user and it has signed-in by a web3 address then try to connect to the wallet address. */}
-              <ApolloClientProvider>
-                <Web3Provider>
-                  <SessionProvider session={ session }>
-                    <TenantProvider initialState={ { currentTenant: session?.currentTenant, availableTenants: session?.availableTenants } }>
-                      {/*TODO: Move this to a better place*/ }
-                      {/*<ThemeToggle />*/ }
-                      <GitHubIssueProvider />
-                      { children }
-                      {/*TODO: Move this to a better place*/ }
-                      {/*<FeedbackFloatingButton />*/ }
-                      <Toaster/>
-                    </TenantProvider>
-                  </SessionProvider>
-                </Web3Provider>
-              </ApolloClientProvider>
-            </ErrorBoundaryProvider>
-          </ThemeProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+      <NextIntlClientProvider locale={locale} messages={messages}>
+        {/* Conditional Analytics - only loads when the user consents */}
+        <ConditionalAnalytics />
+        <GoogleAnalytics gaId={environment.googleAnalyticsMeasurementId} />
+        <GoogleTagManager gtmId={environment.googleTagManagerId} />
+        <ErrorBoundaryProvider config={{ level: 'page', enableRetry: true, maxRetries: 3, reportToAnalytics: true, isolate: false }}>
+          {/* TODO: If the session has a user and it has signed-in by a web3 address then try to connect to the wallet address. */}
+          <ApolloClientProvider>
+            <Web3Provider>
+              <SessionProvider session={ session }>
+                <TenantProvider initialState={ { currentTenant: session?.currentTenant, availableTenants: session?.availableTenants } }>
+                  {/*TODO: Move this to a better place*/ }
+                  {/*<ThemeToggle />*/ }
+                  <GitHubIssueProvider />
+                  { children }
+                  {/*TODO: Move this to a better place*/ }
+                  {/*<FeedbackFloatingButton />*/ }
+                  <Toaster/>
+                </TenantProvider>
+              </SessionProvider>
+            </Web3Provider>
+          </ApolloClientProvider>
+        </ErrorBoundaryProvider>
+      </NextIntlClientProvider>
+    </>
+
   );
 }
