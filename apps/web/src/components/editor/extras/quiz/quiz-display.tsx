@@ -15,6 +15,7 @@ interface QuizDisplayProps {
   allowRetry: boolean
   checkAnswers: () => void
   toggleAnswer: (answerId: string) => void
+  resetQuiz?: () => void
   blanks?: string[]
   fillBlankMode?: "text" | "multiple-choice"
   fillBlankOptions?: string[]
@@ -36,6 +37,7 @@ export function QuizDisplay({
   allowRetry,
   checkAnswers,
   toggleAnswer,
+  resetQuiz,
   blanks = [],
   fillBlankMode = "text",
   fillBlankOptions = [],
@@ -43,11 +45,22 @@ export function QuizDisplay({
   correctRating = 3,
   fillBlankAlternatives = [],
 }: QuizDisplayProps) {
+  const maxSelections = questionType === "multiple-choice" ? answers.filter((a) => a.isCorrect).length : 1
+  const canSelectMore = selectedAnswers.length < maxSelections
+
   const renderQuestionContent = () => {
     switch (questionType) {
       case "multiple-choice":
         return (
           <div className="space-y-3">
+            {maxSelections > 1 && (
+              <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <span className="font-medium">
+                  Select {maxSelections} answer{maxSelections > 1 ? "s" : ""}({selectedAnswers.length}/{maxSelections}{" "}
+                  selected)
+                </span>
+              </div>
+            )}
             {answers.map((answer) => (
               <div
                 key={answer.id}
@@ -58,9 +71,17 @@ export function QuizDisplay({
                     ? "border-blue-500 bg-blue-50 shadow-sm"
                     : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                 }
-                ${showFeedback && !allowRetry ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
+                ${showFeedback ? "cursor-not-allowed" : "hover:shadow-sm"}
+                ${showFeedback && !selectedAnswers.includes(answer.id) ? "opacity-50" : ""}
+                ${!showFeedback && !selectedAnswers.includes(answer.id) && !canSelectMore ? "cursor-not-allowed opacity-50" : ""}
               `}
-                onClick={() => (!showFeedback || allowRetry ? toggleAnswer(answer.id) : undefined)}
+                onClick={() => {
+                  if (!showFeedback) {
+                    if (selectedAnswers.includes(answer.id) || canSelectMore) {
+                      toggleAnswer(answer.id)
+                    }
+                  }
+                }}
               >
                 <div
                   className={`
@@ -95,10 +116,11 @@ export function QuizDisplay({
                   ? "border-green-500 bg-green-50 text-green-700 shadow-sm"
                   : "border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50"
               }
-              ${showFeedback && !allowRetry ? "cursor-not-allowed opacity-75" : "hover:shadow-sm cursor-pointer"}
+              ${showFeedback ? "cursor-not-allowed" : "hover:shadow-sm cursor-pointer"}
+              ${showFeedback && !selectedAnswers.includes("true") ? "opacity-50" : ""}
             `}
-              onClick={() => (!(showFeedback && !allowRetry) ? setSelectedAnswers(["true"]) : undefined)}
-              disabled={showFeedback && !allowRetry}
+              onClick={() => (!showFeedback ? setSelectedAnswers(["true"]) : undefined)}
+              disabled={showFeedback}
             >
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path
@@ -117,15 +139,16 @@ export function QuizDisplay({
                   ? "border-red-500 bg-red-50 text-red-700 shadow-sm"
                   : "border-gray-200 text-gray-700 hover:border-red-300 hover:bg-red-50"
               }
-              ${showFeedback && !allowRetry ? "cursor-not-allowed opacity-75" : "hover:shadow-sm cursor-pointer"}
+              ${showFeedback ? "cursor-not-allowed" : "hover:shadow-sm cursor-pointer"}
+              ${showFeedback && !selectedAnswers.includes("false") ? "opacity-50" : ""}
             `}
-              onClick={() => (!(showFeedback && !allowRetry) ? setSelectedAnswers(["false"]) : undefined)}
-              disabled={showFeedback && !allowRetry}
+              onClick={() => (!showFeedback ? setSelectedAnswers(["false"]) : undefined)}
+              disabled={showFeedback}
             >
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 011.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                   clipRule="evenodd"
                 />
               </svg>
@@ -153,7 +176,7 @@ export function QuizDisplay({
                           newAnswers[index] = e.target.value
                           setSelectedAnswers(newAnswers)
                         }}
-                        disabled={showFeedback && !allowRetry}
+                        disabled={showFeedback}
                       />
                     )}
                   </span>
@@ -186,9 +209,10 @@ export function QuizDisplay({
                         ? "border-blue-500 bg-blue-50 shadow-sm"
                         : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                     }
-                    ${showFeedback && !allowRetry ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
+                    ${showFeedback ? "cursor-not-allowed" : "hover:shadow-sm"}
+                    ${showFeedback && selectedAnswers[0] !== alternative.id ? "opacity-50" : ""}
                   `}
-                    onClick={() => (!(showFeedback && !allowRetry) ? setSelectedAnswers([alternative.id]) : undefined)}
+                    onClick={() => (!showFeedback ? setSelectedAnswers([alternative.id]) : undefined)}
                   >
                     <div
                       className={`
@@ -214,7 +238,7 @@ export function QuizDisplay({
               placeholder="Enter your answer..."
               value={selectedAnswers[0] || ""}
               onChange={(e) => setSelectedAnswers([e.target.value])}
-              disabled={showFeedback && !allowRetry}
+              disabled={showFeedback}
             />
           </div>
         )
@@ -227,7 +251,7 @@ export function QuizDisplay({
               placeholder="Write your essay here..."
               value={selectedAnswers[0] || ""}
               onChange={(e) => setSelectedAnswers([e.target.value])}
-              disabled={showFeedback && !allowRetry}
+              disabled={showFeedback}
               rows={6}
             />
           </div>
@@ -252,12 +276,11 @@ export function QuizDisplay({
                         ? "border-blue-500 bg-blue-500 text-white shadow-lg scale-110"
                         : "border-gray-300 text-gray-700 hover:border-blue-300 hover:bg-blue-50"
                     }
-                    ${showFeedback && !allowRetry ? "cursor-not-allowed opacity-75" : "hover:shadow-md cursor-pointer"}
+                    ${showFeedback ? "cursor-not-allowed" : "hover:shadow-md cursor-pointer"}
+                    ${showFeedback && !selectedAnswers.includes(value.toString()) ? "opacity-50" : ""}
                   `}
-                    onClick={() =>
-                      !(showFeedback && !allowRetry) ? setSelectedAnswers([value.toString()]) : undefined
-                    }
-                    disabled={showFeedback && !allowRetry}
+                    onClick={() => (!showFeedback ? setSelectedAnswers([value.toString()]) : undefined)}
+                    disabled={showFeedback}
                   >
                     {value}
                   </button>
@@ -274,6 +297,17 @@ export function QuizDisplay({
 
   return (
     <div className="space-y-4">
+      {showFeedback && allowRetry && resetQuiz && (
+        <div className="flex justify-center">
+          <button
+            onClick={resetQuiz}
+            className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
+          >
+            Reset Quiz
+          </button>
+        </div>
+      )}
+
       {questionType !== "fill-blank" || fillBlankMode !== "multiple-choice" ? (
         <div className="text-lg font-medium">{question}</div>
       ) : null}
