@@ -1,18 +1,18 @@
 "use client"
 
-import type { SerializedQuizNode } from "../../nodes/quiz-node"
+import type { SerializedQuizNode } from "@/components/editor/nodes/quiz-node"
 import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
-import { QuizWrapper } from "../../extras/quiz/quiz-wrapper"
-import { QuizDisplay } from "../../extras/quiz/quiz-display"
+import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
+import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
 import { Button } from "@/components/ui/button"
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw } from "lucide-react"
 
 export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
   const quizLogic = useQuizLogic({
-    answers: node.data?.answers,
-    allowRetry: node.data?.allowRetry,
-    correctFeedback: node.data?.correctFeedback,
-    incorrectFeedback: node.data?.incorrectFeedback,
+    answers: node.data?.answers || [],
+    allowRetry: node.data?.allowRetry !== undefined ? node.data.allowRetry : true,
+    correctFeedback: node.data?.correctFeedback || "",
+    incorrectFeedback: node.data?.incorrectFeedback || "",
   })
 
   if (!node?.data) {
@@ -35,21 +35,22 @@ export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
     correctRating,
   } = node.data
 
-  const { selectedAnswers, showFeedback, isCorrect, checkAnswers, toggleAnswer, resetQuiz } = quizLogic
+  const { selectedAnswers, setSelectedAnswers, showFeedback, isCorrect, checkAnswers, toggleAnswer, resetQuiz } =
+    quizLogic
 
   return (
     <QuizWrapper backgroundColor={backgroundColor}>
       <QuizDisplay
         question={question}
         questionType={questionType || "multiple-choice"}
-        answers={answers}
+        answers={answers || []}
         selectedAnswers={selectedAnswers}
-        setSelectedAnswers={() => {}} // Dummy function
+        setSelectedAnswers={setSelectedAnswers} // Using proper function instead of dummy
         showFeedback={showFeedback}
         isCorrect={isCorrect}
-        correctFeedback={correctFeedback ?? ""}
-        incorrectFeedback={incorrectFeedback ?? ""}
-        allowRetry={allowRetry}
+        correctFeedback={correctFeedback || ""}
+        incorrectFeedback={incorrectFeedback || ""}
+        allowRetry={allowRetry !== undefined ? allowRetry : true}
         checkAnswers={checkAnswers}
         toggleAnswer={toggleAnswer}
         blanks={blanks}
