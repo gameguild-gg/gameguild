@@ -142,6 +142,7 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
   const isLoading = useEditorLoading()
 
   const [isEditing, setIsEditing] = useState(false)
+  const [hasAutoOpened, setHasAutoOpened] = useState(false)
 
   const {
     selectedAnswers,
@@ -163,6 +164,14 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
   useEffect(() => {
     resetQuiz()
   }, [data, resetQuiz])
+
+  useEffect(() => {
+    const isNewQuiz = !data.question || data.question.trim() === ""
+    if (isNewQuiz && !hasAutoOpened) {
+      setIsEditing(true)
+      setHasAutoOpened(true)
+    }
+  }, [data.question, hasAutoOpened])
 
   const handleSave = (newData: QuizData) => {
     editor.update(() => {
@@ -194,7 +203,7 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
 
   return (
     <>
-      <div className="relative group">
+      <div className="relative group my-4">
         <QuizWrapper backgroundColor={data.backgroundColor}>
           <ContentEditMenu
             options={[
@@ -227,6 +236,18 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
             correctRating={data.correctRating}
           />
         </QuizWrapper>
+
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsEditing(true)}
+            className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm border"
+            title="Edit Quiz"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <QuizSettingsDialog isOpen={isEditing} onClose={() => setIsEditing(false)} data={data} onSave={handleSave} />
