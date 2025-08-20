@@ -43,9 +43,9 @@ const socialLinks = [
 
 const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children, ...props }) => {
   return (
-    <footer className={cn('w-full bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white', className)} {...props}>
+    <footer className={cn('w-full bg-gradient-to-b from-slate-200 via-slate-100 to-slate-200 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-slate-800 dark:text-white', className)} {...props}>
       {/* Top Subtle Border */}
-      <div className="h-0.5 bg-gradient-to-r from-transparent via-slate-600/50 to-transparent"></div>
+      <div className="h-0.5 bg-gradient-to-r from-transparent via-slate-400/50 dark:via-slate-600/50 to-transparent"></div>
 
       {/* Main Footer Content */}
       <div className="container mx-auto max-w-7xl px-4 py-8 lg:py-12">
@@ -62,7 +62,7 @@ const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children,
         </div>
 
         {/* Social Media & Bottom Links */}
-        <div className="mt-8 lg:mt-12 pt-6 lg:pt-8 border-t border-slate-700/50">
+        <div className="mt-8 lg:mt-12 pt-6 lg:pt-8 border-t border-slate-400/50 dark:border-slate-700/50">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
             <SocialMediaLinks links={socialLinks} />
             <LegalLinks
@@ -75,7 +75,7 @@ const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children,
             />
           </div>
 
-          <div className="mt-6 lg:mt-8 pt-4 lg:pt-6 border-t border-slate-700/50 text-center text-sm text-slate-500">© {new Date().getFullYear()} Game Guild Inc. All rights reserved.</div>
+          <div className="mt-6 lg:mt-8 pt-4 lg:pt-6 border-t border-slate-400/50 dark:border-slate-700/50 text-center text-sm text-slate-600 dark:text-slate-500">© {new Date().getFullYear()} Game Guild Inc. All rights reserved.</div>
         </div>
       </div>
 
