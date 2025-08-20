@@ -13,7 +13,6 @@ import { CreateProjectDialog } from "@/components/editor/extras/editor/create-pr
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
-import { useTheme } from "@/lib/context/theme-context"
 
 interface ProjectData {
   id: string
@@ -598,17 +597,17 @@ export default function Page() {
               Use our powerful editor to create engaging content with rich formatting, media, quizzes, and more
             </p>
             <div className="flex items-center gap-4">
-              <Link href="/editor">
+              <Link href="/gglexical">
                 <Button variant="outline" size="sm" className="gap-2 bg-transparent">
                   <Home className="w-4 h-4" />
                   Home
                 </Button>
               </Link>
 
-              <Link href="/editor/preview/">
+              <Link href="/gglexical/view/">
                 <Button variant="outline" size="sm" className="gap-2 bg-transparent">
                   <Eye className="w-4 h-4" />
-                  Full Preview
+                  View
                 </Button>
               </Link>
             </div>
