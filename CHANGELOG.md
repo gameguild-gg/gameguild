@@ -1,3 +1,15 @@
+# [2.7.0](https://github.com/gameguild-gg/gameguild/compare/v2.6.0...v2.7.0) (2025-08-20)
+
+
+### Bug Fixes
+
+* **editor:** open project fix ([75a2b51](https://github.com/gameguild-gg/gameguild/commit/75a2b51dfc4f7606c3860a8f29e42a4c62a23684))
+
+
+### Features
+
+* **courses:** add AI for Games course content and update mock data ([b54825a](https://github.com/gameguild-gg/gameguild/commit/b54825a748b009f20e0f8c49902fd340d547545b))
+
 # [2.6.0](https://github.com/gameguild-gg/gameguild/compare/v2.5.3...v2.6.0) (2025-08-19)
 
 
