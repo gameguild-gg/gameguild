@@ -47,7 +47,7 @@ export async function getPostById(data: GetApiPostsByPostIdData) {
  * Get recent posts with limit
  */
 export async function getRecentPosts(limit: number = 10) {
-  const result = await getPosts({
+  const result = await getApiPosts({
     query: {
       pageSize: limit,
       orderBy: 'createdAt',
