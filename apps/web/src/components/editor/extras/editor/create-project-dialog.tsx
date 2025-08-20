@@ -31,7 +31,6 @@ interface CreateProjectDialogProps {
   onProjectCreate: (projectData: { id: string; name: string; tags: string[] }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
-  isStorageAtLimit: () => boolean
   generateProjectId: () => string
 }
 
@@ -44,7 +43,6 @@ export function CreateProjectDialog({
   onProjectCreate,
   onProjectsListUpdate,
   onAvailableTagsUpdate,
-  isStorageAtLimit,
   generateProjectId,
 }: CreateProjectDialogProps) {
   const [newCreateProjectName, setNewCreateProjectName] = useState("")
@@ -86,15 +84,7 @@ export function CreateProjectDialog({
       return
     }
 
-    // Check storage limit before creating new project
-    if (isStorageAtLimit()) {
-      toast.error("Armazenamento lotado", {
-        description: "Limite de armazenamento atingido. Exclua projetos para liberar espaço",
-        duration: 5000,
-        icon: "🚫",
-      })
-      return
-    }
+
 
     // Check if project with same name already exists
     const existingProjects = await storageAdapter.list()
