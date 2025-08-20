@@ -11,35 +11,35 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Callout as UICallout, type CalloutType } from "@/components/editor/extras/callout"
+import { Admonition as UIAdmonition, type AdmonitionType } from "@/components/editor/extras/admonition"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import { EditorLoadingContext } from "../lexical-editor"
 
-export interface CalloutData {
+export interface AdmonitionData {
   title: string
   content: string
-  type: CalloutType
+  type: AdmonitionType
   isNew?: boolean
 }
 
-export interface SerializedCalloutNode extends SerializedLexicalNode {
-  type: "callout"
-  data: CalloutData
+export interface SerializedAdmonitionNode extends SerializedLexicalNode {
+  type: "admonition"
+  data: AdmonitionData
   version: 1
 }
 
-export class CalloutNode extends DecoratorNode<JSX.Element> {
-  __data: CalloutData
+export class AdmonitionNode extends DecoratorNode<JSX.Element> {
+  __data: AdmonitionData
 
   static getType(): string {
-    return "callout"
+    return "admonition"
   }
 
-  static clone(node: CalloutNode): CalloutNode {
-    return new CalloutNode(node.__data, node.__key)
+  static clone(node: AdmonitionNode): AdmonitionNode {
+    return new AdmonitionNode(node.__data, node.__key)
   }
 
-  constructor(data: CalloutData, key?: string) {
+  constructor(data: AdmonitionData, key?: string) {
     super(key)
     this.__data = {
       title: data.title || "",
@@ -57,46 +57,46 @@ export class CalloutNode extends DecoratorNode<JSX.Element> {
     return false
   }
 
-  setData(data: CalloutData): void {
+  setData(data: AdmonitionData): void {
     const writable = this.getWritable()
     writable.__data = data
   }
 
-  exportJSON(): SerializedCalloutNode {
+  exportJSON(): SerializedAdmonitionNode {
     return {
-      type: "callout",
+      type: "admonition",
       data: this.__data,
       version: 1,
     }
   }
 
-  static importJSON(serializedNode: SerializedCalloutNode): CalloutNode {
-    return new CalloutNode(serializedNode.data)
+  static importJSON(serializedNode: SerializedAdmonitionNode): AdmonitionNode {
+    return new AdmonitionNode(serializedNode.data)
   }
 
   decorate(): JSX.Element {
-    return <CalloutComponent data={this.__data} nodeKey={this.__key} />
+    return <AdmonitionComponent data={this.__data} nodeKey={this.__key} />
   }
 }
 
-interface CalloutComponentProps {
-  data: CalloutData
+interface AdmonitionComponentProps {
+  data: AdmonitionData
   nodeKey: string
 }
 
-function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
+function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
   const [editor] = useLexicalComposerContext()
   const isLoading = useContext(EditorLoadingContext)
   const [isEditing, setIsEditing] = useState((data.isNew || false) && !isLoading)
   const [title, setTitle] = useState(data.title || "")
   const [content, setContent] = useState(data.content || "")
-  const [type, setType] = useState<CalloutType>(data.type || "note")
+  const [type, setType] = useState<AdmonitionType>(data.type || "note")
 
   useEffect(() => {
     if (data.isNew) {
       editor.update(() => {
         const node = $getNodeByKey(nodeKey)
-        if (node instanceof CalloutNode) {
+        if (node instanceof AdmonitionNode) {
           const { isNew, ...rest } = data
           node.setData(rest)
         }
@@ -110,10 +110,10 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
     }
   }, [isLoading])
 
-  const updateCallout = (newData: Partial<CalloutData>) => {
+  const updateAdmonition = (newData: Partial<AdmonitionData>) => {
     editor.update(() => {
       const node = $getNodeByKey(nodeKey)
-      if (node instanceof CalloutNode) {
+      if (node instanceof AdmonitionNode) {
         node.setData({ ...data, ...newData })
       }
     })
@@ -121,29 +121,29 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
 
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle)
-    updateCallout({ title: newTitle })
+    updateAdmonition({ title: newTitle })
   }
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent)
-    updateCallout({ content: newContent })
+    updateAdmonition({ content: newContent })
   }
 
-  const handleTypeChange = (newType: CalloutType) => {
+  const handleTypeChange = (newType: AdmonitionType) => {
     setType(newType)
-    updateCallout({ type: newType })
+    updateAdmonition({ type: newType })
   }
 
   if (!isEditing) {
     return (
       <div className="my-4 relative">
-        <UICallout title={title} content={content} type={type} />
+        <UIAdmonition title={title} content={content} type={type} />
         <ContentEditMenu
           options={[
             {
               id: "edit",
               icon: <Pencil className="h-4 w-4" />,
-              label: "Edit Callout",
+              label: "Edit Admonition",
               action: () => setIsEditing(true),
             },
           ]}
@@ -163,7 +163,7 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
       >
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">Configure Callout</h3>
+            <h3 className="text-lg font-medium">Configure Admonition</h3>
             <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
               <Check className="h-4 w-4 mr-2" />
               Done
@@ -172,7 +172,7 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
 
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <label htmlFor="callout-type" className="text-sm font-medium">
+              <label htmlFor="admonition-type" className="text-sm font-medium">
                 Type
               </label>
               <DropdownMenu>
@@ -200,33 +200,33 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
             </div>
 
             <div className="grid gap-2">
-              <label htmlFor="callout-title" className="text-sm font-medium">
+              <label htmlFor="admonition-title" className="text-sm font-medium">
                 Title (optional)
               </label>
               <Input
-                id="callout-title"
+                id="admonition-title"
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="Callout title"
+                placeholder="Admonition title"
               />
             </div>
 
             <div className="grid gap-2">
-              <label htmlFor="callout-content" className="text-sm font-medium">
+              <label htmlFor="admonition-content" className="text-sm font-medium">
                 Content
               </label>
               <Textarea
-                id="callout-content"
+                id="admonition-content"
                 value={content}
                 onChange={(e) => handleContentChange(e.target.value)}
-                placeholder="Callout content"
+                placeholder="Admonition content"
                 rows={4}
               />
             </div>
 
             <div className="mt-4">
               <h4 className="text-sm font-medium mb-2">Preview</h4>
-              <UICallout title={title} content={content} type={type} />
+              <UIAdmonition title={title} content={content} type={type} />
             </div>
           </div>
         </div>
@@ -235,8 +235,8 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
   )
 }
 
-export function $createCalloutNode(data: Partial<CalloutData> = {}): CalloutNode {
-  return new CalloutNode({
+export function $createAdmonitionNode(data: Partial<AdmonitionData> = {}): AdmonitionNode {
+  return new AdmonitionNode({
     title: data.title || "",
     content: data.content || "",
     type: data.type || "note",
