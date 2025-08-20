@@ -9,7 +9,6 @@ import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-ad
 import Link from "next/link"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
 import { PreviewTableOfContents } from "@/components/editor/extras/preview/preview-table-of-contents"
-import { useTheme } from "@/lib/context/theme-context"
 
 interface ProjectData {
   id: string
@@ -32,8 +31,6 @@ export default function PreviewPage() {
   const [openDialogOpen, setOpenDialogOpen] = useState(false)
   const [availableTags, setAvailableTags] = useState<Array<{ name: string; usageCount: number }>>([])
   const [isDbInitialized, setIsDbInitialized] = useState(false)
-
-  const { theme } = useTheme()
 
   const dbStorage = useRef<EnhancedStorageAdapter>(new EnhancedStorageAdapter())
 
@@ -62,19 +59,6 @@ export default function PreviewPage() {
       setAvailableTags(tags)
     } catch (error) {
       console.error("Failed to load tags:", error)
-    }
-  }
-
-  const formatStorageSize = (sizeInKB: number): string => {
-    const sizeInMB = sizeInKB / 1024
-    const sizeInGB = sizeInMB / 1024
-
-    if (sizeInGB >= 1) {
-      return `${sizeInGB.toFixed(1)}GB`
-    } else if (sizeInMB >= 1) {
-      return `${sizeInMB.toFixed(1)}MB`
-    } else {
-      return `${sizeInKB.toFixed(1)}KB`
     }
   }
 
@@ -161,7 +145,7 @@ export default function PreviewPage() {
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <Link href="/editor">
+                  <Link href="/gglexical">
                     <Button
                       variant="outline"
                       size="sm"
@@ -172,7 +156,7 @@ export default function PreviewPage() {
                     </Button>
                   </Link>
 
-                  <Link href="/editor/lexical">
+                  <Link href="/gglexical/studio">
                     <Button
                       variant="outline"
                       size="sm"
@@ -186,7 +170,7 @@ export default function PreviewPage() {
                           d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                         />
                       </svg>
-                      Editor
+                      Studio
                     </Button>
                   </Link>
                 </div>
@@ -199,7 +183,6 @@ export default function PreviewPage() {
                     storageAdapter={storageAdapter}
                     availableTags={availableTags}
                     onProjectLoad={handleProjectLoad}
-                    formatStorageSize={formatStorageSize}
                   />
                 </div>
               </div>
@@ -245,9 +228,7 @@ export default function PreviewPage() {
                 <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
                   <div className="p-6 px-12 py-12">
                     <PreviewRenderer
-                      serializedState={serializedState}
-                      showHeader={true}
-                      projectName={currentProject.name}
+                      serializedState={serializedState as any}
                     />
                   </div>
                 </div>
