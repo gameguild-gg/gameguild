@@ -327,8 +327,7 @@ export const bulkDeactivateUsers = deactivateUsersBulk;
  * Alias for getUsers to maintain compatibility
  */
 export async function getUsersData(page: number = 1, limit: number = 10) {
-  const result = await getUsers({
-    url: '/api/users',
+  const result = await getApiUsers({
     query: {
       skip: (page - 1) * limit,
       take: limit,
