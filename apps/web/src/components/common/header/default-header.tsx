@@ -7,13 +7,18 @@ import { UserProfile } from '@/components/common/header/common/ui/user-profile';
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
 import { NavigationMenuLink } from '@radix-ui/react-navigation-menu';
 import { MobileMenu } from './mobile-menu';
+import type { Session } from 'next-auth';
+import type { UserResponseDto } from '@/lib/api/generated/types.gen';
 
-type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>;
+type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement> & {
+  session?: Session | null;
+  userProfile?: UserResponseDto | null;
+}>;
 
-const Header: React.FunctionComponent<Readonly<Props>> = async ({ className, children, ...props }) => {
+const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children, session = null, userProfile = null, ...props }) => {
 
   return (
-    <header className={cn('w-full bg-white/10 dark:bg-slate-900/20 backdrop-blur-md border-b border-white/10 dark:border-slate-700/30 text-white sticky top-0 z-50 shadow-lg', className)} {...props}>
+    <header className={cn('w-full bg-white/10 dark:bg-slate-900/20 backdrop-blur-md border-b border-white/10 dark:border-slate-700/30 text-slate-900 dark:text-white sticky top-0 z-50 shadow-lg', className)} {...props}>
       {/* Top Subtle Border */}
       <div className="h-px bg-gradient-to-r from-transparent via-white/20 dark:via-slate-400/30 to-transparent"></div>
 
@@ -26,7 +31,7 @@ const Header: React.FunctionComponent<Readonly<Props>> = async ({ className, chi
             <NavigationMenuList>
 
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-200 hover:text-purple-300 transition-colors duration-300 bg-transparent hover:bg-white/5 backdrop-blur-sm">Courses</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-slate-700 dark:text-slate-200 hover:text-purple-600 dark:hover:text-purple-300 transition-colors duration-300 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 backdrop-blur-sm">Courses</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
                     <ListItem href="/courses" title="Courses">
@@ -42,7 +47,7 @@ const Header: React.FunctionComponent<Readonly<Props>> = async ({ className, chi
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-200 hover:text-green-300 transition-colors duration-300 bg-transparent hover:bg-white/5 backdrop-blur-sm">Testing Lab</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-slate-700 dark:text-slate-200 hover:text-green-600 dark:hover:text-green-300 transition-colors duration-300 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 backdrop-blur-sm">Testing Lab</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
                     <ListItem href="/testing-lab" title="Testing Lab">
@@ -59,7 +64,7 @@ const Header: React.FunctionComponent<Readonly<Props>> = async ({ className, chi
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-200 hover:text-blue-300 transition-colors duration-300 bg-transparent hover:bg-white/5 backdrop-blur-sm">Institutional</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-300 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 backdrop-blur-sm">Institutional</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
                     <ListItem href="/contributors" title="Contributors">
@@ -90,23 +95,23 @@ const Header: React.FunctionComponent<Readonly<Props>> = async ({ className, chi
         <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
           {/*<NotificationDropdown />*/}
           <MobileMenu>
-            <Link href="/courses" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            <Link href="/courses" className="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-md transition-colors">
               Courses
             </Link>
-            <Link href="/programs" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            <Link href="/programs" className="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-md transition-colors">
               Programs
             </Link>
-            <Link href="/testing-lab" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            <Link href="/testing-lab" className="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-md transition-colors">
               Testing Lab
             </Link>
-            <Link href="/about" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            <Link href="/about" className="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-md transition-colors">
               About
             </Link>
-            <Link href="/contact" className="block px-3 py-2 text-slate-200 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+            <Link href="/contact" className="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-md transition-colors">
               Contact
             </Link>
           </MobileMenu>
-          <UserProfile />
+          <UserProfile session={session} userProfile={userProfile} />
         </div>
         {children}
       </div>
@@ -126,13 +131,13 @@ const ListItem = React.forwardRef<React.ElementRef<'a'>, React.ComponentPropsWit
         <a
           ref={ref}
           className={cn(
-            'block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-all duration-200 hover:bg-white/10 dark:hover:bg-slate-800/50 text-slate-200 hover:text-white border border-transparent hover:border-white/20 dark:hover:border-blue-400/30 backdrop-blur-sm',
+            'block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-all duration-200 hover:bg-black/10 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white border border-transparent hover:border-black/20 dark:hover:border-blue-400/30 backdrop-blur-sm',
             className,
           )}
           {...props}
         >
-          <div className="text-sm font-medium leading-none text-blue-300">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-slate-300">{children}</p>
+          <div className="text-sm font-medium leading-none text-blue-600 dark:text-blue-300">{title}</div>
+          <p className="line-clamp-2 text-sm leading-snug text-slate-600 dark:text-slate-300">{children}</p>
         </a>
       </NavigationMenuLink>
     </li>
