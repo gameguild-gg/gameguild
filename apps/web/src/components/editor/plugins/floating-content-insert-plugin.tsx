@@ -46,7 +46,7 @@ import type { AudioData } from "../nodes/audio-node" // Import type for AudioDat
 import type { HeaderData } from "../nodes/header-node"
 import type { DividerData } from "../nodes/divider-node"
 import type { ButtonData } from "../nodes/button-node"
-import type { CalloutData } from "../nodes/callout-node"
+import type { AdmonitionData } from "../nodes/admonition-node"
 import type { YouTubeData } from "../nodes/youtube-node"
 import {
   Dialog,
@@ -92,7 +92,7 @@ export const INSERT_AUDIO_COMMAND = createCommand<AudioData>("INSERT_AUDIO_COMMA
 export const INSERT_HEADER_COMMAND = createCommand<HeaderData>("INSERT_HEADER_COMMAND")
 export const INSERT_DIVIDER_COMMAND = createCommand<Partial<DividerData>>("INSERT_DIVIDER_COMMAND")
 export const INSERT_BUTTON_COMMAND = createCommand<Partial<ButtonData>>("INSERT_BUTTON_COMMAND")
-export const INSERT_CALLOUT_COMMAND = createCommand<Partial<CalloutData>>("INSERT_CALLOUT_COMMAND")
+export const INSERT_ADMONITION_COMMAND = createCommand<Partial<AdmonitionData>>("INSERT_ADMONITION_COMMAND")
 export const INSERT_GALLERY_COMMAND = createCommand("INSERT_GALLERY_COMMAND")
 export const INSERT_PRESENTATION_COMMAND = createCommand("INSERT_PRESENTATION_COMMAND")
 export const INSERT_SOURCE_COMMAND = createCommand("INSERT_SOURCE_COMMAND")
@@ -410,9 +410,9 @@ export function FloatingContentInsertPlugin() {
     },
     {
       icon: AlertCircle,
-      label: "Callout",
+      label: "Admonition",
       action: () => {
-        editor.dispatchCommand(INSERT_CALLOUT_COMMAND, {})
+        editor.dispatchCommand(INSERT_ADMONITION_COMMAND, {})
         setShowMenu(false)
       },
     },
