@@ -229,6 +229,7 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
             allowRetry={data.allowRetry !== undefined ? data.allowRetry : true}
             checkAnswers={checkAnswers}
             toggleAnswer={toggleAnswer}
+            resetQuiz={resetQuiz}
             blanks={data.blanks}
             fillBlankMode={data.fillBlankMode}
             fillBlankAlternatives={data.fillBlankAlternatives}

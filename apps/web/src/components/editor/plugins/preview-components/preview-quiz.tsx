@@ -1,11 +1,10 @@
 "use client"
 
-import type { SerializedQuizNode } from "@/components/editor/nodes/quiz-node"
+import type { SerializedQuizNode } from "../../nodes/quiz-node"
 import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
 import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
 import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
-import { Button } from "@/components/ui/button"
-import { RotateCcw } from "lucide-react"
+import { useEffect } from "react"
 
 export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
   const quizLogic = useQuizLogic({
@@ -14,11 +13,6 @@ export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
     correctFeedback: node.data?.correctFeedback || "",
     incorrectFeedback: node.data?.incorrectFeedback || "",
   })
-
-  if (!node?.data) {
-    console.error("Invalid quiz node structure:", node)
-    return null
-  }
 
   const {
     question,
@@ -38,6 +32,15 @@ export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
   const { selectedAnswers, setSelectedAnswers, showFeedback, isCorrect, checkAnswers, toggleAnswer, resetQuiz } =
     quizLogic
 
+  useEffect(() => {
+    resetQuiz()
+  }, [node.data, resetQuiz])
+
+  if (!node?.data) {
+    console.error("Invalid quiz node structure:", node)
+    return null
+  }
+
   return (
     <QuizWrapper backgroundColor={backgroundColor}>
       <QuizDisplay
@@ -45,7 +48,7 @@ export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
         questionType={questionType || "multiple-choice"}
         answers={answers || []}
         selectedAnswers={selectedAnswers}
-        setSelectedAnswers={setSelectedAnswers} // Using proper function instead of dummy
+        setSelectedAnswers={setSelectedAnswers}
         showFeedback={showFeedback}
         isCorrect={isCorrect}
         correctFeedback={correctFeedback || ""}
@@ -53,25 +56,13 @@ export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
         allowRetry={allowRetry !== undefined ? allowRetry : true}
         checkAnswers={checkAnswers}
         toggleAnswer={toggleAnswer}
+        resetQuiz={resetQuiz}
         blanks={blanks}
         fillBlankMode={fillBlankMode}
         fillBlankAlternatives={fillBlankAlternatives}
         ratingScale={ratingScale}
         correctRating={correctRating}
       />
-      {showFeedback && !allowRetry && (
-        <div className="flex justify-end mt-4 pt-3 border-t border-border/50">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={resetQuiz}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors bg-transparent"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Try Again
-          </Button>
-        </div>
-      )}
     </QuizWrapper>
   )
 }
