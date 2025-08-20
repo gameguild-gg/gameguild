@@ -46,8 +46,8 @@ import { ButtonNode } from "./nodes/button-node"
 import { ButtonPlugin } from "./plugins/button-plugin"
 
 // Add these imports
-import { CalloutNode } from "./nodes/callout-node"
-import { CalloutPlugin } from "./plugins/callout-plugin"
+import { AdmonitionNode } from "./nodes/admonition-node"
+import { AdmonitionPlugin } from "./plugins/admonition-plugin"
 
 // Add these imports
 import { GalleryNode } from "./nodes/gallery-node"
@@ -134,7 +134,7 @@ function StructureDeleteConfirmPlugin() {
           node.getType() === "spotify" ||
           node.getType() === "source-code" ||
           node.getType() === "button" ||
-          node.getType() === "callout" ||
+          node.getType() === "admonition" ||
           node.getType() === "divider" ||
           node.getType() === "header" ||
           node.getType() === "mermaid",
@@ -157,7 +157,7 @@ function StructureDeleteConfirmPlugin() {
                 node.getType() === "spotify" ||
                 node.getType() === "source-code" ||
                 node.getType() === "button" ||
-                node.getType() === "callout" ||
+                node.getType() === "admonition" ||
                 node.getType() === "divider" ||
                 node.getType() === "header" ||
                 node.getType() === "mermaid"
@@ -197,7 +197,7 @@ function StructureDeleteConfirmPlugin() {
             node.getType() === "spotify" ||
             node.getType() === "source-code" ||
             node.getType() === "button" ||
-            node.getType() === "callout" ||
+            node.getType() === "admonition" ||
             node.getType() === "divider" ||
             node.getType() === "header" ||
             node.getType() === "mermaid"
@@ -220,7 +220,7 @@ function StructureDeleteConfirmPlugin() {
                   node.getType() === "spotify" ||
                   node.getType() === "source-code" ||
                   node.getType() === "button" ||
-                  node.getType() === "callout" ||
+                  node.getType() === "admonition" ||
                   node.getType() === "divider" ||
                   node.getType() === "header" ||
                   node.getType() === "mermaid"
@@ -289,14 +289,14 @@ const initialConfig = {
     AudioNode,
     HeaderNode,
     DividerNode,
-    ButtonNode, // Add ButtonNode here
-    CalloutNode, // Add CalloutNode here
+    ButtonNode,
+    AdmonitionNode,
     GalleryNode,
     PresentationNode,
-    SourceNode, // Add SourceNode here
-    YouTubeNode, // Add YouTubeNode here
-    SpotifyNode, // Add SpotifyNode here
-    SourceCodeNode, // Add SourceCodeNode here
+    SourceNode,
+    YouTubeNode,
+    SpotifyNode,
+    SourceCodeNode,
     MermaidNode,
   ],
   theme: {
@@ -395,7 +395,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             <HeaderPlugin />
             <DividerPlugin />
             <ButtonPlugin />
-            <CalloutPlugin />
+            <AdmonitionPlugin />
             <GalleryPlugin />
             <PresentationPlugin />
             <SourcePlugin />
