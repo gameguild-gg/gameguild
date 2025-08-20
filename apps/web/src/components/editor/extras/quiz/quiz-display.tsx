@@ -71,8 +71,7 @@ export function QuizDisplay({
                     ? "border-blue-500 bg-blue-50 shadow-sm"
                     : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                 }
-                ${showFeedback ? "cursor-not-allowed" : "hover:shadow-sm"}
-                ${showFeedback && !selectedAnswers.includes(answer.id) ? "opacity-50" : ""}
+                ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
                 ${!showFeedback && !selectedAnswers.includes(answer.id) && !canSelectMore ? "cursor-not-allowed opacity-50" : ""}
               `}
                 onClick={() => {
@@ -116,8 +115,7 @@ export function QuizDisplay({
                   ? "border-green-500 bg-green-50 text-green-700 shadow-sm"
                   : "border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50"
               }
-              ${showFeedback ? "cursor-not-allowed" : "hover:shadow-sm cursor-pointer"}
-              ${showFeedback && !selectedAnswers.includes("true") ? "opacity-50" : ""}
+              ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm cursor-pointer"}
             `}
               onClick={() => (!showFeedback ? setSelectedAnswers(["true"]) : undefined)}
               disabled={showFeedback}
@@ -139,8 +137,7 @@ export function QuizDisplay({
                   ? "border-red-500 bg-red-50 text-red-700 shadow-sm"
                   : "border-gray-200 text-gray-700 hover:border-red-300 hover:bg-red-50"
               }
-              ${showFeedback ? "cursor-not-allowed" : "hover:shadow-sm cursor-pointer"}
-              ${showFeedback && !selectedAnswers.includes("false") ? "opacity-50" : ""}
+              ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm cursor-pointer"}
             `}
               onClick={() => (!showFeedback ? setSelectedAnswers(["false"]) : undefined)}
               disabled={showFeedback}
@@ -209,8 +206,7 @@ export function QuizDisplay({
                         ? "border-blue-500 bg-blue-50 shadow-sm"
                         : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                     }
-                    ${showFeedback ? "cursor-not-allowed" : "hover:shadow-sm"}
-                    ${showFeedback && selectedAnswers[0] !== alternative.id ? "opacity-50" : ""}
+                    ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
                   `}
                     onClick={() => (!showFeedback ? setSelectedAnswers([alternative.id]) : undefined)}
                   >
@@ -276,8 +272,7 @@ export function QuizDisplay({
                         ? "border-blue-500 bg-blue-500 text-white shadow-lg scale-110"
                         : "border-gray-300 text-gray-700 hover:border-blue-300 hover:bg-blue-50"
                     }
-                    ${showFeedback ? "cursor-not-allowed" : "hover:shadow-md cursor-pointer"}
-                    ${showFeedback && !selectedAnswers.includes(value.toString()) ? "opacity-50" : ""}
+                    ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-md cursor-pointer"}
                   `}
                     onClick={() => (!showFeedback ? setSelectedAnswers([value.toString()]) : undefined)}
                     disabled={showFeedback}
