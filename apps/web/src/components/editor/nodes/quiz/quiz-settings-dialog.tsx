@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, BookOpen, Save } from "lucide-react"
+import { X, BookOpen, Save, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,6 +37,10 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
   const [ratingScale, setRatingScale] = useState(data.ratingScale || { min: 1, max: 5, step: 1 })
   const [correctRating, setCorrectRating] = useState(data.correctRating || 3)
 
+  const [previewSelectedAnswers, setPreviewSelectedAnswers] = useState<string[]>([])
+  const [previewShowFeedback, setPreviewShowFeedback] = useState(false)
+  const [previewIsCorrect, setPreviewIsCorrect] = useState(false)
+
   useEffect(() => {
     if (isOpen) {
       setShowTypeSelector(!data.question)
@@ -52,6 +56,10 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
       setFillBlankAlternatives(data.fillBlankAlternatives || [])
       setRatingScale(data.ratingScale || { min: 1, max: 5, step: 1 })
       setCorrectRating(data.correctRating || 3)
+
+      setPreviewSelectedAnswers([])
+      setPreviewShowFeedback(false)
+      setPreviewIsCorrect(false)
     }
   }, [isOpen, data])
 
@@ -289,8 +297,21 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
 
               {/* Right Panel - Live Preview */}
               <div className="w-1/2 flex flex-col bg-white dark:bg-gray-900">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 flex items-center justify-between">
                   <h3 className="font-medium text-gray-800 dark:text-gray-200">Live Preview</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setPreviewSelectedAnswers([])
+                      setPreviewShowFeedback(false)
+                      setPreviewIsCorrect(false)
+                    }}
+                    className="flex items-center gap-1 text-xs"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Reset
+                  </Button>
                 </div>
                 <div className="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900">
                   <QuizWrapper backgroundColor={backgroundColor}>
@@ -298,15 +319,33 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                       question={question || "Your question will appear here..."}
                       questionType={questionType}
                       answers={answers}
-                      selectedAnswers={[]}
-                      setSelectedAnswers={() => {}}
-                      showFeedback={false}
-                      isCorrect={false}
+                      selectedAnswers={previewSelectedAnswers}
+                      setSelectedAnswers={setPreviewSelectedAnswers}
+                      showFeedback={previewShowFeedback}
+                      isCorrect={previewIsCorrect}
                       correctFeedback={correctFeedback}
                       incorrectFeedback={incorrectFeedback}
                       allowRetry={allowRetry}
-                      checkAnswers={() => {}}
-                      toggleAnswer={() => {}}
+                      checkAnswers={() => {
+                        const correctAnswerIds = answers.filter((a) => a.isCorrect).map((a) => a.id)
+                        const isCorrect =
+                          previewSelectedAnswers.length > 0 &&
+                          previewSelectedAnswers.every((id) => correctAnswerIds.includes(id)) &&
+                          correctAnswerIds.every((id) => previewSelectedAnswers.includes(id))
+
+                        setPreviewIsCorrect(isCorrect)
+                        setPreviewShowFeedback(true)
+                      }}
+                      toggleAnswer={(answerId: string) => {
+                        if (questionType === "multiple-choice") {
+                          setPreviewSelectedAnswers((prev) =>
+                            prev.includes(answerId) ? prev.filter((id) => id !== answerId) : [...prev, answerId],
+                          )
+                        } else {
+                          setPreviewSelectedAnswers([answerId])
+                        }
+                        setPreviewShowFeedback(false)
+                      }}
                       blanks={blanks}
                       fillBlankMode={fillBlankMode}
                       fillBlankAlternatives={fillBlankAlternatives}
