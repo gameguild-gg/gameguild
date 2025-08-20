@@ -17,28 +17,28 @@ export function TopMenu() {
             <div className="w-8 h-8 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center">
               <Menu className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-lg text-gray-900 dark:text-gray-100">GameGuild</span>
+            <span className="font-bold text-lg text-gray-900 dark:text-gray-100">GameGuild Lexical Editor</span>
           </Link>
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <Link
-              href="/editor"
+              href="/gglexical"
               className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             >
               Home
             </Link>
             <Link
-              href="/editor/lexical"
+              href="/gglexical/studio"
               className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             >
-              Editor
+              Studio
             </Link>
             <Link
-              href="/editor/preview"
+              href="/gglexical/view"
               className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             >
-              Preview
+              View
             </Link>
           </nav>
 

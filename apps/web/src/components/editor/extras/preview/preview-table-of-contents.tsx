@@ -118,7 +118,7 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
     // Check if any parent heading is expanded
     for (let i = index - 1; i >= 0; i--) {
       const parentHeading = headings[i]
-      if (parentHeading.level < heading.level) {
+      if (parentHeading && parentHeading.level < heading.level) {
         if (parentHeading.level <= maxLevel && expandedHeadings.has(parentHeading.id)) {
           return true
         }
@@ -137,6 +137,7 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
 
     for (let i = index + 1; i < headings.length; i++) {
       const nextHeading = headings[i]
+      if (!nextHeading) break
       if (nextHeading.level <= heading.level) break
       if (nextHeading.level > maxLevel) return true
     }

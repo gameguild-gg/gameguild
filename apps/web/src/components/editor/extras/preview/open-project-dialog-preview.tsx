@@ -32,7 +32,6 @@ interface OpenProjectDialogPreviewProps {
   storageAdapter: StorageAdapter
   availableTags: Array<{ name: string; usageCount: number }>
   onProjectLoad: (projectData: ProjectData) => void
-  formatStorageSize: (sizeInKB: number) => string
 }
 
 export function OpenProjectDialogPreview({
@@ -42,7 +41,6 @@ export function OpenProjectDialogPreview({
   storageAdapter,
   availableTags,
   onProjectLoad,
-  formatStorageSize,
 }: OpenProjectDialogPreviewProps) {
   const {
     searchTerm,
