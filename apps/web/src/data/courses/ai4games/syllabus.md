@@ -1,97 +1,125 @@
 # Artificial Intelligence
 
-Students with a firm foundation in the basic techniques of artificial intelligence for games will apply their skills to
-program advanced pathfinding algorithms, artificial opponents, scripting tools and other real-time drivers for
-non-playable agents. The goal of the course is to provide finely-tuned artificial competition for players using all the
-rules followed by a human.
+This course provides a technical introduction to the core concepts of artifical intelligence (AI). Students will be introduced to the history of AI, agents (agent architecture and multi-agent behavior), search (search space, uninformed and informed search, constraint satisfaction, game playing), knowledge representation (logical encoding of domain knowledge, logical reeasoning systems), planning (search over plan space, partial-order planning, practical planning), uncertainty and probability, learning (inductive learning, linear separators, decision trees, boosting, reinforcement learning), and perception and cognition (natural language, machine vision, robotics). [source](https://catalog.champlain.edu/preview_course_nopop.php?catoid=47&coid=33594)
 
 ## Requirements
 
-- Artificial Intelligence for Games
+- Required: [GPR-200 (Introduction to Modern Graphics Programming)](https://catalog.champlain.edu/preview_course_nopop.php?catoid=46&coid=31450) and [GPR-250 (Game Architecture)](https://catalog.champlain.edu/preview_course_nopop.php?catoid=37&coid=25336)
+- Recommended: [CSI-281 (Data Structures and Algorithms)](https://classlist.champlain.edu/show/course/number/CSI_281)
 
 ### Textbook
 
-- AI for Games, Third Edition: 9781138483972: Millington, Ian
+- AI for Games, Third Edition: Millington, Ian. [amazon](https://a.co/d/3wjdn1T) [online via Champlain](https://research-ebsco-com.cobalt.champlain.edu/c/uomcmi/search/details/gokywrfgzb)
 
 ## Student-centered Learning Outcomes
 
-[![Bloom's Taxonomy](https://cdn.vanderbilt.edu/vu-wp0/wp-content/uploads/sites/59/2019/03/27124326/Blooms-Taxonomy-650x366.jpg)](https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/)
-[Reference](https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/)
+[![Bloom's Taxonomy](https://cdn.vanderbilt.edu/vu-wp0/wp-content/uploads/sites/59/2019/03/27124326/Blooms-Taxonomy-650x366.jpg)](https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/) [image source](https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/)
 
-Upon completion of the Advanced AI for Games, students should be able to:
+Upon completion of the AI for Games, students should be able to:
 
 ### Objective Outcomes
 
 - **Recall** fundamental AI techniques for games;
-- **Identify** key components of advanced AI, including pathfinding algorithms and scripting tools
-- Demonstrate a deep **understanding** of advanced AI principles in gaming;
-- **Apply** knowledge to program advanced AI components for finely-tuned competition;
-- **Evaluate** the effectiveness and ethical considerations of advanced AI in game design;
+- **Identify** key components of AI and which algorithms are used in each component;
+- Demonstrate a deep **understanding** of AI principles in gaming;
+- **Apply** knowledge to program AI components for finely-tuned game play;
+- **Evaluate** the effectiveness and ethical considerations of AI in game design;
 - **Design** and **implement** innovative AI-driven features for enhanced gameplay;
-- **Integrate** advanced AI seamlessly into game systems for cohesive environments;
+- **Integrate** AI seamlessly into game systems for cohesive environments;
 - **Consider** societal impact and consequences of AI applications in gaming;
 
-::: warning
-This is a work in progress schedule. It is subject to change. Every change will be communicated in class.
+::: warning "Tentative Schedule"
+
+This is a work in progress, and the schedule is subject to change. Every change will be communicated in class. Use the github repo as the source of truth for the schedule and materials. The materials provided in canvas are just a copy for archiving purposes and might be outdated.
+
 :::
 
-## Schedule for Spring 2025
+## Schedule for Fall 2025
 
-## Special dates:
+College dates for the Fall 2025 semester:
 
-- Semester begins Monday 1/13
-- No Classes MLK Day: Monday, 1/20
-- Spring Break 3/10-14
-- No Classes: Friday 4/11
+| Event                                     | Date              |
+| ----------------------------------------- | ----------------- |
+| Classes Begin                             | Aug. 25           |
+| Add/Drop                                  | Aug. 25 - 29      |
+| No Classes - College remains open         | Sept. 19          |
+| Indigenous Peoples Day Holiday Observance | Oct. 13           |
+| Last Day to Withdraw                      | Nov. 07           |
+| Thanksgiving Break                        | Nov. 24 - Nov. 28 |
+| Last Day of Classes                       | Dec. 05           |
+| Finals                                    | Dec. 08 - Dec. 12 |
+| Winter Break                              | Dec. 15 - Jan. 09 |
 
-### Weekly Schedule
+## Weekly schedule
 
-- Week 1:
-    - 2025/01/14: Introduction to AI for Games
-    - 2025/01/17: Review of basic AI techniques
-- Week 2:
-    - 2025/01/21: Procedural Content Generation
-    - 2025/01/24: Wave function Collapse
-- Week 3:
-    - 2025/01/28: AI Planning Engine / Behaviour Trees
-    - 2025/01/31: AI Planning Engine / Behaviour Trees
-- Week 4:
-    - 2025/02/04: GOAP / BlackBoard / HTN / Utility Based
-    - 2025/02/07: GOAP / BlackBoard / HTN / Utility Based
-- Week 5:
-    - 2025/02/11: GOAP / BlackBoard / HTN / Utility Based
-    - 2025/02/14: GOAP / BlackBoard / HTN / Utility Based
-- Week 6:
-    - 2025/02/18: Testing your AI Agent, building meaningful tests, metrics, evaluation and machinations
-    - 2025/02/21: Testing your AI Agent, building meaningful tests, metrics, evaluation and machinations
-- Week 7:
-    - 2025/02/25: MidTerms / Work sessions
-    - 2025/02/28: MidTerms / Work sessions
-- Week 8:
-    - 2025/03/04: Believable agents Techniques / Stealth games / Tactical games / Steering Behaviors Orchestration
-        - Fable example on Believable agents
-    - 2025/03/07: Believable agents Techniques / Stealth games / Tactical games / Steering Behaviors Orchestration
-- Week 9:
-    - 2025/03/11: Spring BREAK. No classes this week.
-    - 2025/03/14: Spring BREAK. No classes this week.
-- Week 10:
-    - 2025/03/18: General Topics
-    - 2025/03/21: General Topics
-- Week 11:
-    - 2025/03/25: Min Max
-    - 2025/03/28: Min Max
-- Week 12:
-    - 2025/04/01: Monte Carlo Tree Search
-    - 2025/04/04: Monte Carlo Tree Search
-- Week 13:
-    - 2025/04/08: Chess
-    - 2025/04/11: No Classes
-- Week 14:
-    - 2025/04/15: Chess
-    - 2025/04/18: Chess
-- Week 15:
-    - 2025/04/22: Test Chess Competition
-    - 2025/04/25: Test Chess Competition
-- Week 16:
-    - Finals Week / Final chess competition 
-
+- Week 01. 2025/08/25 - 2025/08/29
+  - Topics:
+    - **Introduction**
+    - **Game AI History**
+  - Assignments:
+    1. Read this Syllabus;
+    2. [Read Notes on plagiarism](submissions)
+    3. [Sign FERPA Form](ferpa)
+    4. Read Text Chapters 1 & 2 from AI for Games book;
+    5. Take the quiz on Canvas;
+    6. [Setup your machine and repository](setup);
+    7. Start the [Flocking Simulation](flocking);
+- Week 02. 2025/09/01 - 2025/09/05
+  - Topic: **Behavioral Agents**
+  - Presentation: [Flocking](https://docs.google.com/presentation/d/1OBEY-tb_ubgoq6Mk9lEsCFaYLINni3oPwjH8iAXEQQM/edit?usp=sharing)
+  - Formal Assignment: [Flocking](flocking)
+  - Interactive Assignment: [Flocking](https://github.com/InfiniBrains/mobagen/tree/master/examples/flocking)
+- Week 03. 2025/09/08 - 2025/09/12
+  - Topic: **Finite Automata** and **2D Grids**
+  - Formal Assignment: [Formal Game of Life](life)
+  - Interactive Assignment: [Interactive Game of Life](https://github.com/gameguild-gg/mobagen/tree/master/examples/life)
+- Week 04. 2025/09/15 - 2025/09/19
+  - Topic: **Random Numbers**
+  - Formal Assignment: [Formal](rng)
+- Week 05. 2025/09/22 - 2025/09/26
+  - Topics:
+    - **Depth First Search**
+    - **Random walk**
+    - **Maze Generation**
+  - Formal Assignment: [Formal Maze](maze)
+  - Interactive Assignment: [Interactive Maze](https://github.com/gameguild-gg/mobagen/tree/master/examples/maze)
+- Week 06. 2025/09/29 - 2025/10/03
+  - Topics:
+    - **Breadth First Search**
+    - **Path Finding**
+  - Interactive Assignment: [Catch the Cat](https://github.com/gameguild-gg/mobagen/tree/master/examples/catchthecat)
+- Week 07. 2025/10/06 - 2025/10/10
+  - Topic:
+    - **MidTerms**
+    - **Catch the Cat Challenge** and **Competition**
+  - [Catch the Cat](https://github.com/gameguild-gg/mobagen/tree/master/examples/catchthecat)
+- Week 8. 2025/10/13 - 2025/10/17
+  - Topic:
+    - **Spatial Quantization, Partitioning and Hashing**
+  - Readings: [Spatial Quantization](spatial-quantization)
+- Week 9. 2025/10/20 - 2025/10/24
+  - Topic:
+    - **Pathfinding on Continuous Space**
+  - Formal Assignment: [PathFinding on continuous space](pathfinding-continuous)
+- Week 10. 2025/10/27 - 2025/10/31
+  - Topic: **Noise functions**
+  - Formal Assignment: [Noise functions](noise)
+- Week 11. 2025/11/03 - 2025/11/07
+  - Topic:
+    - **Procedural Content Generation**
+  - Interactive Assignment: [Scenario Generation](https://github.com/InfiniBrains/mobagen/tree/master/examples/scenario)
+- Week 12. 2025/11/10 - 2025/11/14
+  - Topic:
+    - **Procedural Content Generation**
+  - Interactive Assignment: [Scenario Generation](https://github.com/InfiniBrains/mobagen/tree/master/examples/scenario)
+- Week 13. 2025/11/17 - 2025/11/21
+  - Topic: Work sessions for final project
+  - Assignment: [Final Project](final-project)
+- Week 14. 2025/11/24 - 2025/11/28
+  - Topic: Thanksgiving Break
+- Week 15. 2025/12/01 - 2025/12/05
+  - Topic: Work sessions for final project
+  - Assignment: [Final Project](final-project)
+- Week 16. 2025/12/08 - 2025/12/12
+  - Topic: Finals Presentation
+  - Assignment: [Final Project](final-project)
