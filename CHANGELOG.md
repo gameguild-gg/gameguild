@@ -1,3 +1,17 @@
+## [2.7.1](https://github.com/gameguild-gg/gameguild/compare/v2.7.0...v2.7.1) (2025-08-20)
+
+
+### Bug Fixes
+
+* **editor:** callout to admonition ([6a24b8b](https://github.com/gameguild-gg/gameguild/commit/6a24b8b6026ba3bda6794aaf41b7fc9a24d55adb))
+* **editor:** import fix ([641e441](https://github.com/gameguild-gg/gameguild/commit/641e4410ca0b6592a63d82090e149d1e69581895))
+* **editor:** logic fix in preview-table-of-contents ([365637d](https://github.com/gameguild-gg/gameguild/commit/365637da8ef16f1a1ddfdc90e65a040594f8928a))
+* **editor:** open project fix ([09561b1](https://github.com/gameguild-gg/gameguild/commit/09561b1ac301af84df013d57dcc82f06cca3ad87))
+* **editor:** preview page = serializedState type ([3a96333](https://github.com/gameguild-gg/gameguild/commit/3a9633305f82d465853859d0e2cb0717c818d229))
+* **editor:** preview page focus serializedState ([f21ec4d](https://github.com/gameguild-gg/gameguild/commit/f21ec4dd2a5e8e12a1572ae82c8baac90ce1aea9))
+* **layouts:** implement comprehensive hydration and theme fixes ([c908e0b](https://github.com/gameguild-gg/gameguild/commit/c908e0bcc74f4c0cc589e55dac70ed475619472b))
+* **ui:** resolve hydration issues, theme persistence, and error handling ([bce7a6a](https://github.com/gameguild-gg/gameguild/commit/bce7a6a2ec8c6134c49b2ed30c4e809138f4ee07))
+
 # [2.7.0](https://github.com/gameguild-gg/gameguild/compare/v2.6.0...v2.7.0) (2025-08-20)
 
 
