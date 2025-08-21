@@ -1,40 +1,51 @@
-import { CourseProvider } from '@/lib/courses';
-import { getCourseData } from '@/lib/courses/actions';
-import { Suspense } from 'react';
+'use client';
 
+import React, { Suspense } from 'react';
+import { CourseProvider } from '@/lib/courses';
+import { getCourseData } from '@/lib/courses/actions/index';
 import { CourseErrorBoundary } from '@/components/courses/course-error-boundary';
 import { CourseGridEnhanced } from '@/components/courses/course-grid-enhanced';
 import { CoursePageError } from '@/components/courses/course-page-error';
 import { CourseStates } from '@/components/courses/course-states';
+import { Program } from '@/lib/api/generated';
 
-export const dynamic = 'force-dynamic';
+export default function CourseCatalogPage() {
+  const [courses, setCourses] = React.useState<Program[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-export default async function CoursesPage() {
-  try {
-    const courses = await getCourseData();
-    console.log('CoursesPage - courses:', {
-      coursesLength: courses.length,
-      firstCourse: courses[0],
-    });
+  React.useEffect(() => {
+    async function loadCourses() {
+      try {
+        setLoading(true);
+        const courseData = await getCourseData();
+        setCourses(courseData);
+      } catch (err) {
+        console.error('Error loading courses:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load courses');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadCourses();
+  }, []);
 
-    return (
-      <CourseErrorBoundary>
-        <CourseProvider initialCourses={courses}>
-          <div className="container mx-auto px-4 py-8">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold mb-4 text-primary">Course Catalog</h1>
-              <p className="text-xl text-muted-foreground">Browse and filter through all available game development courses to find the perfect learning path for you.</p>
-            </div>
-
-            <Suspense fallback={<CourseStates.Loading />}>
-              <CourseGridEnhanced />
-            </Suspense>
-          </div>
-        </CourseProvider>
-      </CourseErrorBoundary>
-    );
-  } catch (error) {
-    console.error('Error loading courses:', error);
-    return <CoursePageError message="Failed to load courses. Please try again later." />;
+  if (error) {
+    return <CoursePageError message={error} />;
   }
+
+  return (
+    <CourseProvider initialCourses={courses}>
+      <CourseErrorBoundary>
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold mb-8">Courses</h1>
+          {loading ? (
+            <CourseStates.Loading />
+          ) : (
+            <CourseGridEnhanced />
+          )}
+        </div>
+      </CourseErrorBoundary>
+    </CourseProvider>
+  );
 }
