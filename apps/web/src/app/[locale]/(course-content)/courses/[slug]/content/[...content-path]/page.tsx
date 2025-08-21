@@ -5,7 +5,7 @@ import { getProgramBySlugService } from '@/lib/content-management/programs/progr
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { CourseContentPageClient } from './course-content-page-client.tsx';
+import { CourseContentPageClient } from './course-content-page-client';
 
 interface PageProps {
   params: Promise<{ slug: string; 'content-path': string[]; locale: string }>;
@@ -72,12 +72,19 @@ export default async function ContentPage({ params }: PageProps) {
   }
 
   // Try API service first, fallback to mock data
-  let program = await getProgramBySlugService(slug);
+  let program = null;
   let programData = null;
 
-  if (program.success && program.data) {
-    programData = program.data;
-  } else {
+  try {
+    program = await getProgramBySlugService(slug);
+    if (program.success && program.data) {
+      programData = program.data;
+    }
+  } catch (error) {
+    console.log('Authentication issue with getProgramBySlugService, falling back to mock data:', error);
+  }
+
+  if (!programData) {
     // Fallback to mock data
     const mockProgram = getProgramBySlug(slug);
     if (mockProgram) {
@@ -135,15 +142,23 @@ export default async function ContentPage({ params }: PageProps) {
     notFound();
   }
 
-  // Get children if any
-  const childrenResult = content.id ? await getProgramContentChildren({
-    path: {
-      programId: programData.id,
-      parentId: content.id
+  // Get children if any - handle authentication gracefully
+  let children: ProgramContentDto[] = [];
+  if (content.id) {
+    try {
+      const childrenResult = await getProgramContentChildren({
+        path: {
+          programId: programData.id,
+          parentId: content.id
+        }
+      });
+      children = (childrenResult?.data as any) ?? [];
+    } catch (error) {
+      console.log('🚨 Failed to get children from API (likely auth issue), using empty array:', error);
+      // For unauthenticated users, we'll just show no children
+      children = [];
     }
-  }) : { data: [] };
-
-  const children: ProgramContentDto[] = (childrenResult?.data as any) ?? [];
+  }
 
   // Find siblings for navigation (from the parent level)
   let siblings: ProgramContentDto[] = [];
