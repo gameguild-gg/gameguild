@@ -11,7 +11,7 @@ export default async function Layout({ children }: PropsWithChildren): Promise<R
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body>
+      <body suppressHydrationWarning>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             {children}
           </ThemeProvider>
