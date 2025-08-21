@@ -1,3 +1,11 @@
+## [2.8.3](https://github.com/gameguild-gg/gameguild/compare/v2.8.2...v2.8.3) (2025-08-21)
+
+
+### Bug Fixes
+
+* cloudflare dns update ([d10a377](https://github.com/gameguild-gg/gameguild/commit/d10a37780fe7e55f1d84aa8aa8c071ece8379268))
+* DNS update logic and enhance authentication error handling ([fe8cf02](https://github.com/gameguild-gg/gameguild/commit/fe8cf02316bd7867a854b9c3269676d9a2b4f48a))
+
 ## [2.8.2](https://github.com/gameguild-gg/gameguild/compare/v2.8.1...v2.8.2) (2025-08-21)
 
 
