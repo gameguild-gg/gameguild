@@ -4,9 +4,10 @@ import Link from 'next/link';
 import React, { PropsWithChildren } from 'react';
 
 import { UserProfile } from '@/components/common/header/common/ui/user-profile';
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
-import { NavigationMenuLink } from '@radix-ui/react-navigation-menu';
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { MobileMenu } from './mobile-menu';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
+import { GitHubForkButton } from './github-fork-button';
 import type { Session } from 'next-auth';
 import type { UserResponseDto } from '@/lib/api/generated/types.gen';
 
@@ -31,40 +32,39 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
             <NavigationMenuList>
 
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-700 dark:text-slate-200 hover:text-purple-600 dark:hover:text-purple-300 transition-colors duration-300 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 backdrop-blur-sm">Courses</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-black dark:text-slate-200 hover:text-purple-600 dark:hover:text-purple-300 transition-colors duration-300 bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 backdrop-blur-sm">Courses</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
-                    <ListItem href="/courses" title="Courses">
+                    <ListItem href="/courses/catalog" title="Courses">
                       Learn about our learning pathways and start your journey.
                     </ListItem>
-                    <ListItem href="/courses/catalog" title="Course Catalog">
-                      Browse and filter through all available courses.
-                    </ListItem>
-                    <ListItem href="/tracks" title="Learning Tracks">
-                      Explore structured learning paths from beginner to expert.
-                    </ListItem>
+                    <a
+                      href="#"
+                      className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                      data-github-issue="true"
+                      data-route="/tracks"
+                    >
+                      <div className="text-sm font-medium leading-none">Learning Tracks</div>
+                      <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                        Explore structured learning paths from beginner to expert.
+                      </p>
+                    </a>
                   </ul>
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-700 dark:text-slate-200 hover:text-green-600 dark:hover:text-green-300 transition-colors duration-300 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 backdrop-blur-sm">Testing Lab</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
-                    <ListItem href="/testing-lab" title="Testing Lab">
-                      Access the game testing platform and submit feedback.
-                    </ListItem>
-                    <ListItem href="/testing-lab/sessions" title="Testing Sessions">
-                      View and join active testing sessions.
-                    </ListItem>
-                    <ListItem href="/dashboard/testing-lab/overview" title="Testing Overview">
-                      Manage testing lab dashboard and analytics.
-                    </ListItem>
-                  </ul>
-                </NavigationMenuContent>
+                <a 
+                  href="#" 
+                  data-github-issue="true" 
+                  data-route="/testing-lab"
+                  className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=open]:hover:bg-accent data-[state=open]:text-accent-foreground data-[state=open]:focus:bg-accent data-[state=open]:bg-accent/50 focus-visible:ring-ring/50 outline-none focus-visible:ring-[3px] focus-visible:outline-1 group text-black dark:text-slate-200 hover:text-green-600 dark:hover:text-green-300 transition-colors duration-300 bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 backdrop-blur-sm"
+                >
+                  Testing Lab
+                </a>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-300 bg-transparent hover:bg-black/5 dark:hover:bg-white/5 backdrop-blur-sm">Institutional</NavigationMenuTrigger>
+                <NavigationMenuTrigger className="text-black dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-300 transition-colors duration-300 bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 backdrop-blur-sm">Institutional</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
                     <ListItem href="/contributors" title="Contributors">
@@ -94,17 +94,24 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
         </div>
         <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
           {/*<NotificationDropdown />*/}
+          <GitHubForkButton />
+          <ThemeToggle />
           <MobileMenu>
-            <Link href="/courses" className="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-md transition-colors">
+            <Link href="/courses/catalog" className="block px-3 py-2 text-black dark:text-slate-200 hover:text-black dark:hover:text-white bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 rounded-md transition-colors">
               Courses
             </Link>
-            <Link href="/programs" className="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-md transition-colors">
-              Programs
-            </Link>
-            <Link href="/testing-lab" className="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-md transition-colors">
+            <a
+              href="#"
+              className="block px-3 py-2 text-black dark:text-slate-200 hover:text-black dark:hover:text-white bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 rounded-md transition-colors"
+              data-github-issue="true"
+              data-route="/tracks"
+            >
+              Learning Tracks
+            </a>
+            <Link href="/testing-lab" className="block px-3 py-2 text-black dark:text-slate-200 hover:text-black dark:hover:text-white bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 rounded-md transition-colors">
               Testing Lab
             </Link>
-            <Link href="/about" className="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-md transition-colors">
+            <Link href="#" className="block px-3 py-2 text-black dark:text-slate-200 hover:text-black dark:hover:text-white bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 rounded-md transition-colors">
               About
             </Link>
             <Link href="/contact" className="block px-3 py-2 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 rounded-md transition-colors">
