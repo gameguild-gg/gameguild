@@ -1,3 +1,10 @@
+## [2.8.1](https://github.com/gameguild-gg/gameguild/compare/v2.8.0...v2.8.1) (2025-08-21)
+
+
+### Bug Fixes
+
+* Add suppressHydrationWarning to gglexical layout body element ([d886d14](https://github.com/gameguild-gg/gameguild/commit/d886d1456db47db3687decc414dbf52b5159f8f5))
+
 # [2.8.0](https://github.com/gameguild-gg/gameguild/compare/v2.7.1...v2.8.0) (2025-08-21)
 
 
