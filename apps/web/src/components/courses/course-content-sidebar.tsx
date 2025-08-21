@@ -1,16 +1,19 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ProgramContent } from '@/lib/api/generated/types.gen';
+import { cn } from '@/lib/utils';
+import { BarChart3, BookOpen, ChevronDown, ChevronRight, ClipboardList, Code, FileText, HelpCircle, MessageSquare, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronRight, ChevronDown, BookOpen, FileText, ClipboardList, HelpCircle, Code, MessageSquare, Trophy, BarChart3 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { ProgramContent } from '@/lib/api/generated/types.gen';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useSidebar } from './sidebar-context';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 
 interface CourseContentSidebarProps {
   courseSlug: string;
+  courseTitle?: string;
   content: ProgramContent[];
 }
 
@@ -36,27 +39,29 @@ interface ContentItemProps {
   index: number;
   level: number;
   parentPath?: string;
+  isMobile: boolean;
+  closeSidebar: () => void;
 }
 
-function ContentItem({ item, courseSlug, index, level, parentPath = '' }: ContentItemProps) {
+function ContentItem({ item, courseSlug, index, level, parentPath = '', isMobile, closeSidebar }: ContentItemProps) {
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   const contentSlug = item.slug || item.id || 'untitled';
   const currentPath = parentPath ? `${parentPath}/${contentSlug}` : contentSlug;
   const href = `/courses/${courseSlug}/content/${currentPath}`;
   const isActive = pathname === href || pathname.startsWith(`${href}/`);
   const Icon = getContentIcon(item.type || 0);
-  
+
   const hasChildren = item.children && item.children.length > 0;
   const paddingLeft = level * 16;
-  
+
   return (
     <div>
       <div className={cn(
         "flex items-center gap-2 p-2 rounded-lg transition-colors cursor-pointer",
-        isActive 
-          ? "bg-primary text-primary-foreground" 
+        isActive
+          ? "bg-primary text-primary-foreground"
           : "hover:bg-muted"
       )} style={{ paddingLeft: `${paddingLeft + 12}px` }}>
         {hasChildren && (
@@ -74,8 +79,17 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '' }: Conten
             )}
           </button>
         )}
-        
-        <Link href={href} className="flex items-center gap-2 flex-1 min-w-0">
+
+        <Link
+          href={href}
+          className="flex items-center gap-2 flex-1 min-w-0"
+          onClick={() => {
+            // Close sidebar on mobile when clicking a content item
+            if (isMobile) {
+              closeSidebar();
+            }
+          }}
+        >
           <div className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary font-medium text-xs">
             {index + 1}
           </div>
@@ -90,7 +104,7 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '' }: Conten
           </div>
         </Link>
       </div>
-      
+
       {hasChildren && isExpanded && (
         <div className="mt-1">
           {item.children!.map((child, childIndex) => (
@@ -101,6 +115,8 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '' }: Conten
               index={childIndex}
               level={level + 1}
               parentPath={currentPath}
+              isMobile={isMobile}
+              closeSidebar={closeSidebar}
             />
           ))}
         </div>
@@ -109,46 +125,79 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '' }: Conten
   );
 }
 
-export function CourseContentSidebar({ courseSlug, content }: CourseContentSidebarProps) {
+export function CourseContentSidebar({ courseSlug, courseTitle, content }: CourseContentSidebarProps) {
+  const { isSidebarOpen, closeSidebar, isMobile } = useSidebar();
+
   return (
-    <div className="w-80 border-r border-border bg-background flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-2 mb-2">
-          <BookOpen className="h-5 w-5 text-primary" />
-          <h2 className="font-semibold">Course Content</h2>
-        </div>
-      </div>
-      
-      {/* Navigation */}
-      <ScrollArea className="flex-1">
-        <div className="p-2 space-y-1">
-          {content.length === 0 ? (
-            <div className="text-sm text-muted-foreground p-3 text-center">
-              No content available
+    <>
+      {/* Overlay - only on small screens when sidebar is open */}
+      {isSidebarOpen && (
+        <div
+          className="fixed top-0 left-0 right-0 bottom-0 bg-black/50 z-40 lg:hidden"
+          onClick={closeSidebar}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={cn(
+        "w-80 bg-background flex flex-col transition-all duration-300 ease-in-out",
+        // Large screens: fixed positioning, always visible when open
+        "lg:fixed lg:top-0 lg:left-0 lg:h-screen lg:border-r lg:border-border lg:z-40",
+        // Large screens: hide/show with transform
+        isSidebarOpen ? "lg:translate-x-0" : "lg:-translate-x-full",
+        // Small screens: fixed positioning with overlay behavior
+        "fixed top-0 left-0 h-screen z-50 border-r border-border",
+        // Small screens: hide/show with transform
+        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        {/* Header */}
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-lg truncate">
+              {courseTitle || 'Course Content'}
+            </h2>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button
+                 variant="ghost"
+                 size="sm"
+                 asChild
+                 className="text-muted-foreground hover:text-foreground"
+               >
+                 <Link href="/courses/catalog">
+                   ← Courses
+                 </Link>
+               </Button>
             </div>
-          ) : (
-            content.map((item, index) => (
-              <ContentItem 
-                key={item.id} 
-                item={item} 
-                courseSlug={courseSlug} 
-                index={index}
-                level={0}
-              />
-            ))
-          )}
+          </div>
         </div>
-      </ScrollArea>
-      
-      {/* Footer */}
-      <div className="p-4 border-t border-border">
-        <Link href={`/courses/${courseSlug}/content`}>
-          <Button variant="outline" size="sm" className="w-full">
-            Manage Content
-          </Button>
-        </Link>
+
+
+        {/* Navigation */}
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="p-2 space-y-1">
+            {content.length === 0 ? (
+              <div className="text-sm text-muted-foreground p-3 text-center">
+                No content available
+              </div>
+            ) : (
+              content.map((item, index) => (
+                <ContentItem
+                  key={item.id}
+                  item={item}
+                  courseSlug={courseSlug}
+                  index={index}
+                  level={0}
+                  isMobile={isMobile}
+                  closeSidebar={closeSidebar}
+                />
+              ))
+            )}
+          </div>
+        </ScrollArea>
+
+
       </div>
-    </div>
+    </>
   );
 }
