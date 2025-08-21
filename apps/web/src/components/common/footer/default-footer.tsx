@@ -75,7 +75,7 @@ const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children,
             />
           </div>
 
-          <div className="mt-6 lg:mt-8 pt-4 lg:pt-6 border-t border-slate-400/50 dark:border-slate-700/50 text-center text-sm text-slate-600 dark:text-slate-500">© {new Date().getFullYear()} Game Guild Inc. All rights reserved.</div>
+          <div className="mt-6 lg:mt-8 pt-4 lg:pt-6 border-t border-slate-400/50 dark:border-slate-700/50 text-center text-sm text-slate-700 dark:text-slate-500">© {new Date().getFullYear()} Game Guild Inc. All rights reserved.</div>
         </div>
       </div>
 
