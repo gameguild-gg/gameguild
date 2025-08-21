@@ -14,7 +14,7 @@ interface CourseContentLayoutClientProps {
 }
 
 export function CourseContentLayoutClient({ courseSlug, courseTitle, content, children }: CourseContentLayoutClientProps) {
-    const { isSidebarOpen } = useSidebar();
+    const { isSidebarOpen, mounted } = useSidebar();
 
     return (
         <div className="flex min-h-screen relative">
@@ -30,7 +30,8 @@ export function CourseContentLayoutClient({ courseSlug, courseTitle, content, ch
                 "flex-1 transition-all duration-300 ease-in-out overflow-hidden",
                 // Large screens: adjust margin based on sidebar state
                 "lg:ml-0",
-                isSidebarOpen && "lg:ml-80",
+                // Only apply conditional styling after hydration
+                mounted && isSidebarOpen && "lg:ml-80",
                 // Ensure content uses full width
                 "w-full"
             )}>
