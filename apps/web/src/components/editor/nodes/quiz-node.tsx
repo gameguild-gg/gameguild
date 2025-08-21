@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, createContext, useContext } from "react"
+import { useState, useEffect, createContext, useContext, useRef } from "react"
 import { DecoratorNode, type SerializedLexicalNode } from "lexical"
 import { Pencil } from "lucide-react"
 import { $getNodeByKey } from "lexical"
@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button"
 import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
 import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
 import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
-import { ContentEditMenu } from "@/components/ui/content-edit-menu"
+import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
+import type { EditMenuOption } from "@/components/editor/extras/content-edit-menu"
 import { QuizSettingsDialog } from "./quiz/quiz-settings-dialog"
 
 // Adicionar no topo do arquivo, após os imports
@@ -143,6 +144,8 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
 
   const [isEditing, setIsEditing] = useState(false)
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
+  const previousAnswersRef = useRef<string>("")
+  const previousQuestionRef = useRef<string>("")
 
   const {
     selectedAnswers,
@@ -162,8 +165,16 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
   })
 
   useEffect(() => {
-    resetQuiz()
-  }, [data, resetQuiz])
+    // Só resetar o quiz quando as respostas ou perguntas mudarem realmente
+    const currentAnswers = JSON.stringify(data.answers)
+    const currentQuestion = data.question
+    
+    if (currentAnswers !== previousAnswersRef.current || currentQuestion !== previousQuestionRef.current) {
+      resetQuiz()
+      previousAnswersRef.current = currentAnswers
+      previousQuestionRef.current = currentQuestion
+    }
+  }, [data.answers, data.question, resetQuiz])
 
   useEffect(() => {
     const isNewQuiz = !data.question || data.question.trim() === ""
