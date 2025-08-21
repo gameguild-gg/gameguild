@@ -1,15 +1,19 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home, Mail, Bug } from 'lucide-react';
+import { ArrowLeft, Home, Bug } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { GitHubIssueModal } from '@/components/ui/github-issue-modal';
 // Note: Using a simple header since this is a client component
 import Footer from '@/components/common/footer/default-footer';
 
 export function NotFound() {
   const router = useRouter();
+  const pathname = usePathname();
+  const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
 
   useEffect(() => {
     // Track 404 page view with Google Analytics
@@ -27,23 +31,7 @@ export function NotFound() {
   }, []);
 
   const handleReportIssue = () => {
-    // Create a temporary link element with GitHub issue data attributes
-    const link = document.createElement('a');
-    link.setAttribute('data-github-issue', 'true');
-    link.setAttribute('data-route', window.location.pathname);
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    
-    // Trigger a click event on the link to activate the GitHub issue handler
-    const clickEvent = new MouseEvent('click', {
-      bubbles: true,
-      cancelable: true,
-      view: window
-    });
-    link.dispatchEvent(clickEvent);
-    
-    // Clean up the temporary link
-    document.body.removeChild(link);
+    setIsGitHubModalOpen(true);
   };
 
   return (
@@ -108,20 +96,16 @@ export function NotFound() {
                 <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-lg blur-xl -z-10 animate-pulse"></div>
               </div>
             </div>
-            
-            {/* Secondary Support Option */}
-            <div className="flex justify-center">
-              <Link href="mailto:support@gameguild.com">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-                  <Mail className="h-4 w-4" />
-                  Contact Support
-                </Button>
-              </Link>
-            </div>
           </div>
         </div>
       </main>
       <Footer />
+      
+      <GitHubIssueModal
+        isOpen={isGitHubModalOpen}
+        onClose={() => setIsGitHubModalOpen(false)}
+        route={pathname}
+      />
     </div>
   );
 }

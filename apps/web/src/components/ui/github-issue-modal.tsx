@@ -52,7 +52,7 @@ export function GitHubIssueModal({ isOpen, onClose, route, githubIssue }: GitHub
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
             <Github className="h-6 w-6 text-blue-400" />
-            {githubIssue ? 'Help Improve This Feature!' : 'Feature Coming Soon!'}
+            {githubIssue ? 'Help Us Improve!' : 'Help Us Build Better!'}
           </DialogTitle>
           <DialogDescription className="text-slate-300 text-base leading-relaxed">
             {githubIssue 
