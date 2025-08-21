@@ -35,7 +35,7 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
                 <NavigationMenuTrigger className="text-black dark:text-slate-200 hover:text-purple-600 dark:hover:text-purple-300 transition-colors duration-300 bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 backdrop-blur-sm">Courses</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
-                    <ListItem href="/courses/catalog" title="Courses">
+                    <ListItem href="/programs" title="Courses">
                       Learn about our learning pathways and start your journey.
                     </ListItem>
                     <a
@@ -97,7 +97,7 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
           <GitHubForkButton />
           <ThemeToggle />
           <MobileMenu>
-            <Link href="/courses/catalog" className="block px-3 py-2 text-black dark:text-slate-200 hover:text-black dark:hover:text-white bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 rounded-md transition-colors">
+            <Link href="/programs" className="block px-3 py-2 text-black dark:text-slate-200 hover:text-black dark:hover:text-white bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 rounded-md transition-colors">
               Courses
             </Link>
             <a

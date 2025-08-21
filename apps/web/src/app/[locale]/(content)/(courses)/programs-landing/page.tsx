@@ -18,7 +18,7 @@ export default function CoursesLandingPage() {
             <p className="text-xl lg:text-2xl text-slate-300 mb-8 max-w-3xl mx-auto">Game Development Shapes the World Around Us. Now, You Can Take Part.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Button asChild size="lg" className="text-lg px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all text-white">
-                <Link href="/courses/catalog">
+                <Link href="/programs">
                   <BookOpen className="mr-2 h-5 w-5" />
                   Explore Courses
                 </Link>
@@ -99,7 +99,7 @@ export default function CoursesLandingPage() {
                 </div>
                 <div className="space-y-3">
                   <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all text-white">
-                    <Link href="/courses/catalog?category=programming">
+                    <Link href="/programs?category=programming">
                       Browse Courses <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -136,7 +136,7 @@ export default function CoursesLandingPage() {
                 </div>
                 <div className="space-y-3">
                   <Button asChild className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 border-0 shadow-lg hover:shadow-xl hover:shadow-purple-500/25 transition-all text-white">
-                    <Link href="/courses/catalog?category=art">
+                    <Link href="/programs?category=art">
                       Browse Courses <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -173,7 +173,7 @@ export default function CoursesLandingPage() {
                 </div>
                 <div className="space-y-3">
                   <Button asChild className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 border-0 shadow-lg hover:shadow-xl hover:shadow-green-500/25 transition-all text-white">
-                    <Link href="/courses/catalog?category=design">
+                    <Link href="/programs?category=design">
                       Browse Courses <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -387,7 +387,7 @@ export default function CoursesLandingPage() {
           <p className="text-xl mb-8 max-w-2xl mx-auto text-slate-300">Join thousands of students who have transformed their passion for games into successful careers.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="text-lg px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 border-0 shadow-lg hover:shadow-xl hover:shadow-blue-500/25 transition-all text-white">
-              <Link href="/courses/catalog">
+              <Link href="/programs">
                 <BookOpen className="mr-2 h-5 w-5" />
                 Browse All Courses
               </Link>

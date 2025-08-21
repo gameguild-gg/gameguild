@@ -14,7 +14,7 @@ const navSections: NavSection[] = [
     title: 'Platform',
     color: 'blue',
     links: [
-      { href: '/courses', label: 'Courses' },
+      { href: '/programs', label: 'Courses' },
       { href: '/jobs', label: 'Job Board' },
       { href: '/community', label: 'Community' },
       { href: '/testing-lab', label: 'Game Testing Lab' },

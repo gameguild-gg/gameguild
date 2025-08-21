@@ -8,7 +8,7 @@ import { BookOpen } from 'lucide-react';
 
 export function CourseCard({ course, viewMode = 'grid' }: { course: Course; viewMode?: 'grid' | 'list' }) {
   return (
-    <Link href={`/courses/${course.slug}/content`} className="block">
+    <Link href={`/p/${course.slug}`} className="block">
       <div className="overflow-hidden border rounded-lg bg-card cursor-pointer transition-transform duration-200 hover:scale-[1.02] hover:shadow-lg">
       {/* Thumbnail */}
       <div className="relative aspect-video w-full overflow-hidden bg-slate-700/50">
