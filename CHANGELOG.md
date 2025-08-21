@@ -1,3 +1,11 @@
+# [2.10.0](https://github.com/gameguild-gg/gameguild/compare/v2.9.0...v2.10.0) (2025-08-21)
+
+
+### Features
+
+* add redirect from /p to /programs ([378fadc](https://github.com/gameguild-gg/gameguild/commit/378fadcd334c5c498683547caf59d30b3f8e3a03))
+* restructure course routes and cleanup empty files ([ed7c4c4](https://github.com/gameguild-gg/gameguild/commit/ed7c4c42b9f24462193cf8abd6cf2594bc5f479f))
+
 # [2.9.0](https://github.com/gameguild-gg/gameguild/compare/v2.8.3...v2.9.0) (2025-08-21)
 
 
