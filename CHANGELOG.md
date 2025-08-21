@@ -1,3 +1,20 @@
+# [2.8.0](https://github.com/gameguild-gg/gameguild/compare/v2.7.1...v2.8.0) (2025-08-21)
+
+
+### Bug Fixes
+
+* actions ([5d27c92](https://github.com/gameguild-gg/gameguild/commit/5d27c926b3b9e978f286ae19642169e7c1a8ec17))
+* resolve conflicting star exports in activity-tracking module ([2d29a60](https://github.com/gameguild-gg/gameguild/commit/2d29a60e6151394304cc6a5c97fd2e76d99b0872))
+
+
+### Features
+
+* add GitHub fork button component ([649af32](https://github.com/gameguild-gg/gameguild/commit/649af326636e6c1be94c1bafa41d8797fe67a099))
+* add responsive sidebar infrastructure for course content ([0ec4fac](https://github.com/gameguild-gg/gameguild/commit/0ec4fac254768ccb8de4a631f0fed3eb576c1922))
+* enhance course content sidebar with theme toggle and header ([3d3234e](https://github.com/gameguild-gg/gameguild/commit/3d3234edc423562a29c21a01e3b8188ba031e97b))
+* integrate GitHub fork button into default header ([0e48290](https://github.com/gameguild-gg/gameguild/commit/0e48290520c309019d4b3c32f50025b915ad2031))
+* restructure course content routing with new layout ([1893d0e](https://github.com/gameguild-gg/gameguild/commit/1893d0e214111c38d73eb756d51dae34d704e395))
+
 ## [2.7.1](https://github.com/gameguild-gg/gameguild/compare/v2.7.0...v2.7.1) (2025-08-20)
 
 
