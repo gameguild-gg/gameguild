@@ -126,12 +126,12 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '', isMobile
 }
 
 export function CourseContentSidebar({ courseSlug, courseTitle, content }: CourseContentSidebarProps) {
-  const { isSidebarOpen, closeSidebar, isMobile } = useSidebar();
+  const { isSidebarOpen, closeSidebar, isMobile, mounted } = useSidebar();
 
   return (
     <>
       {/* Overlay - only on small screens when sidebar is open */}
-      {isSidebarOpen && (
+      {mounted && isSidebarOpen && (
         <div
           className="fixed top-0 left-0 right-0 bottom-0 bg-black/50 z-40 lg:hidden"
           onClick={closeSidebar}
@@ -143,12 +143,12 @@ export function CourseContentSidebar({ courseSlug, courseTitle, content }: Cours
         "w-80 bg-background flex flex-col transition-all duration-300 ease-in-out",
         // Large screens: fixed positioning, always visible when open
         "lg:fixed lg:top-0 lg:left-0 lg:h-screen lg:border-r lg:border-border lg:z-40",
-        // Large screens: hide/show with transform
-        isSidebarOpen ? "lg:translate-x-0" : "lg:-translate-x-full",
+        // Large screens: hide/show with transform - only after hydration
+        mounted ? (isSidebarOpen ? "lg:translate-x-0" : "lg:-translate-x-full") : "lg:-translate-x-full",
         // Small screens: fixed positioning with overlay behavior
         "fixed top-0 left-0 h-screen z-50 border-r border-border",
-        // Small screens: hide/show with transform
-        isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        // Small screens: hide/show with transform - only after hydration
+        mounted ? (isSidebarOpen ? "translate-x-0" : "-translate-x-full") : "-translate-x-full"
       )}>
         {/* Header */}
         <div className="p-4 border-b border-border">
@@ -188,7 +188,7 @@ export function CourseContentSidebar({ courseSlug, courseTitle, content }: Cours
                   courseSlug={courseSlug}
                   index={index}
                   level={0}
-                  isMobile={isMobile}
+                  isMobile={mounted ? isMobile : false}
                   closeSidebar={closeSidebar}
                 />
               ))

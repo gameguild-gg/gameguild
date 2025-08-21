@@ -10,7 +10,7 @@ interface SidebarToggleProps {
 }
 
 export function SidebarToggle({ className }: SidebarToggleProps) {
-  const { isSidebarOpen, toggleSidebar } = useSidebar();
+  const { isSidebarOpen, toggleSidebar, mounted } = useSidebar();
 
   return (
     <Button
@@ -21,17 +21,17 @@ export function SidebarToggle({ className }: SidebarToggleProps) {
         "fixed top-4 z-50 size-8 transition-all duration-300 ease-in-out",
         "bg-background/80 backdrop-blur-sm border border-border shadow-sm",
         "hover:bg-accent hover:text-accent-foreground",
-        // Position based on sidebar state
-        isSidebarOpen ? "left-[21rem] lg:left-[21rem]" : "left-4",
+        // Position based on sidebar state - only after hydration
+        mounted && isSidebarOpen ? "left-[21rem] lg:left-[21rem]" : "left-4",
         className
       )}
     >
-      {isSidebarOpen ? (
+      {mounted && isSidebarOpen ? (
         <X className="h-4 w-4" />
       ) : (
         <PanelLeftIcon className="h-4 w-4" />
       )}
-      <span className="sr-only">{isSidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}</span>
+      <span className="sr-only">{mounted && isSidebarOpen ? 'Close Sidebar' : 'Open Sidebar'}</span>
     </Button>
   );
 }
