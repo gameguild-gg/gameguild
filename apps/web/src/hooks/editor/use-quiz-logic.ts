@@ -39,9 +39,10 @@ export function useQuizLogic({
     setIsCorrect(isAllCorrect)
     setShowFeedback(true)
 
-    if (!allowRetry) {
-      setSelectedAnswers([])
-    }
+    // Não limpar as seleções quando allowRetry é false para manter visível o que foi escolhido
+    // if (!allowRetry) {
+    //   setSelectedAnswers([])
+    // }
   }
 
   const toggleAnswer = (id: string) => {

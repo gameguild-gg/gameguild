@@ -4,12 +4,15 @@ import type { SerializedQuizNode } from "../../nodes/quiz-node"
 import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
 import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
 import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
+  const previousAnswersRef = useRef<string>("")
+  const previousQuestionRef = useRef<string>("")
+  
   const quizLogic = useQuizLogic({
     answers: node.data?.answers || [],
-    allowRetry: node.data?.allowRetry !== undefined ? node.data.allowRetry : true,
+    allowRetry: node.data?.allowRetry !== undefined ? node.data?.allowRetry : true,
     correctFeedback: node.data?.correctFeedback || "",
     incorrectFeedback: node.data?.incorrectFeedback || "",
   })
@@ -33,8 +36,16 @@ export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
     quizLogic
 
   useEffect(() => {
-    resetQuiz()
-  }, [node.data, resetQuiz])
+    // Só resetar o quiz quando as respostas ou perguntas mudarem realmente
+    const currentAnswers = JSON.stringify(answers)
+    const currentQuestion = question
+    
+    if (currentAnswers !== previousAnswersRef.current || currentQuestion !== previousQuestionRef.current) {
+      resetQuiz()
+      previousAnswersRef.current = currentAnswers
+      previousQuestionRef.current = currentQuestion
+    }
+  }, [answers, question, resetQuiz])
 
   if (!node?.data) {
     console.error("Invalid quiz node structure:", node)
