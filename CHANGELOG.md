@@ -1,3 +1,15 @@
+# [2.9.0](https://github.com/gameguild-gg/gameguild/compare/v2.8.3...v2.9.0) (2025-08-21)
+
+
+### Bug Fixes
+
+* Add missing username generation for OAuth user creation ([6420e6a](https://github.com/gameguild-gg/gameguild/commit/6420e6aa8f337b67cfc294c8aa3f57fa830da8c8))
+
+
+### Features
+
+* add GitHub issue modals to auth links and remove sign-up div ([0a79d0f](https://github.com/gameguild-gg/gameguild/commit/0a79d0f83ddccecc146318fcb85b0e952bf5080e))
+
 ## [2.8.3](https://github.com/gameguild-gg/gameguild/compare/v2.8.2...v2.8.3) (2025-08-21)
 
 
