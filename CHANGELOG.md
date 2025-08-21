@@ -1,3 +1,10 @@
+## [2.8.2](https://github.com/gameguild-gg/gameguild/compare/v2.8.1...v2.8.2) (2025-08-21)
+
+
+### Bug Fixes
+
+* Allow course content access without authentication ([3d523e8](https://github.com/gameguild-gg/gameguild/commit/3d523e8eb21306110a8feeebb4b89a0ceb929065))
+
 ## [2.8.1](https://github.com/gameguild-gg/gameguild/compare/v2.8.0...v2.8.1) (2025-08-21)
 
 
