@@ -36,7 +36,7 @@ const LegalLink = ({ label, href }: LegalLinkData): React.JSX.Element => {
 };
 
 export const LegalLinks = ({ links = [] }: LegalLinksProps): React.JSX.Element => (
-  <div className="flex flex-wrap gap-4 sm:gap-6 lg:gap-8 text-sm text-slate-400 justify-center sm:justify-end">
+  <div className="flex flex-wrap gap-4 sm:gap-6 lg:gap-8 text-sm text-slate-700 dark:text-slate-400 justify-center sm:justify-end">
     {links.map((link) => (
       <LegalLink key={link.href} label={link.label} href={link.href} />
     ))}

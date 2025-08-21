@@ -392,7 +392,7 @@ export function TestingLabOverview() {
                       <span className="text-sm text-white">{stats.totalSessions}</span>
                     </div>
                     <Button asChild variant="outline" className="w-full border-slate-600 bg-slate-800/50 text-slate-200 hover:bg-slate-700/50">
-                      <Link href="/dashboard/testing-lab/sessions">Manage Sessions</Link>
+                      <a href="#" data-github-issue="true" data-route="/dashboard/testing-lab/sessions">Manage Sessions</a>
                     </Button>
                   </div>
                 </CardContent>
@@ -482,7 +482,7 @@ export function TestingLabOverview() {
               <CardContent>
                 <p className="text-slate-400">Sessions functionality will be implemented here.</p>
                 <Button asChild className="mt-4">
-                  <Link href="/dashboard/testing-lab/sessions">Go to Sessions Page</Link>
+                  <a href="#" data-github-issue="true" data-route="/dashboard/testing-lab/sessions">Go to Sessions Page</a>
                 </Button>
               </CardContent>
             </Card>

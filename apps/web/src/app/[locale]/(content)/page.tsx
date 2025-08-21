@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { GitHubIssueProvider } from '@/components/providers/github-issue-provider';
 import {
   ArrowRight,
   Beaker,
@@ -15,7 +16,9 @@ import React from 'react';
 
 export default async function Page(): Promise<React.JSX.Element> {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <>
+      <GitHubIssueProvider />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Hero Section */}
       <section className="relative py-16 lg:py-24 px-4 overflow-hidden">
         <div className="container mx-auto max-w-6xl">
@@ -32,15 +35,15 @@ export default async function Page(): Promise<React.JSX.Element> {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-                <Link href="/courses">
+                <Link href="/courses/catalog">
                   Start Learning
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-slate-600 text-slate-300 hover:bg-slate-800">
-                <Link href="/community">
+              <Button asChild variant="outline" size="lg" className="!border-gray-300 !text-black !bg-white/90 !hover:bg-white !dark:border-slate-600 !dark:text-slate-300 !dark:bg-slate-800/90 !dark:hover:bg-slate-800">
+                <a href="#" data-github-issue="true" data-route="/community">
                   Join Community
-                </Link>
+                </a>
               </Button>
             </div>
           </div>
@@ -171,12 +174,12 @@ export default async function Page(): Promise<React.JSX.Element> {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-                <Link href="/courses">
+                <Link href="/courses/catalog">
                   Explore Courses
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-slate-600 text-slate-300 hover:bg-slate-800">
+              <Button asChild variant="outline" size="lg" className="!border-gray-300 !text-black !bg-white/90 !hover:bg-white !dark:border-slate-600 !dark:text-slate-300 !dark:bg-slate-800/90 !dark:hover:bg-slate-800">
                 <Link href="/about">
                   Learn More
                 </Link>
@@ -185,6 +188,7 @@ export default async function Page(): Promise<React.JSX.Element> {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }
