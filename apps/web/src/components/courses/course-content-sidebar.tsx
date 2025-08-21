@@ -49,7 +49,7 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '', isMobile
 
   const contentSlug = item.slug || item.id || 'untitled';
   const currentPath = parentPath ? `${parentPath}/${contentSlug}` : contentSlug;
-  const href = `/courses/${courseSlug}/content/${currentPath}`;
+  const href = `/p/${courseSlug}/${currentPath}`;
   const isActive = pathname === href || pathname.startsWith(`${href}/`);
   const Icon = getContentIcon(item.type || 0);
 
@@ -164,7 +164,7 @@ export function CourseContentSidebar({ courseSlug, courseTitle, content }: Cours
                  asChild
                  className="text-muted-foreground hover:text-foreground"
                >
-                 <Link href="/courses/catalog">
+                 <Link href="/programs">
                    ← Courses
                  </Link>
                </Button>
