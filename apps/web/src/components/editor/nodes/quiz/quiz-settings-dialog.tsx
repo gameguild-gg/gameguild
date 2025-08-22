@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, BookOpen, Save, RotateCcw } from "lucide-react"
+import { X, BookOpen, Save, RotateCcw, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
 import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
 import { QuizTypeSelector } from "./quiz-type-selector"
-import type { QuizData, QuestionType, QuizAnswer, FillBlankAlternative } from "../quiz-node"
+import type { QuizData, QuestionType, QuizAnswer, FillBlankField, FillBlankAlternative } from "../quiz-node"
 
 interface QuizSettingsDialogProps {
   isOpen: boolean
@@ -29,11 +29,7 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
   const [incorrectFeedback, setIncorrectFeedback] = useState(data.incorrectFeedback || "")
   const [allowRetry, setAllowRetry] = useState(data.allowRetry !== undefined ? data.allowRetry : true)
   const [backgroundColor, setBackgroundColor] = useState(data.backgroundColor || "white")
-  const [blanks, setBlanks] = useState<string[]>(data.blanks || [])
-  const [fillBlankMode, setFillBlankMode] = useState<"text" | "multiple-choice">(data.fillBlankMode || "text")
-  const [fillBlankAlternatives, setFillBlankAlternatives] = useState<FillBlankAlternative[]>(
-    data.fillBlankAlternatives || [],
-  )
+  const [fillBlankFields, setFillBlankFields] = useState<FillBlankField[]>(data.fillBlankFields || [])
   const [ratingScale, setRatingScale] = useState(data.ratingScale || { min: 1, max: 5, step: 1 })
   const [correctRating, setCorrectRating] = useState(data.correctRating || 3)
 
@@ -51,9 +47,7 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
       setIncorrectFeedback(data.incorrectFeedback || "")
       setAllowRetry(data.allowRetry !== undefined ? data.allowRetry : true)
       setBackgroundColor(data.backgroundColor || "white")
-      setBlanks(data.blanks || [])
-      setFillBlankMode(data.fillBlankMode || "text")
-      setFillBlankAlternatives(data.fillBlankAlternatives || [])
+      setFillBlankFields(data.fillBlankFields || [])
       setRatingScale(data.ratingScale || { min: 1, max: 5, step: 1 })
       setCorrectRating(data.correctRating || 3)
 
@@ -62,6 +56,43 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
       setPreviewIsCorrect(false)
     }
   }, [isOpen, data])
+
+  // Auto-detect blanks when question changes for fill-blank type
+  useEffect(() => {
+    if (questionType === "fill-blank" && question) {
+      const blanks = question.split("___")
+      if (blanks.length > 1) {
+        // Create or update fill blank fields
+        const newFields: FillBlankField[] = []
+        for (let i = 0; i < blanks.length - 1; i++) {
+          // Check if we already have a field for this position
+          const existingField = fillBlankFields.find(field => field.position === i)
+          if (existingField) {
+            // Preserve existing field data
+            newFields.push(existingField)
+          } else {
+            // Create new field with default values
+            newFields.push({
+              id: Math.random().toString(36).substring(7),
+              position: i,
+              expectedWords: [""],
+              alternatives: []
+            })
+          }
+        }
+        
+        // Only update if the number of fields changed
+        if (newFields.length !== fillBlankFields.length) {
+          setFillBlankFields(newFields)
+        }
+      } else {
+        // No blanks detected, clear fields
+        if (fillBlankFields.length > 0) {
+          setFillBlankFields([])
+        }
+      }
+    }
+  }, [question, questionType, fillBlankFields])
 
   const handleTypeSelect = (template: any) => {
     setQuestionType(template.type)
@@ -82,7 +113,21 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
         { id: "false", text: "False", isCorrect: template.defaultData.questions[0].correctAnswer === false },
       ])
     } else if (template.type === "fill-blank") {
-      setBlanks([template.defaultData.questions[0].correctAnswer])
+      // Parse the question to find blanks and create fields
+      const questionText = template.defaultData.questions[0].question
+      const blanks = questionText.split("___")
+      const newFields: FillBlankField[] = []
+      
+      for (let i = 0; i < blanks.length - 1; i++) {
+        newFields.push({
+          id: Math.random().toString(36).substring(7),
+          position: i,
+          expectedWords: [template.defaultData.questions[0].correctAnswer || ""],
+          alternatives: []
+        })
+      }
+      
+      setFillBlankFields(newFields)
     }
 
     setShowTypeSelector(false)
@@ -109,6 +154,61 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
     setAnswers(answers.filter((a) => a.id !== id))
   }
 
+  // Fill-blank specific functions
+  const addFillBlankField = () => {
+    const newField: FillBlankField = {
+      id: Math.random().toString(36).substring(7),
+      position: fillBlankFields.length,
+      expectedWords: [""],
+      alternatives: []
+    }
+    setFillBlankFields([...fillBlankFields, newField])
+  }
+
+  const removeFillBlankField = (id: string) => {
+    setFillBlankFields(fillBlankFields.filter(field => field.id !== id))
+  }
+
+  const updateFillBlankFieldWords = (id: string, words: string[]) => {
+    setFillBlankFields(fillBlankFields.map(field => 
+      field.id === id ? { ...field, expectedWords: words } : field
+    ))
+  }
+
+  const addFillBlankAlternative = (fieldId: string) => {
+    const newAlternative: FillBlankAlternative = {
+      id: Math.random().toString(36).substring(7),
+      words: [""],
+      isCorrect: true
+    }
+    setFillBlankFields(fillBlankFields.map(field => 
+      field.id === fieldId 
+        ? { ...field, alternatives: [...field.alternatives, newAlternative] }
+        : field
+    ))
+  }
+
+  const removeFillBlankAlternative = (fieldId: string, alternativeId: string) => {
+    setFillBlankFields(fillBlankFields.map(field => 
+      field.id === fieldId 
+        ? { ...field, alternatives: field.alternatives.filter(alt => alt.id !== alternativeId) }
+        : field
+    ))
+  }
+
+  const updateFillBlankAlternative = (fieldId: string, alternativeId: string, words: string[]) => {
+    setFillBlankFields(fillBlankFields.map(field => 
+      field.id === fieldId 
+        ? { 
+            ...field, 
+            alternatives: field.alternatives.map(alt => 
+              alt.id === alternativeId ? { ...alt, words } : alt
+            )
+          }
+        : field
+    ))
+  }
+
   const handleSave = () => {
     const quizData: QuizData = {
       question,
@@ -118,9 +218,7 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
       incorrectFeedback,
       allowRetry,
       backgroundColor,
-      blanks,
-      fillBlankMode,
-      fillBlankAlternatives,
+      fillBlankFields: questionType === "fill-blank" ? fillBlankFields : undefined,
       ratingScale,
       correctRating,
     }
@@ -181,12 +279,19 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                   <div className="space-y-2">
                     <Label className="text-base font-medium">Question</Label>
                     <Textarea
-                      placeholder="Enter your question here..."
+                      placeholder="Enter your question here... Use ___ to create blanks"
                       value={question}
                       onChange={(e) => setQuestion(e.target.value)}
                       rows={3}
                       className="resize-none"
                     />
+                    {questionType === "fill-blank" && (
+                      <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                        <p className="font-medium mb-2">💡 Dica para Fill-in-the-Blank:</p>
+                        <p>Use <code className="bg-gray-200 px-1 rounded">___</code> para criar espaços em branco.</p>
+                        <p>Exemplo: "A capital do Brasil é ___ e fica no estado de ___."</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Question Type Specific Configuration */}
@@ -240,6 +345,91 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                           <SelectItem value="false">False</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                  )}
+
+                  {/* Fill-blank Configuration */}
+                  {questionType === "fill-blank" && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-base font-medium">Blank Fields Configuration</Label>
+                        <Button variant="outline" size="sm" onClick={addFillBlankField}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Blank
+                        </Button>
+                      </div>
+                      
+                      {fillBlankFields.length === 0 && (
+                        <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                          <p>No blanks detected in the question.</p>
+                          <p className="text-sm">Add <code className="bg-gray-200 px-1 rounded">___</code> to your question to create blanks.</p>
+                        </div>
+                      )}
+
+                      {fillBlankFields.map((field, index) => (
+                        <div key={field.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-medium">Blank #{index + 1}</Label>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeFillBlankField(field.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-xs text-gray-600">Expected Words (separate with commas)</Label>
+                            <Input
+                              placeholder="e.g., word1, word2, word3"
+                              value={field.expectedWords.join(", ")}
+                              onChange={(e) => {
+                                const words = e.target.value.split(",").map(w => w.trim()).filter(w => w)
+                                updateFillBlankFieldWords(field.id, words)
+                              }}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs text-gray-600">Alternative Word Sets</Label>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => addFillBlankAlternative(field.id)}
+                                className="text-xs h-7 px-2"
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Add Alternative
+                              </Button>
+                            </div>
+                            
+                            {field.alternatives.map((alternative) => (
+                              <div key={alternative.id} className="flex items-center gap-2">
+                                <Input
+                                  placeholder="e.g., alt1, alt2, alt3"
+                                  value={alternative.words.join(", ")}
+                                  onChange={(e) => {
+                                    const words = e.target.value.split(",").map(w => w.trim()).filter(w => w)
+                                    updateFillBlankAlternative(field.id, alternative.id, words)
+                                  }}
+                                  className="flex-1"
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeFillBlankAlternative(field.id, alternative.id)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 w-7 p-0"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
 
@@ -327,13 +517,28 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                       incorrectFeedback={incorrectFeedback}
                       allowRetry={allowRetry}
                       checkAnswers={() => {
-                        const correctAnswerIds = answers.filter((a) => a.isCorrect).map((a) => a.id)
-                        const isCorrect =
-                          previewSelectedAnswers.length > 0 &&
-                          previewSelectedAnswers.every((id) => correctAnswerIds.includes(id)) &&
-                          correctAnswerIds.every((id) => previewSelectedAnswers.includes(id))
-
-                        setPreviewIsCorrect(isCorrect)
+                        if (questionType === "fill-blank") {
+                          // Check fill-blank answers
+                          const isCorrect = fillBlankFields.every((field, index) => {
+                            const userAnswer = previewSelectedAnswers[index] || ""
+                            const allAcceptableWords = [
+                              ...field.expectedWords,
+                              ...field.alternatives.flatMap(alt => alt.words)
+                            ]
+                            return allAcceptableWords.some(word => 
+                              word.toLowerCase().trim() === userAnswer.toLowerCase().trim()
+                            )
+                          })
+                          setPreviewIsCorrect(isCorrect)
+                        } else {
+                          // Check other question types
+                          const correctAnswerIds = answers.filter((a) => a.isCorrect).map((a) => a.id)
+                          const isCorrect =
+                            previewSelectedAnswers.length > 0 &&
+                            previewSelectedAnswers.every((id) => correctAnswerIds.includes(id)) &&
+                            correctAnswerIds.every((id) => previewSelectedAnswers.includes(id))
+                          setPreviewIsCorrect(isCorrect)
+                        }
                         setPreviewShowFeedback(true)
                       }}
                       toggleAnswer={(answerId: string) => {
@@ -346,9 +551,7 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                         }
                         setPreviewShowFeedback(false)
                       }}
-                      blanks={blanks}
-                      fillBlankMode={fillBlankMode}
-                      fillBlankAlternatives={fillBlankAlternatives}
+                      fillBlankFields={fillBlankFields}
                       ratingScale={ratingScale}
                       correctRating={correctRating}
                     />
