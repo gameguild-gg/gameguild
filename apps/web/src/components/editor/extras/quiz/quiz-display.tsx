@@ -1,6 +1,6 @@
 "use client"
 import { QuizFeedback } from "./quiz-feedback"
-import type { QuizAnswer, QuestionType, FillBlankAlternative } from "../../nodes/quiz-node"
+import type { QuizAnswer, QuestionType, FillBlankField } from "../../nodes/quiz-node"
 
 interface QuizDisplayProps {
   question: string
@@ -16,12 +16,9 @@ interface QuizDisplayProps {
   checkAnswers: () => void
   toggleAnswer: (answerId: string) => void
   resetQuiz?: () => void
-  blanks?: string[]
-  fillBlankMode?: "text" | "multiple-choice"
-  fillBlankOptions?: string[]
+  fillBlankFields?: FillBlankField[]
   ratingScale?: { min: number; max: number; step: number }
   correctRating?: number
-  fillBlankAlternatives?: FillBlankAlternative[]
 }
 
 export function QuizDisplay({
@@ -38,12 +35,9 @@ export function QuizDisplay({
   checkAnswers,
   toggleAnswer,
   resetQuiz,
-  blanks = [],
-  fillBlankMode = "text",
-  fillBlankOptions = [],
+  fillBlankFields = [],
   ratingScale = { min: 1, max: 5, step: 1 },
   correctRating = 3,
-  fillBlankAlternatives = [],
 }: QuizDisplayProps) {
   const maxSelections = questionType === "multiple-choice" ? answers.filter((a) => a.isCorrect).length : 1
   const canSelectMore = selectedAnswers.length < maxSelections
@@ -106,21 +100,27 @@ export function QuizDisplay({
 
       case "true-false":
         return (
-          <div className="flex gap-4">
+          <div className="space-y-3">
             <button
               className={`
-              flex items-center justify-center px-6 py-3 rounded-lg border-2 font-medium transition-all duration-200 min-w-[120px]
+              w-full p-4 rounded-lg border-2 font-medium text-lg transition-all duration-200
               ${
                 selectedAnswers.includes("true")
-                  ? "border-green-500 bg-green-50 text-green-700 shadow-sm"
-                  : "border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50"
+                  ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
+                  : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
               }
-              ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm cursor-pointer"}
+              ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
             `}
               onClick={() => (!showFeedback ? setSelectedAnswers(["true"]) : undefined)}
               disabled={showFeedback}
             >
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className={`w-5 h-5 inline mr-3 transition-colors ${
+                  selectedAnswers.includes("true") ? "text-blue-500" : "text-gray-400"
+                }`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path
                   fillRule="evenodd"
                   d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -131,21 +131,27 @@ export function QuizDisplay({
             </button>
             <button
               className={`
-              flex items-center justify-center px-6 py-3 rounded-lg border-2 font-medium transition-all duration-200 min-w-[120px]
+              w-full p-4 rounded-lg border-2 font-medium text-lg transition-all duration-200
               ${
                 selectedAnswers.includes("false")
-                  ? "border-red-500 bg-red-50 text-red-700 shadow-sm"
-                  : "border-gray-200 text-gray-700 hover:border-red-300 hover:bg-red-50"
+                  ? "border-blue-500 bg-blue-50 text-blue-700 shadow-sm"
+                  : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
               }
-              ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm cursor-pointer"}
+              ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
             `}
               onClick={() => (!showFeedback ? setSelectedAnswers(["false"]) : undefined)}
               disabled={showFeedback}
             >
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <svg
+                className={`w-5 h-5 inline mr-3 transition-colors ${
+                  selectedAnswers.includes("false") ? "text-blue-500" : "text-gray-400"
+                }`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
                 <path
                   fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 011.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
                   clipRule="evenodd"
                 />
               </svg>
@@ -155,76 +161,32 @@ export function QuizDisplay({
         )
 
       case "fill-blank":
-        if (fillBlankMode === "text") {
-          const questionParts = question.split("___")
-          return (
-            <div className="space-y-4">
-              <div className="text-lg leading-relaxed">
-                {questionParts.map((part, index) => (
-                  <span key={index}>
-                    {part}
-                    {index < questionParts.length - 1 && (
-                      <input
-                        className="inline-block w-32 mx-2 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
-                        placeholder="..."
-                        value={selectedAnswers[index] || ""}
-                        onChange={(e) => {
-                          const newAnswers = [...selectedAnswers]
-                          newAnswers[index] = e.target.value
-                          setSelectedAnswers(newAnswers)
-                        }}
-                        disabled={showFeedback}
-                      />
-                    )}
-                  </span>
-                ))}
-              </div>
+        // Parse the question to find blanks and render input fields
+        const questionParts = question.split("___")
+        return (
+          <div className="space-y-4">
+            <div className="text-lg leading-relaxed">
+              {questionParts.map((part, index) => (
+                <span key={index}>
+                  {part}
+                  {index < questionParts.length - 1 && (
+                    <input
+                      className="inline-block w-32 mx-2 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                      placeholder="..."
+                      value={selectedAnswers[index] || ""}
+                      onChange={(e) => {
+                        const newAnswers = [...selectedAnswers]
+                        newAnswers[index] = e.target.value
+                        setSelectedAnswers(newAnswers)
+                      }}
+                      disabled={showFeedback}
+                    />
+                  )}
+                </span>
+              ))}
             </div>
-          )
-        } else {
-          const questionParts = question.split("___")
-          return (
-            <div className="space-y-4">
-              <div className="text-lg font-medium mb-6 p-4 bg-gray-50 rounded-lg">
-                {questionParts.map((part, index) => (
-                  <span key={index}>
-                    {part}
-                    {index < questionParts.length - 1 && (
-                      <span className="mx-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-md font-mono">___</span>
-                    )}
-                  </span>
-                ))}
-              </div>
-              <div className="space-y-3">
-                {fillBlankAlternatives?.map((alternative) => (
-                  <div
-                    key={alternative.id}
-                    className={`
-                    flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
-                    ${
-                      selectedAnswers[0] === alternative.id
-                        ? "border-blue-500 bg-blue-50 shadow-sm"
-                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                    }
-                    ${showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
-                  `}
-                    onClick={() => (!showFeedback ? setSelectedAnswers([alternative.id]) : undefined)}
-                  >
-                    <div
-                      className={`
-                    flex items-center justify-center w-5 h-5 rounded-full border-2 mr-4 transition-colors
-                    ${selectedAnswers[0] === alternative.id ? "border-blue-500 bg-blue-500" : "border-gray-300"}
-                  `}
-                    >
-                      {selectedAnswers[0] === alternative.id && <div className="w-2 h-2 bg-white rounded-full"></div>}
-                    </div>
-                    <span className="text-base font-medium text-gray-800">{alternative.words.join(", ")}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        }
+          </div>
+        )
 
       case "short-answer":
         return (
@@ -303,7 +265,7 @@ export function QuizDisplay({
         </div>
       )}
 
-      {questionType !== "fill-blank" || fillBlankMode !== "multiple-choice" ? (
+      {questionType !== "fill-blank" ? (
         <div className="text-lg font-medium">{question}</div>
       ) : null}
 
