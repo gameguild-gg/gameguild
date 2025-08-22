@@ -175,40 +175,6 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
     ))
   }
 
-  const addFillBlankAlternative = (fieldId: string) => {
-    const newAlternative: FillBlankAlternative = {
-      id: Math.random().toString(36).substring(7),
-      words: [""],
-      isCorrect: true
-    }
-    setFillBlankFields(fillBlankFields.map(field => 
-      field.id === fieldId 
-        ? { ...field, alternatives: [...field.alternatives, newAlternative] }
-        : field
-    ))
-  }
-
-  const removeFillBlankAlternative = (fieldId: string, alternativeId: string) => {
-    setFillBlankFields(fillBlankFields.map(field => 
-      field.id === fieldId 
-        ? { ...field, alternatives: field.alternatives.filter(alt => alt.id !== alternativeId) }
-        : field
-    ))
-  }
-
-  const updateFillBlankAlternative = (fieldId: string, alternativeId: string, words: string[]) => {
-    setFillBlankFields(fillBlankFields.map(field => 
-      field.id === fieldId 
-        ? { 
-            ...field, 
-            alternatives: field.alternatives.map(alt => 
-              alt.id === alternativeId ? { ...alt, words } : alt
-            )
-          }
-        : field
-    ))
-  }
-
   const handleSave = () => {
     const quizData: QuizData = {
       question,
@@ -381,52 +347,21 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                           </div>
                           
                           <div className="space-y-2">
-                            <Label className="text-xs text-gray-600">Expected Words (separate with commas)</Label>
-                            <Input
-                              placeholder="e.g., word1, word2, word3"
-                              value={field.expectedWords.join(", ")}
+                            <Label className="text-xs text-gray-600">Expected Words</Label>
+                            <div className="text-xs text-gray-500 mb-2">
+                              You can include any characters including commas, spaces, and punctuation. Separate multiple acceptable answers with line breaks.
+                            </div>
+                            <Textarea
+                              placeholder="e.g., word1&#10;word2&#10;phrase with spaces, punctuation!&#10;another answer"
+                              value={field.expectedWords.join("\n")}
                               onChange={(e) => {
-                                const words = e.target.value.split(",").map(w => w.trim()).filter(w => w)
+                                // Split by line breaks to allow multiple acceptable answers
+                                const words = e.target.value.split("\n").map(w => w.trim()).filter(w => w)
                                 updateFillBlankFieldWords(field.id, words)
                               }}
+                              rows={4}
+                              className="resize-none"
                             />
-                          </div>
-
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-xs text-gray-600">Alternative Word Sets</Label>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => addFillBlankAlternative(field.id)}
-                                className="text-xs h-7 px-2"
-                              >
-                                <Plus className="h-3 w-3 mr-1" />
-                                Add Alternative
-                              </Button>
-                            </div>
-                            
-                            {field.alternatives.map((alternative) => (
-                              <div key={alternative.id} className="flex items-center gap-2">
-                                <Input
-                                  placeholder="e.g., alt1, alt2, alt3"
-                                  value={alternative.words.join(", ")}
-                                  onChange={(e) => {
-                                    const words = e.target.value.split(",").map(w => w.trim()).filter(w => w)
-                                    updateFillBlankAlternative(field.id, alternative.id, words)
-                                  }}
-                                  className="flex-1"
-                                />
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => removeFillBlankAlternative(field.id, alternative.id)}
-                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 w-7 p-0"
-                                >
-                                  <X className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            ))}
                           </div>
                         </div>
                       ))}
@@ -521,11 +456,10 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                           // Check fill-blank answers
                           const isCorrect = fillBlankFields.every((field, index) => {
                             const userAnswer = previewSelectedAnswers[index] || ""
-                            const allAcceptableWords = [
-                              ...field.expectedWords,
-                              ...field.alternatives.flatMap(alt => alt.words)
-                            ]
-                            return allAcceptableWords.some(word => 
+                            if (!userAnswer.trim()) return false
+                            
+                            // Check if user answer matches any of the expected words
+                            return field.expectedWords.some(word => 
                               word.toLowerCase().trim() === userAnswer.toLowerCase().trim()
                             )
                           })
