@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
 import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
 import { QuizTypeSelector } from "./quiz-type-selector"
-import type { QuizData, QuestionType, QuizAnswer, FillBlankField, FillBlankAlternative } from "../quiz-node"
+import type { QuizData, QuestionType, QuizAnswer, FillBlankField } from "../quiz-node"
 
 interface QuizSettingsDialogProps {
   isOpen: boolean
@@ -33,6 +33,8 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
   const [ratingScale, setRatingScale] = useState(data.ratingScale || { min: 1, max: 5, step: 1 })
   const [correctRating, setCorrectRating] = useState(data.correctRating || 3)
 
+  const [fillBlankInputValues, setFillBlankInputValues] = useState<Record<string, string>>({})
+
   const [previewSelectedAnswers, setPreviewSelectedAnswers] = useState<string[]>([])
   const [previewShowFeedback, setPreviewShowFeedback] = useState(false)
   const [previewIsCorrect, setPreviewIsCorrect] = useState(false)
@@ -51,48 +53,17 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
       setRatingScale(data.ratingScale || { min: 1, max: 5, step: 1 })
       setCorrectRating(data.correctRating || 3)
 
+      const inputValues: Record<string, string> = {}
+      data.fillBlankFields?.forEach((field) => {
+        inputValues[field.id] = field.expectedWords.join(",, ")
+      })
+      setFillBlankInputValues(inputValues)
+
       setPreviewSelectedAnswers([])
       setPreviewShowFeedback(false)
       setPreviewIsCorrect(false)
     }
   }, [isOpen, data])
-
-  // Auto-detect blanks when question changes for fill-blank type
-  useEffect(() => {
-    if (questionType === "fill-blank" && question) {
-      const blanks = question.split("___")
-      if (blanks.length > 1) {
-        // Create or update fill blank fields
-        const newFields: FillBlankField[] = []
-        for (let i = 0; i < blanks.length - 1; i++) {
-          // Check if we already have a field for this position
-          const existingField = fillBlankFields.find(field => field.position === i)
-          if (existingField) {
-            // Preserve existing field data
-            newFields.push(existingField)
-          } else {
-            // Create new field with default values
-            newFields.push({
-              id: Math.random().toString(36).substring(7),
-              position: i,
-              expectedWords: [""],
-              alternatives: []
-            })
-          }
-        }
-        
-        // Only update if the number of fields changed
-        if (newFields.length !== fillBlankFields.length) {
-          setFillBlankFields(newFields)
-        }
-      } else {
-        // No blanks detected, clear fields
-        if (fillBlankFields.length > 0) {
-          setFillBlankFields([])
-        }
-      }
-    }
-  }, [question, questionType, fillBlankFields])
 
   const handleTypeSelect = (template: any) => {
     setQuestionType(template.type)
@@ -117,16 +88,16 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
       const questionText = template.defaultData.questions[0].question
       const blanks = questionText.split("___")
       const newFields: FillBlankField[] = []
-      
+
       for (let i = 0; i < blanks.length - 1; i++) {
         newFields.push({
           id: Math.random().toString(36).substring(7),
           position: i,
           expectedWords: [template.defaultData.questions[0].correctAnswer || ""],
-          alternatives: []
+          alternatives: [],
         })
       }
-      
+
       setFillBlankFields(newFields)
     }
 
@@ -160,19 +131,34 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
       id: Math.random().toString(36).substring(7),
       position: fillBlankFields.length,
       expectedWords: [""],
-      alternatives: []
+      alternatives: [],
     }
     setFillBlankFields([...fillBlankFields, newField])
   }
 
   const removeFillBlankField = (id: string) => {
-    setFillBlankFields(fillBlankFields.filter(field => field.id !== id))
+    setFillBlankFields(fillBlankFields.filter((field) => field.id !== id))
   }
 
   const updateFillBlankFieldWords = (id: string, words: string[]) => {
-    setFillBlankFields(fillBlankFields.map(field => 
-      field.id === id ? { ...field, expectedWords: words } : field
-    ))
+    setFillBlankFields(fillBlankFields.map((field) => (field.id === id ? { ...field, expectedWords: words } : field)))
+  }
+
+  const handleFillBlankInputChange = (fieldId: string, inputValue: string) => {
+    // Keep the raw input value for display (with double commas)
+    setFillBlankInputValues((prev) => ({
+      ...prev,
+      [fieldId]: inputValue,
+    }))
+
+    // Process the input to extract words for quiz logic
+    const words = inputValue
+      .split(",,")
+      .map((w) => w.trim())
+      .filter((w) => w.length > 0)
+
+    // Update the field data with processed words
+    updateFillBlankFieldWords(fieldId, words.length > 0 ? words : [inputValue.trim()].filter((w) => w))
   }
 
   const handleSave = () => {
@@ -254,7 +240,9 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                     {questionType === "fill-blank" && (
                       <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
                         <p className="font-medium mb-2">💡 Dica para Fill-in-the-Blank:</p>
-                        <p>Use <code className="bg-gray-200 px-1 rounded">___</code> para criar espaços em branco.</p>
+                        <p>
+                          Use <code className="bg-gray-200 px-1 rounded">___</code> para criar espaços em branco.
+                        </p>
                         <p>Exemplo: "A capital do Brasil é ___ e fica no estado de ___."</p>
                       </div>
                     )}
@@ -324,11 +312,13 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                           Add Blank
                         </Button>
                       </div>
-                      
+
                       {fillBlankFields.length === 0 && (
                         <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
                           <p>No blanks detected in the question.</p>
-                          <p className="text-sm">Add <code className="bg-gray-200 px-1 rounded">___</code> to your question to create blanks.</p>
+                          <p className="text-sm">
+                            Add <code className="bg-gray-200 px-1 rounded">___</code> to your question to create blanks.
+                          </p>
                         </div>
                       )}
 
@@ -345,22 +335,21 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
-                          
+
                           <div className="space-y-2">
                             <Label className="text-xs text-gray-600">Expected Words</Label>
                             <div className="text-xs text-gray-500 mb-2">
-                              You can include any characters including commas, spaces, and punctuation. Separate multiple acceptable answers with line breaks.
+                              Enter acceptable answers separated by double commas (,,). Spaces and punctuation are
+                              allowed.
+                              <br />
+                              Example: "Brasília,, brasilia,, capital do Brasil,, Capital do Brasil"
                             </div>
-                            <Textarea
-                              placeholder="e.g., word1&#10;word2&#10;phrase with spaces, punctuation!&#10;another answer"
-                              value={field.expectedWords.join("\n")}
-                              onChange={(e) => {
-                                // Split by line breaks to allow multiple acceptable answers
-                                const words = e.target.value.split("\n").map(w => w.trim()).filter(w => w)
-                                updateFillBlankFieldWords(field.id, words)
-                              }}
-                              rows={4}
-                              className="resize-none"
+                            <Input
+                              type="text"
+                              placeholder="e.g., word1,, word2,, phrase with spaces,, another answer"
+                              value={fillBlankInputValues[field.id] || ""}
+                              onChange={(e) => handleFillBlankInputChange(field.id, e.target.value)}
+                              className="w-full"
                             />
                           </div>
                         </div>
@@ -457,10 +446,10 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                           const isCorrect = fillBlankFields.every((field, index) => {
                             const userAnswer = previewSelectedAnswers[index] || ""
                             if (!userAnswer.trim()) return false
-                            
+
                             // Check if user answer matches any of the expected words
-                            return field.expectedWords.some(word => 
-                              word.toLowerCase().trim() === userAnswer.toLowerCase().trim()
+                            return field.expectedWords.some(
+                              (word) => word.toLowerCase().trim() === userAnswer.toLowerCase().trim(),
                             )
                           })
                           setPreviewIsCorrect(isCorrect)
