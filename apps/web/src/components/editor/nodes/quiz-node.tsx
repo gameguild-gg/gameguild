@@ -12,7 +12,6 @@ import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
 import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
 import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
-import type { EditMenuOption } from "@/components/editor/extras/content-edit-menu"
 import { QuizSettingsDialog } from "./quiz/quiz-settings-dialog"
 
 // Adicionar no topo do arquivo, após os imports
