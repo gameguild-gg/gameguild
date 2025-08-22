@@ -55,6 +55,13 @@ export interface FillBlankAlternative {
   isCorrect: boolean
 }
 
+export interface FillBlankField {
+  id: string
+  position: number // Position in the question text
+  expectedWords: string[] // Array of acceptable words for this blank
+  alternatives: FillBlankAlternative[] // Alternative word sets for this blank
+}
+
 export interface QuizData {
   question: string
   questionType: QuestionType
@@ -63,10 +70,8 @@ export interface QuizData {
   incorrectFeedback?: string
   allowRetry: boolean
   backgroundColor?: string
-  // For fill-in-the-blank
-  blanks?: string[]
-  fillBlankMode?: "text" | "multiple-choice"
-  fillBlankAlternatives?: FillBlankAlternative[] // New structure for alternatives
+  // For fill-in-the-blank - NEW STRUCTURE
+  fillBlankFields?: FillBlankField[] // Array of blank fields with their expected words
   // For matching questions
   matchingPairs?: MatchingPair[]
   // For ordering questions
@@ -162,6 +167,8 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
     allowRetry: data.allowRetry !== undefined ? data.allowRetry : true,
     correctFeedback: data.correctFeedback || "",
     incorrectFeedback: data.incorrectFeedback || "",
+    questionType: data.questionType,
+    fillBlankFields: data.fillBlankFields,
   })
 
   useEffect(() => {
@@ -241,9 +248,7 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
             checkAnswers={checkAnswers}
             toggleAnswer={toggleAnswer}
             resetQuiz={resetQuiz}
-            blanks={data.blanks}
-            fillBlankMode={data.fillBlankMode}
-            fillBlankAlternatives={data.fillBlankAlternatives}
+            fillBlankFields={data.fillBlankFields}
             ratingScale={data.ratingScale}
             correctRating={data.correctRating}
           />
@@ -276,8 +281,6 @@ export function $createQuizNode(): QuizNode {
       { id: "2", text: "", isCorrect: false },
     ],
     allowRetry: true,
-    fillBlankMode: "text",
-    fillBlankAlternatives: [],
     backgroundColor: "white",
   })
 }
