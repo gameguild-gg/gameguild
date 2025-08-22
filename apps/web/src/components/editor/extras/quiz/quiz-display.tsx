@@ -171,7 +171,8 @@ export function QuizDisplay({
                   {part}
                   {index < questionParts.length - 1 && (
                     <input
-                      className="inline-block w-32 mx-2 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                      type="text"
+                      className="inline-block w-40 mx-2 px-3 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
                       placeholder="..."
                       value={selectedAnswers[index] || ""}
                       onChange={(e) => {
@@ -265,9 +266,7 @@ export function QuizDisplay({
         </div>
       )}
 
-      {questionType !== "fill-blank" ? (
-        <div className="text-lg font-medium">{question}</div>
-      ) : null}
+      {questionType !== "fill-blank" ? <div className="text-lg font-medium">{question}</div> : null}
 
       {renderQuestionContent()}
 
