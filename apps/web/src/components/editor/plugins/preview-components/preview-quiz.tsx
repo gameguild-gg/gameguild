@@ -4,17 +4,53 @@ import type { SerializedQuizNode } from "../../nodes/quiz-node"
 import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
 import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
 import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useMemo } from "react"
+
+// Função para migrar dados antigos para o novo formato
+function migrateFillBlankData(nodeData: any) {
+  // Se já tem fillBlankFields, não precisa migrar
+  if (nodeData.fillBlankFields) {
+    return nodeData.fillBlankFields
+  }
+
+  // Se tem dados antigos, migrar para o novo formato
+  if (nodeData.questionType === 'fill-blank' && nodeData.fillBlankAlternatives) {
+    const blankCount = (nodeData.question.match(/___/g) || []).length
+    
+    return Array.from({ length: blankCount }, (_, index) => ({
+      id: `blank-${index}`,
+      position: index,
+      expectedWords: [], // Não há expectedWords no formato antigo
+      alternatives: nodeData.fillBlankAlternatives
+        .filter((alt: any) => alt.isCorrect)
+        .map((alt: any) => ({
+          id: alt.id,
+          words: alt.words,
+          isCorrect: alt.isCorrect
+        }))
+    }))
+  }
+
+  return []
+}
 
 export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
   const previousAnswersRef = useRef<string>("")
   const previousQuestionRef = useRef<string>("")
+  
+  // Migrar dados antigos para o novo formato
+  const migratedFillBlankFields = useMemo(() => 
+    migrateFillBlankData(node.data), 
+    [node.data]
+  )
   
   const quizLogic = useQuizLogic({
     answers: node.data?.answers || [],
     allowRetry: node.data?.allowRetry !== undefined ? node.data?.allowRetry : true,
     correctFeedback: node.data?.correctFeedback || "",
     incorrectFeedback: node.data?.incorrectFeedback || "",
+    questionType: node.data?.questionType,
+    fillBlankFields: migratedFillBlankFields,
   })
 
   const {
@@ -25,9 +61,6 @@ export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
     incorrectFeedback,
     allowRetry,
     backgroundColor,
-    blanks,
-    fillBlankMode,
-    fillBlankAlternatives,
     ratingScale,
     correctRating,
   } = node.data
@@ -68,9 +101,7 @@ export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
         checkAnswers={checkAnswers}
         toggleAnswer={toggleAnswer}
         resetQuiz={resetQuiz}
-        blanks={blanks}
-        fillBlankMode={fillBlankMode}
-        fillBlankAlternatives={fillBlankAlternatives}
+        fillBlankFields={migratedFillBlankFields}
         ratingScale={ratingScale}
         correctRating={correctRating}
       />
