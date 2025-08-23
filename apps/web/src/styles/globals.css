@@ -112,6 +112,12 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@layer utilities {
+    .text-balance {
+        text-wrap: balance;
+    }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -119,6 +125,7 @@
 
   body {
     @apply bg-background text-foreground;
+      font-family: Arial, Helvetica, sans-serif;
   }
 
   html,
