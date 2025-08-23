@@ -1,3 +1,12 @@
+## [2.10.2](https://github.com/gameguild-gg/gameguild/compare/v2.10.1...v2.10.2) (2025-08-23)
+
+
+### Bug Fixes
+
+* add .vscode settings to prevent markdown auto-formatting ([63b9e8c](https://github.com/gameguild-gg/gameguild/commit/63b9e8c87c43be8ca30d764cfb9f9f2bdcf54ca0))
+* correct LaTeX formatting in flocking.md ([b23fb18](https://github.com/gameguild-gg/gameguild/commit/b23fb183c901a8328ec793fcce8a1b3af5b07341))
+* update markdown content and renderer ([d70579d](https://github.com/gameguild-gg/gameguild/commit/d70579d85ea7449fd0dd3f6c11a45106006db088))
+
 ## [2.10.1](https://github.com/gameguild-gg/gameguild/compare/v2.10.0...v2.10.1) (2025-08-23)
 
 
