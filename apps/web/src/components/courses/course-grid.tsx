@@ -1,7 +1,7 @@
 import React from 'react';
 import { CourseCard } from './course-card';
 
-interface Course {
+interface CourseGridCourse {
   id: string;
   title: string;
   description: string;
@@ -17,13 +17,13 @@ interface Course {
     name: string;
     avatar: string;
   };
-  isEnrolled?: boolean;
-  progress?: number;
-  certification?: boolean;
+  isEnrolled: boolean;
+  progress: number;
+  certification: boolean;
 }
 
 interface CourseGridProps {
-  courses: Course[];
+  courses: CourseGridCourse[];
   variant?: 'default' | 'compact' | 'featured';
   columns?: 1 | 2 | 3 | 4;
   loading?: boolean;
@@ -69,8 +69,8 @@ export function CourseGrid({ courses, variant = 'default', columns = 3, loading 
   return (
     <div className={`grid ${gridClass} gap-6`}>
       {courses.map((course) => (
-        <CourseCard key={course.id} course={course} variant={variant} />
+        <CourseCard key={course.id} course={course} />
       ))}
-    </div>
-  );
+     </div>
+   );
 }

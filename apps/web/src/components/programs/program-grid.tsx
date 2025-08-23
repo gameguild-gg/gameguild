@@ -58,7 +58,7 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {programs.map((program) => (
-        <Link key={program.id} href={`/courses/${program.slug || program.id}/content`}>
+        <Link key={program.id} href={`/p/${program.slug || program.id}`}>
           <Card className="group overflow-hidden border-slate-700/50 bg-slate-800/30 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:border-slate-600/50 cursor-pointer">
             <CardHeader className="p-0">
               <div className="relative aspect-video w-full overflow-hidden bg-slate-700/50">

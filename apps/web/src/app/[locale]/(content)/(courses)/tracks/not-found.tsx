@@ -36,7 +36,7 @@ export default function TrackNotFound() {
             </Button>
 
             <Button asChild className="bg-blue-600 hover:bg-blue-700">
-              <Link href="/courses/catalog">Browse All Courses</Link>
+              <Link href="/programs">Browse All Courses</Link>
             </Button>
           </div>
         </div>
