@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
-import { Eye, Home } from "lucide-react"
+import { Eye, Home, Blocks } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { OpenProjectDialogPreview } from "@/components/editor/extras/preview/open-project-dialog-preview"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
@@ -132,12 +132,12 @@ export default function PreviewPage() {
         <div className={`mx-auto space-y-8 ${currentProject && serializedState ? "max-w-7xl" : "max-w-4xl"}`}>
           <div className="text-center space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-sm font-medium">
-              <Eye className="w-4 h-4" />
-              Preview Mode
+              <Eye className="w-4" />
+              View
             </div>
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Content Preview</h1>
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Content View</h1>
             <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              View your projects as they would appear to readers
+              View your documents as they would appear to readers
             </p>
           </div>
 
@@ -151,7 +151,7 @@ export default function PreviewPage() {
                       size="sm"
                       className="gap-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
-                      <Home className="w-4 h-4" />
+                      <Home className="size" />
                       Home
                     </Button>
                   </Link>
@@ -162,14 +162,7 @@ export default function PreviewPage() {
                       size="sm"
                       className="gap-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
+                      <Blocks className="w-4" />
                       Studio
                     </Button>
                   </Link>
