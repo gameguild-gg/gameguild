@@ -1,19 +1,32 @@
-"use client"
-
-import { Button } from "@/components/ui/button"
+import { Button }                 from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Edit3, Eye, ArrowRight } from "lucide-react"
-import Link from "next/link"
+import { ArrowRight, Edit3, Eye } from "lucide-react"
+import Link                       from "next/link"
+import React                      from 'react';
 
-export default function HomePage() {
+
+const EDITOR_FEATURES = [
+  "Rich text formatting and styling",
+  "Media embedding (images, videos, audio)",
+  "Interactive quizzes and code blocks",
+  "Project management and auto-save",
+];
+
+const PREVIEW_FEATURES = [
+  "Clean, distraction-free reading",
+  "Mobile-responsive design",
+  "Share and export options",
+  "Print-friendly layouts",
+];
+
+export default async function Page(): Promise<React.JSX.Element> {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
+    <div className="flex flex-col flex-1 items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="flex flex-col flex-1 justify-around container max-w-4xl gap-16 sm:gap-8">
           {/* Header Section */}
-          <div className="text-center space-y-6 mb-16">
+        <header className="text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-sm font-medium">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="size-4" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
