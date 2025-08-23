@@ -1,10 +1,10 @@
-import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "sonner"
 import { ThemeProvider } from "@/lib/context/theme-context"
 import { TopMenu } from "@/components/editor/top-menu"
+import React, { PropsWithChildren } from 'react';
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -43,14 +43,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning={true}>
-      <body className={inter.className}>
-        <ThemeProvider>
-          <TopMenu />
-          <main className="pt-16 container mx-auto py-10">{children}</main>
-          <Toaster position="top-right" />
-        </ThemeProvider>
-      </body>
-    </html>
+    <div>
+      <TopMenu />
+      <div className="flex flex-col flex-1 mt-10">{ children }</div>
+    </div>
   )
 }
