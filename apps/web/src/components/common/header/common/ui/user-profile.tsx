@@ -1,50 +1,30 @@
 import Link from 'next/link';
-import { Settings, User } from 'lucide-react';
 import { UserProfileMenu } from './user-profile-menu';
-import { auth } from '@/auth';
-import { getCurrentUserProfile } from '@/lib/user-profile/user-profile.actions';
+import { User, Settings } from 'lucide-react';
+import type { Session } from 'next-auth';
+import type { UserResponseDto } from '@/lib/api/generated/types.gen';
 
-export const UserProfile = async (): Promise<React.JSX.Element> => {
-  const session = await auth();
+interface UserProfileProps {
+  session: Session | null;
+  userProfile?: UserResponseDto | null;
+}
 
-  // Return login button if not authenticated
-  if (!session || !session.user) {
+export function UserProfile({ session, userProfile }: UserProfileProps) {
+  if (!session?.user) {
     return (
-      <Link
-        href="/sign-in"
-        className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3"
-      >
-        Sign In
-      </Link>
-    );
-  }
-
-  // Handle session errors
-  if (session.error) {
-    return (
-      <Link
-        href="/sign-in"
-        className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-3"
-      >
-        Sign In
-      </Link>
-    );
-  }
-
-  const userResult = await getCurrentUserProfile();
-  
-  if (!userResult.success || !userResult.data) {
-    return (
-      <div className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 bg-gray-200">
-        Error loading profile
+      <div className="flex items-center space-x-2">
+        <Link
+          href="/api/auth/signin"
+          className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Sign In
+        </Link>
       </div>
     );
   }
 
-  const userData = userResult.data;
-
   // Use actual username for profile URL instead of transforming the display name
-  const profileUsername = userData?.username || userData?.name?.toLowerCase().replace(/\s+/g, '') || 'user';
+  const profileUsername = userProfile?.username || userProfile?.name?.toLowerCase().replace(/\s+/g, '') || 'user';
 
   // Define menu items
   const menuItems = [
@@ -61,4 +41,4 @@ export const UserProfile = async (): Promise<React.JSX.Element> => {
   ];
 
   return <UserProfileMenu session={session} menuItems={menuItems} />;
-};
+}

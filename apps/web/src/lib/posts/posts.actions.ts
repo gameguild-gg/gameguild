@@ -42,3 +42,28 @@ export async function getPostById(data: GetApiPostsByPostIdData) {
     path: data.path,
   });
 }
+
+/**
+ * Get recent posts with limit
+ */
+export async function getRecentPosts(limit: number = 10) {
+  const result = await getApiPosts({
+    query: {
+      pageSize: limit,
+      orderBy: 'createdAt',
+      descending: true,
+    },
+  });
+  
+  return {
+    success: true,
+    data: Array.isArray(result.data) ? result.data.map(post => ({
+      id: post.id || '',
+      title: post.title || '',
+      authorId: post.authorId || '',
+      authorName: post.authorName || 'Unknown',
+      authorAvatar: post.authorAvatar || null,
+      createdAt: post.createdAt || new Date().toISOString(),
+    })) : [],
+  };
+}

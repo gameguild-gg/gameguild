@@ -131,9 +131,14 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                       </Button>
                     </div>
                     <div className="flex justify-end">
-                      <Link href="#" className="text-sm text-slate-400 hover:text-blue-400 transition-colors underline-offset-4 hover:underline">
+                      <a 
+                        href="#" 
+                        className="text-sm text-slate-400 hover:text-blue-400 transition-colors underline-offset-4 hover:underline cursor-pointer"
+                        data-github-issue="true"
+                        data-route="/forgot-password"
+                      >
                         Forgot your password?
-                      </Link>
+                      </a>
                     </div>
                   </div>
                   <Button type="submit" className="w-full bg-slate-700 hover:bg-slate-600 text-white border-slate-600 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" disabled={emailPasswordLoading}>
@@ -183,12 +188,7 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                 </Button>
               </div>
 
-              <div className="text-center text-sm">
-                <span className="text-slate-400">Don&apos;t have an account?</span>{' '}
-                <Link href="/sign-up" className="text-blue-400 hover:text-blue-300 transition-colors underline underline-offset-4">
-                  Sign up
-                </Link>
-              </div>
+
             </div>
           </CardContent>
         </Card>
@@ -196,13 +196,23 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
 
       <div className="text-balance text-center text-xs text-slate-400">
         By clicking continue, you agree to our{' '}
-        <Link href="/terms-of-service" className="text-blue-400 hover:text-blue-300 transition-colors underline underline-offset-4">
+        <a 
+          href="#" 
+          className="text-blue-400 hover:text-blue-300 transition-colors underline underline-offset-4 cursor-pointer"
+          data-github-issue="true"
+          data-route="/terms-of-service"
+        >
           Terms of Service
-        </Link>{' '}
+        </a>{' '}
         and{' '}
-        <Link href="/polices/privacy" className="text-blue-400 hover:text-blue-300 transition-colors underline underline-offset-4">
+        <a 
+          href="#" 
+          className="text-blue-400 hover:text-blue-300 transition-colors underline underline-offset-4 cursor-pointer"
+          data-github-issue="true"
+          data-route="/polices/privacy"
+        >
           Privacy Policy
-        </Link>
+        </a>
         .
       </div>
     </div>

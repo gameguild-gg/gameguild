@@ -7,7 +7,7 @@ import Link from "next/link"
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           {/* Header Section */}
@@ -27,7 +27,7 @@ export default function HomePage() {
               Welcome to <span className="text-blue-600 dark:text-blue-400">GameGuild</span>
             </h1>
 
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl text-slate-700 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
               Create, edit, and preview your game development content with our powerful tools designed for the gaming
               community.
             </p>
@@ -42,26 +42,26 @@ export default function HomePage() {
                   <Edit3 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                 </div>
                 <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Content Editor</CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-300 text-base">
+                <CardDescription className="text-slate-700 dark:text-gray-300 text-base">
                   Create rich content with our advanced editor featuring text formatting, media, quizzes, and
                   interactive elements
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-3 mb-6">
-                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-gray-300">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     Rich text formatting and styling
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-gray-300">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     Media embedding (images, videos, audio)
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-gray-300">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     Interactive quizzes and code blocks
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-gray-300">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     Project management and auto-save
                   </div>
@@ -82,25 +82,25 @@ export default function HomePage() {
                   <Eye className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                 </div>
                 <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Content Preview</CardTitle>
-                <CardDescription className="text-gray-600 dark:text-gray-300 text-base">
+                <CardDescription className="text-slate-700 dark:text-gray-300 text-base">
                   Preview and share your content in a clean, reader-friendly format optimized for your audience
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-3 mb-6">
-                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-gray-300">
                     <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                     Clean, distraction-free reading
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-gray-300">
                     <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                     Mobile-responsive design
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-gray-300">
                     <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                     Share and export options
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-gray-300">
                     <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                     Print-friendly layouts
                   </div>
@@ -120,7 +120,7 @@ export default function HomePage() {
 
           {/* Footer Section */}
           <div className="text-center mt-16 space-y-4">
-            <div className="flex items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center justify-center gap-6 text-sm text-slate-600 dark:text-gray-400">
               <span className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 All systems operational
@@ -131,7 +131,7 @@ export default function HomePage() {
               <span>Open source</span>
             </div>
 
-            <p className="text-gray-400 dark:text-gray-500 text-sm">
+            <p className="text-slate-500 dark:text-gray-500 text-sm">
               Empowering the game development community with better content creation tools
             </p>
           </div>
