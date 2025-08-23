@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Tenants;
@@ -475,10 +476,20 @@ namespace GameGuild.Modules.Authentication {
       bool isNewUser = false;
 
       if (user == null) {
+        // Generate unique username from name using slugify (same as CreateUserHandler)
+        var baseUsername = name.ToSlugCase();
+        var existingUsernames = await context.Users
+                                             .Where(u => u.Username.StartsWith(baseUsername))
+                                             .Select(u => u.Username)
+                                             .ToListAsync();
+
+        var uniqueUsername = SlugCase.GenerateUnique(name, existingUsernames, 50);
+
         // Create new user
         user = new User {
           Id = Guid.NewGuid(),
           Name = name,
+          Username = uniqueUsername,
           Email = email,
           CreatedAt = DateTime.UtcNow,
           UpdatedAt = DateTime.UtcNow,
