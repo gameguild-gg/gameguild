@@ -130,9 +130,8 @@ export default async function Page(): Promise<React.JSX.Element> {
             <p className="text-slate-500 dark:text-gray-500 text-sm">
               Empowering the game development community with better content creation tools
             </p>
-          </div>
+        </footer>
         </div>
-      </div>
     </div>
   )
 }
