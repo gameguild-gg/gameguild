@@ -1,3 +1,10 @@
+## [2.10.1](https://github.com/gameguild-gg/gameguild/compare/v2.10.0...v2.10.1) (2025-08-23)
+
+
+### Bug Fixes
+
+* Update flocking.md content ([e8f09c9](https://github.com/gameguild-gg/gameguild/commit/e8f09c9f7d422f8f3bb1919f5f5ad2a7a8bf7d2a))
+
 # [2.10.0](https://github.com/gameguild-gg/gameguild/compare/v2.9.0...v2.10.0) (2025-08-21)
 
 
