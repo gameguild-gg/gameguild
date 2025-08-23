@@ -40,32 +40,32 @@ const ACTIVITIES = [
 ]
 
 interface Props {
-  params: Promise<{ username: string; }>;
+  params: Promise<{ user: string; }>;
 }
 
-export async function generateStaticParams(): Promise<{ username: string; }[]> {
+export async function generateStaticParams(): Promise<{ user: string; }[]> {
   // TODO: Use an API Key to fetch usernames from your database.
   // TODO: Replace with actual usernames from your database.
   const users = ['john_doe', 'jane_smith', 'gamer123'];
 
-  return users.map(username => ({username}));
+  return users.map(user => ({user}));
 }
 
 export default async function Page({params}: Props) {
-  const {username} = await params;
-  const user = await getUserByUsername(username);
+  const {user} = await params;
+  const userData = await getUserByUsername(user);
 
-  if (!user || user.isDeleted || !user.isActive) notFound();
+  if (!userData || userData.isDeleted || !userData.isActive) notFound();
 
   // Extract display name and initials from user data
-  const displayName = user.name || username;
+  const displayName = userData.name || user;
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
-  const joinDate = new Date(user.createdAt);
+  const joinDate = new Date(userData.createdAt);
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
       <ProfileHeader
-        username={username}
+        username={user}
         displayName={displayName}
         initials={initials}
         joinDate={joinDate}
