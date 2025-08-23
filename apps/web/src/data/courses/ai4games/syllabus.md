@@ -19,14 +19,14 @@ Upon completion of the AI for Games, students should be able to:
 
 ### Objective Outcomes
 
-- **Recall** fundamental AI techniques for games;
-- **Identify** key components of AI and which algorithms are used in each component;
-- Demonstrate a deep **understanding** of AI principles in gaming;
-- **Apply** knowledge to program AI components for finely-tuned game play;
-- **Evaluate** the effectiveness and ethical considerations of AI in game design;
-- **Design** and **implement** innovative AI-driven features for enhanced gameplay;
-- **Integrate** AI seamlessly into game systems for cohesive environments;
-- **Consider** societal impact and consequences of AI applications in gaming;
+- **Recall** AI algorithms used in games including search techniques (DFS, BFS, dijkstra), pathfinding A\*, behavioral systems and others;
+- **Identify** appropriate AI techniques for specific game mechanics such as agent movement, maze generation, procedural content and other techniques to solve game problems;
+- **Understand** core AI concepts including finite state machines, flocking behaviors, spatial partitioning, and noise functions;
+- **Apply** basic search algorithms (DFS, BFS, A\*) to solve pathfinding and maze generation problems in 2D game environments;
+- **Implement** behavioral agent systems using flocking algorithms and finite automata for game character AI;
+- **Analyze** the performance trade-offs between different pathfinding approaches in continuous and grid-based spaces, and its common data structures;
+- **Create** procedural content using noise functions and spatial quantization techniques for game world generation;
+- **Integrate** multiple AI systems (movement, pathfinding, and procedural generation) into a cohesive game project demonstrating technical proficiency.
 
 ::: warning "Tentative Schedule"
 
