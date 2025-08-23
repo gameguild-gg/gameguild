@@ -158,7 +158,7 @@ export default async function Page({params}: Props) {
             <TabsContent value="activity" className="space-y-6">
               <ActivityFeed
                 activities={ACTIVITIES}
-                username={username}
+                username={user}
                 displayName={displayName}
                 initials={initials}
               />
