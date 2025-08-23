@@ -5,7 +5,7 @@ import { ErrorBoundaryProvider }             from '@/components/common/errors/er
 import { ApolloClientProvider }              from '@/components/providers/apollo-provider';
 import { GitHubIssueProvider }               from '@/components/providers/github-issue-provider';
 import { TenantProvider }                    from '@/components/tenant';
-import { ThemeProvider }                    from '@/components/theme/theme-provider';
+import { ThemeProvider }                     from '@/components/theme';
 import { Toaster }                           from '@/components/ui/sonner';
 import { Web3Provider }                      from '@/components/web3';
 import { environment }                       from '@/configs/environment';
