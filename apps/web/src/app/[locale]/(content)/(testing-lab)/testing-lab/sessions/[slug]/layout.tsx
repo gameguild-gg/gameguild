@@ -1,11 +1,7 @@
-import { ReactNode } from 'react';
+import React, {PropsWithChildren} from 'react';
+import {PropsWithModal} from "@/types";
 
-interface LayoutProps {
-  children: ReactNode;
-  modal: ReactNode;
-}
-
-export default function SessionLayout({ children, modal }: LayoutProps) {
+export default function Layout({children, modal}: PropsWithChildren<PropsWithModal>): React.JSX.Element {
   return (
     <>
       {children}
