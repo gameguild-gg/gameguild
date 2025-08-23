@@ -154,7 +154,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                   <div className="mt-4 flex justify-between items-center">
                     <span className="text-sm text-zinc-500">Enrolled: {new Date(course.enrolledAt).toLocaleDateString()}</span>
                     <Button asChild size="sm">
-                      <Link href={`/courses/catalog`}>{course.status === 'Completed' ? 'Review' : 'Continue'}</Link>
+                      <Link href={`/programs`}>{course.status === 'Completed' ? 'Review' : 'Continue'}</Link>
                     </Button>
                   </div>
                 </CardContent>
