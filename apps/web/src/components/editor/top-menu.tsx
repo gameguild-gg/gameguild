@@ -1,12 +1,24 @@
 "use client"
 
 import { Sun, Moon, Menu } from "lucide-react"
-import { useTheme } from "@/lib/context/theme-context"
+import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 
 export function TopMenu() {
-  const { isDark, toggleTheme, mounted } = useTheme()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark")
+  }
+
+  const isDark = theme === "dark"
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">

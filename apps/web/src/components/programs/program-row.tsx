@@ -56,7 +56,7 @@ export function ProgramRow({ program }: ProgramRowProps) {
   };
 
   return (
-    <Link href={`/courses/${program.slug || program.id}/content`}>
+    <Link href={`/p/${program.slug || program.id}`}>
       <Card className="group overflow-hidden border-slate-700/50 bg-slate-800/30 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:border-slate-600/50 cursor-pointer">
         <CardContent className="p-3">
           <div className="flex items-start gap-3">

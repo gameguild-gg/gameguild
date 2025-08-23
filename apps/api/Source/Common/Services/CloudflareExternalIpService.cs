@@ -201,7 +201,14 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
             var existingRecord = await GetDnsRecordAsync(config, cancellationToken);
 
             if (existingRecord != null) {
-                // Update existing record
+                // Check if the IP address is different before updating
+                if (existingRecord.Content == ipAddress) {
+                    _logger.LogDebug("DNS record {RecordName} ({RecordType}) already has IP {IpAddress}, skipping update",
+                      config.Name, config.Type, ipAddress);
+                    return true; // No update needed, but consider it successful
+                }
+                
+                // Update existing record with new IP
                 return await UpdateExistingDnsRecordAsync(existingRecord.Id, config, ipAddress, cancellationToken);
             }
             else {

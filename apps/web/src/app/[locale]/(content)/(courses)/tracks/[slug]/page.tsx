@@ -1,5 +1,6 @@
 // import { getTrackBySlug } from '@/lib/tracks/actions';
 import { TRACK_LEVELS, TRACK_LEVEL_COLORS, Track } from '@/components/legacy/types/tracks';
+import { ProgramDifficulty } from '@/lib/api/generated';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -202,7 +203,7 @@ const getMockTrackData = async (track: Track): Promise<MockTrackData> => {
     slug: course.slug || '',
     thumbnail: course.thumbnail || '',
     estimatedHours: course.estimatedHours || 40,
-    difficulty: course.difficulty === 'Beginner' ? 0 : course.difficulty === 'Intermediate' ? 1 : course.difficulty === 'Advanced' ? 2 : 3,
+    difficulty: course.difficulty ?? 0,
     category: 0, // Default category
   }));
 
@@ -520,7 +521,7 @@ export default async function TrackDetailPage({ params }: { params: Promise<{ sl
                           <Card key={course.id} className={`bg-gray-800/50 border-gray-700 hover:bg-gray-800 transition-all duration-200 group ${course.isReal ? 'cursor-pointer' : 'cursor-default'}`}>
                             <CardContent className="p-6">
                               {course.isReal && course.slug ? (
-                                <Link href={`/courses/${course.slug}/content`} className="block">
+                                <Link href={`/p/${course.slug}`} className="block">
                                   <div className="flex items-start gap-4">
                                     <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
                                       <Image src={course.image} alt={course.title} fill className="object-cover" />

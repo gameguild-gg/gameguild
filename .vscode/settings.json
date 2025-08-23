@@ -1,0 +1,65 @@
+{
+    "files.associations": {
+        "string": "cpp"
+    },
+    "dbmlERDPreviewer.preferredTheme": "dark",
+    // Workspace-specific settings for debugging and development
+    "dotnet.defaultSolution": "apps/api/GameGuild.API.sln",
+    "omnisharp.enableRoslynAnalyzers": true,
+    "omnisharp.enableEditorConfigSupport": true,
+    "typescript.preferences.includePackageJsonAutoImports": "on",
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "eslint.workingDirectories": [
+        "apps/web"
+    ],
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/bin": true,
+        "**/obj": true,
+        "**/.next": true,
+        "**/dist": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/bin": true,
+        "**/obj": true,
+        "**/.next": true,
+        "**/dist": true
+    },
+    "debug.internalConsoleOptions": "openOnSessionStart",
+    "debug.console.fontSize": 12,
+    "csharp.format.enable": true,
+    "csharp.semanticHighlighting.enabled": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit",
+        "source.fixAll.eslint": "explicit"
+    },
+    "[markdown]": {
+        "editor.formatOnSave": false,
+        "editor.formatOnPaste": false,
+        "editor.formatOnType": false,
+        "editor.autoIndent": "none",
+        "editor.wordWrap": "off",
+        "editor.quickSuggestions": false,
+        "editor.suggest.showWords": false,
+        "editor.acceptSuggestionOnEnter": "off"
+    },
+    "[csharp]": {
+        "editor.defaultFormatter": "muhammad-sammy.csharp"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "dotnet.formatting.organizeImportsOnFormat": true,
+    "markdown.validate.enabled": true
+}
