@@ -1,10 +1,9 @@
 import { MarkdownContent } from '@/components/content/markdown';
+import { Header } from '@/components/common/header';
+import { Footer } from '@/components/common/footer';
 import { getLicensesFromGitHub } from '@/lib/integrations/github/github.actions';
-import Header from '@/components/common/header/default-header';
-import Footer from '@/components/common/footer/default-footer';
-import React from 'react';
 
-export default async function Page(): Promise<React.JSX.Element> {
+export default async function LicensesPage() {
   const licensesData = await getLicensesFromGitHub();
 
   if (!licensesData || licensesData.length === 0) {

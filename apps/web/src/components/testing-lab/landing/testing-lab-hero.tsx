@@ -74,7 +74,7 @@ export function TestingLabHero() {
                 size="lg"
                 className="relative bg-gradient-to-r from-purple-600/50 to-purple-500/50 backdrop-blur-md border border-purple-400/60 text-white hover:from-purple-600/90 hover:to-purple-500/90 hover:border-purple-300/90 px-8 py-4 text-lg font-semibold shadow-lg transition-all duration-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
               >
-                <Link href="/testing-lab/sessions">Browse Sessions</Link>
+                <a href="#" data-github-issue="true" data-route="/testing-lab/sessions">Browse Sessions</a>
               </Button>
             </div>
           </div>
