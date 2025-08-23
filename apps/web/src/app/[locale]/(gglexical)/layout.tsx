@@ -1,13 +1,5 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { Toaster } from "sonner"
-import { ThemeProvider } from "@/components/theme/theme-provider"
-import { themeScript } from "@/lib/theme-script"
-import { TopMenu } from "@/components/editor/top-menu"
-
-const inter = Inter({ subsets: ["latin"] })
+import { Metadata }                 from 'next';
+import React, { PropsWithChildren } from 'react';
 
 export const metadata: Metadata = {
   title: "GameGuild Editor",
@@ -38,23 +30,8 @@ export const metadata: Metadata = {
   ]
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
-      <body className={inter.className} suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <TopMenu />
-          <main className="pt-16 container mx-auto py-10">{children}</main>
-          <Toaster position="top-right" />
-        </ThemeProvider>
-      </body>
-    </html>
+    <div className="flex flex-col flex-1">{ children }</div>
   )
 }
