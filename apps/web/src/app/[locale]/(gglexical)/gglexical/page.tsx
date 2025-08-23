@@ -22,9 +22,9 @@ const PREVIEW_FEATURES = [
 export default async function Page(): Promise<React.JSX.Element> {
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="flex flex-col flex-1 justify-around container max-w-4xl gap-16 sm:gap-8">
+      <div className="flex flex-col flex-1 justify-around container max-w-4xl gap-16">
           {/* Header Section */}
-        <header className="text-center space-y-6">
+        <header className="text-center flex flex-col items-center flex-0 gap-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-sm font-medium">
               <svg className="size-4" fill="currentColor" viewBox="0 0 20 20">
                 <path
