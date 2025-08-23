@@ -4,8 +4,8 @@ export default async function Layout({children}: PropsWithChildren): Promise<Rea
   // TODO Fetch all testing lab sessions here using API Key and provide then into a context.
 
   return (
-    <div className="flex flex-col flex-1">
+    <>
       {children}
-    </div>
+    </>
   );
 }
