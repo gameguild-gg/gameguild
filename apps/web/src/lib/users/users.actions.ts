@@ -318,3 +318,31 @@ export const bulkActivateUsers = activateUsersBulk;
  * Alias for deactivateUsersBulk to match component naming
  */
 export const bulkDeactivateUsers = deactivateUsersBulk;
+
+// =============================================================================
+// COMPATIBILITY ALIASES
+// =============================================================================
+
+/**
+ * Alias for getUsers to maintain compatibility
+ */
+export async function getUsersData(page: number = 1, limit: number = 10) {
+  const result = await getApiUsers({
+    query: {
+      skip: (page - 1) * limit,
+      take: limit,
+    },
+  });
+  
+  return {
+    users: Array.isArray(result.data) ? result.data : [],
+    total: Array.isArray(result.data) ? result.data.length : 0,
+  };
+}
+
+/**
+ * Refresh user statistics - alias for getUserStatistics
+ */
+export async function refreshUserStatistics(data?: GetApiUsersStatisticsData) {
+  return getUserStatistics(data);
+}

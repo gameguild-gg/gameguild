@@ -21,7 +21,7 @@ export function CourseHeader({ course }: CourseHeaderProps) {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-2 text-sm">
             <Button asChild variant="ghost" className="text-gray-300 hover:text-white p-0">
-              <Link href="/courses">Courses</Link>
+              <Link href="/programs">Courses</Link>
             </Button>
             <span className="text-gray-500">/</span>
             <Button asChild variant="ghost" className="text-gray-300 hover:text-white p-0">
