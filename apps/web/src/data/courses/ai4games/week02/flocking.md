@@ -155,6 +155,8 @@ Where:
 
 The $ \overrightarrow{V_{new}} $ and $ P_{new} $ are the ones that will be used in the next frame and you will have to print to the console at the end of every single frame.
 
+:::
+
 ::: note
 
 - For simplicity, we are going to assume that the mass of all agents is 1.
