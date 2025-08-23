@@ -16,9 +16,12 @@ import { Metadata }                          from 'next';
 import { SessionProvider }                   from 'next-auth/react';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale }     from 'next-intl/server';
+import { Inter }                             from "next/font/google";
 import { notFound }                          from 'next/navigation';
 import React, { PropsWithChildren }          from 'react';
 
+
+const inter = Inter({ subsets: [ "latin" ] });
 
 export async function generateMetadata({ params }: PropsWithLocaleParams): Promise<Metadata> {
   const { locale } = await params;
@@ -48,40 +51,40 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
   const messages = await getMessages();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body>
-        <WebVitals />
+    <html lang={ locale } suppressHydrationWarning>
+    <body className={ inter.className }>
+    <WebVitals/>
 
-        {/* Initialize Google Consent Mode early */}
-        <InitializeGoogleConsent />
+    {/* Initialize Google Consent Mode early */ }
+    <InitializeGoogleConsent/>
 
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          {/* Conditional Analytics - only loads when the user consents */}
-          <ConditionalAnalytics />
-          <GoogleAnalytics gaId={environment.googleAnalyticsMeasurementId} />
-          <GoogleTagManager gtmId={environment.googleTagManagerId} />
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <ErrorBoundaryProvider config={{ level: 'page', enableRetry: true, maxRetries: 3, reportToAnalytics: true, isolate: false }}>
-              {/* TODO: If the session has a user and it has signed-in by a web3 address then try to connect to the wallet address. */}
-              <ApolloClientProvider>
-                <Web3Provider>
-                  <SessionProvider session={ session }>
-                    <TenantProvider initialState={ { currentTenant: session?.currentTenant, availableTenants: session?.availableTenants } }>
-                      {/*TODO: Move this to a better place*/ }
-                      {/*<ThemeToggle />*/ }
-                      <GitHubIssueProvider />
-                      { children }
-                      {/*TODO: Move this to a better place*/ }
-                      {/*<FeedbackFloatingButton />*/ }
-                      <Toaster/>
-                    </TenantProvider>
-                  </SessionProvider>
-                </Web3Provider>
-              </ApolloClientProvider>
-            </ErrorBoundaryProvider>
-          </ThemeProvider>
-        </NextIntlClientProvider>
-      </body>
+    <NextIntlClientProvider locale={ locale } messages={ messages }>
+      {/* Conditional Analytics - only loads when the user consents */ }
+      <ConditionalAnalytics/>
+      <GoogleAnalytics gaId={ environment.googleAnalyticsMeasurementId }/>
+      <GoogleTagManager gtmId={ environment.googleTagManagerId }/>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ErrorBoundaryProvider config={ { level: 'page', enableRetry: true, maxRetries: 3, reportToAnalytics: true, isolate: false } }>
+          {/* TODO: If the session has a user and it has signed-in by a web3 address then try to connect to the wallet address. */ }
+          <ApolloClientProvider>
+            <Web3Provider>
+              <SessionProvider session={ session }>
+                <TenantProvider initialState={ { currentTenant: session?.currentTenant, availableTenants: session?.availableTenants } }>
+                  {/*TODO: Move this to a better place*/ }
+                  {/*<ThemeToggle />*/ }
+                  <GitHubIssueProvider/>
+                  { children }
+                  {/*TODO: Move this to a better place*/ }
+                  {/*<FeedbackFloatingButton />*/ }
+                  <Toaster/>
+                </TenantProvider>
+              </SessionProvider>
+            </Web3Provider>
+          </ApolloClientProvider>
+        </ErrorBoundaryProvider>
+      </ThemeProvider>
+    </NextIntlClientProvider>
+    </body>
     </html>
   );
 }
