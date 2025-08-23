@@ -3,7 +3,7 @@
 import { Editor } from "@/components/editor/lexical-editor"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Save, HardDrive, Eye, Home } from "lucide-react"
+import { Save, HardDrive, Eye, Blocks, Home } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -582,36 +582,91 @@ export default function Page() {
         <div className="mx-auto max-w-4xl space-y-8">
           {/* Header Section */}
           <div className="text-center space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-sm font-medium">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Rich Text Editor
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-sm font-medium">
+              <Blocks className="w-4" />
+              Studio
             </div>
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Create Your Content</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto dark:text-gray-300">
-              Use our powerful editor to create engaging content with rich formatting, media, quizzes, and more
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Content Studio</h1>
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+              Create your documents with the rich text editor designed
             </p>
-            <div className="flex items-center gap-4">
-              <Link href="/gglexical">
-                <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                  <Home className="w-4 h-4" />
-                  Home
-                </Button>
-              </Link>
+          </div>
 
-              <Link href="/gglexical/view/">
-                <Button variant="outline" size="sm" className="gap-2 bg-transparent">
-                  <Eye className="w-4 h-4" />
-                  View
-                </Button>
-              </Link>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Link href="/gglexical">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      <Home className="size" />
+                      Home
+                    </Button>
+                  </Link>
+
+                  <Link href="/gglexical/view">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      <Eye className="size" />
+                      View
+                    </Button>
+                  </Link>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSave}
+                    className="gap-2 bg-transparent"
+                    disabled={!isDbInitialized}
+                  >
+                    <Save className="size" />
+                    Save
+                  </Button>
+
+                  <SaveAsDialog
+                    open={saveAsDialogOpen}
+                    onOpenChange={setSaveAsDialogOpen}
+                    projectName={newProjectName}
+                    onProjectNameChange={setNewProjectName}
+                    onSave={handleSaveAs}
+                    currentProjectSize={currentProjectSize}
+                    getSizeIndicatorColor={getSizeIndicatorColor}
+                    formatSize={formatSize}
+                    isDbInitialized={isDbInitialized}
+                  />
+
+                  <OpenProjectDialog
+                    open={openDialogOpen}
+                    onOpenChange={setOpenDialogOpen}
+                    isFirstTime={isFirstTime}
+                    isDbInitialized={isDbInitialized}
+                    storageAdapter={storageAdapter}
+                    availableTags={availableTags}
+                    editorRef={editorRef}
+                    setLoadingRef={setLoadingRef}
+                    onProjectLoad={(projectData) => {
+                      setCurrentProjectId(projectData.id)
+                      setCurrentProjectName(projectData.name)
+                      setProjectTags(projectData.tags || [])
+                      setIsFirstTime(false)
+                    }}
+                    onProjectsListUpdate={loadSavedProjectsList}
+                    onCreateNew={() => setCreateDialogOpen(true)}
+                    currentProjectName={currentProjectName}
+                  />
+                </div>
+              </div>
             </div>
           </div>
+
 
           {/* Project Management Toolbar */}
           <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 shadow-sm">
@@ -673,7 +728,7 @@ export default function Page() {
                   </button>
 
                   <div className="flex items-center gap-2">
-                    <HardDrive className="w-4 h-4 text-gray-500" />
+                    <HardDrive className="size text-gray-500" />
                     <span className={`text-sm ${getSizeIndicatorColor()}`}>{formatSize(currentProjectSize)}</span>
                     <span className="text-sm text-gray-400 dark:text-gray-500">/</span>
                     <span className="text-sm text-gray-400 dark:text-gray-500">
@@ -731,48 +786,7 @@ export default function Page() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSave}
-                    className="gap-2 bg-transparent"
-                    disabled={!isDbInitialized}
-                  >
-                    <Save className="w-4 h-4" />
-                    Save
-                  </Button>
-
-                  <SaveAsDialog
-                    open={saveAsDialogOpen}
-                    onOpenChange={setSaveAsDialogOpen}
-                    projectName={newProjectName}
-                    onProjectNameChange={setNewProjectName}
-                    onSave={handleSaveAs}
-                    currentProjectSize={currentProjectSize}
-                    getSizeIndicatorColor={getSizeIndicatorColor}
-                    formatSize={formatSize}
-                    isDbInitialized={isDbInitialized}
-                  />
-
-                  <OpenProjectDialog
-                    open={openDialogOpen}
-                    onOpenChange={setOpenDialogOpen}
-                    isFirstTime={isFirstTime}
-                    isDbInitialized={isDbInitialized}
-                    storageAdapter={storageAdapter}
-                    availableTags={availableTags}
-                    editorRef={editorRef}
-                    setLoadingRef={setLoadingRef}
-                    onProjectLoad={(projectData) => {
-                      setCurrentProjectId(projectData.id)
-                      setCurrentProjectName(projectData.name)
-                      setProjectTags(projectData.tags || [])
-                      setIsFirstTime(false)
-                    }}
-                    onProjectsListUpdate={loadSavedProjectsList}
-                    onCreateNew={() => setCreateDialogOpen(true)}
-                    currentProjectName={currentProjectName}
-                  />
+                  
 
 
 
