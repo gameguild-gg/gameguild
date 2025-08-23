@@ -124,6 +124,7 @@
   }
 
   body {
+    @apply flex flex-col flex-1;
     @apply bg-background text-foreground;
       font-family: Arial, Helvetica, sans-serif;
   }
