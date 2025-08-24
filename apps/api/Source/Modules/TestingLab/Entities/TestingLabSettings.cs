@@ -1,8 +1,7 @@
 using GameGuild.Common;
 using GameGuild.Modules.Tenants;
 
-
-namespace GameGuild.Modules.TestingLab.Models;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary>
 /// Represents the settings and configuration for the Testing Lab
