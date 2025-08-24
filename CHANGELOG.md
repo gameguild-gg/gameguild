@@ -1,36 +1,3 @@
-# [2.12.0](https://github.com/gameguild-gg/gameguild/compare/v2.11.0...v2.12.0) (2025-08-24)
-
-
-### Bug Fixes
-
-* Prevent horizontal overflow in course content layout ([10c7a97](https://github.com/gameguild-gg/gameguild/commit/10c7a97f1772597db71883cd526ab4420ae671e9))
-
-
-### Features
-
-* Enable word wrap in VS Code settings ([b35a6ec](https://github.com/gameguild-gg/gameguild/commit/b35a6ecc2275c1b2880db5967f7ed68ecb3efdcc))
-
-# [2.11.0](https://github.com/gameguild-gg/gameguild/compare/v2.10.2...v2.11.0) (2025-08-24)
-
-
-### Bug Fixes
-
-* **gglexical:** fill-in-the-blank fix ([a721e41](https://github.com/gameguild-gg/gameguild/commit/a721e41c94ecce9202ecad47210182818616a10b))
-* **gglexical:** fill-in-the-blank preview fix ([a61180e](https://github.com/gameguild-gg/gameguild/commit/a61180e6319be330ab8ff04cca5885c37020ec20))
-* **gglexical:** fill-in-the-blank preview fix 2 ([b88798d](https://github.com/gameguild-gg/gameguild/commit/b88798ded37586ff4dae2fb5dc7ea440e43b8e60))
-* **gglexical:** fill-in-the-blank quiz fix ([a2f3a34](https://github.com/gameguild-gg/gameguild/commit/a2f3a34467187b86d7b15621eaae21c39f2ff339))
-* **gglexical:** quiz selection visible ([95a6735](https://github.com/gameguild-gg/gameguild/commit/95a6735e2dfe7aaceb9694a276ce2c4de9a55e2c))
-
-
-### Features
-
-* **apps/gglexical:** Dynamize feature lists in navigation cards ([be5d338](https://github.com/gameguild-gg/gameguild/commit/be5d33855e01d25cf4f94c568bfb0cdb27b8f9b5))
-* **apps/web:** Add testing session sidebar and improve layout structure ([4f56e77](https://github.com/gameguild-gg/gameguild/commit/4f56e77d21bd646bbaa107b5be9c8b3eadab16c8))
-* **apps/web:** Centralize HTML, font, and ThemeProvider in root layout ([8f14596](https://github.com/gameguild-gg/gameguild/commit/8f145961f7564b877f64b782efdc972d22b2c1e8))
-* **apps/web:** Make global-error page standalone with html structure ([fb71535](https://github.com/gameguild-gg/gameguild/commit/fb715356f87a74e62c58a421d93f16d9eeadbd09))
-* **apps/web:** Make not-found page standalone with html structure ([d16b00a](https://github.com/gameguild-gg/gameguild/commit/d16b00aeaa6b3934ec92b7b933b809daa2f935be))
-* **apps/web:** Restructure testing-lab section with new layout and landing page components ([52654d1](https://github.com/gameguild-gg/gameguild/commit/52654d1e219f827bfd4dcaba06ccf7ec26a659f6))
-
 ## [2.10.2](https://github.com/gameguild-gg/gameguild/compare/v2.10.1...v2.10.2) (2025-08-23)
 
 
