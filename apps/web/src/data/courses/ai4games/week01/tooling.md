@@ -2,7 +2,7 @@
 
 :: tip "Opinion"
 
-    This list is a mix of standard tools and personal choice. It is a good starting point, but in the future you will be impacted by other options, just keep your mind open to new choices.
+This list is a mix of standard tools and personal choice. It is a good starting point, but in the future you will be impacted by other options, just keep your mind open to new choices.
 
 :::
 
@@ -271,7 +271,9 @@ If you are using Linux, you know the drill. No need for further explanations her
 If you are using an Ubuntu distro, sa far as I tested at the date of writing this, you can try this to install most of the tools you will need here:
 
 ```bash
-sudo apt-get update && sudo apt-get install -y build-essential git cmake lcov xcb libx11-dev libx11-xcb-dev libxcb-randr0-dev
+sudo apt-get update
+sudo apt-get install -y build-essential git cmake \
+ lcov xcb libx11-dev libx11-xcb-dev libxcb-randr0-dev
 ```
 
 In order to compile:
