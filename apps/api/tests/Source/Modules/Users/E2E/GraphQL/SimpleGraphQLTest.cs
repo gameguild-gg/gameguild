@@ -26,10 +26,10 @@ namespace GameGuild.Tests.Modules.Users.E2E.GraphQL {
 
       var response = await _client.PostAsync("/graphql", content);
       var responseString = await response.Content.ReadAsStringAsync();
-      
+
       Console.WriteLine($"Response Status: {response.StatusCode}");
       Console.WriteLine($"Response Content: {responseString}");
-      
+
       Assert.True(response.IsSuccessStatusCode, $"GraphQL endpoint failed. Status: {response.StatusCode}, Content: {responseString}");
     }
   }

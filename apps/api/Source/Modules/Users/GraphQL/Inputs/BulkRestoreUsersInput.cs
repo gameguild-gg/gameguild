@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-
-namespace GameGuild.Modules.Users.Inputs;
+﻿namespace GameGuild.Modules.Users.Inputs;
 
 /// <summary>
 /// Input for restoring multiple soft-deleted users in a single operation

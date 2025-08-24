@@ -1,6 +1,4 @@
 using GameGuild.Database;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Users;

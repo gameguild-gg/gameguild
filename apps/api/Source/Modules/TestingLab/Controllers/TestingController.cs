@@ -605,7 +605,7 @@ public class TestingController(ITestService testService) : ControllerBase {
       // Get the current authenticated user's ID
       var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId)) 
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId))
         return Unauthorized("User ID not found in token");
 
       await testService.UpdateSessionAttendanceAsync(sessionId, attendanceDto.UserId, attendanceDto.AttendanceStatus, currentUserId);
@@ -625,7 +625,7 @@ public class TestingController(ITestService testService) : ControllerBase {
       // Get the current authenticated user's ID
       var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId)) 
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId))
         return Unauthorized("User ID not found in token");
 
       await testService.ReportFeedbackAsync(feedbackId, reportDto.Reason, currentUserId);
@@ -645,7 +645,7 @@ public class TestingController(ITestService testService) : ControllerBase {
       // Get the current authenticated user's ID
       var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId)) 
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId))
         return Unauthorized("User ID not found in token");
 
       await testService.RateFeedbackQualityAsync(feedbackId, qualityDto.Quality, currentUserId);
@@ -744,7 +744,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   [HttpGet("permissions/check")]
   public async Task<ActionResult<TestingLabActionPermissions>> CheckTestingLabPermissions([FromServices] IModulePermissionService modulePermissionService, [FromQuery] Guid? tenantId = null) {
     var userId = GetCurrentUserId();
-    
+
     var permissions = new TestingLabActionPermissions {
       CanCreateSessions = await modulePermissionService.CanCreateTestingSessionsAsync(userId, tenantId),
       CanDeleteSessions = await modulePermissionService.CanDeleteTestingSessionsAsync(userId, tenantId),
@@ -752,7 +752,7 @@ public class TestingController(ITestService testService) : ControllerBase {
       CanViewReports = await modulePermissionService.CanViewTestingReportsAsync(userId, tenantId),
       CanExportData = await modulePermissionService.CanExportTestingDataAsync(userId, tenantId),
     };
-    
+
     return Ok(permissions);
   }
 
@@ -780,7 +780,7 @@ public class TestingController(ITestService testService) : ControllerBase {
         request.RoleName,
         request.Constraints,
         request.ExpiresAt);
-      
+
       return Ok(new { message = $"Successfully assigned {request.RoleName} role to user {request.UserId}" });
     }
     catch (Exception ex) {
@@ -796,20 +796,20 @@ public class TestingController(ITestService testService) : ControllerBase {
     [FromServices] IModulePermissionService modulePermissionService,
     [FromBody] CreateTestingSessionDto sessionDto,
     [FromQuery] Guid? tenantId = null) {
-    
+
     var userId = GetCurrentUserId();
-    
+
     // Check if user has permission to create sessions
     var canCreate = await modulePermissionService.CanCreateTestingSessionsAsync(userId, tenantId);
     if (!canCreate) {
       return Forbid("You do not have permission to create testing sessions");
     }
-    
+
     try {
       // Convert DTO to entity and create session
       var session = sessionDto.ToTestingSession(userId);
       var createdSession = await testService.CreateTestingSessionAsync(session);
-      
+
       return CreatedAtAction(nameof(GetTestingSession), new { id = createdSession.Id }, createdSession);
     }
     catch (Exception ex) {
@@ -825,19 +825,19 @@ public class TestingController(ITestService testService) : ControllerBase {
     [FromServices] IModulePermissionService modulePermissionService,
     Guid id,
     [FromQuery] Guid? tenantId = null) {
-    
+
     var userId = GetCurrentUserId();
-    
+
     // Check if user has permission to delete sessions
     var canDelete = await modulePermissionService.CanDeleteTestingSessionsAsync(userId, tenantId);
     if (!canDelete) {
       return Forbid("You do not have permission to delete testing sessions");
     }
-    
+
     try {
       var result = await testService.DeleteTestingSessionAsync(id);
       if (!result) return NotFound();
-      
+
       return NoContent();
     }
     catch (Exception ex) {
@@ -853,7 +853,7 @@ public class TestingController(ITestService testService) : ControllerBase {
     [FromServices] IModulePermissionService modulePermissionService,
     string roleName,
     [FromQuery] Guid? tenantId = null) {
-    
+
     // TODO: Add admin permission check
     var users = await modulePermissionService.GetUsersWithRoleAsync(tenantId, ModuleType.TestingLab, roleName);
     return Ok(users);

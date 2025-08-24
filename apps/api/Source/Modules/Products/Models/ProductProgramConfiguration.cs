@@ -1,9 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Modules.Programs;
-
-
-namespace GameGuild.Modules.Products;
+﻿namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Entity Framework configuration for ProductProgram entity
