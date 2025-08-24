@@ -36,7 +36,8 @@ public class ContextMiddleware {
           var claims = string.Join(", ", userContext.Claims.Select(kvp => $"{kvp.Key}={kvp.Value}"));
           _logger.LogDebug("User claims: {Claims}", claims);
         }
-      } else {
+      }
+      else {
         _logger.LogDebug("Request with no authenticated user context");
       }
 

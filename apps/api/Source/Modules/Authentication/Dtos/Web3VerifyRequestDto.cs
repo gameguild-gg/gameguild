@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-
-namespace GameGuild.Modules.Authentication;
+﻿namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Request DTO for Web3 authentication verification

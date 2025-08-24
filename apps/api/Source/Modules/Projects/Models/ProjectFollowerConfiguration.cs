@@ -1,13 +1,9 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
 namespace GameGuild.Modules.Projects;
 
 internal sealed class ProjectFollowerConfiguration : IEntityTypeConfiguration<ProjectFollower> {
   public void Configure(EntityTypeBuilder<ProjectFollower> builder) {
     ArgumentNullException.ThrowIfNull(builder);
-    
+
     // Configure the relationship with User as optional to avoid query filter warnings
     builder.HasOne(pf => pf.User)
            .WithMany()
@@ -30,14 +26,14 @@ internal sealed class ProjectFollowerConfiguration : IEntityTypeConfiguration<Pr
     // Additional indexes
     builder.HasIndex(pf => pf.UserId)
            .HasDatabaseName("IX_ProjectFollowers_User");
-           
+
     builder.HasIndex(pf => pf.FollowedAt)
            .HasDatabaseName("IX_ProjectFollowers_Date");
 
     // Configure properties
     builder.Property(pf => pf.FollowedAt)
            .IsRequired();
-           
+
     builder.Property(pf => pf.NotificationSettings)
            .HasMaxLength(1000);
   }

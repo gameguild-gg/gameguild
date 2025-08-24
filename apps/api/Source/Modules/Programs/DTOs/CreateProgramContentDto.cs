@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 
 
@@ -12,7 +11,7 @@ public class CreateProgramContentDto {
 
   public Guid? ParentId { get; set; }
 
-  [Required] [StringLength(255)] public string Title { get; set; } = string.Empty;
+  [Required][StringLength(255)] public string Title { get; set; } = string.Empty;
 
   public string Description { get; set; } = string.Empty;
 
