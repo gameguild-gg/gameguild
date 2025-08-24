@@ -57,7 +57,7 @@ $$
 
 ![cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.gif)
 
-:: tip
+::: tip
 
 Note that the maximum magnitude of $ \overrightarrow{F_c} $ is 1. Inclusive. This value can be multiplied by a constant $ K_c $ to increase or decrease the cohesion force to looks more appealing.
 
