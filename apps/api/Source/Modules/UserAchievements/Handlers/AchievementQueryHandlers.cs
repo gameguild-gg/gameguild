@@ -1,6 +1,5 @@
 using GameGuild.Common;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.UserAchievements;
@@ -46,7 +45,7 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, G
       }
 
       if (!string.IsNullOrEmpty(request.SearchTerm)) {
-        query = query.Where(a => a.Name.Contains(request.SearchTerm) || 
+        query = query.Where(a => a.Name.Contains(request.SearchTerm) ||
                                 (a.Description != null && a.Description.Contains(request.SearchTerm)));
       }
 

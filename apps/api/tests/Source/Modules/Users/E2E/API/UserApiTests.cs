@@ -20,7 +20,7 @@ namespace GameGuild.Tests.Modules.Users.E2E.API {
       // Use a unique database name for this test class to avoid interference
       var uniqueDbName = $"UserApiTests_{Guid.NewGuid()}";
       _factory = IntegrationTestHelper.GetTestFactory(uniqueDbName);
-      
+
       _scope = _factory.Services.CreateScope();
       _context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     }
@@ -28,11 +28,11 @@ namespace GameGuild.Tests.Modules.Users.E2E.API {
     private async Task<HttpClient> GetAuthenticatedClientAsync() {
       // Create authenticated test user with permissions
       var (client, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(_factory);
-      
+
       // Store the IDs for use in test assertions
       _userId = userId;
       _tenantId = tenantId;
-      
+
       return client;
     }
 
@@ -43,7 +43,7 @@ namespace GameGuild.Tests.Modules.Users.E2E.API {
       var email = $"test.{Guid.NewGuid()}@example.com";
       var username = "testuser123"; // Simple, guaranteed valid username
       var registerPayload = new { username = username, email = email, password = "TestPassword123!" };
-      
+
       Console.WriteLine($"Test payload: username={username}, email={email}");
 
       // Act - Register (should not require authentication)
@@ -88,12 +88,12 @@ namespace GameGuild.Tests.Modules.Users.E2E.API {
       // Act
       var response = await _client.GetAsync($"/api/users/{_userId}");
       var content = await response.Content.ReadAsStringAsync();
-      
+
       // Debug: Log the actual response
       if (string.IsNullOrEmpty(content)) {
         Assert.True(false, $"Response content is empty. Status: {response.StatusCode}, Headers: {response.Headers}");
       }
-      
+
       var result = JsonDocument.Parse(content);
 
       // Assert
@@ -114,12 +114,12 @@ namespace GameGuild.Tests.Modules.Users.E2E.API {
                        new StringContent(JsonSerializer.Serialize(updatePayload), Encoding.UTF8, "application/json")
                      );
       var content = await response.Content.ReadAsStringAsync();
-      
+
       // Debug: Log the actual response
       if (string.IsNullOrEmpty(content)) {
         Assert.True(false, $"Response content is empty. Status: {response.StatusCode}, Headers: {response.Headers}");
       }
-      
+
       var result = JsonDocument.Parse(content);
 
       // Assert

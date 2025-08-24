@@ -1,6 +1,5 @@
 using GameGuild.Common;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Posts;
@@ -56,24 +55,24 @@ public class GetPostsHandler(
                         .Skip((request.PageNumber - 1) * request.PageSize)
                         .Take(request.PageSize)
                         .Select(p => new PostDto {
-                                  Id = p.Id,
-                                  Title = p.Title,
-                                  Description = p.Description,
-                                  Slug = p.Slug,
-                                  PostType = p.PostType,
-                                  AuthorId = p.AuthorId,
-                                  AuthorName = p.Author != null ? p.Author.Name : "",
-                                  IsSystemGenerated = p.IsSystemGenerated,
-                                  Visibility = p.Visibility,
-                                  Status = p.Status,
-                                  IsPinned = p.IsPinned,
-                                  LikesCount = p.LikesCount,
-                                  CommentsCount = p.CommentsCount,
-                                  SharesCount = p.SharesCount,
-                                  RichContent = p.RichContent,
-                                  CreatedAt = p.CreatedAt,
-                                  UpdatedAt = p.UpdatedAt,
-                          }
+                          Id = p.Id,
+                          Title = p.Title,
+                          Description = p.Description,
+                          Slug = p.Slug,
+                          PostType = p.PostType,
+                          AuthorId = p.AuthorId,
+                          AuthorName = p.Author != null ? p.Author.Name : "",
+                          IsSystemGenerated = p.IsSystemGenerated,
+                          Visibility = p.Visibility,
+                          Status = p.Status,
+                          IsPinned = p.IsPinned,
+                          LikesCount = p.LikesCount,
+                          CommentsCount = p.CommentsCount,
+                          SharesCount = p.SharesCount,
+                          RichContent = p.RichContent,
+                          CreatedAt = p.CreatedAt,
+                          UpdatedAt = p.UpdatedAt,
+                        }
                         )
                         .ToListAsync(cancellationToken);
 

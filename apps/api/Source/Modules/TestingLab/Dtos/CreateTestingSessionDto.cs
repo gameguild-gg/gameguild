@@ -1,13 +1,10 @@
-using System.ComponentModel.DataAnnotations;
-
-
 namespace GameGuild.Modules.TestingLab {
   public class CreateTestingSessionDto {
     [Required] public Guid TestingRequestId { get; set; }
 
     [Required] public Guid LocationId { get; set; }
 
-    [Required] [MaxLength(255)] public string SessionName { get; set; } = string.Empty;
+    [Required][MaxLength(255)] public string SessionName { get; set; } = string.Empty;
 
     [Required] public DateTime SessionDate { get; set; }
 

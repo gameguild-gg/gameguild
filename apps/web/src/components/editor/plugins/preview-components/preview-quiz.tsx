@@ -2,23 +2,56 @@
 
 import type { SerializedQuizNode } from "../../nodes/quiz-node"
 import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
-import { QuizWrapper } from "../../extras/quiz/quiz-wrapper"
-import { QuizDisplay } from "../../extras/quiz/quiz-display"
-import { Button } from "@/components/ui/button"
-import { RotateCcw } from 'lucide-react'
+import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
+import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
+import { useEffect, useRef, useMemo } from "react"
+
+// Função para migrar dados antigos para o novo formato
+function migrateFillBlankData(nodeData: any) {
+  // Se já tem fillBlankFields, não precisa migrar
+  if (nodeData.fillBlankFields) {
+    return nodeData.fillBlankFields
+  }
+
+  // Se tem dados antigos, migrar para o novo formato
+  if (nodeData.questionType === 'fill-blank' && nodeData.fillBlankAlternatives) {
+    const blankCount = (nodeData.question.match(/___/g) || []).length
+    
+    return Array.from({ length: blankCount }, (_, index) => ({
+      id: `blank-${index}`,
+      position: index,
+      expectedWords: [], // Não há expectedWords no formato antigo
+      alternatives: nodeData.fillBlankAlternatives
+        .filter((alt: any) => alt.isCorrect)
+        .map((alt: any) => ({
+          id: alt.id,
+          words: alt.words,
+          isCorrect: alt.isCorrect
+        }))
+    }))
+  }
+
+  return []
+}
 
 export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
+  const previousAnswersRef = useRef<string>("")
+  const previousQuestionRef = useRef<string>("")
+  
+  // Migrar dados antigos para o novo formato
+  const migratedFillBlankFields = useMemo(() => 
+    migrateFillBlankData(node.data), 
+    [node.data]
+  )
+  
   const quizLogic = useQuizLogic({
-    answers: node.data?.answers,
-    allowRetry: node.data?.allowRetry,
-    correctFeedback: node.data?.correctFeedback,
-    incorrectFeedback: node.data?.incorrectFeedback,
+    answers: node.data?.answers || [],
+    allowRetry: node.data?.allowRetry !== undefined ? node.data?.allowRetry : true,
+    correctFeedback: node.data?.correctFeedback || "",
+    incorrectFeedback: node.data?.incorrectFeedback || "",
+    questionType: node.data?.questionType,
+    fillBlankFields: migratedFillBlankFields,
   })
-
-  if (!node?.data) {
-    console.error("Invalid quiz node structure:", node)
-    return null
-  }
 
   const {
     question,
@@ -28,49 +61,50 @@ export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
     incorrectFeedback,
     allowRetry,
     backgroundColor,
-    blanks,
-    fillBlankMode,
-    fillBlankAlternatives,
     ratingScale,
     correctRating,
   } = node.data
 
-  const { selectedAnswers, showFeedback, isCorrect, checkAnswers, toggleAnswer, resetQuiz } = quizLogic
+  const { selectedAnswers, setSelectedAnswers, showFeedback, isCorrect, checkAnswers, toggleAnswer, resetQuiz } =
+    quizLogic
+
+  useEffect(() => {
+    // Só resetar o quiz quando as respostas ou perguntas mudarem realmente
+    const currentAnswers = JSON.stringify(answers)
+    const currentQuestion = question
+    
+    if (currentAnswers !== previousAnswersRef.current || currentQuestion !== previousQuestionRef.current) {
+      resetQuiz()
+      previousAnswersRef.current = currentAnswers
+      previousQuestionRef.current = currentQuestion
+    }
+  }, [answers, question, resetQuiz])
+
+  if (!node?.data) {
+    console.error("Invalid quiz node structure:", node)
+    return null
+  }
 
   return (
     <QuizWrapper backgroundColor={backgroundColor}>
       <QuizDisplay
         question={question}
         questionType={questionType || "multiple-choice"}
-        answers={answers}
+        answers={answers || []}
         selectedAnswers={selectedAnswers}
-        setSelectedAnswers={() => {}} // Dummy function
+        setSelectedAnswers={setSelectedAnswers}
         showFeedback={showFeedback}
         isCorrect={isCorrect}
-        correctFeedback={correctFeedback ?? ""}
-        incorrectFeedback={incorrectFeedback ?? ""}
-        allowRetry={allowRetry}
+        correctFeedback={correctFeedback || ""}
+        incorrectFeedback={incorrectFeedback || ""}
+        allowRetry={allowRetry !== undefined ? allowRetry : true}
         checkAnswers={checkAnswers}
         toggleAnswer={toggleAnswer}
-        blanks={blanks}
-        fillBlankMode={fillBlankMode}
-        fillBlankAlternatives={fillBlankAlternatives}
+        resetQuiz={resetQuiz}
+        fillBlankFields={migratedFillBlankFields}
         ratingScale={ratingScale}
         correctRating={correctRating}
       />
-      {showFeedback && !allowRetry && (
-        <div className="flex justify-end mt-4 pt-3 border-t border-border/50">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={resetQuiz}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors bg-transparent"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Try Again
-          </Button>
-        </div>
-      )}
     </QuizWrapper>
   )
 }

@@ -62,16 +62,16 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     // Assert - GraphQL endpoint should respond properly
     // __typename is a basic GraphQL introspection field that should always work
     Assert.True(response.IsSuccessStatusCode, $"GraphQL endpoint should respond successfully. Status: {response.StatusCode}");
-    
+
     var content = await response.Content.ReadAsStringAsync();
     Console.WriteLine($"DEBUG: GraphQL response: {content}");
-    
+
     // Verify we get a valid GraphQL response structure
     Assert.True(!string.IsNullOrEmpty(content), "Response should not be empty");
-    
+
     // Parse the JSON to ensure it's valid
     var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
-    
+
     // Should have either data or errors (valid GraphQL response)
     Assert.True(jsonResponse.TryGetProperty("data", out _) || jsonResponse.TryGetProperty("errors", out _),
                 "Response should contain either 'data' or 'errors' property");
@@ -107,9 +107,9 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     // For now, verify that GraphQL is responding correctly
     // This tests the infrastructure rather than specific permissions due to schema registration issues
     Assert.True(response.IsSuccessStatusCode, "GraphQL endpoint should respond successfully");
-    
+
     var jsonResponse = JsonSerializer.Deserialize<JsonElement>(content);
-    
+
     // Should have either data or errors (valid GraphQL response)
     Assert.True(jsonResponse.TryGetProperty("data", out _) || jsonResponse.TryGetProperty("errors", out _),
                 "Response should contain either 'data' or 'errors' property");
@@ -373,7 +373,8 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
 
   private async Task<Comment> CreateTestCommentAsync() {
     var comment = new Comment {
-      Id = Guid.NewGuid(), Content = "Test comment content",
+      Id = Guid.NewGuid(),
+      Content = "Test comment content",
       // Note: Comment entity doesn't have IsEdited property
     };
 
@@ -398,7 +399,9 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     PermissionType[] permissions
   ) {
     var contentTypePermission = new ContentTypePermission {
-      UserId = userId, TenantId = tenantId, ContentType = contentTypeName, // The correct property name is ContentType, not ContentTypeName
+      UserId = userId,
+      TenantId = tenantId,
+      ContentType = contentTypeName, // The correct property name is ContentType, not ContentTypeName
     };
 
     foreach (var permission in permissions) contentTypePermission.AddPermission(permission);
@@ -428,10 +431,10 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
 
     var roles = new[] { "User" };
 
-    var additionalClaims = new List<System.Security.Claims.Claim> { 
+    var additionalClaims = new List<System.Security.Claims.Claim> {
       new System.Security.Claims.Claim("tenant_id", tenant.Id.ToString()),
     };
-    
+
     // Add custom permissions if provided
     foreach (var permission in permissions) {
       additionalClaims.Add(new System.Security.Claims.Claim("permission", permission));

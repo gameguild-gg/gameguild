@@ -1,5 +1,4 @@
 using GameGuild.Modules.Contents;
-using MediatR;
 
 
 namespace GameGuild.Modules.Projects;

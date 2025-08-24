@@ -1,5 +1,5 @@
-import { Locale } from 'next-intl';
-import { ReactNode } from 'react';
+import {Locale} from 'next-intl';
+import {ReactNode} from 'react';
 
 export type RequiredFields<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 export type OptionalFields<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
@@ -15,7 +15,7 @@ export type PropsWithIdParams<P = unknown> = P & { params: Promise<ParamsWithId>
 
 export type PropsWithSlugParams<P = unknown> = P & { params: Promise<ParamsWithSlug> };
 
-export type PropsWithModal<P = unknown> = P & { modal?: ReactNode };
+export type PropsWithModal<P = unknown> = P & { modal?: ReactNode | undefined };
 
 export type PropsWithLocaleParams<P = unknown> = P & {
   params: Promise<ParamsWithLocale>;
@@ -42,15 +42,15 @@ export const invertRecord = <T extends Record<string, PropertyKey>>(object: T): 
 export type ActionCompleteResult<T> = T extends object
   ? { status: HttpStatusCode; data?: T }
   : {
-      success: HttpStatusCode;
-    };
+    success: HttpStatusCode;
+  };
 export type ActionErrorResult = { status: HttpStatusCode; success: false; error: Error };
 export type ActionValidationErrorResult<T> = T extends object
   ? {
-      status: HttpStatusCode;
-      success: false;
-      fieldErrors: Partial<Record<keyof T, Error>>;
-    }
+    status: HttpStatusCode;
+    success: false;
+    fieldErrors: Partial<Record<keyof T, Error>>;
+  }
   : never;
 
 export type ActionResult<T = unknown> = ActionCompleteResult<T> | ActionErrorResult | ActionValidationErrorResult<T>;

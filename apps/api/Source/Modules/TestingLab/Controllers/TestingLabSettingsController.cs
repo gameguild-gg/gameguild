@@ -1,13 +1,11 @@
 using System.Security.Claims;
 using GameGuild.Common;
-using GameGuild.Common.Services;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.TestingLab.Dtos;
 using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Modules.TestingLab.Services;
 using GameGuild.Modules.Tenants;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
 
 
 namespace GameGuild.Modules.TestingLab.Controllers;
@@ -35,29 +33,29 @@ public class TestingLabSettingsController(
       var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
       var rolesClaim = User.FindFirst("roles")?.Value;
       var roleClaims = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
-      
+
       // For debugging purposes only - log role information
       Console.WriteLine($"User ID: {userId}");
       Console.WriteLine($"Roles claim: {rolesClaim}");
       Console.WriteLine($"Individual role claims: {string.Join(", ", roleClaims)}");
-      
+
       if (string.IsNullOrEmpty(userId)) {
-        return Unauthorized(new { 
+        return Unauthorized(new {
           message = "User ID claim not found in token",
-          allClaims = claims 
+          allClaims = claims
         });
       }
-      
-  // Use middleware-provided tenant context (nullable for global)
-  var tenantId = tenantContext.TenantId;
-      
+
+      // Use middleware-provided tenant context (nullable for global)
+      var tenantId = tenantContext.TenantId;
+
       var settings = await settingsService.GetTestingLabSettingsDtoAsync(tenantId);
       return Ok(settings);
     }
     catch (Exception ex) {
       // Enhanced error response with debugging information
-      return StatusCode(500, new { 
-        message = "An error occurred while retrieving settings", 
+      return StatusCode(500, new {
+        message = "An error occurred while retrieving settings",
         error = ex.Message,
         stackTrace = ex.StackTrace,
         claims = User.Claims.Select(c => new { Type = c.Type, Value = c.Value }).ToList(),
@@ -155,7 +153,7 @@ public class TestingLabSettingsController(
     // First, try to get tenant ID from claims
     // Check for both standard claim "tenant_id" and JWT-specific claim
     var tenantIdClaim = User.FindFirst("tenant_id")?.Value ?? User.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid")?.Value;
-    
+
     if (Guid.TryParse(tenantIdClaim, out var tenantId)) {
       return tenantId;
     }

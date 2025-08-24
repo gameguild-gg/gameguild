@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 
 
@@ -8,7 +7,7 @@ namespace GameGuild.Modules.TestingLab {
 
     [Required] public Guid RatedByUserId { get; set; }
 
-    [Required] [Range(1, 5)] public int QualityRating { get; set; }
+    [Required][Range(1, 5)] public int QualityRating { get; set; }
 
     public string? Reason { get; set; }
   }

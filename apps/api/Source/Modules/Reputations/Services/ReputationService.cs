@@ -1,5 +1,4 @@
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Reputations;

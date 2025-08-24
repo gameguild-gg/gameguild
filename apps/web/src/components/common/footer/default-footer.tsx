@@ -1,12 +1,11 @@
-import React, { PropsWithChildren } from 'react';
-import { cn } from '@/lib/utils';
-import { CommunityInfo } from './common/ui/community-info';
-import { NavigationLinks } from './common/ui/navigation-links';
-import { SocialMediaLinks } from './common/ui/social-media-links';
-import { LegalLinks } from '@/components/common/footer/common/ui/legal-links';
-import { Github, Twitter, Youtube, LucideIcon } from 'lucide-react';
-import { FaDiscord } from 'react-icons/fa';
-import { IconType } from 'react-icons';
+import React, {PropsWithChildren} from 'react';
+import {cn} from '@/lib/utils';
+import {CommunityInfo} from './common/ui/community-info';
+import {NavigationLinks} from './common/ui/navigation-links';
+import {SocialMediaLinks} from './common/ui/social-media-links';
+import {LegalLinks} from '@/components/common/footer/common/ui/legal-links';
+import {Github, Twitter, Youtube} from 'lucide-react';
+import {FaDiscord} from 'react-icons/fa';
 
 type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>;
 
@@ -41,41 +40,46 @@ const socialLinks = [
   },
 ];
 
-const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children, ...props }) => {
+export const Footer: React.FunctionComponent<Readonly<Props>> = ({className, children, ...props}) => {
   return (
-    <footer className={cn('w-full bg-gradient-to-b from-slate-200 via-slate-100 to-slate-200 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-slate-800 dark:text-white', className)} {...props}>
+    <footer
+      className={cn('w-full bg-gradient-to-b from-slate-200 via-slate-100 to-slate-200 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-slate-800 dark:text-white', className)} {...props}>
       {/* Top Subtle Border */}
-      <div className="h-0.5 bg-gradient-to-r from-transparent via-slate-400/50 dark:via-slate-600/50 to-transparent"></div>
+      <div
+        className="h-0.5 bg-gradient-to-r from-transparent via-slate-400/50 dark:via-slate-600/50 to-transparent"></div>
 
       {/* Main Footer Content */}
       <div className="container mx-auto max-w-7xl px-4 py-8 lg:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-8 lg:gap-12">
           {/* Community Info */}
           <div className="lg:col-span-2">
-            <CommunityInfo />
+            <CommunityInfo/>
           </div>
 
           {/* Navigation Links */}
           <div className="lg:col-span-4">
-            <NavigationLinks />
+            <NavigationLinks/>
           </div>
         </div>
 
         {/* Social Media & Bottom Links */}
         <div className="mt-8 lg:mt-12 pt-6 lg:pt-8 border-t border-slate-400/50 dark:border-slate-700/50">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
-            <SocialMediaLinks links={socialLinks} />
+            <SocialMediaLinks links={socialLinks}/>
             <LegalLinks
               links={[
-                { label: 'Licenses', href: '/licenses' },
-                { label: 'Terms of Service', href: '/terms-of-service' },
-                { label: 'Privacy', href: '/polices/privacy' },
-                { label: 'Cookies', href: '/polices/cookies' },
+                {label: 'Licenses', href: '/licenses'},
+                {label: 'Terms of Service', href: '/terms-of-service'},
+                {label: 'Privacy', href: '/polices/privacy'},
+                {label: 'Cookies', href: '/polices/cookies'},
               ]}
             />
           </div>
 
-          <div className="mt-6 lg:mt-8 pt-4 lg:pt-6 border-t border-slate-400/50 dark:border-slate-700/50 text-center text-sm text-slate-700 dark:text-slate-500">© {new Date().getFullYear()} Game Guild Inc. All rights reserved.</div>
+          <div
+            className="mt-6 lg:mt-8 pt-4 lg:pt-6 border-t border-slate-400/50 dark:border-slate-700/50 text-center text-sm text-slate-700 dark:text-slate-500">© {new Date().getFullYear()} Game
+            Guild Inc. All rights reserved.
+          </div>
         </div>
       </div>
 
@@ -87,4 +91,4 @@ const Footer: React.FunctionComponent<Readonly<Props>> = ({ className, children,
   );
 };
 
-export default Footer;
+

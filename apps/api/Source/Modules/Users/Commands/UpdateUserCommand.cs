@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using MediatR;
-
-
 namespace GameGuild.Modules.Users;
 
 /// <summary>
@@ -14,7 +10,7 @@ public sealed class UpdateUserCommand : IRequest<User> {
 
   [StringLength(50, MinimumLength = 1)] public string? Username { get; set; }
 
-  [EmailAddress] [StringLength(255)] public string? Email { get; set; }
+  [EmailAddress][StringLength(255)] public string? Email { get; set; }
 
   public bool? IsActive { get; set; }
 

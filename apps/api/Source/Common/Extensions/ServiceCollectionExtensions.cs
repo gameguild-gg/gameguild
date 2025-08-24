@@ -3,7 +3,6 @@ using GameGuild.Modules.Subscriptions.Services;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.TestingLab.Services;
-using GameGuild.Modules.UserAchievements;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Credentials;
@@ -78,13 +77,13 @@ public static class ServiceCollectionExtensions {
 
     // Add permission service for three-layer permission system
     services.AddScoped<IPermissionService, PermissionService>();
-    
+
     // Add DAC permission resolver for attribute-based permission checks
     services.AddScoped<IDacPermissionResolver, DacPermissionResolver>();
-    
+
     // Add module permission service for granular module-based permissions
     services.AddScoped<IModulePermissionService, ModulePermissionService>();
-    
+
     // Add simple permission service for basic permission operations
     services.AddScoped<ISimplePermissionService, SimplePermissionService>();
 
