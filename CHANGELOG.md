@@ -1,3 +1,15 @@
+# [2.12.0](https://github.com/gameguild-gg/gameguild/compare/v2.11.0...v2.12.0) (2025-08-24)
+
+
+### Bug Fixes
+
+* Prevent horizontal overflow in course content layout ([10c7a97](https://github.com/gameguild-gg/gameguild/commit/10c7a97f1772597db71883cd526ab4420ae671e9))
+
+
+### Features
+
+* Enable word wrap in VS Code settings ([b35a6ec](https://github.com/gameguild-gg/gameguild/commit/b35a6ecc2275c1b2880db5967f7ed68ecb3efdcc))
+
 # [2.11.0](https://github.com/gameguild-gg/gameguild/compare/v2.10.2...v2.11.0) (2025-08-24)
 
 
