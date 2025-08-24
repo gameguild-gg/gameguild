@@ -1,8 +1,11 @@
-namespace GameGuild.Modules.TestingLab {
-  public enum SessionStatus {
-    Scheduled,
-    Active,
-    Completed,
-    Cancelled,
-  }
+namespace GameGuild.Modules.TestingLab;
+
+public enum SessionStatus {
+  Scheduled,
+
+  Active,
+
+  Completed,
+
+  Cancelled,
 }
