@@ -5,9 +5,7 @@ using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.TestingLab;
 
-/// <summary>
-/// Resolvers for TestingRequest GraphQL type
-/// </summary>
+/// <summary> Resolvers for TestingRequest GraphQL type </summary>
 public class TestingRequestResolvers {
   public async Task<ProjectVersion?> GetProjectVersion(
     [Parent] TestingRequest request,

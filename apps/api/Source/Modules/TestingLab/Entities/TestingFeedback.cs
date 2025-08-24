@@ -2,99 +2,65 @@ using GameGuild.Common;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.TestingLab {
-  public class TestingFeedback : Entity {
-    /// <summary>
-    /// Foreign key to the testing request
-    /// </summary>
-    public Guid TestingRequestId { get; set; }
+namespace GameGuild.Modules.TestingLab;
 
-    /// <summary>
-    /// Navigation property to the testing request
-    /// </summary>
-    public virtual TestingRequest TestingRequest { get; set; } = null!;
+public class TestingFeedback : Entity {
+  /// <summary> Foreign key to the testing request </summary>
+  public Guid TestingRequestId { get; set; }
 
-    /// <summary>
-    /// Foreign key to the feedback form
-    /// </summary>
-    public Guid FeedbackFormId { get; set; }
+  /// <summary> Navigation property to the testing request </summary>
+  public virtual TestingRequest TestingRequest { get; set; } = null!;
 
-    /// <summary>
-    /// Navigation property to the feedback form
-    /// </summary>
-    public virtual TestingFeedbackForm FeedbackForm { get; set; } = null!;
+  /// <summary> Foreign key to the feedback form </summary>
+  public Guid FeedbackFormId { get; set; }
 
-    /// <summary>
-    /// Foreign key to the user
-    /// </summary>
-    public Guid UserId { get; set; }
+  /// <summary> Navigation property to the feedback form </summary>
+  public virtual TestingFeedbackForm FeedbackForm { get; set; } = null!;
 
-    /// <summary>
-    /// Navigation property to the user
-    /// </summary>
-    public virtual User User { get; set; } = null!;
+  /// <summary> Foreign key to the user </summary>
+  public Guid UserId { get; set; }
 
-    /// <summary>
-    /// Optional foreign key to the session
-    /// </summary>
-    public Guid? SessionId { get; set; }
+  /// <summary> Navigation property to the user </summary>
+  public virtual User User { get; set; } = null!;
 
-    /// <summary>
-    /// Navigation property to the session (optional)
-    /// </summary>
-    public virtual TestingSession? Session { get; set; }
+  /// <summary> Optional foreign key to the session </summary>
+  public Guid? SessionId { get; set; }
 
-    [Required] public TestingContext TestingContext { get; set; }
+  /// <summary> Navigation property to the session (optional) </summary>
+  public virtual TestingSession? Session { get; set; }
 
-    [Required] public string FeedbackData { get; set; } = string.Empty; // JSON
+  [Required] public TestingContext TestingContext { get; set; }
 
-    /// <summary>
-    /// Overall rating (1-10)
-    /// </summary>
-    [Range(1, 10)]
-    public int? OverallRating { get; set; }
+  [Required] public string FeedbackData { get; set; } = string.Empty; // JSON
 
-    /// <summary>
-    /// Would the tester recommend this game
-    /// </summary>
-    public bool? WouldRecommend { get; set; }
+  /// <summary> Overall rating (1-10) </summary>
+  [Range(1, 10)]
+  public int? OverallRating { get; set; }
 
-    public string? AdditionalNotes { get; set; }
+  /// <summary> Would the tester recommend this game </summary>
+  public bool? WouldRecommend { get; set; }
 
-    /// <summary>
-    /// Whether this feedback has been reported as inappropriate
-    /// </summary>
-    public bool IsReported { get; set; } = false;
+  public string? AdditionalNotes { get; set; }
 
-    /// <summary>
-    /// Quality rating of this feedback (positive/negative) for tracking purposes
-    /// </summary>
-    public FeedbackQuality? QualityRating { get; set; }
+  /// <summary> Whether this feedback has been reported as inappropriate </summary>
+  public bool IsReported { get; set; } = false;
 
-    /// <summary>
-    /// Reason for reporting this feedback
-    /// </summary>
-    public string? ReportReason { get; set; }
+  /// <summary> Quality rating of this feedback (positive/negative) for tracking purposes </summary>
+  public FeedbackQuality? QualityRating { get; set; }
 
-    /// <summary>
-    /// User who reported this feedback
-    /// </summary>
-    public Guid? ReportedByUserId { get; set; }
+  /// <summary> Reason for reporting this feedback </summary>
+  public string? ReportReason { get; set; }
 
-    /// <summary>
-    /// Navigation property to the user who reported this feedback
-    /// </summary>
-    public virtual User? ReportedByUser { get; set; }
+  /// <summary> User who reported this feedback </summary>
+  public Guid? ReportedByUserId { get; set; }
 
-    /// <summary>
-    /// When this feedback was reported
-    /// </summary>
-    public DateTime? ReportedAt { get; set; }
-  }
+  /// <summary> Navigation property to the user who reported this feedback </summary>
+  public virtual User? ReportedByUser { get; set; }
 
-  public enum FeedbackQuality {
-    Positive = 1,
-    Negative = 2,
-    Neutral = 3,
-  }
+  /// <summary> When this feedback was reported </summary>
+  public DateTime? ReportedAt { get; set; }
+}
+
+public enum FeedbackQuality {
+  Positive = 1, Negative = 2, Neutral = 3,
 }

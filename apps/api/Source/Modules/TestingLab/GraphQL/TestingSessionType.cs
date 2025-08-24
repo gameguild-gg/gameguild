@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.TestingLab;
 
-/// <summary>
-/// GraphQL type definition for TestingSession entity
-/// </summary>
+/// <summary> GraphQL type definition for TestingSession entity </summary>
 public class TestingSessionType : ObjectType<TestingSession> {
   protected override void Configure(IObjectTypeDescriptor<TestingSession> descriptor) {
     descriptor.Name("TestingSession");

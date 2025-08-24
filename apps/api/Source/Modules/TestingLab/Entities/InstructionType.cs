@@ -1,3 +1,3 @@
-namespace GameGuild.Modules.TestingLab {
-  public enum InstructionType { Text, Url, File }
-}
+namespace GameGuild.Modules.TestingLab;
+
+public enum InstructionType { Text, Url, File }
