@@ -2,6 +2,7 @@
 
 # editor
 .idea/
+.vscode/
 .vs/
 
 # dependencies

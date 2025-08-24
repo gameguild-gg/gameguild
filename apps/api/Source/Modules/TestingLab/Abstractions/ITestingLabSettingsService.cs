@@ -1,8 +1,6 @@
 using GameGuild.Modules.TestingLab.Dtos;
-using GameGuild.Modules.TestingLab.Models;
 
-
-namespace GameGuild.Modules.TestingLab.Services;
+namespace GameGuild.Modules.TestingLab.Abstractions;
 
 /// <summary>
 /// Service interface for TestingLabSettings operations
