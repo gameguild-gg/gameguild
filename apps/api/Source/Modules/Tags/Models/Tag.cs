@@ -1,8 +1,5 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Tenants;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Tags.Models;
@@ -14,7 +11,7 @@ namespace GameGuild.Modules.Tags.Models;
 [Index(nameof(TenantId))]
 [Index(nameof(Name), nameof(TenantId), IsUnique = true)]
 public class Tag : Entity, ITenantable {
-  [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
+  [Required][MaxLength(100)] public string Name { get; set; } = string.Empty;
 
   [MaxLength(500)] public string? Description { get; set; }
 

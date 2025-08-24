@@ -1,10 +1,5 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Credentials;
-using GameGuild.Modules.Permissions;
-using GameGuild.Modules.Tenants;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Users;
@@ -13,7 +8,7 @@ namespace GameGuild.Modules.Users;
 [Index(nameof(Email), IsUnique = true)]
 [Index(nameof(Username), IsUnique = true)]
 public sealed class User : Entity {
-  [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
+  [Required][MaxLength(100)] public string Name { get; set; } = string.Empty;
 
   [Required]
   [MaxLength(50)]

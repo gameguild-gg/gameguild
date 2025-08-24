@@ -1,14 +1,13 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Home, Bug } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import {Button} from '@/components/ui/button';
+import {ArrowLeft, Bug, Home} from 'lucide-react';
+import {usePathname, useRouter} from 'next/navigation';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
-import { GitHubIssueModal } from '@/components/ui/github-issue-modal';
+import {useEffect, useState} from 'react';
+import {GitHubIssueModal} from '@/components/ui/github-issue-modal';
 // Note: Using a simple header since this is a client component
-import Footer from '@/components/common/footer/default-footer';
+import {Footer} from '@/components/common/footer/default-footer';
 
 export function NotFound() {
   const router = useRouter();
@@ -37,7 +36,8 @@ export function NotFound() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Simple header for 404 page */}
-      <header className="w-full bg-white/10 dark:bg-slate-900/20 backdrop-blur-md border-b border-white/10 dark:border-slate-700/30 text-slate-900 dark:text-white sticky top-0 z-50 shadow-lg">
+      <header
+        className="w-full bg-white/10 dark:bg-slate-900/20 backdrop-blur-md border-b border-white/10 dark:border-slate-700/30 text-slate-900 dark:text-white sticky top-0 z-50 shadow-lg">
         <div className="container mx-auto px-4 flex justify-between items-center py-4">
           <Link href="/" className="text-xl font-bold">
             Game Guild
@@ -62,16 +62,16 @@ export function NotFound() {
               onClick={() => router.push('/')}
               className="flex items-center gap-2"
             >
-              <Home className="h-4 w-4" />
+              <Home className="h-4 w-4"/>
               Go Home
             </Button>
-            
+
             <Button
               variant="outline"
               onClick={() => router.back()}
               className="flex items-center gap-2"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4"/>
               Go Back
             </Button>
           </div>
@@ -81,7 +81,7 @@ export function NotFound() {
               <p className="text-sm text-muted-foreground">
                 Think this is a mistake? Help us improve by reporting this issue.
               </p>
-              
+
               {/* Featured GitHub Issue Button */}
               <div className="relative">
                 <Button
@@ -89,18 +89,19 @@ export function NotFound() {
                   className="relative bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center gap-3 mx-auto animate-pulse"
                   size="lg"
                 >
-                  <Bug className="h-5 w-5" />
+                  <Bug className="h-5 w-5"/>
                   Report Issue on GitHub
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
                 </Button>
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-lg blur-xl -z-10 animate-pulse"></div>
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-lg blur-xl -z-10 animate-pulse"></div>
               </div>
             </div>
           </div>
         </div>
       </main>
-      <Footer />
-      
+      <Footer/>
+
       <GitHubIssueModal
         isOpen={isGitHubModalOpen}
         onClose={() => setIsGitHubModalOpen(false)}

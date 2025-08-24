@@ -1,6 +1,3 @@
-using FluentValidation;
-using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 using ValidationException = FluentValidation.ValidationException;
@@ -36,7 +33,10 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       _logger.LogInformation("DEBUG: Received username: '{Username}', email: '{Email}'", request.Username, request.Email);
 
       var command = new LocalSignUpCommand {
-        Email = request.Email, Password = request.Password, Username = request.Username ?? request.Email, TenantId = request.TenantId,
+        Email = request.Email,
+        Password = request.Password,
+        Username = request.Username ?? request.Email,
+        TenantId = request.TenantId,
       };
 
       _logger.LogInformation("DEBUG: Command username: '{Username}', email: '{Email}'", command.Username, command.Email);
@@ -52,7 +52,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
       return BadRequest(
         new ProblemDetails {
-          Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest,
+          Title = "Validation Error",
+          Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)),
+          Status = StatusCodes.Status400BadRequest,
         }
       );
     }
@@ -61,7 +63,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
       return Conflict(
         new ProblemDetails {
-          Title = "Operation Error", Detail = ex.Message, Status = StatusCodes.Status409Conflict,
+          Title = "Operation Error",
+          Detail = ex.Message,
+          Status = StatusCodes.Status409Conflict,
         }
       );
     }
@@ -71,7 +75,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       return StatusCode(
         StatusCodes.Status500InternalServerError,
         new ProblemDetails {
-          Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError,
+          Title = "Internal Server Error",
+          Detail = "An unexpected error occurred",
+          Status = StatusCodes.Status500InternalServerError,
         }
       );
     }
@@ -92,7 +98,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       _logger.LogInformation("Local sign-in attempt for email: {Email}", request.Email);
 
       var command = new LocalSignInCommand {
-        Email = request.Email, Password = request.Password, TenantId = request.TenantId,
+        Email = request.Email,
+        Password = request.Password,
+        TenantId = request.TenantId,
       };
 
       var result = await _mediator.Send(command);
@@ -106,7 +114,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
       return BadRequest(
         new ProblemDetails {
-          Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest,
+          Title = "Validation Error",
+          Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)),
+          Status = StatusCodes.Status400BadRequest,
         }
       );
     }
@@ -115,7 +125,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
       return Unauthorized(
         new ProblemDetails {
-          Title = "Authentication Failed", Detail = "Invalid credentials", Status = StatusCodes.Status401Unauthorized,
+          Title = "Authentication Failed",
+          Detail = "Invalid credentials",
+          Status = StatusCodes.Status401Unauthorized,
         }
       );
     }
@@ -125,7 +137,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       return StatusCode(
         StatusCodes.Status500InternalServerError,
         new ProblemDetails {
-          Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError,
+          Title = "Internal Server Error",
+          Detail = "An unexpected error occurred",
+          Status = StatusCodes.Status500InternalServerError,
         }
       );
     }
@@ -145,7 +159,8 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       _logger.LogInformation("Google ID token sign-in attempt");
 
       var command = new GoogleIdTokenSignInCommand {
-        IdToken = request.IdToken, TenantId = request.TenantId,
+        IdToken = request.IdToken,
+        TenantId = request.TenantId,
       };
 
       var result = await _mediator.Send(command);
@@ -159,7 +174,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
       return BadRequest(
         new ProblemDetails {
-          Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest,
+          Title = "Validation Error",
+          Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)),
+          Status = StatusCodes.Status400BadRequest,
         }
       );
     }
@@ -168,7 +185,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
       return Unauthorized(
         new ProblemDetails {
-          Title = "Authentication Failed", Detail = "Invalid Google ID token", Status = StatusCodes.Status401Unauthorized,
+          Title = "Authentication Failed",
+          Detail = "Invalid Google ID token",
+          Status = StatusCodes.Status401Unauthorized,
         }
       );
     }
@@ -178,7 +197,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       return StatusCode(
         StatusCodes.Status500InternalServerError,
         new ProblemDetails {
-          Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError,
+          Title = "Internal Server Error",
+          Detail = "An unexpected error occurred",
+          Status = StatusCodes.Status500InternalServerError,
         }
       );
     }
@@ -206,13 +227,16 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
         return BadRequest(
           new ProblemDetails {
-            Title = "Validation Error", Detail = "Refresh token is required", Status = StatusCodes.Status400BadRequest,
+            Title = "Validation Error",
+            Detail = "Refresh token is required",
+            Status = StatusCodes.Status400BadRequest,
           }
         );
       }
 
       var command = new RefreshTokenCommand {
-        RefreshToken = request.RefreshToken, TenantId = request.TenantId,
+        RefreshToken = request.RefreshToken,
+        TenantId = request.TenantId,
       };
 
       var result = await _mediator.Send(command);
@@ -226,7 +250,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
       return BadRequest(
         new ProblemDetails {
-          Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest,
+          Title = "Validation Error",
+          Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)),
+          Status = StatusCodes.Status400BadRequest,
         }
       );
     }
@@ -235,7 +261,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
       return Unauthorized(
         new ProblemDetails {
-          Title = "Token Refresh Failed", Detail = "Invalid or expired refresh token", Status = StatusCodes.Status401Unauthorized,
+          Title = "Token Refresh Failed",
+          Detail = "Invalid or expired refresh token",
+          Status = StatusCodes.Status401Unauthorized,
         }
       );
     }
@@ -245,7 +273,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       return StatusCode(
         StatusCodes.Status500InternalServerError,
         new ProblemDetails {
-          Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError,
+          Title = "Internal Server Error",
+          Detail = "An unexpected error occurred",
+          Status = StatusCodes.Status500InternalServerError,
         }
       );
     }
@@ -266,7 +296,8 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       _logger.LogInformation("Token revocation attempt");
 
       var command = new RevokeTokenCommand {
-        RefreshToken = request.RefreshToken, IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+        RefreshToken = request.RefreshToken,
+        IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
       };
 
       await _mediator.Send(command);
@@ -280,7 +311,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
       return BadRequest(
         new ProblemDetails {
-          Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest,
+          Title = "Validation Error",
+          Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)),
+          Status = StatusCodes.Status400BadRequest,
         }
       );
     }
@@ -289,7 +322,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
       return Unauthorized(
         new ProblemDetails {
-          Title = "Token Revocation Failed", Detail = ex.Message, Status = StatusCodes.Status401Unauthorized,
+          Title = "Token Revocation Failed",
+          Detail = ex.Message,
+          Status = StatusCodes.Status401Unauthorized,
         }
       );
     }
@@ -299,7 +334,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       return StatusCode(
         StatusCodes.Status500InternalServerError,
         new ProblemDetails {
-          Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError,
+          Title = "Internal Server Error",
+          Detail = "An unexpected error occurred",
+          Status = StatusCodes.Status500InternalServerError,
         }
       );
     }
@@ -336,7 +373,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
       return Unauthorized(
         new ProblemDetails {
-          Title = "Unauthorized", Detail = ex.Message, Status = StatusCodes.Status401Unauthorized,
+          Title = "Unauthorized",
+          Detail = ex.Message,
+          Status = StatusCodes.Status401Unauthorized,
         }
       );
     }
@@ -346,7 +385,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       return StatusCode(
         StatusCodes.Status500InternalServerError,
         new ProblemDetails {
-          Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError,
+          Title = "Internal Server Error",
+          Detail = "An unexpected error occurred",
+          Status = StatusCodes.Status500InternalServerError,
         }
       );
     }

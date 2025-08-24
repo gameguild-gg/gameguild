@@ -1,6 +1,4 @@
 using System.Security.Claims;
-using HotChocolate;
-using HotChocolate.Types;
 using GameGuild.Modules.Permissions;
 using GameGuild.Common;
 using GameGuild.Modules.Authentication;

@@ -1,6 +1,3 @@
-using GameGuild.Common;
-
-
 namespace GameGuild.Modules.UserAchievements;
 
 /// <summary>
@@ -153,7 +150,7 @@ public class AchievementStatisticsDto {
   public double CompletionRate { get; set; }
   public DateTime? FirstEarned { get; set; }
   public DateTime? LastEarned { get; set; }
-  
+
   // Global statistics properties
   public int TotalAchievements { get; set; }
   public int ActiveAchievements { get; set; }

@@ -1,7 +1,5 @@
 using FluentValidation;
 using GameGuild.Modules.Authentication.Validators;
-using MediatR;
-using Microsoft.Extensions.Logging;
 
 
 namespace GameGuild.Modules.Authentication;

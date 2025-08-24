@@ -1,7 +1,5 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Tags.Models;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Certificates;

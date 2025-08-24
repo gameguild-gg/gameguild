@@ -1,7 +1,5 @@
-                                                                                                                                                        using GameGuild.Common;
+using GameGuild.Common;
 using GameGuild.Database;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Error = GameGuild.Common.Error;
 
 
