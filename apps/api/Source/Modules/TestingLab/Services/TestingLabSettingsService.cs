@@ -1,27 +1,24 @@
+using GameGuild.Database;
 using GameGuild.Modules.TestingLab.Dtos;
-using GameGuild.Modules.TestingLab.Models;
 
 
 namespace GameGuild.Modules.TestingLab.Services;
 
-/// <summary>
-/// Implementation of the TestingLabSettings service
-/// </summary>
+/// <summary> Implementation of the TestingLabSettings service </summary>
 internal class TestingLabSettingsService : ITestingLabSettingsService {
-  private readonly GameGuild.Database.ApplicationDbContext _dbContext;
+  private readonly ApplicationDbContext _dbContext;
 
-  public TestingLabSettingsService(GameGuild.Database.ApplicationDbContext dbContext) {
-    _dbContext = dbContext;
-  }
+  public TestingLabSettingsService(ApplicationDbContext dbContext) { _dbContext = dbContext; }
 
   /// <inheritdoc />
   public async Task<TestingLabSettings> GetTestingLabSettingsAsync(Guid? tenantId = null) {
     var settings = await _dbContext.TestingLabSettings
-        .Include(s => s.Tenant)
-        .FirstOrDefaultAsync(s => tenantId == null
-            ? s.Tenant == null
-            : s.Tenant != null && s.Tenant.Id == tenantId)
-        .ConfigureAwait(false);
+                                   .Include(s => s.Tenant)
+                                   .FirstOrDefaultAsync(s => tenantId == null
+                                                               ? s.Tenant == null
+                                                               : s.Tenant != null && s.Tenant.Id == tenantId
+                                   )
+                                   .ConfigureAwait(false);
 
     if (settings == null) {
       // Create default settings
@@ -34,7 +31,7 @@ internal class TestingLabSettingsService : ITestingLabSettingsService {
         AllowPublicSignups = true,
         RequireApproval = true,
         EnableNotifications = true,
-        MaxSimultaneousSessions = 10
+        MaxSimultaneousSessions = 10,
       };
 
       _dbContext.TestingLabSettings.Add(settings);
@@ -47,6 +44,7 @@ internal class TestingLabSettingsService : ITestingLabSettingsService {
   /// <inheritdoc />
   public async Task<TestingLabSettingsDto> GetTestingLabSettingsDtoAsync(Guid? tenantId = null) {
     var settings = await GetTestingLabSettingsAsync(tenantId).ConfigureAwait(false);
+
     return MapToDto(settings);
   }
 
@@ -55,16 +53,17 @@ internal class TestingLabSettingsService : ITestingLabSettingsService {
     ArgumentNullException.ThrowIfNull(dto);
 
     var settings = await _dbContext.TestingLabSettings
-        .Include(s => s.Tenant)
-        .FirstOrDefaultAsync(s => tenantId == null
-            ? s.Tenant == null
-            : s.Tenant != null && s.Tenant.Id == tenantId)
-        .ConfigureAwait(false);
+                                   .Include(s => s.Tenant)
+                                   .FirstOrDefaultAsync(s => tenantId == null
+                                                               ? s.Tenant == null
+                                                               : s.Tenant != null && s.Tenant.Id == tenantId
+                                   )
+                                   .ConfigureAwait(false);
 
     if (settings == null) {
       // Create new settings
       settings = new TestingLabSettings {
-        Tenant = tenantId.HasValue ? await _dbContext.Tenants.FindAsync(tenantId.Value).ConfigureAwait(false) : null
+        Tenant = tenantId.HasValue ? await _dbContext.Tenants.FindAsync(tenantId.Value).ConfigureAwait(false) : null,
       };
       _dbContext.TestingLabSettings.Add(settings);
     }
@@ -80,6 +79,7 @@ internal class TestingLabSettingsService : ITestingLabSettingsService {
     settings.MaxSimultaneousSessions = dto.MaxSimultaneousSessions;
 
     await _dbContext.SaveChangesAsync().ConfigureAwait(false);
+
     return settings;
   }
 
@@ -90,42 +90,36 @@ internal class TestingLabSettingsService : ITestingLabSettingsService {
     var settings = await GetTestingLabSettingsAsync(tenantId).ConfigureAwait(false);
 
     // Update only non-null properties
-    if (dto.LabName != null)
-      settings.LabName = dto.LabName;
+    if (dto.LabName != null) settings.LabName = dto.LabName;
 
-    if (dto.Description != null)
-      settings.Description = dto.Description;
+    if (dto.Description != null) settings.Description = dto.Description;
 
-    if (dto.Timezone != null)
-      settings.Timezone = dto.Timezone;
+    if (dto.Timezone != null) settings.Timezone = dto.Timezone;
 
-    if (dto.DefaultSessionDuration.HasValue)
-      settings.DefaultSessionDuration = dto.DefaultSessionDuration.Value;
+    if (dto.DefaultSessionDuration.HasValue) settings.DefaultSessionDuration = dto.DefaultSessionDuration.Value;
 
-    if (dto.AllowPublicSignups.HasValue)
-      settings.AllowPublicSignups = dto.AllowPublicSignups.Value;
+    if (dto.AllowPublicSignups.HasValue) settings.AllowPublicSignups = dto.AllowPublicSignups.Value;
 
-    if (dto.RequireApproval.HasValue)
-      settings.RequireApproval = dto.RequireApproval.Value;
+    if (dto.RequireApproval.HasValue) settings.RequireApproval = dto.RequireApproval.Value;
 
-    if (dto.EnableNotifications.HasValue)
-      settings.EnableNotifications = dto.EnableNotifications.Value;
+    if (dto.EnableNotifications.HasValue) settings.EnableNotifications = dto.EnableNotifications.Value;
 
-    if (dto.MaxSimultaneousSessions.HasValue)
-      settings.MaxSimultaneousSessions = dto.MaxSimultaneousSessions.Value;
+    if (dto.MaxSimultaneousSessions.HasValue) settings.MaxSimultaneousSessions = dto.MaxSimultaneousSessions.Value;
 
     await _dbContext.SaveChangesAsync().ConfigureAwait(false);
+
     return settings;
   }
 
   /// <inheritdoc />
   public async Task<TestingLabSettings> ResetTestingLabSettingsAsync(Guid? tenantId = null) {
     var settings = await _dbContext.TestingLabSettings
-        .Include(s => s.Tenant)
-        .FirstOrDefaultAsync(s => tenantId == null
-            ? s.Tenant == null
-            : s.Tenant != null && s.Tenant.Id == tenantId)
-        .ConfigureAwait(false);
+                                   .Include(s => s.Tenant)
+                                   .FirstOrDefaultAsync(s => tenantId == null
+                                                               ? s.Tenant == null
+                                                               : s.Tenant != null && s.Tenant.Id == tenantId
+                                   )
+                                   .ConfigureAwait(false);
 
     if (settings != null) {
       // Reset to defaults
@@ -139,6 +133,7 @@ internal class TestingLabSettingsService : ITestingLabSettingsService {
       settings.MaxSimultaneousSessions = 10;
 
       await _dbContext.SaveChangesAsync().ConfigureAwait(false);
+
       return settings;
     }
 
@@ -149,11 +144,12 @@ internal class TestingLabSettingsService : ITestingLabSettingsService {
   /// <inheritdoc />
   public async Task<bool> TestingLabSettingsExistAsync(Guid? tenantId = null) {
     return await _dbContext.TestingLabSettings
-        .Include(s => s.Tenant)
-        .AnyAsync(s => tenantId == null
-            ? s.Tenant == null
-            : s.Tenant != null && s.Tenant.Id == tenantId)
-        .ConfigureAwait(false);
+                           .Include(s => s.Tenant)
+                           .AnyAsync(s => tenantId == null
+                                            ? s.Tenant == null
+                                            : s.Tenant != null && s.Tenant.Id == tenantId
+                           )
+                           .ConfigureAwait(false);
   }
 
   // Helper method to map entity to DTO
@@ -170,7 +166,7 @@ internal class TestingLabSettingsService : ITestingLabSettingsService {
       MaxSimultaneousSessions = settings.MaxSimultaneousSessions,
       TenantId = settings.Tenant?.Id,
       CreatedAt = settings.CreatedAt,
-      UpdatedAt = settings.UpdatedAt
+      UpdatedAt = settings.UpdatedAt,
     };
   }
 }

@@ -3,59 +3,47 @@ using GameGuild.Modules.Projects;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.TestingLab {
-  public class TestingRequest : Entity {
-    /// <summary>
-    /// Foreign key to the project version
-    /// </summary>
-    public Guid ProjectVersionId { get; set; }
+namespace GameGuild.Modules.TestingLab;
 
-    /// <summary>
-    /// Navigation property to the project version
-    /// </summary>
-    public virtual ProjectVersion ProjectVersion { get; set; } = null!;
+public class TestingRequest : Entity {
+  /// <summary> Foreign key to the project version </summary>
+  public Guid ProjectVersionId { get; set; }
 
-    [Required][MaxLength(255)] public string Title { get; set; } = string.Empty;
+  /// <summary> Navigation property to the project version </summary>
+  public virtual ProjectVersion ProjectVersion { get; set; } = null!;
 
-    public string? Description { get; set; }
+  [Required] [MaxLength(255)] public string Title { get; set; } = string.Empty;
 
-    /// <summary>
-    /// URL to download the game build
-    /// </summary>
-    [MaxLength(1000)]
-    public string? DownloadUrl { get; set; }
+  public string? Description { get; set; }
 
-    [Required] public InstructionType InstructionsType { get; set; }
+  /// <summary> URL to download the game build </summary>
+  [MaxLength(1000)]
+  public string? DownloadUrl { get; set; }
 
-    public string? InstructionsContent { get; set; }
+  [Required] public InstructionType InstructionsType { get; set; }
 
-    [MaxLength(500)] public string? InstructionsUrl { get; set; }
+  public string? InstructionsContent { get; set; }
 
-    public Guid? InstructionsFileId { get; set; }
+  [MaxLength(500)] public string? InstructionsUrl { get; set; }
 
-    /// <summary>
-    /// Simple feedback form content (plain text questions)
-    /// </summary>
-    public string? FeedbackFormContent { get; set; }
+  public Guid? InstructionsFileId { get; set; }
 
-    public int? MaxTesters { get; set; }
+  /// <summary> Simple feedback form content (plain text questions) </summary>
+  public string? FeedbackFormContent { get; set; }
 
-    public int CurrentTesterCount { get; set; } = 0;
+  public int? MaxTesters { get; set; }
 
-    [Required] public DateTime StartDate { get; set; }
+  public int CurrentTesterCount { get; set; } = 0;
 
-    [Required] public DateTime EndDate { get; set; }
+  [Required] public DateTime StartDate { get; set; }
 
-    [Required] public TestingRequestStatus Status { get; set; } = TestingRequestStatus.Draft;
+  [Required] public DateTime EndDate { get; set; }
 
-    /// <summary>
-    /// Foreign key to the user who created this request
-    /// </summary>
-    public Guid CreatedById { get; set; }
+  [Required] public TestingRequestStatus Status { get; set; } = TestingRequestStatus.Draft;
 
-    /// <summary>
-    /// Navigation property to the user who created this request
-    /// </summary>
-    public virtual User CreatedBy { get; set; } = null!;
-  }
+  /// <summary> Foreign key to the user who created this request </summary>
+  public Guid CreatedById { get; set; }
+
+  /// <summary> Navigation property to the user who created this request </summary>
+  public virtual User CreatedBy { get; set; } = null!;
 }
