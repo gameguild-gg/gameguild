@@ -39,7 +39,7 @@ I usually take up to 1 week to grade assignments, but I will grade them as soon 
 
 ## Late Submissions Policy
 
-If you submit an assignment late, you will receive a flat 20% deduction on your grade.
+If you submit an assignment late, you will receive a 1% deduction per day on your grade, up to a maximum of 30% deduction, in other words, the worst scenario would be to gave a C grade if you do everything correct but late.
 
 If you have accommodations, message me, and I will try accommodating you. But always send a message on every submission stating that. Canvas is a nice tool, but it needs to cover accommodations better.
 
