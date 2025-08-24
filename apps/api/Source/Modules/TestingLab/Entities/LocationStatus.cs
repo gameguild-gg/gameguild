@@ -1,3 +1,3 @@
-namespace GameGuild.Modules.TestingLab {
-  public enum LocationStatus { Active, Maintenance, Inactive }
-}
+namespace GameGuild.Modules.TestingLab;
+
+public enum LocationStatus { Active, Maintenance, Inactive }

@@ -1,3 +1,3 @@
-namespace GameGuild.Modules.TestingLab {
-  public enum RegistrationType { ProjectMember, Tester }
-}
+namespace GameGuild.Modules.TestingLab;
+
+public enum RegistrationType { ProjectMember, Tester }
