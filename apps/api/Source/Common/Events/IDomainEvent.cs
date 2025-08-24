@@ -1,7 +1,4 @@
-﻿using MediatR;
-
-
-namespace GameGuild.Common;
+﻿namespace GameGuild.Common;
 
 /// <summary>
 /// Marker interface for domain events that follow DDD principles

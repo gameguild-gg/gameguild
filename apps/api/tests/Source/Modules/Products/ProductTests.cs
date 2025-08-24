@@ -14,284 +14,263 @@ namespace GameGuild.Tests.Modules.Products;
 /// <summary>
 /// Comprehensive tests for Product management with CQRS architecture
 /// </summary>
-public class ProductTests : IDisposable
-{
-    private readonly ApplicationDbContext _context;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IMediator _mediator;
-    private readonly Mock<IUserContext> _mockUserContext;
-    private readonly Mock<ITenantContext> _mockTenantContext;
+public class ProductTests : IDisposable {
+  private readonly ApplicationDbContext _context;
+  private readonly IServiceProvider _serviceProvider;
+  private readonly IMediator _mediator;
+  private readonly Mock<IUserContext> _mockUserContext;
+  private readonly Mock<ITenantContext> _mockTenantContext;
 
-    public ProductTests()
-    {
-        var services = new ServiceCollection();
-        
-        // Add database context factory for GraphQL DataLoader compatibility
-        services.AddDbContextFactory<ApplicationDbContext>(options =>
-            options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
-        
-        // Add regular DbContext using the factory (ensures compatible lifetimes)
-        services.AddScoped<ApplicationDbContext>(provider => {
-            var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
-            return factory.CreateDbContext();
-        });
-        
-        // Add logging
-        services.AddLogging(builder => builder.AddConsole());
-        
-        // Add MediatR
-        services.AddMediatR(typeof(ProductCommandHandlers).Assembly);
-        
-        // Mock contexts
-        _mockUserContext = new Mock<IUserContext>();
-        _mockTenantContext = new Mock<ITenantContext>();
-        
-        services.AddSingleton(_mockUserContext.Object);
-        services.AddSingleton(_mockTenantContext.Object);
-        
-        // Add product handlers
-        services.AddScoped<ProductCommandHandlers>();
-        services.AddScoped<ProductQueryHandlers>();
-        
-        _serviceProvider = services.BuildServiceProvider();
-        _context = _serviceProvider.GetRequiredService<ApplicationDbContext>();
-        _mediator = _serviceProvider.GetRequiredService<IMediator>();
-    }
+  public ProductTests() {
+    var services = new ServiceCollection();
 
-    [Fact]
-    public async Task Product_Entity_Can_Be_Created_And_Saved()
-    {
-        // Arrange
-        var product = new Product
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Course Bundle",
-            ShortDescription = "A comprehensive course bundle",
-        };
+    // Add database context factory for GraphQL DataLoader compatibility
+    services.AddDbContextFactory<ApplicationDbContext>(options =>
+        options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
 
-        // Act
-        _context.Products.Add(product);
-        await _context.SaveChangesAsync();
+    // Add regular DbContext using the factory (ensures compatible lifetimes)
+    services.AddScoped<ApplicationDbContext>(provider => {
+      var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+      return factory.CreateDbContext();
+    });
 
-        // Assert
-        var savedProduct = await _context.Products.FindAsync(product.Id);
-        Assert.NotNull(savedProduct);
-        Assert.Equal("Test Course Bundle", savedProduct.Name);
-        Assert.Equal("A comprehensive course bundle", savedProduct.ShortDescription);
-    }
+    // Add logging
+    services.AddLogging(builder => builder.AddConsole());
 
-    [Fact]
-    public async Task Product_Can_Create_Product_Via_Command()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        await SeedTestUser(userId, "Test User");
+    // Add MediatR
+    services.AddMediatR(typeof(ProductCommandHandlers).Assembly);
 
-        _mockUserContext.Setup(x => x.UserId).Returns(userId);
-        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
-        _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(true);
+    // Mock contexts
+    _mockUserContext = new Mock<IUserContext>();
+    _mockTenantContext = new Mock<ITenantContext>();
 
-        var command = new CreateProductCommand
-        {
-            Name = "New Product",
-            ShortDescription = "Created via CQRS command",
-            CreatorId = userId,
-        };
+    services.AddSingleton(_mockUserContext.Object);
+    services.AddSingleton(_mockTenantContext.Object);
 
-        // Act
-        var result = await _mediator.Send(command);
+    // Add product handlers
+    services.AddScoped<ProductCommandHandlers>();
+    services.AddScoped<ProductQueryHandlers>();
 
-        // Assert
-        Assert.True(result.Success);
-        Assert.NotNull(result.Product);
-        Assert.Equal("New Product", result.Product.Name);
-        Assert.Equal("Created via CQRS command", result.Product.ShortDescription);
-    }
+    _serviceProvider = services.BuildServiceProvider();
+    _context = _serviceProvider.GetRequiredService<ApplicationDbContext>();
+    _mediator = _serviceProvider.GetRequiredService<IMediator>();
+  }
 
-    [Fact]
-    public async Task Product_Can_Update_Product_Via_Command()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        await SeedTestUser(userId, "Test User");
+  [Fact]
+  public async Task Product_Entity_Can_Be_Created_And_Saved() {
+    // Arrange
+    var product = new Product {
+      Id = Guid.NewGuid(),
+      Name = "Test Course Bundle",
+      ShortDescription = "A comprehensive course bundle",
+    };
 
-        _mockUserContext.Setup(x => x.UserId).Returns(userId);
-        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
-        _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(true);
+    // Act
+    _context.Products.Add(product);
+    await _context.SaveChangesAsync();
 
-        // Create product first
-        var createCommand = new CreateProductCommand
-        {
-            Name = "Original Product",
-            ShortDescription = "Original description",
-            CreatorId = userId,
-        };
+    // Assert
+    var savedProduct = await _context.Products.FindAsync(product.Id);
+    Assert.NotNull(savedProduct);
+    Assert.Equal("Test Course Bundle", savedProduct.Name);
+    Assert.Equal("A comprehensive course bundle", savedProduct.ShortDescription);
+  }
 
-        var createResult = await _mediator.Send(createCommand);
-        Assert.True(createResult.Success);
+  [Fact]
+  public async Task Product_Can_Create_Product_Via_Command() {
+    // Arrange
+    var userId = Guid.NewGuid();
+    await SeedTestUser(userId, "Test User");
 
-        // Act - Update product
-        var updateCommand = new UpdateProductCommand
-        {
-            ProductId = createResult.Product!.Id,
-            Name = "Updated Product",
-            ShortDescription = "Updated description",
-        };
+    _mockUserContext.Setup(x => x.UserId).Returns(userId);
+    _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
+    _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(true);
 
-        var updateResult = await _mediator.Send(updateCommand);
+    var command = new CreateProductCommand {
+      Name = "New Product",
+      ShortDescription = "Created via CQRS command",
+      CreatorId = userId,
+    };
 
-        // Assert
-        Assert.True(updateResult.Success);
-        Assert.NotNull(updateResult.Product);
-        Assert.Equal("Updated Product", updateResult.Product.Name);
-        Assert.Equal("Updated description", updateResult.Product.ShortDescription);
-    }
+    // Act
+    var result = await _mediator.Send(command);
 
-    [Fact]
-    public async Task Product_Can_Delete_Product_Via_Command()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        await SeedTestUser(userId, "Test User");
+    // Assert
+    Assert.True(result.Success);
+    Assert.NotNull(result.Product);
+    Assert.Equal("New Product", result.Product.Name);
+    Assert.Equal("Created via CQRS command", result.Product.ShortDescription);
+  }
 
-        _mockUserContext.Setup(x => x.UserId).Returns(userId);
-        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
-        _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(true);
+  [Fact]
+  public async Task Product_Can_Update_Product_Via_Command() {
+    // Arrange
+    var userId = Guid.NewGuid();
+    await SeedTestUser(userId, "Test User");
 
-        // Create product first
-        var createCommand = new CreateProductCommand
-        {
-            Name = "Product to Delete",
-            ShortDescription = "This will be deleted",
-            CreatorId = userId,
-        };
+    _mockUserContext.Setup(x => x.UserId).Returns(userId);
+    _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
+    _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(true);
 
-        var createResult = await _mediator.Send(createCommand);
-        Assert.True(createResult.Success);
+    // Create product first
+    var createCommand = new CreateProductCommand {
+      Name = "Original Product",
+      ShortDescription = "Original description",
+      CreatorId = userId,
+    };
 
-        // Act - Delete product
-        var deleteCommand = new DeleteProductCommand
-        {
-            ProductId = createResult.Product!.Id,
-        };
+    var createResult = await _mediator.Send(createCommand);
+    Assert.True(createResult.Success);
 
-        var deleteResult = await _mediator.Send(deleteCommand);
+    // Act - Update product
+    var updateCommand = new UpdateProductCommand {
+      ProductId = createResult.Product!.Id,
+      Name = "Updated Product",
+      ShortDescription = "Updated description",
+    };
 
-        // Assert
-        Assert.True(deleteResult.Success);
-        
-        // Verify product is soft deleted by checking DeletedAt field directly
-        // Note: In-memory database doesn't consistently apply global query filters,
-        // so we verify the soft delete by checking the DeletedAt timestamp
-        var deletedProduct = await _context.Products
-            .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(p => p.Id == createResult.Product.Id);
-        Assert.NotNull(deletedProduct);
-        Assert.NotNull(deletedProduct.DeletedAt);
-        
-        // Verify product would be filtered out by explicit DeletedAt check
-        // (simulating what the global query filter should do)
-        var queryResult = await _context.Products
-            .Where(p => p.Id == createResult.Product.Id && p.DeletedAt == null)
-            .FirstOrDefaultAsync();
-        Assert.Null(queryResult);
-    }
+    var updateResult = await _mediator.Send(updateCommand);
 
-    [Fact]
-    public async Task Product_Can_Get_Products_Via_Query()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        await SeedTestUser(userId, "Test User");
+    // Assert
+    Assert.True(updateResult.Success);
+    Assert.NotNull(updateResult.Product);
+    Assert.Equal("Updated Product", updateResult.Product.Name);
+    Assert.Equal("Updated description", updateResult.Product.ShortDescription);
+  }
 
-        _mockUserContext.Setup(x => x.UserId).Returns(userId);
-        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
+  [Fact]
+  public async Task Product_Can_Delete_Product_Via_Command() {
+    // Arrange
+    var userId = Guid.NewGuid();
+    await SeedTestUser(userId, "Test User");
 
-        // Create test products with the test user as creator
-        await SeedTestProduct("Product 1", "Description 1", userId);
-        await SeedTestProduct("Product 2", "Description 2", userId);
-        await SeedTestProduct("Product 3", "Description 3", userId);
+    _mockUserContext.Setup(x => x.UserId).Returns(userId);
+    _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
+    _mockUserContext.Setup(x => x.IsInRole("Admin")).Returns(true);
 
-        // Act
-        var query = new GetProductsQuery
-        {
-            Skip = 0,
-            Take = 10,
-        };
+    // Create product first
+    var createCommand = new CreateProductCommand {
+      Name = "Product to Delete",
+      ShortDescription = "This will be deleted",
+      CreatorId = userId,
+    };
 
-        var products = await _mediator.Send(query);
+    var createResult = await _mediator.Send(createCommand);
+    Assert.True(createResult.Success);
 
-        // Assert
-        Assert.NotNull(products);
-        var productList = products.ToList();
-        Assert.True(productList.Count >= 3);
-    }
+    // Act - Delete product
+    var deleteCommand = new DeleteProductCommand {
+      ProductId = createResult.Product!.Id,
+    };
 
-    [Fact]
-    public async Task Product_Can_Get_Product_By_Id_Via_Query()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        await SeedTestUser(userId, "Test User");
+    var deleteResult = await _mediator.Send(deleteCommand);
 
-        _mockUserContext.Setup(x => x.UserId).Returns(userId);
-        _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
+    // Assert
+    Assert.True(deleteResult.Success);
 
-        var testProduct = await SeedTestProduct("Test Product", "Test Description", userId);
+    // Verify product is soft deleted by checking DeletedAt field directly
+    // Note: In-memory database doesn't consistently apply global query filters,
+    // so we verify the soft delete by checking the DeletedAt timestamp
+    var deletedProduct = await _context.Products
+        .IgnoreQueryFilters()
+        .FirstOrDefaultAsync(p => p.Id == createResult.Product.Id);
+    Assert.NotNull(deletedProduct);
+    Assert.NotNull(deletedProduct.DeletedAt);
 
-        // Act
-        var query = new GetProductByIdQuery
-        {
-            ProductId = testProduct.Id,
-        };
+    // Verify product would be filtered out by explicit DeletedAt check
+    // (simulating what the global query filter should do)
+    var queryResult = await _context.Products
+        .Where(p => p.Id == createResult.Product.Id && p.DeletedAt == null)
+        .FirstOrDefaultAsync();
+    Assert.Null(queryResult);
+  }
 
-        var product = await _mediator.Send(query);
+  [Fact]
+  public async Task Product_Can_Get_Products_Via_Query() {
+    // Arrange
+    var userId = Guid.NewGuid();
+    await SeedTestUser(userId, "Test User");
 
-        // Assert
-        Assert.NotNull(product);
-        Assert.Equal(testProduct.Id, product.Id);
-        Assert.Equal("Test Product", product.Name);
-        Assert.Equal("Test Description", product.ShortDescription);
-    }
+    _mockUserContext.Setup(x => x.UserId).Returns(userId);
+    _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
 
-    #region Helper Methods
+    // Create test products with the test user as creator
+    await SeedTestProduct("Product 1", "Description 1", userId);
+    await SeedTestProduct("Product 2", "Description 2", userId);
+    await SeedTestProduct("Product 3", "Description 3", userId);
 
-    private async Task SeedTestUser(Guid userId, string name)
-    {
-        var user = new User
-        {
-            Id = userId,
-            Name = name,
-            Email = $"{name.ToLower().Replace(" ", "")}@test.com",
-        };
+    // Act
+    var query = new GetProductsQuery {
+      Skip = 0,
+      Take = 10,
+    };
 
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-    }
+    var products = await _mediator.Send(query);
 
-    private async Task<Product> SeedTestProduct(string name, string description, Guid? creatorId = null)
-    {
-        var product = new Product
-        {
-            Id = Guid.NewGuid(),
-            Name = name,
-            ShortDescription = description,
-            CreatorId = creatorId ?? Guid.NewGuid(),
-            Status = ContentStatus.Published,
-            Visibility = AccessLevel.Public,
-        };
+    // Assert
+    Assert.NotNull(products);
+    var productList = products.ToList();
+    Assert.True(productList.Count >= 3);
+  }
 
-        _context.Products.Add(product);
-        await _context.SaveChangesAsync();
-        return product;
-    }
+  [Fact]
+  public async Task Product_Can_Get_Product_By_Id_Via_Query() {
+    // Arrange
+    var userId = Guid.NewGuid();
+    await SeedTestUser(userId, "Test User");
 
-    #endregion
+    _mockUserContext.Setup(x => x.UserId).Returns(userId);
+    _mockUserContext.Setup(x => x.IsAuthenticated).Returns(true);
 
-    public void Dispose()
-    {
-        _context.Dispose();
-        if (_serviceProvider is IDisposable disposable)
-            disposable.Dispose();
-    }
+    var testProduct = await SeedTestProduct("Test Product", "Test Description", userId);
+
+    // Act
+    var query = new GetProductByIdQuery {
+      ProductId = testProduct.Id,
+    };
+
+    var product = await _mediator.Send(query);
+
+    // Assert
+    Assert.NotNull(product);
+    Assert.Equal(testProduct.Id, product.Id);
+    Assert.Equal("Test Product", product.Name);
+    Assert.Equal("Test Description", product.ShortDescription);
+  }
+
+  #region Helper Methods
+
+  private async Task SeedTestUser(Guid userId, string name) {
+    var user = new User {
+      Id = userId,
+      Name = name,
+      Email = $"{name.ToLower().Replace(" ", "")}@test.com",
+    };
+
+    _context.Users.Add(user);
+    await _context.SaveChangesAsync();
+  }
+
+  private async Task<Product> SeedTestProduct(string name, string description, Guid? creatorId = null) {
+    var product = new Product {
+      Id = Guid.NewGuid(),
+      Name = name,
+      ShortDescription = description,
+      CreatorId = creatorId ?? Guid.NewGuid(),
+      Status = ContentStatus.Published,
+      Visibility = AccessLevel.Public,
+    };
+
+    _context.Products.Add(product);
+    await _context.SaveChangesAsync();
+    return product;
+  }
+
+  #endregion
+
+  public void Dispose() {
+    _context.Dispose();
+    if (_serviceProvider is IDisposable disposable)
+      disposable.Dispose();
+  }
 }

@@ -1,6 +1,5 @@
 using FluentValidation;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Users.Validators;

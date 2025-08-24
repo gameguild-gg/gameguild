@@ -1,7 +1,5 @@
 using GameGuild.Common;
 using GameGuild.Database;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.UserAchievements;
@@ -39,9 +37,9 @@ public class AchievementService : IAchievementService {
   /// Award an achievement to a user
   /// </summary>
   public async Task<GameGuild.Common.Result<UserAchievement>> AwardAchievementAsync(
-    Guid userId, 
-    Guid achievementId, 
-    string? context = null, 
+    Guid userId,
+    Guid achievementId,
+    string? context = null,
     Guid? tenantId = null) {
     try {
       var command = new AwardAchievementCommand {
@@ -63,10 +61,10 @@ public class AchievementService : IAchievementService {
   /// Update user's progress towards an achievement
   /// </summary>
   public async Task<GameGuild.Common.Result<AchievementProgress>> UpdateProgressAsync(
-    Guid userId, 
-    Guid achievementId, 
-    int progressIncrement = 1, 
-    string? context = null, 
+    Guid userId,
+    Guid achievementId,
+    int progressIncrement = 1,
+    string? context = null,
     Guid? tenantId = null) {
     try {
       var command = new UpdateAchievementProgressCommand {
@@ -154,9 +152,9 @@ public class AchievementService : IAchievementService {
     try {
       var unnotifiedAchievements = await _context.UserAchievements
         .Include(ua => ua.Achievement)
-        .Where(ua => ua.UserId == userId && 
-                     ua.TenantId == tenantId && 
-                     !ua.IsNotified && 
+        .Where(ua => ua.UserId == userId &&
+                     ua.TenantId == tenantId &&
+                     !ua.IsNotified &&
                      ua.IsCompleted)
         .ToListAsync();
 
@@ -199,7 +197,7 @@ public class AchievementService : IAchievementService {
       .ToListAsync();
 
     foreach (var prerequisite in achievement.Prerequisites) {
-      var hasPrerequisite = userAchievements.Any(ua => 
+      var hasPrerequisite = userAchievements.Any(ua =>
         ua.AchievementId == prerequisite.PrerequisiteAchievementId &&
         (!prerequisite.RequiresCompletion || ua.IsCompleted) &&
         (!prerequisite.MinimumLevel.HasValue || ua.Level >= prerequisite.MinimumLevel.Value));
@@ -256,7 +254,7 @@ public class AchievementNotificationService : IAchievementNotificationService {
     try {
       // Only notify on significant progress milestones
       var progressPercentage = progress.TargetProgress > 0 ? (double)progress.CurrentProgress / progress.TargetProgress * 100 : 0;
-      
+
       if (progressPercentage >= 50 && progressPercentage < 100) {
         _logger.LogInformation("Progress notification sent to user {UserId} for achievement {AchievementId}: {Progress}%",
           progress.UserId, progress.AchievementId, progressPercentage);

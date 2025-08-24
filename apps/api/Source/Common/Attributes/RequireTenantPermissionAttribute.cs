@@ -44,15 +44,17 @@ public class RequireTenantPermissionAttribute(PermissionType requiredPermission)
         var result = await dacResolver.ResolvePermissionAsync<Entity>(
           userId, tenantId, requiredPermission);
         hasPermission = result.IsGranted;
-      } else {
+      }
+      else {
         // Fallback to legacy permission service
         hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, requiredPermission);
       }
-    } catch (Exception ex) {
+    }
+    catch (Exception ex) {
       var logger = context.HttpContext.RequestServices.GetService<ILogger<RequireTenantPermissionAttribute>>();
-      logger?.LogError(ex, "Error checking tenant permission {Permission} for user {UserId}", 
+      logger?.LogError(ex, "Error checking tenant permission {Permission} for user {UserId}",
         requiredPermission, userId);
-      
+
       context.Result = new StatusCodeResult(500);
       return;
     }

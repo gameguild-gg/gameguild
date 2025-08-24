@@ -2,16 +2,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace GameGuild.Migrations
-{
+namespace GameGuild.Migrations {
+  /// <inheritdoc />
+  public partial class CleanupDuplicateAdminPermissions : Migration {
     /// <inheritdoc />
-    public partial class CleanupDuplicateAdminPermissions : Migration
-    {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            // Clean up duplicate permission records for admin user and ensure correct permissions
-            migrationBuilder.Sql(@"
+    protected override void Up(MigrationBuilder migrationBuilder) {
+      // Clean up duplicate permission records for admin user and ensure correct permissions
+      migrationBuilder.Sql(@"
                 DO $$
                 DECLARE
                     super_admin_id UUID;
@@ -76,19 +73,18 @@ namespace GameGuild.Migrations
                 END
                 $$;
             ");
-        }
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            // This migration cleans up permissions, so rollback would remove all admin permissions
-            // which could lock out the admin. For safety, we're not removing permissions in rollback.
-            migrationBuilder.Sql(@"
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder) {
+      // This migration cleans up permissions, so rollback would remove all admin permissions
+      // which could lock out the admin. For safety, we're not removing permissions in rollback.
+      migrationBuilder.Sql(@"
                 -- Note: This migration cleans up duplicate admin permissions. 
                 -- Rolling back would remove all admin permissions which could lock out the admin.
                 -- For safety, we're not removing permissions in the rollback.
                 SELECT 1; -- No-op to ensure valid SQL
             ");
-        }
     }
+  }
 }

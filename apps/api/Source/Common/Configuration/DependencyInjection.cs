@@ -11,9 +11,7 @@ using GameGuild.Modules.Payments;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs;
 using HotChocolate.Execution.Configuration;
-using MediatR;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
@@ -56,7 +54,7 @@ public static class DependencyInjection {
         var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
 
         if (File.Exists(xmlPath)) c.IncludeXmlComments(xmlPath);
-        
+
         // Add custom schema filter for enhanced enum documentation
         c.SchemaFilter<GameGuild.Common.Swagger.EnumSchemaFilter>();
       }
@@ -67,7 +65,7 @@ public static class DependencyInjection {
             .AddJsonOptions(options => {
               // Handle circular references in navigation properties
               options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-              
+
               // Configure JSON naming policy
               options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
               options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
@@ -220,7 +218,7 @@ public static class DependencyInjection {
     services.Configure<CloudflareDynamicDnsOptions>(options => {
       var section = configuration.GetSection(CloudflareDynamicDnsOptions.SectionName);
       section.Bind(options);
-      
+
       // Manual binding for DNS records - always run to ensure proper binding
       Console.WriteLine($"DNS records before manual binding: {options.DnsRecords?.Count ?? 0}");
       if (options.DnsRecords?.Any() == true) {
@@ -228,75 +226,75 @@ public static class DependencyInjection {
           Console.WriteLine($"Existing DNS Record {index}: Type='{record.Type}', Name='{record.Name}'");
         }
       }
-      
+
       // Always run manual binding to ensure proper configuration
       {
         Console.WriteLine("Manual DNS records binding triggered - no DNS records found in normal binding");
-        
+
         // Test if we can read any environment variables
         var testKey = $"{CloudflareDynamicDnsOptions.SectionName}__Enabled";
         var testValue = configuration[testKey];
         Console.WriteLine($"Test read: {testKey} = '{testValue}'");
-        
+
         // Try reading directly from environment variables
         var envEnabled = Environment.GetEnvironmentVariable("CLOUDFLARE_DYNAMIC_DNS__ENABLED");
         Console.WriteLine($"Direct env read: CLOUDFLARE_DYNAMIC_DNS__ENABLED = '{envEnabled}'");
-        
+
         // Manual binding for other configuration values
         var apiToken = Environment.GetEnvironmentVariable("CLOUDFLARE_DYNAMIC_DNS__API_TOKEN");
         var zoneId = Environment.GetEnvironmentVariable("CLOUDFLARE_DYNAMIC_DNS__ZONE_ID");
         var intervalMinutes = Environment.GetEnvironmentVariable("CLOUDFLARE_DYNAMIC_DNS__INTERVAL_MINUTES");
-        
+
         Console.WriteLine($"Manual binding - ApiToken: {(string.IsNullOrEmpty(apiToken) ? "NULL" : "SET")}");
         Console.WriteLine($"Manual binding - ZoneId: {(string.IsNullOrEmpty(zoneId) ? "NULL" : "SET")}");
         Console.WriteLine($"Manual binding - IntervalMinutes: {intervalMinutes}");
-        
+
         // Set the configuration values manually
         if (!string.IsNullOrEmpty(apiToken)) options.ApiToken = apiToken;
         if (!string.IsNullOrEmpty(zoneId)) options.ZoneId = zoneId;
         if (!string.IsNullOrEmpty(intervalMinutes) && int.TryParse(intervalMinutes, out var interval)) options.IntervalMinutes = interval;
         if (!string.IsNullOrEmpty(envEnabled) && bool.TryParse(envEnabled, out var enabled)) options.Enabled = enabled;
-        
+
         var dnsRecords = new List<DnsRecordConfiguration>();
         var index = 0;
-        
+
         while (true) {
           var nameKey = $"CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__{index}__NAME";
           var typeKey = $"CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__{index}__TYPE";
-          
+
           Console.WriteLine($"Looking for env vars: '{nameKey}' and '{typeKey}'");
-          
+
           var name = Environment.GetEnvironmentVariable(nameKey);
           var type = Environment.GetEnvironmentVariable(typeKey);
-          
+
           Console.WriteLine($"Checking index {index}: Name='{name}' Type='{type}'");
-          
+
           if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(type)) {
             Console.WriteLine($"Stopping at index {index} - missing name or type");
             break;
           }
-          
+
           var ttlKey = $"CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__{index}__TTL";
           var proxiedKey = $"CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__{index}__PROXIED";
-          
+
           var ttlStr = Environment.GetEnvironmentVariable(ttlKey);
           var proxiedStr = Environment.GetEnvironmentVariable(proxiedKey);
-          
+
           var ttl = int.TryParse(ttlStr, out var ttlValue) ? ttlValue : 300;
           var proxied = bool.TryParse(proxiedStr, out var proxiedValue) ? proxiedValue : true;
-          
+
           Console.WriteLine($"Adding DNS record {index}: {name} ({type}) TTL={ttl} Proxied={proxied}");
-          
+
           dnsRecords.Add(new DnsRecordConfiguration {
             Name = name,
             Type = type,
             Ttl = ttl,
             Proxied = proxied
           });
-          
+
           index++;
         }
-        
+
         Console.WriteLine($"Manual binding complete. Found {dnsRecords.Count} DNS records");
         options.DnsRecords = dnsRecords;
       }

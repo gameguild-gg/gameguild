@@ -62,21 +62,21 @@ public class CreateAchievementCommandValidator : AbstractValidator<CreateAchieve
 
   private static bool BeValidHexColorOrNull(string? color) {
     if (string.IsNullOrEmpty(color)) return true;
-    return color.StartsWith("#") && color.Length == 7 && 
+    return color.StartsWith("#") && color.Length == 7 &&
            color[1..].All(c => char.IsDigit(c) || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'));
   }
 
   private static bool BeValidLevelsOrNull(List<CreateAchievementLevelCommand>? levels) {
     if (levels == null || !levels.Any()) return true;
-    
+
     // Check for unique level numbers
     var levelNumbers = levels.Select(l => l.Level).ToList();
     if (levelNumbers.Count != levelNumbers.Distinct().Count()) return false;
 
     // Check for valid data
-    return levels.All(l => l.Level > 0 && 
-                          !string.IsNullOrEmpty(l.Name) && 
-                          l.RequiredProgress >= 0 && 
+    return levels.All(l => l.Level > 0 &&
+                          !string.IsNullOrEmpty(l.Name) &&
+                          l.RequiredProgress >= 0 &&
                           l.Points >= 0);
   }
 }
@@ -143,7 +143,7 @@ public class UpdateAchievementCommandValidator : AbstractValidator<UpdateAchieve
 
   private static bool BeValidHexColorOrNull(string? color) {
     if (string.IsNullOrEmpty(color)) return true;
-    return color.StartsWith("#") && color.Length == 7 && 
+    return color.StartsWith("#") && color.Length == 7 &&
            color[1..].All(c => char.IsDigit(c) || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f'));
   }
 }

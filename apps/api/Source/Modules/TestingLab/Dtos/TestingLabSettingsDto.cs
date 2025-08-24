@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
-
 namespace GameGuild.Modules.TestingLab.Dtos;
 
 /// <summary>

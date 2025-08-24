@@ -1,5 +1,4 @@
 using GameGuild.Modules.Users;
-using MediatR;
 
 
 namespace GameGuild.Modules.Authentication;

@@ -1,8 +1,6 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Programs;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Payments;
@@ -58,7 +56,9 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
       _logger.LogInformation("Payment intent created: {PaymentId} for user {UserId}", payment.Id, request.UserId);
 
       return new CreatePaymentResult {
-        Success = true, Payment = payment, ClientSecret = $"pi_{payment.Id}_secret", // Placeholder for actual payment provider integration
+        Success = true,
+        Payment = payment,
+        ClientSecret = $"pi_{payment.Id}_secret", // Placeholder for actual payment provider integration
       };
     }
     catch (Exception ex) {
@@ -96,12 +96,13 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
 
       // Set provider transaction ID
       payment.ProviderTransactionId = request.ProviderTransactionId;
-      
+
       // Check if this is a failed payment based on provider transaction ID
       if (request.ProviderTransactionId.StartsWith("pi_failed", StringComparison.OrdinalIgnoreCase)) {
         // Mark payment as failed
         payment.MarkAsFailed("Insufficient funds");
-      } else {
+      }
+      else {
         // Mark payment as successful
         payment.MarkAsSuccessful();
       }
@@ -276,13 +277,13 @@ public class CancelPaymentCommandHandler : IRequestHandler<CancelPaymentCommand,
       payment.UpdatedAt = DateTime.UtcNow;
 
       // Add cancellation metadata
-      var metadata = string.IsNullOrEmpty(payment.Metadata) ? new Dictionary<string, object>() : 
+      var metadata = string.IsNullOrEmpty(payment.Metadata) ? new Dictionary<string, object>() :
                      System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(payment.Metadata) ?? new Dictionary<string, object>();
-      
+
       metadata["cancellation_reason"] = request.Reason;
       metadata["cancelled_by"] = request.CancelledBy.ToString();
       metadata["cancelled_at"] = DateTime.UtcNow.ToString("O");
-      
+
       payment.Metadata = System.Text.Json.JsonSerializer.Serialize(metadata);
 
       await _context.SaveChangesAsync(cancellationToken);

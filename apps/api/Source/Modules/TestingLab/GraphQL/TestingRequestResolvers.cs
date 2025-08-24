@@ -1,7 +1,6 @@
 using GameGuild.Database;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.TestingLab;
