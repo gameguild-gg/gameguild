@@ -1,5 +1,4 @@
 using GameGuild.Common;
-using MediatR;
 using IUserContext = GameGuild.Common.IUserContext;
 
 
