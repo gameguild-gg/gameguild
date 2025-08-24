@@ -14,13 +14,13 @@ The learner has to produce original content. You can use tools like `LLMs` to he
 
 ### What is acceptable:
 
-- On writing, coding assignments, or interactive assignments, you can ask AI questions about concepts, ideas, syntaxes, etc;
-- You can ask AI assistants what is wrong with your code, but you cannot use the answer 1 to 1 copy to your final submission. You have to modify it;
-- In extreme conditions, in case your submission contains part of an AI-assisted tool, you have to cite it. Ex.: "I prompted \_**\_ in ChatGPT, and the answer was \_\_**." and as a professor, I will deduct points from your submission with fairness instead of giving you zero points;
+- On writing, coding assignments, or interactive assignments, you can ask AI questions about concepts, ideas, syntaxes, etc. Every time you prompt it something, **always state that you are not asking for the full answer, but to help you understand and use dialetic process to help you**.
+- You can ask AI assistants what is wrong with your code, but you cannot use the answer 1 to 1 copy to your final submission. You have to modify it. A nice way to do that is read, understand, go do something else, than come back and try to do by yourself.
+- In extreme conditions, in case your submission **contains** part of an AI-assisted tool, you have to cite it. Ex.: `I prompted ___ in ChatGPT, and the answer was ___.` and as a professor, I will deduct points from your submission with fairness instead of giving you zero points;
 
 ### What is not acceptable
 
-- You cannot use AI autocompletion to write code, use jetbrains tools for that
+- You cannot use AI autocompletion to write code, use jetbrains tools for that, without AI agent enabled.
 - You cannot copy the question and prompt AI to answer it and then use the answer as your own;
 - You cannot ask AI to code a solution for you;
 - You cannot use any AI while coding(e.g. GitHub Copilot), but I do recommend you to use any IDE instead;
