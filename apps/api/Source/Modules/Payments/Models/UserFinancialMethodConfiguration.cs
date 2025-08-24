@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
-namespace GameGuild.Modules.Payments;
+﻿namespace GameGuild.Modules.Payments;
 
 public class UserFinancialMethodConfiguration : IEntityTypeConfiguration<UserFinancialMethod> {
   public void Configure(EntityTypeBuilder<UserFinancialMethod> builder) {

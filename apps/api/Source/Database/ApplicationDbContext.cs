@@ -2,7 +2,6 @@ using System.Reflection;
 using GameGuild.Common;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Certificates;
-using GameGuild.Modules.Comments;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Feedbacks;
@@ -24,7 +23,6 @@ using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Modules.UserAchievements;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
 using Tag = GameGuild.Modules.Tags.Models.Tag;
 using UserRoleAssignment = GameGuild.Modules.Permissions.UserRoleAssignment;
 

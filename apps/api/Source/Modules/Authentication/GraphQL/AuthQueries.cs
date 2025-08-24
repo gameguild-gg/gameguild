@@ -1,7 +1,5 @@
 using GameGuild.Common;
 using GameGuild.Modules.Users;
-using HotChocolate.Authorization;
-using MediatR;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 
 

@@ -1,10 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Products;
@@ -15,7 +12,7 @@ namespace GameGuild.Modules.Products;
 [Index(nameof(Visibility))]
 [Index(nameof(CreatorId))]
 public class Product : Content {
-  [Required] [MaxLength(200)] public string Name { get; set; } = string.Empty;
+  [Required][MaxLength(200)] public string Name { get; set; } = string.Empty;
 
   [MaxLength(500)] public string? ShortDescription { get; set; }
 

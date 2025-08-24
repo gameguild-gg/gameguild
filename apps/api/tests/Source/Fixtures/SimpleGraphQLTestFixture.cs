@@ -15,79 +15,71 @@ namespace GameGuild.Tests.Fixtures;
 /// <summary>
 /// Simplified test server fixture that explicitly registers TestModuleQueries for debugging
 /// </summary>
-public class SimpleGraphQLTestFixture : IDisposable
-{
-    public TestServer Server { get; }
-    
-    private readonly IHost _host;
+public class SimpleGraphQLTestFixture : IDisposable {
+  public TestServer Server { get; }
 
-    public SimpleGraphQLTestFixture()
-    {
-        var hostBuilder = Host.CreateDefaultBuilder()
-            .ConfigureWebHostDefaults(webHost =>
-            {
-                webHost.UseTestServer();
-                webHost.Configure(app =>
-                {
-                    app.UseRouting();
-                    app.UseEndpoints(endpoints =>
-                    {
-                        endpoints.MapGraphQL();
-                        endpoints.MapControllers();
-                    });
-                });
-                webHost.ConfigureServices(services =>
-                {
-                    ConfigureServices(services);
-                });
+  private readonly IHost _host;
+
+  public SimpleGraphQLTestFixture() {
+    var hostBuilder = Host.CreateDefaultBuilder()
+        .ConfigureWebHostDefaults(webHost => {
+          webHost.UseTestServer();
+          webHost.Configure(app => {
+            app.UseRouting();
+            app.UseEndpoints(endpoints => {
+              endpoints.MapGraphQL();
+              endpoints.MapControllers();
             });
+          });
+          webHost.ConfigureServices(services => {
+            ConfigureServices(services);
+          });
+        });
 
-        _host = hostBuilder.Start();
-        Server = _host.GetTestServer();
-    }
+    _host = hostBuilder.Start();
+    Server = _host.GetTestServer();
+  }
 
-    private void ConfigureServices(IServiceCollection services)
-    {
-        // Basic configuration
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>())
-            .Build();
+  private void ConfigureServices(IServiceCollection services) {
+    // Basic configuration
+    var configuration = new ConfigurationBuilder()
+        .AddInMemoryCollection(new Dictionary<string, string?>())
+        .Build();
 
-        services.AddSingleton<IConfiguration>(configuration);
-        
-        // Add logging first (required by many services)
-        services.AddLogging();
+    services.AddSingleton<IConfiguration>(configuration);
 
-        // Add database context FIRST (required by PermissionService and other common services)
-        services.AddDbContext<ApplicationDbContext>(options => 
-            options.UseInMemoryDatabase($"SimpleGraphQL_{Guid.NewGuid()}"));
+    // Add logging first (required by many services)
+    services.AddLogging();
 
-        // Add common services AFTER database context
-        services.AddCommonServices();
+    // Add database context FIRST (required by PermissionService and other common services)
+    services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseInMemoryDatabase($"SimpleGraphQL_{Guid.NewGuid()}"));
 
-        // Add our test module
-        TestModuleDependencyInjection.AddTestModule(services);
+    // Add common services AFTER database context
+    services.AddCommonServices();
 
-        // Add HTTP context accessor
-        services.AddHttpContextAccessor();
-        
-        // Add IDateTimeProvider
-        services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+    // Add our test module
+    TestModuleDependencyInjection.AddTestModule(services);
 
-        // Add GraphQL server with explicit TestModuleQueries registration
-        services.AddGraphQLServer()
-            .AddQueryType<Query>()  // Add the base Query type
-            .AddTypeExtension<TestModuleQueries>();  // Add our extension
+    // Add HTTP context accessor
+    services.AddHttpContextAccessor();
 
-        // Add controllers
-        services.AddControllers();
-    }
+    // Add IDateTimeProvider
+    services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
-    public HttpClient CreateClient() => Server.CreateClient();
+    // Add GraphQL server with explicit TestModuleQueries registration
+    services.AddGraphQLServer()
+        .AddQueryType<Query>()  // Add the base Query type
+        .AddTypeExtension<TestModuleQueries>();  // Add our extension
 
-    public void Dispose()
-    {
-        _host?.Dispose();
-        Server?.Dispose();
-    }
+    // Add controllers
+    services.AddControllers();
+  }
+
+  public HttpClient CreateClient() => Server.CreateClient();
+
+  public void Dispose() {
+    _host?.Dispose();
+    Server?.Dispose();
+  }
 }

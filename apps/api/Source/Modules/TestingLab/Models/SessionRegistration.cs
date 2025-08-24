@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 using GameGuild.Modules.Teams.Models;
 using GameGuild.Modules.Users;

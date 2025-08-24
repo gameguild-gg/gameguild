@@ -2,16 +2,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace GameGuild.Migrations
-{
+namespace GameGuild.Migrations {
+  /// <inheritdoc />
+  public partial class GrantAllPermissionsToSuperAdmin : Migration {
     /// <inheritdoc />
-    public partial class GrantAllPermissionsToSuperAdmin : Migration
-    {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            // Grant all permissions to the super admin user (admin@gameguild.local) on the global tenant
-            migrationBuilder.Sql(@"
+    protected override void Up(MigrationBuilder migrationBuilder) {
+      // Grant all permissions to the super admin user (admin@gameguild.local) on the global tenant
+      migrationBuilder.Sql(@"
                 DO $$
                 DECLARE
                     super_admin_id UUID;
@@ -88,13 +85,12 @@ namespace GameGuild.Migrations
                 END
                 $$;
             ");
-        }
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            // Remove all permissions from the super admin user
-            migrationBuilder.Sql(@"
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder) {
+      // Remove all permissions from the super admin user
+      migrationBuilder.Sql(@"
                 DO $$
                 DECLARE
                     super_admin_id UUID;
@@ -120,6 +116,6 @@ namespace GameGuild.Migrations
                 END
                 $$;
             ");
-        }
     }
+  }
 }

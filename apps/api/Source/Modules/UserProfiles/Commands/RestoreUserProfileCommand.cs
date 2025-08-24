@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using GameGuild.Common;
+﻿using GameGuild.Common;
 
 
 namespace GameGuild.Modules.UserProfiles;

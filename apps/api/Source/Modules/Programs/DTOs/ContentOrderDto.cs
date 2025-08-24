@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-
-namespace GameGuild.Modules.Programs;
+﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// DTO for individual content order items

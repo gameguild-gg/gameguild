@@ -27,7 +27,7 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     // Use a unique database name for this test class to avoid interference
     var uniqueDbName = $"TenantDomainIntegrationTests_{Guid.NewGuid()}";
     _factory = IntegrationTestHelper.GetTestFactory(uniqueDbName);
-    
+
     // We'll create the authenticated client and get the user/tenant IDs later
     _scope = _factory.Services.CreateScope();
     _context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -36,22 +36,22 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
   private async Task<HttpClient> GetAuthenticatedClientAsync() {
     // Create authenticated test user with permissions
     var (client, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(_factory);
-    
+
     // Store the IDs for use in test assertions
     _userId = userId;
     _tenantId = tenantId;
-    
+
     // Grant necessary content type permissions for TenantDomain operations
     await GrantContentTypePermissions(_userId, _tenantId, "TenantDomain", [
-      PermissionType.Create, 
-      PermissionType.Read, 
-      PermissionType.Edit, 
+      PermissionType.Create,
+      PermissionType.Read,
+      PermissionType.Edit,
       PermissionType.Delete,
     ]);
-    
+
     return client;
   }
-  
+
   private async Task GrantContentTypePermissions(
     Guid userId,
     Guid tenantId,
@@ -748,14 +748,14 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     // Debug: Check if content type permissions were actually granted
     using var scope = _factory.Services.CreateScope();
     var permissionService = scope.ServiceProvider.GetRequiredService<IPermissionService>();
-    
+
     var hasPermission = await permissionService.HasContentTypePermissionAsync(
-      _userId, 
-      _tenantId, 
-      "TenantDomain", 
+      _userId,
+      _tenantId,
+      "TenantDomain",
       PermissionType.Create
     );
-    
+
     // Assert
     Assert.True(hasPermission, $"User {_userId} should have TenantDomain Create permission for tenant {_tenantId}");
   }
@@ -767,12 +767,12 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
 
     // Debug: Make a request and check what's in the response headers or try a simple endpoint
     var response = await _client.GetAsync("/api/users");
-    
+
     // If we get unauthorized, let's see the exact status
     var content = await response.Content.ReadAsStringAsync();
-    
+
     // Assert or debug info
-    Assert.True(response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Unauthorized, 
+    Assert.True(response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Unauthorized,
       $"Response: {response.StatusCode}, Content: {content}");
   }
 

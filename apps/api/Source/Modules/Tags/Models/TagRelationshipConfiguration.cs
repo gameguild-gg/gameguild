@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
-namespace GameGuild.Modules.Tags.Models;
+﻿namespace GameGuild.Modules.Tags.Models;
 
 public class TagRelationshipConfiguration : IEntityTypeConfiguration<TagRelationship> {
   public void Configure(EntityTypeBuilder<TagRelationship> builder) {

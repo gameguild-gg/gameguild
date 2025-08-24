@@ -1,7 +1,6 @@
-using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 using GameGuild.Modules.Projects;
-using GameGuild.Modules.Users; 
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.TestingLab {

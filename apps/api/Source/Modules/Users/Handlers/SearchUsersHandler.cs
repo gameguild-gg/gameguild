@@ -1,8 +1,8 @@
 ﻿using GameGuild.Common;
 using GameGuild.Database;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-using Npgsql.EntityFrameworkCore.PostgreSQL; // For EF.Functions.ILike
+
+
+// For EF.Functions.ILike
 
 
 namespace GameGuild.Modules.Users;

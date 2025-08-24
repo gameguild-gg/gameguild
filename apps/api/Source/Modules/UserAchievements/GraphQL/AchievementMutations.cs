@@ -1,6 +1,4 @@
 using GameGuild.Common;
-using HotChocolate.Authorization;
-using MediatR;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 
 
@@ -129,8 +127,8 @@ public class AchievementMutations {
     [Service] ITenantContext tenantContext,
     UpdateAchievementProgressInput input) {
     // Only allow users to update their own progress or admins/moderators
-    if (input.UserId != userContext.UserId && 
-        !userContext.IsInRole("Admin") && 
+    if (input.UserId != userContext.UserId &&
+        !userContext.IsInRole("Admin") &&
         !userContext.IsInRole("Moderator")) {
       throw new GraphQLException("Access denied");
     }

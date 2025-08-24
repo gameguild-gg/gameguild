@@ -35,7 +35,7 @@ public class AchievementResolvers {
     [Parent] Achievement achievement,
     [Service] IAchievementStatisticsDataLoader statisticsLoader,
     CancellationToken cancellationToken) {
-    return await statisticsLoader.LoadAsync(achievement.Id, cancellationToken) ?? 
+    return await statisticsLoader.LoadAsync(achievement.Id, cancellationToken) ??
            new AchievementStatisticsDto { AchievementId = achievement.Id };
   }
 

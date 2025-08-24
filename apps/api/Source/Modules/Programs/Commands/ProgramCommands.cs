@@ -1,6 +1,5 @@
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
-using MediatR;
 using ProgramAvailabilityStatus = GameGuild.Common.EnrollmentStatus;
 
 

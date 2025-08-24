@@ -1,6 +1,5 @@
 using GameGuild.Modules.Credentials.Commands;
 using GameGuild.Modules.Credentials.Notifications;
-using MediatR;
 
 
 namespace GameGuild.Modules.Credentials.Handlers;
