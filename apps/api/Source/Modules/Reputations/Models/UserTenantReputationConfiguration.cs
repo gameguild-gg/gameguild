@@ -1,13 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
-namespace GameGuild.Modules.Reputations;
+﻿namespace GameGuild.Modules.Reputations;
 
 internal sealed class UserTenantReputationConfiguration : IEntityTypeConfiguration<UserTenantReputation> {
   public void Configure(EntityTypeBuilder<UserTenantReputation> builder) {
     ArgumentNullException.ThrowIfNull(builder);
-    
+
     // Configure the relationship with TenantPermission as optional to avoid query filter warnings
     builder.HasOne(utr => utr.TenantPermission)
            .WithMany()

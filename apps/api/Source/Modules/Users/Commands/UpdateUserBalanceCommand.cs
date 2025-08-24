@@ -1,8 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using MediatR;
-
-
-namespace GameGuild.Modules.Users;
+﻿namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// Command to update user balance

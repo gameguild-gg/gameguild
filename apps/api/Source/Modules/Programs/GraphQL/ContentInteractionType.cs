@@ -65,12 +65,12 @@ public class ContentInteractionType : ObjectType<ContentInteraction> {
               .Type<IntType>()
               .Description("Duration between first and last access in minutes")
               .Resolve(context => {
-                  var interaction = context.Parent<ContentInteraction>();
+                var interaction = context.Parent<ContentInteraction>();
 
-                  if (interaction is { FirstAccessedAt: not null, LastAccessedAt: not null }) return (int)(interaction.LastAccessedAt.Value - interaction.FirstAccessedAt.Value).TotalMinutes;
+                if (interaction is { FirstAccessedAt: not null, LastAccessedAt: not null }) return (int)(interaction.LastAccessedAt.Value - interaction.FirstAccessedAt.Value).TotalMinutes;
 
-                  return null;
-                }
+                return null;
+              }
               );
 
     // Base entity fields

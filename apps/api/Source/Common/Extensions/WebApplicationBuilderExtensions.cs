@@ -1,6 +1,5 @@
 using DotNetEnv;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Common;
@@ -78,41 +77,41 @@ public static class WebApplicationBuilderExtensions {
     // Manual binding for CORS from environment variables
     var allowedOrigins = new List<string>();
     var index = 0;
-    
+
     Console.WriteLine("CORS Environment Variable Debug:");
-    
+
     while (true) {
       var originKey = $"CORS__ALLOWED_ORIGINS__{index}";
       var origin = Environment.GetEnvironmentVariable(originKey);
-      
+
       Console.WriteLine($"  {originKey} = '{origin}'");
-      
+
       if (string.IsNullOrEmpty(origin)) {
         break;
       }
-      
+
       allowedOrigins.Add(origin);
       index++;
     }
-    
+
     Console.WriteLine($"Found {allowedOrigins.Count} CORS origins from environment variables");
     foreach (var origin in allowedOrigins) {
       Console.WriteLine($"  - {origin}");
     }
-    
+
     // If no environment variables found, use the configuration or defaults
     if (allowedOrigins.Count == 0) {
-      allowedOrigins = corsOptions.AllowedOrigins?.Length > 0 
+      allowedOrigins = corsOptions.AllowedOrigins?.Length > 0
         ? corsOptions.AllowedOrigins.ToList()
         : ["http://localhost:3000", "https://localhost:3001"];
     }
-    
+
     // Read AllowCredentials from environment variable
     var allowCredentialsStr = Environment.GetEnvironmentVariable("CORS__ALLOW_CREDENTIALS");
-    var allowCredentials = !string.IsNullOrEmpty(allowCredentialsStr) && bool.TryParse(allowCredentialsStr, out var parsed) 
-      ? parsed 
+    var allowCredentials = !string.IsNullOrEmpty(allowCredentialsStr) && bool.TryParse(allowCredentialsStr, out var parsed)
+      ? parsed
       : corsOptions.AllowCredentials;
-    
+
     Console.WriteLine($"CORS AllowCredentials from env: '{allowCredentialsStr}' -> {allowCredentials}");
     Console.WriteLine($"Final CORS configuration: {allowedOrigins.Count} origins, AllowCredentials: {allowCredentials}");
 
@@ -184,7 +183,7 @@ public static class WebApplicationExtensions {
     app.MapEndpoints();
     app.MapGraphQL();
     app.MapControllers();
-    
+
     // Health checks
     app.MapHealthChecks();
 
@@ -200,12 +199,12 @@ public static class WebApplicationExtensions {
     app.MapOpenApi();
     app.UseSwagger();
     app.UseSwaggerUI(options => {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "GameGuild CMS API v1");
-        options.RoutePrefix = "swagger";
-        options.EnableDeepLinking();
-        options.DisplayRequestDuration();
-        options.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
-      }
+      options.SwaggerEndpoint("/swagger/v1/swagger.json", "GameGuild CMS API v1");
+      options.RoutePrefix = "swagger";
+      options.EnableDeepLinking();
+      options.DisplayRequestDuration();
+      options.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
+    }
     );
 
     return app;
@@ -402,8 +401,11 @@ public static class AdvancedWebApplicationBuilderExtensions {
             new {
               status = report.Status.ToString(),
               checks = report.Entries.Select(entry => new {
-                  name = entry.Key, status = entry.Value.Status.ToString(), duration = entry.Value.Duration.ToString(), description = entry.Value.Description
-                }
+                name = entry.Key,
+                status = entry.Value.Status.ToString(),
+                duration = entry.Value.Duration.ToString(),
+                description = entry.Value.Description
+              }
               ),
             }
           );

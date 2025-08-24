@@ -1,7 +1,6 @@
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 using GameGuild.Common;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.TestingLab;
@@ -585,7 +584,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
   public async Task<TestingRequest> CreateSimpleTestingRequestAsync(CreateSimpleTestingRequestDto requestDto, Guid userId) {
     // For the simplified workflow, we'll create a testing request without requiring a ProjectVersion
     // We'll create a placeholder ProjectVersion or skip it for now
-    
+
     var existingProject = await context.Projects
         .FirstOrDefaultAsync(p => p.Title == requestDto.TeamIdentifier && p.DeletedAt == null);
 
@@ -605,11 +604,12 @@ public class TestService(ApplicationDbContext context) : ITestService {
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       };
-      
+
       context.Projects.Add(newProject);
       await context.SaveChangesAsync();
       projectId = newProject.Id;
-    } else {
+    }
+    else {
       projectId = existingProject.Id;
     }
 
@@ -676,7 +676,8 @@ public class TestService(ApplicationDbContext context) : ITestService {
       context.TestingFeedbackForms.Add(feedbackForm);
       await context.SaveChangesAsync();
       feedbackFormId = feedbackForm.Id;
-    } else {
+    }
+    else {
       feedbackFormId = existingForm.Id;
     }
 
@@ -762,16 +763,16 @@ public class TestService(ApplicationDbContext context) : ITestService {
         .Where(ts => ts.DeletedAt == null)
         .Include(ts => ts.Location)
         .Select(ts => new {
-            Id = ts.Id,
-            SessionName = ts.SessionName,
-            Date = ts.SessionDate.ToString("yyyy-MM-dd"),
-            Location = ts.Location.Name,
-            TotalCapacity = ts.Location.MaxTestersCapacity,
-            StudentsRegistered = ts.RegisteredTesterCount,
-            StudentsAttended = ts.RegisteredTesterCount, // Placeholder - would need actual attendance tracking
-            AttendanceRate = ts.RegisteredTesterCount > 0 ? 
+          Id = ts.Id,
+          SessionName = ts.SessionName,
+          Date = ts.SessionDate.ToString("yyyy-MM-dd"),
+          Location = ts.Location.Name,
+          TotalCapacity = ts.Location.MaxTestersCapacity,
+          StudentsRegistered = ts.RegisteredTesterCount,
+          StudentsAttended = ts.RegisteredTesterCount, // Placeholder - would need actual attendance tracking
+          AttendanceRate = ts.RegisteredTesterCount > 0 ?
                 (double)ts.RegisteredTesterCount / ts.RegisteredTesterCount * 100 : 0,
-            GamesTested = 1, // Placeholder - would need actual count
+          GamesTested = 1, // Placeholder - would need actual count
         })
         .ToListAsync();
 

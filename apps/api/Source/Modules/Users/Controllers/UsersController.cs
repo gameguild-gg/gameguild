@@ -1,5 +1,4 @@
 using GameGuild.Common;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -26,19 +25,19 @@ public class UsersController(IMediator mediator) : ControllerBase {
     var users = await mediator.Send(query);
 
     var userDtos = users.Select(u => new UserResponseDto {
-                            Id = u.Id,
-                            Version = u.Version,
-                            Name = u.Name,
-                            Username = u.Username,
-                            Email = u.Email,
-                            IsActive = u.IsActive,
-                            Balance = u.Balance,
-                            AvailableBalance = u.AvailableBalance,
-                            CreatedAt = u.CreatedAt,
-                            UpdatedAt = u.UpdatedAt,
-                            DeletedAt = u.DeletedAt,
-                            IsDeleted = u.DeletedAt != null,
-                          }
+      Id = u.Id,
+      Version = u.Version,
+      Name = u.Name,
+      Username = u.Username,
+      Email = u.Email,
+      IsActive = u.IsActive,
+      Balance = u.Balance,
+      AvailableBalance = u.AvailableBalance,
+      CreatedAt = u.CreatedAt,
+      UpdatedAt = u.UpdatedAt,
+      DeletedAt = u.DeletedAt,
+      IsDeleted = u.DeletedAt != null,
+    }
                         )
                         .ToList();
 
@@ -246,19 +245,19 @@ public class UsersController(IMediator mediator) : ControllerBase {
     var users = await mediator.Send(query);
 
     var userDtos = users.Items.Select(u => new UserResponseDto {
-                            Id = u.Id,
-                            Version = u.Version,
-                            Name = u.Name,
-                            Username = u.Username,
-                            Email = u.Email,
-                            IsActive = u.IsActive,
-                            Balance = u.Balance,
-                            AvailableBalance = u.AvailableBalance,
-                            CreatedAt = u.CreatedAt,
-                            UpdatedAt = u.UpdatedAt,
-                            DeletedAt = u.DeletedAt,
-                            IsDeleted = u.DeletedAt != null,
-                          }
+      Id = u.Id,
+      Version = u.Version,
+      Name = u.Name,
+      Username = u.Username,
+      Email = u.Email,
+      IsActive = u.IsActive,
+      Balance = u.Balance,
+      AvailableBalance = u.AvailableBalance,
+      CreatedAt = u.CreatedAt,
+      UpdatedAt = u.UpdatedAt,
+      DeletedAt = u.DeletedAt,
+      IsDeleted = u.DeletedAt != null,
+    }
                         )
                         .ToList();
 

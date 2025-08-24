@@ -190,7 +190,8 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
 
     // Now refresh the token with a specific tenant ID
     var refreshRequest = new RefreshTokenRequestDto {
-      RefreshToken = loginData.RefreshToken, TenantId = Guid.Parse("33333333-3333-3333-3333-333333333333"), // Use the second tenant
+      RefreshToken = loginData.RefreshToken,
+      TenantId = Guid.Parse("33333333-3333-3333-3333-333333333333"), // Use the second tenant
     };
 
     var refreshJson = JsonSerializer.Serialize(refreshRequest);
@@ -202,7 +203,7 @@ public class TenantAuthIntegrationTests : IClassFixture<WebApplicationFactory<Pr
     // Assert
     Assert.Equal(HttpStatusCode.OK, refreshResponse.StatusCode);
 
-  var responseData = await refreshResponse.Content.ReadFromJsonAsync<SignInResponseDto>();
+    var responseData = await refreshResponse.Content.ReadFromJsonAsync<SignInResponseDto>();
     Assert.NotNull(responseData);
     Assert.NotEmpty(responseData.AccessToken);
     Assert.NotEmpty(responseData.RefreshToken);

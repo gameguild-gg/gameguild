@@ -1,6 +1,3 @@
-using MediatR;
-
-
 namespace GameGuild.Modules.Credentials.Notifications;
 
 /// <summary>

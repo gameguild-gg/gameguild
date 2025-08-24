@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using GameGuild.Common;
 using GameGuild.Modules.Certificates;
@@ -8,7 +6,6 @@ using GameGuild.Modules.Feedbacks;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tags.Models;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Programs;

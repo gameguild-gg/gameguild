@@ -2,7 +2,6 @@ using GameGuild.Common.Services;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Common;

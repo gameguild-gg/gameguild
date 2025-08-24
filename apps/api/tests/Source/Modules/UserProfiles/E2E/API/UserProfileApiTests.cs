@@ -29,11 +29,11 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
       // Create profile payload
-      var createPayload = new { 
-        userId = userId, 
-        givenName = "Test", 
-        familyName = "User", 
-        displayName = "Test User", 
+      var createPayload = new {
+        userId = userId,
+        givenName = "Test",
+        familyName = "User",
+        displayName = "Test User",
         title = "Developer",
         description = "My test bio",
       };
@@ -47,10 +47,10 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
       // Assert - Create response status first
       var createContent = await createResponse.Content.ReadAsStringAsync();
       Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-      
+
       // Ensure we have valid JSON content
       Assert.False(string.IsNullOrWhiteSpace(createContent), $"Expected valid JSON response but got: '{createContent}'");
-      
+
       var createResult = JsonDocument.Parse(createContent);
       var profileId = createResult.RootElement.GetProperty("id").GetString();
 
@@ -61,9 +61,9 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
       Assert.Equal("My test bio", createResult.RootElement.GetProperty("description").GetString());
 
       // Arrange - Update
-      var updatePayload = new { 
-        givenName = "Updated", 
-        familyName = "User", 
+      var updatePayload = new {
+        givenName = "Updated",
+        familyName = "User",
         displayName = "Updated User",
         description = "Updated bio",
       };
@@ -77,10 +77,10 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.API {
       // Assert - Update response status first
       var updateContent = await updateResponse.Content.ReadAsStringAsync();
       Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
-      
+
       // Ensure we have valid JSON content
       Assert.False(string.IsNullOrWhiteSpace(updateContent), $"Expected valid JSON response but got: '{updateContent}'");
-      
+
       var updateResult = JsonDocument.Parse(updateContent);
 
       // Assert - Update properties

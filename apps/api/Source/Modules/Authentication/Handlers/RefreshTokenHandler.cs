@@ -1,6 +1,3 @@
-using MediatR;
-
-
 namespace GameGuild.Modules.Authentication;
 
 /// <summary>
@@ -18,25 +15,26 @@ public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, SignInRe
   }
 
   public async Task<SignInResponseDto> Handle(RefreshTokenCommand request, CancellationToken cancellationToken) {
-      _logger.LogInformation("Processing refresh token request");
-      var refreshRequest = new RefreshTokenRequestDto { RefreshToken = request.RefreshToken, TenantId = request.TenantId };
-      try {
-        var response = await _authService.RefreshTokenAsync(refreshRequest);
+    _logger.LogInformation("Processing refresh token request");
+    var refreshRequest = new RefreshTokenRequestDto { RefreshToken = request.RefreshToken, TenantId = request.TenantId };
+    try {
+      var response = await _authService.RefreshTokenAsync(refreshRequest);
 
-        // Optional: publish notification with extracted info
-        var notification = new TokenRefreshedNotification {
-          UserId = response.User.Id,
-          Email = response.User.Email,
-          TenantId = response.TenantId,
-          RefreshedAt = DateTime.UtcNow,
-        };
-        await _mediator.Publish(notification, cancellationToken);
+      // Optional: publish notification with extracted info
+      var notification = new TokenRefreshedNotification {
+        UserId = response.User.Id,
+        Email = response.User.Email,
+        TenantId = response.TenantId,
+        RefreshedAt = DateTime.UtcNow,
+      };
+      await _mediator.Publish(notification, cancellationToken);
 
-        _logger.LogInformation("Refresh token processed successfully");
-        return response;
-      } catch (Exception ex) {
-        _logger.LogError(ex, "Failed to process refresh token request");
-        throw;
-      }
+      _logger.LogInformation("Refresh token processed successfully");
+      return response;
     }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Failed to process refresh token request");
+      throw;
+    }
+  }
 }
