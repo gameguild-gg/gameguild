@@ -89,6 +89,25 @@ import portfolioWeek11Activity from './portfolio/chapters/week11/activity.md';
 import portfolioWeek11Lecture from './portfolio/chapters/week11/lecture.md';
 import portfolioSyllabus from './portfolio/syllabus.md';
 
+// DSA Course Imports
+import dsaSyllabus from './dsa/syllabus.md';
+import dsaIntroduction from './dsa/01-introduction/introduction.md';
+import dsaAnalysis from './dsa/02-analysis/README.md';
+import dsaDynamicData from './dsa/03-dynamic-data/README.md';
+import dsaSorting from './dsa/04-sorting/README.md';
+import dsaDivideAndConquer from './dsa/05-divide-and-conquer/README.md';
+import dsaHashtables from './dsa/06-hashtables/README.md';
+import dsaMidterm from './dsa/07-midterm/README.md';
+import dsaStackAndQueue from './dsa/08-stack-and-queue/README.md';
+import dsaBreak from './dsa/09-break/README.md';
+import dsaGraphs from './dsa/10-graphs/README.md';
+import dsaDijkstra from './dsa/11-dijkstra/README.md';
+import dsaMst from './dsa/12-mst/README.md';
+import dsaBst from './dsa/13-bst/README.md';
+import dsaHeap from './dsa/14-heap/README.md';
+import dsaProject from './dsa/15-project/README.md';
+import dsaFinals from './dsa/16-finals/README.md';
+
 // Mock user for the creator
 const mockUser = {
     id: '1',
@@ -248,6 +267,33 @@ export const portfolioProgram: Program = {
     programWishlists: [],
 };
 
+// DSA Program
+export const dsaProgram: Program = {
+    id: 'dsa-program-1',
+    title: 'Data Structures and Algorithms',
+    description: 'Students compare and contrast a variety of data structures. Students compare algorithms for tasks such as searching and sorting, while articulating efficiency in terms of time complexity.',
+    slug: 'dsa',
+    thumbnail: 'https://placehold.co/400x225/1f2937/ffffff.png?text=Data+Structures+%26+Algorithms',
+    videoShowcaseUrl: null,
+    estimatedHours: 60,
+    enrollmentStatus: 0, // Open
+    maxEnrollments: null,
+    enrollmentDeadline: null,
+    category: 0, // Programming
+    difficulty: 2, // Advanced
+    visibility: 0, // Public
+    status: 1, // Published
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    programContents: [],
+    programUsers: [],
+    productPrograms: [],
+    certificates: [],
+    feedbackSubmissions: [],
+    programRatings: [],
+    programWishlists: [],
+};
+
 // AI4Games Product
 export const ai4gamesProduct: Product = {
     id: 'ai4games-product-1',
@@ -332,6 +378,34 @@ export const portfolioProduct: Product = {
     promoCodes: [],
 };
 
+// DSA Product
+export const dsaProduct: Product = {
+    id: 'dsa-product-1',
+    title: 'Data Structures and Algorithms Course',
+    name: 'Data Structures and Algorithms',
+    description: 'Master data structures and algorithms with comprehensive analysis of time complexity',
+    shortDescription: 'Learn essential data structures and algorithms for efficient programming',
+    imageUrl: 'https://placehold.co/400x225/1f2937/ffffff.png?text=Data+Structures+%26+Algorithms',
+    type: 0, // Course
+    isBundle: false,
+    creatorId: '1',
+    creator: mockUser,
+    bundleItems: null,
+    referralCommissionPercentage: 0,
+    maxAffiliateDiscount: 0,
+    affiliateCommissionPercentage: 0,
+    visibility: 0, // Public
+    status: 1, // Published
+    slug: 'dsa',
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    productPrograms: [],
+    productPricings: [],
+    subscriptionPlans: [],
+    userProducts: [],
+    promoCodes: [],
+};
+
 // Product-Program relationships
 export const ai4gamesProductProgram: ProductProgram = {
     id: 'ai4games-product-program-1',
@@ -362,6 +436,17 @@ export const portfolioProductProgram: ProductProgram = {
     programId: portfolioProgram.id!,
     program: portfolioProgram,
     sortOrder: 3,
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const dsaProductProgram: ProductProgram = {
+    id: 'dsa-product-program-1',
+    productId: dsaProduct.id!,
+    product: dsaProduct,
+    programId: dsaProgram.id!,
+    program: dsaProgram,
+    sortOrder: 4,
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
 };
@@ -2235,6 +2320,398 @@ export const portfolioWeek11ActivityContent: ProgramContent = {
     slug: 'final-activity',
 };
 
+// DSA Program Content
+export const dsaSyllabusContent: ProgramContent = {
+    id: 'dsa-syllabus',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Data Structures and Algorithms Syllabus',
+    description: 'Course syllabus and overview',
+    type: 0, // Page
+    body: dsaSyllabus,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'syllabus',
+};
+
+export const dsaIntroductionContent: ProgramContent = {
+    id: 'dsa-introduction',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Introduction to Data Structures and Algorithms',
+    description: 'Course introduction and overview',
+    type: 0, // Page
+    body: dsaIntroduction,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'introduction',
+};
+
+export const dsaAnalysisContent: ProgramContent = {
+    id: 'dsa-analysis',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Algorithm Analysis',
+    description: 'Big O notation and algorithm complexity analysis',
+    type: 0, // Page
+    body: dsaAnalysis,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'analysis',
+};
+
+export const dsaDynamicDataContent: ProgramContent = {
+    id: 'dsa-dynamic-data',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Dynamic Data Structures',
+    description: 'Arrays, linked lists, and dynamic memory allocation',
+    type: 0, // Page
+    body: dsaDynamicData,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 150,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'dynamic-data',
+};
+
+export const dsaSortingContent: ProgramContent = {
+    id: 'dsa-sorting',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Sorting Algorithms',
+    description: 'Bubble sort, selection sort, insertion sort, merge sort, quick sort',
+    type: 0, // Page
+    body: dsaSorting,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 180,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'sorting',
+};
+
+export const dsaDivideAndConquerContent: ProgramContent = {
+    id: 'dsa-divide-and-conquer',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Divide and Conquer',
+    description: 'Divide and conquer algorithms and techniques',
+    type: 0, // Page
+    body: dsaDivideAndConquer,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'divide-and-conquer',
+};
+
+export const dsaHashtablesContent: ProgramContent = {
+    id: 'dsa-hashtables',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Hash Tables',
+    description: 'Hash functions, collision resolution, and hash table implementation',
+    type: 0, // Page
+    body: dsaHashtables,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 150,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'hashtables',
+};
+
+export const dsaMidtermContent: ProgramContent = {
+    id: 'dsa-midterm',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Midterm Exam',
+    description: 'Midterm examination covering first half of course',
+    type: 2, // Assignment
+    body: dsaMidterm,
+    sortOrder: 8,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'midterm',
+};
+
+export const dsaStackAndQueueContent: ProgramContent = {
+    id: 'dsa-stack-and-queue',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Stacks and Queues',
+    description: 'Stack and queue data structures and their applications',
+    type: 0, // Page
+    body: dsaStackAndQueue,
+    sortOrder: 9,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'stack-and-queue',
+};
+
+export const dsaBreakContent: ProgramContent = {
+    id: 'dsa-break',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Spring Break',
+    description: 'Spring break - no classes',
+    type: 0, // Page
+    body: dsaBreak,
+    sortOrder: 10,
+    isRequired: false,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 0,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'break',
+};
+
+export const dsaGraphsContent: ProgramContent = {
+    id: 'dsa-graphs',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Graph Data Structures',
+    description: 'Graph representation, traversal algorithms (BFS, DFS)',
+    type: 0, // Page
+    body: dsaGraphs,
+    sortOrder: 11,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 180,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'graphs',
+};
+
+export const dsaDijkstraContent: ProgramContent = {
+    id: 'dsa-dijkstra',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Dijkstra\'s Algorithm',
+    description: 'Shortest path algorithms and Dijkstra\'s algorithm',
+    type: 0, // Page
+    body: dsaDijkstra,
+    sortOrder: 12,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 150,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'dijkstra',
+};
+
+export const dsaMstContent: ProgramContent = {
+    id: 'dsa-mst',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Minimum Spanning Trees',
+    description: 'Kruskal\'s and Prim\'s algorithms for minimum spanning trees',
+    type: 0, // Page
+    body: dsaMst,
+    sortOrder: 13,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 150,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'mst',
+};
+
+export const dsaBstContent: ProgramContent = {
+    id: 'dsa-bst',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Binary Search Trees',
+    description: 'Binary search tree implementation and operations',
+    type: 0, // Page
+    body: dsaBst,
+    sortOrder: 14,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 180,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'bst',
+};
+
+export const dsaHeapContent: ProgramContent = {
+    id: 'dsa-heap',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Heaps and Priority Queues',
+    description: 'Heap data structure and priority queue implementation',
+    type: 0, // Page
+    body: dsaHeap,
+    sortOrder: 15,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 150,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'heap',
+};
+
+export const dsaProjectContent: ProgramContent = {
+    id: 'dsa-project',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Final Project',
+    description: 'Comprehensive final project applying course concepts',
+    type: 2, // Assignment
+    body: dsaProject,
+    sortOrder: 16,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 200,
+    estimatedMinutes: 480,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'project',
+};
+
+export const dsaFinalsContent: ProgramContent = {
+    id: 'dsa-finals',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Final Exam',
+    description: 'Comprehensive final examination',
+    type: 2, // Assignment
+    body: dsaFinals,
+    sortOrder: 17,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 150,
+    estimatedMinutes: 180,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'finals',
+};
+
 // Update relationships
 pythonProgram.programContents = [
     pythonSyllabusContent,
@@ -2303,6 +2780,25 @@ portfolioProgram.programContents = [
     portfolioWeek10AssignmentContent,
     portfolioWeek11LectureContent,
     portfolioWeek11ActivityContent,
+
+    // DSA content
+    dsaSyllabusContent,
+    dsaIntroductionContent,
+    dsaAnalysisContent,
+    dsaDynamicDataContent,
+    dsaSortingContent,
+    dsaDivideAndConquerContent,
+    dsaHashtablesContent,
+    dsaMidtermContent,
+    dsaStackAndQueueContent,
+    dsaBreakContent,
+    dsaGraphsContent,
+    dsaDijkstraContent,
+    dsaMstContent,
+    dsaBstContent,
+    dsaHeapContent,
+    dsaProjectContent,
+    dsaFinalsContent,
 ];
 
 ai4games2Program.programContents = [
@@ -2329,15 +2825,36 @@ ai4games2Program.programContents = [
     ai4games2ExtraContent,
 ];
 
+dsaProgram.programContents = [
+    dsaSyllabusContent,
+    dsaIntroductionContent,
+    dsaAnalysisContent,
+    dsaDynamicDataContent,
+    dsaSortingContent,
+    dsaDivideAndConquerContent,
+    dsaHashtablesContent,
+    dsaMidtermContent,
+    dsaStackAndQueueContent,
+    dsaBreakContent,
+    dsaGraphsContent,
+    dsaDijkstraContent,
+    dsaMstContent,
+    dsaBstContent,
+    dsaHeapContent,
+    dsaProjectContent,
+    dsaFinalsContent,
+];
+
 pythonProduct.productPrograms = [pythonProductProgram];
 ai4gamesProduct.productPrograms = [ai4gamesProductProgram];
 ai4games2Product.productPrograms = [ai4games2ProductProgram];
 portfolioProduct.productPrograms = [portfolioProductProgram];
+dsaProduct.productPrograms = [dsaProductProgram];
 
 // Export all mock data
-export const mockPrograms: Program[] = [pythonProgram, ai4gamesProgram, ai4games2Program, portfolioProgram];
-export const mockProducts: Product[] = [pythonProduct, ai4gamesProduct, ai4games2Product, portfolioProduct];
-export const mockProductPrograms: ProductProgram[] = [pythonProductProgram, ai4gamesProductProgram, ai4games2ProductProgram, portfolioProductProgram];
+export const mockPrograms: Program[] = [pythonProgram, ai4gamesProgram, ai4games2Program, portfolioProgram, dsaProgram];
+export const mockProducts: Product[] = [pythonProduct, ai4gamesProduct, ai4games2Product, portfolioProduct, dsaProduct];
+export const mockProductPrograms: ProductProgram[] = [pythonProductProgram, ai4gamesProductProgram, ai4games2ProductProgram, portfolioProductProgram, dsaProductProgram];
 export const mockProgramContents: ProgramContent[] = [
     // Python content
     pythonSyllabusContent,
