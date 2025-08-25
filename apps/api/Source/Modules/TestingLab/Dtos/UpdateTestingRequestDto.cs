@@ -1,49 +1,49 @@
-namespace GameGuild.Modules.TestingLab {
-  public class UpdateTestingRequestDto {
-    public Guid? ProjectVersionId { get; set; }
+namespace GameGuild.Modules.TestingLab;
 
-    [MaxLength(255)] public string? Title { get; set; }
+public class UpdateTestingRequestDto {
+  public Guid? ProjectVersionId { get; set; }
 
-    public string? Description { get; set; }
+  [MaxLength(255)] public string? Title { get; set; }
 
-    public InstructionType? InstructionsType { get; set; }
+  public string? Description { get; set; }
 
-    public string? InstructionsContent { get; set; }
+  public InstructionType? InstructionsType { get; set; }
 
-    [MaxLength(500)] public string? InstructionsUrl { get; set; }
+  public string? InstructionsContent { get; set; }
 
-    public Guid? InstructionsFileId { get; set; }
+  [MaxLength(500)] public string? InstructionsUrl { get; set; }
 
-    public int? MaxTesters { get; set; }
+  public Guid? InstructionsFileId { get; set; }
 
-    public DateTime? StartDate { get; set; }
+  public int? MaxTesters { get; set; }
 
-    public DateTime? EndDate { get; set; }
+  public DateTime? StartDate { get; set; }
 
-    public TestingRequestStatus? Status { get; set; }
+  public DateTime? EndDate { get; set; }
 
-    public void UpdateTestingRequest(TestingRequest testingRequest) {
-      if (ProjectVersionId.HasValue) testingRequest.ProjectVersionId = ProjectVersionId.Value;
+  public TestingRequestStatus? Status { get; set; }
 
-      if (!string.IsNullOrEmpty(Title)) testingRequest.Title = Title;
+  public void UpdateTestingRequest(TestingRequest testingRequest) {
+    if (ProjectVersionId.HasValue) testingRequest.ProjectVersionId = ProjectVersionId.Value;
 
-      if (Description != null) testingRequest.Description = Description;
+    if (!string.IsNullOrEmpty(Title)) testingRequest.Title = Title;
 
-      if (InstructionsType.HasValue) testingRequest.InstructionsType = InstructionsType.Value;
+    if (Description != null) testingRequest.Description = Description;
 
-      if (InstructionsContent != null) testingRequest.InstructionsContent = InstructionsContent;
+    if (InstructionsType.HasValue) testingRequest.InstructionsType = InstructionsType.Value;
 
-      if (InstructionsUrl != null) testingRequest.InstructionsUrl = InstructionsUrl;
+    if (InstructionsContent != null) testingRequest.InstructionsContent = InstructionsContent;
 
-      if (InstructionsFileId.HasValue) testingRequest.InstructionsFileId = InstructionsFileId.Value;
+    if (InstructionsUrl != null) testingRequest.InstructionsUrl = InstructionsUrl;
 
-      if (MaxTesters.HasValue) testingRequest.MaxTesters = MaxTesters.Value;
+    if (InstructionsFileId.HasValue) testingRequest.InstructionsFileId = InstructionsFileId.Value;
 
-      if (StartDate.HasValue) testingRequest.StartDate = StartDate.Value;
+    if (MaxTesters.HasValue) testingRequest.MaxTesters = MaxTesters.Value;
 
-      if (EndDate.HasValue) testingRequest.EndDate = EndDate.Value;
+    if (StartDate.HasValue) testingRequest.StartDate = StartDate.Value;
 
-      if (Status.HasValue) testingRequest.Status = Status.Value;
-    }
+    if (EndDate.HasValue) testingRequest.EndDate = EndDate.Value;
+
+    if (Status.HasValue) testingRequest.Status = Status.Value;
   }
 }
