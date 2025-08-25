@@ -1,3 +1,24 @@
+# [2.13.0](https://github.com/gameguild-gg/gameguild/compare/v2.12.0...v2.13.0) (2025-08-25)
+
+
+### Bug Fixes
+
+* setup instructions ([7850ee2](https://github.com/gameguild-gg/gameguild/commit/7850ee2f249bf6082f2905dba45b0454b23ed66e))
+
+
+### Features
+
+* add Data Structures and Algorithms course content ([64c3161](https://github.com/gameguild-gg/gameguild/commit/64c316179aacdc09df0d6fa01fbfd02eaaef1fb4))
+* **apps/api:** Add commands for managing testing requests and sessions ([3ddf1b2](https://github.com/gameguild-gg/gameguild/commit/3ddf1b267fdbd86f230577857cd80edcfa74e6e5))
+* **apps/api:** Add comprehensive TestingLab module abstractions and service interfaces ([1b0828b](https://github.com/gameguild-gg/gameguild/commit/1b0828b3c6aec34ccdb58534156a245c6824cab2))
+* **apps/api:** Add comprehensive TestingLab module with entities, enums, and permissions ([bbc5b73](https://github.com/gameguild-gg/gameguild/commit/bbc5b7318da1e9888815d32bcdec9780be1199fc))
+* **apps/api:** Add handlers for testing requests and sessions with event publishing ([1a306cb](https://github.com/gameguild-gg/gameguild/commit/1a306cb0acefdb44355aca4f42c957484a75895d))
+* **apps/api:** Add queries for testing lab data retrieval ([4a4985a](https://github.com/gameguild-gg/gameguild/commit/4a4985ae9b39acfed2540e981dcd48e96a600daf))
+* **apps/api:** Add testing lab event notifications for feedback, requests, and sessions ([8e23d4c](https://github.com/gameguild-gg/gameguild/commit/8e23d4cbc08dcb41041ccb44a4593172aa47b1df))
+* **apps/api:** Add validators for TestingLab commands ([3798695](https://github.com/gameguild-gg/gameguild/commit/3798695ea4e41fb5a10d9351840b31dc0a7c3c83))
+* **apps/api:** Revamp TestingLab module with new entities, services, commands, queries, and permission management ([81dc6cc](https://github.com/gameguild-gg/gameguild/commit/81dc6ccab8ca4ca4c9feae93236c64996975b2a4))
+* integrate DSA course into mock data system ([113cdfd](https://github.com/gameguild-gg/gameguild/commit/113cdfd36efea9b5461b13ecbd1e32ad11d2e1c4))
+
 ## [2.10.2](https://github.com/gameguild-gg/gameguild/compare/v2.10.1...v2.10.2) (2025-08-23)
 
 
