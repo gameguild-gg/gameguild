@@ -13,7 +13,7 @@ No requirements
 ## Student-centered Learning Outcomes
 
 
-[![Bloom's Taxonomy](https://cdn.vanderbilt.edu/vu-wp0/wp-content/uploads/sites/59/2019/03/27124326/Blooms-Taxonomy-650x366.jpg){ loading=lazy width="600" }](https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/)
+[![Bloom's Taxonomy](https://cdn.vanderbilt.edu/vu-wp0/wp-content/uploads/sites/59/2019/03/27124326/Blooms-Taxonomy-650x366.jpg)](https://cft.vanderbilt.edu/guides-sub-pages/blooms-taxonomy/)
 
 Upon completion of the Intro to game programming, students should be able to:
 
@@ -53,8 +53,6 @@ If you have any accommodations and want to use your rights, or if you are facing
 This is a work in progress, and the schedule is subject to change. Every change will be communicated in class. Use this github repo as the source of truth for the schedule and materials. The materials provided in canvas are just a copy for archiving purposes and might be outdated.
 
 :::
-
-College dates for the Spring 2024 semester:
 
 College dates for the Fall 2025 semester:
 
