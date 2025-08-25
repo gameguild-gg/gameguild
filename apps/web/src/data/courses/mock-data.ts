@@ -108,6 +108,33 @@ import dsaHeap from './dsa/14-heap/README.md';
 import dsaProject from './dsa/15-project/README.md';
 import dsaFinals from './dsa/16-finals/README.md';
 
+// Intro to Game Programming Course Imports
+import intro2gproSyllabus from './intro2gpro/syllabus.md';
+
+// Introduction to Game Programming syllabus content
+export const intro2gproSyllabusContent: ProgramContent = {
+    id: 'intro2gpro-syllabus',
+    programId: 'intro2gpro-program-1',
+    parentId: undefined,
+    title: 'Course Syllabus',
+    description: 'Introduction to Game Programming course syllabus',
+    type: 0, // Page
+    body: intro2gproSyllabus,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'syllabus',
+};
+
 // Mock user for the creator
 const mockUser = {
     id: '1',
@@ -294,6 +321,33 @@ export const dsaProgram: Program = {
     programWishlists: [],
 };
 
+// Intro to Game Programming Program
+export const intro2gproProgram: Program = {
+    id: 'intro2gpro-program-1',
+    title: 'Introduction to Game Programming',
+    description: 'Students will be introduced to and familiarized with their roles as Game Programmers. The course explores the various disciplines and vocations within game programming, provides an overview of the skills that make a game programmer successful, and presents both industry and academic contexts for their duties.',
+    slug: 'intro2gpro',
+    thumbnail: 'https://placehold.co/400x225/1f2937/ffffff.png?text=Intro+to+Game+Programming',
+    videoShowcaseUrl: null,
+    estimatedHours: 45,
+    enrollmentStatus: 0, // Open
+    maxEnrollments: null,
+    enrollmentDeadline: null,
+    category: 1, // Game Development
+    difficulty: 0, // Beginner
+    visibility: 0, // Public
+    status: 1, // Published
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    programContents: [],
+    programUsers: [],
+    productPrograms: [],
+    certificates: [],
+    feedbackSubmissions: [],
+    programRatings: [],
+    programWishlists: [],
+};
+
 // AI4Games Product
 export const ai4gamesProduct: Product = {
     id: 'ai4games-product-1',
@@ -406,6 +460,34 @@ export const dsaProduct: Product = {
     promoCodes: [],
 };
 
+// Intro to Game Programming Product
+export const intro2gproProduct: Product = {
+    id: 'intro2gpro-product-1',
+    title: 'Introduction to Game Programming Course',
+    name: 'Introduction to Game Programming',
+    description: 'Learn the fundamentals of game programming and explore various disciplines within game development',
+    shortDescription: 'Get introduced to game programming roles, tools, and industry contexts',
+    imageUrl: 'https://placehold.co/400x225/1f2937/ffffff.png?text=Intro+to+Game+Programming',
+    type: 0, // Course
+    isBundle: false,
+    creatorId: '1',
+    creator: mockUser,
+    bundleItems: null,
+    referralCommissionPercentage: 0,
+    maxAffiliateDiscount: 0,
+    affiliateCommissionPercentage: 0,
+    visibility: 0, // Public
+    status: 1, // Published
+    slug: 'intro2gpro',
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    productPrograms: [],
+    productPricings: [],
+    subscriptionPlans: [],
+    userProducts: [],
+    promoCodes: [],
+};
+
 // Product-Program relationships
 export const ai4gamesProductProgram: ProductProgram = {
     id: 'ai4games-product-program-1',
@@ -447,6 +529,17 @@ export const dsaProductProgram: ProductProgram = {
     programId: dsaProgram.id!,
     program: dsaProgram,
     sortOrder: 4,
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const intro2gproProductProgram: ProductProgram = {
+    id: 'intro2gpro-product-program-1',
+    productId: intro2gproProduct.id!,
+    product: intro2gproProduct,
+    programId: intro2gproProgram.id!,
+    program: intro2gproProgram,
+    sortOrder: 5,
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
 };
@@ -2845,16 +2938,24 @@ dsaProgram.programContents = [
     dsaFinalsContent,
 ];
 
+intro2gproProgram.programContents = [
+    intro2gproSyllabusContent,
+];
+
+// Set program references
+intro2gproSyllabusContent.program = intro2gproProgram;
+
 pythonProduct.productPrograms = [pythonProductProgram];
 ai4gamesProduct.productPrograms = [ai4gamesProductProgram];
 ai4games2Product.productPrograms = [ai4games2ProductProgram];
 portfolioProduct.productPrograms = [portfolioProductProgram];
 dsaProduct.productPrograms = [dsaProductProgram];
+intro2gproProduct.productPrograms = [intro2gproProductProgram];
 
 // Export all mock data
-export const mockPrograms: Program[] = [pythonProgram, ai4gamesProgram, ai4games2Program, portfolioProgram, dsaProgram];
-export const mockProducts: Product[] = [pythonProduct, ai4gamesProduct, ai4games2Product, portfolioProduct, dsaProduct];
-export const mockProductPrograms: ProductProgram[] = [pythonProductProgram, ai4gamesProductProgram, ai4games2ProductProgram, portfolioProductProgram, dsaProductProgram];
+export const mockPrograms: Program[] = [pythonProgram, ai4gamesProgram, ai4games2Program, portfolioProgram, dsaProgram, intro2gproProgram];
+export const mockProducts: Product[] = [pythonProduct, ai4gamesProduct, ai4games2Product, portfolioProduct, dsaProduct, intro2gproProduct];
+export const mockProductPrograms: ProductProgram[] = [pythonProductProgram, ai4gamesProductProgram, ai4games2ProductProgram, portfolioProductProgram, dsaProductProgram, intro2gproProductProgram];
 export const mockProgramContents: ProgramContent[] = [
     // Python content
     pythonSyllabusContent,
@@ -2941,6 +3042,8 @@ export const mockProgramContents: ProgramContent[] = [
     portfolioWeek10AssignmentContent,
     portfolioWeek11LectureContent,
     portfolioWeek11ActivityContent,
+    // Intro to Game Programming content
+    intro2gproSyllabusContent,
 ];
 
 // Helper function to get program by slug
