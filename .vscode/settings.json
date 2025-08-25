@@ -36,6 +36,8 @@
         "source.fixAll.eslint": "explicit"
     },
     "editor.wordWrap": "on",
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
     "[markdown]": {
         "editor.formatOnSave": false,
         "editor.formatOnPaste": false,
