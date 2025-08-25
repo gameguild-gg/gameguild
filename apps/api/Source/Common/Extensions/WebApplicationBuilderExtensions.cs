@@ -46,8 +46,8 @@ public static class WebApplicationBuilderExtensions {
   public static WebApplicationBuilder ConfigureServices(this WebApplicationBuilder builder) {
     builder.Services
            .AddPresentation(CreatePresentationOptionsInternal(builder))
-           .AddApplication()
-           .AddInfrastructure(builder.Configuration);
+           .AddInfrastructure(builder.Configuration)  // Register domain modules BEFORE MediatR
+           .AddApplication();  // Register MediatR handlers after their dependencies
 
     return builder;
   }

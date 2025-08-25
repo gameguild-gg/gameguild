@@ -4,7 +4,7 @@ using GameGuild.Database;
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Implementation of the TestingLabSettings service </summary>
-internal class TestingLabSettingsService : ITestingLabSettingsService {
+public class TestingLabSettingsService : ITestingLabSettingsService {
   private readonly ApplicationDbContext _dbContext;
 
   public TestingLabSettingsService(ApplicationDbContext dbContext) { _dbContext = dbContext; }
