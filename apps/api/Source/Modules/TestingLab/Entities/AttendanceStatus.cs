@@ -1,6 +1,6 @@
 namespace GameGuild.Modules.TestingLab;
 
-internal enum AttendanceStatus {
+public enum AttendanceStatus {
   Registered,
 
   CheckedIn,

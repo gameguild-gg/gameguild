@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Abstractions;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Base interface for query handlers in the Testing Lab module </summary>
 /// <typeparam name="TQuery"> The query type </typeparam>

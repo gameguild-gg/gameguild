@@ -19,7 +19,6 @@ using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.Modules.Tags.Models;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.TestingLab;
-using GameGuild.Modules.TestingLab.Models;
 using GameGuild.Modules.UserAchievements;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;

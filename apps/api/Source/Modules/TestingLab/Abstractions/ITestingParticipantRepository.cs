@@ -1,7 +1,7 @@
-namespace GameGuild.Modules.TestingLab.Abstractions;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Repository abstraction for Testing Participant operations </summary>
-public interface ITestingParticipantRepository : IRepository<TestingParticipant> {
+public interface ITestingParticipantRepository {
   /// <summary> Get participants with pagination </summary>
   Task<IEnumerable<TestingParticipant>> GetWithPaginationAsync(int skip = 0, int take = 50);
 

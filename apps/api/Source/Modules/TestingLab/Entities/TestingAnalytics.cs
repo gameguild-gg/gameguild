@@ -40,7 +40,7 @@ public class TestingAnalytics {
 
   public double AverageFeedbackRating { get; set; }
 
-  public Dictionary<FeedbackQualityRating, int> FeedbackQualityDistribution { get; set; } = new Dictionary<FeedbackQualityRating, int>();
+  public Dictionary<FeedbackQuality, int> FeedbackQualityDistribution { get; set; } = new Dictionary<FeedbackQuality, int>();
 
   // Time-based Statistics
   public double AverageSessionDurationMinutes { get; set; }

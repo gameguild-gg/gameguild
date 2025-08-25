@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Abstractions;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Service abstraction for Testing Request operations </summary>
 public interface ITestingRequestService {

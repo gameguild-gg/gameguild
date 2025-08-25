@@ -1,10 +1,10 @@
-namespace GameGuild.Modules.TestingLab.Commands;
+namespace GameGuild.Modules.TestingLab;
 
 public record SubmitFeedbackCommand(
   Guid TestingRequestId,
   Guid UserId,
   string Content,
-  FeedbackQualityRating? QualityRating,
+  FeedbackQuality? QualityRating,
   int? Rating,
   bool IsAnonymous = false
 ) : IRequest<TestingFeedback>;

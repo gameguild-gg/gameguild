@@ -1,9 +1,9 @@
-namespace GameGuild.Modules.TestingLab.Queries;
+namespace GameGuild.Modules.TestingLab;
 
 public record GetTestingFeedbackQuery(
   Guid TestingRequestId,
   int Skip = 0,
   int Take = 50,
   Guid? UserId = null,
-  FeedbackQualityRating? MinQualityRating = null
+  FeedbackQuality? MinQualityRating = null
 ) : IRequest<IEnumerable<TestingFeedback>>;

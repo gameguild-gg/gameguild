@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Abstractions;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Repository interface for managing testing feedback forms </summary>
 public interface ITestingFeedbackFormRepository {
