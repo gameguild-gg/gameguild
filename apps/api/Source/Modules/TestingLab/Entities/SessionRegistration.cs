@@ -3,36 +3,28 @@ using GameGuild.Modules.Teams.Models;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Modules.TestingLab {
-  public class SessionRegistration : Entity {
-    /// <summary>
-    /// Foreign key to the session
-    /// </summary>
-    public Guid SessionId { get; set; }
+namespace GameGuild.Modules.TestingLab;
 
-    /// <summary>
-    /// Navigation property to the session
-    /// </summary>
-    public virtual TestingSession Session { get; set; } = null!;
+public class SessionRegistration : Entity {
+  /// <summary> Foreign key to the session </summary>
+  public Guid SessionId { get; set; }
 
-    /// <summary>
-    /// Foreign key to the user
-    /// </summary>
-    public Guid UserId { get; set; }
+  /// <summary> Navigation property to the session </summary>
+  public virtual TestingSession Session { get; set; } = null!;
 
-    /// <summary>
-    /// Navigation property to the user
-    /// </summary>
-    public virtual User User { get; set; } = null!;
+  /// <summary> Foreign key to the user </summary>
+  public Guid UserId { get; set; }
 
-    [Required] public RegistrationType RegistrationType { get; set; }
+  /// <summary> Navigation property to the user </summary>
+  public virtual User User { get; set; } = null!;
 
-    public TeamRole? ProjectRole { get; set; }
+  [Required] public RegistrationType RegistrationType { get; set; }
 
-    public string? RegistrationNotes { get; set; }
+  public TeamRole? ProjectRole { get; set; }
 
-    [Required] public AttendanceStatus AttendanceStatus { get; set; } = AttendanceStatus.Registered;
+  public string? RegistrationNotes { get; set; }
 
-    public DateTime? AttendedAt { get; set; }
-  }
+  [Required] public AttendanceStatus AttendanceStatus { get; set; } = AttendanceStatus.Registered;
+
+  public DateTime? AttendedAt { get; set; }
 }
