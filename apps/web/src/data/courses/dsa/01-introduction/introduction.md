@@ -1,5 +1,24 @@
 # Data-Structures & Algorithms
 
+<details>
+<summary>Teacher notes</summary>
+Day 1:
+
+- Course Overview;
+- Expectations;
+- FERPA Waiver consent form for using github;
+- Form for receiving feedback about their expectations and topics;
+- Setup Repos;
+
+Day 2:
+
+- Review expectations in class;
+- Final project;
+- CI/CD;
+- Why start building your portfolio now
+    - Itchio, github pages, your own domain, etc.
+</details>
+
 ## Table of Contents
 
 - [Syllabus](syllabus)

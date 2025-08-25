@@ -1,7 +1,22 @@
 # Setup the repos
 
+<details>
+<summary>Teacher notes</summary>
+- Day 1: 
+    - Teacher Introduction; 
+    - Course Overview; 
+    - Expectations; 
+    - FERPA Waiver consent form for using github; 
+    - Form for receiving feedback about their expectations and topics;
+    - Setup Repos;
+- Day 2: 
+    - Intro to game AI;
+    - Setup Repos;
+    - Ensure everyone is ready for the class. Check mobagen and ai4games repos.
+</details>
+
 1. Read about Privacy and FERPA compliance [here](./ferpa)
-2. `Testable AI` assignments for in class coding assignments. [repo](https://github.com/gameguild-gg/testable-ai)
+2. `Testable AI` assignments for in class coding assignments. [repo](https://github.com/gameguild-gg/ai4games)
 3. `MoBaGEn`, for interactive assignments. [repo](https://github.com/gameguild-gg/mobagen). Please leave a star there to help me gain visibility! Star this [website repo](https://github.com/gameguild-gg/gameguild) too!
 4. Install `CLion` (has `CMake` embedded);
 5. Install git and add the binaries to your `PATH`;
