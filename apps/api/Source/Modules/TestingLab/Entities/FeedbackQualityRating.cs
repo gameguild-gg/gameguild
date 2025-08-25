@@ -1,14 +1,14 @@
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.TestingLab {
-  public class FeedbackQualityRating : Entity {
-    [Required] public Guid FeedbackId { get; set; }
+namespace GameGuild.Modules.TestingLab;
 
-    [Required] public Guid RatedByUserId { get; set; }
+internal class FeedbackQualityRating : Entity {
+  [Required] public Guid FeedbackId { get; set; }
 
-    [Required][Range(1, 5)] public int QualityRating { get; set; }
+  [Required] public Guid RatedByUserId { get; set; }
 
-    public string? Reason { get; set; }
-  }
+  [Required][Range(1, 5)] public int QualityRating { get; set; }
+
+  public string? Reason { get; set; }
 }

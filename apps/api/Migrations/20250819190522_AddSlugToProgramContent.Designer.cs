@@ -9,15 +9,12 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace GameGuild.Migrations
-{
+namespace GameGuild.Migrations {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20250819190522_AddSlugToProgramContent")]
-    partial class AddSlugToProgramContent
-    {
+    partial class AddSlugToProgramContent {
         /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
-        {
+        protected override void BuildTargetModel(ModelBuilder modelBuilder) {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "9.0.7")
@@ -25,8817 +22,8585 @@ namespace GameGuild.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("ContentContentLicense", b =>
-                {
-                    b.Property<Guid>("ContentsId")
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("ContentContentLicense", b => {
+                b.Property<Guid>("ContentsId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("LicensesId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("LicensesId")
+                    .HasColumnType("uuid");
 
-                    b.HasKey("ContentsId", "LicensesId");
+                b.HasKey("ContentsId", "LicensesId");
 
-                    b.HasIndex("LicensesId");
+                b.HasIndex("LicensesId");
 
-                    b.ToTable("ContentContentLicense");
-                });
+                b.ToTable("ContentContentLicense");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Authentication.RefreshToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Authentication.RefreshToken", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("CreatedByIp")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("CreatedByIp")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsRevoked")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsRevoked")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("ReplacedByToken")
-                        .HasColumnType("text");
+                b.Property<string>("ReplacedByToken")
+                    .HasColumnType("text");
 
-                    b.Property<DateTime?>("RevokedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("RevokedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("RevokedByIp")
-                        .HasColumnType("text");
+                b.Property<string>("RevokedByIp")
+                    .HasColumnType("text");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("Token")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("RefreshTokens");
-                });
+                b.ToTable("RefreshTokens");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Certificates.Certificate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Certificates.Certificate", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("CertificateTemplate")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("CertificateTemplate")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<decimal>("CompletionPercentage")
-                        .HasColumnType("decimal(5,2)");
+                b.Property<decimal>("CompletionPercentage")
+                    .HasColumnType("decimal(5,2)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("Description")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<decimal?>("MinimumGrade")
-                        .HasColumnType("decimal(5,2)");
+                b.Property<decimal?>("MinimumGrade")
+                    .HasColumnType("decimal(5,2)");
 
-                    b.Property<decimal?>("MinimumRating")
-                        .HasColumnType("decimal(2,1)");
+                b.Property<decimal?>("MinimumRating")
+                    .HasColumnType("decimal(2,1)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<Guid?>("ProductId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProductId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProgramId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProgramId")
+                    .HasColumnType("uuid");
 
-                    b.Property<bool>("RequiresFeedback")
-                        .HasColumnType("boolean");
+                b.Property<bool>("RequiresFeedback")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("RequiresRating")
-                        .HasColumnType("boolean");
+                b.Property<bool>("RequiresRating")
+                    .HasColumnType("boolean");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                b.Property<int>("Type")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int?>("ValidityDays")
-                        .HasColumnType("integer");
+                b.Property<int?>("ValidityDays")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("VerificationMethod")
-                        .HasColumnType("integer");
+                b.Property<int>("VerificationMethod")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CompletionPercentage");
+                b.HasIndex("CompletionPercentage");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ProductId");
+                b.HasIndex("ProductId");
 
-                    b.HasIndex("ProgramId");
+                b.HasIndex("ProgramId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("Type");
+                b.HasIndex("Type");
 
-                    b.ToTable("certificates");
-                });
+                b.ToTable("certificates");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Certificates.CertificateBlockchainAnchor", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Certificates.CertificateBlockchainAnchor", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("AnchoredAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("AnchoredAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("BlockHash")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                b.Property<string>("BlockHash")
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)");
 
-                    b.Property<long?>("BlockNumber")
-                        .HasColumnType("bigint");
+                b.Property<long?>("BlockNumber")
+                    .HasColumnType("bigint");
 
-                    b.Property<string>("BlockchainNetwork")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("BlockchainNetwork")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("CertificateId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("CertificateId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("ConfirmedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ConfirmedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ContractAddress")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("ContractAddress")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("TokenId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("TokenId")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("TransactionHash")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                b.Property<string>("TransactionHash")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AnchoredAt");
+                b.HasIndex("AnchoredAt");
 
-                    b.HasIndex("BlockchainNetwork");
+                b.HasIndex("BlockchainNetwork");
 
-                    b.HasIndex("CertificateId");
+                b.HasIndex("CertificateId");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("Status");
+                b.HasIndex("Status");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("TransactionHash")
-                        .IsUnique();
+                b.HasIndex("TransactionHash")
+                    .IsUnique();
 
-                    b.ToTable("certificate_blockchain_anchors");
-                });
+                b.ToTable("certificate_blockchain_anchors");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Certificates.CertificateTag", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Certificates.CertificateTag", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<Guid>("CertificateId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("CertificateId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("RelationshipType")
-                        .HasColumnType("integer");
+                b.Property<int>("RelationshipType")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("TagId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("TagId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TagProficiencyId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TagProficiencyId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CertificateId");
+                b.HasIndex("CertificateId");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("RelationshipType");
+                b.HasIndex("RelationshipType");
 
-                    b.HasIndex("TagId");
+                b.HasIndex("TagId");
 
-                    b.HasIndex("TagProficiencyId");
+                b.HasIndex("TagProficiencyId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("CertificateId", "TagId")
-                        .IsUnique();
+                b.HasIndex("CertificateId", "TagId")
+                    .IsUnique();
 
-                    b.ToTable("certificate_tags");
-                });
+                b.ToTable("certificate_tags");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Certificates.UserCertificate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Certificates.UserCertificate", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<Guid>("CertificateId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("CertificateId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal?>("FinalGrade")
-                        .HasColumnType("decimal(5,2)");
+                b.Property<decimal?>("FinalGrade")
+                    .HasColumnType("decimal(5,2)");
 
-                    b.Property<DateTime>("IssuedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("IssuedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Metadata")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("Metadata")
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid?>("ProductId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProductId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProgramId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProgramId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProgramUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProgramUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("RevocationReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("RevocationReason")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<DateTime?>("RevokedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("RevokedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("VerificationCode")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("VerificationCode")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CertificateId");
+                b.HasIndex("CertificateId");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("IssuedAt");
+                b.HasIndex("IssuedAt");
 
-                    b.HasIndex("ProductId");
+                b.HasIndex("ProductId");
 
-                    b.HasIndex("ProgramId");
+                b.HasIndex("ProgramId");
 
-                    b.HasIndex("ProgramUserId");
+                b.HasIndex("ProgramUserId");
 
-                    b.HasIndex("Status");
+                b.HasIndex("Status");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("VerificationCode")
-                        .IsUnique();
+                b.HasIndex("VerificationCode")
+                    .IsUnique();
 
-                    b.ToTable("user_certificates");
-                });
+                b.ToTable("user_certificates");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Comments.CommentPermission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Comments.CommentPermission", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<long>("PermissionFlags1")
-                        .HasColumnType("bigint");
+                b.Property<long>("PermissionFlags1")
+                    .HasColumnType("bigint");
 
-                    b.Property<long>("PermissionFlags2")
-                        .HasColumnType("bigint");
+                b.Property<long>("PermissionFlags2")
+                    .HasColumnType("bigint");
 
-                    b.Property<Guid>("ResourceId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ResourceId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex(new[] { "ExpiresAt" }, "IX_CommentPermissions_Expiration");
+                b.HasIndex(new[] { "ExpiresAt" }, "IX_CommentPermissions_Expiration");
 
-                    b.HasIndex(new[] { "ResourceId", "UserId" }, "IX_CommentPermissions_Resource_User");
+                b.HasIndex(new[] { "ResourceId", "UserId" }, "IX_CommentPermissions_Resource_User");
 
-                    b.HasIndex(new[] { "TenantId" }, "IX_CommentPermissions_TenantId");
+                b.HasIndex(new[] { "TenantId" }, "IX_CommentPermissions_TenantId");
 
-                    b.HasIndex(new[] { "UserId", "TenantId", "ResourceId" }, "IX_CommentPermissions_User_Tenant_Resource")
-                        .IsUnique();
+                b.HasIndex(new[] { "UserId", "TenantId", "ResourceId" }, "IX_CommentPermissions_User_Tenant_Resource")
+                    .IsUnique();
 
-                    b.ToTable("CommentPermissions");
-                });
+                b.ToTable("CommentPermissions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Credentials.Credential", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Credentials.Credential", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastUsedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("LastUsedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Metadata")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                b.Property<string>("Metadata")
+                    .HasMaxLength(2000)
+                    .HasColumnType("character varying(2000)");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Type")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("Value")
+                    .IsRequired()
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId", "Type");
+                b.HasIndex("UserId", "Type");
 
-                    b.ToTable("Credentials");
-                });
+                b.ToTable("Credentials");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Feedbacks.ProgramFeedbackSubmission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Feedbacks.ProgramFeedbackSubmission", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Comments")
-                        .HasColumnType("text");
+                b.Property<string>("Comments")
+                    .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("FeedbackData")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
+                b.Property<string>("FeedbackData")
+                    .IsRequired()
+                    .HasColumnType("jsonb");
 
-                    b.Property<decimal?>("OverallRating")
-                        .HasColumnType("decimal(2,1)");
+                b.Property<decimal?>("OverallRating")
+                    .HasColumnType("decimal(2,1)");
 
-                    b.Property<Guid?>("ProductId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProductId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("ProgramId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProgramId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("ProgramUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProgramUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("SubmittedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.Property<bool?>("WouldRecommend")
-                        .HasColumnType("boolean");
+                b.Property<bool?>("WouldRecommend")
+                    .HasColumnType("boolean");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("OverallRating");
+                b.HasIndex("OverallRating");
 
-                    b.HasIndex("ProductId");
+                b.HasIndex("ProductId");
 
-                    b.HasIndex("ProgramId");
+                b.HasIndex("ProgramId");
 
-                    b.HasIndex("ProgramUserId");
+                b.HasIndex("ProgramUserId");
 
-                    b.HasIndex("SubmittedAt");
+                b.HasIndex("SubmittedAt");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("UserId", "ProgramId")
-                        .IsUnique();
+                b.HasIndex("UserId", "ProgramId")
+                    .IsUnique();
 
-                    b.ToTable("program_feedback_submissions");
-                });
+                b.ToTable("program_feedback_submissions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.GameJams.Models.Jam", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.GameJams.Models.Jam", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("CreatedBy")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
+                b.Property<string>("Description")
+                    .HasColumnType("text");
 
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("EndDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("MaxParticipants")
-                        .HasColumnType("integer");
+                b.Property<int?>("MaxParticipants")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<int>("ParticipantCount")
-                        .HasColumnType("integer");
+                b.Property<int>("ParticipantCount")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Rules")
-                        .HasColumnType("text");
+                b.Property<string>("Rules")
+                    .HasColumnType("text");
 
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Slug")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("StartDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("SubmissionCriteria")
-                        .HasColumnType("text");
+                b.Property<string>("SubmissionCriteria")
+                    .HasColumnType("text");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Theme")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Theme")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.Property<DateTime?>("VotingEndDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("VotingEndDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("Jam");
-                });
+                b.ToTable("Jam");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.GameJams.Models.JamScore", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.GameJams.Models.JamScore", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("CriteriaId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("CriteriaId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Feedback")
-                        .HasColumnType("text");
+                b.Property<string>("Feedback")
+                    .HasColumnType("text");
 
-                    b.Property<Guid>("JudgeUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("JudgeUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProjectJamSubmissionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProjectJamSubmissionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Score")
-                        .HasColumnType("integer");
+                b.Property<int>("Score")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("SubmissionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("SubmissionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ProjectJamSubmissionId");
+                b.HasIndex("ProjectJamSubmissionId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("JamScore");
-                });
+                b.ToTable("JamScore");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Kyc.Models.UserKycVerification", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Kyc.Models.UserKycVerification", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("CompletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("DocumentCountry")
-                        .HasMaxLength(2)
-                        .HasColumnType("character varying(2)");
+                b.Property<string>("DocumentCountry")
+                    .HasMaxLength(2)
+                    .HasColumnType("character varying(2)");
 
-                    b.Property<string>("DocumentTypes")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("DocumentTypes")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ExternalVerificationId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("ExternalVerificationId")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<string>("Notes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("Notes")
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.Property<int>("Provider")
-                        .HasColumnType("integer");
+                b.Property<int>("Provider")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("ProviderData")
-                        .HasColumnType("jsonb");
+                b.Property<string>("ProviderData")
+                    .HasColumnType("jsonb");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("SubmittedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("VerificationLevel")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("VerificationLevel")
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ExternalVerificationId");
+                b.HasIndex("ExternalVerificationId");
 
-                    b.HasIndex("Provider");
+                b.HasIndex("Provider");
 
-                    b.HasIndex("Status");
+                b.HasIndex("Status");
 
-                    b.HasIndex("SubmittedAt");
+                b.HasIndex("SubmittedAt");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("user_kyc_verifications");
-                });
+                b.ToTable("user_kyc_verifications");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Localization.Language", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Localization.Language", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                b.Property<string>("Code")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(64)
+                    .HasColumnType("character varying(64)");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
+                b.HasIndex("Code")
+                    .IsUnique();
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("Name");
+                b.HasIndex("Name");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("Languages");
-                });
+                b.ToTable("Languages");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.DiscountCode", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.Payments.DiscountCode", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Code")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("CurrentUses")
-                        .HasColumnType("integer");
+                b.Property<int>("CurrentUses")
+                    .HasColumnType("integer");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<int?>("MaxUses")
-                        .HasColumnType("integer");
+                b.Property<int?>("MaxUses")
+                    .HasColumnType("integer");
 
-                    b.Property<decimal?>("MaximumDiscount")
-                        .HasColumnType("numeric");
+                b.Property<decimal?>("MaximumDiscount")
+                    .HasColumnType("numeric");
 
-                    b.Property<decimal?>("MinimumAmount")
-                        .HasColumnType("numeric");
+                b.Property<decimal?>("MinimumAmount")
+                    .HasColumnType("numeric");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                b.Property<int>("Type")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime?>("ValidFrom")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ValidFrom")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ValidUntil")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ValidUntil")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("Value")
-                        .HasColumnType("numeric");
+                b.Property<decimal>("Value")
+                    .HasColumnType("numeric");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("DiscountCodes");
-                });
+                b.ToTable("DiscountCodes");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.FinancialTransaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Payments.FinancialTransaction", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(10,2)");
+                b.Property<decimal>("Amount")
+                    .HasColumnType("decimal(10,2)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
+                b.Property<string>("Currency")
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasColumnType("character varying(3)");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Description")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<string>("Error")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Error")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<string>("ExternalTransactionId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("ExternalTransactionId")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime?>("FailedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("FailedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("FailureReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("FailureReason")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<Guid?>("FromUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("FromUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Metadata")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("Metadata")
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.Property<decimal?>("NetAmount")
-                        .HasColumnType("decimal(10,2)");
+                b.Property<decimal?>("NetAmount")
+                    .HasColumnType("decimal(10,2)");
 
-                    b.Property<Guid?>("PaymentMethodId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("PaymentMethodId")
+                    .HasColumnType("uuid");
 
-                    b.Property<decimal?>("PlatformFee")
-                        .HasColumnType("decimal(10,2)");
+                b.Property<decimal?>("PlatformFee")
+                    .HasColumnType("decimal(10,2)");
 
-                    b.Property<DateTime?>("ProcessedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ProcessedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal?>("ProcessorFee")
-                        .HasColumnType("decimal(10,2)");
+                b.Property<decimal?>("ProcessorFee")
+                    .HasColumnType("decimal(10,2)");
 
-                    b.Property<Guid?>("PromoCodeId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("PromoCodeId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ToUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ToUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                b.Property<int>("Type")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("Amount");
+                b.HasIndex("Amount");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ExternalTransactionId");
+                b.HasIndex("ExternalTransactionId");
 
-                    b.HasIndex("FromUserId");
+                b.HasIndex("FromUserId");
 
-                    b.HasIndex("PaymentMethodId");
+                b.HasIndex("PaymentMethodId");
 
-                    b.HasIndex("ProcessedAt");
+                b.HasIndex("ProcessedAt");
 
-                    b.HasIndex("PromoCodeId");
+                b.HasIndex("PromoCodeId");
 
-                    b.HasIndex("Status");
+                b.HasIndex("Status");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("ToUserId");
+                b.HasIndex("ToUserId");
 
-                    b.HasIndex("Type");
+                b.HasIndex("Type");
 
-                    b.ToTable("financial_transactions");
-                });
+                b.ToTable("financial_transactions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.Payment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.Payments.Payment", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric");
+                b.Property<decimal>("Amount")
+                    .HasColumnType("numeric");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
+                b.Property<string>("Currency")
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasColumnType("character varying(3)");
 
-                    b.Property<decimal>("DiscountAmount")
-                        .HasColumnType("numeric");
+                b.Property<decimal>("DiscountAmount")
+                    .HasColumnType("numeric");
 
-                    b.Property<Guid?>("DiscountCodeId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("DiscountCodeId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("FailedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("FailedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("FailureReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("FailureReason")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<decimal>("FinalAmount")
-                        .HasColumnType("numeric");
+                b.Property<decimal>("FinalAmount")
+                    .HasColumnType("numeric");
 
-                    b.Property<int>("Gateway")
-                        .HasColumnType("integer");
+                b.Property<int>("Gateway")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Metadata")
-                        .HasColumnType("text");
+                b.Property<string>("Metadata")
+                    .HasColumnType("text");
 
-                    b.Property<int>("Method")
-                        .HasColumnType("integer");
+                b.Property<int>("Method")
+                    .HasColumnType("integer");
 
-                    b.Property<decimal>("NetAmount")
-                        .HasColumnType("numeric");
+                b.Property<decimal>("NetAmount")
+                    .HasColumnType("numeric");
 
-                    b.Property<string>("PaymentIntentId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("PaymentIntentId")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime?>("ProcessedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ProcessedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("ProcessingFee")
-                        .HasColumnType("numeric");
+                b.Property<decimal>("ProcessingFee")
+                    .HasColumnType("numeric");
 
-                    b.Property<Guid?>("ProductId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProductId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("ProviderTransactionId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("ProviderTransactionId")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("Payments");
-                });
+                b.ToTable("Payments");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.PaymentRefund", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.Payments.PaymentRefund", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ExternalRefundId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("ExternalRefundId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("PaymentId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("PaymentId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("ProcessedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ProcessedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Reason")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<decimal>("RefundAmount")
-                        .HasColumnType("numeric");
+                b.Property<decimal>("RefundAmount")
+                    .HasColumnType("numeric");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("PaymentId");
+                b.HasIndex("PaymentId");
 
-                    b.ToTable("PaymentRefunds");
-                });
+                b.ToTable("PaymentRefunds");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.UserFinancialMethod", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Payments.UserFinancialMethod", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Brand")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Brand")
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("DisplayName")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("DisplayName")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("ExpiryMonth")
-                        .HasMaxLength(2)
-                        .HasColumnType("character varying(2)");
+                b.Property<string>("ExpiryMonth")
+                    .HasMaxLength(2)
+                    .HasColumnType("character varying(2)");
 
-                    b.Property<string>("ExpiryYear")
-                        .HasMaxLength(4)
-                        .HasColumnType("character varying(4)");
+                b.Property<string>("ExpiryYear")
+                    .HasMaxLength(4)
+                    .HasColumnType("character varying(4)");
 
-                    b.Property<string>("ExternalId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("ExternalId")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDefault")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("LastFour")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                b.Property<string>("LastFour")
+                    .HasMaxLength(10)
+                    .HasColumnType("character varying(10)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                b.Property<int>("Type")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ExternalId");
+                b.HasIndex("ExternalId");
 
-                    b.HasIndex("IsDefault");
+                b.HasIndex("IsDefault");
 
-                    b.HasIndex("Status");
+                b.HasIndex("Status");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("Type");
+                b.HasIndex("Type");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("user_financial_methods");
-                });
+                b.ToTable("user_financial_methods");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Permissions.ContentTypePermission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Permissions.ContentTypePermission", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("ContentType")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<long>("PermissionFlags1")
-                        .HasColumnType("bigint");
+                b.Property<long>("PermissionFlags1")
+                    .HasColumnType("bigint");
 
-                    b.Property<long>("PermissionFlags2")
-                        .HasColumnType("bigint");
+                b.Property<long>("PermissionFlags2")
+                    .HasColumnType("bigint");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex(new[] { "ContentType", "TenantId" }, "IX_ContentTypePermissions_ContentType_Tenant");
+                b.HasIndex(new[] { "ContentType", "TenantId" }, "IX_ContentTypePermissions_ContentType_Tenant");
 
-                    b.HasIndex(new[] { "ContentType", "UserId", "TenantId" }, "IX_ContentTypePermissions_ContentType_User_Tenant")
-                        .IsUnique();
+                b.HasIndex(new[] { "ContentType", "UserId", "TenantId" }, "IX_ContentTypePermissions_ContentType_User_Tenant")
+                    .IsUnique();
 
-                    b.HasIndex(new[] { "ExpiresAt" }, "IX_ContentTypePermissions_ExpiresAt");
+                b.HasIndex(new[] { "ExpiresAt" }, "IX_ContentTypePermissions_ExpiresAt");
 
-                    b.HasIndex(new[] { "TenantId" }, "IX_ContentTypePermissions_TenantId");
+                b.HasIndex(new[] { "TenantId" }, "IX_ContentTypePermissions_TenantId");
 
-                    b.HasIndex(new[] { "UserId" }, "IX_ContentTypePermissions_UserId");
+                b.HasIndex(new[] { "UserId" }, "IX_ContentTypePermissions_UserId");
 
-                    b.ToTable("ContentTypePermissions");
-                });
+                b.ToTable("ContentTypePermissions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Permissions.ModuleRole", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.Permissions.ModuleRole", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Description")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDeleted")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsSystemRole")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsSystemRole")
+                    .HasColumnType("boolean");
 
-                    b.Property<int>("Module")
-                        .HasColumnType("integer");
+                b.Property<int>("Module")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("PermissionsJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
+                b.Property<string>("PermissionsJson")
+                    .IsRequired()
+                    .HasColumnType("jsonb");
 
-                    b.Property<int>("Priority")
-                        .HasColumnType("integer");
+                b.Property<int>("Priority")
+                    .HasColumnType("integer");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                b.Property<byte[]>("RowVersion")
+                    .IsConcurrencyToken()
+                    .IsRequired()
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("bytea");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("Name", "Module", "TenantId")
-                        .IsUnique();
+                b.HasIndex("Name", "Module", "TenantId")
+                    .IsUnique();
 
-                    b.ToTable("ModuleRoles");
-                });
+                b.ToTable("ModuleRoles");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Permissions.RoleTemplate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Permissions.RoleTemplate", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Description")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<bool>("IsSystemRole")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsSystemRole")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("PermissionTemplatesJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
+                b.Property<string>("PermissionTemplatesJson")
+                    .IsRequired()
+                    .HasColumnType("jsonb");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("RoleTemplates");
-                });
+                b.ToTable("RoleTemplates");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Permissions.UserPermission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Permissions.UserPermission", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Action")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Action")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<string>("ConstraintsJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
+                b.Property<string>("ConstraintsJson")
+                    .IsRequired()
+                    .HasColumnType("jsonb");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("GrantedByRole")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("GrantedByRole")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<Guid?>("ResourceId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ResourceId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("ResourceType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("ResourceType")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<Guid?>("RoleTemplateId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("RoleTemplateId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("RoleTemplateId");
+                b.HasIndex("RoleTemplateId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("UserPermissions");
-                });
+                b.ToTable("UserPermissions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Permissions.UserRoleAssignment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.Permissions.UserRoleAssignment", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("ConstraintsJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
+                b.Property<string>("ConstraintsJson")
+                    .IsRequired()
+                    .HasColumnType("jsonb");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDeleted")
+                    .HasColumnType("boolean");
 
-                    b.Property<int>("Module")
-                        .HasColumnType("integer");
+                b.Property<int>("Module")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("RoleId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("RoleId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("RoleName")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                b.Property<byte[]>("RowVersion")
+                    .IsConcurrencyToken()
+                    .IsRequired()
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("bytea");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("RoleId");
+                b.HasIndex("RoleId");
 
-                    b.HasIndex("UserId", "Module", "RoleName")
-                        .IsUnique();
+                b.HasIndex("UserId", "Module", "RoleName")
+                    .IsUnique();
 
-                    b.ToTable("UserRoleAssignments");
-                });
+                b.ToTable("UserRoleAssignments");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostFollower", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostFollower", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("NotifyOnComments")
-                        .HasColumnType("boolean");
+                b.Property<bool>("NotifyOnComments")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("NotifyOnLikes")
-                        .HasColumnType("boolean");
+                b.Property<bool>("NotifyOnLikes")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("NotifyOnShares")
-                        .HasColumnType("boolean");
+                b.Property<bool>("NotifyOnShares")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("NotifyOnUpdates")
-                        .HasColumnType("boolean");
+                b.Property<bool>("NotifyOnUpdates")
+                    .HasColumnType("boolean");
 
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("PostId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("PostId");
+                b.HasIndex("PostId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("post_followers");
-                });
+                b.ToTable("post_followers");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostStatistics", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostStatistics", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<double>("AverageEngagementTime")
-                        .HasColumnType("double precision");
+                b.Property<double>("AverageEngagementTime")
+                    .HasColumnType("double precision");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<double>("EngagementScore")
-                        .HasColumnType("double precision");
+                b.Property<double>("EngagementScore")
+                    .HasColumnType("double precision");
 
-                    b.Property<int>("ExternalSharesCount")
-                        .HasColumnType("integer");
+                b.Property<int>("ExternalSharesCount")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("LastCalculatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("LastCalculatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("PostId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<double>("TrendingScore")
-                        .HasColumnType("double precision");
+                b.Property<double>("TrendingScore")
+                    .HasColumnType("double precision");
 
-                    b.Property<int>("UniqueViewersCount")
-                        .HasColumnType("integer");
+                b.Property<int>("UniqueViewersCount")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.Property<int>("ViewsCount")
-                        .HasColumnType("integer");
+                b.Property<int>("ViewsCount")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("PostId")
-                        .IsUnique();
+                b.HasIndex("PostId")
+                    .IsUnique();
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("post_statistics");
-                });
+                b.ToTable("post_statistics");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTag", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTag", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Category")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<string>("Color")
-                        .HasMaxLength(7)
-                        .HasColumnType("character varying(7)");
+                b.Property<string>("Color")
+                    .HasMaxLength(7)
+                    .HasColumnType("character varying(7)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Description")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("DisplayName")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<bool>("IsFeatured")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsFeatured")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("UsageCount")
-                        .HasColumnType("integer");
+                b.Property<int>("UsageCount")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("Category");
+                b.HasIndex("Category");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("Name");
+                b.HasIndex("Name");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UsageCount");
+                b.HasIndex("UsageCount");
 
-                    b.ToTable("post_tags");
-                });
+                b.ToTable("post_tags");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTagAssignment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTagAssignment", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Order")
-                        .HasColumnType("integer");
+                b.Property<int>("Order")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("PostId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("TagId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("TagId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("PostId");
+                b.HasIndex("PostId");
 
-                    b.HasIndex("TagId");
+                b.HasIndex("TagId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("post_tag_assignments");
-                });
+                b.ToTable("post_tag_assignments");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostView", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostView", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("DurationSeconds")
-                        .HasColumnType("integer");
+                b.Property<int>("DurationSeconds")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(45)
-                        .HasColumnType("character varying(45)");
+                b.Property<string>("IpAddress")
+                    .HasMaxLength(45)
+                    .HasColumnType("character varying(45)");
 
-                    b.Property<bool>("IsEngaged")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsEngaged")
+                    .HasColumnType("boolean");
 
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("PostId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Referrer")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Referrer")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("UserAgent")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.Property<DateTime>("ViewedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("ViewedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("IpAddress");
+                b.HasIndex("IpAddress");
 
-                    b.HasIndex("PostId");
+                b.HasIndex("PostId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("ViewedAt");
+                b.HasIndex("ViewedAt");
 
-                    b.ToTable("post_views");
-                });
+                b.ToTable("post_views");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostComment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Posts.PostComment", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<Guid>("AuthorId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("AuthorId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("Content")
+                    .IsRequired()
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("LikesCount")
-                        .HasColumnType("integer");
+                b.Property<int>("LikesCount")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("ParentCommentId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ParentCommentId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("PostId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AuthorId");
+                b.HasIndex("AuthorId");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ParentCommentId");
+                b.HasIndex("ParentCommentId");
 
-                    b.HasIndex("PostId");
+                b.HasIndex("PostId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("post_comments");
-                });
+                b.ToTable("post_comments");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostContentReference", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Posts.PostContentReference", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Context")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Context")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("PostId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("ReferenceType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("ReferenceType")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("ReferencedResourceId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ReferencedResourceId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("PostId");
+                b.HasIndex("PostId");
 
-                    b.HasIndex("ReferencedResourceId");
+                b.HasIndex("ReferencedResourceId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("post_content_references");
-                });
+                b.ToTable("post_content_references");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostLike", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Posts.PostLike", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("PostId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("PostId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("ReactionType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                b.Property<string>("ReactionType")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("PostId");
+                b.HasIndex("PostId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("PostId", "UserId")
-                        .IsUnique();
+                b.HasIndex("PostId", "UserId")
+                    .IsUnique();
 
-                    b.ToTable("post_likes");
-                });
+                b.ToTable("post_likes");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.ProductPricing", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductPricing", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<decimal>("BasePrice")
-                        .HasColumnType("decimal(10,2)");
+                b.Property<decimal>("BasePrice")
+                    .HasColumnType("decimal(10,2)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
+                b.Property<string>("Currency")
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasColumnType("character varying(3)");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDefault")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProductId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("SaleEndDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("SaleEndDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal?>("SalePrice")
-                        .HasColumnType("decimal(10,2)");
+                b.Property<decimal?>("SalePrice")
+                    .HasColumnType("decimal(10,2)");
 
-                    b.Property<DateTime?>("SaleStartDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("SaleStartDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("Currency");
+                b.HasIndex("Currency");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("IsDefault");
+                b.HasIndex("IsDefault");
 
-                    b.HasIndex("ProductId");
+                b.HasIndex("ProductId");
 
-                    b.HasIndex("SaleEndDate");
+                b.HasIndex("SaleEndDate");
 
-                    b.HasIndex("SaleStartDate");
+                b.HasIndex("SaleStartDate");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("product_pricing");
-                });
+                b.ToTable("product_pricing");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.ProductProgram", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductProgram", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProductId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("ProgramId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProgramId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                b.Property<int>("SortOrder")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ProgramId");
+                b.HasIndex("ProgramId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("ProductId", "ProgramId")
-                        .IsUnique()
-                        .HasFilter("\"DeletedAt\" IS NULL");
+                b.HasIndex("ProductId", "ProgramId")
+                    .IsUnique()
+                    .HasFilter("\"DeletedAt\" IS NULL");
 
-                    b.HasIndex("ProductId", "SortOrder");
+                b.HasIndex("ProductId", "SortOrder");
 
-                    b.ToTable("product_programs");
-                });
+                b.ToTable("product_programs");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.ProductSubscriptionPlan", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductSubscriptionPlan", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<int>("BillingInterval")
-                        .HasColumnType("integer");
+                b.Property<int>("BillingInterval")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
+                b.Property<string>("Currency")
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasColumnType("character varying(3)");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("Description")
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.Property<int>("IntervalCount")
-                        .HasColumnType("integer");
+                b.Property<int>("IntervalCount")
+                    .HasColumnType("integer");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDefault")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(10,2)");
+                b.Property<decimal>("Price")
+                    .HasColumnType("decimal(10,2)");
 
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProductId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int?>("TrialPeriodDays")
-                        .HasColumnType("integer");
+                b.Property<int?>("TrialPeriodDays")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("BillingInterval")
-                        .HasDatabaseName("IX_ProductSubscriptionPlans_BillingInterval");
+                b.HasIndex("BillingInterval")
+                    .HasDatabaseName("IX_ProductSubscriptionPlans_BillingInterval");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("IsActive")
-                        .HasDatabaseName("IX_ProductSubscriptionPlans_IsActive");
+                b.HasIndex("IsActive")
+                    .HasDatabaseName("IX_ProductSubscriptionPlans_IsActive");
 
-                    b.HasIndex("IsDefault")
-                        .HasDatabaseName("IX_ProductSubscriptionPlans_IsDefault");
+                b.HasIndex("IsDefault")
+                    .HasDatabaseName("IX_ProductSubscriptionPlans_IsDefault");
 
-                    b.HasIndex("Name")
-                        .HasDatabaseName("IX_ProductSubscriptionPlans_Name");
+                b.HasIndex("Name")
+                    .HasDatabaseName("IX_ProductSubscriptionPlans_Name");
 
-                    b.HasIndex("Price")
-                        .HasDatabaseName("IX_ProductSubscriptionPlans_Price");
+                b.HasIndex("Price")
+                    .HasDatabaseName("IX_ProductSubscriptionPlans_Price");
 
-                    b.HasIndex("ProductId")
-                        .HasDatabaseName("IX_ProductSubscriptionPlans_ProductId");
+                b.HasIndex("ProductId")
+                    .HasDatabaseName("IX_ProductSubscriptionPlans_ProductId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("product_subscription_plans");
-                });
+                b.ToTable("product_subscription_plans");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.PromoCode", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Products.PromoCode", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Code")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("CreatedBy")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
+                b.Property<string>("Currency")
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasColumnType("character varying(3)");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
+                b.Property<string>("Description")
+                    .HasColumnType("text");
 
-                    b.Property<decimal?>("DiscountAmount")
-                        .HasColumnType("decimal(10,2)");
+                b.Property<decimal?>("DiscountAmount")
+                    .HasColumnType("decimal(10,2)");
 
-                    b.Property<decimal?>("DiscountPercentage")
-                        .HasColumnType("decimal(5,2)");
+                b.Property<decimal?>("DiscountPercentage")
+                    .HasColumnType("decimal(5,2)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<int?>("MaxUses")
-                        .HasColumnType("integer");
+                b.Property<int?>("MaxUses")
+                    .HasColumnType("integer");
 
-                    b.Property<int?>("MaxUsesPerUser")
-                        .HasColumnType("integer");
+                b.Property<int?>("MaxUsesPerUser")
+                    .HasColumnType("integer");
 
-                    b.Property<decimal?>("MinimumOrderAmount")
-                        .HasColumnType("decimal(10,2)");
+                b.Property<decimal?>("MinimumOrderAmount")
+                    .HasColumnType("decimal(10,2)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<Guid?>("ProductId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProductId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                b.Property<int>("Type")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("ValidFrom")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ValidFrom")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ValidUntil")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ValidUntil")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
+                b.HasIndex("Code")
+                    .IsUnique();
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("CreatedBy");
+                b.HasIndex("CreatedBy");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("IsActive");
+                b.HasIndex("IsActive");
 
-                    b.HasIndex("ProductId");
+                b.HasIndex("ProductId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("Type");
+                b.HasIndex("Type");
 
-                    b.HasIndex("ValidFrom");
+                b.HasIndex("ValidFrom");
 
-                    b.HasIndex("ValidUntil");
+                b.HasIndex("ValidUntil");
 
-                    b.ToTable("promo_codes");
-                });
+                b.ToTable("promo_codes");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.PromoCodeUse", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Products.PromoCodeUse", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("DiscountApplied")
-                        .HasColumnType("decimal(10,2)");
+                b.Property<decimal>("DiscountApplied")
+                    .HasColumnType("decimal(10,2)");
 
-                    b.Property<Guid>("FinancialTransactionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("FinancialTransactionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("PromoCodeId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("PromoCodeId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("FinancialTransactionId");
+                b.HasIndex("FinancialTransactionId");
 
-                    b.HasIndex("PromoCodeId");
+                b.HasIndex("PromoCodeId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("promo_code_uses");
-                });
+                b.ToTable("promo_code_uses");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.UserProduct", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Products.UserProduct", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime?>("AccessEndDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("AccessEndDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("AccessStartDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("AccessStartDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("AccessStatus")
-                        .HasColumnType("integer");
+                b.Property<int>("AccessStatus")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("AcquisitionType")
-                        .HasColumnType("integer");
+                b.Property<int>("AcquisitionType")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)");
+                b.Property<string>("Currency")
+                    .IsRequired()
+                    .HasMaxLength(3)
+                    .HasColumnType("character varying(3)");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("GiftedByUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("GiftedByUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<decimal>("PricePaid")
-                        .HasColumnType("decimal(10,2)");
+                b.Property<decimal>("PricePaid")
+                    .HasColumnType("decimal(10,2)");
 
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProductId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("SubscriptionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("SubscriptionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("UserSubscriptionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserSubscriptionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AccessEndDate");
+                b.HasIndex("AccessEndDate");
 
-                    b.HasIndex("AccessStatus");
+                b.HasIndex("AccessStatus");
 
-                    b.HasIndex("AcquisitionType");
+                b.HasIndex("AcquisitionType");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("GiftedByUserId");
+                b.HasIndex("GiftedByUserId");
 
-                    b.HasIndex("ProductId");
+                b.HasIndex("ProductId");
 
-                    b.HasIndex("SubscriptionId");
+                b.HasIndex("SubscriptionId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("UserSubscriptionId");
+                b.HasIndex("UserSubscriptionId");
 
-                    b.HasIndex("UserId", "ProductId")
-                        .IsUnique();
+                b.HasIndex("UserId", "ProductId")
+                    .IsUnique();
 
-                    b.ToTable("user_products");
-                });
+                b.ToTable("user_products");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ActivityGrade", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ActivityGrade", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<Guid>("ContentInteractionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ContentInteractionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Feedback")
-                        .HasColumnType("text");
+                b.Property<string>("Feedback")
+                    .HasColumnType("text");
 
-                    b.Property<decimal>("Grade")
-                        .HasColumnType("decimal(5,2)");
+                b.Property<decimal>("Grade")
+                    .HasColumnType("decimal(5,2)");
 
-                    b.Property<DateTime>("GradedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("GradedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("GraderProgramUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("GraderProgramUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("GradingDetails")
-                        .HasColumnType("jsonb");
+                b.Property<string>("GradingDetails")
+                    .HasColumnType("jsonb");
 
-                    b.Property<Guid?>("ProgramUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProgramUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ContentInteractionId");
+                b.HasIndex("ContentInteractionId");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("GraderProgramUserId");
+                b.HasIndex("GraderProgramUserId");
 
-                    b.HasIndex("ProgramUserId");
+                b.HasIndex("ProgramUserId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("activity_grades");
-                });
+                b.ToTable("activity_grades");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ContentInteraction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentInteraction", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("CompletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("CompletionPercentage")
-                        .HasColumnType("decimal(5,2)");
+                b.Property<decimal>("CompletionPercentage")
+                    .HasColumnType("decimal(5,2)");
 
-                    b.Property<Guid>("ContentId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ContentId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("FirstAccessedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("FirstAccessedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastAccessedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("LastAccessedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("ProgramContentId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProgramContentId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("ProgramUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProgramUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("SubmissionData")
-                        .HasColumnType("jsonb");
+                b.Property<string>("SubmissionData")
+                    .HasColumnType("jsonb");
 
-                    b.Property<DateTime?>("SubmittedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("SubmittedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int?>("TimeSpentMinutes")
-                        .HasColumnType("integer");
+                b.Property<int?>("TimeSpentMinutes")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ContentId");
+                b.HasIndex("ContentId");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ProgramContentId");
+                b.HasIndex("ProgramContentId");
 
-                    b.HasIndex("ProgramUserId");
+                b.HasIndex("ProgramUserId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("content_interactions");
-                });
+                b.ToTable("content_interactions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ContentProgress", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentProgress", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<int>("Attempts")
-                        .HasColumnType("integer");
+                b.Property<int>("Attempts")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("CompletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("CompletionStatus")
-                        .HasColumnType("integer");
+                b.Property<int>("CompletionStatus")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("ContentId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ContentId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("FirstAccessedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("FirstAccessedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastAccessedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("LastAccessedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal?>("MaxScore")
-                        .HasColumnType("numeric");
+                b.Property<decimal?>("MaxScore")
+                    .HasColumnType("numeric");
 
-                    b.Property<Guid>("ProgramEnrollmentId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProgramEnrollmentId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("ProgressData")
-                        .HasColumnType("jsonb");
+                b.Property<string>("ProgressData")
+                    .HasColumnType("jsonb");
 
-                    b.Property<decimal>("ProgressPercentage")
-                        .HasColumnType("numeric");
+                b.Property<decimal>("ProgressPercentage")
+                    .HasColumnType("numeric");
 
-                    b.Property<decimal?>("Score")
-                        .HasColumnType("numeric");
+                b.Property<decimal?>("Score")
+                    .HasColumnType("numeric");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("TimeSpentSeconds")
-                        .HasColumnType("integer");
+                b.Property<int>("TimeSpentSeconds")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CompletedAt");
+                b.HasIndex("CompletedAt");
 
-                    b.HasIndex("CompletionStatus");
+                b.HasIndex("CompletionStatus");
 
-                    b.HasIndex("ContentId");
+                b.HasIndex("ContentId");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ProgramEnrollmentId");
+                b.HasIndex("ProgramEnrollmentId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("UserId", "ContentId")
-                        .IsUnique();
+                b.HasIndex("UserId", "ContentId")
+                    .IsUnique();
 
-                    b.ToTable("content_progress");
-                });
+                b.ToTable("content_progress");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ContentReport", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentReport", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("ActionTaken")
-                        .HasColumnType("text");
+                b.Property<string>("ActionTaken")
+                    .HasColumnType("text");
 
-                    b.Property<DateTime?>("AssignedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("AssignedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Category")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<Guid?>("ContentId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ContentId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("Description")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<string>("Evidence")
-                        .HasColumnType("jsonb");
+                b.Property<string>("Evidence")
+                    .HasColumnType("jsonb");
 
-                    b.Property<Guid?>("ModeratorId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ModeratorId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("PeerReviewId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("PeerReviewId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Priority")
-                        .HasColumnType("integer");
+                b.Property<int>("Priority")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("ReportType")
-                        .HasColumnType("integer");
+                b.Property<int>("ReportType")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("ReportedUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ReportedUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("ReporterId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ReporterId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("ResolutionNotes")
-                        .HasColumnType("text");
+                b.Property<string>("ResolutionNotes")
+                    .HasColumnType("text");
 
-                    b.Property<DateTime?>("ResolvedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ResolvedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("Subject")
-                        .HasColumnType("integer");
+                b.Property<int>("Subject")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ModeratorId");
+                b.HasIndex("ModeratorId");
 
-                    b.HasIndex("PeerReviewId");
+                b.HasIndex("PeerReviewId");
 
-                    b.HasIndex("ReportType");
+                b.HasIndex("ReportType");
 
-                    b.HasIndex("ReportedUserId");
+                b.HasIndex("ReportedUserId");
 
-                    b.HasIndex("ReporterId");
+                b.HasIndex("ReporterId");
 
-                    b.HasIndex("Status");
+                b.HasIndex("Status");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("content_reports");
-                });
+                b.ToTable("content_reports");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.PeerReview", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Programs.PeerReview", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("AcceptanceReason")
-                        .HasColumnType("text");
+                b.Property<string>("AcceptanceReason")
+                    .HasColumnType("text");
 
-                    b.Property<DateTime>("AssignedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("AssignedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("ContentInteractionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ContentInteractionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DueDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DueDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Feedback")
-                        .HasColumnType("text");
+                b.Property<string>("Feedback")
+                    .HasColumnType("text");
 
-                    b.Property<decimal?>("Grade")
-                        .HasColumnType("numeric");
+                b.Property<decimal?>("Grade")
+                    .HasColumnType("numeric");
 
-                    b.Property<bool?>("IsAccepted")
-                        .HasColumnType("boolean");
+                b.Property<bool?>("IsAccepted")
+                    .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("ResponseAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ResponseAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ReviewData")
-                        .HasColumnType("jsonb");
+                b.Property<string>("ReviewData")
+                    .HasColumnType("jsonb");
 
-                    b.Property<int?>("ReviewQuality")
-                        .HasColumnType("integer");
+                b.Property<int?>("ReviewQuality")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("RevieweeId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("RevieweeId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("ReviewerId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ReviewerId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime?>("SubmittedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("SubmittedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AssignedAt");
+                b.HasIndex("AssignedAt");
 
-                    b.HasIndex("ContentInteractionId");
+                b.HasIndex("ContentInteractionId");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("RevieweeId");
+                b.HasIndex("RevieweeId");
 
-                    b.HasIndex("ReviewerId");
+                b.HasIndex("ReviewerId");
 
-                    b.HasIndex("Status");
+                b.HasIndex("Status");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("peer_reviews");
-                });
+                b.ToTable("peer_reviews");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramContent", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramContent", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
+                b.Property<string>("Body")
+                    .IsRequired()
+                    .HasColumnType("jsonb");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("Description")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<int?>("EstimatedMinutes")
-                        .HasColumnType("integer");
+                b.Property<int?>("EstimatedMinutes")
+                    .HasColumnType("integer");
 
-                    b.Property<int?>("GradingMethod")
-                        .HasColumnType("integer");
+                b.Property<int?>("GradingMethod")
+                    .HasColumnType("integer");
 
-                    b.Property<bool>("IsRequired")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsRequired")
+                    .HasColumnType("boolean");
 
-                    b.Property<decimal?>("MaxPoints")
-                        .HasColumnType("decimal(5,2)");
+                b.Property<decimal?>("MaxPoints")
+                    .HasColumnType("decimal(5,2)");
 
-                    b.Property<Guid?>("ParentId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ParentId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("ProgramId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProgramId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Slug")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Slug")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                b.Property<int>("SortOrder")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Title")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                b.Property<int>("Type")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.Property<int>("Visibility")
-                        .HasColumnType("integer");
+                b.Property<int>("Visibility")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("IsRequired");
+                b.HasIndex("IsRequired");
 
-                    b.HasIndex("ParentId");
+                b.HasIndex("ParentId");
 
-                    b.HasIndex("ProgramId");
+                b.HasIndex("ProgramId");
 
-                    b.HasIndex("SortOrder");
+                b.HasIndex("SortOrder");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("Type");
+                b.HasIndex("Type");
 
-                    b.HasIndex("Visibility");
+                b.HasIndex("Visibility");
 
-                    b.HasIndex("ParentId", "SortOrder");
+                b.HasIndex("ParentId", "SortOrder");
 
-                    b.HasIndex("ProgramId", "SortOrder");
+                b.HasIndex("ProgramId", "SortOrder");
 
-                    b.ToTable("program_contents");
-                });
+                b.ToTable("program_contents");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramEnrollment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramEnrollment", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<Guid?>("CertificateId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("CertificateId")
+                    .HasColumnType("uuid");
 
-                    b.Property<bool>("CertificateIssued")
-                        .HasColumnType("boolean");
+                b.Property<bool>("CertificateIssued")
+                    .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("CertificateIssuedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("CertificateIssuedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("CompletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("CompletionStatus")
-                        .HasColumnType("integer");
+                b.Property<int>("CompletionStatus")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("EnrolledAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("EnrolledAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("EnrollmentSource")
-                        .HasColumnType("integer");
+                b.Property<int>("EnrollmentSource")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("EnrollmentStatus")
-                        .HasColumnType("integer");
+                b.Property<int>("EnrollmentStatus")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime?>("ExpiryDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ExpiryDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal?>("FinalGrade")
-                        .HasColumnType("numeric");
+                b.Property<decimal?>("FinalGrade")
+                    .HasColumnType("numeric");
 
-                    b.Property<string>("Metadata")
-                        .HasColumnType("jsonb");
+                b.Property<string>("Metadata")
+                    .HasColumnType("jsonb");
 
-                    b.Property<Guid>("ProgramId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProgramId")
+                    .HasColumnType("uuid");
 
-                    b.Property<decimal>("ProgressPercentage")
-                        .HasColumnType("numeric");
+                b.Property<decimal>("ProgressPercentage")
+                    .HasColumnType("numeric");
 
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("StartDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CompletionStatus");
+                b.HasIndex("CompletionStatus");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("EnrollmentStatus");
+                b.HasIndex("EnrollmentStatus");
 
-                    b.HasIndex("ProgramId");
+                b.HasIndex("ProgramId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("UserId", "ProgramId")
-                        .IsUnique();
+                b.HasIndex("UserId", "ProgramId")
+                    .IsUnique();
 
-                    b.ToTable("program_enrollments");
-                });
+                b.ToTable("program_enrollments");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramRating", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramRating", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("HelpfulVotes")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
+                b.Property<int>("HelpfulVotes")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(0);
 
-                    b.Property<bool>("IsFeatured")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
+                b.Property<bool>("IsFeatured")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("boolean")
+                    .HasDefaultValue(false);
 
-                    b.Property<bool>("IsVerified")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(false);
+                b.Property<bool>("IsVerified")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("boolean")
+                    .HasDefaultValue(false);
 
-                    b.Property<Guid>("ProgramId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProgramId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProgramUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProgramUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<decimal>("Rating")
-                        .HasPrecision(3, 2)
-                        .HasColumnType("numeric(3,2)");
+                b.Property<decimal>("Rating")
+                    .HasPrecision(3, 2)
+                    .HasColumnType("numeric(3,2)");
 
-                    b.Property<string>("Review")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                b.Property<string>("Review")
+                    .HasMaxLength(2000)
+                    .HasColumnType("character varying(2000)");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("UnhelpfulVotes")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
+                b.Property<int>("UnhelpfulVotes")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(0);
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
+                b.Property<string>("UserId")
+                    .IsRequired()
+                    .HasMaxLength(450)
+                    .HasColumnType("character varying(450)");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt")
-                        .HasDatabaseName("IX_ProgramRatings_CreatedAt");
+                b.HasIndex("CreatedAt")
+                    .HasDatabaseName("IX_ProgramRatings_CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("IsFeatured")
-                        .HasDatabaseName("IX_ProgramRatings_IsFeatured");
+                b.HasIndex("IsFeatured")
+                    .HasDatabaseName("IX_ProgramRatings_IsFeatured");
 
-                    b.HasIndex("IsVerified")
-                        .HasDatabaseName("IX_ProgramRatings_IsVerified");
+                b.HasIndex("IsVerified")
+                    .HasDatabaseName("IX_ProgramRatings_IsVerified");
 
-                    b.HasIndex("ProgramId");
+                b.HasIndex("ProgramId");
 
-                    b.HasIndex("ProgramUserId");
+                b.HasIndex("ProgramUserId");
 
-                    b.HasIndex("Rating")
-                        .HasDatabaseName("IX_ProgramRatings_Rating");
+                b.HasIndex("Rating")
+                    .HasDatabaseName("IX_ProgramRatings_Rating");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("ProgramId", "UserId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ProgramRatings_ProgramId_UserId_Unique");
+                b.HasIndex("ProgramId", "UserId")
+                    .IsUnique()
+                    .HasDatabaseName("IX_ProgramRatings_ProgramId_UserId_Unique");
 
-                    b.ToTable("program_ratings", (string)null);
-                });
+                b.ToTable("program_ratings", (string)null);
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramUser", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramUser", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("CompletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("CompletionPercentage")
-                        .HasColumnType("decimal(5,2)");
+                b.Property<decimal>("CompletionPercentage")
+                    .HasColumnType("decimal(5,2)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal?>("FinalGrade")
-                        .HasColumnType("decimal(5,2)");
+                b.Property<decimal?>("FinalGrade")
+                    .HasColumnType("decimal(5,2)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<DateTime>("JoinedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("JoinedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastAccessedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("LastAccessedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("ProgramId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProgramId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("StartedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("StartedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CompletionPercentage");
+                b.HasIndex("CompletionPercentage");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("IsActive");
+                b.HasIndex("IsActive");
 
-                    b.HasIndex("JoinedAt");
+                b.HasIndex("JoinedAt");
 
-                    b.HasIndex("ProgramId");
+                b.HasIndex("ProgramId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("UserId", "ProgramId")
-                        .IsUnique();
+                b.HasIndex("UserId", "ProgramId")
+                    .IsUnique();
 
-                    b.ToTable("program_users");
-                });
+                b.ToTable("program_users");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramWishlist", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramWishlist", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("AddedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("AddedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Notes")
-                        .HasColumnType("text");
+                b.Property<string>("Notes")
+                    .HasColumnType("text");
 
-                    b.Property<Guid>("ProgramId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProgramId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AddedAt");
+                b.HasIndex("AddedAt");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ProgramId");
+                b.HasIndex("ProgramId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("UserId", "ProgramId")
-                        .IsUnique();
+                b.HasIndex("UserId", "ProgramId")
+                    .IsUnique();
 
-                    b.ToTable("program_wishlists");
-                });
+                b.ToTable("program_wishlists");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectMetadata", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectMetadata", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("DownloadCount")
-                        .HasColumnType("integer");
+                b.Property<int>("DownloadCount")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("FollowerCount")
-                        .HasColumnType("integer");
+                b.Property<int>("FollowerCount")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("ViewCount")
-                        .HasColumnType("integer");
+                b.Property<int>("ViewCount")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("ProjectId")
-                        .IsUnique();
+                b.HasIndex("ProjectId")
+                    .IsUnique();
 
-                    b.ToTable("ProjectMetadata");
-                });
+                b.ToTable("ProjectMetadata");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectPermission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectPermission", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<long>("PermissionFlags1")
-                        .HasColumnType("bigint");
+                b.Property<long>("PermissionFlags1")
+                    .HasColumnType("bigint");
 
-                    b.Property<long>("PermissionFlags2")
-                        .HasColumnType("bigint");
+                b.Property<long>("PermissionFlags2")
+                    .HasColumnType("bigint");
 
-                    b.Property<Guid>("ResourceId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ResourceId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex(new[] { "ExpiresAt" }, "IX_ProjectPermissions_Expiration");
+                b.HasIndex(new[] { "ExpiresAt" }, "IX_ProjectPermissions_Expiration");
 
-                    b.HasIndex(new[] { "ResourceId", "UserId" }, "IX_ProjectPermissions_Resource_User");
+                b.HasIndex(new[] { "ResourceId", "UserId" }, "IX_ProjectPermissions_Resource_User");
 
-                    b.HasIndex(new[] { "TenantId" }, "IX_ProjectPermissions_TenantId");
+                b.HasIndex(new[] { "TenantId" }, "IX_ProjectPermissions_TenantId");
 
-                    b.HasIndex(new[] { "UserId", "TenantId", "ResourceId" }, "IX_ProjectPermissions_User_Tenant_Resource")
-                        .IsUnique();
+                b.HasIndex(new[] { "UserId", "TenantId", "ResourceId" }, "IX_ProjectPermissions_User_Tenant_Resource")
+                    .IsUnique();
 
-                    b.ToTable("ProjectPermissions");
-                });
+                b.ToTable("ProjectPermissions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectVersion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectVersion", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("CreatedById")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("CreatedById")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("DownloadCount")
-                        .HasColumnType("integer");
+                b.Property<int>("DownloadCount")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("ReleaseNotes")
-                        .HasColumnType("text");
+                b.Property<string>("ReleaseNotes")
+                    .HasColumnType("text");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.Property<string>("VersionNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("VersionNumber")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("CreatedById");
+                b.HasIndex("CreatedById");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ProjectId");
+                b.HasIndex("ProjectId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("ProjectVersion");
-                });
+                b.ToTable("ProjectVersion");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Resources.Resource", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.Resources.Resource", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                b.Property<string>("Description")
+                    .HasMaxLength(2000)
+                    .HasColumnType("character varying(2000)");
 
-                    b.Property<Guid?>("MetadataId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("MetadataId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Title")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.Property<int>("Visibility")
-                        .HasColumnType("integer");
+                b.Property<int>("Visibility")
+                    .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("MetadataId");
+                b.HasIndex("MetadataId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable((string)null);
+                b.ToTable((string)null);
 
-                    b.UseTpcMappingStrategy();
-                });
+                b.UseTpcMappingStrategy();
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Resources.ResourceLocalization", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Resources.ResourceLocalization", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<Guid?>("CommentId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("CommentId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("Content")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<Guid?>("ContentId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ContentId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ContentLicenseId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ContentLicenseId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("FieldName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("FieldName")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDefault")
+                    .HasColumnType("boolean");
 
-                    b.Property<Guid>("LanguageId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("LanguageId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProjectCategoryId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProjectCategoryId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProjectCollaboratorId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProjectCollaboratorId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProjectFeedbackId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProjectFeedbackId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProjectFollowerId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProjectFollowerId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProjectJamSubmissionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProjectJamSubmissionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProjectReleaseId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProjectReleaseId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProjectTeamId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProjectTeamId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ReputationActionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ReputationActionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ReputationTierId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ReputationTierId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("ResourceId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ResourceId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("ResourceType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("ResourceType")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid?>("UserProfileId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserProfileId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("UserReputationHistoryId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserReputationHistoryId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("UserReputationId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserReputationId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("UserTenantReputationId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserTenantReputationId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CommentId");
+                b.HasIndex("CommentId");
 
-                    b.HasIndex("ContentId");
+                b.HasIndex("ContentId");
 
-                    b.HasIndex("ContentLicenseId");
+                b.HasIndex("ContentLicenseId");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("LanguageId");
+                b.HasIndex("LanguageId");
 
-                    b.HasIndex("ProjectCategoryId");
+                b.HasIndex("ProjectCategoryId");
 
-                    b.HasIndex("ProjectCollaboratorId");
+                b.HasIndex("ProjectCollaboratorId");
 
-                    b.HasIndex("ProjectFeedbackId");
+                b.HasIndex("ProjectFeedbackId");
 
-                    b.HasIndex("ProjectFollowerId");
+                b.HasIndex("ProjectFollowerId");
 
-                    b.HasIndex("ProjectJamSubmissionId");
+                b.HasIndex("ProjectJamSubmissionId");
 
-                    b.HasIndex("ProjectReleaseId");
+                b.HasIndex("ProjectReleaseId");
 
-                    b.HasIndex("ProjectTeamId");
+                b.HasIndex("ProjectTeamId");
 
-                    b.HasIndex("ReputationActionId");
+                b.HasIndex("ReputationActionId");
 
-                    b.HasIndex("ReputationTierId");
+                b.HasIndex("ReputationTierId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserProfileId");
+                b.HasIndex("UserProfileId");
 
-                    b.HasIndex("UserReputationHistoryId");
+                b.HasIndex("UserReputationHistoryId");
 
-                    b.HasIndex("UserReputationId");
+                b.HasIndex("UserReputationId");
 
-                    b.HasIndex("UserTenantReputationId");
+                b.HasIndex("UserTenantReputationId");
 
-                    b.ToTable("ResourceLocalizations");
-                });
+                b.ToTable("ResourceLocalizations");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Resources.ResourceMetadata", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Resources.ResourceMetadata", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("AdditionalData")
-                        .HasColumnType("jsonb");
+                b.Property<string>("AdditionalData")
+                    .HasColumnType("jsonb");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ResourceType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("ResourceType")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("SeoMetadata")
-                        .HasColumnType("jsonb");
+                b.Property<string>("SeoMetadata")
+                    .HasColumnType("jsonb");
 
-                    b.Property<string>("Tags")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Tags")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ResourceType");
+                b.HasIndex("ResourceType");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("ResourceMetadata");
-                });
+                b.ToTable("ResourceMetadata");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Subscriptions.Models.UserSubscription", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Subscriptions.Models.UserSubscription", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime?>("CanceledAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("CanceledAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime>("CurrentPeriodEnd")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("CurrentPeriodEnd")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("CurrentPeriodStart")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("CurrentPeriodStart")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("EndsAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("EndsAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ExternalSubscriptionId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("ExternalSubscriptionId")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime?>("LastPaymentAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("LastPaymentAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("NextBillingAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("NextBillingAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("ProductSubscriptionPlanId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProductSubscriptionPlanId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("SubscriptionPlanId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("SubscriptionPlanId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("TrialEndsAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("TrialEndsAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("CurrentPeriodEnd");
+                b.HasIndex("CurrentPeriodEnd");
 
-                    b.HasIndex("CurrentPeriodStart");
+                b.HasIndex("CurrentPeriodStart");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ExternalSubscriptionId");
+                b.HasIndex("ExternalSubscriptionId");
 
-                    b.HasIndex("NextBillingAt");
+                b.HasIndex("NextBillingAt");
 
-                    b.HasIndex("ProductSubscriptionPlanId");
+                b.HasIndex("ProductSubscriptionPlanId");
 
-                    b.HasIndex("Status");
+                b.HasIndex("Status");
 
-                    b.HasIndex("SubscriptionPlanId");
+                b.HasIndex("SubscriptionPlanId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("user_subscriptions");
-                });
+                b.ToTable("user_subscriptions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Tags.Models.Tag", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Tags.Models.Tag", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Color")
-                        .HasMaxLength(7)
-                        .HasColumnType("character varying(7)");
+                b.Property<string>("Color")
+                    .HasMaxLength(7)
+                    .HasColumnType("character varying(7)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Description")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<string>("Icon")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Icon")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                b.Property<int>("Type")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("IsActive");
+                b.HasIndex("IsActive");
 
-                    b.HasIndex("Name");
+                b.HasIndex("Name");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("Type");
+                b.HasIndex("Type");
 
-                    b.HasIndex("Name", "TenantId")
-                        .IsUnique();
+                b.HasIndex("Name", "TenantId")
+                    .IsUnique();
 
-                    b.ToTable("tags");
-                });
+                b.ToTable("tags");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Tags.Models.TagProficiency", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Tags.Models.TagProficiency", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Color")
-                        .HasMaxLength(7)
-                        .HasColumnType("character varying(7)");
+                b.Property<string>("Color")
+                    .HasMaxLength(7)
+                    .HasColumnType("character varying(7)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Description")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<string>("Icon")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Icon")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("ProficiencyLevel")
-                        .HasColumnType("integer");
+                b.Property<int>("ProficiencyLevel")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                b.Property<int>("Type")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("IsActive");
+                b.HasIndex("IsActive");
 
-                    b.HasIndex("Name");
+                b.HasIndex("Name");
 
-                    b.HasIndex("ProficiencyLevel");
+                b.HasIndex("ProficiencyLevel");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("Type");
+                b.HasIndex("Type");
 
-                    b.ToTable("tag_proficiencies");
-                });
+                b.ToTable("tag_proficiencies");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Tags.Models.TagRelationship", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Tags.Models.TagRelationship", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Metadata")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Metadata")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<Guid>("SourceId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("SourceId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("TargetId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("TargetId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                b.Property<int>("Type")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.Property<decimal?>("Weight")
-                        .HasColumnType("decimal(3,2)");
+                b.Property<decimal?>("Weight")
+                    .HasColumnType("decimal(3,2)");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("SourceId");
+                b.HasIndex("SourceId");
 
-                    b.HasIndex("TargetId");
+                b.HasIndex("TargetId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("Type");
+                b.HasIndex("Type");
 
-                    b.HasIndex("SourceId", "TargetId")
-                        .IsUnique();
+                b.HasIndex("SourceId", "TargetId")
+                    .IsUnique();
 
-                    b.ToTable("tag_relationships", t =>
-                        {
-                            t.HasCheckConstraint("CK_TagRelationships_NoSelfReference", "\"SourceId\" != \"TargetId\"");
-                        });
+                b.ToTable("tag_relationships", t => {
+                    t.HasCheckConstraint("CK_TagRelationships_NoSelfReference", "\"SourceId\" != \"TargetId\"");
                 });
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Teams.Models.Team", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.Teams.Models.Team", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
+                b.Property<string>("Description")
+                    .HasColumnType("text");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.ToTable("Team");
-                });
+                b.ToTable("Team");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Teams.Models.TeamMember", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Teams.Models.TeamMember", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("InvitedBy")
-                        .HasColumnType("text");
+                b.Property<string>("InvitedBy")
+                    .HasColumnType("text");
 
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
+                b.Property<int>("Role")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("TeamId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("TeamId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("UserId")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("TeamId");
+                b.HasIndex("TeamId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("TeamMember");
-                });
+                b.ToTable("TeamMember");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantDomain", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantDomain", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsMainDomain")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsMainDomain")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsSecondaryDomain")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsSecondaryDomain")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Subdomain")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Subdomain")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("TopLevelDomain")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("TopLevelDomain")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid?>("UserGroupId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserGroupId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("UserGroupId");
+                b.HasIndex("UserGroupId");
 
-                    b.HasIndex("TenantId", "IsMainDomain");
+                b.HasIndex("TenantId", "IsMainDomain");
 
-                    b.HasIndex("TopLevelDomain", "Subdomain")
-                        .IsUnique();
+                b.HasIndex("TopLevelDomain", "Subdomain")
+                    .IsUnique();
 
-                    b.ToTable("TenantDomains");
-                });
+                b.ToTable("TenantDomains");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantPermission", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantPermission", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ExpiresAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<long>("PermissionFlags1")
-                        .HasColumnType("bigint");
+                b.Property<long>("PermissionFlags1")
+                    .HasColumnType("bigint");
 
-                    b.Property<long>("PermissionFlags2")
-                        .HasColumnType("bigint");
+                b.Property<long>("PermissionFlags2")
+                    .HasColumnType("bigint");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex(new[] { "ExpiresAt" }, "IX_TenantPermissions_ExpiresAt");
+                b.HasIndex(new[] { "ExpiresAt" }, "IX_TenantPermissions_ExpiresAt");
 
-                    b.HasIndex(new[] { "TenantId" }, "IX_TenantPermissions_TenantId");
+                b.HasIndex(new[] { "TenantId" }, "IX_TenantPermissions_TenantId");
 
-                    b.HasIndex(new[] { "UserId" }, "IX_TenantPermissions_UserId");
+                b.HasIndex(new[] { "UserId" }, "IX_TenantPermissions_UserId");
 
-                    b.HasIndex(new[] { "UserId", "TenantId" }, "IX_TenantPermissions_User_Tenant")
-                        .IsUnique();
+                b.HasIndex(new[] { "UserId", "TenantId" }, "IX_TenantPermissions_User_Tenant")
+                    .IsUnique();
 
-                    b.ToTable("TenantPermissions");
-                });
+                b.ToTable("TenantPermissions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantUserGroup", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantUserGroup", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Description")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDefault")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<Guid?>("ParentGroupId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ParentGroupId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ParentGroupId");
+                b.HasIndex("ParentGroupId");
 
-                    b.HasIndex("TenantId", "Name")
-                        .IsUnique();
+                b.HasIndex("TenantId", "Name")
+                    .IsUnique();
 
-                    b.ToTable("TenantUserGroups");
-                });
+                b.ToTable("TenantUserGroups");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantUserGroupMembership", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantUserGroupMembership", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsAutoAssigned")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsAutoAssigned")
+                    .HasColumnType("boolean");
 
-                    b.Property<DateTime>("JoinedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("JoinedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserGroupId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserGroupId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserGroupId");
+                b.HasIndex("UserGroupId");
 
-                    b.HasIndex("UserId", "UserGroupId")
-                        .IsUnique();
+                b.HasIndex("UserId", "UserGroupId")
+                    .IsUnique();
 
-                    b.ToTable("TenantUserGroupMemberships");
-                });
+                b.ToTable("TenantUserGroupMemberships");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.Models.TestingLabSettings", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.Models.TestingLabSettings", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<bool>("AllowPublicSignups")
-                        .HasColumnType("boolean");
+                b.Property<bool>("AllowPublicSignups")
+                    .HasColumnType("boolean");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("DefaultSessionDuration")
-                        .HasColumnType("integer");
+                b.Property<int>("DefaultSessionDuration")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("Description")
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.Property<bool>("EnableNotifications")
-                        .HasColumnType("boolean");
+                b.Property<bool>("EnableNotifications")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("LabName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("LabName")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<int>("MaxSimultaneousSessions")
-                        .HasColumnType("integer");
+                b.Property<int>("MaxSimultaneousSessions")
+                    .HasColumnType("integer");
 
-                    b.Property<bool>("RequireApproval")
-                        .HasColumnType("boolean");
+                b.Property<bool>("RequireApproval")
+                    .HasColumnType("boolean");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Timezone")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Timezone")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("TestingLabSettings");
-                });
+                b.ToTable("TestingLabSettings");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionProject", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionProject", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Notes")
-                        .HasColumnType("text");
+                b.Property<string>("Notes")
+                    .HasColumnType("text");
 
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ProjectVersionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProjectVersionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("RegisteredAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("RegisteredAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("RegisteredById")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("RegisteredById")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("SessionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ProjectId");
+                b.HasIndex("ProjectId");
 
-                    b.HasIndex("ProjectVersionId");
+                b.HasIndex("ProjectVersionId");
 
-                    b.HasIndex("RegisteredById");
+                b.HasIndex("RegisteredById");
 
-                    b.HasIndex("SessionId");
+                b.HasIndex("SessionId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("SessionProjects");
-                });
+                b.ToTable("SessionProjects");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionRegistration", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionRegistration", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<int>("AttendanceStatus")
-                        .HasColumnType("integer");
+                b.Property<int>("AttendanceStatus")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime?>("AttendedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("AttendedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("ProjectRole")
-                        .HasColumnType("integer");
+                b.Property<int?>("ProjectRole")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("RegistrationNotes")
-                        .HasColumnType("text");
+                b.Property<string>("RegistrationNotes")
+                    .HasColumnType("text");
 
-                    b.Property<int>("RegistrationType")
-                        .HasColumnType("integer");
+                b.Property<int>("RegistrationType")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("SessionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("SessionId");
+                b.HasIndex("SessionId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("SessionRegistrations");
-                });
+                b.ToTable("SessionRegistrations");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionWaitlist", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionWaitlist", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Position")
-                        .HasColumnType("integer");
+                b.Property<int>("Position")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("RegistrationNotes")
-                        .HasColumnType("text");
+                b.Property<string>("RegistrationNotes")
+                    .HasColumnType("text");
 
-                    b.Property<int>("RegistrationType")
-                        .HasColumnType("integer");
+                b.Property<int>("RegistrationType")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("SessionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("SessionId");
+                b.HasIndex("SessionId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("SessionWaitlists");
-                });
+                b.ToTable("SessionWaitlists");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingFeedback", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingFeedback", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("AdditionalNotes")
-                        .HasColumnType("text");
+                b.Property<string>("AdditionalNotes")
+                    .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("FeedbackData")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("FeedbackData")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<Guid>("FeedbackFormId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("FeedbackFormId")
+                    .HasColumnType("uuid");
 
-                    b.Property<bool>("IsReported")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsReported")
+                    .HasColumnType("boolean");
 
-                    b.Property<int?>("OverallRating")
-                        .HasColumnType("integer");
+                b.Property<int?>("OverallRating")
+                    .HasColumnType("integer");
 
-                    b.Property<int?>("QualityRating")
-                        .HasColumnType("integer");
+                b.Property<int?>("QualityRating")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("ReportReason")
-                        .HasColumnType("text");
+                b.Property<string>("ReportReason")
+                    .HasColumnType("text");
 
-                    b.Property<DateTime?>("ReportedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ReportedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("ReportedByUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ReportedByUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("SessionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("SessionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("TestingContext")
-                        .HasColumnType("integer");
+                b.Property<int>("TestingContext")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("TestingRequestId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("TestingRequestId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.Property<bool?>("WouldRecommend")
-                        .HasColumnType("boolean");
+                b.Property<bool?>("WouldRecommend")
+                    .HasColumnType("boolean");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("FeedbackFormId");
+                b.HasIndex("FeedbackFormId");
 
-                    b.HasIndex("ReportedByUserId");
+                b.HasIndex("ReportedByUserId");
 
-                    b.HasIndex("SessionId");
+                b.HasIndex("SessionId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("TestingRequestId");
+                b.HasIndex("TestingRequestId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("TestingFeedback");
-                });
+                b.ToTable("TestingFeedback");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingFeedbackForm", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingFeedbackForm", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("FormSchema")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("FormSchema")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.Property<bool>("IsForOnline")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsForOnline")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsForSessions")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsForSessions")
+                    .HasColumnType("boolean");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("TestingRequestId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("TestingRequestId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("TestingFeedbackForms");
-                });
+                b.ToTable("TestingFeedbackForms");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingLocation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingLocation", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<string>("Address")
-                        .HasColumnType("text");
+                b.Property<string>("Address")
+                    .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
+                b.Property<string>("Description")
+                    .HasColumnType("text");
 
-                    b.Property<string>("EquipmentAvailable")
-                        .HasColumnType("text");
+                b.Property<string>("EquipmentAvailable")
+                    .HasColumnType("text");
 
-                    b.Property<int>("MaxProjectsCapacity")
-                        .HasColumnType("integer");
+                b.Property<int>("MaxProjectsCapacity")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("MaxTestersCapacity")
-                        .HasColumnType("integer");
+                b.Property<int>("MaxTestersCapacity")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("TestingLocations");
-                });
+                b.ToTable("TestingLocations");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingParticipant", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingParticipant", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("CompletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("InstructionsAcknowledged")
-                        .HasColumnType("boolean");
+                b.Property<bool>("InstructionsAcknowledged")
+                    .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("InstructionsAcknowledgedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("InstructionsAcknowledgedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("StartedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("StartedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("TestingRequestId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("TestingRequestId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("TestingRequestId");
+                b.HasIndex("TestingRequestId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.ToTable("TestingParticipants");
-                });
+                b.ToTable("TestingParticipants");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingRequest", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("CreatedById")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("CreatedById")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("CurrentTesterCount")
-                        .HasColumnType("integer");
+                b.Property<int>("CurrentTesterCount")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
+                b.Property<string>("Description")
+                    .HasColumnType("text");
 
-                    b.Property<string>("DownloadUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("DownloadUrl")
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("EndDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("FeedbackFormContent")
-                        .HasColumnType("text");
+                b.Property<string>("FeedbackFormContent")
+                    .HasColumnType("text");
 
-                    b.Property<string>("InstructionsContent")
-                        .HasColumnType("text");
+                b.Property<string>("InstructionsContent")
+                    .HasColumnType("text");
 
-                    b.Property<Guid?>("InstructionsFileId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("InstructionsFileId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("InstructionsType")
-                        .HasColumnType("integer");
+                b.Property<int>("InstructionsType")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("InstructionsUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("InstructionsUrl")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<int?>("MaxTesters")
-                        .HasColumnType("integer");
+                b.Property<int?>("MaxTesters")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("ProjectVersionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProjectVersionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("StartDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Title")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("CreatedById");
+                b.HasIndex("CreatedById");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ProjectVersionId");
+                b.HasIndex("ProjectVersionId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.ToTable("TestingRequests");
-                });
+                b.ToTable("TestingRequests");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingSession", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingSession", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("CreatedById")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("CreatedById")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("EndTime")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("EndTime")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("LocationId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("LocationId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("ManagerId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ManagerId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("ManagerUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ManagerUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("MaxProjects")
-                        .HasColumnType("integer");
+                b.Property<int>("MaxProjects")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("MaxTesters")
-                        .HasColumnType("integer");
+                b.Property<int>("MaxTesters")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("RegisteredProjectCount")
-                        .HasColumnType("integer");
+                b.Property<int>("RegisteredProjectCount")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("RegisteredProjectMemberCount")
-                        .HasColumnType("integer");
+                b.Property<int>("RegisteredProjectMemberCount")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("RegisteredTesterCount")
-                        .HasColumnType("integer");
+                b.Property<int>("RegisteredTesterCount")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("SessionDate")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("SessionDate")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("SessionName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("SessionName")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("StartTime")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("TestingRequestId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("TestingRequestId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("CreatedById");
+                b.HasIndex("CreatedById");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("LocationId");
+                b.HasIndex("LocationId");
 
-                    b.HasIndex("ManagerId");
+                b.HasIndex("ManagerId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("TestingRequestId");
+                b.HasIndex("TestingRequestId");
 
-                    b.ToTable("TestingSessions");
-                });
+                b.ToTable("TestingSessions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.UserAchievements.Achievement", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.UserAchievements.Achievement", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Category")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<string>("Color")
-                        .HasMaxLength(7)
-                        .HasColumnType("character varying(7)");
+                b.Property<string>("Color")
+                    .HasMaxLength(7)
+                    .HasColumnType("character varying(7)");
 
-                    b.Property<string>("Conditions")
-                        .HasColumnType("jsonb");
+                b.Property<string>("Conditions")
+                    .HasColumnType("jsonb");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Description")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("integer");
+                b.Property<int>("DisplayOrder")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("IconUrl")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("IconUrl")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDeleted")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsRepeatable")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsRepeatable")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsSecret")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsSecret")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("Points")
-                        .HasColumnType("integer");
+                b.Property<int>("Points")
+                    .HasColumnType("integer");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                b.Property<byte[]>("RowVersion")
+                    .IsConcurrencyToken()
+                    .IsRequired()
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("bytea");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Type")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("Category");
+                b.HasIndex("Category");
 
-                    b.HasIndex("IsActive");
+                b.HasIndex("IsActive");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("Type");
+                b.HasIndex("Type");
 
-                    b.ToTable("achievements");
-                });
+                b.ToTable("achievements");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementLevel", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementLevel", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("AchievementId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("AchievementId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Color")
-                        .HasMaxLength(7)
-                        .HasColumnType("character varying(7)");
+                b.Property<string>("Color")
+                    .HasMaxLength(7)
+                    .HasColumnType("character varying(7)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)");
+                b.Property<string>("Description")
+                    .HasMaxLength(300)
+                    .HasColumnType("character varying(300)");
 
-                    b.Property<string>("IconUrl")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("IconUrl")
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDeleted")
+                    .HasColumnType("boolean");
 
-                    b.Property<int>("Level")
-                        .HasColumnType("integer");
+                b.Property<int>("Level")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<int>("Points")
-                        .HasColumnType("integer");
+                b.Property<int>("Points")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("RequiredProgress")
-                        .HasColumnType("integer");
+                b.Property<int>("RequiredProgress")
+                    .HasColumnType("integer");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                b.Property<byte[]>("RowVersion")
+                    .IsConcurrencyToken()
+                    .IsRequired()
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("bytea");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AchievementId");
+                b.HasIndex("AchievementId");
 
-                    b.HasIndex("Level");
+                b.HasIndex("Level");
 
-                    b.ToTable("achievement_levels");
-                });
+                b.ToTable("achievement_levels");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementPrerequisite", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementPrerequisite", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("AchievementId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("AchievementId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDeleted")
+                    .HasColumnType("boolean");
 
-                    b.Property<int?>("MinimumLevel")
-                        .HasColumnType("integer");
+                b.Property<int?>("MinimumLevel")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("PrerequisiteAchievementId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("PrerequisiteAchievementId")
+                    .HasColumnType("uuid");
 
-                    b.Property<bool>("RequiresCompletion")
-                        .HasColumnType("boolean");
+                b.Property<bool>("RequiresCompletion")
+                    .HasColumnType("boolean");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                b.Property<byte[]>("RowVersion")
+                    .IsConcurrencyToken()
+                    .IsRequired()
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("bytea");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AchievementId");
+                b.HasIndex("AchievementId");
 
-                    b.HasIndex("PrerequisiteAchievementId");
+                b.HasIndex("PrerequisiteAchievementId");
 
-                    b.ToTable("achievement_prerequisites");
-                });
+                b.ToTable("achievement_prerequisites");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementProgress", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementProgress", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("AchievementId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("AchievementId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Context")
-                        .HasColumnType("jsonb");
+                b.Property<string>("Context")
+                    .HasColumnType("jsonb");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("CurrentProgress")
-                        .HasColumnType("integer");
+                b.Property<int>("CurrentProgress")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsCompleted")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDeleted")
+                    .HasColumnType("boolean");
 
-                    b.Property<DateTime>("LastUpdated")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("LastUpdated")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                b.Property<byte[]>("RowVersion")
+                    .IsConcurrencyToken()
+                    .IsRequired()
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("bytea");
 
-                    b.Property<int>("TargetProgress")
-                        .HasColumnType("integer");
+                b.Property<int>("TargetProgress")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AchievementId");
+                b.HasIndex("AchievementId");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("UserId", "AchievementId")
-                        .IsUnique();
+                b.HasIndex("UserId", "AchievementId")
+                    .IsUnique();
 
-                    b.ToTable("achievement_progress");
-                });
+                b.ToTable("achievement_progress");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.UserAchievements.UserAchievement", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+            modelBuilder.Entity("GameGuild.Modules.UserAchievements.UserAchievement", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("AchievementId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("AchievementId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Context")
-                        .HasColumnType("jsonb");
+                b.Property<string>("Context")
+                    .HasColumnType("jsonb");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("CreatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("EarnCount")
-                        .HasColumnType("integer");
+                b.Property<int>("EarnCount")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("EarnedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("EarnedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsCompleted")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsDeleted")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsNotified")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsNotified")
+                    .HasColumnType("boolean");
 
-                    b.Property<int?>("Level")
-                        .HasColumnType("integer");
+                b.Property<int?>("Level")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("MaxProgress")
-                        .HasColumnType("integer");
+                b.Property<int>("MaxProgress")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("PointsEarned")
-                        .HasColumnType("integer");
+                b.Property<int>("PointsEarned")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("Progress")
-                        .HasColumnType("integer");
+                b.Property<int>("Progress")
+                    .HasColumnType("integer");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                b.Property<byte[]>("RowVersion")
+                    .IsConcurrencyToken()
+                    .IsRequired()
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("bytea");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("UpdatedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("AchievementId");
+                b.HasIndex("AchievementId");
 
-                    b.HasIndex("EarnedAt");
+                b.HasIndex("EarnedAt");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UserId");
+                b.HasIndex("UserId");
 
-                    b.HasIndex("UserId", "AchievementId");
+                b.HasIndex("UserId", "AchievementId");
 
-                    b.ToTable("user_achievements");
-                });
+                b.ToTable("user_achievements");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Users.User", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasDefaultValueSql("gen_random_uuid()");
+            modelBuilder.Entity("GameGuild.Modules.Users.User", b => {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
 
-                    b.Property<decimal>("AvailableBalance")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(18,8)")
-                        .HasDefaultValue(0m);
+                b.Property<decimal>("AvailableBalance")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("decimal(18,8)")
+                    .HasDefaultValue(0m);
 
-                    b.Property<decimal>("Balance")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(18,8)")
-                        .HasDefaultValue(0m);
+                b.Property<decimal>("Balance")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("decimal(18,8)")
+                    .HasDefaultValue(0m);
 
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("CreatedAt")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("DeletedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Email")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                b.Property<DateTime>("UpdatedAt")
+                    .ValueGeneratedOnAddOrUpdate()
+                    .HasColumnType("timestamp with time zone")
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Username")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<int>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1);
+                b.Property<int>("Version")
+                    .IsConcurrencyToken()
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("integer")
+                    .HasDefaultValue(1);
 
-                    b.HasKey("Id");
+                b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
+                b.HasIndex("Email")
+                    .IsUnique();
 
-                    b.HasIndex("IsActive");
+                b.HasIndex("IsActive");
 
-                    b.HasIndex("TenantId");
+                b.HasIndex("TenantId");
 
-                    b.HasIndex("UpdatedAt");
+                b.HasIndex("UpdatedAt");
 
-                    b.HasIndex("Username")
-                        .IsUnique();
+                b.HasIndex("Username")
+                    .IsUnique();
 
-                    b.ToTable("Users");
-                });
+                b.ToTable("Users");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Comments.Comment", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Comments.Comment", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("text");
+                b.Property<string>("Content")
+                    .IsRequired()
+                    .HasColumnType("text");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.ToTable("Comment");
-                });
+                b.ToTable("Comment");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Contents.Content", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Contents.Content", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Slug")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.ToTable((string)null);
-                });
+                b.ToTable((string)null);
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Contents.ContentLicense", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Contents.ContentLicense", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<string>("Url")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Url")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.ToTable("ContentLicenses");
-                });
+                b.ToTable("ContentLicenses");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectCategory", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectCategory", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.ToTable("ProjectCategory");
-                });
+                b.ToTable("ProjectCategory");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectCollaborator", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectCollaborator", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<DateTime>("JoinedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("JoinedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LeftAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("LeftAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Permissions")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Permissions")
+                    .IsRequired()
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Role")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("IX_ProjectCollaborators_User");
+                b.HasIndex("UserId")
+                    .HasDatabaseName("IX_ProjectCollaborators_User");
 
-                    b.HasIndex("ProjectId", "UserId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ProjectCollaborators_Project_User");
+                b.HasIndex("ProjectId", "UserId")
+                    .IsUnique()
+                    .HasDatabaseName("IX_ProjectCollaborators_Project_User");
 
-                    b.HasIndex(new[] { "ProjectId", "UserId" }, "IX_ProjectCollaborators_Project_User")
-                        .IsUnique();
+                b.HasIndex(new[] { "ProjectId", "UserId" }, "IX_ProjectCollaborators_Project_User")
+                    .IsUnique();
 
-                    b.HasIndex(new[] { "UserId" }, "IX_ProjectCollaborators_User");
+                b.HasIndex(new[] { "UserId" }, "IX_ProjectCollaborators_User");
 
-                    b.ToTable("ProjectCollaborators");
-                });
+                b.ToTable("ProjectCollaborators");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectFeedback", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectFeedback", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<string>("Categories")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Categories")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<string>("Content")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                b.Property<string>("Content")
+                    .HasMaxLength(2000)
+                    .HasColumnType("character varying(2000)");
 
-                    b.Property<int>("HelpfulVotes")
-                        .HasColumnType("integer");
+                b.Property<int>("HelpfulVotes")
+                    .HasColumnType("integer");
 
-                    b.Property<bool>("IsFeatured")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsFeatured")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsVerified")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsVerified")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Platform")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Platform")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("ProjectVersion")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("ProjectVersion")
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<int>("Rating")
-                        .HasColumnType("integer");
+                b.Property<int>("Rating")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("TotalVotes")
-                        .HasColumnType("integer");
+                b.Property<int>("TotalVotes")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.HasIndex("CreatedAt")
-                        .HasDatabaseName("IX_ProjectFeedbacks_Date");
+                b.HasIndex("CreatedAt")
+                    .HasDatabaseName("IX_ProjectFeedbacks_Date");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("IX_ProjectFeedbacks_User");
+                b.HasIndex("UserId")
+                    .HasDatabaseName("IX_ProjectFeedbacks_User");
 
-                    b.HasIndex("ProjectId", "Rating")
-                        .HasDatabaseName("IX_ProjectFeedbacks_Project_Rating");
+                b.HasIndex("ProjectId", "Rating")
+                    .HasDatabaseName("IX_ProjectFeedbacks_Project_Rating");
 
-                    b.HasIndex("ProjectId", "UserId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ProjectFeedbacks_Project_User");
+                b.HasIndex("ProjectId", "UserId")
+                    .IsUnique()
+                    .HasDatabaseName("IX_ProjectFeedbacks_Project_User");
 
-                    b.HasIndex(new[] { "CreatedAt" }, "IX_ProjectFeedbacks_Date");
+                b.HasIndex(new[] { "CreatedAt" }, "IX_ProjectFeedbacks_Date");
 
-                    b.HasIndex(new[] { "ProjectId", "Rating" }, "IX_ProjectFeedbacks_Project_Rating");
+                b.HasIndex(new[] { "ProjectId", "Rating" }, "IX_ProjectFeedbacks_Project_Rating");
 
-                    b.HasIndex(new[] { "ProjectId", "UserId" }, "IX_ProjectFeedbacks_Project_User")
-                        .IsUnique();
+                b.HasIndex(new[] { "ProjectId", "UserId" }, "IX_ProjectFeedbacks_Project_User")
+                    .IsUnique();
 
-                    b.HasIndex(new[] { "UserId" }, "IX_ProjectFeedbacks_User");
+                b.HasIndex(new[] { "UserId" }, "IX_ProjectFeedbacks_User");
 
-                    b.ToTable("ProjectFeedbacks");
-                });
+                b.ToTable("ProjectFeedbacks");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectFollower", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectFollower", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<bool>("EmailNotifications")
-                        .HasColumnType("boolean");
+                b.Property<bool>("EmailNotifications")
+                    .HasColumnType("boolean");
 
-                    b.Property<DateTime>("FollowedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("FollowedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("NotificationSettings")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("NotificationSettings")
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uuid");
 
-                    b.Property<bool>("PushNotifications")
-                        .HasColumnType("boolean");
+                b.Property<bool>("PushNotifications")
+                    .HasColumnType("boolean");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("FollowedAt")
-                        .HasDatabaseName("IX_ProjectFollowers_Date");
+                b.HasIndex("FollowedAt")
+                    .HasDatabaseName("IX_ProjectFollowers_Date");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("IX_ProjectFollowers_User");
+                b.HasIndex("UserId")
+                    .HasDatabaseName("IX_ProjectFollowers_User");
 
-                    b.HasIndex("ProjectId", "UserId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ProjectFollowers_Project_User");
+                b.HasIndex("ProjectId", "UserId")
+                    .IsUnique()
+                    .HasDatabaseName("IX_ProjectFollowers_Project_User");
 
-                    b.HasIndex(new[] { "FollowedAt" }, "IX_ProjectFollowers_Date");
+                b.HasIndex(new[] { "FollowedAt" }, "IX_ProjectFollowers_Date");
 
-                    b.HasIndex(new[] { "ProjectId", "UserId" }, "IX_ProjectFollowers_Project_User")
-                        .IsUnique();
+                b.HasIndex(new[] { "ProjectId", "UserId" }, "IX_ProjectFollowers_Project_User")
+                    .IsUnique();
 
-                    b.HasIndex(new[] { "UserId" }, "IX_ProjectFollowers_User");
+                b.HasIndex(new[] { "UserId" }, "IX_ProjectFollowers_User");
 
-                    b.ToTable("ProjectFollowers");
-                });
+                b.ToTable("ProjectFollowers");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectJamSubmission", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectJamSubmission", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<string>("AwardDetails")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("AwardDetails")
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.Property<decimal?>("FinalScore")
-                        .HasColumnType("numeric");
+                b.Property<decimal?>("FinalScore")
+                    .HasColumnType("numeric");
 
-                    b.Property<bool>("HasAward")
-                        .HasColumnType("boolean");
+                b.Property<bool>("HasAward")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsEligible")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
+                b.Property<bool>("IsEligible")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("boolean")
+                    .HasDefaultValue(true);
 
-                    b.Property<Guid?>("JamId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("JamId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int?>("Ranking")
-                        .HasColumnType("integer");
+                b.Property<int?>("Ranking")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("SubmissionNotes")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                b.Property<string>("SubmissionNotes")
+                    .HasMaxLength(2000)
+                    .HasColumnType("character varying(2000)");
 
-                    b.Property<DateTime>("SubmittedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("SubmittedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("FinalScore")
-                        .HasDatabaseName("IX_ProjectJamSubmissions_Score");
+                b.HasIndex("FinalScore")
+                    .HasDatabaseName("IX_ProjectJamSubmissions_Score");
 
-                    b.HasIndex("JamId")
-                        .HasDatabaseName("IX_ProjectJamSubmissions_Jam");
+                b.HasIndex("JamId")
+                    .HasDatabaseName("IX_ProjectJamSubmissions_Jam");
 
-                    b.HasIndex("SubmittedAt")
-                        .HasDatabaseName("IX_ProjectJamSubmissions_Date");
+                b.HasIndex("SubmittedAt")
+                    .HasDatabaseName("IX_ProjectJamSubmissions_Date");
 
-                    b.HasIndex("ProjectId", "JamId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ProjectJamSubmissions_Project_Jam");
+                b.HasIndex("ProjectId", "JamId")
+                    .IsUnique()
+                    .HasDatabaseName("IX_ProjectJamSubmissions_Project_Jam");
 
-                    b.HasIndex(new[] { "SubmittedAt" }, "IX_ProjectJamSubmissions_Date");
+                b.HasIndex(new[] { "SubmittedAt" }, "IX_ProjectJamSubmissions_Date");
 
-                    b.HasIndex(new[] { "JamId" }, "IX_ProjectJamSubmissions_Jam");
+                b.HasIndex(new[] { "JamId" }, "IX_ProjectJamSubmissions_Jam");
 
-                    b.HasIndex(new[] { "ProjectId", "JamId" }, "IX_ProjectJamSubmissions_Project_Jam")
-                        .IsUnique();
+                b.HasIndex(new[] { "ProjectId", "JamId" }, "IX_ProjectJamSubmissions_Project_Jam")
+                    .IsUnique();
 
-                    b.HasIndex(new[] { "FinalScore" }, "IX_ProjectJamSubmissions_Score");
+                b.HasIndex(new[] { "FinalScore" }, "IX_ProjectJamSubmissions_Score");
 
-                    b.ToTable("ProjectJamSubmissions");
-                });
+                b.ToTable("ProjectJamSubmissions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectRelease", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectRelease", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<string>("BuildNumber")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("BuildNumber")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Checksum")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                b.Property<string>("Checksum")
+                    .HasMaxLength(128)
+                    .HasColumnType("character varying(128)");
 
-                    b.Property<int>("DownloadCount")
-                        .HasColumnType("integer");
+                b.Property<int>("DownloadCount")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("DownloadUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("DownloadUrl")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<long?>("FileSize")
-                        .HasColumnType("bigint");
+                b.Property<long?>("FileSize")
+                    .HasColumnType("bigint");
 
-                    b.Property<bool>("IsLatest")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsLatest")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsPrerelease")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsPrerelease")
+                    .HasColumnType("boolean");
 
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("ReleaseMetadata")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
+                b.Property<string>("ReleaseMetadata")
+                    .HasMaxLength(2000)
+                    .HasColumnType("character varying(2000)");
 
-                    b.Property<string>("ReleaseNotes")
-                        .HasColumnType("text");
+                b.Property<string>("ReleaseNotes")
+                    .HasColumnType("text");
 
-                    b.Property<string>("ReleaseType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("ReleaseType")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<string>("ReleaseVersion")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("ReleaseVersion")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime>("ReleasedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("ReleasedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
+                b.Property<int>("Status")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("SupportedPlatforms")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("SupportedPlatforms")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<string>("SystemRequirements")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("SystemRequirements")
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex(new[] { "IsLatest" }, "IX_ProjectReleases_Latest");
+                b.HasIndex(new[] { "IsLatest" }, "IX_ProjectReleases_Latest");
 
-                    b.HasIndex(new[] { "ProjectId", "ReleasedAt" }, "IX_ProjectReleases_Project_Date");
+                b.HasIndex(new[] { "ProjectId", "ReleasedAt" }, "IX_ProjectReleases_Project_Date");
 
-                    b.HasIndex(new[] { "ProjectId", "ReleaseVersion" }, "IX_ProjectReleases_Project_Version")
-                        .IsUnique();
+                b.HasIndex(new[] { "ProjectId", "ReleaseVersion" }, "IX_ProjectReleases_Project_Version")
+                    .IsUnique();
 
-                    b.ToTable("ProjectReleases");
-                });
+                b.ToTable("ProjectReleases");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectTeam", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectTeam", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<DateTime>("AssignedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("AssignedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("ContributionPercentage")
-                        .HasColumnType("numeric");
+                b.Property<decimal>("ContributionPercentage")
+                    .HasColumnType("numeric");
 
-                    b.Property<DateTime?>("EndedAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("EndedAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Notes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("Notes")
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.Property<string>("Permissions")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                b.Property<string>("Permissions")
+                    .HasMaxLength(1000)
+                    .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid>("ProjectId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("ProjectId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Role")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("TeamId")
-                        .HasColumnType("uuid");
+                b.Property<Guid>("TeamId")
+                    .HasColumnType("uuid");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex(new[] { "AssignedAt" }, "IX_ProjectTeams_Date");
+                b.HasIndex(new[] { "AssignedAt" }, "IX_ProjectTeams_Date");
 
-                    b.HasIndex(new[] { "ProjectId", "TeamId" }, "IX_ProjectTeams_Project_Team")
-                        .IsUnique();
+                b.HasIndex(new[] { "ProjectId", "TeamId" }, "IX_ProjectTeams_Project_Team")
+                    .IsUnique();
 
-                    b.HasIndex(new[] { "TeamId" }, "IX_ProjectTeams_Team");
+                b.HasIndex(new[] { "TeamId" }, "IX_ProjectTeams_Team");
 
-                    b.ToTable("ProjectTeams");
-                });
+                b.ToTable("ProjectTeams");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.ReputationAction", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Reputations.ReputationAction", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<string>("ActionType")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("ActionType")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int?>("DailyLimit")
-                        .HasColumnType("integer");
+                b.Property<int?>("DailyLimit")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                b.Property<string>("DisplayName")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<int>("Points")
-                        .HasColumnType("integer");
+                b.Property<int>("Points")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("RequiredLevelId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("RequiredLevelId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int?>("TotalLimit")
-                        .HasColumnType("integer");
+                b.Property<int?>("TotalLimit")
+                    .HasColumnType("integer");
 
-                    b.HasIndex("ActionType")
-                        .IsUnique();
+                b.HasIndex("ActionType")
+                    .IsUnique();
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("IsActive");
+                b.HasIndex("IsActive");
 
-                    b.HasIndex("Points");
+                b.HasIndex("Points");
 
-                    b.HasIndex("RequiredLevelId");
+                b.HasIndex("RequiredLevelId");
 
-                    b.HasIndex("ActionType", "TenantId")
-                        .IsUnique()
-                        .HasFilter("\"DeletedAt\" IS NULL");
+                b.HasIndex("ActionType", "TenantId")
+                    .IsUnique()
+                    .HasFilter("\"DeletedAt\" IS NULL");
 
-                    b.ToTable("ReputationActions");
-                });
+                b.ToTable("ReputationActions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.ReputationTier", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Reputations.ReputationTier", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<string>("Color")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("Color")
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                b.Property<string>("DisplayName")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)");
 
-                    b.Property<string>("Icon")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Icon")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<int?>("MaximumScore")
-                        .HasColumnType("integer");
+                b.Property<int?>("MaximumScore")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("MinimumScore")
-                        .HasColumnType("integer");
+                b.Property<int>("MinimumScore")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
+                b.Property<int>("SortOrder")
+                    .HasColumnType("integer");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("MinimumScore");
+                b.HasIndex("MinimumScore");
 
-                    b.HasIndex("SortOrder");
+                b.HasIndex("SortOrder");
 
-                    b.ToTable("ReputationLevels");
-                });
+                b.ToTable("ReputationLevels");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.UserReputation", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Reputations.UserReputation", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<Guid?>("CurrentLevelId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("CurrentLevelId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("LastLevelCalculation")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("LastLevelCalculation")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("LastUpdated")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("LastUpdated")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("NegativeChanges")
-                        .HasColumnType("integer");
+                b.Property<int>("NegativeChanges")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("PositiveChanges")
-                        .HasColumnType("integer");
+                b.Property<int>("PositiveChanges")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("ReputationTierId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ReputationTierId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("Score")
-                        .HasColumnType("integer");
+                b.Property<int>("Score")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("CurrentLevelId");
+                b.HasIndex("CurrentLevelId");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ReputationTierId");
+                b.HasIndex("ReputationTierId");
 
-                    b.HasIndex("Score");
+                b.HasIndex("Score");
 
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasFilter("\"DeletedAt\" IS NULL");
+                b.HasIndex("UserId")
+                    .IsUnique()
+                    .HasFilter("\"DeletedAt\" IS NULL");
 
-                    b.ToTable("UserReputations");
-                });
+                b.ToTable("UserReputations");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.UserReputationHistory", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Reputations.UserReputationHistory", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<Guid?>("NewLevelId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("NewLevelId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("NewScore")
-                        .HasColumnType("integer");
+                b.Property<int>("NewScore")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("OccurredAt")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("PointsChange")
-                        .HasColumnType("integer");
+                b.Property<int>("PointsChange")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("PreviousLevelId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("PreviousLevelId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("PreviousScore")
-                        .HasColumnType("integer");
+                b.Property<int>("PreviousScore")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Reason")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Reason")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<Guid?>("RelatedResourceId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("RelatedResourceId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ReputationActionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ReputationActionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TenantPermissionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantPermissionId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("TriggeredByUserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TriggeredByUserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("UserReputationId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserReputationId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("UserTenantReputationId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("UserTenantReputationId")
+                    .HasColumnType("uuid");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("NewLevelId");
+                b.HasIndex("NewLevelId");
 
-                    b.HasIndex("OccurredAt");
+                b.HasIndex("OccurredAt");
 
-                    b.HasIndex("PointsChange");
+                b.HasIndex("PointsChange");
 
-                    b.HasIndex("PreviousLevelId");
+                b.HasIndex("PreviousLevelId");
 
-                    b.HasIndex("RelatedResourceId");
+                b.HasIndex("RelatedResourceId");
 
-                    b.HasIndex("ReputationActionId");
+                b.HasIndex("ReputationActionId");
 
-                    b.HasIndex("TriggeredByUserId");
+                b.HasIndex("TriggeredByUserId");
 
-                    b.HasIndex("UserReputationId");
+                b.HasIndex("UserReputationId");
 
-                    b.HasIndex("UserTenantReputationId");
+                b.HasIndex("UserTenantReputationId");
 
-                    b.HasIndex("TenantPermissionId", "OccurredAt");
+                b.HasIndex("TenantPermissionId", "OccurredAt");
 
-                    b.HasIndex("UserId", "OccurredAt");
+                b.HasIndex("UserId", "OccurredAt");
 
-                    b.ToTable("UserReputationHistory", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_UserReputationHistory_UserOrUserTenant", "(\"UserReputationId\" IS NOT NULL AND \"UserTenantReputationId\" IS NULL) OR (\"UserReputationId\" IS NULL AND \"UserTenantReputationId\" IS NOT NULL)");
-                        });
+                b.ToTable("UserReputationHistory", null, t => {
+                    t.HasCheckConstraint("CK_UserReputationHistory_UserOrUserTenant", "(\"UserReputationId\" IS NOT NULL AND \"UserTenantReputationId\" IS NULL) OR (\"UserReputationId\" IS NULL AND \"UserTenantReputationId\" IS NOT NULL)");
                 });
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.UserTenantReputation", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Reputations.UserTenantReputation", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<Guid?>("CurrentLevelId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("CurrentLevelId")
+                    .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("LastLevelCalculation")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("LastLevelCalculation")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("LastUpdated")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("LastUpdated")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("NegativeChanges")
-                        .HasColumnType("integer");
+                b.Property<int>("NegativeChanges")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("PositiveChanges")
-                        .HasColumnType("integer");
+                b.Property<int>("PositiveChanges")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("Score")
-                        .HasColumnType("integer");
+                b.Property<int>("Score")
+                    .HasColumnType("integer");
 
-                    b.Property<Guid?>("TenantPermissionId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("TenantPermissionId")
+                    .HasColumnType("uuid");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("CurrentLevelId");
+                b.HasIndex("CurrentLevelId");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("Score");
+                b.HasIndex("Score");
 
-                    b.HasIndex("TenantPermissionId")
-                        .IsUnique();
+                b.HasIndex("TenantPermissionId")
+                    .IsUnique();
 
-                    b.ToTable("UserTenantReputations");
-                });
+                b.ToTable("UserTenantReputations");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Tenants.Tenant", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.Tenants.Tenant", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsActive")
+                    .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
+                b.Property<string>("Slug")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("character varying(255)");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("Name")
-                        .IsUnique();
+                b.HasIndex("Name")
+                    .IsUnique();
 
-                    b.ToTable("Tenants");
-                });
+                b.ToTable("Tenants");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.UserProfiles.UserProfile", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Resources.Resource");
+            modelBuilder.Entity("GameGuild.Modules.UserProfiles.UserProfile", b => {
+                b.HasBaseType("GameGuild.Modules.Resources.Resource");
 
-                    b.Property<string>("DisplayName")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("DisplayName")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("FamilyName")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("FamilyName")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.Property<string>("GivenName")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                b.Property<string>("GivenName")
+                    .HasMaxLength(100)
+                    .HasColumnType("character varying(100)");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.ToTable("UserProfiles");
-                });
+                b.ToTable("UserProfiles");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Post", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Contents.Content");
+            modelBuilder.Entity("GameGuild.Modules.Posts.Post", b => {
+                b.HasBaseType("GameGuild.Modules.Contents.Content");
 
-                    b.Property<Guid?>("AuthorId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("AuthorId")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("CommentsCount")
-                        .HasColumnType("integer");
+                b.Property<int>("CommentsCount")
+                    .HasColumnType("integer");
 
-                    b.Property<bool>("IsPinned")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsPinned")
+                    .HasColumnType("boolean");
 
-                    b.Property<bool>("IsSystemGenerated")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsSystemGenerated")
+                    .HasColumnType("boolean");
 
-                    b.Property<int>("LikesCount")
-                        .HasColumnType("integer");
+                b.Property<int>("LikesCount")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("PostType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                b.Property<string>("PostType")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("character varying(50)");
 
-                    b.Property<string>("RichContent")
-                        .HasColumnType("jsonb");
+                b.Property<string>("RichContent")
+                    .HasColumnType("jsonb");
 
-                    b.Property<int>("SharesCount")
-                        .HasColumnType("integer");
+                b.Property<int>("SharesCount")
+                    .HasColumnType("integer");
 
-                    b.HasIndex("AuthorId");
+                b.HasIndex("AuthorId");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("IsPinned");
+                b.HasIndex("IsPinned");
 
-                    b.HasIndex("IsSystemGenerated");
+                b.HasIndex("IsSystemGenerated");
 
-                    b.HasIndex("PostType");
+                b.HasIndex("PostType");
 
-                    b.ToTable("posts");
-                });
+                b.ToTable("posts");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Product", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Contents.Content");
+            modelBuilder.Entity("GameGuild.Modules.Products.Product", b => {
+                b.HasBaseType("GameGuild.Modules.Contents.Content");
 
-                    b.Property<decimal>("AffiliateCommissionPercentage")
-                        .HasColumnType("decimal(5,2)");
+                b.Property<decimal>("AffiliateCommissionPercentage")
+                    .HasColumnType("decimal(5,2)");
 
-                    b.Property<string>("BundleItems")
-                        .HasColumnType("jsonb");
+                b.Property<string>("BundleItems")
+                    .HasColumnType("jsonb");
 
-                    b.Property<Guid?>("CreatorId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("CreatorId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("ImageUrl")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<bool>("IsBundle")
-                        .HasColumnType("boolean");
+                b.Property<bool>("IsBundle")
+                    .HasColumnType("boolean");
 
-                    b.Property<decimal>("MaxAffiliateDiscount")
-                        .HasColumnType("decimal(5,2)");
+                b.Property<decimal>("MaxAffiliateDiscount")
+                    .HasColumnType("decimal(5,2)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                b.Property<string>("Name")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("character varying(200)");
 
-                    b.Property<decimal>("ReferralCommissionPercentage")
-                        .HasColumnType("decimal(5,2)");
+                b.Property<decimal>("ReferralCommissionPercentage")
+                    .HasColumnType("decimal(5,2)");
 
-                    b.Property<string>("ShortDescription")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("ShortDescription")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                b.Property<int>("Type")
+                    .HasColumnType("integer");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("CreatorId");
+                b.HasIndex("CreatorId");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("Name");
+                b.HasIndex("Name");
 
-                    b.HasIndex("Status");
+                b.HasIndex("Status");
 
-                    b.HasIndex("Visibility");
+                b.HasIndex("Visibility");
 
-                    b.ToTable("Products");
-                });
+                b.ToTable("Products");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Program", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Contents.Content");
+            modelBuilder.Entity("GameGuild.Modules.Programs.Program", b => {
+                b.HasBaseType("GameGuild.Modules.Contents.Content");
 
-                    b.Property<int>("Category")
-                        .HasColumnType("integer");
+                b.Property<int>("Category")
+                    .HasColumnType("integer");
 
-                    b.Property<int>("Difficulty")
-                        .HasColumnType("integer");
+                b.Property<int>("Difficulty")
+                    .HasColumnType("integer");
 
-                    b.Property<DateTime?>("EnrollmentDeadline")
-                        .HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("EnrollmentDeadline")
+                    .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("EnrollmentStatus")
-                        .HasColumnType("integer");
+                b.Property<int>("EnrollmentStatus")
+                    .HasColumnType("integer");
 
-                    b.Property<float?>("EstimatedHours")
-                        .HasColumnType("real");
+                b.Property<float?>("EstimatedHours")
+                    .HasColumnType("real");
 
-                    b.Property<int?>("MaxEnrollments")
-                        .HasColumnType("integer");
+                b.Property<int?>("MaxEnrollments")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("Thumbnail")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("Thumbnail")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<string>("VideoShowcaseUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("VideoShowcaseUrl")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.HasIndex("Category");
+                b.HasIndex("Category");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("Difficulty");
+                b.HasIndex("Difficulty");
 
-                    b.HasIndex("Slug");
+                b.HasIndex("Slug");
 
-                    b.HasIndex("Status");
+                b.HasIndex("Status");
 
-                    b.HasIndex("Visibility");
+                b.HasIndex("Visibility");
 
-                    b.ToTable("programs");
-                });
+                b.ToTable("programs");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.Project", b =>
-                {
-                    b.HasBaseType("GameGuild.Modules.Contents.Content");
+            modelBuilder.Entity("GameGuild.Modules.Projects.Project", b => {
+                b.HasBaseType("GameGuild.Modules.Contents.Content");
 
-                    b.Property<Guid?>("CategoryId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("CategoryId")
+                    .HasColumnType("uuid");
 
-                    b.Property<Guid?>("CreatedById")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("CreatedById")
+                    .HasColumnType("uuid");
 
-                    b.Property<int>("DevelopmentStatus")
-                        .HasColumnType("integer");
+                b.Property<int>("DevelopmentStatus")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("DownloadUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("DownloadUrl")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("ImageUrl")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<Guid?>("ProjectCategoryId")
-                        .HasColumnType("uuid");
+                b.Property<Guid?>("ProjectCategoryId")
+                    .HasColumnType("uuid");
 
-                    b.Property<string>("RepositoryUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("RepositoryUrl")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<string>("ShortDescription")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("ShortDescription")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.Property<string>("SocialLinks")
-                        .HasColumnType("text");
+                b.Property<string>("SocialLinks")
+                    .HasColumnType("text");
 
-                    b.Property<string>("Tags")
-                        .HasColumnType("text");
+                b.Property<string>("Tags")
+                    .HasColumnType("text");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                b.Property<int>("Type")
+                    .HasColumnType("integer");
 
-                    b.Property<string>("WebsiteUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                b.Property<string>("WebsiteUrl")
+                    .HasMaxLength(500)
+                    .HasColumnType("character varying(500)");
 
-                    b.HasIndex("CategoryId");
+                b.HasIndex("CategoryId");
 
-                    b.HasIndex("CreatedAt");
+                b.HasIndex("CreatedAt");
 
-                    b.HasIndex("CreatedById");
+                b.HasIndex("CreatedById");
 
-                    b.HasIndex("DeletedAt");
+                b.HasIndex("DeletedAt");
 
-                    b.HasIndex("ProjectCategoryId");
+                b.HasIndex("ProjectCategoryId");
 
-                    b.HasIndex("Status");
+                b.HasIndex("Status");
 
-                    b.HasIndex("Title");
+                b.HasIndex("Title");
 
-                    b.HasIndex("UpdatedAt");
+                b.HasIndex("UpdatedAt");
 
-                    b.HasIndex("Visibility");
+                b.HasIndex("Visibility");
 
-                    b.HasIndex("CategoryId", "Status");
+                b.HasIndex("CategoryId", "Status");
 
-                    b.HasIndex("Status", "Visibility");
+                b.HasIndex("Status", "Visibility");
 
-                    b.ToTable("Projects", (string)null);
-                });
+                b.ToTable("Projects", (string)null);
+            });
 
-            modelBuilder.Entity("ContentContentLicense", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Contents.Content", null)
-                        .WithMany()
-                        .HasForeignKey("ContentsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Contents.ContentLicense", null)
-                        .WithMany()
-                        .HasForeignKey("LicensesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+            modelBuilder.Entity("ContentContentLicense", b => {
+                b.HasOne("GameGuild.Modules.Contents.Content", null)
+                    .WithMany()
+                    .HasForeignKey("ContentsId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Authentication.RefreshToken", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Contents.ContentLicense", null)
+                    .WithMany()
+                    .HasForeignKey("LicensesId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
 
-                    b.Navigation("Tenant");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Authentication.RefreshToken", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-            modelBuilder.Entity("GameGuild.Modules.Certificates.Certificate", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
-                        .WithMany("Certificates")
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity("GameGuild.Modules.Certificates.Certificate", b => {
+                b.HasOne("GameGuild.Modules.Products.Product", "Product")
+                    .WithMany()
+                    .HasForeignKey("ProductId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.HasOne("GameGuild.Modules.Programs.Program", "Program")
+                    .WithMany("Certificates")
+                    .HasForeignKey("ProgramId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Product");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Program");
+                b.Navigation("Product");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Program");
 
-            modelBuilder.Entity("GameGuild.Modules.Certificates.CertificateBlockchainAnchor", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Certificates.UserCertificate", "Certificate")
-                        .WithMany("BlockchainAnchors")
-                        .HasForeignKey("CertificateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+            modelBuilder.Entity("GameGuild.Modules.Certificates.CertificateBlockchainAnchor", b => {
+                b.HasOne("GameGuild.Modules.Certificates.UserCertificate", "Certificate")
+                    .WithMany("BlockchainAnchors")
+                    .HasForeignKey("CertificateId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Certificate");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Certificate");
 
-            modelBuilder.Entity("GameGuild.Modules.Certificates.CertificateTag", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Certificates.Certificate", "Certificate")
-                        .WithMany("CertificateTags")
-                        .HasForeignKey("CertificateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Tags.Models.TagProficiency", "Tag")
-                        .WithMany()
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Certificates.CertificateTag", b => {
+                b.HasOne("GameGuild.Modules.Certificates.Certificate", "Certificate")
+                    .WithMany("CertificateTags")
+                    .HasForeignKey("CertificateId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tags.Models.TagProficiency", null)
-                        .WithMany("CertificateTags")
-                        .HasForeignKey("TagProficiencyId");
+                b.HasOne("GameGuild.Modules.Tags.Models.TagProficiency", "Tag")
+                    .WithMany()
+                    .HasForeignKey("TagId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Tags.Models.TagProficiency", null)
+                    .WithMany("CertificateTags")
+                    .HasForeignKey("TagProficiencyId");
 
-                    b.Navigation("Certificate");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tag");
+                b.Navigation("Certificate");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Tag");
 
-            modelBuilder.Entity("GameGuild.Modules.Certificates.UserCertificate", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Certificates.Certificate", "Certificate")
-                        .WithMany("UserCertificates")
-                        .HasForeignKey("CertificateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity("GameGuild.Modules.Certificates.UserCertificate", b => {
+                b.HasOne("GameGuild.Modules.Certificates.Certificate", "Certificate")
+                    .WithMany("UserCertificates")
+                    .HasForeignKey("CertificateId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
-                        .WithMany()
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.HasOne("GameGuild.Modules.Products.Product", "Product")
+                    .WithMany()
+                    .HasForeignKey("ProductId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Programs.ProgramUser", "ProgramUser")
-                        .WithMany("UserCertificates")
-                        .HasForeignKey("ProgramUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.HasOne("GameGuild.Modules.Programs.Program", "Program")
+                    .WithMany()
+                    .HasForeignKey("ProgramId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Programs.ProgramUser", "ProgramUser")
+                    .WithMany("UserCertificates")
+                    .HasForeignKey("ProgramUserId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Certificate");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Product");
+                b.Navigation("Certificate");
 
-                    b.Navigation("Program");
+                b.Navigation("Product");
 
-                    b.Navigation("ProgramUser");
+                b.Navigation("Program");
 
-                    b.Navigation("Tenant");
+                b.Navigation("ProgramUser");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Tenant");
 
-            modelBuilder.Entity("GameGuild.Modules.Comments.CommentPermission", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Comments.Comment", "Resource")
-                        .WithMany("Permissions")
-                        .HasForeignKey("ResourceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("User");
+            });
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+            modelBuilder.Entity("GameGuild.Modules.Comments.CommentPermission", b => {
+                b.HasOne("GameGuild.Modules.Comments.Comment", "Resource")
+                    .WithMany("Permissions")
+                    .HasForeignKey("ResourceId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Resource");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId");
 
-                    b.Navigation("Tenant");
+                b.Navigation("Resource");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Tenant");
 
-            modelBuilder.Entity("GameGuild.Modules.Credentials.Credential", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany("Credentials")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("User");
-                });
+                b.Navigation("User");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Feedbacks.ProgramFeedbackSubmission", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId");
+            modelBuilder.Entity("GameGuild.Modules.Credentials.Credential", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
-                        .WithMany("FeedbackSubmissions")
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany("Credentials")
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Programs.ProgramUser", "ProgramUser")
-                        .WithMany("FeedbackSubmissions")
-                        .HasForeignKey("ProgramUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("User");
+            });
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Feedbacks.ProgramFeedbackSubmission", b => {
+                b.HasOne("GameGuild.Modules.Products.Product", "Product")
+                    .WithMany()
+                    .HasForeignKey("ProductId");
 
-                    b.Navigation("Product");
+                b.HasOne("GameGuild.Modules.Programs.Program", "Program")
+                    .WithMany("FeedbackSubmissions")
+                    .HasForeignKey("ProgramId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Program");
+                b.HasOne("GameGuild.Modules.Programs.ProgramUser", "ProgramUser")
+                    .WithMany("FeedbackSubmissions")
+                    .HasForeignKey("ProgramUserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("ProgramUser");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tenant");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Product");
 
-            modelBuilder.Entity("GameGuild.Modules.GameJams.Models.Jam", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Program");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("ProgramUser");
 
-            modelBuilder.Entity("GameGuild.Modules.GameJams.Models.JamScore", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Projects.ProjectJamSubmission", null)
-                        .WithMany("Scores")
-                        .HasForeignKey("ProjectJamSubmissionId");
+                b.Navigation("Tenant");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("Tenant");
-                });
+            modelBuilder.Entity("GameGuild.Modules.GameJams.Models.Jam", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-            modelBuilder.Entity("GameGuild.Modules.Kyc.Models.UserKycVerification", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.GameJams.Models.JamScore", b => {
+                b.HasOne("GameGuild.Modules.Projects.ProjectJamSubmission", null)
+                    .WithMany("Scores")
+                    .HasForeignKey("ProjectJamSubmissionId");
 
-                    b.Navigation("Tenant");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Localization.Language", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+            modelBuilder.Entity("GameGuild.Modules.Kyc.Models.UserKycVerification", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tenant");
-                });
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.FinancialTransaction", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Users.User", "FromUser")
-                        .WithMany()
-                        .HasForeignKey("FromUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.Navigation("Tenant");
 
-                    b.HasOne("GameGuild.Modules.Payments.UserFinancialMethod", "PaymentMethod")
-                        .WithMany()
-                        .HasForeignKey("PaymentMethodId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.Navigation("User");
+            });
 
-                    b.HasOne("GameGuild.Modules.Products.PromoCode", "PromoCode")
-                        .WithMany("FinancialTransactions")
-                        .HasForeignKey("PromoCodeId")
-                        .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity("GameGuild.Modules.Localization.Language", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Users.User", "ToUser")
-                        .WithMany()
-                        .HasForeignKey("ToUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity("GameGuild.Modules.Payments.FinancialTransaction", b => {
+                b.HasOne("GameGuild.Modules.Users.User", "FromUser")
+                    .WithMany()
+                    .HasForeignKey("FromUserId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("FromUser");
+                b.HasOne("GameGuild.Modules.Payments.UserFinancialMethod", "PaymentMethod")
+                    .WithMany()
+                    .HasForeignKey("PaymentMethodId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("PaymentMethod");
+                b.HasOne("GameGuild.Modules.Products.PromoCode", "PromoCode")
+                    .WithMany("FinancialTransactions")
+                    .HasForeignKey("PromoCodeId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("PromoCode");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tenant");
+                b.HasOne("GameGuild.Modules.Users.User", "ToUser")
+                    .WithMany()
+                    .HasForeignKey("ToUserId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("ToUser");
-                });
+                b.Navigation("FromUser");
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.PaymentRefund", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Payments.Payment", "Payment")
-                        .WithMany("Refunds")
-                        .HasForeignKey("PaymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Payment");
-                });
+                b.Navigation("PaymentMethod");
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.UserFinancialMethod", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("PromoCode");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
 
-                    b.Navigation("Tenant");
+                b.Navigation("ToUser");
+            });
 
-                    b.Navigation("User");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Payments.PaymentRefund", b => {
+                b.HasOne("GameGuild.Modules.Payments.Payment", "Payment")
+                    .WithMany("Refunds")
+                    .HasForeignKey("PaymentId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Permissions.ContentTypePermission", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Payment");
+            });
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
+            modelBuilder.Entity("GameGuild.Modules.Payments.UserFinancialMethod", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tenant");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Tenant");
 
-            modelBuilder.Entity("GameGuild.Modules.Permissions.RoleTemplate", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("Tenant");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Permissions.ContentTypePermission", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-            modelBuilder.Entity("GameGuild.Modules.Permissions.UserPermission", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Permissions.RoleTemplate", null)
-                        .WithMany("UserPermissions")
-                        .HasForeignKey("RoleTemplateId");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Tenant");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("User");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Permissions.UserRoleAssignment", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Permissions.ModuleRole", "Role")
-                        .WithMany("UserRoleAssignments")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Role");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Permissions.RoleTemplate", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostFollower", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
-                        .WithMany("Followers")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+            modelBuilder.Entity("GameGuild.Modules.Permissions.UserPermission", b => {
+                b.HasOne("GameGuild.Modules.Permissions.RoleTemplate", null)
+                    .WithMany("UserPermissions")
+                    .HasForeignKey("RoleTemplateId");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Post");
+                b.Navigation("Tenant");
+            });
 
-                    b.Navigation("Tenant");
+            modelBuilder.Entity("GameGuild.Modules.Permissions.UserRoleAssignment", b => {
+                b.HasOne("GameGuild.Modules.Permissions.ModuleRole", "Role")
+                    .WithMany("UserRoleAssignments")
+                    .HasForeignKey("RoleId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Role");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostStatistics", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
-                        .WithOne("Statistics")
-                        .HasForeignKey("GameGuild.Modules.Posts.Models.PostStatistics", "PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostFollower", b => {
+                b.HasOne("GameGuild.Modules.Posts.Post", "Post")
+                    .WithMany("Followers")
+                    .HasForeignKey("PostId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Post");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Post");
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTag", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Tenant");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("User");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTagAssignment", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
-                        .WithMany("Tags")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostStatistics", b => {
+                b.HasOne("GameGuild.Modules.Posts.Post", "Post")
+                    .WithOne("Statistics")
+                    .HasForeignKey("GameGuild.Modules.Posts.Models.PostStatistics", "PostId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Posts.Models.PostTag", "Tag")
-                        .WithMany("Posts")
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Post");
 
-                    b.Navigation("Post");
+                b.Navigation("Tenant");
+            });
 
-                    b.Navigation("Tag");
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTag", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostView", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
-                        .WithMany("Views")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTagAssignment", b => {
+                b.HasOne("GameGuild.Modules.Posts.Post", "Post")
+                    .WithMany("Tags")
+                    .HasForeignKey("PostId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Posts.Models.PostTag", "Tag")
+                    .WithMany("Posts")
+                    .HasForeignKey("TagId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Post");
+                b.Navigation("Post");
 
-                    b.Navigation("Tenant");
+                b.Navigation("Tag");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostComment", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Users.User", "Author")
-                        .WithMany()
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostView", b => {
+                b.HasOne("GameGuild.Modules.Posts.Post", "Post")
+                    .WithMany("Views")
+                    .HasForeignKey("PostId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Posts.PostComment", "ParentComment")
-                        .WithMany("Replies")
-                        .HasForeignKey("ParentCommentId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
-                        .WithMany("Comments")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Post");
 
-                    b.Navigation("Author");
+                b.Navigation("Tenant");
 
-                    b.Navigation("ParentComment");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("Post");
+            modelBuilder.Entity("GameGuild.Modules.Posts.PostComment", b => {
+                b.HasOne("GameGuild.Modules.Users.User", "Author")
+                    .WithMany()
+                    .HasForeignKey("AuthorId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Tenant");
-                });
+                b.HasOne("GameGuild.Modules.Posts.PostComment", "ParentComment")
+                    .WithMany("Replies")
+                    .HasForeignKey("ParentCommentId");
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostContentReference", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
-                        .WithMany("ContentReferences")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Posts.Post", "Post")
+                    .WithMany("Comments")
+                    .HasForeignKey("PostId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Resources.Resource", "ReferencedResource")
-                        .WithMany()
-                        .HasForeignKey("ReferencedResourceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Author");
 
-                    b.Navigation("Post");
+                b.Navigation("ParentComment");
 
-                    b.Navigation("ReferencedResource");
+                b.Navigation("Post");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostLike", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Posts.Post", "Post")
-                        .WithMany("Likes")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Posts.PostContentReference", b => {
+                b.HasOne("GameGuild.Modules.Posts.Post", "Post")
+                    .WithMany("ContentReferences")
+                    .HasForeignKey("PostId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Resources.Resource", "ReferencedResource")
+                    .WithMany()
+                    .HasForeignKey("ReferencedResourceId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Post");
+                b.Navigation("Post");
 
-                    b.Navigation("Tenant");
+                b.Navigation("ReferencedResource");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.ProductPricing", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
-                        .WithMany("ProductPricings")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Posts.PostLike", b => {
+                b.HasOne("GameGuild.Modules.Posts.Post", "Post")
+                    .WithMany("Likes")
+                    .HasForeignKey("PostId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Product");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Post");
 
-            modelBuilder.Entity("GameGuild.Modules.Products.ProductProgram", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
-                        .WithMany("ProductPrograms")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
 
-                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
-                        .WithMany("ProductPrograms")
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("User");
+            });
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductPricing", b => {
+                b.HasOne("GameGuild.Modules.Products.Product", "Product")
+                    .WithMany("ProductPricings")
+                    .HasForeignKey("ProductId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Product");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Program");
+                b.Navigation("Product");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.ProductSubscriptionPlan", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
-                        .WithMany("SubscriptionPlans")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductProgram", b => {
+                b.HasOne("GameGuild.Modules.Products.Product", "Product")
+                    .WithMany("ProductPrograms")
+                    .HasForeignKey("ProductId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Programs.Program", "Program")
+                    .WithMany("ProductPrograms")
+                    .HasForeignKey("ProgramId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Product");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Product");
 
-            modelBuilder.Entity("GameGuild.Modules.Products.PromoCode", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Users.User", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                b.Navigation("Program");
 
-                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
-                        .WithMany("PromoCodes")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductSubscriptionPlan", b => {
+                b.HasOne("GameGuild.Modules.Products.Product", "Product")
+                    .WithMany("SubscriptionPlans")
+                    .HasForeignKey("ProductId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("CreatedByUser");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Product");
+                b.Navigation("Product");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.PromoCodeUse", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Payments.FinancialTransaction", "FinancialTransaction")
-                        .WithMany("PromoCodeUses")
-                        .HasForeignKey("FinancialTransactionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Products.PromoCode", b => {
+                b.HasOne("GameGuild.Modules.Users.User", "CreatedByUser")
+                    .WithMany()
+                    .HasForeignKey("CreatedBy")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Products.PromoCode", "PromoCode")
-                        .WithMany("PromoCodeUses")
-                        .HasForeignKey("PromoCodeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Products.Product", "Product")
+                    .WithMany("PromoCodes")
+                    .HasForeignKey("ProductId")
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("CreatedByUser");
 
-                    b.Navigation("FinancialTransaction");
+                b.Navigation("Product");
 
-                    b.Navigation("PromoCode");
+                b.Navigation("Tenant");
+            });
 
-                    b.Navigation("Tenant");
+            modelBuilder.Entity("GameGuild.Modules.Products.PromoCodeUse", b => {
+                b.HasOne("GameGuild.Modules.Payments.FinancialTransaction", "FinancialTransaction")
+                    .WithMany("PromoCodeUses")
+                    .HasForeignKey("FinancialTransactionId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("User");
-                });
+                b.HasOne("GameGuild.Modules.Products.PromoCode", "PromoCode")
+                    .WithMany("PromoCodeUses")
+                    .HasForeignKey("PromoCodeId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Products.UserProduct", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Users.User", "GiftedByUser")
-                        .WithMany()
-                        .HasForeignKey("GiftedByUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Products.Product", "Product")
-                        .WithMany("UserProducts")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Subscriptions.Models.UserSubscription", "Subscription")
-                        .WithMany()
-                        .HasForeignKey("SubscriptionId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.Navigation("FinancialTransaction");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("PromoCode");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                b.Navigation("Tenant");
 
-                    b.HasOne("GameGuild.Modules.Subscriptions.Models.UserSubscription", null)
-                        .WithMany("UserProducts")
-                        .HasForeignKey("UserSubscriptionId");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("GiftedByUser");
+            modelBuilder.Entity("GameGuild.Modules.Products.UserProduct", b => {
+                b.HasOne("GameGuild.Modules.Users.User", "GiftedByUser")
+                    .WithMany()
+                    .HasForeignKey("GiftedByUserId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Product");
+                b.HasOne("GameGuild.Modules.Products.Product", "Product")
+                    .WithMany("UserProducts")
+                    .HasForeignKey("ProductId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.Navigation("Subscription");
+                b.HasOne("GameGuild.Modules.Subscriptions.Models.UserSubscription", "Subscription")
+                    .WithMany()
+                    .HasForeignKey("SubscriptionId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Tenant");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("User");
-                });
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ActivityGrade", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Programs.ContentInteraction", "ContentInteraction")
-                        .WithMany("ActivityGrades")
-                        .HasForeignKey("ContentInteractionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Subscriptions.Models.UserSubscription", null)
+                    .WithMany("UserProducts")
+                    .HasForeignKey("UserSubscriptionId");
 
-                    b.HasOne("GameGuild.Modules.Programs.ProgramUser", "GraderProgramUser")
-                        .WithMany("GivenGrades")
-                        .HasForeignKey("GraderProgramUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                b.Navigation("GiftedByUser");
 
-                    b.HasOne("GameGuild.Modules.Programs.ProgramUser", null)
-                        .WithMany("ReceivedGrades")
-                        .HasForeignKey("ProgramUserId");
+                b.Navigation("Product");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Subscription");
 
-                    b.Navigation("ContentInteraction");
+                b.Navigation("Tenant");
 
-                    b.Navigation("GraderProgramUser");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("Tenant");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Programs.ActivityGrade", b => {
+                b.HasOne("GameGuild.Modules.Programs.ContentInteraction", "ContentInteraction")
+                    .WithMany("ActivityGrades")
+                    .HasForeignKey("ContentInteractionId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ContentInteraction", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Programs.ProgramContent", "Content")
-                        .WithMany()
-                        .HasForeignKey("ContentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Programs.ProgramUser", "GraderProgramUser")
+                    .WithMany("GivenGrades")
+                    .HasForeignKey("GraderProgramUserId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Programs.ProgramContent", null)
-                        .WithMany("ContentInteractions")
-                        .HasForeignKey("ProgramContentId");
+                b.HasOne("GameGuild.Modules.Programs.ProgramUser", null)
+                    .WithMany("ReceivedGrades")
+                    .HasForeignKey("ProgramUserId");
 
-                    b.HasOne("GameGuild.Modules.Programs.ProgramUser", "ProgramUser")
-                        .WithMany("ContentInteractions")
-                        .HasForeignKey("ProgramUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("ContentInteraction");
 
-                    b.Navigation("Content");
+                b.Navigation("GraderProgramUser");
 
-                    b.Navigation("ProgramUser");
+                b.Navigation("Tenant");
+            });
 
-                    b.Navigation("Tenant");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentInteraction", b => {
+                b.HasOne("GameGuild.Modules.Programs.ProgramContent", "Content")
+                    .WithMany()
+                    .HasForeignKey("ContentId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ContentProgress", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Contents.Content", "Content")
-                        .WithMany()
-                        .HasForeignKey("ContentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Programs.ProgramContent", null)
+                    .WithMany("ContentInteractions")
+                    .HasForeignKey("ProgramContentId");
 
-                    b.HasOne("GameGuild.Modules.Programs.ProgramEnrollment", "ProgramEnrollment")
-                        .WithMany()
-                        .HasForeignKey("ProgramEnrollmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Programs.ProgramUser", "ProgramUser")
+                    .WithMany("ContentInteractions")
+                    .HasForeignKey("ProgramUserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Content");
 
-                    b.Navigation("Content");
+                b.Navigation("ProgramUser");
 
-                    b.Navigation("ProgramEnrollment");
+                b.Navigation("Tenant");
+            });
 
-                    b.Navigation("Tenant");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentProgress", b => {
+                b.HasOne("GameGuild.Modules.Contents.Content", "Content")
+                    .WithMany()
+                    .HasForeignKey("ContentId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("User");
-                });
+                b.HasOne("GameGuild.Modules.Programs.ProgramEnrollment", "ProgramEnrollment")
+                    .WithMany()
+                    .HasForeignKey("ProgramEnrollmentId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ContentReport", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Users.User", "Moderator")
-                        .WithMany()
-                        .HasForeignKey("ModeratorId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Programs.PeerReview", "PeerReview")
-                        .WithMany()
-                        .HasForeignKey("PeerReviewId");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Users.User", "ReportedUser")
-                        .WithMany()
-                        .HasForeignKey("ReportedUserId");
+                b.Navigation("Content");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "Reporter")
-                        .WithMany()
-                        .HasForeignKey("ReporterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("ProgramEnrollment");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Tenant");
 
-                    b.Navigation("Moderator");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("PeerReview");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentReport", b => {
+                b.HasOne("GameGuild.Modules.Users.User", "Moderator")
+                    .WithMany()
+                    .HasForeignKey("ModeratorId");
 
-                    b.Navigation("ReportedUser");
+                b.HasOne("GameGuild.Modules.Programs.PeerReview", "PeerReview")
+                    .WithMany()
+                    .HasForeignKey("PeerReviewId");
 
-                    b.Navigation("Reporter");
+                b.HasOne("GameGuild.Modules.Users.User", "ReportedUser")
+                    .WithMany()
+                    .HasForeignKey("ReportedUserId");
 
-                    b.Navigation("Tenant");
-                });
+                b.HasOne("GameGuild.Modules.Users.User", "Reporter")
+                    .WithMany()
+                    .HasForeignKey("ReporterId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.PeerReview", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Programs.ContentInteraction", "ContentInteraction")
-                        .WithMany()
-                        .HasForeignKey("ContentInteractionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "Reviewee")
-                        .WithMany()
-                        .HasForeignKey("RevieweeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Moderator");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "Reviewer")
-                        .WithMany()
-                        .HasForeignKey("ReviewerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("PeerReview");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("ReportedUser");
 
-                    b.Navigation("ContentInteraction");
+                b.Navigation("Reporter");
 
-                    b.Navigation("Reviewee");
+                b.Navigation("Tenant");
+            });
 
-                    b.Navigation("Reviewer");
+            modelBuilder.Entity("GameGuild.Modules.Programs.PeerReview", b => {
+                b.HasOne("GameGuild.Modules.Programs.ContentInteraction", "ContentInteraction")
+                    .WithMany()
+                    .HasForeignKey("ContentInteractionId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Tenant");
-                });
+                b.HasOne("GameGuild.Modules.Users.User", "Reviewee")
+                    .WithMany()
+                    .HasForeignKey("RevieweeId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramContent", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Programs.ProgramContent", "Parent")
-                        .WithMany("Children")
-                        .HasForeignKey("ParentId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne("GameGuild.Modules.Users.User", "Reviewer")
+                    .WithMany()
+                    .HasForeignKey("ReviewerId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
-                        .WithMany("ProgramContents")
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("ContentInteraction");
 
-                    b.Navigation("Parent");
+                b.Navigation("Reviewee");
 
-                    b.Navigation("Program");
+                b.Navigation("Reviewer");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramEnrollment", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
-                        .WithMany()
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramContent", b => {
+                b.HasOne("GameGuild.Modules.Programs.ProgramContent", "Parent")
+                    .WithMany("Children")
+                    .HasForeignKey("ParentId")
+                    .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Programs.Program", "Program")
+                    .WithMany("ProgramContents")
+                    .HasForeignKey("ProgramId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Program");
+                b.Navigation("Parent");
 
-                    b.Navigation("Tenant");
+                b.Navigation("Program");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramRating", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
-                        .WithMany("ProgramRatings")
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramEnrollment", b => {
+                b.HasOne("GameGuild.Modules.Programs.Program", "Program")
+                    .WithMany()
+                    .HasForeignKey("ProgramId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Programs.ProgramUser", null)
-                        .WithMany("ProgramRatings")
-                        .HasForeignKey("ProgramUserId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Program");
+                b.Navigation("Program");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Tenant");
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramUser", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
-                        .WithMany("ProgramUsers")
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("User");
+            });
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramRating", b => {
+                b.HasOne("GameGuild.Modules.Programs.Program", "Program")
+                    .WithMany("ProgramRatings")
+                    .HasForeignKey("ProgramId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Programs.ProgramUser", null)
+                    .WithMany("ProgramRatings")
+                    .HasForeignKey("ProgramUserId");
 
-                    b.Navigation("Program");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tenant");
+                b.Navigation("Program");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramWishlist", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Programs.Program", "Program")
-                        .WithMany("ProgramWishlists")
-                        .HasForeignKey("ProgramId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramUser", b => {
+                b.HasOne("GameGuild.Modules.Programs.Program", "Program")
+                    .WithMany("ProgramUsers")
+                    .HasForeignKey("ProgramId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Program");
+                b.Navigation("Program");
 
-                    b.Navigation("Tenant");
+                b.Navigation("Tenant");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("User");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectMetadata", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Projects.Project", "Project")
-                        .WithOne("ProjectMetadata")
-                        .HasForeignKey("GameGuild.Modules.Projects.ProjectMetadata", "ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramWishlist", b => {
+                b.HasOne("GameGuild.Modules.Programs.Program", "Program")
+                    .WithMany("ProgramWishlists")
+                    .HasForeignKey("ProgramId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectPermission", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Projects.Project", "Resource")
-                        .WithMany()
-                        .HasForeignKey("ResourceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
+                b.Navigation("Program");
 
-                    b.Navigation("Resource");
+                b.Navigation("Tenant");
 
-                    b.Navigation("Tenant");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("User");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectMetadata", b => {
+                b.HasOne("GameGuild.Modules.Projects.Project", "Project")
+                    .WithOne("ProjectMetadata")
+                    .HasForeignKey("GameGuild.Modules.Projects.ProjectMetadata", "ProjectId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectVersion", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Users.User", "CreatedBy")
-                        .WithMany()
-                        .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Project");
+            });
 
-                    b.HasOne("GameGuild.Modules.Projects.Project", "Project")
-                        .WithMany("Versions")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectPermission", b => {
+                b.HasOne("GameGuild.Modules.Projects.Project", "Resource")
+                    .WithMany()
+                    .HasForeignKey("ResourceId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("CreatedBy");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId");
 
-                    b.Navigation("Project");
+                b.Navigation("Resource");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Tenant");
 
-            modelBuilder.Entity("GameGuild.Modules.Resources.Resource", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Resources.ResourceMetadata", "Metadata")
-                        .WithMany()
-                        .HasForeignKey("MetadataId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.Navigation("User");
+            });
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectVersion", b => {
+                b.HasOne("GameGuild.Modules.Users.User", "CreatedBy")
+                    .WithMany()
+                    .HasForeignKey("CreatedById")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Metadata");
+                b.HasOne("GameGuild.Modules.Projects.Project", "Project")
+                    .WithMany("Versions")
+                    .HasForeignKey("ProjectId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Tenant");
-                });
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-            modelBuilder.Entity("GameGuild.Modules.Resources.ResourceLocalization", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Comments.Comment", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("CommentId");
+                b.Navigation("CreatedBy");
 
-                    b.HasOne("GameGuild.Modules.Contents.Content", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("ContentId");
+                b.Navigation("Project");
 
-                    b.HasOne("GameGuild.Modules.Contents.ContentLicense", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("ContentLicenseId");
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Localization.Language", "Language")
-                        .WithMany("ResourceLocalizations")
-                        .HasForeignKey("LanguageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Resources.Resource", b => {
+                b.HasOne("GameGuild.Modules.Resources.ResourceMetadata", "Metadata")
+                    .WithMany()
+                    .HasForeignKey("MetadataId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Projects.ProjectCategory", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("ProjectCategoryId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Projects.ProjectCollaborator", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("ProjectCollaboratorId");
+                b.Navigation("Metadata");
 
-                    b.HasOne("GameGuild.Modules.Projects.ProjectFeedback", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("ProjectFeedbackId");
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Projects.ProjectFollower", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("ProjectFollowerId");
+            modelBuilder.Entity("GameGuild.Modules.Resources.ResourceLocalization", b => {
+                b.HasOne("GameGuild.Modules.Comments.Comment", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("CommentId");
 
-                    b.HasOne("GameGuild.Modules.Projects.ProjectJamSubmission", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("ProjectJamSubmissionId");
+                b.HasOne("GameGuild.Modules.Contents.Content", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("ContentId");
 
-                    b.HasOne("GameGuild.Modules.Projects.ProjectRelease", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("ProjectReleaseId");
+                b.HasOne("GameGuild.Modules.Contents.ContentLicense", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("ContentLicenseId");
 
-                    b.HasOne("GameGuild.Modules.Projects.ProjectTeam", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("ProjectTeamId");
+                b.HasOne("GameGuild.Modules.Localization.Language", "Language")
+                    .WithMany("ResourceLocalizations")
+                    .HasForeignKey("LanguageId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Reputations.ReputationAction", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("ReputationActionId");
+                b.HasOne("GameGuild.Modules.Projects.ProjectCategory", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("ProjectCategoryId");
 
-                    b.HasOne("GameGuild.Modules.Reputations.ReputationTier", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("ReputationTierId");
+                b.HasOne("GameGuild.Modules.Projects.ProjectCollaborator", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("ProjectCollaboratorId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany("Localizations")
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Projects.ProjectFeedback", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("ProjectFeedbackId");
 
-                    b.HasOne("GameGuild.Modules.UserProfiles.UserProfile", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("UserProfileId");
+                b.HasOne("GameGuild.Modules.Projects.ProjectFollower", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("ProjectFollowerId");
 
-                    b.HasOne("GameGuild.Modules.Reputations.UserReputationHistory", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("UserReputationHistoryId");
+                b.HasOne("GameGuild.Modules.Projects.ProjectJamSubmission", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("ProjectJamSubmissionId");
 
-                    b.HasOne("GameGuild.Modules.Reputations.UserReputation", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("UserReputationId");
+                b.HasOne("GameGuild.Modules.Projects.ProjectRelease", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("ProjectReleaseId");
 
-                    b.HasOne("GameGuild.Modules.Reputations.UserTenantReputation", null)
-                        .WithMany("Localizations")
-                        .HasForeignKey("UserTenantReputationId");
+                b.HasOne("GameGuild.Modules.Projects.ProjectTeam", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("ProjectTeamId");
 
-                    b.Navigation("Language");
+                b.HasOne("GameGuild.Modules.Reputations.ReputationAction", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("ReputationActionId");
 
-                    b.Navigation("Tenant");
-                });
+                b.HasOne("GameGuild.Modules.Reputations.ReputationTier", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("ReputationTierId");
 
-            modelBuilder.Entity("GameGuild.Modules.Resources.ResourceMetadata", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany("Localizations")
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tenant");
-                });
+                b.HasOne("GameGuild.Modules.UserProfiles.UserProfile", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("UserProfileId");
 
-            modelBuilder.Entity("GameGuild.Modules.Subscriptions.Models.UserSubscription", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Products.ProductSubscriptionPlan", null)
-                        .WithMany("UserSubscriptions")
-                        .HasForeignKey("ProductSubscriptionPlanId");
+                b.HasOne("GameGuild.Modules.Reputations.UserReputationHistory", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("UserReputationHistoryId");
 
-                    b.HasOne("GameGuild.Modules.Products.ProductSubscriptionPlan", "SubscriptionPlan")
-                        .WithMany()
-                        .HasForeignKey("SubscriptionPlanId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Reputations.UserReputation", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("UserReputationId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Reputations.UserTenantReputation", null)
+                    .WithMany("Localizations")
+                    .HasForeignKey("UserTenantReputationId");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Language");
 
-                    b.Navigation("SubscriptionPlan");
+                b.Navigation("Tenant");
+            });
 
-                    b.Navigation("Tenant");
+            modelBuilder.Entity("GameGuild.Modules.Resources.ResourceMetadata", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Tags.Models.Tag", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Tenant");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Subscriptions.Models.UserSubscription", b => {
+                b.HasOne("GameGuild.Modules.Products.ProductSubscriptionPlan", null)
+                    .WithMany("UserSubscriptions")
+                    .HasForeignKey("ProductSubscriptionPlanId");
 
-            modelBuilder.Entity("GameGuild.Modules.Tags.Models.TagProficiency", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Products.ProductSubscriptionPlan", "SubscriptionPlan")
+                    .WithMany()
+                    .HasForeignKey("SubscriptionPlanId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-                    b.Navigation("Tenant");
-                });
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-            modelBuilder.Entity("GameGuild.Modules.Tags.Models.TagRelationship", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tags.Models.Tag", "Source")
-                        .WithMany("SourceRelationships")
-                        .HasForeignKey("SourceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tags.Models.Tag", "Target")
-                        .WithMany("TargetRelationships")
-                        .HasForeignKey("TargetId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("SubscriptionPlan");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Tenant");
 
-                    b.Navigation("Source");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("Target");
+            modelBuilder.Entity("GameGuild.Modules.Tags.Models.Tag", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Teams.Models.TeamMember", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Teams.Models.Team", "Team")
-                        .WithMany("Members")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.Tags.Models.TagProficiency", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Tenant");
+            });
 
-                    b.Navigation("Team");
+            modelBuilder.Entity("GameGuild.Modules.Tags.Models.TagRelationship", b => {
+                b.HasOne("GameGuild.Modules.Tags.Models.Tag", "Source")
+                    .WithMany("SourceRelationships")
+                    .HasForeignKey("SourceId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Tenant");
-                });
+                b.HasOne("GameGuild.Modules.Tags.Models.Tag", "Target")
+                    .WithMany("TargetRelationships")
+                    .HasForeignKey("TargetId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantDomain", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.TenantUserGroup", "UserGroup")
-                        .WithMany("Domains")
-                        .HasForeignKey("UserGroupId");
+                b.Navigation("Source");
 
-                    b.Navigation("Tenant");
+                b.Navigation("Target");
 
-                    b.Navigation("UserGroup");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantPermission", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany("TenantPermissions")
-                        .HasForeignKey("TenantId");
+            modelBuilder.Entity("GameGuild.Modules.Teams.Models.TeamMember", b => {
+                b.HasOne("GameGuild.Modules.Teams.Models.Team", "Team")
+                    .WithMany("Members")
+                    .HasForeignKey("TeamId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tenant");
+                b.Navigation("Team");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Tenant");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantUserGroup", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.TenantUserGroup", "ParentGroup")
-                        .WithMany("SubGroups")
-                        .HasForeignKey("ParentGroupId");
+            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantDomain", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.TenantUserGroup", "UserGroup")
+                    .WithMany("Domains")
+                    .HasForeignKey("UserGroupId");
 
-                    b.Navigation("ParentGroup");
+                b.Navigation("Tenant");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("UserGroup");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantUserGroupMembership", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantPermission", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany("TenantPermissions")
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.TenantUserGroup", "UserGroup")
-                        .WithMany("Memberships")
-                        .HasForeignKey("UserGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
 
-                    b.Navigation("Tenant");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("User");
+            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantUserGroup", b => {
+                b.HasOne("GameGuild.Modules.Tenants.TenantUserGroup", "ParentGroup")
+                    .WithMany("SubGroups")
+                    .HasForeignKey("ParentGroupId");
 
-                    b.Navigation("UserGroup");
-                });
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.Models.TestingLabSettings", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("ParentGroup");
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionProject", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Projects.Project", "Project")
-                        .WithMany()
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Projects.ProjectVersion", "ProjectVersion")
-                        .WithMany()
-                        .HasForeignKey("ProjectVersionId");
+            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantUserGroupMembership", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "RegisteredBy")
-                        .WithMany()
-                        .HasForeignKey("RegisteredById")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.TenantUserGroup", "UserGroup")
+                    .WithMany("Memberships")
+                    .HasForeignKey("UserGroupId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.TestingLab.TestingSession", "Session")
-                        .WithMany("SessionProjects")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Tenant");
 
-                    b.Navigation("Project");
+                b.Navigation("User");
 
-                    b.Navigation("ProjectVersion");
+                b.Navigation("UserGroup");
+            });
 
-                    b.Navigation("RegisteredBy");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.Models.TestingLabSettings", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Session");
+                b.Navigation("Tenant");
+            });
 
-                    b.Navigation("Tenant");
-                });
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionProject", b => {
+                b.HasOne("GameGuild.Modules.Projects.Project", "Project")
+                    .WithMany()
+                    .HasForeignKey("ProjectId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionRegistration", b =>
-                {
-                    b.HasOne("GameGuild.Modules.TestingLab.TestingSession", "Session")
-                        .WithMany("Registrations")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Projects.ProjectVersion", "ProjectVersion")
+                    .WithMany()
+                    .HasForeignKey("ProjectVersionId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Users.User", "RegisteredBy")
+                    .WithMany()
+                    .HasForeignKey("RegisteredById")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.TestingLab.TestingSession", "Session")
+                    .WithMany("SessionProjects")
+                    .HasForeignKey("SessionId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Session");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tenant");
+                b.Navigation("Project");
 
-                    b.Navigation("User");
-                });
+                b.Navigation("ProjectVersion");
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionWaitlist", b =>
-                {
-                    b.HasOne("GameGuild.Modules.TestingLab.TestingSession", "Session")
-                        .WithMany()
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("RegisteredBy");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Session");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
+            });
 
-                    b.Navigation("Session");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionRegistration", b => {
+                b.HasOne("GameGuild.Modules.TestingLab.TestingSession", "Session")
+                    .WithMany("Registrations")
+                    .HasForeignKey("SessionId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Tenant");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("User");
-                });
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingFeedback", b =>
-                {
-                    b.HasOne("GameGuild.Modules.TestingLab.TestingFeedbackForm", "FeedbackForm")
-                        .WithMany()
-                        .HasForeignKey("FeedbackFormId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Session");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "ReportedByUser")
-                        .WithMany()
-                        .HasForeignKey("ReportedByUserId");
+                b.Navigation("Tenant");
 
-                    b.HasOne("GameGuild.Modules.TestingLab.TestingSession", "Session")
-                        .WithMany()
-                        .HasForeignKey("SessionId");
+                b.Navigation("User");
+            });
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.SessionWaitlist", b => {
+                b.HasOne("GameGuild.Modules.TestingLab.TestingSession", "Session")
+                    .WithMany()
+                    .HasForeignKey("SessionId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.TestingLab.TestingRequest", "TestingRequest")
-                        .WithMany()
-                        .HasForeignKey("TestingRequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("FeedbackForm");
+                b.Navigation("Session");
 
-                    b.Navigation("ReportedByUser");
+                b.Navigation("Tenant");
 
-                    b.Navigation("Session");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("Tenant");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingFeedback", b => {
+                b.HasOne("GameGuild.Modules.TestingLab.TestingFeedbackForm", "FeedbackForm")
+                    .WithMany()
+                    .HasForeignKey("FeedbackFormId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("TestingRequest");
+                b.HasOne("GameGuild.Modules.Users.User", "ReportedByUser")
+                    .WithMany()
+                    .HasForeignKey("ReportedByUserId");
 
-                    b.Navigation("User");
-                });
+                b.HasOne("GameGuild.Modules.TestingLab.TestingSession", "Session")
+                    .WithMany()
+                    .HasForeignKey("SessionId");
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingFeedbackForm", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Tenant");
-                });
+                b.HasOne("GameGuild.Modules.TestingLab.TestingRequest", "TestingRequest")
+                    .WithMany()
+                    .HasForeignKey("TestingRequestId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingLocation", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("FeedbackForm");
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingParticipant", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("ReportedByUser");
 
-                    b.HasOne("GameGuild.Modules.TestingLab.TestingRequest", "TestingRequest")
-                        .WithMany()
-                        .HasForeignKey("TestingRequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Session");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
 
-                    b.Navigation("Tenant");
+                b.Navigation("TestingRequest");
 
-                    b.Navigation("TestingRequest");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("User");
-                });
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingFeedbackForm", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingRequest", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Users.User", "CreatedBy")
-                        .WithMany()
-                        .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Projects.ProjectVersion", "ProjectVersion")
-                        .WithMany()
-                        .HasForeignKey("ProjectVersionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingLocation", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("Tenant");
+            });
 
-                    b.Navigation("CreatedBy");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingParticipant", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("ProjectVersion");
+                b.HasOne("GameGuild.Modules.TestingLab.TestingRequest", "TestingRequest")
+                    .WithMany()
+                    .HasForeignKey("TestingRequestId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("Tenant");
-                });
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingSession", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Users.User", "CreatedBy")
-                        .WithMany()
-                        .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("Tenant");
 
-                    b.HasOne("GameGuild.Modules.TestingLab.TestingLocation", "Location")
-                        .WithMany()
-                        .HasForeignKey("LocationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("TestingRequest");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "Manager")
-                        .WithMany()
-                        .HasForeignKey("ManagerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.Navigation("User");
+            });
 
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingRequest", b => {
+                b.HasOne("GameGuild.Modules.Users.User", "CreatedBy")
+                    .WithMany()
+                    .HasForeignKey("CreatedById")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.TestingLab.TestingRequest", "TestingRequest")
-                        .WithMany()
-                        .HasForeignKey("TestingRequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                b.HasOne("GameGuild.Modules.Projects.ProjectVersion", "ProjectVersion")
+                    .WithMany()
+                    .HasForeignKey("ProjectVersionId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("CreatedBy");
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.Navigation("Location");
+                b.Navigation("CreatedBy");
 
-                    b.Navigation("Manager");
+                b.Navigation("ProjectVersion");
 
-                    b.Navigation("Tenant");
+                b.Navigation("Tenant");
+            });
 
-                    b.Navigation("TestingRequest");
-                });
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingSession", b => {
+                b.HasOne("GameGuild.Modules.Users.User", "CreatedBy")
+                    .WithMany()
+                    .HasForeignKey("CreatedById")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementLevel", b =>
-                {
-                    b.HasOne("GameGuild.Modules.UserAchievements.Achievement", "Achievement")
-                        .WithMany("Levels")
-                        .HasForeignKey("AchievementId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Achievement");
-                });
+                b.HasOne("GameGuild.Modules.TestingLab.TestingLocation", "Location")
+                    .WithMany()
+                    .HasForeignKey("LocationId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementPrerequisite", b =>
-                {
-                    b.HasOne("GameGuild.Modules.UserAchievements.Achievement", "Achievement")
-                        .WithMany("Prerequisites")
-                        .HasForeignKey("AchievementId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.UserAchievements.Achievement", "PrerequisiteAchievement")
-                        .WithMany()
-                        .HasForeignKey("PrerequisiteAchievementId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Achievement");
-
-                    b.Navigation("PrerequisiteAchievement");
-                });
+                b.HasOne("GameGuild.Modules.Users.User", "Manager")
+                    .WithMany()
+                    .HasForeignKey("ManagerId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementProgress", b =>
-                {
-                    b.HasOne("GameGuild.Modules.UserAchievements.Achievement", "Achievement")
-                        .WithMany()
-                        .HasForeignKey("AchievementId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Achievement");
-
-                    b.Navigation("User");
-                });
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-            modelBuilder.Entity("GameGuild.Modules.UserAchievements.UserAchievement", b =>
-                {
-                    b.HasOne("GameGuild.Modules.UserAchievements.Achievement", "Achievement")
-                        .WithMany("UserAchievements")
-                        .HasForeignKey("AchievementId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Achievement");
-
-                    b.Navigation("User");
-                });
+                b.HasOne("GameGuild.Modules.TestingLab.TestingRequest", "TestingRequest")
+                    .WithMany()
+                    .HasForeignKey("TestingRequestId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Users.User", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId");
+                b.Navigation("CreatedBy");
 
-                    b.Navigation("Tenant");
-                });
+                b.Navigation("Location");
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectCollaborator", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Projects.Project", "Project")
-                        .WithMany("Collaborators")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Project");
-
-                    b.Navigation("User");
-                });
+                b.Navigation("Manager");
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectFeedback", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Projects.Project", "Project")
-                        .WithMany("Feedbacks")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Project");
-
-                    b.Navigation("User");
-                });
+                b.Navigation("Tenant");
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectFollower", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Projects.Project", "Project")
-                        .WithMany("Followers")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Project");
-
-                    b.Navigation("User");
-                });
+                b.Navigation("TestingRequest");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectJamSubmission", b =>
-                {
-                    b.HasOne("GameGuild.Modules.GameJams.Models.Jam", "Jam")
-                        .WithMany()
-                        .HasForeignKey("JamId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("GameGuild.Modules.Projects.Project", "Project")
-                        .WithMany("JamSubmissions")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Jam");
-
-                    b.Navigation("Project");
-                });
+            modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementLevel", b => {
+                b.HasOne("GameGuild.Modules.UserAchievements.Achievement", "Achievement")
+                    .WithMany("Levels")
+                    .HasForeignKey("AchievementId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectRelease", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Projects.Project", null)
-                        .WithMany("Releases")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
+                b.Navigation("Achievement");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectTeam", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Projects.Project", "Project")
-                        .WithMany("Teams")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GameGuild.Modules.Teams.Models.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-
-                    b.Navigation("Team");
-                });
+            modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementPrerequisite", b => {
+                b.HasOne("GameGuild.Modules.UserAchievements.Achievement", "Achievement")
+                    .WithMany("Prerequisites")
+                    .HasForeignKey("AchievementId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.ReputationAction", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Reputations.ReputationTier", "RequiredLevel")
-                        .WithMany()
-                        .HasForeignKey("RequiredLevelId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("RequiredLevel");
-                });
+                b.HasOne("GameGuild.Modules.UserAchievements.Achievement", "PrerequisiteAchievement")
+                    .WithMany()
+                    .HasForeignKey("PrerequisiteAchievementId")
+                    .OnDelete(DeleteBehavior.Restrict)
+                    .IsRequired();
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.UserReputation", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Reputations.ReputationTier", "CurrentLevel")
-                        .WithMany()
-                        .HasForeignKey("CurrentLevelId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.Navigation("Achievement");
 
-                    b.HasOne("GameGuild.Modules.Reputations.ReputationTier", null)
-                        .WithMany("UserReputations")
-                        .HasForeignKey("ReputationTierId");
+                b.Navigation("PrerequisiteAchievement");
+            });
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity("GameGuild.Modules.UserAchievements.AchievementProgress", b => {
+                b.HasOne("GameGuild.Modules.UserAchievements.Achievement", "Achievement")
+                    .WithMany()
+                    .HasForeignKey("AchievementId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("CurrentLevel");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("User");
-                });
+                b.Navigation("Achievement");
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.UserReputationHistory", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Reputations.ReputationTier", "NewLevel")
-                        .WithMany()
-                        .HasForeignKey("NewLevelId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.Navigation("User");
+            });
 
-                    b.HasOne("GameGuild.Modules.Reputations.ReputationTier", "PreviousLevel")
-                        .WithMany()
-                        .HasForeignKey("PreviousLevelId")
-                        .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity("GameGuild.Modules.UserAchievements.UserAchievement", b => {
+                b.HasOne("GameGuild.Modules.UserAchievements.Achievement", "Achievement")
+                    .WithMany("UserAchievements")
+                    .HasForeignKey("AchievementId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Resources.Resource", "RelatedResource")
-                        .WithMany()
-                        .HasForeignKey("RelatedResourceId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("GameGuild.Modules.Reputations.ReputationAction", "ReputationAction")
-                        .WithMany("ReputationHistory")
-                        .HasForeignKey("ReputationActionId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.Navigation("Achievement");
 
-                    b.HasOne("GameGuild.Modules.Tenants.TenantPermission", "TenantPermission")
-                        .WithMany()
-                        .HasForeignKey("TenantPermissionId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.Navigation("User");
+            });
 
-                    b.HasOne("GameGuild.Modules.Users.User", "TriggeredByUser")
-                        .WithMany()
-                        .HasForeignKey("TriggeredByUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity("GameGuild.Modules.Users.User", b => {
+                b.HasOne("GameGuild.Modules.Tenants.Tenant", "Tenant")
+                    .WithMany()
+                    .HasForeignKey("TenantId");
 
-                    b.HasOne("GameGuild.Modules.Users.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.Navigation("Tenant");
+            });
 
-                    b.HasOne("GameGuild.Modules.Reputations.UserReputation", "UserReputation")
-                        .WithMany("History")
-                        .HasForeignKey("UserReputationId")
-                        .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectCollaborator", b => {
+                b.HasOne("GameGuild.Modules.Projects.Project", "Project")
+                    .WithMany("Collaborators")
+                    .HasForeignKey("ProjectId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Reputations.UserTenantReputation", "UserTenantReputation")
-                        .WithMany("History")
-                        .HasForeignKey("UserTenantReputationId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("NewLevel");
+                b.Navigation("Project");
 
-                    b.Navigation("PreviousLevel");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("RelatedResource");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectFeedback", b => {
+                b.HasOne("GameGuild.Modules.Projects.Project", "Project")
+                    .WithMany("Feedbacks")
+                    .HasForeignKey("ProjectId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("ReputationAction");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("TenantPermission");
+                b.Navigation("Project");
 
-                    b.Navigation("TriggeredByUser");
+                b.Navigation("User");
+            });
 
-                    b.Navigation("User");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectFollower", b => {
+                b.HasOne("GameGuild.Modules.Projects.Project", "Project")
+                    .WithMany("Followers")
+                    .HasForeignKey("ProjectId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("UserReputation");
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("UserTenantReputation");
-                });
+                b.Navigation("Project");
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.UserTenantReputation", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Reputations.ReputationTier", "CurrentLevel")
-                        .WithMany()
-                        .HasForeignKey("CurrentLevelId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.Navigation("User");
+            });
 
-                    b.HasOne("GameGuild.Modules.Tenants.TenantPermission", "TenantPermission")
-                        .WithMany()
-                        .HasForeignKey("TenantPermissionId")
-                        .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectJamSubmission", b => {
+                b.HasOne("GameGuild.Modules.GameJams.Models.Jam", "Jam")
+                    .WithMany()
+                    .HasForeignKey("JamId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("CurrentLevel");
+                b.HasOne("GameGuild.Modules.Projects.Project", "Project")
+                    .WithMany("JamSubmissions")
+                    .HasForeignKey("ProjectId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.Navigation("TenantPermission");
-                });
+                b.Navigation("Jam");
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Post", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Users.User", "Author")
-                        .WithMany()
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Author");
-                });
+                b.Navigation("Project");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Product", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Users.User", "Creator")
-                        .WithMany()
-                        .HasForeignKey("CreatorId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Creator");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectRelease", b => {
+                b.HasOne("GameGuild.Modules.Projects.Project", null)
+                    .WithMany("Releases")
+                    .HasForeignKey("ProjectId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.Project", b =>
-                {
-                    b.HasOne("GameGuild.Modules.Projects.ProjectCategory", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.SetNull);
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectTeam", b => {
+                b.HasOne("GameGuild.Modules.Projects.Project", "Project")
+                    .WithMany("Teams")
+                    .HasForeignKey("ProjectId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Users.User", "CreatedBy")
-                        .WithMany()
-                        .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.SetNull);
+                b.HasOne("GameGuild.Modules.Teams.Models.Team", "Team")
+                    .WithMany()
+                    .HasForeignKey("TeamId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
 
-                    b.HasOne("GameGuild.Modules.Projects.ProjectCategory", null)
-                        .WithMany("Projects")
-                        .HasForeignKey("ProjectCategoryId");
+                b.Navigation("Project");
 
-                    b.Navigation("Category");
+                b.Navigation("Team");
+            });
 
-                    b.Navigation("CreatedBy");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Reputations.ReputationAction", b => {
+                b.HasOne("GameGuild.Modules.Reputations.ReputationTier", "RequiredLevel")
+                    .WithMany()
+                    .HasForeignKey("RequiredLevelId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("GameGuild.Modules.Certificates.Certificate", b =>
-                {
-                    b.Navigation("CertificateTags");
+                b.Navigation("RequiredLevel");
+            });
 
-                    b.Navigation("UserCertificates");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Reputations.UserReputation", b => {
+                b.HasOne("GameGuild.Modules.Reputations.ReputationTier", "CurrentLevel")
+                    .WithMany()
+                    .HasForeignKey("CurrentLevelId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("GameGuild.Modules.Certificates.UserCertificate", b =>
-                {
-                    b.Navigation("BlockchainAnchors");
-                });
+                b.HasOne("GameGuild.Modules.Reputations.ReputationTier", null)
+                    .WithMany("UserReputations")
+                    .HasForeignKey("ReputationTierId");
 
-            modelBuilder.Entity("GameGuild.Modules.Localization.Language", b =>
-                {
-                    b.Navigation("ResourceLocalizations");
-                });
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.FinancialTransaction", b =>
-                {
-                    b.Navigation("PromoCodeUses");
-                });
+                b.Navigation("CurrentLevel");
 
-            modelBuilder.Entity("GameGuild.Modules.Payments.Payment", b =>
-                {
-                    b.Navigation("Refunds");
-                });
+                b.Navigation("User");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Permissions.ModuleRole", b =>
-                {
-                    b.Navigation("UserRoleAssignments");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Reputations.UserReputationHistory", b => {
+                b.HasOne("GameGuild.Modules.Reputations.ReputationTier", "NewLevel")
+                    .WithMany()
+                    .HasForeignKey("NewLevelId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("GameGuild.Modules.Permissions.RoleTemplate", b =>
-                {
-                    b.Navigation("UserPermissions");
-                });
+                b.HasOne("GameGuild.Modules.Reputations.ReputationTier", "PreviousLevel")
+                    .WithMany()
+                    .HasForeignKey("PreviousLevelId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTag", b =>
-                {
-                    b.Navigation("Posts");
-                });
+                b.HasOne("GameGuild.Modules.Resources.Resource", "RelatedResource")
+                    .WithMany()
+                    .HasForeignKey("RelatedResourceId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.PostComment", b =>
-                {
-                    b.Navigation("Replies");
-                });
+                b.HasOne("GameGuild.Modules.Reputations.ReputationAction", "ReputationAction")
+                    .WithMany("ReputationHistory")
+                    .HasForeignKey("ReputationActionId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("GameGuild.Modules.Products.ProductSubscriptionPlan", b =>
-                {
-                    b.Navigation("UserSubscriptions");
-                });
+                b.HasOne("GameGuild.Modules.Tenants.TenantPermission", "TenantPermission")
+                    .WithMany()
+                    .HasForeignKey("TenantPermissionId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("GameGuild.Modules.Products.PromoCode", b =>
-                {
-                    b.Navigation("FinancialTransactions");
+                b.HasOne("GameGuild.Modules.Users.User", "TriggeredByUser")
+                    .WithMany()
+                    .HasForeignKey("TriggeredByUserId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("PromoCodeUses");
-                });
+                b.HasOne("GameGuild.Modules.Users.User", "User")
+                    .WithMany()
+                    .HasForeignKey("UserId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ContentInteraction", b =>
-                {
-                    b.Navigation("ActivityGrades");
-                });
+                b.HasOne("GameGuild.Modules.Reputations.UserReputation", "UserReputation")
+                    .WithMany("History")
+                    .HasForeignKey("UserReputationId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramContent", b =>
-                {
-                    b.Navigation("Children");
+                b.HasOne("GameGuild.Modules.Reputations.UserTenantReputation", "UserTenantReputation")
+                    .WithMany("History")
+                    .HasForeignKey("UserTenantReputationId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("ContentInteractions");
-                });
+                b.Navigation("NewLevel");
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramUser", b =>
-                {
-                    b.Navigation("ContentInteractions");
+                b.Navigation("PreviousLevel");
 
-                    b.Navigation("FeedbackSubmissions");
+                b.Navigation("RelatedResource");
 
-                    b.Navigation("GivenGrades");
+                b.Navigation("ReputationAction");
 
-                    b.Navigation("ProgramRatings");
+                b.Navigation("TenantPermission");
 
-                    b.Navigation("ReceivedGrades");
+                b.Navigation("TriggeredByUser");
 
-                    b.Navigation("UserCertificates");
-                });
+                b.Navigation("User");
 
-            modelBuilder.Entity("GameGuild.Modules.Subscriptions.Models.UserSubscription", b =>
-                {
-                    b.Navigation("UserProducts");
-                });
+                b.Navigation("UserReputation");
 
-            modelBuilder.Entity("GameGuild.Modules.Tags.Models.Tag", b =>
-                {
-                    b.Navigation("SourceRelationships");
+                b.Navigation("UserTenantReputation");
+            });
 
-                    b.Navigation("TargetRelationships");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Reputations.UserTenantReputation", b => {
+                b.HasOne("GameGuild.Modules.Reputations.ReputationTier", "CurrentLevel")
+                    .WithMany()
+                    .HasForeignKey("CurrentLevelId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("GameGuild.Modules.Tags.Models.TagProficiency", b =>
-                {
-                    b.Navigation("CertificateTags");
-                });
+                b.HasOne("GameGuild.Modules.Tenants.TenantPermission", "TenantPermission")
+                    .WithMany()
+                    .HasForeignKey("TenantPermissionId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity("GameGuild.Modules.Teams.Models.Team", b =>
-                {
-                    b.Navigation("Members");
-                });
+                b.Navigation("CurrentLevel");
 
-            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantUserGroup", b =>
-                {
-                    b.Navigation("Domains");
+                b.Navigation("TenantPermission");
+            });
 
-                    b.Navigation("Memberships");
+            modelBuilder.Entity("GameGuild.Modules.Posts.Post", b => {
+                b.HasOne("GameGuild.Modules.Users.User", "Author")
+                    .WithMany()
+                    .HasForeignKey("AuthorId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("SubGroups");
-                });
+                b.Navigation("Author");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingSession", b =>
-                {
-                    b.Navigation("Registrations");
+            modelBuilder.Entity("GameGuild.Modules.Products.Product", b => {
+                b.HasOne("GameGuild.Modules.Users.User", "Creator")
+                    .WithMany()
+                    .HasForeignKey("CreatorId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("SessionProjects");
-                });
+                b.Navigation("Creator");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.UserAchievements.Achievement", b =>
-                {
-                    b.Navigation("Levels");
+            modelBuilder.Entity("GameGuild.Modules.Projects.Project", b => {
+                b.HasOne("GameGuild.Modules.Projects.ProjectCategory", "Category")
+                    .WithMany()
+                    .HasForeignKey("CategoryId")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Prerequisites");
+                b.HasOne("GameGuild.Modules.Users.User", "CreatedBy")
+                    .WithMany()
+                    .HasForeignKey("CreatedById")
+                    .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("UserAchievements");
-                });
+                b.HasOne("GameGuild.Modules.Projects.ProjectCategory", null)
+                    .WithMany("Projects")
+                    .HasForeignKey("ProjectCategoryId");
 
-            modelBuilder.Entity("GameGuild.Modules.Users.User", b =>
-                {
-                    b.Navigation("Credentials");
-                });
+                b.Navigation("Category");
 
-            modelBuilder.Entity("GameGuild.Modules.Comments.Comment", b =>
-                {
-                    b.Navigation("Localizations");
+                b.Navigation("CreatedBy");
+            });
 
-                    b.Navigation("Permissions");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Certificates.Certificate", b => {
+                b.Navigation("CertificateTags");
 
-            modelBuilder.Entity("GameGuild.Modules.Contents.Content", b =>
-                {
-                    b.Navigation("Localizations");
-                });
+                b.Navigation("UserCertificates");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Contents.ContentLicense", b =>
-                {
-                    b.Navigation("Localizations");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Certificates.UserCertificate", b => {
+                b.Navigation("BlockchainAnchors");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectCategory", b =>
-                {
-                    b.Navigation("Localizations");
+            modelBuilder.Entity("GameGuild.Modules.Localization.Language", b => {
+                b.Navigation("ResourceLocalizations");
+            });
 
-                    b.Navigation("Projects");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Payments.FinancialTransaction", b => {
+                b.Navigation("PromoCodeUses");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectCollaborator", b =>
-                {
-                    b.Navigation("Localizations");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Payments.Payment", b => {
+                b.Navigation("Refunds");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectFeedback", b =>
-                {
-                    b.Navigation("Localizations");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Permissions.ModuleRole", b => {
+                b.Navigation("UserRoleAssignments");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectFollower", b =>
-                {
-                    b.Navigation("Localizations");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Permissions.RoleTemplate", b => {
+                b.Navigation("UserPermissions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectJamSubmission", b =>
-                {
-                    b.Navigation("Localizations");
+            modelBuilder.Entity("GameGuild.Modules.Posts.Models.PostTag", b => {
+                b.Navigation("Posts");
+            });
 
-                    b.Navigation("Scores");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Posts.PostComment", b => {
+                b.Navigation("Replies");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectRelease", b =>
-                {
-                    b.Navigation("Localizations");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Products.ProductSubscriptionPlan", b => {
+                b.Navigation("UserSubscriptions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectTeam", b =>
-                {
-                    b.Navigation("Localizations");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Products.PromoCode", b => {
+                b.Navigation("FinancialTransactions");
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.ReputationAction", b =>
-                {
-                    b.Navigation("Localizations");
+                b.Navigation("PromoCodeUses");
+            });
 
-                    b.Navigation("ReputationHistory");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Programs.ContentInteraction", b => {
+                b.Navigation("ActivityGrades");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.ReputationTier", b =>
-                {
-                    b.Navigation("Localizations");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramContent", b => {
+                b.Navigation("Children");
 
-                    b.Navigation("UserReputations");
-                });
+                b.Navigation("ContentInteractions");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.UserReputation", b =>
-                {
-                    b.Navigation("History");
+            modelBuilder.Entity("GameGuild.Modules.Programs.ProgramUser", b => {
+                b.Navigation("ContentInteractions");
 
-                    b.Navigation("Localizations");
-                });
+                b.Navigation("FeedbackSubmissions");
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.UserReputationHistory", b =>
-                {
-                    b.Navigation("Localizations");
-                });
+                b.Navigation("GivenGrades");
 
-            modelBuilder.Entity("GameGuild.Modules.Reputations.UserTenantReputation", b =>
-                {
-                    b.Navigation("History");
+                b.Navigation("ProgramRatings");
 
-                    b.Navigation("Localizations");
-                });
+                b.Navigation("ReceivedGrades");
 
-            modelBuilder.Entity("GameGuild.Modules.Tenants.Tenant", b =>
-                {
-                    b.Navigation("Localizations");
+                b.Navigation("UserCertificates");
+            });
 
-                    b.Navigation("TenantPermissions");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Subscriptions.Models.UserSubscription", b => {
+                b.Navigation("UserProducts");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.UserProfiles.UserProfile", b =>
-                {
-                    b.Navigation("Localizations");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Tags.Models.Tag", b => {
+                b.Navigation("SourceRelationships");
 
-            modelBuilder.Entity("GameGuild.Modules.Posts.Post", b =>
-                {
-                    b.Navigation("Comments");
+                b.Navigation("TargetRelationships");
+            });
 
-                    b.Navigation("ContentReferences");
+            modelBuilder.Entity("GameGuild.Modules.Tags.Models.TagProficiency", b => {
+                b.Navigation("CertificateTags");
+            });
 
-                    b.Navigation("Followers");
+            modelBuilder.Entity("GameGuild.Modules.Teams.Models.Team", b => {
+                b.Navigation("Members");
+            });
 
-                    b.Navigation("Likes");
+            modelBuilder.Entity("GameGuild.Modules.Tenants.TenantUserGroup", b => {
+                b.Navigation("Domains");
 
-                    b.Navigation("Statistics");
+                b.Navigation("Memberships");
 
-                    b.Navigation("Tags");
+                b.Navigation("SubGroups");
+            });
 
-                    b.Navigation("Views");
-                });
+            modelBuilder.Entity("GameGuild.Modules.TestingLab.TestingSession", b => {
+                b.Navigation("Registrations");
 
-            modelBuilder.Entity("GameGuild.Modules.Products.Product", b =>
-                {
-                    b.Navigation("ProductPricings");
+                b.Navigation("SessionProjects");
+            });
 
-                    b.Navigation("ProductPrograms");
+            modelBuilder.Entity("GameGuild.Modules.UserAchievements.Achievement", b => {
+                b.Navigation("Levels");
 
-                    b.Navigation("PromoCodes");
+                b.Navigation("Prerequisites");
 
-                    b.Navigation("SubscriptionPlans");
+                b.Navigation("UserAchievements");
+            });
 
-                    b.Navigation("UserProducts");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Users.User", b => {
+                b.Navigation("Credentials");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Programs.Program", b =>
-                {
-                    b.Navigation("Certificates");
+            modelBuilder.Entity("GameGuild.Modules.Comments.Comment", b => {
+                b.Navigation("Localizations");
 
-                    b.Navigation("FeedbackSubmissions");
+                b.Navigation("Permissions");
+            });
 
-                    b.Navigation("ProductPrograms");
+            modelBuilder.Entity("GameGuild.Modules.Contents.Content", b => {
+                b.Navigation("Localizations");
+            });
 
-                    b.Navigation("ProgramContents");
+            modelBuilder.Entity("GameGuild.Modules.Contents.ContentLicense", b => {
+                b.Navigation("Localizations");
+            });
 
-                    b.Navigation("ProgramRatings");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectCategory", b => {
+                b.Navigation("Localizations");
 
-                    b.Navigation("ProgramUsers");
+                b.Navigation("Projects");
+            });
 
-                    b.Navigation("ProgramWishlists");
-                });
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectCollaborator", b => {
+                b.Navigation("Localizations");
+            });
 
-            modelBuilder.Entity("GameGuild.Modules.Projects.Project", b =>
-                {
-                    b.Navigation("Collaborators");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectFeedback", b => {
+                b.Navigation("Localizations");
+            });
 
-                    b.Navigation("Feedbacks");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectFollower", b => {
+                b.Navigation("Localizations");
+            });
 
-                    b.Navigation("Followers");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectJamSubmission", b => {
+                b.Navigation("Localizations");
 
-                    b.Navigation("JamSubmissions");
+                b.Navigation("Scores");
+            });
 
-                    b.Navigation("ProjectMetadata");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectRelease", b => {
+                b.Navigation("Localizations");
+            });
 
-                    b.Navigation("Releases");
+            modelBuilder.Entity("GameGuild.Modules.Projects.ProjectTeam", b => {
+                b.Navigation("Localizations");
+            });
 
-                    b.Navigation("Teams");
+            modelBuilder.Entity("GameGuild.Modules.Reputations.ReputationAction", b => {
+                b.Navigation("Localizations");
 
-                    b.Navigation("Versions");
-                });
+                b.Navigation("ReputationHistory");
+            });
+
+            modelBuilder.Entity("GameGuild.Modules.Reputations.ReputationTier", b => {
+                b.Navigation("Localizations");
+
+                b.Navigation("UserReputations");
+            });
+
+            modelBuilder.Entity("GameGuild.Modules.Reputations.UserReputation", b => {
+                b.Navigation("History");
+
+                b.Navigation("Localizations");
+            });
+
+            modelBuilder.Entity("GameGuild.Modules.Reputations.UserReputationHistory", b => {
+                b.Navigation("Localizations");
+            });
+
+            modelBuilder.Entity("GameGuild.Modules.Reputations.UserTenantReputation", b => {
+                b.Navigation("History");
+
+                b.Navigation("Localizations");
+            });
+
+            modelBuilder.Entity("GameGuild.Modules.Tenants.Tenant", b => {
+                b.Navigation("Localizations");
+
+                b.Navigation("TenantPermissions");
+            });
+
+            modelBuilder.Entity("GameGuild.Modules.UserProfiles.UserProfile", b => {
+                b.Navigation("Localizations");
+            });
+
+            modelBuilder.Entity("GameGuild.Modules.Posts.Post", b => {
+                b.Navigation("Comments");
+
+                b.Navigation("ContentReferences");
+
+                b.Navigation("Followers");
+
+                b.Navigation("Likes");
+
+                b.Navigation("Statistics");
+
+                b.Navigation("Tags");
+
+                b.Navigation("Views");
+            });
+
+            modelBuilder.Entity("GameGuild.Modules.Products.Product", b => {
+                b.Navigation("ProductPricings");
+
+                b.Navigation("ProductPrograms");
+
+                b.Navigation("PromoCodes");
+
+                b.Navigation("SubscriptionPlans");
+
+                b.Navigation("UserProducts");
+            });
+
+            modelBuilder.Entity("GameGuild.Modules.Programs.Program", b => {
+                b.Navigation("Certificates");
+
+                b.Navigation("FeedbackSubmissions");
+
+                b.Navigation("ProductPrograms");
+
+                b.Navigation("ProgramContents");
+
+                b.Navigation("ProgramRatings");
+
+                b.Navigation("ProgramUsers");
+
+                b.Navigation("ProgramWishlists");
+            });
+
+            modelBuilder.Entity("GameGuild.Modules.Projects.Project", b => {
+                b.Navigation("Collaborators");
+
+                b.Navigation("Feedbacks");
+
+                b.Navigation("Followers");
+
+                b.Navigation("JamSubmissions");
+
+                b.Navigation("ProjectMetadata");
+
+                b.Navigation("Releases");
+
+                b.Navigation("Teams");
+
+                b.Navigation("Versions");
+            });
 #pragma warning restore 612, 618
         }
     }
