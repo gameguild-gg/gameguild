@@ -1,3 +1,3 @@
-namespace GameGuild.Modules.TestingLab.Commands;
+namespace GameGuild.Modules.TestingLab;
 
 public record DeleteTestingRequestCommand(Guid Id) : IRequest<bool>;

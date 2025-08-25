@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Abstractions;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Service for mapping between entities and DTOs in the Testing Lab module </summary>
 public interface ITestingLabMappingService {

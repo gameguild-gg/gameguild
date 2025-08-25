@@ -1,7 +1,4 @@
-using GameGuild.Modules.TestingLab.Abstractions;
-
-
-namespace GameGuild.Modules.TestingLab.Handlers;
+namespace GameGuild.Modules.TestingLab;
 
 public class CreateTestingSessionCommandHandler : ITestingLabCommandHandler<CreateTestingSessionCommand, TestingSession> {
   private readonly ITestingLocationRepository _locationRepository;
@@ -40,16 +37,13 @@ public class CreateTestingSessionCommandHandler : ITestingLabCommandHandler<Crea
     var testingSession = new TestingSession {
       Id = Guid.NewGuid(),
       TestingRequestId = request.TestingRequestId,
-      Title = request.Title,
-      Description = request.Description,
-      ScheduledDate = request.ScheduledDate,
-      Duration = request.Duration,
-      Mode = request.Mode,
-      LocationId = request.LocationId,
-      MaxParticipants = request.MaxParticipants,
-      RegistrationType = request.RegistrationType,
+      SessionName = request.Title,
+      SessionDate = request.ScheduledDate,
+      StartTime = request.ScheduledDate,
+      EndTime = request.ScheduledDate.Add(request.Duration),
+      LocationId = request.LocationId ?? Guid.Empty,
+      MaxTesters = request.MaxParticipants,
       Status = SessionStatus.Scheduled,
-      IsActive = request.IsActive,
       CreatedAt = DateTime.UtcNow,
     };
 
@@ -59,9 +53,9 @@ public class CreateTestingSessionCommandHandler : ITestingLabCommandHandler<Crea
     var domainEvent = new TestingSessionCreatedEvent(
       createdSession.Id,
       createdSession.TestingRequestId,
-      createdSession.Title,
-      createdSession.ScheduledDate,
-      createdSession.CreatedByUserId ?? Guid.Empty,
+      createdSession.SessionName,
+      createdSession.SessionDate,
+      createdSession.CreatedById,
       createdSession.CreatedAt
     );
 

@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Queries;
+namespace GameGuild.Modules.TestingLab;
 
 public record GetParticipantsQuery(
   Guid? TestingSessionId = null,

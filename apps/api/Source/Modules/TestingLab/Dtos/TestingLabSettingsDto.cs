@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Dtos;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Data Transfer Object for creating TestingLabSettings </summary>
 public class CreateTestingLabSettingsDto {

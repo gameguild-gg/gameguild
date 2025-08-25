@@ -1,7 +1,7 @@
-namespace GameGuild.Modules.TestingLab.Abstractions;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Repository abstraction for Testing Feedback operations </summary>
-public interface ITestingFeedbackRepository : IRepository<TestingFeedback> {
+public interface ITestingFeedbackRepository {
   /// <summary> Get feedback with pagination </summary>
   Task<IEnumerable<TestingFeedback>> GetWithPaginationAsync(int skip = 0, int take = 50);
 
@@ -15,23 +15,8 @@ public interface ITestingFeedbackRepository : IRepository<TestingFeedback> {
   Task<IEnumerable<TestingFeedback>> GetByTesterAsync(Guid testerId);
 
   /// <summary> Get feedback by quality rating </summary>
-  Task<IEnumerable<TestingFeedback>> GetByQualityRatingAsync(FeedbackQualityRating rating);
+  Task<IEnumerable<TestingFeedback>> GetByQualityRatingAsync(FeedbackQuality rating);
 
   /// <summary> Get feedback statistics for a testing request </summary>
   Task<TestingFeedbackStats> GetFeedbackStatsAsync(Guid testingRequestId);
-}
-
-/// <summary> Statistics for testing feedback </summary>
-public class TestingFeedbackStats {
-  public int TotalFeedback { get; set; }
-
-  public double AverageRating { get; set; }
-
-  public Dictionary<FeedbackQualityRating, int> RatingDistribution { get; set; } = new Dictionary<FeedbackQualityRating, int>();
-
-  public int HighQualityCount { get; set; }
-
-  public int MediumQualityCount { get; set; }
-
-  public int LowQualityCount { get; set; }
 }

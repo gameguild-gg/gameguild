@@ -50,7 +50,7 @@
         "editor.acceptSuggestionOnEnter": "off"
     },
     "[csharp]": {
-        "editor.defaultFormatter": "muhammad-sammy.csharp"
+        "editor.defaultFormatter": "ms-dotnettools.csharp"
     },
     "[typescript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features"

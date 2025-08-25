@@ -90,8 +90,7 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
       await permissionService.AssignRoleToUserAsync(
         userId,
         tenantId,
-        defaultRoleName,
-        null
+        defaultRoleName
       );
 
       _logger.LogInformation(

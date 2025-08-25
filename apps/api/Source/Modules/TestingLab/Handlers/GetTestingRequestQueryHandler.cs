@@ -1,7 +1,4 @@
-using GameGuild.Modules.TestingLab.Abstractions;
-
-
-namespace GameGuild.Modules.TestingLab.Handlers;
+namespace GameGuild.Modules.TestingLab;
 
 public class GetTestingRequestQueryHandler : ITestingLabQueryHandler<GetTestingRequestQuery, TestingRequest?> {
   private readonly ITestingRequestService _service;

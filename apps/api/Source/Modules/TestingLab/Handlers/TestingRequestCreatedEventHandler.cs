@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Handlers;
+namespace GameGuild.Modules.TestingLab;
 
 public class TestingRequestCreatedEventHandler : INotificationHandler<TestingRequestCreatedEvent> {
   private readonly ILogger<TestingRequestCreatedEventHandler> _logger;

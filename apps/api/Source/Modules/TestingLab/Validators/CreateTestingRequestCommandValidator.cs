@@ -1,7 +1,7 @@
 using FluentValidation;
 
 
-namespace GameGuild.Modules.TestingLab.Validators;
+namespace GameGuild.Modules.TestingLab;
 
 public class CreateTestingRequestCommandValidator : AbstractValidator<CreateTestingRequestCommand> {
   public CreateTestingRequestCommandValidator() {
