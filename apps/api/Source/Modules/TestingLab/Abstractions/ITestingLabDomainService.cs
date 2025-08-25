@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Abstractions;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Domain service for coordinating complex Testing Lab operations </summary>
 public interface ITestingLabDomainService {

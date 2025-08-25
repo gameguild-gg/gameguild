@@ -17,7 +17,7 @@ public class TestingSession : Entity {
   /// <summary> Navigation property to the testing location </summary>
   public virtual TestingLocation Location { get; set; } = null!;
 
-  [Required] [MaxLength(255)] public string SessionName { get; set; } = string.Empty;
+  [Required][MaxLength(255)] public string SessionName { get; set; } = string.Empty;
 
   [Required] public DateTime SessionDate { get; set; }
 

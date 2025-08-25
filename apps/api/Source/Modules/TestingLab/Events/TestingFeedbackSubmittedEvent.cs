@@ -1,9 +1,9 @@
-namespace GameGuild.Modules.TestingLab.Events;
+namespace GameGuild.Modules.TestingLab;
 
 public record TestingFeedbackSubmittedEvent(
   Guid FeedbackId,
   Guid TestingRequestId,
   Guid UserId,
-  FeedbackQualityRating? QualityRating,
+  FeedbackQuality? QualityRating,
   DateTime SubmittedAt
 ) : INotification;

@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Events;
+namespace GameGuild.Modules.TestingLab;
 
 public record TestingSessionCreatedEvent(
   Guid TestingSessionId,

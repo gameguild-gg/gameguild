@@ -529,7 +529,10 @@ public class TestService(ApplicationDbContext context) : ITestService {
                                 );
 
     return new {
-      ParticipantCount = participantCount, SessionCount = sessionCount, CompletedSessionCount = completedSessionCount, FeedbackCount = feedbackCount,
+      ParticipantCount = participantCount,
+      SessionCount = sessionCount,
+      CompletedSessionCount = completedSessionCount,
+      FeedbackCount = feedbackCount,
     };
   }
 
@@ -760,16 +763,16 @@ public class TestService(ApplicationDbContext context) : ITestService {
                                 .Where(ts => ts.DeletedAt == null)
                                 .Include(ts => ts.Location)
                                 .Select(ts => new {
-                                    ts.Id,
-                                    ts.SessionName,
-                                    Date = ts.SessionDate.ToString("yyyy-MM-dd"),
-                                    Location = ts.Location.Name,
-                                    TotalCapacity = ts.Location.MaxTestersCapacity,
-                                    StudentsRegistered = ts.RegisteredTesterCount,
-                                    StudentsAttended = ts.RegisteredTesterCount, // Placeholder - would need actual attendance tracking
-                                    AttendanceRate = ts.RegisteredTesterCount > 0 ? (double)ts.RegisteredTesterCount / ts.RegisteredTesterCount * 100 : 0,
-                                    GamesTested = 1, // Placeholder - would need actual count
-                                  }
+                                  ts.Id,
+                                  ts.SessionName,
+                                  Date = ts.SessionDate.ToString("yyyy-MM-dd"),
+                                  Location = ts.Location.Name,
+                                  TotalCapacity = ts.Location.MaxTestersCapacity,
+                                  StudentsRegistered = ts.RegisteredTesterCount,
+                                  StudentsAttended = ts.RegisteredTesterCount, // Placeholder - would need actual attendance tracking
+                                  AttendanceRate = ts.RegisteredTesterCount > 0 ? (double)ts.RegisteredTesterCount / ts.RegisteredTesterCount * 100 : 0,
+                                  GamesTested = 1, // Placeholder - would need actual count
+                                }
                                 )
                                 .ToListAsync();
 
