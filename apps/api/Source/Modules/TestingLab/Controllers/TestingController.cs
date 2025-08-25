@@ -61,7 +61,13 @@ public class TestingController(ITestService testService) : ControllerBase {
       var request = requestDto.ToTestingRequest(userId);
       var createdRequest = await testService.CreateTestingRequestAsync(request);
 
-      return CreatedAtAction(nameof(GetTestingRequest), new { id = createdRequest.Id }, createdRequest);
+      return CreatedAtAction(
+        nameof(GetTestingRequest),
+        new {
+          id = createdRequest.Id,
+        },
+        createdRequest
+      );
     }
     catch (Exception ex) { return BadRequest($"Error creating testing request: {ex.Message}"); }
   }
@@ -154,7 +160,13 @@ public class TestingController(ITestService testService) : ControllerBase {
       session.CreatedById = userId;
       var createdSession = await testService.CreateTestingSessionAsync(session);
 
-      return CreatedAtAction(nameof(GetTestingSession), new { id = createdSession.Id }, createdSession);
+      return CreatedAtAction(
+        nameof(GetTestingSession),
+        new {
+          id = createdSession.Id,
+        },
+        createdSession
+      );
     }
     catch (Exception ex) { return BadRequest($"Error creating testing session: {ex.Message}"); }
   }
@@ -523,7 +535,13 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       var request = await testService.CreateSimpleTestingRequestAsync(requestDto, userId);
 
-      return CreatedAtAction(nameof(GetTestingRequest), new { id = request.Id }, request);
+      return CreatedAtAction(
+        nameof(GetTestingRequest),
+        new {
+          id = request.Id,
+        },
+        request
+      );
     }
     catch (Exception ex) { return BadRequest($"Error creating testing request: {ex.Message}"); }
   }
@@ -543,7 +561,11 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       await testService.SubmitFeedbackAsync(feedbackDto, userId);
 
-      return Ok(new { message = "Feedback submitted successfully" });
+      return Ok(
+        new {
+          message = "Feedback submitted successfully",
+        }
+      );
     }
     catch (Exception ex) { return BadRequest($"Error submitting feedback: {ex.Message}"); }
   }
@@ -577,11 +599,10 @@ public class TestingController(ITestService testService) : ControllerBase {
   public async Task<ActionResult<object>> GetStudentAttendanceReport() {
     try {
       var report = await testService.GetStudentAttendanceReportAsync();
+
       return Ok(report);
     }
-    catch (Exception ex) {
-      return BadRequest($"Error generating student attendance report: {ex.Message}");
-    }
+    catch (Exception ex) { return BadRequest($"Error generating student attendance report: {ex.Message}"); }
   }
 
   // GET: testing/attendance/sessions
@@ -590,11 +611,10 @@ public class TestingController(ITestService testService) : ControllerBase {
   public async Task<ActionResult<object>> GetSessionAttendanceReport() {
     try {
       var report = await testService.GetSessionAttendanceReportAsync();
+
       return Ok(report);
     }
-    catch (Exception ex) {
-      return BadRequest($"Error generating session attendance report: {ex.Message}");
-    }
+    catch (Exception ex) { return BadRequest($"Error generating session attendance report: {ex.Message}"); }
   }
 
   // POST: testing/sessions/{id}/attendance
@@ -605,16 +625,17 @@ public class TestingController(ITestService testService) : ControllerBase {
       // Get the current authenticated user's ID
       var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId))
-        return Unauthorized("User ID not found in token");
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId)) return Unauthorized("User ID not found in token");
 
       await testService.UpdateSessionAttendanceAsync(sessionId, attendanceDto.UserId, attendanceDto.AttendanceStatus, currentUserId);
 
-      return Ok(new { message = "Attendance updated successfully" });
+      return Ok(
+        new {
+          message = "Attendance updated successfully",
+        }
+      );
     }
-    catch (Exception ex) {
-      return BadRequest($"Error updating attendance: {ex.Message}");
-    }
+    catch (Exception ex) { return BadRequest($"Error updating attendance: {ex.Message}"); }
   }
 
   // POST: testing/feedback/{id}/report
@@ -625,16 +646,17 @@ public class TestingController(ITestService testService) : ControllerBase {
       // Get the current authenticated user's ID
       var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId))
-        return Unauthorized("User ID not found in token");
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId)) return Unauthorized("User ID not found in token");
 
       await testService.ReportFeedbackAsync(feedbackId, reportDto.Reason, currentUserId);
 
-      return Ok(new { message = "Feedback reported successfully" });
+      return Ok(
+        new {
+          message = "Feedback reported successfully",
+        }
+      );
     }
-    catch (Exception ex) {
-      return BadRequest($"Error reporting feedback: {ex.Message}");
-    }
+    catch (Exception ex) { return BadRequest($"Error reporting feedback: {ex.Message}"); }
   }
 
   // POST: testing/feedback/{id}/quality
@@ -645,16 +667,17 @@ public class TestingController(ITestService testService) : ControllerBase {
       // Get the current authenticated user's ID
       var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId))
-        return Unauthorized("User ID not found in token");
+      if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var currentUserId)) return Unauthorized("User ID not found in token");
 
       await testService.RateFeedbackQualityAsync(feedbackId, qualityDto.Quality, currentUserId);
 
-      return Ok(new { message = "Feedback quality rated successfully" });
+      return Ok(
+        new {
+          message = "Feedback quality rated successfully",
+        }
+      );
     }
-    catch (Exception ex) {
-      return BadRequest($"Error rating feedback quality: {ex.Message}");
-    }
+    catch (Exception ex) { return BadRequest($"Error rating feedback quality: {ex.Message}"); }
   }
 
   #endregion
@@ -669,6 +692,7 @@ public class TestingController(ITestService testService) : ControllerBase {
     [FromQuery] int take = 50
   ) {
     var locations = await testService.GetTestingLocationsAsync(skip, take);
+
     return Ok(locations);
   }
 
@@ -677,7 +701,9 @@ public class TestingController(ITestService testService) : ControllerBase {
   [RequireResourcePermission<TestingLocation>(PermissionType.Read)]
   public async Task<ActionResult<TestingLocation>> GetTestingLocation(Guid id) {
     var location = await testService.GetTestingLocationByIdAsync(id);
+
     if (location == null) return NotFound();
+
     return Ok(location);
   }
 
@@ -691,11 +717,15 @@ public class TestingController(ITestService testService) : ControllerBase {
       var location = locationDto.ToTestingLocation();
       var createdLocation = await testService.CreateTestingLocationAsync(location);
 
-      return CreatedAtAction(nameof(GetTestingLocation), new { id = createdLocation.Id }, createdLocation);
+      return CreatedAtAction(
+        nameof(GetTestingLocation),
+        new {
+          id = createdLocation.Id,
+        },
+        createdLocation
+      );
     }
-    catch (Exception ex) {
-      return BadRequest($"Error creating testing location: {ex.Message}");
-    }
+    catch (Exception ex) { return BadRequest($"Error creating testing location: {ex.Message}"); }
   }
 
   // PUT: testing/locations/{id}
@@ -704,6 +734,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   public async Task<ActionResult<TestingLocation>> UpdateTestingLocation(Guid id, UpdateTestingLocationDto locationDto) {
     try {
       var existingLocation = await testService.GetTestingLocationByIdAsync(id);
+
       if (existingLocation == null) return NotFound();
 
       locationDto.UpdateTestingLocation(existingLocation);
@@ -711,9 +742,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
       return Ok(updatedLocation);
     }
-    catch (Exception ex) {
-      return BadRequest($"Error updating testing location: {ex.Message}");
-    }
+    catch (Exception ex) { return BadRequest($"Error updating testing location: {ex.Message}"); }
   }
 
   // DELETE: testing/locations/{id}
@@ -721,7 +750,9 @@ public class TestingController(ITestService testService) : ControllerBase {
   [RequireResourcePermission<TestingLocation>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteTestingLocation(Guid id) {
     var result = await testService.DeleteTestingLocationAsync(id);
+
     if (!result) return NotFound();
+
     return NoContent();
   }
 
@@ -730,17 +761,21 @@ public class TestingController(ITestService testService) : ControllerBase {
   [RequireResourcePermission<TestingLocation>(PermissionType.Edit)]
   public async Task<ActionResult> RestoreTestingLocation(Guid id) {
     var result = await testService.RestoreTestingLocationAsync(id);
+
     if (!result) return NotFound();
-    return Ok(new { message = "Testing location restored successfully" });
+
+    return Ok(
+      new {
+        message = "Testing location restored successfully",
+      }
+    );
   }
 
   #endregion
 
   #region Module Permission Integration Endpoints
 
-  /// <summary>
-  /// Check if current user can perform specific Testing Lab actions
-  /// </summary>
+  /// <summary> Check if current user can perform specific Testing Lab actions </summary>
   [HttpGet("permissions/check")]
   public async Task<ActionResult<TestingLabActionPermissions>> CheckTestingLabPermissions([FromServices] IModulePermissionService modulePermissionService, [FromQuery] Guid? tenantId = null) {
     var userId = GetCurrentUserId();
@@ -756,19 +791,16 @@ public class TestingController(ITestService testService) : ControllerBase {
     return Ok(permissions);
   }
 
-  /// <summary>
-  /// Get comprehensive Testing Lab permissions for current user
-  /// </summary>
+  /// <summary> Get comprehensive Testing Lab permissions for current user </summary>
   [HttpGet("permissions/my-permissions")]
   public async Task<ActionResult<TestingLabPermissions>> GetMyTestingLabPermissions([FromServices] IModulePermissionService modulePermissionService, [FromQuery] Guid? tenantId = null) {
     var userId = GetCurrentUserId();
     var permissions = await modulePermissionService.GetUserTestingLabPermissionsAsync(userId, tenantId);
+
     return Ok(permissions);
   }
 
-  /// <summary>
-  /// Assign Testing Lab role to a user (admin only)
-  /// </summary>
+  /// <summary> Assign Testing Lab role to a user (admin only) </summary>
   [HttpPost("permissions/assign-role")]
   public async Task<ActionResult> AssignTestingLabRole([FromServices] IModulePermissionService modulePermissionService, [FromBody] AssignTestingLabRoleDto request) {
     // TODO: Add admin permission check
@@ -779,92 +811,94 @@ public class TestingController(ITestService testService) : ControllerBase {
         ModuleType.TestingLab,
         request.RoleName,
         request.Constraints,
-        request.ExpiresAt);
+        request.ExpiresAt
+      );
 
-      return Ok(new { message = $"Successfully assigned {request.RoleName} role to user {request.UserId}" });
+      return Ok(
+        new {
+          message = $"Successfully assigned {request.RoleName} role to user {request.UserId}",
+        }
+      );
     }
-    catch (Exception ex) {
-      return BadRequest($"Error assigning role: {ex.Message}");
-    }
+    catch (Exception ex) { return BadRequest($"Error assigning role: {ex.Message}"); }
   }
 
-  /// <summary>
-  /// Create a new testing session with module permission checking
-  /// </summary>
+  /// <summary> Create a new testing session with module permission checking </summary>
   [HttpPost("sessions/create-with-permissions")]
   public async Task<ActionResult<TestingSession>> CreateTestingSessionWithPermissions(
     [FromServices] IModulePermissionService modulePermissionService,
     [FromBody] CreateTestingSessionDto sessionDto,
-    [FromQuery] Guid? tenantId = null) {
+    [FromQuery] Guid? tenantId = null
+  ) {
 
     var userId = GetCurrentUserId();
 
     // Check if user has permission to create sessions
     var canCreate = await modulePermissionService.CanCreateTestingSessionsAsync(userId, tenantId);
-    if (!canCreate) {
-      return Forbid("You do not have permission to create testing sessions");
-    }
+
+    if (!canCreate) { return Forbid("You do not have permission to create testing sessions"); }
 
     try {
       // Convert DTO to entity and create session
       var session = sessionDto.ToTestingSession(userId);
       var createdSession = await testService.CreateTestingSessionAsync(session);
 
-      return CreatedAtAction(nameof(GetTestingSession), new { id = createdSession.Id }, createdSession);
+      return CreatedAtAction(
+        nameof(GetTestingSession),
+        new {
+          id = createdSession.Id,
+        },
+        createdSession
+      );
     }
-    catch (Exception ex) {
-      return BadRequest($"Error creating testing session: {ex.Message}");
-    }
+    catch (Exception ex) { return BadRequest($"Error creating testing session: {ex.Message}"); }
   }
 
-  /// <summary>
-  /// Delete a testing session with module permission checking
-  /// </summary>
+  /// <summary> Delete a testing session with module permission checking </summary>
   [HttpDelete("sessions/{id}/delete-with-permissions")]
   public async Task<ActionResult> DeleteTestingSessionWithPermissions(
     [FromServices] IModulePermissionService modulePermissionService,
     Guid id,
-    [FromQuery] Guid? tenantId = null) {
+    [FromQuery] Guid? tenantId = null
+  ) {
 
     var userId = GetCurrentUserId();
 
     // Check if user has permission to delete sessions
     var canDelete = await modulePermissionService.CanDeleteTestingSessionsAsync(userId, tenantId);
-    if (!canDelete) {
-      return Forbid("You do not have permission to delete testing sessions");
-    }
+
+    if (!canDelete) { return Forbid("You do not have permission to delete testing sessions"); }
 
     try {
       var result = await testService.DeleteTestingSessionAsync(id);
+
       if (!result) return NotFound();
 
       return NoContent();
     }
-    catch (Exception ex) {
-      return BadRequest($"Error deleting testing session: {ex.Message}");
-    }
+    catch (Exception ex) { return BadRequest($"Error deleting testing session: {ex.Message}"); }
   }
 
-  /// <summary>
-  /// Get users with specific Testing Lab roles
-  /// </summary>
+  /// <summary> Get users with specific Testing Lab roles </summary>
   [HttpGet("permissions/users-with-role/{roleName}")]
   public async Task<ActionResult<List<UserRoleAssignment>>> GetUsersWithTestingLabRole(
     [FromServices] IModulePermissionService modulePermissionService,
     string roleName,
-    [FromQuery] Guid? tenantId = null) {
+    [FromQuery] Guid? tenantId = null
+  ) {
 
     // TODO: Add admin permission check
     var users = await modulePermissionService.GetUsersWithRoleAsync(tenantId, ModuleType.TestingLab, roleName);
+
     return Ok(users);
   }
 
   // Helper method to get current user ID
   private Guid GetCurrentUserId() {
     var userIdClaim = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) {
-      throw new UnauthorizedAccessException("User ID not found in token");
-    }
+
+    if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { throw new UnauthorizedAccessException("User ID not found in token"); }
+
     return userId;
   }
 
@@ -874,6 +908,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 // DTOs for request bodies
 public class UpdateAttendanceDto {
   public Guid UserId { get; set; }
+
   public AttendanceStatus AttendanceStatus { get; set; }
 }
 
@@ -887,11 +922,17 @@ public class RateFeedbackQualityDto {
 
 public class CreateTestingLocationDto {
   public string Name { get; set; } = string.Empty;
+
   public string? Description { get; set; }
+
   public string? Address { get; set; }
+
   public int MaxTestersCapacity { get; set; }
+
   public int MaxProjectsCapacity { get; set; }
+
   public string? EquipmentAvailable { get; set; }
+
   public LocationStatus Status { get; set; } = LocationStatus.Active;
 
   public TestingLocation ToTestingLocation() {
@@ -909,11 +950,17 @@ public class CreateTestingLocationDto {
 
 public class UpdateTestingLocationDto {
   public string? Name { get; set; }
+
   public string? Description { get; set; }
+
   public string? Address { get; set; }
+
   public int? MaxTestersCapacity { get; set; }
+
   public int? MaxProjectsCapacity { get; set; }
+
   public string? EquipmentAvailable { get; set; }
+
   public LocationStatus? Status { get; set; }
 
   public void UpdateTestingLocation(TestingLocation location) {
@@ -930,16 +977,24 @@ public class UpdateTestingLocationDto {
 // Module Permission DTOs
 public class TestingLabActionPermissions {
   public bool CanCreateSessions { get; set; }
+
   public bool CanDeleteSessions { get; set; }
+
   public bool CanManageTesters { get; set; }
+
   public bool CanViewReports { get; set; }
+
   public bool CanExportData { get; set; }
 }
 
 public class AssignTestingLabRoleDto {
   public Guid UserId { get; set; }
+
   public Guid? TenantId { get; set; }
+
   public string RoleName { get; set; } = string.Empty; // "TestingLabAdmin", "TestingLabManager", etc.
+
   public List<PermissionConstraint>? Constraints { get; set; }
+
   public DateTime? ExpiresAt { get; set; }
 }

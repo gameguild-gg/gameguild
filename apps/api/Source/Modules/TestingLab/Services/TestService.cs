@@ -1,14 +1,12 @@
+using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using GameGuild.Common;
+using GameGuild.Modules.Projects;
 
 
 namespace GameGuild.Modules.TestingLab;
 
-/// <summary>
-/// Service implementation for Testing operations
-/// Comprehensive testing session and request management capabilities
-/// </summary>
+/// <summary> Service implementation for Testing operations Comprehensive testing session and request management capabilities </summary>
 public class TestService(ApplicationDbContext context) : ITestService {
   #region Testing Request Operations
 
@@ -259,7 +257,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
     return await context.TestingRequests.Where(tr =>
                                                  tr.DeletedAt == null &&
                                                  (tr.Title.ToLower().Contains(lowerSearchTerm) ||
-                                                  (tr.Description != null && tr.Description.ToLower().Contains(lowerSearchTerm)))
+                                                  tr.Description != null && tr.Description.ToLower().Contains(lowerSearchTerm))
                         )
                         .Include(tr => tr.ProjectVersion)
                         .Include(tr => tr.CreatedBy)
@@ -364,8 +362,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
     var session = await context.TestingSessions.FindAsync(sessionId);
 
     if (session != null) {
-      if (registrationType == RegistrationType.Tester)
-        session.RegisteredTesterCount++;
+      if (registrationType == RegistrationType.Tester) session.RegisteredTesterCount++;
       else if (registrationType == RegistrationType.ProjectMember) session.RegisteredProjectMemberCount++;
     }
 
@@ -386,8 +383,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
     var session = await context.TestingSessions.FindAsync(sessionId);
 
     if (session != null) {
-      if (registration.RegistrationType == RegistrationType.Tester)
-        session.RegisteredTesterCount = Math.Max(0, session.RegisteredTesterCount - 1);
+      if (registration.RegistrationType == RegistrationType.Tester) session.RegisteredTesterCount = Math.Max(0, session.RegisteredTesterCount - 1);
       else if (registration.RegistrationType == RegistrationType.ProjectMember) session.RegisteredProjectMemberCount = Math.Max(0, session.RegisteredProjectMemberCount - 1);
     }
 
@@ -532,7 +528,12 @@ public class TestService(ApplicationDbContext context) : ITestService {
                                                                            ts.TestingRequestId == testingRequestId && ts.Status == SessionStatus.Completed && ts.DeletedAt == null
                                 );
 
-    return new { ParticipantCount = participantCount, SessionCount = sessionCount, CompletedSessionCount = completedSessionCount, FeedbackCount = feedbackCount };
+    return new {
+      ParticipantCount = participantCount,
+      SessionCount = sessionCount,
+      CompletedSessionCount = completedSessionCount,
+      FeedbackCount = feedbackCount,
+    };
   }
 
   public async Task<object> GetTestingSessionStatisticsAsync(Guid testingSessionId) {
@@ -547,7 +548,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
     var feedbackCount = await context.TestingFeedback.CountAsync(tf => tf.SessionId == testingSessionId);
 
     return new {
-      MaxTesters = session.MaxTesters,
+      session.MaxTesters,
       RegisteredCount = registrationCount,
       WaitlistCount = waitlistCount,
       FeedbackCount = feedbackCount,
@@ -586,12 +587,13 @@ public class TestService(ApplicationDbContext context) : ITestService {
     // We'll create a placeholder ProjectVersion or skip it for now
 
     var existingProject = await context.Projects
-        .FirstOrDefaultAsync(p => p.Title == requestDto.TeamIdentifier && p.DeletedAt == null);
+                                       .FirstOrDefaultAsync(p => p.Title == requestDto.TeamIdentifier && p.DeletedAt == null);
 
     Guid projectId;
+
     if (existingProject == null) {
       // Create a new project for this team
-      var newProject = new GameGuild.Modules.Projects.Project {
+      var newProject = new Project {
         Id = Guid.NewGuid(),
         Title = requestDto.TeamIdentifier,
         ShortDescription = $"Capstone project for {requestDto.TeamIdentifier}",
@@ -599,7 +601,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
         Status = ContentStatus.Published,
         Visibility = AccessLevel.Public,
         DevelopmentStatus = DevelopmentStatus.InDevelopment,
-        Type = Common.ProjectType.Game,
+        Type = ProjectType.Game,
         CreatedById = userId,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
@@ -609,12 +611,10 @@ public class TestService(ApplicationDbContext context) : ITestService {
       await context.SaveChangesAsync();
       projectId = newProject.Id;
     }
-    else {
-      projectId = existingProject.Id;
-    }
+    else { projectId = existingProject.Id; }
 
     // Create a project release instead of project version
-    var projectRelease = new GameGuild.Modules.Projects.ProjectRelease {
+    var projectRelease = new ProjectRelease {
       Id = Guid.NewGuid(),
       ProjectId = projectId,
       ReleaseVersion = requestDto.VersionNumber,
@@ -659,9 +659,10 @@ public class TestService(ApplicationDbContext context) : ITestService {
   public async Task SubmitFeedbackAsync(SubmitFeedbackDto feedbackDto, Guid userId) {
     // Create a feedback form if it doesn't exist for this request
     var existingForm = await context.TestingFeedbackForms
-        .FirstOrDefaultAsync(f => f.TestingRequestId == feedbackDto.TestingRequestId);
+                                    .FirstOrDefaultAsync(f => f.TestingRequestId == feedbackDto.TestingRequestId);
 
     Guid feedbackFormId;
+
     if (existingForm == null) {
       var feedbackForm = new TestingFeedbackForm {
         Id = Guid.NewGuid(),
@@ -677,9 +678,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
       await context.SaveChangesAsync();
       feedbackFormId = feedbackForm.Id;
     }
-    else {
-      feedbackFormId = existingForm.Id;
-    }
+    else { feedbackFormId = existingForm.Id; }
 
     // Create the feedback
     var feedback = new TestingFeedback {
@@ -701,9 +700,10 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
     // Update tester count on the request
     var testingRequest = await context.TestingRequests.FindAsync(feedbackDto.TestingRequestId);
+
     if (testingRequest != null) {
       testingRequest.CurrentTesterCount = await context.TestingFeedback
-          .CountAsync(f => f.TestingRequestId == feedbackDto.TestingRequestId);
+                                                       .CountAsync(f => f.TestingRequestId == feedbackDto.TestingRequestId);
       testingRequest.UpdatedAt = DateTime.UtcNow;
     }
 
@@ -712,12 +712,12 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task<IEnumerable<TestingRequest>> GetActiveTestingRequestsAsync() {
     return await context.TestingRequests
-        .Where(tr => tr.DeletedAt == null && tr.Status == TestingRequestStatus.Open)
-        .Include(tr => tr.ProjectVersion)
-            .ThenInclude(pv => pv.Project)
-        .Include(tr => tr.CreatedBy)
-        .OrderByDescending(tr => tr.CreatedAt)
-        .ToListAsync();
+                        .Where(tr => tr.DeletedAt == null && tr.Status == TestingRequestStatus.Open)
+                        .Include(tr => tr.ProjectVersion)
+                        .ThenInclude(pv => pv.Project)
+                        .Include(tr => tr.CreatedBy)
+                        .OrderByDescending(tr => tr.CreatedAt)
+                        .ToListAsync();
   }
 
   #endregion
@@ -760,37 +760,34 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task<object> GetSessionAttendanceReportAsync() {
     var sessions = await context.TestingSessions
-        .Where(ts => ts.DeletedAt == null)
-        .Include(ts => ts.Location)
-        .Select(ts => new {
-          Id = ts.Id,
-          SessionName = ts.SessionName,
-          Date = ts.SessionDate.ToString("yyyy-MM-dd"),
-          Location = ts.Location.Name,
-          TotalCapacity = ts.Location.MaxTestersCapacity,
-          StudentsRegistered = ts.RegisteredTesterCount,
-          StudentsAttended = ts.RegisteredTesterCount, // Placeholder - would need actual attendance tracking
-          AttendanceRate = ts.RegisteredTesterCount > 0 ?
-                (double)ts.RegisteredTesterCount / ts.RegisteredTesterCount * 100 : 0,
-          GamesTested = 1, // Placeholder - would need actual count
-        })
-        .ToListAsync();
+                                .Where(ts => ts.DeletedAt == null)
+                                .Include(ts => ts.Location)
+                                .Select(ts => new {
+                                  ts.Id,
+                                  ts.SessionName,
+                                  Date = ts.SessionDate.ToString("yyyy-MM-dd"),
+                                  Location = ts.Location.Name,
+                                  TotalCapacity = ts.Location.MaxTestersCapacity,
+                                  StudentsRegistered = ts.RegisteredTesterCount,
+                                  StudentsAttended = ts.RegisteredTesterCount, // Placeholder - would need actual attendance tracking
+                                  AttendanceRate = ts.RegisteredTesterCount > 0 ? (double)ts.RegisteredTesterCount / ts.RegisteredTesterCount * 100 : 0,
+                                  GamesTested = 1, // Placeholder - would need actual count
+                                }
+                                )
+                                .ToListAsync();
 
     return sessions;
   }
 
   public async Task UpdateSessionAttendanceAsync(Guid sessionId, Guid userId, AttendanceStatus status, Guid updatedByUserId) {
     var registration = await context.SessionRegistrations
-        .FirstOrDefaultAsync(sr => sr.SessionId == sessionId && sr.UserId == userId);
+                                    .FirstOrDefaultAsync(sr => sr.SessionId == sessionId && sr.UserId == userId);
 
-    if (registration == null) {
-      throw new ArgumentException("Registration not found");
-    }
+    if (registration == null) { throw new ArgumentException("Registration not found"); }
 
     registration.AttendanceStatus = status;
-    if (status == AttendanceStatus.Completed) {
-      registration.AttendedAt = DateTime.UtcNow;
-    }
+
+    if (status == AttendanceStatus.Completed) { registration.AttendedAt = DateTime.UtcNow; }
 
     await context.SaveChangesAsync();
   }
@@ -801,11 +798,9 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task ReportFeedbackAsync(Guid feedbackId, string reason, Guid reportedByUserId) {
     var feedback = await context.TestingFeedback
-        .FirstOrDefaultAsync(tf => tf.Id == feedbackId);
+                                .FirstOrDefaultAsync(tf => tf.Id == feedbackId);
 
-    if (feedback == null) {
-      throw new ArgumentException("Feedback not found");
-    }
+    if (feedback == null) { throw new ArgumentException("Feedback not found"); }
 
     feedback.IsReported = true;
     feedback.ReportReason = reason;
@@ -817,11 +812,9 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task RateFeedbackQualityAsync(Guid feedbackId, FeedbackQuality quality, Guid ratedByUserId) {
     var feedback = await context.TestingFeedback
-        .FirstOrDefaultAsync(tf => tf.Id == feedbackId);
+                                .FirstOrDefaultAsync(tf => tf.Id == feedbackId);
 
-    if (feedback == null) {
-      throw new ArgumentException("Feedback not found");
-    }
+    if (feedback == null) { throw new ArgumentException("Feedback not found"); }
 
     feedback.QualityRating = quality;
 
@@ -864,11 +857,9 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task<TestingLocation> UpdateTestingLocationAsync(TestingLocation location) {
     var existingLocation = await context.TestingLocations
-        .FirstOrDefaultAsync(tl => tl.Id == location.Id && tl.DeletedAt == null);
+                                        .FirstOrDefaultAsync(tl => tl.Id == location.Id && tl.DeletedAt == null);
 
-    if (existingLocation == null) {
-      throw new InvalidOperationException($"Testing location with ID {location.Id} not found");
-    }
+    if (existingLocation == null) { throw new InvalidOperationException($"Testing location with ID {location.Id} not found"); }
 
     // Update properties
     existingLocation.Name = location.Name;
@@ -887,11 +878,9 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task<bool> DeleteTestingLocationAsync(Guid id) {
     var location = await context.TestingLocations
-        .FirstOrDefaultAsync(tl => tl.Id == id && tl.DeletedAt == null);
+                                .FirstOrDefaultAsync(tl => tl.Id == id && tl.DeletedAt == null);
 
-    if (location == null) {
-      return false;
-    }
+    if (location == null) { return false; }
 
     // Soft delete
     location.DeletedAt = DateTime.UtcNow;
@@ -902,11 +891,9 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public async Task<bool> RestoreTestingLocationAsync(Guid id) {
     var location = await context.TestingLocations
-        .FirstOrDefaultAsync(tl => tl.Id == id && tl.DeletedAt != null);
+                                .FirstOrDefaultAsync(tl => tl.Id == id && tl.DeletedAt != null);
 
-    if (location == null) {
-      return false;
-    }
+    if (location == null) { return false; }
 
     // Restore
     location.DeletedAt = null;

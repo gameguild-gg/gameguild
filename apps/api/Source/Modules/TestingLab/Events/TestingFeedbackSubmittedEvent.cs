@@ -1,11 +1,9 @@
-using MediatR;
-
-namespace GameGuild.Modules.TestingLab.Events;
+namespace GameGuild.Modules.TestingLab;
 
 public record TestingFeedbackSubmittedEvent(
-    Guid FeedbackId,
-    Guid TestingRequestId,
-    Guid UserId,
-    FeedbackQualityRating? QualityRating,
-    DateTime SubmittedAt
+  Guid FeedbackId,
+  Guid TestingRequestId,
+  Guid UserId,
+  FeedbackQuality? QualityRating,
+  DateTime SubmittedAt
 ) : INotification;

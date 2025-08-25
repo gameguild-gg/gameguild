@@ -1,14 +1,14 @@
 using GameGuild.Common;
 
 
-namespace GameGuild.Modules.TestingLab {
-  public class TestingFeedbackForm : Entity {
-    [Required] public Guid TestingRequestId { get; set; }
+namespace GameGuild.Modules.TestingLab;
 
-    [Required] public string FormSchema { get; set; } = string.Empty; // JSON
+public class TestingFeedbackForm : Entity {
+  [Required] public Guid TestingRequestId { get; set; }
 
-    public bool IsForOnline { get; set; } = true;
+  [Required] public string FormSchema { get; set; } = string.Empty; // JSON
 
-    public bool IsForSessions { get; set; } = true;
-  }
+  public bool IsForOnline { get; set; } = true;
+
+  public bool IsForSessions { get; set; } = true;
 }

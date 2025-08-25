@@ -1,43 +1,33 @@
-namespace GameGuild.Modules.TestingLab {
-  /// <summary>
-  /// Simplified DTO for students to submit versions directly without pre-existing ProjectVersion
-  /// </summary>
-  public class CreateSimpleTestingRequestDto {
-    [Required][MaxLength(255)] public string Title { get; set; } = string.Empty;
+namespace GameGuild.Modules.TestingLab;
 
-    public string? Description { get; set; }
+/// <summary> Simplified DTO for students to submit versions directly without pre-existing ProjectVersion </summary>
+public class CreateSimpleTestingRequestDto {
+  [Required][MaxLength(255)] public string Title { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Version number for this submission
-    /// </summary>
-    [Required][MaxLength(50)] public string VersionNumber { get; set; } = string.Empty;
+  public string? Description { get; set; }
 
-    /// <summary>
-    /// URL to download the game build
-    /// </summary>
-    [MaxLength(1000)]
-    public string? DownloadUrl { get; set; }
+  /// <summary> Version number for this submission </summary>
+  [Required][MaxLength(50)] public string VersionNumber { get; set; } = string.Empty;
 
-    [Required] public InstructionType InstructionsType { get; set; }
+  /// <summary> URL to download the game build </summary>
+  [MaxLength(1000)]
+  public string? DownloadUrl { get; set; }
 
-    public string? InstructionsContent { get; set; }
+  [Required] public InstructionType InstructionsType { get; set; }
 
-    [MaxLength(500)] public string? InstructionsUrl { get; set; }
+  public string? InstructionsContent { get; set; }
 
-    /// <summary>
-    /// Simple feedback form content (plain text questions)
-    /// </summary>
-    public string? FeedbackFormContent { get; set; }
+  [MaxLength(500)] public string? InstructionsUrl { get; set; }
 
-    public int? MaxTesters { get; set; }
+  /// <summary> Simple feedback form content (plain text questions) </summary>
+  public string? FeedbackFormContent { get; set; }
 
-    public DateTime? StartDate { get; set; }
+  public int? MaxTesters { get; set; }
 
-    public DateTime? EndDate { get; set; }
+  public DateTime? StartDate { get; set; }
 
-    /// <summary>
-    /// Team identifier (e.g., fa23-capstone-2023-24-t01)
-    /// </summary>
-    [Required][MaxLength(100)] public string TeamIdentifier { get; set; } = string.Empty;
-  }
+  public DateTime? EndDate { get; set; }
+
+  /// <summary> Team identifier (e.g., fa23-capstone-2023-24-t01) </summary>
+  [Required][MaxLength(100)] public string TeamIdentifier { get; set; } = string.Empty;
 }
