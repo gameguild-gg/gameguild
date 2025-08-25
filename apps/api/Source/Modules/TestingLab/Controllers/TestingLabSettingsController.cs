@@ -2,11 +2,10 @@ using System.Security.Claims;
 using GameGuild.Common;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.TestingLab.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.TestingLab.Controllers;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Controller for TestingLabSettings operations </summary>
 [ApiController]
@@ -23,8 +22,9 @@ public class TestingLabSettingsController(
     try {
       // Enhanced debugging: Log all claims
       var claims = User.Claims.Select(c => new {
-                           c.Type, c.Value,
-                         }
+        c.Type,
+        c.Value,
+      }
                        )
                        .ToList();
       var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -39,7 +39,8 @@ public class TestingLabSettingsController(
       if (string.IsNullOrEmpty(userId)) {
         return Unauthorized(
           new {
-            message = "User ID claim not found in token", allClaims = claims,
+            message = "User ID claim not found in token",
+            allClaims = claims,
           }
         );
       }
@@ -60,8 +61,9 @@ public class TestingLabSettingsController(
           error = ex.Message,
           stackTrace = ex.StackTrace,
           claims = User.Claims.Select(c => new {
-                           c.Type, c.Value,
-                         }
+            c.Type,
+            c.Value,
+          }
                        )
                        .ToList(),
           tenantInfo = new {
@@ -96,7 +98,8 @@ public class TestingLabSettingsController(
       return StatusCode(
         500,
         new {
-          message = "An error occurred while saving settings", error = ex.Message,
+          message = "An error occurred while saving settings",
+          error = ex.Message,
         }
       );
     }
@@ -124,7 +127,8 @@ public class TestingLabSettingsController(
       return StatusCode(
         500,
         new {
-          message = "An error occurred while updating settings", error = ex.Message,
+          message = "An error occurred while updating settings",
+          error = ex.Message,
         }
       );
     }
@@ -152,7 +156,8 @@ public class TestingLabSettingsController(
       return StatusCode(
         500,
         new {
-          message = "An error occurred while resetting settings", error = ex.Message,
+          message = "An error occurred while resetting settings",
+          error = ex.Message,
         }
       );
     }
@@ -172,7 +177,8 @@ public class TestingLabSettingsController(
       return StatusCode(
         500,
         new {
-          message = "An error occurred while checking settings", error = ex.Message,
+          message = "An error occurred while checking settings",
+          error = ex.Message,
         }
       );
     }

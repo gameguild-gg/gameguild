@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 
 
-namespace GameGuild.Modules.TestingLab.Abstractions;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Generic repository interface for Testing Lab entities </summary>
 /// <typeparam name="TEntity"> The entity type </typeparam>

@@ -3,7 +3,7 @@ namespace GameGuild.Modules.TestingLab;
 public class CreateTestingRequestDto {
   [Required] public Guid ProjectVersionId { get; set; }
 
-  [Required] [MaxLength(255)] public string Title { get; set; } = string.Empty;
+  [Required][MaxLength(255)] public string Title { get; set; } = string.Empty;
 
   public string? Description { get; set; }
 

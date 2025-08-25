@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Commands;
+namespace GameGuild.Modules.TestingLab;
 
 public record CreateTestingRequestCommand(
   Guid ProjectVersionId,

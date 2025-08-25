@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Abstractions;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Base interface for command handlers in the Testing Lab module </summary>
 /// <typeparam name="TCommand"> The command type </typeparam>

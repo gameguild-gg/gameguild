@@ -12,7 +12,7 @@ public class TestingRequest : Entity {
   /// <summary> Navigation property to the project version </summary>
   public virtual ProjectVersion ProjectVersion { get; set; } = null!;
 
-  [Required] [MaxLength(255)] public string Title { get; set; } = string.Empty;
+  [Required][MaxLength(255)] public string Title { get; set; } = string.Empty;
 
   public string? Description { get; set; }
 

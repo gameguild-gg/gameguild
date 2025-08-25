@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Abstractions;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Service abstraction for Testing Feedback operations </summary>
 public interface ITestingFeedbackService {
@@ -25,7 +25,7 @@ public interface ITestingFeedbackService {
 
   Task<bool> CanUserSubmitFeedbackAsync(Guid userId, Guid testingRequestId);
 
-  Task<TestingFeedback> SubmitFeedbackAsync(Guid userId, Guid testingRequestId, string content, FeedbackQualityRating? qualityRating = null);
+  Task<TestingFeedback> SubmitFeedbackAsync(Guid userId, Guid testingRequestId, string content, FeedbackQuality? qualityRating = null);
 
-  Task<TestingFeedback> RateFeedbackQualityAsync(Guid feedbackId, FeedbackQualityRating rating);
+  Task<TestingFeedback> RateFeedbackQualityAsync(Guid feedbackId, FeedbackQuality rating);
 }

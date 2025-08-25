@@ -1,7 +1,4 @@
-using GameGuild.Modules.TestingLab.Dtos;
-
-
-namespace GameGuild.Modules.TestingLab.Abstractions;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Service interface for TestingLabSettings operations Supports both global settings (tenantId = null) and tenant-specific settings </summary>
 public interface ITestingLabSettingsService {

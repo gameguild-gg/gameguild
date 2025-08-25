@@ -1,8 +1,7 @@
 using GameGuild.Database;
-using GameGuild.Modules.TestingLab.Dtos;
 
 
-namespace GameGuild.Modules.TestingLab.Services;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Implementation of the TestingLabSettings service </summary>
 internal class TestingLabSettingsService : ITestingLabSettingsService {

@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.TestingLab.Queries;
+namespace GameGuild.Modules.TestingLab;
 
 public record GetTestingRequestsQuery(
   int Skip = 0,

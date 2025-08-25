@@ -1,7 +1,4 @@
-using GameGuild.Modules.TestingLab.Abstractions;
-
-
-namespace GameGuild.Modules.TestingLab.Handlers;
+namespace GameGuild.Modules.TestingLab;
 
 public class CreateTestingRequestCommandHandler : ITestingLabCommandHandler<CreateTestingRequestCommand, TestingRequest> {
   private readonly IMediator _mediator;
@@ -36,7 +33,6 @@ public class CreateTestingRequestCommandHandler : ITestingLabCommandHandler<Crea
       StartDate = request.StartDate,
       EndDate = request.EndDate,
       Status = TestingRequestStatus.Draft,
-      IsActive = request.IsActive,
       CreatedAt = DateTime.UtcNow,
     };
 
@@ -47,7 +43,7 @@ public class CreateTestingRequestCommandHandler : ITestingLabCommandHandler<Crea
       createdRequest.Id,
       createdRequest.ProjectVersionId,
       createdRequest.Title,
-      createdRequest.CreatedByUserId ?? Guid.Empty,
+      createdRequest.CreatedById,
       createdRequest.CreatedAt
     );
 
