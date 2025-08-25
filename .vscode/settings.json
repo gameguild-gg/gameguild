@@ -35,12 +35,13 @@
         "source.organizeImports": "explicit",
         "source.fixAll.eslint": "explicit"
     },
+    "editor.wordWrap": "on",
     "[markdown]": {
         "editor.formatOnSave": false,
         "editor.formatOnPaste": false,
         "editor.formatOnType": false,
         "editor.autoIndent": "none",
-        "editor.wordWrap": "off",
+        "editor.wordWrap": "on",
         "editor.quickSuggestions": {
             "comments": "off",
             "strings": "off",
