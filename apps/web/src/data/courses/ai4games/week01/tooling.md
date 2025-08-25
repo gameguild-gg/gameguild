@@ -9,7 +9,7 @@ This list is a mix of standard tools and personal choice. It is a good starting 
 - [Version Control](#version-control)
   - [GIT](#git)
   - [Github](#github)
-  - [GitKraken](#gitkraken)
+  - [GitKraken](#gitkraken) or [Github Desktop](#github-desktop)
 - [Compiler](#compiler)
 - [CMake](#cmake)
 
@@ -47,15 +47,19 @@ It is nice to have `git` in your machine, but it is not required, because we are
 
 ::: warning inline end "Action"
 
-[Install Gitkraken](https://www.gitkraken.com/download){ .md-button .md-button--primary }
+[Install Gitkraken](https://www.gitkraken.com/download)
 
 :::
 
 [GitKraken](https://www.gitkraken.com/) is a Git client for Windows, Mac, and Linux that provides a graphical interface for working with Git repositories. It allows users to manage Git repositories, create and review changes to code, and collaborate with other developers. Some features of GitKraken include a visual representation of the repository's commit history, the ability to stage and discard changes, and support for popular version control systems like GitHub and GitLab. GitKraken is designed to be user-friendly and to make it easier for developers to work with Git, particularly for those who may be new to version control systems.
 
-Gitkraken is a paid software, and it is free for public repositories, but you can have all enterprise and premium functionalities enabled for free with the student pack and described before.
+Gitkraken is a paid software, and it is free for public repositories, but you can have all enterprise and premium functionalities enabled for free with the student pack and described before. [Follow this link to get gitkraken for students](https://www.gitkraken.com/github-student-developer-pack).
 
 [Install Gitkraken](https://www.gitkraken.com/). If you login into gitkraken using GitHub with student pack it will unlock all pro features.
+
+## Github Desktop
+
+Alternativelly to Gitkraken (my personal preference), you can try [Github Desktop](https://github.com/apps/desktop). 
 
 ## Compiler
 
