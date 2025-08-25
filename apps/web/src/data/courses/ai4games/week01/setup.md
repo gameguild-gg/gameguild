@@ -26,7 +26,7 @@
 
 There will be two types of coding assignments:
 
-1. **Formal**: Automatic grading system with automated tests. Some tests might not be fully working for you, talk with me if it doesnt work for you. Or just submit the code on canvas and I will grade it manually. Those should solved using C++; It is done following [this repo](https://github.com/gameguild-gg/testable-ai);
+1. **Formal**: Automatic grading system with automated tests. Some tests might not be fully working for you, talk with me if it doesnt work for you. Or just submit the code on canvas and I will grade it manually. Those should solved using C++; It is done following [this repo](https://github.com/gameguild-gg/ai4games);
 2. **Interactive**: For the interactive assignments you can choose whatever Game Engine you like, but I recommend you to use the framework I created for you: [MoBaGEn](https://github.com/gameguild-gg/mobagen). If you use a Game Engine or custom solution for that, you will have to create all debug interfaces to showcase and debug AI which includes, but it is not limited to:
 
    - Draw vectors to show forces applied by the AI;
