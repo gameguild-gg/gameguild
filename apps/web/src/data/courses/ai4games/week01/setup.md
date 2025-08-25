@@ -81,9 +81,9 @@ If you use `Visual Studio`, you won't be able to use the automated testing syste
 3. Open the `CMakeLists.txt` as project from the root of the repo;
 4. Wait for the setup to finish (it will download the dependencies automatically, such as `SDL`, `doctest` and others );
 
-For the interactive assignments, use this [repo](https://github.com/InfiniBrains/mobagen) and the assignments are located in the `examples` folder.
+For the interactive assignments, use this [repo](https://github.com/gameguild-gg/mobagen) and the assignments are located in the `examples` folder.
 
-For the algorithmic assignments, use this [repo](https://github.com/InfiniBrains/Awesome-GameDev-Resources) and the assignments are located in the `docs/artificialintelligence/assignments` folder. I created some automated tests to help you debug your code and ensure 100% of correctness. To run them, follow the steps (only available though `CLion` or terminal, not `Visual Studio`):
+For the algorithmic assignments, use this [repo](https://github.com/gameguild-gg/ai4games). I created some automated tests to help you debug your code and ensure 100% of correctness. To run them, follow the steps (only available though `CLion` or terminal, not `Visual Studio`):
 
 1. Go to the executable drop down selection (top right, near the green `run` or `debug` button) and select the assignment you want to run. It will be something like `XXX` where `XXX` is the name of the assignment;
 2. If you want to test your assignment against the automated inputs/outputs, select the `XXX-test` build target. Here you should use the `build` button, not the `run` or `debug` button. It will run the tests and show the results in the `Console` tab;
