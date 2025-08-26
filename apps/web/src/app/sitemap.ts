@@ -1,4 +1,4 @@
-import type { MetadataRoute } from 'next';
+import type {MetadataRoute} from 'next';
 
 export async function generateSitemaps() {
   // TODO: Implement dynamic sitemap generation logic if required.
