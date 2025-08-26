@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { FileText, Tag, Calendar, ChevronDown, Search, Filter } from "lucide-react"
+import { FileText, Tag, Calendar, ChevronDown, Search, Filter, Pin, PinOff } from "lucide-react"
 
 interface ProjectData {
   id: string
@@ -27,6 +27,7 @@ interface ProjectSidebarListProps {
   currentProject: ProjectData | null
   onProjectSelect: (project: ProjectData) => void
   isDbInitialized: boolean
+  isSticky?: boolean
 }
 
 export function ProjectSidebarList({
@@ -35,6 +36,7 @@ export function ProjectSidebarList({
   currentProject,
   onProjectSelect,
   isDbInitialized,
+  isSticky = false,
 }: ProjectSidebarListProps) {
   const [projects, setProjects] = useState<ProjectData[]>([])
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
@@ -45,6 +47,7 @@ export function ProjectSidebarList({
   const [loading, setLoading] = useState(false)
   const [tagSearchInput, setTagSearchInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
+  const [isPinned, setIsPinned] = useState(false)
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -128,20 +131,32 @@ export function ProjectSidebarList({
     : availableTags
 
   return (
-    <div className="w-96 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col h-full mr-8">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Documents</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-            className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            <Filter className="h-4 w-4" />
-          </Button>
-        </div>
+    <div className={`${isPinned ? 'sticky top-24 max-h-[calc(100vh-7rem)]' : ''}`}>
+      <div className={`w-96 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col ${isPinned ? 'max-h-[calc(100vh-7rem)]' : 'h-full'} mr-8`}>
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Documents</h3>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsPinned(!isPinned)}
+                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                title={isPinned ? "Unpin sidebar" : "Pin sidebar"}
+              >
+                {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <Filter className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
         {/* Search */}
         <div className="relative mb-4">
@@ -259,7 +274,7 @@ export function ProjectSidebarList({
       </div>
 
       {/* Project List */}
-      <ScrollArea className="flex-1 px-6 py-4">
+      <ScrollArea className="flex-1 px-6 py-4 overflow-auto">
         <div className="space-y-3">
           {loading ? (
             <div className="text-center py-8 text-sm text-gray-500">
@@ -331,7 +346,7 @@ export function ProjectSidebarList({
       </ScrollArea>
 
       {/* Footer Stats */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 rounded-b-xl">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 rounded-b-xl flex-shrink-0">
         <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
           <div className="font-medium">
             {filteredProjects.length} of {projects.length} documents
@@ -343,6 +358,7 @@ export function ProjectSidebarList({
           )}
         </div>
       </div>
+    </div>
     </div>
   )
 }
