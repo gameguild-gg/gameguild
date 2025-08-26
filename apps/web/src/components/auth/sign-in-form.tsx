@@ -1,25 +1,24 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Link } from '@/i18n/navigation';
-import { signInWithEmailAndPassword, signInWithGoogle } from '@/lib/auth/auth.actions';
-import { cn } from '@/lib/utils';
-import { useSearchParams } from 'next/navigation';
-import { Eye, EyeOff } from 'lucide-react';
-import React, { ComponentPropsWithoutRef, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import {Button} from '@/components/ui/button';
+import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
+import {Input} from '@/components/ui/input';
+import {Label} from '@/components/ui/label';
+import {signInWithEmailAndPassword, signInWithGoogle} from '@/lib/auth/auth.actions';
+import {cn} from '@/lib/utils';
+import {useSearchParams} from 'next/navigation';
+import {Eye, EyeOff} from 'lucide-react';
+import React, {ComponentPropsWithoutRef, useState} from 'react';
+import {useSession} from 'next-auth/react';
 
 // import { useAuthError } from '@/lib/hooks/useAuthError';
 
 // import { googleSignInAction } from '@/lib/auth/auth-actions';
 
-export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'div'>) => {
+export const SignInForm = ({className, ...props}: ComponentPropsWithoutRef<'div'>) => {
   // const { hasError, error } = useAuthError();
   const searchParams = useSearchParams();
-  const { update } = useSession();
+  const {update} = useSession();
   const [loading, setLoading] = useState(false);
   const [emailPasswordLoading, setEmailPasswordLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -66,10 +65,13 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
       {/* Decorative background elements */}
       <div className="relative">
         {/* Glow effects */}
-        <div className="absolute -top-20 -left-20 w-40 h-40 rounded-full bg-gradient-to-br from-blue-500/20 via-purple-500/10 to-transparent blur-3xl"></div>
-        <div className="absolute -bottom-20 -right-20 w-32 h-32 rounded-full bg-gradient-to-br from-purple-500/20 via-blue-500/10 to-transparent blur-2xl"></div>
+        <div
+          className="absolute -top-20 -left-20 w-40 h-40 rounded-full bg-gradient-to-br from-blue-500/20 via-purple-500/10 to-transparent blur-3xl"></div>
+        <div
+          className="absolute -bottom-20 -right-20 w-32 h-32 rounded-full bg-gradient-to-br from-purple-500/20 via-blue-500/10 to-transparent blur-2xl"></div>
 
-        <Card className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm border-slate-600/70 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
+        <Card
+          className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm border-slate-600/70 shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden">
           <CardHeader className="text-center relative z-10">
             <CardTitle className="text-2xl font-bold text-white">Welcome back</CardTitle>
             <CardDescription className="text-slate-400">Sign-in with your email and password</CardDescription>
@@ -78,7 +80,8 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
             <div className="grid gap-6">
               {/* Show authentication errors */}
               {(error || authError) && (
-                <div className="bg-red-500/15 text-red-400 text-sm p-3 rounded-lg border border-red-500/30 backdrop-blur-sm">
+                <div
+                  className="bg-red-500/15 text-red-400 text-sm p-3 rounded-lg border border-red-500/30 backdrop-blur-sm">
                   {error ||
                     (authError === 'OAuthAccountNotLinked' && 'Email already in use with different provider.') ||
                     (authError === 'AccessDenied' && 'Access denied. You may not have permission to sign in.') ||
@@ -124,15 +127,15 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
+                          <EyeOff className="h-4 w-4"/>
                         ) : (
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-4 w-4"/>
                         )}
                       </Button>
                     </div>
                     <div className="flex justify-end">
-                      <a 
-                        href="#" 
+                      <a
+                        href="#"
                         className="text-sm text-slate-400 hover:text-blue-400 transition-colors underline-offset-4 hover:underline cursor-pointer"
                         data-github-issue="true"
                         data-route="/forgot-password"
@@ -141,10 +144,13 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                       </a>
                     </div>
                   </div>
-                  <Button type="submit" className="w-full bg-slate-700 hover:bg-slate-600 text-white border-slate-600 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]" disabled={emailPasswordLoading}>
+                  <Button type="submit"
+                          className="w-full bg-slate-700 hover:bg-slate-600 text-white border-slate-600 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                          disabled={emailPasswordLoading}>
                     {emailPasswordLoading ? (
                       <>
-                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        <div
+                          className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"/>
                         Signing in...
                       </>
                     ) : (
@@ -154,8 +160,10 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                 </div>
               </form>
 
-              <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-slate-600">
-                <span className="relative z-10 bg-gradient-to-r from-slate-800 to-slate-900 rounded-full px-4 text-slate-400">Or continue with</span>
+              <div
+                className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-slate-600">
+                <span
+                  className="relative z-10 bg-gradient-to-r from-slate-800 to-slate-900 rounded-full px-4 text-slate-400">Or continue with</span>
               </div>
 
               <div className="flex flex-col gap-4">
@@ -166,14 +174,18 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
                   disabled={loading}
                 >
                   {loading ? (
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    <div
+                      className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"/>
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="size-5 mr-2" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="size-5 mr-2"
+                         aria-hidden="true">
                       <path
                         d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z"
                         fill="#EA4335"
                       />
-                      <path d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z" fill="#4285F4" />
+                      <path
+                        d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z"
+                        fill="#4285F4"/>
                       <path
                         d="M5.26498 14.2949C5.02498 13.5699 4.88495 12.7999 4.88495 11.9999C4.88495 11.1999 5.01998 10.4299 5.26498 9.7049L1.27496 6.60986C0.45996 8.22986 0 10.0599 0 11.9999C0 13.9399 0.45996 15.7699 1.27996 17.3899L5.26498 14.2949Z"
                         fill="#FBBC05"
@@ -196,8 +208,8 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
 
       <div className="text-balance text-center text-xs text-slate-400">
         By clicking continue, you agree to our{' '}
-        <a 
-          href="#" 
+        <a
+          href="#"
           className="text-blue-400 hover:text-blue-300 transition-colors underline underline-offset-4 cursor-pointer"
           data-github-issue="true"
           data-route="/terms-of-service"
@@ -205,8 +217,8 @@ export const SignInForm = ({ className, ...props }: ComponentPropsWithoutRef<'di
           Terms of Service
         </a>{' '}
         and{' '}
-        <a 
-          href="#" 
+        <a
+          href="#"
           className="text-blue-400 hover:text-blue-300 transition-colors underline underline-offset-4 cursor-pointer"
           data-github-issue="true"
           data-route="/polices/privacy"
