@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useEffect } from "react"
 import { List, ChevronRight, ChevronDown, Settings } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface HeadingItem {
   id: string
@@ -159,7 +160,7 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
   if (headings.length === 0) {
     return (
       <div
-        className={`bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm ${className}`}
+        className={`bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm max-h-[calc(100vh-7rem)] flex flex-col ${className}`}
       >
         <div className="p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -174,9 +175,10 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
 
   return (
     <div
-      className={`bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm ${className}`}
+      className={`bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm max-h-[calc(100vh-7rem)] flex flex-col ${className}`}
     >
-      <div className="p-6">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <List className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -242,7 +244,10 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
             )}
           </div>
         </div>
+      </div>
 
+      {/* Scrollable Navigation */}
+      <ScrollArea className="flex-1 p-6 overflow-auto">
         <nav className="space-y-1">
           {headings.map((heading, index) => {
             if (!shouldShowHeading(heading, index)) return null
@@ -290,7 +295,7 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
             )
           })}
         </nav>
-      </div>
+      </ScrollArea>
     </div>
   )
 }
