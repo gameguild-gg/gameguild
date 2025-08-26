@@ -118,6 +118,7 @@
     "zod": "^4.0.5"
   },
   "devDependencies": {
+    "@parcel/watcher": "^2.4.1",
     "@eslint/eslintrc": "^3.3.1",
     "@graphql-codegen/cli": "^5.0.7",
     "@graphql-codegen/typescript": "^4.1.6",
