@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
-import { Eye, Home, Blocks } from "lucide-react"
+import { Eye, Home, Blocks, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { OpenProjectDialogPreview } from "@/components/editor/extras/preview/open-project-dialog-preview"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import Link from "next/link"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
 import { PreviewTableOfContents } from "@/components/editor/extras/preview/preview-table-of-contents"
+import { ProjectSidebarList } from "@/components/editor/extras/preview/project-sidebar-list"
 
 interface ProjectData {
   id: string
@@ -31,6 +32,7 @@ export default function PreviewPage() {
   const [openDialogOpen, setOpenDialogOpen] = useState(false)
   const [availableTags, setAvailableTags] = useState<Array<{ name: string; usageCount: number }>>([])
   const [isDbInitialized, setIsDbInitialized] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const dbStorage = useRef<EnhancedStorageAdapter>(new EnhancedStorageAdapter())
 
@@ -145,6 +147,18 @@ export default function PreviewPage() {
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
+                  {currentProject && serializedState && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSidebarOpen(true)}
+                      className="gap-2 lg:hidden bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      <Menu className="w-4 h-4" />
+                      Documents
+                    </Button>
+                  )}
+                  
                   <Link href="/gglexical">
                     <Button
                       variant="outline"
@@ -216,20 +230,65 @@ export default function PreviewPage() {
           </div>
 
           {currentProject && serializedState ? (
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-              <div className="lg:col-span-3">
-                <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-                  <div className="p-6 px-12 py-12">
-                    <PreviewRenderer
-                      serializedState={serializedState as any}
-                    />
+            <div className="flex">
+              {/* Desktop Sidebar */}
+              <div className="hidden lg:block">
+                <ProjectSidebarList
+                  storageAdapter={storageAdapter}
+                  availableTags={availableTags}
+                  currentProject={currentProject}
+                  onProjectSelect={handleProjectLoad}
+                  isDbInitialized={isDbInitialized}
+                />
+              </div>
+              
+              {/* Mobile Sidebar Overlay */}
+              {sidebarOpen && (
+                <div className="lg:hidden fixed inset-0 z-50 flex">
+                  <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
+                  <div className="relative bg-white dark:bg-gray-900 w-80 h-full shadow-xl">
+                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Documents</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSidebarOpen(false)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="h-full">
+                      <ProjectSidebarList
+                        storageAdapter={storageAdapter}
+                        availableTags={availableTags}
+                        currentProject={currentProject}
+                        onProjectSelect={(project) => {
+                          handleProjectLoad(project)
+                          setSidebarOpen(false)
+                        }}
+                        isDbInitialized={isDbInitialized}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+              
+              <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div className="lg:col-span-3">
+                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+                    <div className="p-6 px-12 py-12">
+                      <PreviewRenderer
+                        serializedState={serializedState as any}
+                      />
+                    </div>
+                  </div>
+                </div>
 
-              <div className="lg:col-span-1">
-                <div className="sticky top-24">
-                  <PreviewTableOfContents serializedState={serializedState} />
+                <div className="lg:col-span-1">
+                  <div className="sticky top-24">
+                    <PreviewTableOfContents serializedState={serializedState} />
+                  </div>
                 </div>
               </div>
             </div>
