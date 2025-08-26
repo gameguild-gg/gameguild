@@ -239,6 +239,7 @@ export default function PreviewPage() {
                   currentProject={currentProject}
                   onProjectSelect={handleProjectLoad}
                   isDbInitialized={isDbInitialized}
+                  isSticky={true}
                 />
               </div>
               
