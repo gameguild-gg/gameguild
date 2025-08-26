@@ -114,15 +114,20 @@ export function ProjectList({
           {paginatedProjects.map((project) => (
             <div
               key={project.id}
-              className="group relative flex cursor-pointer flex-col justify-between rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ease-in-out hover:shadow-md dark:border-gray-800 dark:hover:border-gray-700"
+              className="group relative flex h-40 cursor-pointer flex-col justify-between overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ease-in-out hover:shadow-md dark:border-gray-800 dark:hover:border-gray-700"
               onClick={() => onOpen(project.id)}
             >
               <div className="flex flex-col p-4">
                 <div className="mb-2">
-                  <span className="font-semibold text-gray-900 dark:text-gray-100">{project.name}</span>
+                  <span
+                    className="block truncate font-semibold text-gray-900 dark:text-gray-100"
+                    title={project.name}
+                  >
+                    {project.name}
+                  </span>
                 </div>
                 {project.tags && project.tags.length > 0 && (
-                  <div className="mb-3 flex flex-wrap gap-1">
+                  <div className="mb-3 flex flex-wrap gap-1" title={project.tags.join(", ")}>
                     {project.tags.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
@@ -136,7 +141,7 @@ export function ProjectList({
                     )}
                   </div>
                 )}
-                <div className="text-xs text-gray-500 dark:text-gray-400">
+                <div className="mt-auto text-xs text-gray-500 dark:text-gray-400">
                   <span>{formatSize(project.size)}</span>
                   <span className="mx-1.5">•</span>
                   <span>Updated {new Date(project.updatedAt).toLocaleDateString()}</span>
