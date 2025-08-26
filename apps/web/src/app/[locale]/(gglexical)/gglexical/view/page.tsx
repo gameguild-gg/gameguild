@@ -9,7 +9,7 @@ import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-ad
 import Link from "next/link"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
 import { PreviewTableOfContents } from "@/components/editor/extras/preview/preview-table-of-contents"
-import { ProjectSidebarList } from "@/components/editor/extras/preview/project-sidebar-list"
+import { ProjectSidebarList } from "@/components/editor/extras/preview/project-sidebar-list-improved"
 
 interface ProjectData {
   id: string
@@ -131,7 +131,7 @@ export default function PreviewPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="container mx-auto py-10">
-        <div className={`mx-auto space-y-8 ${currentProject && serializedState ? "max-w-7xl" : "max-w-4xl"}`}>
+        <div className={`mx-auto space-y-8 ${currentProject && serializedState ? "max-w-[95rem]" : "max-w-4xl"}`}>
           <div className="text-center space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-sm font-medium">
               <Eye className="w-4" />
@@ -274,8 +274,8 @@ export default function PreviewPage() {
                 </div>
               )}
               
-              <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-8">
-                <div className="lg:col-span-3">
+              <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div className="lg:col-span-4">
                   <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
                     <div className="p-6 px-12 py-12">
                       <PreviewRenderer
