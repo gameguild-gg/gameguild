@@ -137,3 +137,7 @@ implementation comments:
 This implementation establishes the correct permission architecture even if the technical integration with GraphQL
 authorization needs further work. The business logic and permission hierarchy are now properly aligned with the domain
 model.
+
+# (Moved) ProgramContent Permission Inheritance
+
+Covered in `docs/architecture/permissions-dac.md` (ProgramContent Inheritance section).

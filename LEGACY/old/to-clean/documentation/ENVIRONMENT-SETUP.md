@@ -186,3 +186,7 @@ else
 ```
 
 This setup provides a robust, secure, and flexible configuration system for the GameGuild CMS.
+
+# (Moved) Environment Configuration
+
+Current instructions: `docs/setup/environment.md`.
