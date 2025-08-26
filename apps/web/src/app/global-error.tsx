@@ -2,7 +2,7 @@
 
 import React, {useEffect} from 'react';
 import Link from 'next/link';
-import {ErrorProps} from '@/types';
+import {ErrorProps} from '@/lib/types';
 
 export default function GlobalError({error, reset}: ErrorProps): React.JSX.Element {
   const isDevelopment = process.env.NODE_ENV === 'development';
