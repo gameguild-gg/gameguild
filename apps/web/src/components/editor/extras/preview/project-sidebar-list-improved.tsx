@@ -7,22 +7,23 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { FileText, Tag, Calendar, ChevronDown, Search, Filter, Pin, PinOff } from "lucide-react"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-}
+import {
+  formatFileSize,
+  filterProjects,
+  filterTagsForDropdown,
+  toggleTag,
+  clearAllFilters,
+  loadAllProjects,
+  createSearchFilterState,
+  hasActiveFilters,
+  getFilterSummary,
+  type ProjectData,
+  type SearchFilters,
+  type StorageAdapter
+} from "../search-filter"
 
 interface ProjectSidebarListProps {
-  storageAdapter: {
-    list: () => Promise<ProjectData[]>
-    searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any") => Promise<ProjectData[]>
-  }
+  storageAdapter: StorageAdapter
   availableTags: Array<{ name: string; usageCount: number }>
   currentProject: ProjectData | null
   onProjectSelect: (project: ProjectData) => void
@@ -67,23 +68,23 @@ export function ProjectSidebarList({
   // Load projects on initialization
   useEffect(() => {
     if (isDbInitialized) {
-      loadProjects()
+      handleLoadProjects()
     }
   }, [isDbInitialized])
 
   // Filter projects when search term or tags change
   useEffect(() => {
     if (searchTerm || selectedTags.length > 0) {
-      searchProjects()
+      handleSearchProjects()
     } else {
       setFilteredProjects(projects)
     }
   }, [searchTerm, selectedTags, tagFilterMode, projects])
 
-  const loadProjects = async () => {
+  const handleLoadProjects = async () => {
     try {
       setLoading(true)
-      const allProjects = await storageAdapter.list()
+      const allProjects = await loadAllProjects(storageAdapter)
       setProjects(allProjects)
       setFilteredProjects(allProjects)
     } catch (error) {
@@ -93,10 +94,15 @@ export function ProjectSidebarList({
     }
   }
 
-  const searchProjects = async () => {
+  const handleSearchProjects = async () => {
     try {
       setLoading(true)
-      const results = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode)
+      const filters: SearchFilters = {
+        searchTerm,
+        selectedTags,
+        tagFilterMode
+      }
+      const results = await filterProjects(storageAdapter, projects, filters)
       setFilteredProjects(results)
     } catch (error) {
       console.error("Failed to search projects:", error)
@@ -106,29 +112,18 @@ export function ProjectSidebarList({
   }
 
   const handleTagToggle = (tagName: string) => {
-    const newSelectedTags = selectedTags.includes(tagName)
-      ? selectedTags.filter((t) => t !== tagName)
-      : [...selectedTags, tagName]
+    const newSelectedTags = toggleTag(selectedTags, tagName)
     setSelectedTags(newSelectedTags)
   }
 
-  const clearFilters = () => {
-    setSearchTerm("")
-    setSelectedTags([])
+  const handleClearFilters = () => {
+    const clearedFilters = clearAllFilters()
+    setSearchTerm(clearedFilters.searchTerm)
+    setSelectedTags(clearedFilters.selectedTags)
     setTagSearchInput("")
   }
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 B"
-    const k = 1024
-    const sizes = ["B", "KB", "MB", "GB"]
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-  }
-
-  const filteredTagsForDropdown = tagSearchInput.trim()
-    ? availableTags.filter((tag) => tag.name.toLowerCase().includes(tagSearchInput.toLowerCase()))
-    : availableTags
+  const filteredTagsForDropdown = filterTagsForDropdown(availableTags, tagSearchInput)
 
   return (
     <div className={`${isPinned ? 'sticky top-24 max-h-[calc(100vh-7rem)]' : ''}`}>
@@ -262,7 +257,7 @@ export function ProjectSidebarList({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={clearFilters}
+                  onClick={handleClearFilters}
                   className="h-7 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-0"
                 >
                   Clear all filters
@@ -349,13 +344,19 @@ export function ProjectSidebarList({
       <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 rounded-b-xl flex-shrink-0">
         <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
           <div className="font-medium">
-            {filteredProjects.length} of {projects.length} documents
+            {(() => {
+              const summary = getFilterSummary(filteredProjects.length, projects.length, selectedTags.length)
+              return summary.main
+            })()}
           </div>
-          {selectedTags.length > 0 && (
-            <div className="mt-1 text-gray-400 dark:text-gray-500">
-              Filtered by {selectedTags.length} tag{selectedTags.length > 1 ? 's' : ''}
-            </div>
-          )}
+          {(() => {
+            const summary = getFilterSummary(filteredProjects.length, projects.length, selectedTags.length)
+            return summary.subtitle && (
+              <div className="mt-1 text-gray-400 dark:text-gray-500">
+                {summary.subtitle}
+              </div>
+            )
+          })()}
         </div>
       </div>
     </div>
