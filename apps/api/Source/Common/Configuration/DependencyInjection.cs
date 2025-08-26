@@ -185,16 +185,32 @@ public static class DependencyInjection {
   /// <param name="excludeAuth">Whether to exclude authentication (useful for testing)</param>
   /// <returns>The configured service collection</returns>
   public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration, bool excludeAuth = false) {
+    // Choose GraphQL configuration based on environment
+    var graphqlOptions = GetEnvironmentSpecificGraphQLOptions();
+    
     return services
            .AddCoreServices()
            .AddDatabase(configuration)
            .AddDomainModules()
            .AddAuthenticationInternal(configuration, excludeAuth)
-           .AddGraphQLInfrastructure(GraphQLOptionsFactory.ForProduction())
+           .AddGraphQLInfrastructure(graphqlOptions)
            .AddHealthChecksInternal(configuration)
            .AddCloudflareServices(configuration)
            .AddHttpContextAccessor();
     // Required for GraphQL authorization
+  }
+
+  /// <summary>
+  /// Gets environment-specific GraphQL options based on ASPNETCORE_ENVIRONMENT.
+  /// </summary>
+  private static GraphQLOptions GetEnvironmentSpecificGraphQLOptions() {
+    var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+    
+    return environment?.ToUpperInvariant() switch {
+      "DEVELOPMENT" => GraphQLOptionsFactory.ForDevelopment(),
+      "TESTING" => GraphQLOptionsFactory.ForTesting(),
+      _ => GraphQLOptionsFactory.ForProduction()
+    };
   }
 
   /// <summary>
