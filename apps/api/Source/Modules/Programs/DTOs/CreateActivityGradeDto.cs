@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-
-namespace GameGuild.Modules.Programs;
+﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// DTO for creating new activity grades
@@ -9,7 +6,7 @@ namespace GameGuild.Modules.Programs;
 public record CreateActivityGradeDto(
   [Required] Guid ContentInteractionId,
   [Required] Guid GraderProgramUserId,
-  [Required] [Range(0, 100)] decimal Grade,
+  [Required][Range(0, 100)] decimal Grade,
   string? Feedback = null,
   string? GradingDetails = null
 ) {

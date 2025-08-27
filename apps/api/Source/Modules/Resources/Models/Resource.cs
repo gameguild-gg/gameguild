@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Localization;

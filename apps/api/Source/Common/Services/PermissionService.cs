@@ -2,7 +2,6 @@ using GameGuild.Database;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tenants;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Common;
@@ -47,7 +46,8 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
     else {
       // Create new permission record
       tenantPermission = new TenantPermission {
-        UserId = userId, TenantId = tenantId,
+        UserId = userId,
+        TenantId = tenantId,
         // IsActive replaced by IsValid property,
         // JoinedAt replaced by CreatedAt (inherited)
         // Status removed - using IsValid property instead
@@ -204,7 +204,8 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
 
     // Create new membership with minimal permissions
     var membership = new TenantPermission {
-      UserId = userId, TenantId = tenantId,
+      UserId = userId,
+      TenantId = tenantId,
       // IsActive replaced by IsValid property,
       // JoinedAt replaced by CreatedAt (inherited)
       // Status removed - using IsValid property instead
@@ -285,7 +286,9 @@ public class PermissionService(ApplicationDbContext context) : IPermissionServic
     else {
       // Create new permission record
       contentTypePermission = new ContentTypePermission {
-        UserId = userId, TenantId = tenantId, ContentType = contentTypeName,
+        UserId = userId,
+        TenantId = tenantId,
+        ContentType = contentTypeName,
         // AssignedAt replaced by CreatedAt (inherited)
         // AssignedByUserId removed - will be tracked through permission logs
         // IsActive replaced by IsValid property

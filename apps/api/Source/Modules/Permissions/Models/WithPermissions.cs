@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
