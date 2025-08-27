@@ -2,10 +2,8 @@ import { Product, ProductProgram, Program, ProgramContent } from '@/lib/api/gene
 
 // Intro to AI courses
 import ai4gamesSyllabus from './ai4games/syllabus.md';
-import ai4gamesFerpa from './ai4games/week01/ferpa.md';
 import ai4gamesSetup from './ai4games/week01/setup.md';
 import ai4gamesSubmissions from './ai4games/week01/submissions.md';
-import ai4gamesTooling from './ai4games/week01/tooling.md';
 import ai4gamesFlocking from './ai4games/week02/flocking.md';
 import ai4gamesLife from './ai4games/week03/life.md';
 import ai4gamesRng from './ai4games/week04/rng.md';
@@ -90,7 +88,6 @@ import portfolioWeek11Lecture from './portfolio/chapters/week11/lecture.md';
 import portfolioSyllabus from './portfolio/syllabus.md';
 
 // DSA Course Imports
-import dsaSyllabus from './dsa/syllabus.md';
 import dsaIntroduction from './dsa/01-introduction/introduction.md';
 import dsaAnalysis from './dsa/02-analysis/README.md';
 import dsaDynamicData from './dsa/03-dynamic-data/README.md';
@@ -107,6 +104,7 @@ import dsaBst from './dsa/13-bst/README.md';
 import dsaHeap from './dsa/14-heap/README.md';
 import dsaProject from './dsa/15-project/README.md';
 import dsaFinals from './dsa/16-finals/README.md';
+import dsaSyllabus from './dsa/syllabus.md';
 
 // Intro to Game Programming Course Imports
 import intro2gproSyllabus from './intro2gpro/syllabus.md';
@@ -1008,29 +1006,6 @@ export const ai4gamesSyllabusContent: ProgramContent = {
     slug: 'syllabus',
 };
 
-export const ai4gamesFerpaContent: ProgramContent = {
-    id: 'ai4games-ferpa',
-    programId: ai4gamesProgram.id!,
-    parentId: undefined,
-    title: 'Week 01: FERPA Information',
-    description: 'FERPA compliance and privacy information',
-    type: 0, // Page
-    body: ai4gamesFerpa,
-    sortOrder: 2,
-    isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
-    estimatedMinutes: 15,
-    visibility: 1, // Published
-    program: ai4gamesProgram,
-    parent: undefined,
-    children: [],
-    contentInteractions: [],
-    createdAt: '2023-01-01T00:00:00Z',
-    updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'ferpa',
-};
-
 export const ai4gamesSubmissionsContent: ProgramContent = {
     id: 'ai4games-submissions',
     programId: ai4gamesProgram.id!,
@@ -1075,29 +1050,6 @@ export const ai4gamesSetupContent: ProgramContent = {
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
     slug: 'setup',
-};
-
-export const ai4gamesToolingContent: ProgramContent = {
-    id: 'ai4games-tooling',
-    programId: ai4gamesProgram.id!,
-    parentId: undefined,
-    title: 'Week 01: Development Tools',
-    description: 'Introduction to development tools and frameworks',
-    type: 0, // Page
-    body: ai4gamesTooling,
-    sortOrder: 5,
-    isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
-    estimatedMinutes: 30,
-    visibility: 1, // Published
-    program: ai4gamesProgram,
-    parent: undefined,
-    children: [],
-    contentInteractions: [],
-    createdAt: '2023-01-01T00:00:00Z',
-    updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'tooling',
 };
 
 export const ai4gamesFlockingContent: ProgramContent = {
@@ -2830,10 +2782,8 @@ pythonProgram.programContents = [
 
 ai4gamesProgram.programContents = [
     ai4gamesSyllabusContent,
-    ai4gamesFerpaContent,
     ai4gamesSubmissionsContent,
     ai4gamesSetupContent,
-    ai4gamesToolingContent,
     ai4gamesFlockingContent,
     ai4gamesLifeContent,
     ai4gamesRngContent,

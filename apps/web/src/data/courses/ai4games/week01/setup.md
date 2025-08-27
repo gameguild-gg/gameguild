@@ -15,7 +15,7 @@
     - Ensure everyone is ready for the class. Check mobagen and ai4games repos.
 </details>
 
-1. Read about Privacy and FERPA compliance [here](./ferpa)
+1. Read about Privacy and FERPA compliance [here](/ferpa-waiver)
 2. `Testable AI` assignments for in class coding assignments. [repo](https://github.com/gameguild-gg/ai4games)
 3. `MoBaGEn`, for interactive assignments. [repo](https://github.com/gameguild-gg/mobagen). Please leave a star there to help me gain visibility! Star this [website repo](https://github.com/gameguild-gg/gameguild) too!
 4. Install `CLion` (has `CMake` embedded);
