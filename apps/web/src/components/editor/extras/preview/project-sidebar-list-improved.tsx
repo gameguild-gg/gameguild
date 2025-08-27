@@ -47,7 +47,17 @@ export function ProjectSidebarList({
   const [loading, setLoading] = useState(false)
   const [tagSearchInput, setTagSearchInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
-  const [isPinned, setIsPinned] = useState(false)
+  const [isPinned, setIsPinned] = useState(isSticky)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024) // lg breakpoint
+    }
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -131,8 +141,8 @@ export function ProjectSidebarList({
     : availableTags
 
   return (
-    <div className={`${isPinned ? 'sticky top-24 max-h-[calc(100vh-7rem)]' : ''}`}>
-      <div className={`w-96 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col ${isPinned ? 'max-h-[calc(100vh-7rem)]' : 'h-full'} mr-8`}>
+    <div className={`${(isPinned || isMobile) ? 'sticky top-24 max-h-[calc(100vh-7rem)]' : ''}`}>
+      <div className={`w-full md:w-96 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col ${(isPinned || isMobile) ? 'max-h-[calc(100vh-7rem)]' : 'h-full'} md:mr-8`}>
         {/* Header */}
         <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
           <div className="flex items-center justify-between mb-4">
@@ -142,7 +152,7 @@ export function ProjectSidebarList({
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsPinned(!isPinned)}
-                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800 hidden lg:flex"
                 title={isPinned ? "Unpin sidebar" : "Pin sidebar"}
               >
                 {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
