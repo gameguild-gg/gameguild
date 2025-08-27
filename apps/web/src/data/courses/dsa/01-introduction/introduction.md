@@ -35,7 +35,7 @@ Day 2:
 
 TLDR: Be nice to each other, and don't copy code from the internet.
 
-- [Notes on Submissions and Plagiarism](../ai4games/submissions) (todo for alex: move this to a general page)
+- [Notes on Submissions and Plagiarism](/academic-honesty)
 
 Some assignments can be hard, and you may feel tempted to copy code from the internet. **Don't do it**. You will only hurt yourself. You will learn nothing, and you will be caught. Once you get caught, you will be reported to the Dean of Students for academic dishonesty.
 
