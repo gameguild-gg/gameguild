@@ -22,6 +22,10 @@
 5. Install git and add the binaries to your `PATH`;
 6. Those repositories are updated constantly. Pay attention to syncing your repo frequently.
 
+## Setup Windows machines to C++ development
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/mQGqwTuuq9Q?si=IM6pv91MO-k7Vuo7" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 ## Types of coding assignments
 
 There will be two types of coding assignments:
