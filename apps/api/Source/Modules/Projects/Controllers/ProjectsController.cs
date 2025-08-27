@@ -1,8 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using GameGuild.Common;
 using GameGuild.Modules.Contents;
-using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 using Microsoft.AspNetCore.Mvc;
 using IUserContext = GameGuild.Common.IUserContext;

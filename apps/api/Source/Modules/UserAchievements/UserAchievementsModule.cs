@@ -1,5 +1,4 @@
 using HotChocolate.Execution.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 
 namespace GameGuild.Modules.UserAchievements;

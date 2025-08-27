@@ -1,9 +1,6 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Tenants;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Certificates;
@@ -15,7 +12,7 @@ namespace GameGuild.Modules.Certificates;
 [Index(nameof(CompletionPercentage))]
 [Index(nameof(TenantId))]
 public class Certificate : Entity, ITenantable {
-  [Required] [MaxLength(255)] public string Name { get; set; } = string.Empty;
+  [Required][MaxLength(255)] public string Name { get; set; } = string.Empty;
 
   public string Description { get; set; } = string.Empty;
 

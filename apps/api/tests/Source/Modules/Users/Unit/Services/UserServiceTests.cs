@@ -16,12 +16,12 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services {
 
       _mockService.Setup(s => s.CreateUserAsync(It.IsAny<UserModel>()))
                   .ReturnsAsync((UserModel u) => {
-                      u.Id = Guid.NewGuid();
-                      u.CreatedAt = DateTime.UtcNow;
-                      u.UpdatedAt = DateTime.UtcNow;
+                    u.Id = Guid.NewGuid();
+                    u.CreatedAt = DateTime.UtcNow;
+                    u.UpdatedAt = DateTime.UtcNow;
 
-                      return u;
-                    }
+                    return u;
+                  }
                   );
 
       // Act
@@ -89,10 +89,10 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services {
 
       _mockService.Setup(s => s.UpdateUserAsync(userId, It.IsAny<UserModel>()))
                   .ReturnsAsync((Guid id, UserModel u) => {
-                      u.UpdatedAt = DateTime.UtcNow;
+                    u.UpdatedAt = DateTime.UtcNow;
 
-                      return u;
-                    }
+                    return u;
+                  }
                   );
 
       // Act

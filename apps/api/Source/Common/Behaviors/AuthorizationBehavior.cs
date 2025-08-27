@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using MediatR;
 
 
 namespace GameGuild.Common;

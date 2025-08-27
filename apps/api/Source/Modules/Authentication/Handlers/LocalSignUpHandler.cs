@@ -1,6 +1,3 @@
-using MediatR;
-
-
 namespace GameGuild.Modules.Authentication;
 
 /// <summary>
@@ -14,7 +11,10 @@ public class LocalSignUpHandler(IAuthService authService, IMediator mediator) : 
 
     // Publish notification for side effects (email, analytics, etc.)
     var notification = new UserSignedUpNotification {
-      UserId = result.User.Id, Email = result.User.Email, Username = request.Username, TenantId = result.TenantId, // Include the tenant ID from the response
+      UserId = result.User.Id,
+      Email = result.User.Email,
+      Username = request.Username,
+      TenantId = result.TenantId, // Include the tenant ID from the response
     };
 
     await mediator.Publish(notification, cancellationToken);

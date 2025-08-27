@@ -3,7 +3,7 @@
 1. Read about Privacy and FERPA compliance [here](./ferpa)
 2. `Testable AI` assignments for in class coding assignments. [repo](https://github.com/gameguild-gg/testable-ai)
 3. `MoBaGEn`, for interactive assignments. [repo](https://github.com/gameguild-gg/mobagen). Please leave a star there to help me gain visibility! Star this [website repo](https://github.com/gameguild-gg/gameguild) too!
-4. Install `CLion` (has `CMake` embedded) or see [#development-tools](#development-tools)
+4. Install `CLion` (has `CMake` embedded);
 5. Install git and add the binaries to your `PATH`;
 6. Those repositories are updated constantly. Pay attention to syncing your repo frequently.
 
@@ -11,7 +11,7 @@
 
 There will be two types of coding assignments:
 
-1. **Formal**: Automatic grading system with automated tests. Some tests might not be fully working for you, talk with me if it doesnt work for you. Or just submit the code on canvas and I will grade it manually. Those should solved using C++ :simple-cplusplus:; It is done following [this repo](https://github.com/gameguild-gg/testable-ai);
+1. **Formal**: Automatic grading system with automated tests. Some tests might not be fully working for you, talk with me if it doesnt work for you. Or just submit the code on canvas and I will grade it manually. Those should solved using C++; It is done following [this repo](https://github.com/gameguild-gg/testable-ai);
 2. **Interactive**: For the interactive assignments you can choose whatever Game Engine you like, but I recommend you to use the framework I created for you: [MoBaGEn](https://github.com/gameguild-gg/mobagen). If you use a Game Engine or custom solution for that, you will have to create all debug interfaces to showcase and debug AI which includes, but it is not limited to:
 
    - Draw vectors to show forces applied by the AI;
@@ -57,31 +57,34 @@ In all interactive assignments, you will have to record a 5 minute video explain
 
 ## Development tools
 
-I will be using `CMake` :simple-cmake: for the classes, but you can use whatever you want. Please [read this](../../intro/02-tooling/README.md) to understand the `C++` :simple-cplusplus: toolset.
+I will be using `CMake` for the classes, but you can use whatever you want.
 
-In this class, I am going to use `CLion` :simple-clion: as the `IDE`, because it has nice support for `CMake` :simple-cmake: and automated tests.
+In this class, I am going to use `CLion` as the `IDE`, because it has nice support for `CMake` and automated tests.
 
 - Download it [here](https://www.jetbrains.com/clion/).
 - If you are a student, you can get a free license [here](https://www.jetbrains.com/community/education/#students).
 
-If you want to use `Visual Studio` :simple-visualstudio:, be assured that you have the `C++ Desktop Development` :simple-cplusplus: workload installed, more info [this](https://docs.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-160). And then go to `Individual Components` and install `CMake Tools for Windows` :simple-cmake:.
+If you want to use `Visual Studio`, be assured that you have the `C++ Desktop Development` workload installed, more info [this](https://docs.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-160). And then go to `Individual Components` and install `CMake Tools for Windows`.
 
-!!! note
+::: note
 
-    If you use `Visual Studio` :simple-visualstudio:, you won't be able to use the automated testing system that comes with the assignments.
+If you use `Visual Studio`, you won't be able to use the automated testing system that comes with the assignments.
+
+:::
 
 [OPINION]: If you want to use a lightweight environment, don't use VS Code for C++ development. Period. It is not a good IDE for that. It is preferred to code via sublime, notepad, vim, or any other text editor and then compile your code via terminal, and debug via gdb, than using VS Code for C++ development.
 
 ### Opening the Repos
 
 1. Fork and clone the repos. [Make it private if you can](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility#changing-a-repositorys-visibility);
-2. Open `CLion` :simple-clion: or yor preferred `IDE` with `CMake` :simple-cmake: support;
+2. Open `CLion` or yor preferred `IDE` with `CMake`;
 3. Open the `CMakeLists.txt` as project from the root of the repo;
-4. Wait for the setup to finish (it will download the dependencies automatically, such as `SDL`);
+4. Wait for the setup to finish (it will download the dependencies automatically, such as `SDL`, `doctest` and others );
 
 For the interactive assignments, use this [repo](https://github.com/InfiniBrains/mobagen) and the assignments are located in the `examples` folder.
 
-For the algorithmic assignments, use this [repo](https://github.com/InfiniBrains/Awesome-GameDev-Resources) and the assignments are located in the `docs/artificialintelligence/assignments` folder. I created some automated tests to help you debug your code and ensure 100% of correctness. To run them, follow the steps (only available though `CLion` :simple-clion: or terminal, not `Visual Studio` :simple-visualstudio:):
+For the algorithmic assignments, use this [repo](https://github.com/InfiniBrains/Awesome-GameDev-Resources) and the assignments are located in the `docs/artificialintelligence/assignments` folder. I created some automated tests to help you debug your code and ensure 100% of correctness. To run them, follow the steps (only available though `CLion` or terminal, not `Visual Studio`):
 
-1. Go to the executable drop down selection (top right, near the green `run` :material-play: or `debug` :material-bug: button) and select the assignment you want to run. It will be something like `ai-XXX` where `XXX` is the name of the assignment;
-2. If you want to test your assignment against the automated inputs/outputs, select the `ai-XXX-test` build target. Here you should use the `build` :fontawesome-solid-hammer: button, not the `run` :material-play: or `debug` :material-bug: button. It will run the tests and show the results in the `Console` :material-console: tab;
+1. Go to the executable drop down selection (top right, near the green `run` or `debug` button) and select the assignment you want to run. It will be something like `XXX` where `XXX` is the name of the assignment;
+2. If you want to test your assignment against the automated inputs/outputs, select the `XXX-test` build target. Here you should use the `build` button, not the `run` or `debug` button. It will run the tests and show the results in the `Console` tab;
+3. I use a bare minimum memory leak detector hand made, use it to help you. If it is getting in your way, do not import it in your code.
