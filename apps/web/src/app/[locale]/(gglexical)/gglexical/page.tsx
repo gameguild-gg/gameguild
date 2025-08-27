@@ -1,6 +1,6 @@
 import { Button }                 from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowRight, Edit3, Eye } from "lucide-react"
+import { ArrowRight, Edit3, Eye, Blocks } from "lucide-react"
 import Link                       from "next/link"
 import React                      from 'react';
 
@@ -52,9 +52,9 @@ export default async function Page(): Promise<React.JSX.Element> {
             <Card className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-blue-200 dark:hover:border-blue-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
               <CardHeader className="text-center pb-4">
                 <div className="mx-auto size-16 bg-blue-100 dark:bg-blue-900 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                  <Edit3 className="size-8 text-blue-600 dark:text-blue-400"/>
+                  <Blocks className="size-8 text-blue-600 dark:text-blue-400"/>
                 </div>
-                <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Content Editor</CardTitle>
+                <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Studio</CardTitle>
                 <CardDescription className="text-slate-700 dark:text-gray-300 text-base">
                   Create rich content with our advanced editor featuring text formatting, media, quizzes, and interactive elements
                 </CardDescription>
@@ -70,10 +70,10 @@ export default async function Page(): Promise<React.JSX.Element> {
                 </div>
                 <Button
                   asChild
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white group-hover:bg-blue-700 transition-colors duration-300"
+                  className="w-full bg-blue-500 hover:bg-blue-700 text-white group-hover:bg-blue-700 transition-colors duration-300"
                 >
                   <Link href="/gglexical/studio">
-                    Start Creating
+                    Edit Content
                     <ArrowRight className="size-4 ml-2 group-hover:translate-x-1 transition-transform duration-300"/>
                   </Link>
                 </Button>
@@ -86,7 +86,7 @@ export default async function Page(): Promise<React.JSX.Element> {
                 <div className="mx-auto size-16 bg-purple-100 dark:bg-purple-900 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                   <Eye className="size-8 text-purple-600 dark:text-purple-400"/>
                 </div>
-                <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Content Preview</CardTitle>
+                <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">Viewer</CardTitle>
                 <CardDescription className="text-slate-700 dark:text-gray-300 text-base">
                   Preview and share your content in a clean, reader-friendly format optimized for your audience
                 </CardDescription>
@@ -103,9 +103,9 @@ export default async function Page(): Promise<React.JSX.Element> {
                 <Button
                   asChild
                   variant="outline"
-                  className="w-full border-purple-200 dark:border-purple-700 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900 group-hover:bg-purple-50 dark:group-hover:bg-purple-900 transition-colors duration-300 bg-transparent"
+                  className="w-full bg-purple-500 border-purple-200 dark:border-purple-700 text-white dark:text-gray-50 dark:bg-purple-700 hover:bg-purple-700 dark:hover:bg-purple-900 group-hover:bg-purple-700 dark:group-hover:bg-purple-900 transition-colors duration-300"
                 >
-                  <Link href="/gglexical/view">
+                  <Link href="/gglexical/viewer">
                     View Content
                     <ArrowRight className="size-4 ml-2 group-hover:translate-x-1 transition-transform duration-300"/>
                   </Link>
