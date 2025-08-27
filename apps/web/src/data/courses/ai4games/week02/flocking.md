@@ -57,7 +57,7 @@ $$
 
 ![cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.gif)
 
-:: tip
+::: tip
 
 Note that the maximum magnitude of $ \overrightarrow{F_c} $ is 1. Inclusive. This value can be multiplied by a constant $ K_c $ to increase or decrease the cohesion force to looks more appealing.
 
@@ -154,6 +154,8 @@ Where:
 - $ new $ is the new value of the variable to be used in the next frame.
 
 The $ \overrightarrow{V_{new}} $ and $ P_{new} $ are the ones that will be used in the next frame and you will have to print to the console at the end of every single frame.
+
+:::
 
 ::: note
 

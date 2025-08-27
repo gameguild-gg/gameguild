@@ -19,8 +19,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
     public async Task Should_Return_UserProfile_By_Id() {
       // Arrange
       var profileId = Guid.NewGuid();
-      var profile = new UserProfile { 
-        Id = profileId, 
+      var profile = new UserProfile {
+        Id = profileId,
         GivenName = "Test",
         FamilyName = "User",
         DisplayName = "Test User",
@@ -58,8 +58,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
     public async Task Should_Return_UserProfile_By_UserId() {
       // Arrange
       var userId = Guid.NewGuid();
-      var profile = new UserProfile { 
-        Id = userId, 
+      var profile = new UserProfile {
+        Id = userId,
         GivenName = "Test",
         FamilyName = "User",
         DisplayName = "Test User",
@@ -89,8 +89,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
         Description = "Test bio",
       };
 
-      var createdProfile = new UserProfile { 
-        Id = createDto.UserId.Value, 
+      var createdProfile = new UserProfile {
+        Id = createDto.UserId.Value,
         GivenName = "Test",
         FamilyName = "User",
         DisplayName = "Test User",
@@ -144,8 +144,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Controllers {
         Description = "Updated bio",
       };
 
-      var updatedProfile = new UserProfile { 
-        Id = profileId, 
+      var updatedProfile = new UserProfile {
+        Id = profileId,
         GivenName = "Updated",
         FamilyName = "User",
         DisplayName = "Updated User",

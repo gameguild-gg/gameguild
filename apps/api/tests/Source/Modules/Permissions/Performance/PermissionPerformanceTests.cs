@@ -300,10 +300,10 @@ public class PermissionPerformanceTests : IDisposable {
 
     // Act - Query tenant memberships for all users
     var membershipTasks = users.Select(async user => {
-        var userTenants = await _permissionService.GetUserTenantsAsync(user.Id);
+      var userTenants = await _permissionService.GetUserTenantsAsync(user.Id);
 
-        return userTenants.Count();
-      }
+      return userTenants.Count();
+    }
     );
 
     var membershipCounts = await Task.WhenAll(membershipTasks);
@@ -346,34 +346,34 @@ public class PermissionPerformanceTests : IDisposable {
 
     // Act - Perform concurrent permission operations
     var concurrentTasks = users.Select(async user => {
-        var userTasks = new List<Task>();
+      var userTasks = new List<Task>();
 
-        // Create separate DbContext instances for each task to avoid threading issues
-        for (var i = 0; i < operationsPerUser; i++) {
-          // For the grant operation, use a separate context and service
-          var grantContext = CreateNewDbContext();
-          var grantService = new PermissionService(grantContext);
-          userTasks.Add(
-            grantService.GrantTenantPermissionAsync(
-              user.Id,
-              tenant.Id,
-              [PermissionType.Read, PermissionType.Comment]
-            )
-          );
+      // Create separate DbContext instances for each task to avoid threading issues
+      for (var i = 0; i < operationsPerUser; i++) {
+        // For the grant operation, use a separate context and service
+        var grantContext = CreateNewDbContext();
+        var grantService = new PermissionService(grantContext);
+        userTasks.Add(
+          grantService.GrantTenantPermissionAsync(
+            user.Id,
+            tenant.Id,
+            [PermissionType.Read, PermissionType.Comment]
+          )
+        );
 
-          // For the check operation, use another separate context and service
-          userTasks.Add(
-            Task.Run(async () => {
-                var checkContext = CreateNewDbContext();
-                var checkService = new PermissionService(checkContext);
-                await checkService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read);
-              }
-            )
-          );
-        }
-
-        await Task.WhenAll(userTasks);
+        // For the check operation, use another separate context and service
+        userTasks.Add(
+          Task.Run(async () => {
+            var checkContext = CreateNewDbContext();
+            var checkService = new PermissionService(checkContext);
+            await checkService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read);
+          }
+          )
+        );
       }
+
+      await Task.WhenAll(userTasks);
+    }
     );
 
     await Task.WhenAll(concurrentTasks);
@@ -420,7 +420,8 @@ public class PermissionPerformanceTests : IDisposable {
 
   private async Task<Comment> CreateTestCommentAsync(string content = "Test comment content") {
     var comment = new Comment {
-      Id = Guid.NewGuid(), Content = content,
+      Id = Guid.NewGuid(),
+      Content = content,
       // Note: Comment entity doesn't have IsEdited property
     };
 

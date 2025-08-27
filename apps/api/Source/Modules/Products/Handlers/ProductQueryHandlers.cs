@@ -1,8 +1,6 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 using IUserContext = GameGuild.Common.IUserContext;
 
 
@@ -143,7 +141,8 @@ public class ProductQueryHandlers :
       if (request.IsActive.HasValue) {
         if (request.IsActive.Value) {
           query = query.Where(up => up.AccessStatus == ProductAccessStatus.Active);
-        } else {
+        }
+        else {
           query = query.Where(up => up.AccessStatus != ProductAccessStatus.Active);
         }
       }
@@ -244,7 +243,8 @@ public class ProductQueryHandlers :
           // Apply product filter if specified
           if (request.ProductId.HasValue) {
             userProductsQuery = userProductsQuery.Where(up => up.ProductId == request.ProductId.Value);
-          } else {
+          }
+          else {
             // Filter to only products the user can see
             var accessibleProductIds = await query.Select(p => p.Id).ToListAsync(cancellationToken);
             userProductsQuery = userProductsQuery.Where(up => accessibleProductIds.Contains(up.ProductId));
@@ -266,7 +266,7 @@ public class ProductQueryHandlers :
 
           // Revenue by type - placeholder
           revenueByType = productsByType.ToDictionary(
-            kvp => kvp.Key, 
+            kvp => kvp.Key,
             kvp => kvp.Value * 10m // Placeholder calculation
           );
         }
@@ -290,14 +290,14 @@ public class ProductQueryHandlers :
         AcquisitionsByType = acquisitionsByType,
       };
 
-      _logger.LogDebug("Retrieved product statistics: {TotalProducts} products, {PublishedProducts} published", 
+      _logger.LogDebug("Retrieved product statistics: {TotalProducts} products, {PublishedProducts} published",
         stats.TotalProducts, stats.PublishedProducts);
 
       return stats;
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting product statistics");
-      
+
       // Return empty stats on error
       return new ProductStats {
         TotalProducts = 0,

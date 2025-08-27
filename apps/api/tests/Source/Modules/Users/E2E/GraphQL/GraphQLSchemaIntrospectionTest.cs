@@ -45,13 +45,13 @@ namespace GameGuild.Tests.Modules.Users.E2E.GraphQL {
       // Act
       var response = await _client.PostAsync("/graphql", content);
       var responseString = await response.Content.ReadAsStringAsync();
-      
+
       // Debug: Log the schema introspection
       Console.WriteLine($"GraphQL Schema Introspection Response: {responseString}");
-      
+
       // Assert
       Assert.True(response.IsSuccessStatusCode, $"GraphQL introspection failed. Status: {response.StatusCode}");
-      
+
       var result = JsonDocument.Parse(responseString);
       Assert.True(result.RootElement.TryGetProperty("data", out _), "Response should contain 'data' field");
     }

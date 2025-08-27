@@ -41,12 +41,16 @@
         "editor.formatOnType": false,
         "editor.autoIndent": "none",
         "editor.wordWrap": "off",
-        "editor.quickSuggestions": false,
+        "editor.quickSuggestions": {
+            "comments": "off",
+            "strings": "off",
+            "other": "off"
+        },
         "editor.suggest.showWords": false,
         "editor.acceptSuggestionOnEnter": "off"
     },
     "[csharp]": {
-        "editor.defaultFormatter": "muhammad-sammy.csharp"
+        "editor.defaultFormatter": "ms-dotnettools.csharp"
     },
     "[typescript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features"

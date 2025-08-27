@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-
-namespace GameGuild.Modules.UserProfiles;
+﻿namespace GameGuild.Modules.UserProfiles;
 
 public class UpdateUserProfileDto {
   [StringLength(100)] public string? GivenName { get; set; }

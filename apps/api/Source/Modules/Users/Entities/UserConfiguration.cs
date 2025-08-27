@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
-namespace GameGuild.Modules.Users;
+﻿namespace GameGuild.Modules.Users;
 
 internal sealed class UserConfiguration : IEntityTypeConfiguration<User> {
   public void Configure(EntityTypeBuilder<User> builder) {
@@ -26,7 +22,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User> {
 
     // Optimistic concurrency
     builder.Property(user => user.Version).IsRowVersion();
-    
+
     // Note: Soft delete query filter is configured globally in ModelBuilderExtensions.ConfigureSoftDelete()
     // Removing duplicate filter to avoid conflicts with related entities
 
