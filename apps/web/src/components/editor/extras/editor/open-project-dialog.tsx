@@ -8,11 +8,12 @@ import { ProjectSearchFilters } from "@/components/editor/extras/project-dialog/
 import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
 import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
 import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
-import { FolderOpen, Upload } from "lucide-react"
+import { FolderOpen, Upload, Info } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import type { LexicalEditor } from "lexical"
 import { ImportProjectDialog } from "./import-project-dialog"
+import { InfoDialog } from "./info-dialog"
 
 interface ProjectData {
   id: string
@@ -81,6 +82,8 @@ export function OpenProjectDialog({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false)
+  const [projectToEdit, setProjectToEdit] = useState<ProjectData | null>(null)
 
   const handleOpen = async (projectId: string) => {
     const projectData = await loadProject(projectId)
@@ -127,7 +130,30 @@ export function OpenProjectDialog({
     return Date.now().toString() + Math.random().toString(36).substr(2, 9)
   }
 
+  const handleOpenInfo = (project: ProjectData) => {
+    setProjectToEdit(project)
+    setInfoDialogOpen(true)
+  }
 
+  const handleSaveInfo = async (projectId: string, newName: string, newTags: string[]) => {
+    const projectToUpdate = await storageAdapter.load(projectId)
+    if (!projectToUpdate) {
+      toast.error("Error finding project to update.")
+      return
+    }
+
+    try {
+      await storageAdapter.save(projectId, newName, projectToUpdate.data, newTags)
+      toast.success("Project updated", {
+        description: `"${newName}" has been updated successfully.`,
+      })
+      onProjectsListUpdate() // Re-fetch projects
+    } catch (error) {
+      console.error("Failed to save info:", error)
+      toast.error("Failed to update project.")
+      throw error // re-throw to prevent dialog from closing
+    }
+  }
 
   const handleConfirmDelete = (projectId: string, projectName: string) => {
     setProjectToDelete({ id: projectId, name: projectName })
@@ -212,6 +238,7 @@ export function OpenProjectDialog({
                 onOpen={handleOpen}
                 onDelete={handleConfirmDelete}
                 onDownload={handleDownload}
+                onInfo={handleOpenInfo}
                 showDeleteButton={true}
                 openButtonText="Open"
               />
@@ -307,6 +334,15 @@ export function OpenProjectDialog({
         generateProjectId={generateProjectId}
         onOpenProject={handleImportProject}
         />
+      
+      <InfoDialog
+        open={infoDialogOpen}
+        onOpenChange={setInfoDialogOpen}
+        project={projectToEdit}
+        onSave={handleSaveInfo}
+        availableTags={availableTags}
+        storageAdapter={storageAdapter}
+      />
     </>
   )
 }
