@@ -46,6 +46,7 @@ export function InfoDialog({
   const [name, setName] = useState("")
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
+  const [showTagDropdown, setShowTagDropdown] = useState(false)
 
   useEffect(() => {
     if (project) {
@@ -58,6 +59,22 @@ export function InfoDialog({
       setTagInput("")
     }
   }, [project])
+
+  // Close tag dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showTagDropdown) {
+        const target = event.target as Element
+        // Updated to check against a more specific class
+        if (!target.closest(".tag-input-container")) {
+          setShowTagDropdown(false)
+        }
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [showTagDropdown])
 
   const handleSave = async () => {
     if (!project) return
@@ -99,6 +116,7 @@ export function InfoDialog({
         setTags([...tags, newTag])
       }
       setTagInput("")
+      setShowTagDropdown(false)
     }
   }
 
@@ -127,31 +145,147 @@ export function InfoDialog({
               Tags
             </Label>
             <div className="col-span-3">
-              <div className="flex flex-wrap gap-2 rounded-md border p-2">
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                  >
-                    {tag}
+              {/* Tag Input with Dropdown */}
+              <div className="relative tag-input-container">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      placeholder="Search or create tags..."
+                      value={tagInput}
+                      onChange={(e) => {
+                        setTagInput(e.target.value)
+                        setShowTagDropdown(true)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && tagInput.trim()) {
+                          handleTagInputKeyDown(e)
+                        }
+                        if (e.key === "Escape") {
+                          setShowTagDropdown(false)
+                        }
+                      }}
+                      onFocus={() => setShowTagDropdown(true)}
+                      className="pr-10"
+                    />
                     <button
                       type="button"
-                      onClick={() => removeTag(tag)}
-                      className="rounded-full hover:bg-blue-200 dark:hover:bg-blue-800"
+                      onClick={() => setShowTagDropdown(!showTagDropdown)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
-                      <X className="h-3 w-3" />
+                      <svg
+                        className={`h-4 w-4 transition-transform ${showTagDropdown ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
                     </button>
-                  </span>
-                ))}
-                <Input
-                  id="tags"
-                  placeholder="Add a tag..."
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleTagInputKeyDown}
-                  className="flex-1 border-none bg-transparent p-0 shadow-none focus-visible:ring-0"
-                />
+                  </div>
+                </div>
+
+                {/* Dropdown with existing tags */}
+                {showTagDropdown && (
+                  <div className="absolute z-10 mt-1 w-full rounded-md border bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800 max-h-48 overflow-y-auto">
+                    {(() => {
+                      const filteredTags = tagInput.trim()
+                        ? availableTags.filter(
+                            (tag) =>
+                              tag.name.toLowerCase().includes(tagInput.toLowerCase()) && !tags.includes(tag.name),
+                          )
+                        : availableTags.filter((tag) => !tags.includes(tag.name))
+
+                      return (
+                        <>
+                          {/* Show filtered existing tags */}
+                          {filteredTags.length > 0 && (
+                            <>
+                              {filteredTags.slice(0, 10).map((tag) => (
+                                <button
+                                  key={tag.name}
+                                  type="button"
+                                  onClick={() => {
+                                    setTags((prev) => [...prev, tag.name])
+                                    setTagInput("")
+                                    setShowTagDropdown(false)
+                                  }}
+                                  className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+                                >
+                                  <span className="text-sm">{tag.name}</span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    ({tag.usageCount} uses)
+                                  </span>
+                                </button>
+                              ))}
+                              {tagInput.trim() &&
+                                !availableTags.some((tag) => tag.name.toLowerCase() === tagInput.toLowerCase()) &&
+                                !tags.includes(tagInput.trim()) && (
+                                  <div className="my-1 border-t dark:border-gray-700"></div>
+                                )}
+                            </>
+                          )}
+
+                          {/* Create new tag option */}
+                          {tagInput.trim() &&
+                            !availableTags.some((tag) => tag.name.toLowerCase() === tagInput.toLowerCase()) &&
+                            !tags.includes(tagInput.trim()) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newTag = tagInput.trim()
+                                  setTags((prev) => [...prev, newTag])
+                                  setTagInput("")
+                                  setShowTagDropdown(false)
+                                }}
+                                className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <svg
+                                    className="h-4 w-4 text-green-600 dark:text-green-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M12 4v16m8-8H4"
+                                    />
+                                  </svg>
+                                  <span className="text-sm">
+                                    Create "<strong>{tagInput.trim()}</strong>"
+                                  </span>
+                                </div>
+                              </button>
+                            )}
+                        </>
+                      )
+                    })()}
+                  </div>
+                )}
               </div>
+
+              {/* Selected Tags */}
+              {tags.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="ml-1 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
