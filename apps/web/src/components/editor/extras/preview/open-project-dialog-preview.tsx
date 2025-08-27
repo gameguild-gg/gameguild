@@ -86,7 +86,7 @@ export function OpenProjectDialogPreview({
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="max-w-2xl min-w-xl h-[80vh] flex flex-col overflow-hidden"
+        className="max-w-2xl lg:max-w-4xl w-full h-[95vh] flex flex-col overflow-hidden"
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader className="flex-shrink-0">
@@ -109,7 +109,7 @@ export function OpenProjectDialogPreview({
             />
           </div>
 
-          <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <ProjectList
               projects={filteredProjects}
               currentPage={currentPage}
