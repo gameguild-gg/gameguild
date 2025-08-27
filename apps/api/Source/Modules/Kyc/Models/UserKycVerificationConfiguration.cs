@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
-namespace GameGuild.Modules.Kyc.Models;
+﻿namespace GameGuild.Modules.Kyc.Models;
 
 public class UserKycVerificationConfiguration : IEntityTypeConfiguration<UserKycVerification> {
   public void Configure(EntityTypeBuilder<UserKycVerification> builder) {

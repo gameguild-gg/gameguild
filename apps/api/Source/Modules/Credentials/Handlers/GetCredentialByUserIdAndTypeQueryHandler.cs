@@ -1,5 +1,4 @@
 using GameGuild.Modules.Credentials.Queries;
-using MediatR;
 
 
 namespace GameGuild.Modules.Credentials.Handlers;

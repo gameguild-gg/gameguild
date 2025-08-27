@@ -1,6 +1,5 @@
 using GameGuild.Database;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Payments;

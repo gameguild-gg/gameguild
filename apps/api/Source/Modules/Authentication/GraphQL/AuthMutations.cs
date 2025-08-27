@@ -1,6 +1,4 @@
 using GameGuild.Common;
-using HotChocolate.Authorization;
-using MediatR;
 using ValidationException = FluentValidation.ValidationException;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 
@@ -118,7 +116,8 @@ public class AuthMutations {
     [Service] IMediator mediator
   ) {
     var command = new GenerateWeb3ChallengeCommand {
-      WalletAddress = input.WalletAddress, ChainId = input.ChainId ?? "1", // Default to Ethereum mainnet
+      WalletAddress = input.WalletAddress,
+      ChainId = input.ChainId ?? "1", // Default to Ethereum mainnet
     };
 
     return await mediator.Send(command);
@@ -139,7 +138,10 @@ public class AuthMutations {
     [Service] IMediator mediator
   ) {
     var command = new VerifyWeb3SignatureCommand {
-      WalletAddress = input.WalletAddress, Signature = input.Signature, Nonce = input.Nonce, ChainId = input.ChainId ?? "1", // Default to Ethereum mainnet
+      WalletAddress = input.WalletAddress,
+      Signature = input.Signature,
+      Nonce = input.Nonce,
+      ChainId = input.ChainId ?? "1", // Default to Ethereum mainnet
     };
 
     return await mediator.Send(command);

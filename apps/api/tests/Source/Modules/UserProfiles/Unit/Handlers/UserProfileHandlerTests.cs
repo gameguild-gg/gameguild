@@ -21,13 +21,13 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
       var options = new DbContextOptionsBuilder<ApplicationDbContext>()
         .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
         .Options;
-      
+
       _context = new ApplicationDbContext(options);
       _createLoggerMock = new Mock<ILogger<CreateUserProfileHandler>>();
       _updateLoggerMock = new Mock<ILogger<UpdateUserProfileHandler>>();
       _deleteLoggerMock = new Mock<ILogger<DeleteUserProfileHandler>>();
       _eventPublisherMock = new Mock<IDomainEventPublisher>();
-      
+
       _createHandler = new CreateUserProfileHandler(_context, _createLoggerMock.Object, _eventPublisherMock.Object);
       _updateHandler = new UpdateUserProfileHandler(_context, _updateLoggerMock.Object, _eventPublisherMock.Object);
       _deleteHandler = new DeleteUserProfileHandler(_context, _deleteLoggerMock.Object, _eventPublisherMock.Object);
@@ -64,7 +64,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
     public async Task Should_Handle_UserProfile_Update_Command() {
       // Arrange
       var userId = Guid.NewGuid();
-      
+
       // First create a profile
       var createCommand = new CreateUserProfileCommand {
         UserId = userId,
@@ -74,7 +74,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
         Title = "Developer",
         Description = "Original description",
       };
-      
+
       await _createHandler.Handle(createCommand, CancellationToken.None);
 
       // Then update it
@@ -103,7 +103,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
     public async Task Should_Handle_UserProfile_Delete_Command() {
       // Arrange
       var userId = Guid.NewGuid();
-      
+
       // First create a profile
       var createCommand = new CreateUserProfileCommand {
         UserId = userId,
@@ -113,7 +113,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
         Title = "Developer",
         Description = "Test description",
       };
-      
+
       await _createHandler.Handle(createCommand, CancellationToken.None);
 
       // Then delete it
@@ -128,12 +128,12 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
       // Assert
       Assert.True(result.IsSuccess);
       Assert.True(result.Value);
-      
+
       // Verify the profile is soft deleted
       var deletedProfile = await _context.Resources.OfType<UserProfile>()
         .IgnoreQueryFilters()
         .FirstOrDefaultAsync(up => up.Id == userId);
-      
+
       Assert.NotNull(deletedProfile);
       Assert.NotNull(deletedProfile.DeletedAt);
     }

@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using MediatR;
-
-
 namespace GameGuild.Modules.Users;
 
 /// <summary>

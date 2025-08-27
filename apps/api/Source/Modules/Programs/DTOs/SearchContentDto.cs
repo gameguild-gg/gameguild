@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using GameGuild.Common;
+﻿using GameGuild.Common;
 
 
 namespace GameGuild.Modules.Programs;
@@ -10,7 +9,7 @@ namespace GameGuild.Modules.Programs;
 public class SearchContentDto {
   [Required] public Guid ProgramId { get; set; }
 
-  [Required] [StringLength(255)] public string SearchTerm { get; set; } = string.Empty;
+  [Required][StringLength(255)] public string SearchTerm { get; set; } = string.Empty;
 
   public Common.ProgramContentType? Type { get; set; }
 

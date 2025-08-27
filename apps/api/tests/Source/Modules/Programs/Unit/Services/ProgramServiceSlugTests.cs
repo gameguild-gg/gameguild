@@ -216,7 +216,7 @@ public class ProgramServiceSlugTests : IDisposable {
     Assert.NotNull(unityProgram);
     Assert.NotNull(unrealProgram);
     Assert.NotNull(blenderProgram);
-    
+
     Assert.Equal(programs[0].Id, unityProgram.Id);
     Assert.Equal(programs[1].Id, unrealProgram.Id);
     Assert.Equal(programs[2].Id, blenderProgram.Id);
@@ -238,7 +238,7 @@ public class ProgramServiceSlugTests : IDisposable {
   public async Task GetProgramBySlugAsync_WithVeryLongSlug_HandlesCorrectly() {
     // Arrange
     var longSlug = string.Join("-", Enumerable.Repeat("very-long-slug-segment", 10));
-    
+
     var program = new ProgramEntity {
       Id = Guid.NewGuid(),
       Title = "Test Program with Very Long Slug",

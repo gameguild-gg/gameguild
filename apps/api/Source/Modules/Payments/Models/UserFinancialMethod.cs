@@ -1,8 +1,5 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Payments;
@@ -18,7 +15,7 @@ public class UserFinancialMethod : Entity {
 
   public PaymentMethodType Type { get; set; }
 
-  [Required] [MaxLength(255)] public string Name { get; set; } = string.Empty;
+  [Required][MaxLength(255)] public string Name { get; set; } = string.Empty;
 
   /// <summary>
   /// External ID from payment provider (Stripe, PayPal, etc.)

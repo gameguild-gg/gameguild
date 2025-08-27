@@ -1,12 +1,11 @@
+using GameGuild.Database;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.TestingLab;
 
-/// <summary>
-/// GraphQL type definition for TestingRequest entity
-/// </summary>
+/// <summary> GraphQL type definition for TestingRequest entity </summary>
 public class TestingRequestType : ObjectType<TestingRequest> {
   protected override void Configure(IObjectTypeDescriptor<TestingRequest> descriptor) {
     descriptor.Name("TestingRequest");
@@ -62,22 +61,22 @@ public class TestingRequestType : ObjectType<TestingRequest> {
 
     // Navigation Properties
     descriptor.Field("projectVersion")
-              .ResolveWith<TestingRequestResolvers>(r => r.GetProjectVersion(default!, default!))
+              .ResolveWith<TestingRequestResolvers>(r => r.GetProjectVersion(default(TestingRequest)!, default(ApplicationDbContext)!))
               .Type<ObjectType<ProjectVersion>>()
               .Description("The project version being tested.");
 
     descriptor.Field("createdBy")
-              .ResolveWith<TestingRequestResolvers>(r => r.GetCreatedBy(default!, default!))
+              .ResolveWith<TestingRequestResolvers>(r => r.GetCreatedBy(default(TestingRequest)!, default(ApplicationDbContext)!))
               .Type<ObjectType<User>>()
               .Description("The user who created this testing request.");
 
     descriptor.Field("participants")
-              .ResolveWith<TestingRequestResolvers>(r => r.GetParticipants(default!, default!))
+              .ResolveWith<TestingRequestResolvers>(r => r.GetParticipants(default(TestingRequest)!, default(ApplicationDbContext)!))
               .Type<ListType<TestingParticipantType>>()
               .Description("Users participating in this testing request.");
 
     descriptor.Field("sessions")
-              .ResolveWith<TestingRequestResolvers>(r => TestingRequestResolvers.GetSessions(default!, default!))
+              .ResolveWith<TestingRequestResolvers>(r => TestingRequestResolvers.GetSessions(default(TestingRequest)!, default(ApplicationDbContext)!))
               .Type<ListType<TestingSessionType>>()
               .Description("Testing sessions for this request.");
   }

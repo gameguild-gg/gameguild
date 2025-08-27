@@ -1,11 +1,9 @@
 using System.Security.Claims;
-using GameGuild.Common;
 using GameGuild.Common.Results;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Products;
-using GameGuild.Modules.Programs;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Resources;
 using Microsoft.AspNetCore.Mvc;
@@ -81,7 +79,7 @@ public class RequireResourcePermissionAttribute<TPermission, TResource>(Permissi
     // Step 3 - Check tenant-level permission (final fallback)
     var hasTenantPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, requiredPermission);
 
-    if (!hasTenantPermission) { 
+    if (!hasTenantPermission) {
       context.Result = new PermissionDeniedResult(requiredPermission.ToString());
     }
 
@@ -286,7 +284,7 @@ public class RequireResourcePermissionAttribute<TResource>(PermissionType requir
       var hasTenantPermission =
         await permissionService.HasTenantPermissionAsync(userId, tenantId, requiredPermission);
 
-      if (!hasTenantPermission) { 
+      if (!hasTenantPermission) {
         context.Result = new PermissionDeniedResult(requiredPermission.ToString());
       }
       // If we reach here with tenant permission, access is granted

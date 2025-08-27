@@ -42,11 +42,11 @@ public class ProjectsControllerTests : IClassFixture<WebApplicationFactory<Progr
   private async Task<HttpClient> GetAuthenticatedClientAsync() {
     // Create authenticated test user with permissions
     var (client, userId, tenantId) = await IntegrationTestHelper.CreateAuthenticatedTestUserAsync(_factory);
-    
+
     // Store the IDs for use in test assertions
     _userId = userId;
     _tenantId = tenantId;
-    
+
     return client;
   }
 
