@@ -59,7 +59,7 @@ College dates for the Fall 2025 semester:
   - Assignments:
     1. Read this Syllabus;
     2. [Read Notes on plagiarism](submissions)
-    3. [Sign FERPA Form](ferpa)
+    3. [Sign FERPA Form](/ferpa-waiver)
     4. Read Text Chapters 1 & 2 from AI for Games book;
     5. Take the quiz on Canvas;
     6. [Setup your machine and repository](setup);
