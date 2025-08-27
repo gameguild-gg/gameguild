@@ -139,7 +139,7 @@ export default function PreviewPage() {
           <div className="space-y-4 text-center">
             <div className="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700 dark:bg-green-900/50 dark:text-green-300">
               <Eye className="w-4" />
-              View
+              Viewer
             </div>
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Content View</h1>
             <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-300">
@@ -235,16 +235,14 @@ export default function PreviewPage() {
             <div className="flex flex-col lg:flex-row lg:gap-6">
               {/* Desktop Sidebar */}
               <aside className="hidden lg:block lg:w-1/3 xl:w-1/4">
-                
-                  <ProjectSidebarList
-                    storageAdapter={storageAdapter}
-                    availableTags={availableTags}
-                    currentProject={currentProject}
-                    onProjectSelect={handleProjectLoad}
-                    isDbInitialized={isDbInitialized}
-                    isSticky={true}
-                  />
-                
+                <ProjectSidebarList
+                  storageAdapter={storageAdapter}
+                  availableTags={availableTags}
+                  currentProject={currentProject}
+                  onProjectSelect={handleProjectLoad}
+                  isDbInitialized={isDbInitialized}
+                  isSticky={true}
+                />
               </aside>
 
               {/* Mobile Sidebar Overlay */}
@@ -305,7 +303,7 @@ export default function PreviewPage() {
                   <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
                     No Project Selected
                   </h3>
-                  <p className="mb-6 text-gray-500 dark:text-gray-400">Choose a project to preview its content</p>
+                  <p className="mb-6 text-gray-500 dark:text-gray-400">Choose a project to view its content</p>
                   <Button
                     onClick={() => setOpenDialogOpen(true)}
                     disabled={!isDbInitialized}
