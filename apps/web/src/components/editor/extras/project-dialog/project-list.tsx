@@ -109,77 +109,76 @@ export function ProjectList({
 
   return (
     <>
-      <div className="max-h-[30vh] overflow-y-auto">
-        <div className="space-y-2">
+      <div className="flex-1 min-h-0 overflow-y-auto p-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {paginatedProjects.map((project) => (
             <div
               key={project.id}
-              className="flex items-center justify-between p-3 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="group relative flex h-40 cursor-pointer flex-col justify-between overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ease-in-out hover:shadow-md dark:border-gray-800 dark:hover:border-gray-700"
+              onClick={() => onOpen(project.id)}
             >
-              <div className="flex flex-col flex-1 min-w-0 max-w-[calc(100%-120px)]">
-                <div className="flex items-start gap-2 mb-1">
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-full block">
+              <div className="flex flex-col p-4">
+                <div className="mb-2">
+                  <span
+                    className="block truncate font-semibold text-gray-900 dark:text-gray-100"
+                    title={project.name}
+                  >
                     {project.name}
                   </span>
                 </div>
                 {project.tags && project.tags.length > 0 && (
-                  <div className="flex gap-1 mb-1 flex-wrap">
-                    {project.tags.slice(0, 2).map((tag) => (
+                  <div className="mb-3 flex flex-wrap gap-1" title={project.tags.join(", ")}>
+                    {project.tags.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
-                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 truncate max-w-20"
+                        className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/50 dark:text-blue-300 dark:ring-blue-700/30"
                       >
                         {tag}
                       </span>
                     ))}
-                    {project.tags.length > 2 && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
-                        +{project.tags.length - 2}
-                      </span>
+                    {project.tags.length > 3 && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">+{project.tags.length - 3}</span>
                     )}
                   </div>
                 )}
-                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
-                  <span className="flex-shrink-0">{formatSize(project.size)}</span>
-                  <span className="flex-shrink-0">•</span>
-                  <span className="flex-shrink-0">Updated {new Date(project.updatedAt).toLocaleDateString()}</span>
-                  <span className="flex-shrink-0">•</span>
-                  <span className="text-gray-400 dark:text-gray-500 font-mono text-xs truncate max-w-20">
-                    ID: {project.id.slice(0, 8)}...
-                  </span>
+                <div className="mt-auto text-xs text-gray-500 dark:text-gray-400">
+                  <span>{formatSize(project.size)}</span>
+                  <span className="mx-1.5">•</span>
+                  <span>Updated {new Date(project.updatedAt).toLocaleDateString()}</span>
                 </div>
               </div>
-              <div className="flex gap-1 ml-3 flex-shrink-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onOpen(project.id)}
-                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 gap-1 px-2"
-                >
-                  {openButtonIcon}
-                  <span className="hidden sm:inline">{openButtonText}</span>
-                </Button>
+              <div className="absolute bottom-2 right-2 flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                 {onDownload && (
                   <Button
                     variant="ghost"
-                    size="sm"
-                    onClick={() => handleDownloadClick(project)}
-                    className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 px-2"
-                    title="Download project folder"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDownloadClick(project)
+                    }}
+                    className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-green-600 dark:hover:bg-gray-800"
+                    title="Download project"
                   >
-                    <Download className="w-4 h-4" />
+                    <Download className="h-4 w-4" />
                   </Button>
                 )}
                 {showDeleteButton && onDelete && (
                   <Button
                     variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete(project.id, project.name)}
-                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 px-2"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDelete(project.id, project.name)
+                    }}
+                    className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-800"
+                    title="Delete project"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
+              </div>
+              <div className="absolute top-2 right-2 text-xs font-mono text-gray-400/50 dark:text-gray-500/50">
+                {project.id.slice(0, 8)}
               </div>
             </div>
           ))}
