@@ -2929,10 +2929,8 @@ export const mockProgramContents: ProgramContent[] = [
     pythonWeek12LocalLlmContent,
     // AI4Games content
     ai4gamesSyllabusContent,
-    ai4gamesFerpaContent,
     ai4gamesSubmissionsContent,
     ai4gamesSetupContent,
-    ai4gamesToolingContent,
     ai4gamesFlockingContent,
     ai4gamesLifeContent,
     ai4gamesRngContent,
