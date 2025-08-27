@@ -608,14 +608,14 @@ export default function Page() {
                       </Button>
                     </Link>
 
-                    <Link href="/gglexical/view">
+                    <Link href="/gglexical/viewer">
                       <Button
                         variant="outline"
                         size="sm"
                         className="gap-2 border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
                       >
                         <Eye className="h-4 w-4" />
-                        View
+                        Viewer
                       </Button>
                     </Link>
                   </div>
