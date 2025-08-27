@@ -45,7 +45,7 @@ If you are struggling with an assignment, please contact me in my office-hours, 
 
 ::: danger "FERPA WAIVER"
 
-If you are willing to share your final project publicly, you MUST SIGN [this FERPA waiver](../ai4games/ferpa).
+If you are willing to share your final project publicly, you MUST SIGN [this FERPA waiver](/ferpa-waiver).
 
 :::
 
