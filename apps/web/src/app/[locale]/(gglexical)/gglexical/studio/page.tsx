@@ -578,185 +578,170 @@ export default function Page() {
 
   return (
     <>
-      <div className="container mx-auto py-10">
-        <div className="mx-auto max-w-4xl space-y-8">
-          {/* Header Section */}
-          <div className="text-center space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 dark:bg-green-900/50 text-green-700 dark:text-green-300 text-sm font-medium">
-              <Blocks className="w-4" />
-              Studio
-            </div>
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Content Studio</h1>
-            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Create your documents with the rich text editor designed
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Link href="/gglexical">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      <Home className="size" />
-                      Home
-                    </Button>
-                  </Link>
-
-                  <Link href="/gglexical/view">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      <Eye className="size" />
-                      View
-                    </Button>
-                  </Link>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSave}
-                    className="gap-2 bg-transparent"
-                    disabled={!isDbInitialized}
-                  >
-                    <Save className="size" />
-                    Save
-                  </Button>
-
-                  <SaveAsDialog
-                    open={saveAsDialogOpen}
-                    onOpenChange={setSaveAsDialogOpen}
-                    projectName={newProjectName}
-                    onProjectNameChange={setNewProjectName}
-                    onSave={handleSaveAs}
-                    currentProjectSize={currentProjectSize}
-                    getSizeIndicatorColor={getSizeIndicatorColor}
-                    formatSize={formatSize}
-                    isDbInitialized={isDbInitialized}
-                  />
-
-                  <OpenProjectDialog
-                    open={openDialogOpen}
-                    onOpenChange={setOpenDialogOpen}
-                    isFirstTime={isFirstTime}
-                    isDbInitialized={isDbInitialized}
-                    storageAdapter={storageAdapter}
-                    availableTags={availableTags}
-                    editorRef={editorRef}
-                    setLoadingRef={setLoadingRef}
-                    onProjectLoad={(projectData) => {
-                      setCurrentProjectId(projectData.id)
-                      setCurrentProjectName(projectData.name)
-                      setProjectTags(projectData.tags || [])
-                      setIsFirstTime(false)
-                    }}
-                    onProjectsListUpdate={loadSavedProjectsList}
-                    onCreateNew={() => setCreateDialogOpen(true)}
-                    currentProjectName={currentProjectName}
-                  />
-                </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+        <div className="container mx-auto py-10">
+          <div className="mx-auto max-w-4xl space-y-8 px-4 sm:px-6 lg:px-8">
+            {/* Header Section */}
+            <div className="space-y-4 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700 dark:bg-green-900/50 dark:text-green-300">
+                <Blocks className="w-4" />
+                Studio
               </div>
+              <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Content Studio</h1>
+              <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-300">
+                Create your documents with the rich text editor designed
+              </p>
             </div>
-          </div>
 
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+              <div className="p-6">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link href="/gglexical">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+                      >
+                        <Home className="h-4 w-4" />
+                        Home
+                      </Button>
+                    </Link>
 
-          {/* Project Management Toolbar */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 shadow-sm">
-            <div className="p-6 space-y-4">
-              {/* Top Row - Project Title */}
-              <div className="flex items-center justify-center">
-                {isEditingTitle ? (
-                  <input
-                    type="text"
-                    value={editingProjectName}
-                    onChange={(e) => setEditingProjectName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleTitleSave()
-                      } else if (e.key === "Escape") {
-                        setIsEditingTitle(false)
-                        setEditingProjectName(currentProjectName)
-                      }
-                    }}
-                    onBlur={handleTitleSave}
-                    className="text-xl font-semibold text-gray-900 dark:text-gray-100 bg-transparent border-b-2 border-blue-500 outline-none text-center px-2 py-1"
-                    autoFocus
-                  />
-                ) : (
-                  <h2
-                    className="text-xl font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors px-2 py-1 rounded"
-                    onClick={handleTitleEdit}
-                    title="Click to edit project name"
-                  >
-                    {currentProjectName || "Untitled Project"}
-                  </h2>
-                )}
-              </div>
-
-              {/* Second Row - Auto-save and Project Info */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-6">
-                  <button
-                    onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
-                    disabled={!isDbInitialized}
-                  >
-                    <div
-                      className={`w-3 h-3 rounded-full ${
-                        autoSaveEnabled && isDbInitialized
-                          ? "bg-green-500 animate-pulse"
-                          : "bg-gray-400 dark:bg-gray-600"
-                      }`}
-                    ></div>
-                    <span
-                      className={`text-sm font-medium ${
-                        autoSaveEnabled && isDbInitialized
-                          ? "text-green-700 dark:text-green-400"
-                          : "text-gray-500 dark:text-gray-300"
-                      }`}
-                    >
-                      {autoSaveEnabled && isDbInitialized ? "Auto-save" : "Manual"}
-                    </span>
-                  </button>
-
-                  <div className="flex items-center gap-2">
-                    <HardDrive className="size text-gray-500" />
-                    <span className={`text-sm ${getSizeIndicatorColor()}`}>{formatSize(currentProjectSize)}</span>
-                    <span className="text-sm text-gray-400 dark:text-gray-500">/</span>
-                    <span className="text-sm text-gray-400 dark:text-gray-500">
-                      {formatSize(RECOMMENDED_SIZE_KB)} recommended
-                    </span>
+                    <Link href="/gglexical/view">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View
+                      </Button>
+                    </Link>
                   </div>
 
-                  {!isDbInitialized && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-100">
-                      Initializing DB...
-                    </span>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSave}
+                      className="gap-2 border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
+                      disabled={!isDbInitialized}
+                    >
+                      <Save className="h-4 w-4" />
+                      Save
+                    </Button>
+
+                    <SaveAsDialog
+                      open={saveAsDialogOpen}
+                      onOpenChange={setSaveAsDialogOpen}
+                      projectName={newProjectName}
+                      onProjectNameChange={setNewProjectName}
+                      onSave={handleSaveAs}
+                      currentProjectSize={currentProjectSize}
+                      getSizeIndicatorColor={getSizeIndicatorColor}
+                      formatSize={formatSize}
+                      isDbInitialized={isDbInitialized}
+                    />
+
+                    <OpenProjectDialog
+                      open={openDialogOpen}
+                      onOpenChange={setOpenDialogOpen}
+                      isFirstTime={isFirstTime}
+                      isDbInitialized={isDbInitialized}
+                      storageAdapter={storageAdapter}
+                      availableTags={availableTags}
+                      editorRef={editorRef}
+                      setLoadingRef={setLoadingRef}
+                      onProjectLoad={(projectData) => {
+                        setCurrentProjectId(projectData.id)
+                        setCurrentProjectName(projectData.name)
+                        setProjectTags(projectData.tags || [])
+                        setIsFirstTime(false)
+                      }}
+                      onProjectsListUpdate={loadSavedProjectsList}
+                      onCreateNew={() => setCreateDialogOpen(true)}
+                      currentProjectName={currentProjectName}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Project Management Toolbar */}
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+              <div className="space-y-4 p-6">
+                {/* Top Row - Project Title */}
+                <div className="flex items-center justify-center text-center">
+                  {isEditingTitle ? (
+                    <input
+                      type="text"
+                      value={editingProjectName}
+                      onChange={(e) => setEditingProjectName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleTitleSave()
+                        else if (e.key === "Escape") {
+                          setIsEditingTitle(false)
+                          setEditingProjectName(currentProjectName)
+                        }
+                      }}
+                      onBlur={handleTitleSave}
+                      className="w-full max-w-md bg-transparent px-2 py-1 text-center text-xl font-semibold text-gray-900 outline-none dark:text-gray-100"
+                      autoFocus
+                    />
+                  ) : (
+                    <h2
+                      className="cursor-pointer rounded px-2 py-1 text-xl font-semibold text-gray-900 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800"
+                      onClick={handleTitleEdit}
+                      title="Click to edit project name"
+                    >
+                      {currentProjectName || "Untitled Project"}
+                    </h2>
                   )}
                 </div>
 
+                {/* Second Row - Info & Actions */}
+                <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-y border-gray-200 py-4 dark:border-gray-700">
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                    <button
+                      onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
+                      className="flex items-center gap-2 rounded-md px-3 py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                      disabled={!isDbInitialized}
+                    >
+                      <div
+                        className={`h-3 w-3 rounded-full ${
+                          autoSaveEnabled && isDbInitialized ? "bg-green-500 animate-pulse" : "bg-gray-400 dark:bg-gray-600"
+                        }`}
+                      />
+                      <span
+                        className={`text-sm font-medium ${
+                          autoSaveEnabled && isDbInitialized
+                            ? "text-green-700 dark:text-green-400"
+                            : "text-gray-500 dark:text-gray-300"
+                        }`}
+                      >
+                        {autoSaveEnabled && isDbInitialized ? "Auto-save" : "Manual"}
+                      </span>
+                    </button>
 
-              </div>
+                    <div className="flex items-center gap-2">
+                      <HardDrive className="h-4 w-4 text-gray-500" />
+                      <span className={`text-sm ${getSizeIndicatorColor()}`}>{formatSize(currentProjectSize)}</span>
+                      <span className="text-sm text-gray-400 dark:text-gray-500">/</span>
+                      <span className="text-sm text-gray-400 dark:text-gray-500">
+                        {formatSize(RECOMMENDED_SIZE_KB)}
+                      </span>
+                    </div>
+                  </div>
 
-              {/* Third Row - Sync Status and Action Buttons */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {syncStats && (
-                    <>
+                  <div className="flex items-center gap-3">
+                    {syncStats && (
                       <button
                         onClick={() => setShowSyncStatus(!showSyncStatus)}
-                        className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        className="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
                       >
                         <div
-                          className={`w-2 h-2 rounded-full ${
+                          className={`h-2 w-2 rounded-full ${
                             syncStats.isOnline
                               ? syncStats.isSyncing
                                 ? "bg-blue-500 animate-pulse"
@@ -765,7 +750,7 @@ export default function Page() {
                                 ? "bg-red-500"
                                 : "bg-gray-400"
                           }`}
-                        ></div>
+                        />
                         <span className="text-xs text-gray-500 dark:text-gray-300">
                           {!syncConfig.isEnabled()
                             ? "Sync Off"
@@ -776,87 +761,79 @@ export default function Page() {
                               : "Offline"}
                         </span>
                         {syncStats.queue.pending > 0 && (
-                          <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-1.5 py-0.5 rounded-full">
+                          <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-xs text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                             {syncStats.queue.pending}
                           </span>
                         )}
                       </button>
-                    </>
-                  )}
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  
-
-
-
-                  <CreateProjectDialog
-                    open={createDialogOpen}
-                    onOpenChange={(open) => {
-                      setCreateDialogOpen(open)
-                      if (!open) {
-                        setOpenDialogOpen(true)
-                      }
-                    }}
-                    isDbInitialized={isDbInitialized}
-                    storageAdapter={storageAdapter}
-                    availableTags={availableTags}
-                    onProjectCreate={(projectData) => {
-                      // Reset editor to empty state
-                      if (editorRef.current) {
-                        const emptyState =
-                          '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
-                        editorRef.current.setEditorState(editorRef.current.parseEditorState(emptyState))
-                      }
-
-                      setCurrentProjectId(projectData.id)
-                      setCurrentProjectName(projectData.name)
-                      setProjectTags(projectData.tags)
-                      setEditorState(
-                        '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
-                      )
-                      setIsFirstTime(false)
-                    }}
-                    onProjectsListUpdate={loadSavedProjectsList}
-                    onAvailableTagsUpdate={loadAvailableTags}
-                    generateProjectId={generateProjectId}
-                  />
-                </div>
+                <CreateProjectDialog
+                  open={createDialogOpen}
+                  onOpenChange={(open) => {
+                    setCreateDialogOpen(open)
+                    if (!open) setOpenDialogOpen(true)
+                  }}
+                  isDbInitialized={isDbInitialized}
+                  storageAdapter={storageAdapter}
+                  availableTags={availableTags}
+                  onProjectCreate={(projectData) => {
+                    if (editorRef.current) {
+                      const emptyState =
+                        '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+                      editorRef.current.setEditorState(editorRef.current.parseEditorState(emptyState))
+                    }
+                    setCurrentProjectId(projectData.id)
+                    setCurrentProjectName(projectData.name)
+                    setProjectTags(projectData.tags)
+                    setEditorState(
+                      '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
+                    )
+                    setIsFirstTime(false)
+                  }}
+                  onProjectsListUpdate={loadSavedProjectsList}
+                  onAvailableTagsUpdate={loadAvailableTags}
+                  generateProjectId={generateProjectId}
+                />
               </div>
             </div>
-          </div>
 
-          {/* Editor Container */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 shadow-sm">
-            <div className="p-6 px-12 py-12">
-              <Editor
-                editorRef={editorRef}
-                initialState={editorState}
-                onChange={setEditorState}
-                onLoadingChange={(setLoading) => {
-                  setLoadingRef.current = setLoading
-                }}
-              />
+            {/* Editor Container */}
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+              <div className="p-4 sm:p-6 md:p-8 lg:p-12">
+                <Editor
+                  editorRef={editorRef}
+                  initialState={editorState}
+                  onChange={setEditorState}
+                  onLoadingChange={(setLoading) => {
+                    setLoadingRef.current = setLoading
+                  }}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Help Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-            <div className="p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Rich Formatting</h3>
-              <p className="text-sm text-blue-700 dark:text-blue-200">
-                Add headings, lists, links, and text formatting
-              </p>
-            </div>
-            <div className="p-4 bg-green-50 dark:bg-green-900 rounded-lg">
-              <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">Media & Content</h3>
-              <p className="text-sm text-green-700 dark:text-green-200">Insert images, videos, code blocks, and more</p>
-            </div>
-            <div className="p-4 bg-purple-50 dark:bg-purple-900 rounded-lg">
-              <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">Interactive Elements</h3>
-              <p className="text-sm text-purple-700 dark:text-purple-200">
-                Create quizzes, callouts, and interactive content
-              </p>
+            {/* Help Section */}
+            <div className="grid grid-cols-1 gap-4 pt-4 md:grid-cols-3">
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/30">
+                <h3 className="mb-2 font-semibold text-blue-900 dark:text-blue-100">Rich Formatting</h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Add headings, lists, links, and text formatting
+                </p>
+              </div>
+              <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/30">
+                <h3 className="mb-2 font-semibold text-green-900 dark:text-green-100">Media & Content</h3>
+                <p className="text-sm text-green-700 dark:text-green-300">
+                  Insert images, videos, code blocks, and more
+                </p>
+              </div>
+              <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/30">
+                <h3 className="mb-2 font-semibold text-purple-900 dark:text-purple-100">Interactive Elements</h3>
+                <p className="text-sm text-purple-700 dark:text-purple-300">
+                  Create quizzes, callouts, and interactive content
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -869,10 +846,10 @@ export default function Page() {
           </DialogHeader>
           {syncStats && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span className="text-sm text-gray-600 dark:text-gray-300">Conection:</span>
+              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+                <span className="text-sm text-gray-600 dark:text-gray-300">Connection:</span>
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${syncStats.isOnline ? "bg-green-500" : "bg-red-500"}`}></div>
+                  <div className={`h-2 w-2 rounded-full ${syncStats.isOnline ? "bg-green-500" : "bg-red-500"}`} />
                   <span className="text-sm font-medium">{syncStats.isOnline ? "Online" : "Offline"}</span>
                 </div>
               </div>
@@ -880,19 +857,19 @@ export default function Page() {
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">Sync Queue</h4>
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2 bg-blue-50 dark:bg-blue-900 rounded">
+                  <div className="rounded bg-blue-50 p-2 dark:bg-blue-900">
                     <div className="font-medium text-blue-800 dark:text-blue-200">Pending</div>
                     <div className="text-blue-600 dark:text-blue-300">{syncStats.queue.pending}</div>
                   </div>
-                  <div className="p-2 bg-yellow-50 dark:bg-yellow-900 rounded">
+                  <div className="rounded bg-yellow-50 p-2 dark:bg-yellow-900">
                     <div className="font-medium text-yellow-800 dark:text-yellow-200">Processing</div>
                     <div className="text-yellow-600 dark:text-yellow-300">{syncStats.queue.processing}</div>
                   </div>
-                  <div className="p-2 bg-green-50 dark:bg-green-900 rounded">
+                  <div className="rounded bg-green-50 p-2 dark:bg-green-900">
                     <div className="font-medium text-green-800 dark:text-green-200">Completed</div>
                     <div className="text-green-600 dark:text-green-300">{syncStats.queue.completed}</div>
                   </div>
-                  <div className="p-2 bg-red-50 dark:bg-red-900 rounded">
+                  <div className="rounded bg-red-50 p-2 dark:bg-red-900">
                     <div className="font-medium text-red-800 dark:text-red-200">Failed</div>
                     <div className="text-red-600 dark:text-red-300">{syncStats.queue.failed}</div>
                   </div>
@@ -900,7 +877,7 @@ export default function Page() {
               </div>
 
               {syncStats.lastSync && (
-                <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
                   <span className="text-sm text-gray-600 dark:text-gray-300">Last sync:</span>
                   <div className="text-sm font-medium">{new Date(syncStats.lastSync).toLocaleString()}</div>
                 </div>

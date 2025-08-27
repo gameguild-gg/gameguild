@@ -1,5 +1,6 @@
 import { Metadata }                 from 'next';
 import React, { PropsWithChildren } from 'react';
+import { TopMenu } from "@/components/editor/top-menu"
 
 export const metadata: Metadata = {
   title: "GameGuild Editor",
@@ -32,6 +33,9 @@ export const metadata: Metadata = {
 
 export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
   return (
-    <div className="flex flex-col flex-1">{ children }</div>
+    <div>
+      <TopMenu />
+      <div className="flex flex-col flex-1 mt-10">{ children }</div>
+    </div>
   )
 }
