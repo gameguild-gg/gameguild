@@ -28,6 +28,7 @@ interface ProjectSidebarListProps {
   onProjectSelect: (project: ProjectData) => void
   isDbInitialized: boolean
   isSticky?: boolean
+  searchModeOnly?: boolean
 }
 
 export function ProjectSidebarList({
@@ -37,6 +38,7 @@ export function ProjectSidebarList({
   onProjectSelect,
   isDbInitialized,
   isSticky = false,
+  searchModeOnly = true,
 }: ProjectSidebarListProps) {
   const [projects, setProjects] = useState<ProjectData[]>([])
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
@@ -86,16 +88,25 @@ export function ProjectSidebarList({
     if (searchTerm || selectedTags.length > 0) {
       searchProjects()
     } else {
-      setFilteredProjects(projects)
+      if (searchModeOnly) {
+        setFilteredProjects([])
+      } else {
+        setFilteredProjects(projects)
+      }
     }
-  }, [searchTerm, selectedTags, tagFilterMode, projects])
+  }, [searchTerm, selectedTags, tagFilterMode, projects, searchModeOnly])
 
   const loadProjects = async () => {
     try {
       setLoading(true)
-      const allProjects = await storageAdapter.list()
-      setProjects(allProjects)
-      setFilteredProjects(allProjects)
+      if (searchModeOnly) {
+        setProjects([])
+        setFilteredProjects([])
+      } else {
+        const allProjects = await storageAdapter.list()
+        setProjects(allProjects)
+        setFilteredProjects(allProjects)
+      }
     } catch (error) {
       console.error("Failed to load projects:", error)
     } finally {
@@ -168,20 +179,23 @@ export function ProjectSidebarList({
             </div>
           </div>
 
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder="Search documents..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-9 text-sm bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
-          />
-        </div>
+        
 
         {/* Collapsible Filters */}
         {showFilters && (
           <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+
+            {/* Search */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search documents..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-9 text-sm bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+              />
+            </div>
+
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter Mode:</Label>
               <select
@@ -294,12 +308,18 @@ export function ProjectSidebarList({
             <div className="text-center py-12">
               <FileText className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                {searchTerm || selectedTags.length > 0 ? "No documents found" : "No documents available"}
+                {searchTerm || selectedTags.length > 0
+                  ? "No documents found"
+                  : searchModeOnly
+                    ? "Use the filters to search for documents"
+                    : "No documents available"}
               </p>
               {searchTerm || selectedTags.length > 0 ? (
                 <p className="text-xs text-gray-400 dark:text-gray-500">Try adjusting your search or filters</p>
+              ) : searchModeOnly ? (
+                <p className="text-xs text-gray-400 dark:text-gray-500">The list will appear after searching</p>
               ) : null}
-            </div>
+            </div> // null
           ) : (
             filteredProjects.map((project) => (
               <div
