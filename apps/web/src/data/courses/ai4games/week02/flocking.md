@@ -42,7 +42,7 @@ Apply a force towards the center of mass of the group.
 2. Compute the location of the center of mass of the group ($ P_{CM} $);
 3. Compute the force that will move the agent towards the center of mass($ \overrightarrow{F_c} $); The farther the agent is from the center of mass, the force increases linearly up to the limit of the cohesion radius $ r_c $.
 
-![cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.png)
+![cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Fcohesion.png)
 
 $$
 P_{CM} = \frac{\sum_{i=0}^{n-1} P_i}{n}
