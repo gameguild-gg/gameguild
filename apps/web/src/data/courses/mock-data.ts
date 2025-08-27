@@ -3,7 +3,7 @@ import { Product, ProductProgram, Program, ProgramContent } from '@/lib/api/gene
 // Intro to AI courses
 import ai4gamesSyllabus from './ai4games/syllabus.md';
 import ai4gamesSetup from './ai4games/week01/setup.md';
-import ai4gamesSubmissions from './ai4games/week01/submissions.md';
+
 import ai4gamesFlocking from './ai4games/week02/flocking.md';
 import ai4gamesLife from './ai4games/week03/life.md';
 import ai4gamesRng from './ai4games/week04/rng.md';
@@ -1006,28 +1006,7 @@ export const ai4gamesSyllabusContent: ProgramContent = {
     slug: 'syllabus',
 };
 
-export const ai4gamesSubmissionsContent: ProgramContent = {
-    id: 'ai4games-submissions',
-    programId: ai4gamesProgram.id!,
-    parentId: undefined,
-    title: 'Week 01: Assignment Submissions',
-    description: 'Guidelines for assignment submissions',
-    type: 0, // Page
-    body: ai4gamesSubmissions,
-    sortOrder: 3,
-    isRequired: true,
-    gradingMethod: 0, // None
-    maxPoints: null,
-    estimatedMinutes: 20,
-    visibility: 1, // Published
-    program: ai4gamesProgram,
-    parent: undefined,
-    children: [],
-    contentInteractions: [],
-    createdAt: '2023-01-01T00:00:00Z',
-    updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'submissions',
-};
+
 
 export const ai4gamesSetupContent: ProgramContent = {
     id: 'ai4games-setup',
@@ -2782,7 +2761,6 @@ pythonProgram.programContents = [
 
 ai4gamesProgram.programContents = [
     ai4gamesSyllabusContent,
-    ai4gamesSubmissionsContent,
     ai4gamesSetupContent,
     ai4gamesFlockingContent,
     ai4gamesLifeContent,
@@ -2929,7 +2907,6 @@ export const mockProgramContents: ProgramContent[] = [
     pythonWeek12LocalLlmContent,
     // AI4Games content
     ai4gamesSyllabusContent,
-    ai4gamesSubmissionsContent,
     ai4gamesSetupContent,
     ai4gamesFlockingContent,
     ai4gamesLifeContent,
