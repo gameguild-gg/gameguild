@@ -68,7 +68,7 @@ College dates for the Fall 2025 semester:
   - Topic: **Behavioral Agents**
   - Presentation: [Flocking](https://docs.google.com/presentation/d/1OBEY-tb_ubgoq6Mk9lEsCFaYLINni3oPwjH8iAXEQQM/edit?usp=sharing)
   - Formal Assignment: [Flocking](flocking)
-  - Interactive Assignment: [Flocking](https://github.com/InfiniBrains/mobagen/tree/master/examples/flocking)
+  - Interactive Assignment: [Flocking](https://github.com/gameguild-gg/mobagen/tree/master/examples/flocking)
 - Week 03. 2025/09/08 - 2025/09/12
   - Topic: **Finite Automata** and **2D Grids**
   - Formal Assignment: [Formal Game of Life](life)
@@ -107,11 +107,11 @@ College dates for the Fall 2025 semester:
 - Week 11. 2025/11/03 - 2025/11/07
   - Topic:
     - **Procedural Content Generation**
-  - Interactive Assignment: [Scenario Generation](https://github.com/InfiniBrains/mobagen/tree/master/examples/scenario)
+  - Interactive Assignment: [Scenario Generation](https://github.com/gameguild-gg/mobagen/tree/master/examples/scenario)
 - Week 12. 2025/11/10 - 2025/11/14
   - Topic:
     - **Procedural Content Generation**
-  - Interactive Assignment: [Scenario Generation](https://github.com/InfiniBrains/mobagen/tree/master/examples/scenario)
+  - Interactive Assignment: [Scenario Generation](https://github.com/gameguild-gg/mobagen/tree/master/examples/scenario)
 - Week 13. 2025/11/17 - 2025/11/21
   - Topic: Work sessions for final project
   - Assignment: [Final Project](final-project)
