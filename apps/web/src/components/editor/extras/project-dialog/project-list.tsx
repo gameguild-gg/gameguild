@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { FolderOpen, Trash2, Download } from "lucide-react"
+import { FolderOpen, Trash2, Download, Info } from "lucide-react"
 import { DownloadConfirmDialog } from "@/components/editor/extras/dialogs/download-confirm-dialog"
 
 interface ProjectData {
@@ -25,6 +25,7 @@ interface ProjectListProps {
   selectedTags: string[]
   onOpen: (projectId: string) => void
   onDelete?: (projectId: string, projectName: string) => void
+  onInfo?: (project: ProjectData) => void;
   onDownload?: (
     projectId: string,
     projectName: string,
@@ -46,6 +47,7 @@ export function ProjectList({
   selectedTags,
   onOpen,
   onDelete,
+  onInfo,
   onDownload,
   showDeleteButton = true,
   openButtonText = "Open",
@@ -148,6 +150,20 @@ export function ProjectList({
                 </div>
               </div>
               <div className="absolute bottom-2 right-2 flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                {onInfo && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onInfo(project)
+                    }}
+                    className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-800"
+                    title="Edit project info"
+                  >
+                    <Info className="h-4 w-4" />
+                  </Button>
+                )}
                 {onDownload && (
                   <Button
                     variant="ghost"
