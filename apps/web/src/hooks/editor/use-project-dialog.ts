@@ -30,7 +30,7 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(12) // Changed initial itemsPerPage from 10 to 12 to match available options in selector
+  const [itemsPerPage, setItemsPerPage] = useState(16) // Changed initial itemsPerPage from 10 to 12 to match available options in selector
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
   const [totalProjects, setTotalProjects] = useState(0)
   const [tagFilterMode, setTagFilterMode] = useState<"all" | "any">("any")
