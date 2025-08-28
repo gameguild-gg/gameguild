@@ -53,6 +53,39 @@ In order for me and you to be protected, about using external tools and publishi
 
 This class will use github extensively, in order to keep you safe, we will use private repositories. This means that only you and me will be able to see your code. In your final project, you must share it with your pair partner, and with me.
 
+## Definitions
+
+- **Data Structure** - A way of organizing data in memory for efficient access and modification.
+- **Abstract Data Type** - A higher-level interface to use data conveniently from the end-programmer’s point of view.
+    - Built out of data structures.
+    - Provides a way to use data without knowing how it is implemented.
+- **Algorithm** - A formula, process, or set of steps to solve a problem.
+
+## Data Structures
+
+- Array, Dynamic Arrays (aka. Vector)
+- Linked List
+- Hash Table
+- Trees
+- Graph
+- Heap
+
+## Abstract Data Types
+
+- Stacks, Queues -> Linked Lists
+- Map, Sets, Dictionary, Association Arrays, Unordered Set/Map -> Hash Tables
+- Binary Trees, Binary Search Trees, AVL Trees -> Trees
+- Graph -> Based on Dynamic arrays
+- Priority Queues -> Heaps
+
+## Algorithms
+
+- Sorting: Selection, Insertion, Bubble, Merge, Quick
+- Search: Binary, Breadth-First, Depth-First
+- Graph: Dijkstra, Prims(Jarnik), Bellman-Ford
+- Hash tables: Collision avoidance via chaining and linear probing
+- Heap: A* algorithm
+
 ## Activities
 
 TLDR: there is no TLDR, read the whole thing.
