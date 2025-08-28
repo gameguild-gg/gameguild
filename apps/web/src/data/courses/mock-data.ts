@@ -89,6 +89,7 @@ import portfolioWeek11Lecture from './portfolio/chapters/week11/lecture.md';
 import portfolioSyllabus from './portfolio/syllabus.md';
 
 // DSA Course Imports
+import dsaExpectations from './dsa/01-introduction/expectations.md';
 import dsaIntroduction from './dsa/01-introduction/introduction.md';
 import dsaAnalysis from './dsa/02-analysis/README.md';
 import dsaDynamicData from './dsa/03-dynamic-data/README.md';
@@ -2415,6 +2416,29 @@ export const dsaIntroductionContent: ProgramContent = {
     slug: 'introduction',
 };
 
+export const dsaExpectationsContent: ProgramContent = {
+    id: 'dsa-expectations',
+    programId: dsaProgram.id!,
+    parentId: undefined,
+    title: 'Week 01: Course Expectations Report',
+    description: 'Student expectations and feedback analysis for the Data Structures and Algorithms course',
+    type: 0, // Page
+    body: dsaExpectations,
+    sortOrder: 3,
+    isRequired: false,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: dsaProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'expectations',
+};
+
 export const dsaAnalysisContent: ProgramContent = {
     id: 'dsa-analysis',
     programId: dsaProgram.id!,
@@ -2423,7 +2447,7 @@ export const dsaAnalysisContent: ProgramContent = {
     description: 'Big O notation and algorithm complexity analysis',
     type: 0, // Page
     body: dsaAnalysis,
-    sortOrder: 3,
+    sortOrder: 4,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2446,7 +2470,7 @@ export const dsaDynamicDataContent: ProgramContent = {
     description: 'Arrays, linked lists, and dynamic memory allocation',
     type: 0, // Page
     body: dsaDynamicData,
-    sortOrder: 4,
+    sortOrder: 5,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2469,7 +2493,7 @@ export const dsaSortingContent: ProgramContent = {
     description: 'Bubble sort, selection sort, insertion sort, merge sort, quick sort',
     type: 0, // Page
     body: dsaSorting,
-    sortOrder: 5,
+    sortOrder: 6,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2492,7 +2516,7 @@ export const dsaDivideAndConquerContent: ProgramContent = {
     description: 'Divide and conquer algorithms and techniques',
     type: 0, // Page
     body: dsaDivideAndConquer,
-    sortOrder: 6,
+    sortOrder: 7,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2515,7 +2539,7 @@ export const dsaHashtablesContent: ProgramContent = {
     description: 'Hash functions, collision resolution, and hash table implementation',
     type: 0, // Page
     body: dsaHashtables,
-    sortOrder: 7,
+    sortOrder: 8,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2538,7 +2562,7 @@ export const dsaMidtermContent: ProgramContent = {
     description: 'Midterm examination covering first half of course',
     type: 2, // Assignment
     body: dsaMidterm,
-    sortOrder: 8,
+    sortOrder: 9,
     isRequired: true,
     gradingMethod: 1, // Points
     maxPoints: 100,
@@ -2561,7 +2585,7 @@ export const dsaStackAndQueueContent: ProgramContent = {
     description: 'Stack and queue data structures and their applications',
     type: 0, // Page
     body: dsaStackAndQueue,
-    sortOrder: 9,
+    sortOrder: 10,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2584,7 +2608,7 @@ export const dsaBreakContent: ProgramContent = {
     description: 'Spring break - no classes',
     type: 0, // Page
     body: dsaBreak,
-    sortOrder: 10,
+    sortOrder: 11,
     isRequired: false,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2607,7 +2631,7 @@ export const dsaGraphsContent: ProgramContent = {
     description: 'Graph representation, traversal algorithms (BFS, DFS)',
     type: 0, // Page
     body: dsaGraphs,
-    sortOrder: 11,
+    sortOrder: 12,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2630,7 +2654,7 @@ export const dsaDijkstraContent: ProgramContent = {
     description: 'Shortest path algorithms and Dijkstra\'s algorithm',
     type: 0, // Page
     body: dsaDijkstra,
-    sortOrder: 12,
+    sortOrder: 13,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2653,7 +2677,7 @@ export const dsaMstContent: ProgramContent = {
     description: 'Kruskal\'s and Prim\'s algorithms for minimum spanning trees',
     type: 0, // Page
     body: dsaMst,
-    sortOrder: 13,
+    sortOrder: 14,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2676,7 +2700,7 @@ export const dsaBstContent: ProgramContent = {
     description: 'Binary search tree implementation and operations',
     type: 0, // Page
     body: dsaBst,
-    sortOrder: 14,
+    sortOrder: 15,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2699,7 +2723,7 @@ export const dsaHeapContent: ProgramContent = {
     description: 'Heap data structure and priority queue implementation',
     type: 0, // Page
     body: dsaHeap,
-    sortOrder: 15,
+    sortOrder: 16,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2722,7 +2746,7 @@ export const dsaProjectContent: ProgramContent = {
     description: 'Comprehensive final project applying course concepts',
     type: 2, // Assignment
     body: dsaProject,
-    sortOrder: 16,
+    sortOrder: 17,
     isRequired: true,
     gradingMethod: 1, // Points
     maxPoints: 200,
@@ -2745,7 +2769,7 @@ export const dsaFinalsContent: ProgramContent = {
     description: 'Comprehensive final examination',
     type: 2, // Assignment
     body: dsaFinals,
-    sortOrder: 17,
+    sortOrder: 18,
     isRequired: true,
     gradingMethod: 1, // Points
     maxPoints: 150,
@@ -2874,6 +2898,7 @@ ai4games2Program.programContents = [
 dsaProgram.programContents = [
     dsaSyllabusContent,
     dsaIntroductionContent,
+    dsaExpectationsContent,
     dsaAnalysisContent,
     dsaDynamicDataContent,
     dsaSortingContent,
