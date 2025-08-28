@@ -110,6 +110,8 @@ import dsaSyllabus from './dsa/syllabus.md';
 
 // Intro to Game Programming Course Imports
 import intro2gproSyllabus from './intro2gpro/syllabus.md';
+import intro2gproExpectations from './intro2gpro/week01/expectations.md';
+import intro2gproInterview from './intro2gpro/week01/interview-a-gamedev.md';
 
 // Introduction to Game Programming syllabus content
 export const intro2gproSyllabusContent: ProgramContent = {
@@ -133,6 +135,52 @@ export const intro2gproSyllabusContent: ProgramContent = {
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
     slug: 'syllabus',
+};
+
+export const intro2gproExpectationsContent: ProgramContent = {
+    id: 'intro2gpro-expectations',
+    programId: 'intro2gpro-program-1',
+    parentId: undefined,
+    title: 'Week 01: Course Expectations Report',
+    description: 'Student expectations and feedback analysis for the Introduction to Game Programming course',
+    type: 0, // Page
+    body: intro2gproExpectations,
+    sortOrder: 2,
+    isRequired: false,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'expectations',
+};
+
+export const intro2gproInterviewContent: ProgramContent = {
+    id: 'intro2gpro-interview',
+    programId: 'intro2gpro-program-1',
+    parentId: undefined,
+    title: 'Week 01: Interview a Game Developer',
+    description: 'Assignment to interview a game programmer or developer and learn about their experiences and advice',
+    type: 0, // Page
+    body: intro2gproInterview,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'interview-a-gamedev',
 };
 
 // Mock user for the creator
@@ -2899,10 +2947,14 @@ dsaProgram.programContents = [
 
 intro2gproProgram.programContents = [
     intro2gproSyllabusContent,
+    intro2gproExpectationsContent,
+    intro2gproInterviewContent,
 ];
 
 // Set program references
 intro2gproSyllabusContent.program = intro2gproProgram;
+intro2gproExpectationsContent.program = intro2gproProgram;
+intro2gproInterviewContent.program = intro2gproProgram;
 
 pythonProduct.productPrograms = [pythonProductProgram];
 ai4gamesProduct.productPrograms = [ai4gamesProductProgram];
@@ -3001,6 +3053,8 @@ export const mockProgramContents: ProgramContent[] = [
     portfolioWeek11ActivityContent,
     // Intro to Game Programming content
     intro2gproSyllabusContent,
+    intro2gproExpectationsContent,
+    intro2gproInterviewContent,
 ];
 
 // Helper function to get program by slug
