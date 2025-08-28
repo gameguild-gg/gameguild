@@ -130,7 +130,7 @@ export function ImportProjectDialog({
         }
 
         // Extract name from filename or metadata
-        const baseName = lexicalFile.name.replace(/\.(gglexical|lexical)$/, "")
+        const baseName = (lexicalFile as JSZip.JSZipObject).name.replace(/\.(gglexical|lexical)$/, "")
 
         projectData = {
           name: metadata?.name || baseName || "Imported Project",
@@ -184,7 +184,7 @@ export function ImportProjectDialog({
 
     const files = Array.from(e.dataTransfer.files)
     if (files.length > 0) {
-      handleFileUpload(files[0])
+      handleFileUpload(files[0] as File)
     }
   }
 
@@ -201,7 +201,7 @@ export function ImportProjectDialog({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (files && files.length > 0) {
-      handleFileUpload(files[0])
+      handleFileUpload(files[0] as File)
     }
   }
 
