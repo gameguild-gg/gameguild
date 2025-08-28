@@ -1,8 +1,8 @@
-# FERPA Consent
+# FERPA Waiver - Consent or Dissent
 
 FERPA (The Family Educational Rights and Privacy Act) is a federal law protecting the confidentiality of student records. It restricts others from accessing or discussing your educational records without your consent. Here we are going to discuss how it applies to the courses I teach and what are the benefits on sharing your work publicly if you want.
 
-[FERPA consent form](https://forms.gle/JzMiytNsFWDeBGc4A)
+[FERPA Waiver form](https://forms.gle/JzMiytNsFWDeBGc4A)
 
 Read more about the reasoning and rationale below.
 
@@ -24,10 +24,10 @@ On the other hand, if something is truly great is published - and great projects
 
 That said, there are also plenty of reasons why you may wish to work anonymously, when you work online. Perhaps you are concerned about stalkers or harassment. Perhaps you wish to address themes in your work which might not meet with the approval of your parents or future employers. These are valid considerations, in which case, we advise using an anonymous identity on Github. On our course repository, your work will be indexed by a public-facing name, generally your first name. If you would prefer something else, please inform the professor.
 
-## Ferpa Consent Form
+## FERPA Waiver Form
 
 Fill this form if you want to share your work publicly:
 
-[FERPA consent form](https://forms.gle/JzMiytNsFWDeBGc4A)
+[FERPA Waiver form](https://forms.gle/JzMiytNsFWDeBGc4A)
 
 If you don't fill this form, your work should be private and talk with me how can you do that.
