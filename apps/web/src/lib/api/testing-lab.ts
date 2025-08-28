@@ -3,7 +3,7 @@
 import { environment } from '@/configs/environment';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import { client } from '@/lib/api/generated/client.gen';
-import { postTestingSessions, getTestingSessions as sdkGetTestingSessions } from '@/lib/api/generated/sdk.gen';
+import { getTestingPublicSessions, postTestingSessions, getTestingSessions as sdkGetTestingSessions } from '@/lib/api/generated/sdk.gen';
 import type { CreateTestingLocationDto, TestingLocation, TestingSession, UpdateTestingLocationDto } from '@/lib/api/generated/types.gen';
 
 // Re-export the generated types for convenience
@@ -300,11 +300,14 @@ export interface CreateTestingSessionRequest {
   managerId?: string;
 }
 
-export async function getTestingSessions(): Promise<TestingSession[]> {
-  const skip = 0;
-  const take = 50;
+export async function getTestingSessions(params?: { skip?: number; take?: number; status?: number; tenantId?: string }): Promise<TestingSession[]> {
+  const skip = params?.skip ?? 0;
+  const take = params?.take ?? 50;
   await configureAuthenticatedClient();
-  const response = await sdkGetTestingSessions({ query: { skip, take } });
+  const query: Record<string, string> = { skip: skip.toString(), take: take.toString() };
+  if (typeof params?.status === 'number') query.status = params.status.toString();
+  if (params?.tenantId) query.tenantId = params.tenantId;
+  const response = await sdkGetTestingSessions({ query });
   if ('error' in response && response.error) {
     throw new Error('Failed to fetch testing sessions');
   }
@@ -316,16 +319,13 @@ export async function getTestingSessions(): Promise<TestingSession[]> {
  */
 export async function getPublicTestingSessions(take = 100): Promise<TestingSession[]> {
   try {
-    const res = await fetch(`${environment.apiBaseUrl}/testing/public/sessions?take=${encodeURIComponent(take)}`, {
-      cache: 'no-store',
-      headers: { Accept: 'application/json' },
-      credentials: 'omit',
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
+    // Ensure baseUrl configured (idempotent)
+    client.setConfig({ baseUrl: environment.apiBaseUrl });
+    const response = await getTestingPublicSessions({ query: { take } });
+    if ('error' in response && response.error) return [];
+    return (response as any).data as TestingSession[];
   } catch (e) {
-    console.error('Failed to load public testing sessions:', e instanceof Error ? e.message : e);
+    console.error('Failed to load public testing sessions via SDK:', e instanceof Error ? e.message : e);
     return [];
   }
 }

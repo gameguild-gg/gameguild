@@ -165,14 +165,22 @@ export async function updateTestingSession(
     endTime?: string;
     maxTesters?: number;
     status?: number;
+    locationId?: string;
+    managerId?: string; // alias for managerUserId
   },
 ) {
   await configureAuthenticatedClient();
 
   try {
+    // Map provided partial into TestingSession shape (only sending changed fields)
+    const payload: Partial<TestingSession> = { ...sessionData } as Partial<TestingSession>;
+    if (sessionData.managerId && !('managerUserId' in payload)) {
+      (payload as any).managerUserId = sessionData.managerId;
+    }
+
     const response = await putTestingSessionsById({
       path: { id },
-      body: sessionData as TestingSession,
+      body: payload as TestingSession,
     });
 
     if (!response.data) {
