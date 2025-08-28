@@ -1,19 +1,20 @@
 'use server';
 
-import { 
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
+import {
+  deleteApiUsersById,
   getApiUsers,
   getApiUsersById,
   getApiUsersSearch,
   getApiUsersStatistics,
-  postApiUsers,
-  putApiUsersById,
-  deleteApiUsersById,
-  postApiUsersByIdRestore,
-  putApiUsersByIdBalance,
   patchApiUsersBulkActivate,
-  patchApiUsersBulkDeactivate
+  patchApiUsersBulkDeactivate,
+  postApiUsers,
+  postApiUsersByIdRestore,
+  putApiUsersById,
+  putApiUsersByIdBalance
 } from '@/lib/api/generated/sdk.gen';
-import { UserSortField, SortDirection } from '@/lib/api/generated/types.gen';
+import { SortDirection, UserSortField } from '@/lib/api/generated/types.gen';
 
 export interface User {
   id: string;
@@ -95,6 +96,7 @@ export interface PagedResult<T> {
  * Get all users with optional filtering and pagination
  */
 export async function getUsers(includeDeleted = false, skip = 0, take = 50, isActive?: boolean): Promise<User[]> {
+  await configureAuthenticatedClient();
   const response = await getApiUsers({
     query: { includeDeleted, skip, take, isActive },
   });
@@ -110,6 +112,7 @@ export async function getUsers(includeDeleted = false, skip = 0, take = 50, isAc
  * Get a specific user by ID
  */
 export async function getUser(id: string, includeDeleted = false): Promise<User | null> {
+  await configureAuthenticatedClient();
   const response = await getApiUsersById({
     path: { id },
     query: { includeDeleted },
@@ -129,6 +132,7 @@ export async function getUser(id: string, includeDeleted = false): Promise<User 
  * Create a new user
  */
 export async function createUser(userData: CreateUserRequest): Promise<User> {
+  await configureAuthenticatedClient();
   const response = await postApiUsers({
     body: userData,
   });
@@ -144,6 +148,7 @@ export async function createUser(userData: CreateUserRequest): Promise<User> {
  * Update an existing user
  */
 export async function updateUser(id: string, userData: UpdateUserRequest): Promise<User> {
+  await configureAuthenticatedClient();
   const response = await putApiUsersById({
     path: { id },
     body: userData,
@@ -160,6 +165,7 @@ export async function updateUser(id: string, userData: UpdateUserRequest): Promi
  * Delete a user (soft delete by default)
  */
 export async function deleteUser(id: string, softDelete = true, reason?: string): Promise<void> {
+  await configureAuthenticatedClient();
   const response = await deleteApiUsersById({
     path: { id },
     query: { softDelete, reason },
@@ -174,6 +180,7 @@ export async function deleteUser(id: string, softDelete = true, reason?: string)
  * Restore a soft-deleted user
  */
 export async function restoreUser(id: string, reason?: string): Promise<void> {
+  await configureAuthenticatedClient();
   const response = await postApiUsersByIdRestore({
     path: { id },
     query: reason ? { reason } : undefined,
@@ -188,6 +195,7 @@ export async function restoreUser(id: string, reason?: string): Promise<void> {
  * Update user balance
  */
 export async function updateUserBalance(id: string, balanceData: UpdateUserBalanceRequest): Promise<User> {
+  await configureAuthenticatedClient();
   const response = await putApiUsersByIdBalance({
     path: { id },
     body: balanceData,
@@ -280,7 +288,7 @@ export async function getUserByUsername(username: string, includeDeleted = false
         console.warn('Public user search requires authentication, falling back to authenticated client');
         // Fallback to authenticated client if needed
         const authResponse = await getApiUsersSearch({
-          query: { 
+          query: {
             searchTerm: username,
             includeDeleted,
             take: 1
