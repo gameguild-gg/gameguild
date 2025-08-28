@@ -16,9 +16,9 @@ This document synthesizes feedback from 36 students enrolled in the Data Structu
 
 **Representative Quotes:**
 
-> "I would like to learn how to write algorithms for games. for example npc pathfinding and things like that."
-> "I am excited to see how algorithms and sorts are used in real world context. i.e. I know that a sort can produce an ordered data set, but how is this applied to solve bigger challenges."
-> "I am excited to actually learn some more complex algorithms, as I usually end up overthinking what is needed for some data based assignments and make an abomination of an algorithm."
+- "I would like to learn how to write algorithms for games. for example npc pathfinding and things like that."
+- "I am excited to see how algorithms and sorts are used in real world context. i.e. I know that a sort can produce an ordered data set, but how is this applied to solve bigger challenges."
+- "I am excited to actually learn some more complex algorithms, as I usually end up overthinking what is needed for some data based assignments and make an abomination of an algorithm."
 
 ### 2. Preferred Class Structure & Workload
 
@@ -36,9 +36,9 @@ This document synthesizes feedback from 36 students enrolled in the Data Structu
 
 **Representative Quotes:**
 
-> "I think coding assignments should be the majority of the work, since it would help me get a lot of practice in and be better at remembering the algorithms we use."
-> "I guess an ideal algorithms class like this would have a lot of self implementation assignments so that we don't get lost in the theory of structures and what's best, but instead are able to see and realize why things are better for certain tasks."
-> "I think there should be a lot of hands-on work with them as that is how I personally learn best, by doing rather than reading about it."
+- "I think coding assignments should be the majority of the work, since it would help me get a lot of practice in and be better at remembering the algorithms we use."
+- "I guess an ideal algorithms class like this would have a lot of self implementation assignments so that we don't get lost in the theory of structures and what's best, but instead are able to see and realize why things are better for certain tasks."
+- "I think there should be a lot of hands-on work with them as that is how I personally learn best, by doing rather than reading about it."
 
 ### 3. C++ Confidence Levels
 
@@ -56,9 +56,9 @@ This document synthesizes feedback from 36 students enrolled in the Data Structu
 
 **Representative Quotes:**
 
-> "I am fairly confident in my C++ skills when it comes to what we have already been taught through intro and advanced programming."
-> "I am unfortunately not very confident in C++. I took intro and advanced, and advanced was very hard for me."
-> "I'm pretty confident in my c++ skills because i spent an entire year learning it"
+- "I am fairly confident in my C++ skills when it comes to what we have already been taught through intro and advanced programming."
+- "I am unfortunately not very confident in C++. I took intro and advanced, and advanced was very hard for me."
+- "I'm pretty confident in my c++ skills because i spent an entire year learning it"
 
 ### 4. Understanding of Data Structures & Algorithms
 
@@ -78,9 +78,9 @@ This document synthesizes feedback from 36 students enrolled in the Data Structu
 
 **Representative Quotes:**
 
-> "Data structures and algorithms are ways of searching for data or organizing data to be utilized in a more optimized way later."
-> "To me, data structures are was to store and organize data, and algorithms are methods for processing data with a specific goal in mind (sorting, finding a min or max, identifying trends, etc.)"
-> "Data structures and algorithms, to me, are ways of containing, labeling, and processing data so that it can be utilized in a useful capacity."
+- "Data structures and algorithms are ways of searching for data or organizing data to be utilized in a more optimized way later."
+- "To me, data structures are was to store and organize data, and algorithms are methods for processing data with a specific goal in mind (sorting, finding a min or max, identifying trends, etc.)"
+- "Data structures and algorithms, to me, are ways of containing, labeling, and processing data so that it can be utilized in a useful capacity."
 
 ### 5. AI Assistant Tools Perspectives
 
@@ -99,9 +99,9 @@ This document synthesizes feedback from 36 students enrolled in the Data Structu
 
 **Representative Quotes:**
 
-> "I think AI assistants are a little threatening to the job market, but can be useful as a tool, not a replacement."
-> "I refuse to use AI to complete assignments purely out of spite for all the people I have known, either personally or through stories, who use AI in stupid ways."
-> "I think that AI should only be used to learn the content if you are struggling. I don't think it should, or is even reliable enough, to code."
+- "I think AI assistants are a little threatening to the job market, but can be useful as a tool, not a replacement."
+- "I refuse to use AI to complete assignments purely out of spite for all the people I have known, either personally or through stories, who use AI in stupid ways."
+- "I think that AI should only be used to learn the content if you are struggling. I don't think it should, or is even reliable enough, to code."
 
 ### 6. Schedule & Course Structure Feedback
 
@@ -114,7 +114,7 @@ This document synthesizes feedback from 36 students enrolled in the Data Structu
 
 **Specific Feedback:**
 
-> "I have already noticed that for this class and several others, I have assignments due on random days we don't have class (such as Saturday night), and I find that a little annoying."
+- "I have already noticed that for this class and several others, I have assignments due on random days we don't have class (such as Saturday night), and I find that a little annoying."
 
 ## Student Profiles & Concerns
 
