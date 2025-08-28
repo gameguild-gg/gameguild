@@ -1,6 +1,6 @@
-import { createContext, ReactNode, useContext } from 'react';
+import { Program } from '@/components/legacy/types/program';
+import { createContext, ReactNode, useContext, useEffect } from 'react';
 import { BaseFilterState, FilterProvider, useFilterContext } from '../../common/filters';
-import { Program } from '@/lib/programs/programs.actions';
 
 // Program specific filter state
 export type ProgramFilterState = BaseFilterState;
@@ -34,8 +34,7 @@ function filterAndSortPrograms(programs: Program[], filters: ProgramFilterState)
     .filter((program) => {
       const matchesSearch =
         program.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        (program.description && program.description.toLowerCase().includes(filters.searchTerm.toLowerCase())) ||
-        (program.shortDescription && program.shortDescription.toLowerCase().includes(filters.searchTerm.toLowerCase()));
+        (program.description && program.description.toLowerCase().includes(filters.searchTerm.toLowerCase()));
 
       const matchesStatus = filters.selectedStatuses.length === 0 || filters.selectedStatuses.includes(program.status);
 
@@ -67,11 +66,8 @@ interface ProgramFilterProviderProps {
   initialViewMode?: 'cards' | 'row' | 'table';
 }
 
-// Get default view mode based on screen size
+// Stable SSR-safe default; adjust after mount to reflect viewport.
 function getDefaultViewMode(): 'cards' | 'row' | 'table' {
-  if (typeof window !== 'undefined') {
-    return window.innerWidth < 1024 ? 'row' : 'cards';
-  }
   return 'cards';
 }
 
@@ -96,6 +92,17 @@ function ProgramFilterProviderInner({ children, programs }: { children: ReactNod
   const toggleVisibility = (visibility: string) => {
     filterContext.toggleType(visibility);
   };
+
+  // Adjust responsively after client mount (non-blocking) to avoid hydration diff.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const preferred: 'cards' | 'row' | 'table' = window.innerWidth < 1024 ? 'row' : 'cards';
+      if (preferred !== state.viewMode) {
+        filterContext.setViewMode(preferred);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value: ProgramFilterContextType = {
     state,
