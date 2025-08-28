@@ -1,8 +1,10 @@
 'use server';
 
+import { environment } from '@/configs/environment';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import { client } from '@/lib/api/generated/client.gen';
-import type { TestingLocation, LocationStatus, TestingSession, CreateTestingLocationDto, UpdateTestingLocationDto } from '@/lib/api/generated/types.gen';
+import { postTestingSessions, getTestingSessions as sdkGetTestingSessions } from '@/lib/api/generated/sdk.gen';
+import type { CreateTestingLocationDto, TestingLocation, TestingSession, UpdateTestingLocationDto } from '@/lib/api/generated/types.gen';
 
 // Re-export the generated types for convenience
 export type { CreateTestingLocationDto as CreateTestingLocationRequest, UpdateTestingLocationDto as UpdateTestingLocationRequest } from '@/lib/api/generated/types.gen';
@@ -69,8 +71,8 @@ export async function getTestingLocations(skip = 0, take = 50): Promise<TestingL
 
     if (response.error) {
       // Handle different error types
-      const errorMessage = typeof response.error === 'object' 
-        ? JSON.stringify(response.error) 
+      const errorMessage = typeof response.error === 'object'
+        ? JSON.stringify(response.error)
         : String(response.error);
       throw new Error(`Failed to fetch testing locations: ${errorMessage}`);
     }
@@ -120,8 +122,8 @@ export async function createTestingLocation(locationData: CreateTestingLocationD
 
     if (response.error) {
       // Handle different error types
-      const errorMessage = typeof response.error === 'object' 
-        ? JSON.stringify(response.error) 
+      const errorMessage = typeof response.error === 'object'
+        ? JSON.stringify(response.error)
         : String(response.error);
       throw new Error(`Failed to create testing location: ${errorMessage}`);
     }
@@ -150,8 +152,8 @@ export async function updateTestingLocation(id: string, locationData: UpdateTest
 
     if (response.error) {
       // Handle different error types
-      const errorMessage = typeof response.error === 'object' 
-        ? JSON.stringify(response.error) 
+      const errorMessage = typeof response.error === 'object'
+        ? JSON.stringify(response.error)
         : String(response.error);
       throw new Error(`Failed to update testing location: ${errorMessage}`);
     }
@@ -179,8 +181,8 @@ export async function deleteTestingLocation(id: string): Promise<void> {
 
     if (response.error) {
       // Handle different error types
-      const errorMessage = typeof response.error === 'object' 
-        ? JSON.stringify(response.error) 
+      const errorMessage = typeof response.error === 'object'
+        ? JSON.stringify(response.error)
         : String(response.error);
       throw new Error(`Failed to delete testing location: ${errorMessage}`);
     }
@@ -299,65 +301,52 @@ export interface CreateTestingSessionRequest {
 }
 
 export async function getTestingSessions(): Promise<TestingSession[]> {
-  // Mock implementation - replace with actual API call
+  const skip = 0;
+  const take = 50;
   await configureAuthenticatedClient();
+  const response = await sdkGetTestingSessions({ query: { skip, take } });
+  if ('error' in response && response.error) {
+    throw new Error('Failed to fetch testing sessions');
+  }
+  return (response as any).data as TestingSession[];
+}
 
-  // Return mock data for now
-  return [
-    {
-      id: '1',
-      sessionName: 'Morning Testing Session',
-      sessionDate: '2024-01-20',
-      startTime: '09:00',
-      endTime: '12:00',
-      maxTesters: 10,
-      registeredTesterCount: 5,
-      registeredProjectMemberCount: 2,
-      registeredProjectCount: 3,
-      status: 1, // Scheduled
-      locationId: '1',
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-    },
-    {
-      id: '2',
-      sessionName: 'Afternoon Testing Session',
-      sessionDate: '2024-01-20',
-      startTime: '14:00',
-      endTime: '17:00',
-      maxTesters: 8,
-      registeredTesterCount: 3,
-      registeredProjectMemberCount: 1,
-      registeredProjectCount: 2,
-      status: 0, // Draft
-      locationId: '2',
-      createdAt: '2024-01-15T11:00:00Z',
-      updatedAt: '2024-01-15T11:00:00Z',
-    },
-  ];
+/**
+ * Public sessions (unauthenticated) helper, no auth client configuration.
+ */
+export async function getPublicTestingSessions(take = 100): Promise<TestingSession[]> {
+  try {
+    const res = await fetch(`${environment.apiBaseUrl}/testing/public/sessions?take=${encodeURIComponent(take)}`, {
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+      credentials: 'omit',
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    console.error('Failed to load public testing sessions:', e instanceof Error ? e.message : e);
+    return [];
+  }
 }
 
 export async function createTestingSession(sessionData: CreateTestingSessionRequest): Promise<TestingSession> {
-  // Mock implementation - replace with actual API call
   await configureAuthenticatedClient();
-
-  const newSession: TestingSession = {
-    id: Date.now().toString(),
-    sessionName: sessionData.sessionName,
-    sessionDate: sessionData.sessionDate,
-    startTime: sessionData.startTime,
-    endTime: sessionData.endTime,
-    locationId: sessionData.locationId,
-    maxTesters: sessionData.maxTesters,
-    registeredTesterCount: 0,
-    registeredProjectMemberCount: 0,
-    registeredProjectCount: 0,
-    status: 0, // Draft
-    testingRequestId: sessionData.testingRequestId,
-    managerId: sessionData.managerId,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  return newSession;
+  // The generated endpoint expects the DTO shape; adapt if naming differs.
+  const response = await postTestingSessions({
+    body: {
+      sessionName: sessionData.sessionName,
+      sessionDate: sessionData.sessionDate,
+      startTime: sessionData.startTime,
+      endTime: sessionData.endTime,
+      locationId: sessionData.locationId,
+      maxTesters: sessionData.maxTesters,
+      testingRequestId: sessionData.testingRequestId,
+      managerId: sessionData.managerId,
+    } as any
+  });
+  if ('error' in response && response.error) {
+    throw new Error('Failed to create testing session');
+  }
+  return (response as any).data as TestingSession;
 }

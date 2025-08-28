@@ -1,7 +1,7 @@
 import React from 'react';
 
-import {LogOut, Settings, User} from 'lucide-react';
-import {Button} from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,11 +10,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {Avatar, AvatarFallback, AvatarImage} from '@/components/ui/avatar';
-import {auth} from '@/lib/auth';
-import {SidebarTrigger} from '@/components/ui/sidebar';
-import {ThemeToggle} from '@/components/theme';
-import {forceSignOut} from '@/lib/auth/auth.actions';
+import { LogOut, Settings, User } from 'lucide-react';
+// Import auth directly from root auth module where NextAuth instance exports it
+import { auth } from '@/auth';
+import { ThemeToggle } from '@/components/theme';
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import { forceSignOut } from '@/lib/auth/auth.actions';
 
 export const DashboardHeader = async (): Promise<React.JSX.Element> => {
   const session = await auth();
@@ -54,7 +55,7 @@ export const DashboardHeader = async (): Promise<React.JSX.Element> => {
       <div className="flex flex-1 justify-between content-between items-center gap-4">
         <div className="">
           <SidebarTrigger
-            className="text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all duration-200 backdrop-blur-sm"/>
+            className="text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all duration-200 backdrop-blur-sm" />
         </div>
 
         {/* Search Bar */}
@@ -74,7 +75,7 @@ export const DashboardHeader = async (): Promise<React.JSX.Element> => {
         {/* Actions */}
         <div className="flex items-center gap-2">
           {/* Theme Toggle */}
-          <ThemeToggle/>
+          <ThemeToggle />
 
           {/* User Menu */}
           {session?.user && (
@@ -83,7 +84,7 @@ export const DashboardHeader = async (): Promise<React.JSX.Element> => {
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-slate-800/50">
                   <Avatar className="h-8 w-8">
                     {userImage ? (
-                      <AvatarImage src={userImage} alt={userDisplayName}/>
+                      <AvatarImage src={userImage} alt={userDisplayName} />
                     ) : (
                       <AvatarFallback className="bg-slate-700 text-white">{userInitials}</AvatarFallback>
                     )}
@@ -97,20 +98,20 @@ export const DashboardHeader = async (): Promise<React.JSX.Element> => {
                     <p className="text-xs leading-none text-slate-400">{userEmail}</p>
                   </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-slate-700"/>
+                <DropdownMenuSeparator className="bg-slate-700" />
                 <DropdownMenuItem className="text-white hover:bg-slate-700/50">
-                  <User className="mr-2 h-4 w-4"/>
+                  <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-white hover:bg-slate-700/50">
-                  <Settings className="mr-2 h-4 w-4"/>
+                  <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-slate-700"/>
+                <DropdownMenuSeparator className="bg-slate-700" />
                 <form action={handleLogout}>
                   <DropdownMenuItem asChild>
                     <button type="submit" className="w-full text-white hover:bg-slate-700/50 flex items-center">
-                      <LogOut className="mr-2 h-4 w-4"/>
+                      <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
                     </button>
                   </DropdownMenuItem>

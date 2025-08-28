@@ -1,6 +1,6 @@
-import { createContext, ReactNode, useContext } from 'react';
+import { adaptTestingSessionForComponent, SESSION_STATUS, TestSession } from '@/lib/admin';
+import { createContext, ReactNode, useContext, useEffect } from 'react';
 import { BaseFilterState, FilterProvider, useFilterContext } from '../../common/filters';
-import { TestSession } from '@/lib/api/testing-lab/test-sessions';
 
 // Testing Lab specific filter state
 export type TestingLabFilterState = BaseFilterState;
@@ -33,13 +33,21 @@ export function useTestingLabFilters() {
 function filterAndSortSessions(sessions: TestSession[], filters: TestingLabFilterState): TestSession[] {
   return sessions
     .filter((session) => {
-      const matchesSearch = session.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) || session.description.toLowerCase().includes(filters.searchTerm.toLowerCase());
-      const matchesStatus = filters.selectedStatuses.length === 0 || filters.selectedStatuses.includes(session.status);
-      const matchesType = filters.selectedTypes.length === 0 || filters.selectedTypes.includes(session.sessionType);
+      const adapted = adaptTestingSessionForComponent(session);
+      const matchesSearch = adapted.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) || adapted.description.toLowerCase().includes(filters.searchTerm.toLowerCase());
+
+      // Convert numeric status to string for comparison
+      const statusString = adapted.status === SESSION_STATUS.SCHEDULED ? 'open' : adapted.status === SESSION_STATUS.ACTIVE ? 'active' : adapted.status === SESSION_STATUS.COMPLETED ? 'completed' : 'cancelled';
+
+      const matchesStatus = filters.selectedStatuses.length === 0 || filters.selectedStatuses.includes(statusString);
+      const matchesType = filters.selectedTypes.length === 0 || filters.selectedTypes.includes(adapted.sessionType);
 
       return matchesSearch && matchesStatus && matchesType;
     })
     .sort((a, b) => {
+      const adaptedA = adaptTestingSessionForComponent(a);
+      const adaptedB = adaptTestingSessionForComponent(b);
+
       // Define status priority order
       const statusPriority: Record<string, number> = {
         'in-progress': 0,
@@ -60,7 +68,7 @@ function filterAndSortSessions(sessions: TestSession[], filters: TestingLabFilte
       }
 
       // Fallback to title if no date comparison possible
-      return a.title.localeCompare(b.title);
+      return adaptedA.title.localeCompare(adaptedB.title);
     });
 }
 
@@ -70,11 +78,8 @@ interface TestingLabFilterProviderProps {
   initialViewMode?: 'cards' | 'row' | 'table';
 }
 
-// Get default view mode based on screen size
+// Stable default for SSR; adjust responsively after mount to avoid hydration mismatch.
 function getDefaultViewMode(): 'cards' | 'row' | 'table' {
-  if (typeof window !== 'undefined') {
-    return window.innerWidth < 1024 ? 'row' : 'cards';
-  }
   return 'cards';
 }
 
@@ -95,6 +100,16 @@ function TestingLabFilterProviderInner({ children, sessions }: { children: React
 
   const state = filterContext.state as TestingLabFilterState;
   const filteredSessions = filterAndSortSessions(sessions, state);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const preferred: 'cards' | 'row' | 'table' = window.innerWidth < 1024 ? 'row' : 'cards';
+      if (preferred !== state.viewMode) {
+        filterContext.setViewMode(preferred);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value: TestingLabFilterContextType = {
     state,
