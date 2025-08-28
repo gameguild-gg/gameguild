@@ -1,3 +1,10 @@
+## [2.15.3](https://github.com/gameguild-gg/gameguild/compare/v2.15.2...v2.15.3) (2025-08-28)
+
+
+### Bug Fixes
+
+* **courses:** expectations and add week01 content ([2a3e65c](https://github.com/gameguild-gg/gameguild/commit/2a3e65c1e2116467d2a31143024c22ba61db0490))
+
 ## [2.15.2](https://github.com/gameguild-gg/gameguild/compare/v2.15.1...v2.15.2) (2025-08-28)
 
 
