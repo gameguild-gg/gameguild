@@ -1,21 +1,35 @@
 'use client';
 
-import { Badge }                                                                                                              from '@/components/ui/badge';
-import { Button }                                                                                                             from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle }                                                          from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle }                                  from '@/components/ui/dialog';
-import { Input }                                                                                                              from '@/components/ui/input';
-import { Label }                                                                                                              from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue }                                                      from '@/components/ui/select';
-import { Separator }                                                                                                          from '@/components/ui/separator';
-import { Switch }                                                                                                             from '@/components/ui/switch';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow }                                                      from '@/components/ui/table';
-import { Textarea }                                                                                                           from '@/components/ui/textarea';
-import type { LocationStatus, TestingLocation as ApiTestingLocation, UserRoleAssignment as GeneratedUserRoleAssignment, User } from '@/lib/api/generated/types.gen';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import type { TestingLocation as ApiTestingLocation, UserRoleAssignment as GeneratedUserRoleAssignment, LocationStatus } from '@/lib/api/generated/types.gen';
 import { CollaboratorsSettings } from './sections/collaborators-settings';
 // Legacy permission conversion utilities imported previously have been removed to avoid dual models.
 // We now rely exclusively on aggregated boolean permissions returned by server actions in actions/testing-lab-roles.
-import { RoleTemplate } from '@/actions/testing-lab-roles';
+import {
+  createTestingLocationAction,
+  deleteTestingLocationAction,
+  getTestingLocationsAction,
+  updateTestingLocationAction
+} from '@/lib/actions/testing-lab-locations';
+import { createRoleTemplateAction, deleteRoleTemplateAction, getTestingLabRoleTemplatesAction, RoleTemplate, updateRoleTemplateAction } from '@/lib/actions/testing-lab-roles';
+import { getTestingLabSettings, updateTestingLabSettings } from '@/lib/actions/testing-lab-settings';
+import {
+  assignUserRoleAction,
+  getTestingLabUserRoleAssignmentsAction,
+  removeUserRoleAction
+} from '@/lib/actions/testing-lab-user-roles';
+import { ChevronRight, Edit, MapPin, Plus, RefreshCw, Settings, Shield, Trash2, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 // Helper to map aggregated API permissions (role.permissions) to form permission shape
 function mapAggregatedPermissionsToForm(agg: any) {
@@ -48,28 +62,6 @@ function mapAggregatedPermissionsToForm(agg: any) {
     readParticipant: !!(agg.canViewParticipants ?? agg.CanViewParticipants),
   };
 }
-import { getTestingLabSettings, updateTestingLabSettings } from '@/actions/testing-lab-settings';
-import { 
-  getTestingLocationsAction, 
-  createTestingLocationAction, 
-  updateTestingLocationAction, 
-  deleteTestingLocationAction 
-} from '@/actions/testing-lab-locations';
-import { 
-  getTestingLabRoleTemplatesAction,
-  createRoleTemplateAction,
-  updateRoleTemplateAction,
-  deleteRoleTemplateAction 
-} from '@/actions/testing-lab-roles';
-import { 
-  getTestingLabUserRoleAssignmentsAction,
-  assignUserRoleAction,
-  removeUserRoleAction 
-} from '@/actions/testing-lab-user-roles';
-import { getUsers } from '@/lib/api/users';
-import { ChevronRight, Edit, MapPin, Plus, RefreshCw, Settings, Shield, Trash2, UserCheck, UserMinus, UserPlus, Users }                  from 'lucide-react';
-import { useEffect, useState }                                                                                                from 'react';
-import { toast }                                                                                                              from 'sonner';
 
 // Dual Color Chip Component for Location-Role combinations
 interface DualColorChipProps {
@@ -115,18 +107,18 @@ function DualColorChip({
 
   return (
     <div
-      className={ `inline-flex items-center rounded-md font-medium transition-colors border ${ borderColor } hover:shadow-sm cursor-default` }
-      title={ tooltip || `${ leftText } → ${ rightText }${ !isActive ? ' (Inactive)' : '' }` }
+      className={`inline-flex items-center rounded-md font-medium transition-colors border ${borderColor} hover:shadow-sm cursor-default`}
+      title={tooltip || `${leftText} → ${rightText}${!isActive ? ' (Inactive)' : ''}`}
     >
-      {/* Left part (Location) */ }
-      <span className={ `${ sizeClasses } rounded-l-md ${ colorClasses[leftColor] }` }>
-        { leftText }
+      {/* Left part (Location) */}
+      <span className={`${sizeClasses} rounded-l-md ${colorClasses[leftColor]}`}>
+        {leftText}
       </span>
-      {/* Separator */ }
-      <div className={ `w-px h-4 ${ separatorColor }` }/>
-      {/* Right part (Role) */ }
-      <span className={ `${ sizeClasses } rounded-r-md ${ colorClasses[rightColor] }` }>
-        { rightText }
+      {/* Separator */}
+      <div className={`w-px h-4 ${separatorColor}`} />
+      {/* Right part (Role) */}
+      <span className={`${sizeClasses} rounded-r-md ${colorClasses[rightColor]}`}>
+        {rightText}
       </span>
     </div>
   );
@@ -312,43 +304,43 @@ const initialRoleFormData: RoleFormData = {
   },
 };
 
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { GeneralSettings, GeneralSettingsState } from './sections/general-settings';
 
-export function TestingLabSettings({ initialSection = 'general' }: { initialSection?: string }) {
+export function TestingLabSettings({ initialSection = 'general', sectionOnly = false }: { initialSection?: string; sectionOnly?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   // Navigation state
-  const [ currentSection, setCurrentSection ] = useState(initialSection);
+  const [currentSection, setCurrentSection] = useState(initialSection);
 
   // Data states
   const [locations, setLocations] = useState<TestingLocation[]>([]);
   const [managers, setManagers] = useState<TestingLabManager[]>([]);
-  const [ roles, setRoles ] = useState<RoleTemplate[]>([]);
-  const [ userRoles, setUserRoles ] = useState<UserRoleAssignment[]>([]);
+  const [roles, setRoles] = useState<RoleTemplate[]>([]);
+  const [userRoles, setUserRoles] = useState<UserRoleAssignment[]>([]);
 
   // Dialog states
   const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
   const [isManagerDialogOpen, setIsManagerDialogOpen] = useState(false);
-  const [ isRoleDialogOpen, setIsRoleDialogOpen ] = useState(false);
-  const [ isUserRoleDialogOpen, setIsUserRoleDialogOpen ] = useState(false);
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [isUserRoleDialogOpen, setIsUserRoleDialogOpen] = useState(false);
 
   // Editing states
   const [editingLocation, setEditingLocation] = useState<TestingLocation | null>(null);
   const [editingManager, setEditingManager] = useState<TestingLabManager | null>(null);
-  const [ editingRole, setEditingRole ] = useState<RoleTemplate | null>(null);
-  const [ originalRoleId, setOriginalRoleId ] = useState<string | null>(null); // Store original ID for API calls
-  const [ originalRoleName, setOriginalRoleName ] = useState<string | null>(null); // Store original name for comparison
-  const [ selectedUserEmail, setSelectedUserEmail ] = useState<string>('');
+  const [editingRole, setEditingRole] = useState<RoleTemplate | null>(null);
+  const [originalRoleId, setOriginalRoleId] = useState<string | null>(null); // Store original ID for API calls
+  const [originalRoleName, setOriginalRoleName] = useState<string | null>(null); // Store original name for comparison
+  const [selectedUserEmail, setSelectedUserEmail] = useState<string>('');
 
   // Form states
   const [formData, setFormData] = useState<LocationFormData>(initialFormData);
   const [managerFormData, setManagerFormData] = useState<ManagerFormData>(initialManagerFormData);
-  const [ roleFormData, setRoleFormData ] = useState<RoleFormData>(initialRoleFormData);
+  const [roleFormData, setRoleFormData] = useState<RoleFormData>(initialRoleFormData);
   const [isLoading, setIsLoading] = useState(false);
 
   // General settings state
-  const [ generalSettings, setGeneralSettings ] = useState<GeneralSettingsState>({
+  const [generalSettings, setGeneralSettings] = useState<GeneralSettingsState>({
     labName: 'Testing Lab',
     description: 'Primary game testing facility',
     timezone: 'UTC',
@@ -374,7 +366,7 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
     const settingsIndex = pathname.indexOf('/settings');
     if (settingsIndex === -1) return; // unexpected, abort
     const base = pathname.substring(0, settingsIndex + '/settings'.length);
-    try { router.push(`${base}/${sectionId}`); } catch {}
+    try { router.push(`${base}/${sectionId}`); } catch { }
   };
 
   // Load locations and managers on component mount
@@ -393,7 +385,7 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
       setLocations(apiLocations as TestingLocation[]);
     } catch (error) {
       console.error('Failed to load locations:', error);
-      
+
       // Provide user feedback about the error
       let shouldUseMockData = false;
       if (error instanceof Error) {
@@ -555,27 +547,37 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
     setIsLocationDialogOpen(true);
   };
 
+  // Generic confirm dialog state
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<null | (() => Promise<void>)>(null);
+  const [confirmTitle, setConfirmTitle] = useState('Confirm Action');
+  const [confirmDescription, setConfirmDescription] = useState('Are you sure?');
+  const [confirmBusy, setConfirmBusy] = useState(false);
+
+  function openConfirm(opts: { title: string; description: string; onConfirm: () => Promise<void> }) {
+    setConfirmTitle(opts.title);
+    setConfirmDescription(opts.description);
+    setConfirmAction(() => opts.onConfirm);
+    setConfirmOpen(true);
+  }
+
   const handleDeleteLocation = async (id: string) => {
     const locationToDelete = locations.find(loc => loc.id === id);
     const locationName = locationToDelete?.name || 'this location';
-    
-    if (!confirm(`Are you sure you want to delete "${locationName}"? This action cannot be undone and may affect any ongoing testing sessions at this location.`)) {
-      return;
-    }
-
-    try {
-      await deleteTestingLocationAction(id);
-      setLocations(locations.filter(location => location.id !== id));
-      toast.success('Location deleted successfully');
-    } catch (error) {
-      console.warn('Failed to delete location:', error);
-      
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error('An unexpected error occurred. Please try again.');
+    openConfirm({
+      title: 'Delete Location',
+      description: `Delete "${locationName}"? This cannot be undone and may impact ongoing sessions.`,
+      onConfirm: async () => {
+        try {
+          await deleteTestingLocationAction(id);
+          setLocations(prev => prev.filter(location => location.id !== id));
+          toast.success('Location deleted successfully');
+        } catch (error) {
+          console.warn('Failed to delete location:', error);
+          if (error instanceof Error) toast.error(error.message); else toast.error('Unexpected error deleting location');
+        }
       }
-    }
+    });
   };
 
   const handleCreateManager = () => {
@@ -595,28 +597,53 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
     setIsManagerDialogOpen(true);
   };
 
-  const handleDeleteManager = async (managerId: string) => {
-    if (!confirm('Are you sure you want to remove this manager? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      // TODO: Replace with actual API call
-      setManagers(managers.filter((mgr) => mgr.id !== managerId));
-      toast.success('Manager removed successfully');
-    } catch (error) {
-      console.error('Failed to remove manager:', error);
-      toast.error('Failed to remove manager');
-    }
+  const handleDeleteManager = async (managerIdOrUserId: string) => {
+    const targetManager = managers.find(m => m.id === managerIdOrUserId) || managers.find(m => m.userId === managerIdOrUserId);
+    const name = targetManager ? `${targetManager.firstName || ''} ${targetManager.lastName || ''}`.trim() || targetManager.email : 'this collaborator';
+    openConfirm({
+      title: 'Remove Collaborator',
+      description: `Remove ${name}? This removes their Testing Lab roles.`,
+      onConfirm: async () => {
+        try {
+          const userId = targetManager?.userId;
+          if (userId) {
+            const assignmentsForUser = userRoles.filter(a => a.userId === userId);
+            for (const a of assignmentsForUser) {
+              if (a.roleName) {
+                try { await removeUserRoleAction(userId, a.roleName); } catch (e) { console.warn('Revoke failed', e); }
+              }
+            }
+            if (targetManager?.role && !assignmentsForUser.some(a => a.roleName === targetManager.role)) {
+              try { await removeUserRoleAction(userId, targetManager.role); } catch (e) { console.warn('Manager role revoke failed', e); }
+            }
+          }
+          setManagers(prev => prev.filter(m => m.id !== targetManager?.id));
+          if (targetManager?.userId) {
+            const removedAssignments = userRoles.filter(ur => ur.userId === targetManager.userId);
+            if (removedAssignments.length) {
+              setRoles(prev => prev.map(r => {
+                const removedCount = removedAssignments.filter(a => a.roleTemplateId === r.id).length;
+                return removedCount ? { ...r, userCount: Math.max((r.userCount || 0) - removedCount, 0) } : r;
+              }));
+            }
+            setUserRoles(prev => prev.filter(ur => ur.userId !== targetManager.userId));
+          }
+          toast.success('Collaborator removed');
+        } catch (error) {
+          console.error('Failed to remove collaborator:', error);
+          toast.error('Failed to remove collaborator');
+        }
+      }
+    });
   };
 
   const handleSubmitLocation = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (editingLocation) {
-  // If the existing location has a non-GUID id (e.g., locally generated fallback like a numeric or timestamp),
-  // we should treat this as an unsynced local record and perform a create instead of update.
+        // If the existing location has a non-GUID id (e.g., locally generated fallback like a numeric or timestamp),
+        // we should treat this as an unsynced local record and perform a create instead of update.
         const targetId = editingLocation.id!;
         const locationPayload = {
           name: formData.name,
@@ -678,7 +705,7 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
             equipmentAvailable: formData.equipmentAvailable,
             status: stringToLocationStatus(formData.status),
           });
-          setLocations([ ...locations, newLocation as TestingLocation ]);
+          setLocations([...locations, newLocation as TestingLocation]);
           toast.success('Location created successfully');
         } catch (apiError) {
           // Fallback to local creation when API is unavailable
@@ -699,7 +726,7 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
           toast.success('Location created (demo mode)');
         }
       }
-      
+
       setIsLocationDialogOpen(false);
       setFormData(initialFormData);
       setEditingLocation(null);
@@ -711,7 +738,7 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
 
   const handleSubmitManager = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (editingManager) {
         // Update existing manager
@@ -737,7 +764,7 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
         setManagers([...managers, newManager]);
         toast.success('Manager invitation sent successfully');
       }
-      
+
       setIsManagerDialogOpen(false);
       setManagerFormData(initialManagerFormData);
       setEditingManager(null);
@@ -759,10 +786,10 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
     console.log('Full role object:', role);
     console.log('role.permissions:', role.permissions);
     console.log('role.permissionTemplates:', role.permissionTemplates);
-    
-  // Map aggregated permissions object to form shape (single source of truth)
-  const finalPerms = mapAggregatedPermissionsToForm(role.permissions);
-  console.log('Mapped permissions from aggregate (single model):', finalPerms);
+
+    // Map aggregated permissions object to form shape (single source of truth)
+    const finalPerms = mapAggregatedPermissionsToForm(role.permissions);
+    console.log('Mapped permissions from aggregate (single model):', finalPerms);
 
     setEditingRole(role);
     setOriginalRoleId(role.id);
@@ -876,17 +903,17 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
         roleName: selectedRole.name,
         assignedAt: new Date().toISOString(),
         isActive: true,
-  // Default module context for Testing Lab (cast to satisfy generated type expectations)
-  module: 'TestingLab' as any,
+        // Default module context for Testing Lab (cast to satisfy generated type expectations)
+        module: 'TestingLab' as any,
       };
 
-      setUserRoles([ ...userRoles, compatibleAssignment ]);
+      setUserRoles([...userRoles, compatibleAssignment]);
 
       // Update role user count
       setRoles(roles.map(r =>
         r.id === selectedRole.id
-        ? { ...r, userCount: (r.userCount || 0) + 1 }
-        : r,
+          ? { ...r, userCount: (r.userCount || 0) + 1 }
+          : r,
       ));
 
       toast.success('Role assigned successfully');
@@ -909,8 +936,8 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
         // Update role user count
         setRoles(roles.map(r =>
           r.id === assignment.roleTemplateId
-          ? { ...r, userCount: Math.max((r.userCount || 1) - 1, 0) }
-          : r,
+            ? { ...r, userCount: Math.max((r.userCount || 1) - 1, 0) }
+            : r,
         ));
 
         toast.success('Role assignment removed');
@@ -934,81 +961,95 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
     }
   };
 
+  const sectionContent = (
+    <>
+      {currentSection === 'general' && <GeneralSettings generalSettings={generalSettings} setGeneralSettings={setGeneralSettings} saveGeneralSettings={saveGeneralSettings} />}
+      {currentSection === 'collaborators' && (
+        <CollaboratorsSettings
+          managers={managers}
+          roles={roles}
+          userRoles={userRoles}
+          locations={locations}
+          onCreateManager={handleCreateManager}
+          onEditManager={handleEditManager}
+          onDeleteManager={handleDeleteManager}
+          onEditRole={handleEditRole}
+          onAssignRole={handleAssignRole}
+          onRemoveRole={handleRemoveUserRole}
+          onRoleAssigned={(assignment) => {
+            if (userRoles.some(ur => ur.userId === assignment.userId && ur.roleName === assignment.roleName)) return;
+            setUserRoles(prev => [...prev, assignment]);
+            setRoles(prev => prev.map(r => r.id === assignment.roleTemplateId ? { ...r, userCount: (r.userCount || 0) + 1 } : r));
+          }}
+        />
+      )}
+      {currentSection === 'locations' && (
+        <LocationsSettings
+          locations={locations}
+          onCreateLocation={handleCreateLocation}
+          onEditLocation={handleEditLocation}
+          onDeleteLocation={handleDeleteLocation}
+          onRefreshLocations={loadLocations}
+          isLoading={isLoading}
+        />
+      )}
+      {currentSection === 'roles' && (
+        <RolesSettings
+          roles={roles}
+          onCreateRole={handleCreateRole}
+          onEditRole={handleEditRole}
+          onDeleteRole={handleDeleteRole}
+        />
+      )}
+    </>
+  );
+
+  if (sectionOnly) {
+    return <div className="flex flex-col flex-1">{sectionContent}</div>;
+  }
+
   return (
     <div className="flex flex-row flex-1">
-      {/* Sidebar Navigation */ }
+      {/* Sidebar Navigation */}
       <div className="w-64 border-r border-border bg-muted/30">
         <div className="p-6">
           <nav className="space-y-1">
-            { navigationItems.map((item) => {
+            {navigationItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentSection === item.id;
               return (
                 <button
-                  key={ item.id }
-                  onClick={ () => handleNavigate(item.id) }
-                  className={ `w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${
-                    isActive
+                  key={item.id}
+                  onClick={() => handleNavigate(item.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${isActive
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  }` }
+                    }`}
                 >
-                  <Icon className="h-4 w-4"/>
-                  { item.label }
-                  { isActive && <ChevronRight className="h-4 w-4 ml-auto"/> }
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                  {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
                 </button>
               );
-            }) }
+            })}
           </nav>
         </div>
       </div>
-      {/* Main Content */ }
+      {/* Main Content */}
       <div className="flex flex-col flex-1 items-center justify-center">
         <div className="flex flex-1 container">
           <div className="flex flex-col flex-1 ">
-            { currentSection === 'general' && <GeneralSettings generalSettings={ generalSettings } setGeneralSettings={ setGeneralSettings } saveGeneralSettings={ saveGeneralSettings }/> }
-            { currentSection === 'collaborators' && (
-              <CollaboratorsSettings
-                managers={ managers }
-                roles={ roles }
-                userRoles={ userRoles }
-                locations={ locations }
-                onCreateManager={ handleCreateManager }
-                onEditManager={ handleEditManager }
-                onDeleteManager={ handleDeleteManager }
-                onEditRole={ handleEditRole }
-                onAssignRole={ handleAssignRole }
-                onRemoveRole={ handleRemoveUserRole }
-              />
-            ) }
-            { currentSection === 'locations' && (
-              <LocationsSettings
-                locations={ locations }
-                onCreateLocation={ handleCreateLocation }
-                onEditLocation={ handleEditLocation }
-                onDeleteLocation={ handleDeleteLocation }
-                onRefreshLocations={ loadLocations }
-                isLoading={ isLoading }
-              />
-            ) }
-            { currentSection === 'roles' && (
-              <RolesSettings
-                roles={ roles }
-                onCreateRole={ handleCreateRole }
-                onEditRole={ handleEditRole }
-                onDeleteRole={ handleDeleteRole }
-              />
-            ) }
+            {sectionContent}
           </div>
         </div>
       </div>
-      {/* Dialogs */ }
+      {/* Dialogs */}
       <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{ editingLocation ? 'Edit Location' : 'Create New Location' }</DialogTitle>
+            <DialogTitle>{editingLocation ? 'Edit Location' : 'Create New Location'}</DialogTitle>
             <DialogDescription>
-              { editingLocation ? 'Update the location details' : 'Add a new testing location to your lab' }
+              {editingLocation ? 'Update the location details' : 'Add a new testing location to your lab'}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -1016,8 +1057,8 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
               <Label htmlFor="name">Location Name *</Label>
               <Input
                 id="name"
-                value={ formData.name }
-                onChange={ (e) => setFormData({ ...formData, name: e.target.value }) }
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Main Testing Lab, VR Suite, Mobile Lab"
                 required
               />
@@ -1027,7 +1068,7 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={ (e) => setFormData({ ...formData, description: e.target.value }) }
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Describe the testing environment, specializations, or unique features"
                 className="min-h-[60px]"
               />
@@ -1037,7 +1078,7 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
               <Textarea
                 id="address"
                 value={formData.address}
-                onChange={ (e) => setFormData({ ...formData, address: e.target.value }) }
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 placeholder="123 Innovation Street, Tech City, TC 12345"
                 className="min-h-[60px]"
               />
@@ -1051,7 +1092,7 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
                   min="1"
                   max="100"
                   value={formData.maxTestersCapacity}
-                  onChange={ (e) => setFormData({ ...formData, maxTestersCapacity: parseInt(e.target.value) || 0 }) }
+                  onChange={(e) => setFormData({ ...formData, maxTestersCapacity: parseInt(e.target.value) || 0 })}
                   placeholder="e.g., 15"
                   required
                 />
@@ -1064,7 +1105,7 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
                   min="1"
                   max="50"
                   value={formData.maxProjectsCapacity}
-                  onChange={ (e) => setFormData({ ...formData, maxProjectsCapacity: parseInt(e.target.value) || 0 }) }
+                  onChange={(e) => setFormData({ ...formData, maxProjectsCapacity: parseInt(e.target.value) || 0 })}
                   placeholder="e.g., 5"
                   required
                 />
@@ -1075,7 +1116,7 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
               <Textarea
                 id="equipment"
                 value={formData.equipmentAvailable}
-                onChange={ (e) => setFormData({ ...formData, equipmentAvailable: e.target.value }) }
+                onChange={(e) => setFormData({ ...formData, equipmentAvailable: e.target.value })}
                 placeholder="VR Headsets (10x), Gaming PCs (15x), Recording Equipment, Tablets, etc."
                 className="min-h-[60px]"
               />
@@ -1083,13 +1124,13 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
-                value={ formData.status }
-                onValueChange={ (value: 'Active' | 'Inactive' | 'Maintenance') =>
+                value={formData.status}
+                onValueChange={(value: 'Active' | 'Inactive' | 'Maintenance') =>
                   setFormData({ ...formData, status: value })
                 }
               >
                 <SelectTrigger>
-                  <SelectValue/>
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Active">Active</SelectItem>
@@ -1100,11 +1141,11 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={ () => setIsLocationDialogOpen(false) }>
+            <Button variant="outline" onClick={() => setIsLocationDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={ async () => {
+            <Button
+              onClick={async () => {
                 // Enhanced validation
                 if (!formData.name.trim()) {
                   toast.error('Location name is required');
@@ -1170,24 +1211,47 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
                     toast.success('Location updated successfully');
                   } else {
                     const newLocation = await createTestingLocationAction(locationData);
-                    setLocations([ ...locations, newLocation as TestingLocation ]);
+                    setLocations([...locations, newLocation as TestingLocation]);
                     toast.success('Location created successfully');
                   }
                   setIsLocationDialogOpen(false);
                 } catch (error) {
                   console.error('Failed to save location:', error);
-                  
+
                   if (error instanceof Error) {
                     toast.error(error.message);
                   } else {
                     toast.error('An unexpected error occurred. Please try again.');
                   }
                 }
-              } }
+              }}
               disabled={!formData.name.trim() || !formData.description.trim() || !formData.address.trim() || formData.maxTestersCapacity <= 0 || formData.maxProjectsCapacity <= 0}
             >
-              { editingLocation ? 'Update Location' : 'Create Location' }
+              {editingLocation ? 'Update Location' : 'Create Location'}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmOpen} onOpenChange={(o) => { if (!o && !confirmBusy) setConfirmOpen(false); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{confirmTitle}</DialogTitle>
+            <DialogDescription>{confirmDescription}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 justify-end">
+            <Button variant="outline" disabled={confirmBusy} onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              disabled={confirmBusy || !confirmAction}
+              onClick={async () => {
+                if (!confirmAction) return;
+                setConfirmBusy(true);
+                await confirmAction();
+                setConfirmBusy(false);
+                setConfirmOpen(false);
+              }}
+            >{confirmBusy ? 'Working...' : 'Confirm'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1224,10 +1288,10 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
                   required
                 />
               </div>
-              
+
               <div className="space-y-4">
                 <h4 className="font-medium text-sm">Permissions</h4>
-                
+
                 {/* Session Permissions */}
                 <div className="space-y-3">
                   <h5 className="font-medium text-sm text-muted-foreground">Testing Sessions</h5>
@@ -1494,7 +1558,7 @@ export function TestingLabSettings({ initialSection = 'general' }: { initialSect
               }}>
                 Cancel
               </Button>
-              <Button 
+              <Button
                 type="submit"
                 disabled={!roleFormData.name.trim() || !roleFormData.description.trim()}
               >
@@ -1565,7 +1629,7 @@ function LocationsSettings({ locations, onCreateLocation, onEditLocation, onDele
         </p>
       </div>
 
-      <Separator/>
+      <Separator />
 
       <Card>
         <CardHeader>
@@ -1577,19 +1641,19 @@ function LocationsSettings({ locations, onCreateLocation, onEditLocation, onDele
               </Badge>
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => {
                   onRefreshLocations();
                 }}
                 className="flex items-center gap-1"
               >
-                <RefreshCw className="h-3 w-3"/>
+                <RefreshCw className="h-3 w-3" />
                 Refresh
               </Button>
-              <Button onClick={ onCreateLocation } className="flex items-center gap-2">
-                <Plus className="h-4 w-4"/>
+              <Button onClick={onCreateLocation} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
                 Add Location
               </Button>
             </div>
@@ -1599,50 +1663,50 @@ function LocationsSettings({ locations, onCreateLocation, onEditLocation, onDele
           </CardDescription>
         </CardHeader>
         <CardContent>
-          { isLoading ? (
+          {isLoading ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground">Loading locations...</p>
             </div>
           ) : locations.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              { locations.map((location) => (
-                <Card key={ location.id } className="relative">
+              {locations.map((location) => (
+                <Card key={location.id} className="relative">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
-                        <MapPin className="h-5 w-5 text-blue-500"/>
-                        <CardTitle className="text-base">{ location.name }</CardTitle>
+                        <MapPin className="h-5 w-5 text-blue-500" />
+                        <CardTitle className="text-base">{location.name}</CardTitle>
                       </div>
                       <Badge
                         variant="secondary"
-                        className={ `text-xs ${ getStatusBadgeColor(location.status!) }` }
+                        className={`text-xs ${getStatusBadgeColor(location.status!)}`}
                       >
-                        { locationStatusToString(location.status!) }
+                        {locationStatusToString(location.status!)}
                       </Badge>
                     </div>
-                    <CardDescription className="text-sm">{ location.description }</CardDescription>
+                    <CardDescription className="text-sm">{location.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="space-y-2 text-sm text-muted-foreground">
                       {location.address && (
                         <p className="flex items-start gap-2">
                           <span>📍</span>
-                          <span className="flex-1">{ location.address }</span>
+                          <span className="flex-1">{location.address}</span>
                         </p>
                       )}
                       <div className="grid grid-cols-2 gap-2">
                         <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3"/>
-                          <span>{ location.maxTestersCapacity } testers</span>
+                          <Users className="h-3 w-3" />
+                          <span>{location.maxTestersCapacity} testers</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3"/>
-                          <span>{ location.maxProjectsCapacity } projects</span>
+                          <MapPin className="h-3 w-3" />
+                          <span>{location.maxProjectsCapacity} projects</span>
                         </div>
                       </div>
                       {location.equipmentAvailable && (
                         <p className="text-xs bg-gray-50 dark:bg-gray-800 rounded p-2 mt-2">
-                          <strong>Equipment:</strong> { location.equipmentAvailable }
+                          <strong>Equipment:</strong> {location.equipmentAvailable}
                         </p>
                       )}
                     </div>
@@ -1650,40 +1714,40 @@ function LocationsSettings({ locations, onCreateLocation, onEditLocation, onDele
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={ () => onEditLocation(location) }
+                        onClick={() => onEditLocation(location)}
                         className="flex-1"
                       >
-                        <Edit className="h-4 w-4 mr-1"/>
+                        <Edit className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={ () => onDeleteLocation(location.id!) }
+                        onClick={() => onDeleteLocation(location.id!)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
                         title="Delete location"
                       >
-                        <Trash2 className="h-4 w-4"/>
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-              )) }
+              ))}
             </div>
           ) : (
-                <div className="text-center py-8">
-                  <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4"/>
-                  <h3 className="text-lg font-semibold mb-2">No testing locations</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Get started by creating your first testing location. You can set up multiple locations 
-                    to organize different types of testing environments.
-                  </p>
-                  <Button onClick={ onCreateLocation } className="flex items-center gap-2">
-                    <Plus className="h-4 w-4"/>
-                    Create First Location
-                  </Button>
-                </div>
-              ) }
+            <div className="text-center py-8">
+              <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No testing locations</h3>
+              <p className="text-muted-foreground mb-4">
+                Get started by creating your first testing location. You can set up multiple locations
+                to organize different types of testing environments.
+              </p>
+              <Button onClick={onCreateLocation} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Create First Location
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -1711,14 +1775,14 @@ function RolesSettings({ roles, onCreateRole, onEditRole, onDeleteRole }: RolesS
         </p>
       </div>
 
-      <Separator/>
+      <Separator />
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             Role Templates
-            <Button onClick={ onCreateRole } className="flex items-center gap-2">
-              <Plus className="h-4 w-4"/>
+            <Button onClick={onCreateRole} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
               Create Role
             </Button>
           </CardTitle>
@@ -1727,79 +1791,79 @@ function RolesSettings({ roles, onCreateRole, onEditRole, onDeleteRole }: RolesS
           </CardDescription>
         </CardHeader>
         <CardContent>
-          { roles.length > 0 ? (
+          {roles.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
-              { roles.map((role) => (
-                <Card key={ role.id } className="relative">
+              {roles.map((role) => (
+                <Card key={role.id} className="relative">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
-                        <Shield className="h-5 w-5 text-blue-500"/>
-                        <CardTitle className="text-base">{ role.name }</CardTitle>
+                        <Shield className="h-5 w-5 text-blue-500" />
+                        <CardTitle className="text-base">{role.name}</CardTitle>
                       </div>
-                      { role.isSystemRole && (
+                      {role.isSystemRole && (
                         <Badge variant="secondary" className="text-xs">
                           System Role
                         </Badge>
-                      ) }
+                      )}
                     </div>
-                    <CardDescription className="text-sm">{ role.description }</CardDescription>
+                    <CardDescription className="text-sm">{role.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Permissions:</p>
                       <div className="flex flex-wrap gap-1">
-                        { (role.permissionTemplates || []).slice(0, 4).map((permission, index) => (
-                          <Badge key={ `${role.id}-${permission.action}-${permission.resourceType}-${index}` } variant="outline" className="text-xs">
-                            { permission.action } { permission.resourceType }
+                        {(role.permissionTemplates || []).slice(0, 4).map((permission, index) => (
+                          <Badge key={`${role.id}-${permission.action}-${permission.resourceType}-${index}`} variant="outline" className="text-xs">
+                            {permission.action} {permission.resourceType}
                           </Badge>
-                        )) }
-                        { (role.permissionTemplates || []).length > 4 && (
+                        ))}
+                        {(role.permissionTemplates || []).length > 4 && (
                           <Badge variant="outline" className="text-xs">
-                            +{ (role.permissionTemplates || []).length - 4 } more
+                            +{(role.permissionTemplates || []).length - 4} more
                           </Badge>
-                        ) }
+                        )}
                       </div>
-                      { role.userCount !== undefined && (
+                      {role.userCount !== undefined && (
                         <p className="text-xs text-muted-foreground mt-2">
-                          { role.userCount } users assigned
+                          {role.userCount} users assigned
                         </p>
-                      ) }
+                      )}
                     </div>
                     <div className="flex gap-2 mt-4">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={ () => onEditRole(role) }
+                        onClick={() => onEditRole(role)}
                         className="flex-1"
                       >
-                        <Edit className="h-4 w-4 mr-1"/>
+                        <Edit className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
-                      { !role.isSystemRole && (
+                      {!role.isSystemRole && (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={ () => onDeleteRole(role.id) }
+                          onClick={() => onDeleteRole(role.id)}
                         >
-                          <Trash2 className="h-4 w-4"/>
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      ) }
+                      )}
                     </div>
                   </CardContent>
                 </Card>
-              )) }
+              ))}
             </div>
           ) : (
-              <div className="text-center py-8">
-                <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4"/>
-                <p className="text-muted-foreground mb-4">No roles found</p>
-                <Button onClick={ onCreateRole } className="flex items-center gap-2">
-                  <Plus className="h-4 w-4"/>
-                  Create First Role
+            <div className="text-center py-8">
+              <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-4">No roles found</p>
+              <Button onClick={onCreateRole} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Create First Role
               </Button>
-              </div>
-            ) }
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -1808,3 +1872,4 @@ function RolesSettings({ roles, onCreateRole, onEditRole, onDeleteRole }: RolesS
 
 // Export the DualColorChip for reuse in other components
 export { DualColorChip };
+

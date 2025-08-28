@@ -172,19 +172,51 @@ export async function updateTestingSession(
   await configureAuthenticatedClient();
 
   try {
-    // Map provided partial into TestingSession shape (only sending changed fields)
-    const payload: Partial<TestingSession> = { ...sessionData } as Partial<TestingSession>;
-    if (sessionData.managerId && !('managerUserId' in payload)) {
-      (payload as any).managerUserId = sessionData.managerId;
+    // Fetch current session so we can send a complete payload (PUT is usually not partial)
+    const currentResp = await getTestingSessionsById({
+      path: { id },
+      headers: { 'Cache-Control': 'no-store' },
+    });
+    if (!currentResp.data) {
+      throw new Error('Current testing session not found for update');
     }
+    const current = currentResp.data as TestingSession;
+
+    // Build merged payload ensuring required fields are present.
+    // Some properties in the generated type are read-only or server-managed; omit them.
+    const merged: Partial<TestingSession> = {
+      sessionName: sessionData.sessionName ?? current.sessionName,
+      sessionDate: sessionData.sessionDate ?? current.sessionDate,
+      startTime: sessionData.startTime ?? current.startTime,
+      endTime: sessionData.endTime ?? current.endTime,
+      maxTesters: sessionData.maxTesters ?? current.maxTesters,
+      // If backend requires maxProjects but UI doesn't edit it, preserve existing or default to 0
+      maxProjects: (current as any).maxProjects ?? 0,
+      status: (sessionData.status ?? current.status) as any,
+      testingRequestId: current.testingRequestId, // not editable here yet
+      locationId: sessionData.locationId ?? current.locationId,
+      managerId: sessionData.managerId ?? (current as any).managerId ?? (current as any).managerUserId,
+      managerUserId: sessionData.managerId ?? (current as any).managerUserId ?? (current as any).managerId,
+      version: (current as any).version,
+    };
+
+    // Defensive: remove any undefined to avoid overwriting with nullish if API treats missing differently
+    Object.keys(merged).forEach(k => (merged as any)[k] === undefined && delete (merged as any)[k]);
+
+    console.log('[updateTestingSession] Updating session', id, 'with payload:', merged);
 
     const response = await putTestingSessionsById({
       path: { id },
-      body: payload as TestingSession,
+      body: merged as TestingSession,
     });
-
+    if ((response as any).error) {
+      const err = (response as any).error;
+      console.error('[updateTestingSession] API error response:', err);
+      throw new Error(typeof err === 'string' ? err : JSON.stringify(err));
+    }
     if (!response.data) {
-      throw new Error('Failed to update testing session');
+      console.error('[updateTestingSession] No data returned from API response object:', response);
+      throw new Error('Failed to update testing session (empty response)');
     }
 
     revalidateTag('testing-sessions');
@@ -192,6 +224,19 @@ export async function updateTestingSession(
   } catch (error) {
     console.error('Error updating testing session:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to update testing session');
+  }
+}
+
+// Convenience wrapper returning success/error instead of throwing, for UI components
+export async function updateTestingSessionSafe(
+  id: string,
+  sessionData: Parameters<typeof updateTestingSession>[1],
+) {
+  try {
+    const updated = await updateTestingSession(id, sessionData);
+    return { success: true, data: updated, error: null };
+  } catch (e) {
+    return { success: false, data: null, error: e instanceof Error ? e.message : String(e) };
   }
 }
 

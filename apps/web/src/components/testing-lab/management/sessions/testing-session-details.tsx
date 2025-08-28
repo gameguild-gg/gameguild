@@ -1,21 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
-import { toast } from 'sonner';
-import { Calendar, Clock, MapPin, TestTube, User, Users, Pencil, Save, X, Loader2, ListChecks } from 'lucide-react';
-import Link from 'next/link';
-import type { TestingSession } from '@/lib/api/generated/types.gen';
-import { updateTestingSession, getTestingSessionRegistrations } from '@/lib/admin/testing-lab/sessions/testing-sessions.actions';
-import { getTestingLocations, getTestingLabManagers } from '@/lib/api/testing-lab';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { getTestingSessionRegistrations, updateTestingSession } from '@/lib/admin/testing-lab/sessions/testing-sessions.actions';
+import type { TestingSession } from '@/lib/api/generated/types.gen';
+import { getTestingLabManagers, getTestingLocations } from '@/lib/api/testing-lab';
+import { Calendar, Clock, ListChecks, Loader2, MapPin, Pencil, Save, TestTube, User, Users, X } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+// NOTE: Textarea currently unused; remove import if not needed later.
+// import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TestingSessionDetailsProps {
@@ -23,6 +24,7 @@ interface TestingSessionDetailsProps {
 }
 
 export function TestingSessionDetails({ data: session }: TestingSessionDetailsProps) {
+  const NONE_VALUE = '__none'; // internal sentinel for "no selection"
   const { data: userSession } = useSession();
   const [loading, setLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -36,9 +38,9 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
   // Local editable state
   const [form, setForm] = useState({
     sessionName: session.sessionName || '',
-    sessionDate: session.sessionDate ? new Date(session.sessionDate).toISOString().slice(0,10) : '',
-    startTime: session.startTime ? new Date(session.startTime).toISOString().slice(11,16) : '',
-    endTime: session.endTime ? new Date(session.endTime).toISOString().slice(11,16) : '',
+    sessionDate: session.sessionDate ? new Date(session.sessionDate).toISOString().slice(0, 10) : '',
+    startTime: session.startTime ? new Date(session.startTime).toISOString().slice(11, 16) : '',
+    endTime: session.endTime ? new Date(session.endTime).toISOString().slice(11, 16) : '',
     maxTesters: session.maxTesters || 0,
     locationId: session.locationId || '',
     managerId: (session as any).managerId || (session as any).managerUserId || '',
@@ -144,8 +146,8 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
         startTime: form.startTime ? new Date(`${form.sessionDate}T${form.startTime}:00Z`).toISOString() : undefined,
         endTime: form.endTime ? new Date(`${form.sessionDate}T${form.endTime}:00Z`).toISOString() : undefined,
         maxTesters: form.maxTesters,
-        locationId: form.locationId || undefined,
-        managerId: form.managerId || undefined,
+        locationId: (form.locationId && form.locationId !== NONE_VALUE) ? form.locationId : undefined,
+        managerId: (form.managerId && form.managerId !== NONE_VALUE) ? form.managerId : undefined,
       });
       toast.success('Session updated');
       setEditMode(false);
@@ -230,12 +232,12 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
                     </div>
                     <div className="flex flex-col gap-1">
                       <Label htmlFor="locationId">Location</Label>
-                      <Select value={form.locationId} onValueChange={(v) => setForm(f => ({ ...f, locationId: v }))}>
+                      <Select value={form.locationId || NONE_VALUE} onValueChange={(v) => setForm(f => ({ ...f, locationId: v === NONE_VALUE ? '' : v }))}>
                         <SelectTrigger id="locationId">
                           <SelectValue placeholder={metaLoading ? 'Loading...' : 'Select location'} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value={NONE_VALUE}>None</SelectItem>
                           {locations.map(l => (
                             <SelectItem key={l.id} value={l.id}>{l.name || l.id}</SelectItem>
                           ))}
@@ -244,12 +246,12 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
                     </div>
                     <div className="flex flex-col gap-1">
                       <Label htmlFor="managerId">Manager</Label>
-                      <Select value={form.managerId} onValueChange={(v) => setForm(f => ({ ...f, managerId: v }))}>
+                      <Select value={form.managerId || NONE_VALUE} onValueChange={(v) => setForm(f => ({ ...f, managerId: v === NONE_VALUE ? '' : v }))}>
                         <SelectTrigger id="managerId">
                           <SelectValue placeholder={metaLoading ? 'Loading...' : 'Select manager'} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value={NONE_VALUE}>None</SelectItem>
                           {managers.map(m => (
                             <SelectItem key={m.id} value={m.id}>{m.firstName || m.lastName ? `${m.firstName || ''} ${m.lastName || ''}`.trim() : (m.email || m.id)}</SelectItem>
                           ))}

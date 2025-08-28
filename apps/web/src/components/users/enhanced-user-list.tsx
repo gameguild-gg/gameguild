@@ -1,50 +1,50 @@
 /* eslint-disable prettier/prettier */
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { useUserContext } from '@/lib/user-management/users/users.context';
 import { useTenant } from '@/components/tenant/context/tenant-provider';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { UserResponseDto } from '@/lib/api/generated/types.gen';
+import { useUserContext } from '@/lib/user-management/users/users.context';
+import { cn } from '@/lib/utils';
 import {
-  Filter,
-  RefreshCw,
-  MoreHorizontal,
-  Eye,
-  MessageSquare,
-  UserCheck,
-  UserX,
-  Download,
-  Users,
-  Clock,
-  Shield,
-  Crown,
+  Activity,
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Clock,
+  Columns,
+  Crown,
+  Database,
+  Download,
+  Eye,
+  Filter,
+  Key,
+  MessageSquare,
+  MoreHorizontal,
+  RefreshCw,
+  Settings2,
+  Shield,
   SortAsc,
   SortDesc,
-  X,
-  Database,
-  Key,
-  Activity,
-  Settings2,
-  Columns
+  UserCheck,
+  Users,
+  UserX,
+  X
 } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import type { UserResponseDto } from '@/lib/api/generated/types.gen';
-import { cn } from '@/lib/utils';
 
 // Enhanced types for user management
 interface EnhancedUser extends UserResponseDto {
@@ -104,7 +104,7 @@ const DEFAULT_COLUMNS: ColumnConfig[] = [
 
 const AVAILABLE_TENANTS = [
   'GameDev Studio',
-  'IndieCorp', 
+  'IndieCorp',
   'MegaGames',
   'PixelPerfect',
   'CodeCrafters',
@@ -141,7 +141,7 @@ export function EnhancedUserList() {
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
   const [impersonatingUser, setImpersonatingUser] = useState<string | null>(null);
   const [bulkActionDialog, setBulkActionDialog] = useState<string | null>(null);
-  const [editingUserTenants, setEditingUserTenants] = useState<{userId: string, tenants: string[]} | null>(null);
+  const [editingUserTenants, setEditingUserTenants] = useState<{ userId: string, tenants: string[] } | null>(null);
 
   // Initialize from URL params and set default to current tenant
   useEffect(() => {
@@ -171,48 +171,31 @@ export function EnhancedUserList() {
 
   // Enhanced users with real data filtered by current tenant
   useEffect(() => {
-    if (contextUsers && currentTenant) {
-      // Filter users to only show those belonging to the current tenant
-      const enhancedUsers: EnhancedUser[] = contextUsers
-        .map((user: UserResponseDto, index: number) => ({
-          ...user,
-          lastActive: user.updatedAt || user.createdAt || new Date().toISOString(),
-          ownedObjectsCount: Math.floor(Math.random() * 10) + 1, // This would come from real data
-          grantsReceivedCount: Math.floor(Math.random() * 15) + 1, // This would come from real data
-          tenantMemberships: [
-            {
-              tenantId: currentTenant.id,
-              tenantName: currentTenant.name,
-              role: index % 3 === 0 ? 'owner' : index % 3 === 1 ? 'admin' : 'member'
-            }
-          ],
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
-          username: user.email?.split('@')[0] || `user${index}`, // Derive from email since username not in API
-        }));
-      setUsers(enhancedUsers);
-    } else if (contextUsers && !currentTenant) {
-      // Show Game Guild only users when no tenant is selected
-      const enhancedUsers: EnhancedUser[] = contextUsers.map((user: UserResponseDto, index: number) => ({
-        ...user,
-        lastActive: user.updatedAt || user.createdAt || new Date().toISOString(),
-        ownedObjectsCount: Math.floor(Math.random() * 10) + 1,
-        grantsReceivedCount: Math.floor(Math.random() * 15) + 1,
-        tenantMemberships: [], // Game Guild only users have no tenant memberships
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`,
-        username: user.email?.split('@')[0] || `user${index}`, // Derive from email since username not in API
-      }));
-      setUsers(enhancedUsers);
-    }
+    if (!contextUsers) return;
+    // Map API users without injecting fake metrics; keep placeholders if missing
+    const mapped: EnhancedUser[] = contextUsers.map((user: UserResponseDto) => ({
+      ...(user as any),
+      lastActive: (user as any).lastActive || user.updatedAt || user.createdAt || undefined,
+      tenantMemberships: (user as any).tenantMemberships || [],
+      avatar: (user as any).avatar || (user.email ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.email)}` : undefined),
+      username: (user as any).username || (user.email?.split('@')[0] ?? undefined),
+    }));
+
+    // If a tenant is selected and backend eventually tags memberships, filter when data exists
+    const filtered = currentTenant
+      ? mapped.filter(u => !u.tenantMemberships?.length || u.tenantMemberships?.some(m => m.tenantId === currentTenant.id || m.tenantName === currentTenant.name))
+      : mapped;
+    setUsers(filtered);
   }, [contextUsers, currentTenant]);
 
   // Update URL when filters/sort/pagination change
   const updateURL = (newFilters: UserFilters, newSort: UserSort, newPagination: UserPagination) => {
     const params = new URLSearchParams();
-    
+
     Object.entries(newFilters).forEach(([key, value]) => {
       if (value && value !== 'all') params.set(key, value);
     });
-    
+
     if (newSort.field !== 'lastActive') params.set('sortField', newSort.field);
     if (newSort.direction !== 'desc') params.set('sortDirection', newSort.direction);
     if (newPagination.page !== 1) params.set('page', newPagination.page.toString());
@@ -233,7 +216,7 @@ export function EnhancedUserList() {
           user.username,
           user.id,
         ].filter(Boolean).map(field => field!.toLowerCase());
-        
+
         if (!searchableFields.some(field => field.includes(searchTerm))) {
           return false;
         }
@@ -267,7 +250,7 @@ export function EnhancedUserList() {
         const lastActive = new Date(user.lastActive);
         const now = new Date();
         const daysDiff = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24);
-        
+
         switch (filters.lastActive) {
           case '7days':
             if (daysDiff > 7) return false;
@@ -455,16 +438,16 @@ export function EnhancedUserList() {
   const handleTenantSave = async (userId: string, newTenantNames: string[]) => {
     try {
       // Update the user's tenant memberships
-      setUsers(prev => prev.map(user => 
-        user.id === userId 
-          ? { 
-              ...user, 
-              tenantMemberships: newTenantNames.map(tenantName => ({
-                tenantId: `tenant-${tenantName.toLowerCase().replace(/\s+/g, '-')}`,
-                tenantName,
-                role: 'member' as const
-              }))
-            }
+      setUsers(prev => prev.map(user =>
+        user.id === userId
+          ? {
+            ...user,
+            tenantMemberships: newTenantNames.map(tenantName => ({
+              tenantId: `tenant-${tenantName.toLowerCase().replace(/\s+/g, '-')}`,
+              tenantName,
+              role: 'member' as const
+            }))
+          }
           : user
       ));
       setEditingUserTenants(null);
@@ -475,7 +458,7 @@ export function EnhancedUserList() {
   };
 
   const handleColumnToggle = (columnId: string) => {
-    setColumns(prev => prev.map(col => 
+    setColumns(prev => prev.map(col =>
       col.id === columnId ? { ...col, visible: !col.visible } : col
     ));
   };
@@ -502,10 +485,10 @@ export function EnhancedUserList() {
   const renderTableHeader = (column: ColumnConfig) => {
     const sortField = getSortFieldForColumn(column.id);
     const isCurrentSort = sort.field === sortField;
-    
+
     if (column.sortable && sortField) {
       return (
-        <TableHead 
+        <TableHead
           key={column.id}
           className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
           onClick={() => handleSortChange(sortField)}
@@ -519,9 +502,9 @@ export function EnhancedUserList() {
         </TableHead>
       );
     }
-    
+
     return (
-      <TableHead 
+      <TableHead
         key={column.id}
         className={column.id === 'actions' ? 'w-16' : undefined}
       >
@@ -549,7 +532,7 @@ export function EnhancedUserList() {
             </div>
           </TableCell>
         );
-      
+
       case 'contact':
         return (
           <TableCell key={column.id}>
@@ -561,11 +544,11 @@ export function EnhancedUserList() {
             </div>
           </TableCell>
         );
-      
+
       case 'tenant':
         return (
           <TableCell key={column.id}>
-            <div 
+            <div
               className="flex flex-wrap gap-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-1 rounded"
               onClick={() => handleTenantEdit(user.id!)}
               title="Click to edit tenant memberships"
@@ -585,14 +568,14 @@ export function EnhancedUserList() {
             </div>
           </TableCell>
         );
-      
+
       case 'status':
         return (
           <TableCell key={column.id}>
             {getUserStatusBadge(user)}
           </TableCell>
         );
-      
+
       case 'lastActive':
         return (
           <TableCell key={column.id}>
@@ -602,7 +585,7 @@ export function EnhancedUserList() {
             </div>
           </TableCell>
         );
-      
+
       case 'ownership':
         return (
           <TableCell key={column.id}>
@@ -612,7 +595,7 @@ export function EnhancedUserList() {
             </div>
           </TableCell>
         );
-      
+
       case 'grants':
         return (
           <TableCell key={column.id}>
@@ -622,14 +605,14 @@ export function EnhancedUserList() {
             </div>
           </TableCell>
         );
-      
+
       case 'role':
         return (
           <TableCell key={column.id}>
             <Badge variant="secondary">{user.role || 'User'}</Badge>
           </TableCell>
         );
-      
+
       case 'balance':
         return (
           <TableCell key={column.id}>
@@ -639,7 +622,7 @@ export function EnhancedUserList() {
             </div>
           </TableCell>
         );
-      
+
       case 'subscription':
         return (
           <TableCell key={column.id}>
@@ -648,7 +631,7 @@ export function EnhancedUserList() {
             </Badge>
           </TableCell>
         );
-      
+
       case 'createdAt':
         return (
           <TableCell key={column.id}>
@@ -657,7 +640,7 @@ export function EnhancedUserList() {
             </div>
           </TableCell>
         );
-      
+
       case 'actions':
         return (
           <TableCell key={column.id}>
@@ -697,7 +680,7 @@ export function EnhancedUserList() {
             </DropdownMenu>
           </TableCell>
         );
-      
+
       default:
         return <TableCell key={column.id}>-</TableCell>;
     }
@@ -713,11 +696,11 @@ export function EnhancedUserList() {
 
   const getLastActiveText = (lastActive?: string) => {
     if (!lastActive) return 'Never';
-    
+
     const date = new Date(lastActive);
     const now = new Date();
     const daysDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (daysDiff === 0) return 'Today';
     if (daysDiff === 1) return 'Yesterday';
     if (daysDiff < 7) return `${daysDiff} days ago`;
@@ -747,8 +730,8 @@ export function EnhancedUserList() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">User Management</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {currentTenant 
-              ? `Manage users for ${currentTenant.name}` 
+            {currentTenant
+              ? `Manage users for ${currentTenant.name}`
               : 'Manage Game Guild users, permissions, and access control'
             }
           </p>
@@ -854,7 +837,7 @@ export function EnhancedUserList() {
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                 />
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium mb-2 block">Status</label>
                 <Select
@@ -946,8 +929,8 @@ export function EnhancedUserList() {
           {filters.search && (
             <Badge variant="secondary" className="gap-1">
               Search: {filters.search}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
+              <X
+                className="h-3 w-3 cursor-pointer"
                 onClick={() => handleFilterChange('search', '')}
               />
             </Badge>
@@ -955,8 +938,8 @@ export function EnhancedUserList() {
           {filters.status !== 'all' && (
             <Badge variant="secondary" className="gap-1">
               Status: {filters.status}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
+              <X
+                className="h-3 w-3 cursor-pointer"
                 onClick={() => handleFilterChange('status', 'all')}
               />
             </Badge>
@@ -964,8 +947,8 @@ export function EnhancedUserList() {
           {filters.tenant !== 'all' && (
             <Badge variant="secondary" className="gap-1">
               Tenant: {filters.tenant}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
+              <X
+                className="h-3 w-3 cursor-pointer"
                 onClick={() => handleFilterChange('tenant', 'all')}
               />
             </Badge>
@@ -973,8 +956,8 @@ export function EnhancedUserList() {
           {filters.lastActive !== 'all' && (
             <Badge variant="secondary" className="gap-1">
               Last Active: {filters.lastActive}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
+              <X
+                className="h-3 w-3 cursor-pointer"
                 onClick={() => handleFilterChange('lastActive', 'all')}
               />
             </Badge>
@@ -982,8 +965,8 @@ export function EnhancedUserList() {
           {filters.accessType !== 'all' && (
             <Badge variant="secondary" className="gap-1">
               Access: {filters.accessType}
-              <X 
-                className="h-3 w-3 cursor-pointer" 
+              <X
+                className="h-3 w-3 cursor-pointer"
                 onClick={() => handleFilterChange('accessType', 'all')}
               />
             </Badge>
@@ -1293,7 +1276,7 @@ export function EnhancedUserList() {
             <Button variant="outline" onClick={() => setEditingUserTenants(null)}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 if (editingUserTenants) {
                   handleTenantSave(editingUserTenants.userId, editingUserTenants.tenants);
