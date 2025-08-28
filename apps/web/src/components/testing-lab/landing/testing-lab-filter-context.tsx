@@ -1,6 +1,6 @@
-import { createContext, ReactNode, useContext } from 'react';
 import { BaseFilterState, FilterProvider, useFilterContext } from '@/components/common/filters/filter-context';
 import { adaptTestingSessionForComponent, SESSION_STATUS, TestSession } from '@/lib/admin';
+import { createContext, ReactNode, useContext, useEffect } from 'react';
 
 // Testing Lab specific filter state
 export type TestingLabFilterState = BaseFilterState;
@@ -78,11 +78,10 @@ interface TestingLabFilterProviderProps {
   initialViewMode?: 'cards' | 'row' | 'table';
 }
 
-// Get default view mode based on screen size
+// NOTE: For SSR we must use a deterministic default to avoid hydration mismatches.
+// We previously derived this from window.innerWidth which differs between server and client.
+// We now always return a stable value and (optionally) adjust after mount in an effect.
 function getDefaultViewMode(): 'cards' | 'row' | 'table' {
-  if (typeof window !== 'undefined') {
-    return window.innerWidth < 1024 ? 'row' : 'cards';
-  }
   return 'cards';
 }
 
@@ -103,6 +102,18 @@ function TestingLabFilterProviderInner({ children, sessions }: { children: React
 
   const state = filterContext.state as TestingLabFilterState;
   const filteredSessions = filterAndSortSessions(sessions, state);
+
+  // After first client mount, adjust view mode responsively (non-blocking) to avoid hydration diff.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const preferred: 'cards' | 'row' | 'table' = window.innerWidth < 1024 ? 'row' : 'cards';
+      if (preferred !== state.viewMode) {
+        filterContext.setViewMode(preferred);
+      }
+    }
+    // We intentionally run only once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value: TestingLabFilterContextType = {
     state,

@@ -1,7 +1,7 @@
 'use server';
 
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import { getTestingSessions as getTestingSessionsApi, createTestingSession as createTestingSessionApi } from '@/lib/api/testing-lab';
+import { createTestingSession as createTestingSessionApi, getPublicTestingSessions, getTestingSessions as getTestingSessionsApi } from '@/lib/api/testing-lab';
 import type { TestingSession } from '@/lib/api/testing-types';
 
 /**
@@ -91,11 +91,11 @@ export const getAllTestingSessions = getTestingSessionsData;
  * Get available test sessions for the landing page
  */
 export async function getAvailableTestSessions() {
+  // Use generated client public helper (no auth)
   try {
-    const result = await getTestingSessionsData();
-    return result.testingSessions || [];
+    return await getPublicTestingSessions(100);
   } catch (error) {
-    console.error('Error fetching available test sessions:', error);
+    console.error('Public fetch of available test sessions failed (returning empty list):', error instanceof Error ? error.message : error);
     return [];
   }
 }

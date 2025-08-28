@@ -602,6 +602,8 @@ import type {
   GetTestingSessionsByIdDetailsResponses,
   PostTestingSessionsByIdRestoreData,
   PostTestingSessionsByIdRestoreResponses,
+  GetTestingPublicSessionsData,
+  GetTestingPublicSessionsResponses,
   GetTestingRequestsByProjectVersionByProjectVersionIdData,
   GetTestingRequestsByProjectVersionByProjectVersionIdResponses,
   GetTestingRequestsByCreatorByCreatorIdData,
@@ -3483,6 +3485,13 @@ export const getTestingSessionsByIdDetails = <ThrowOnError extends boolean = fal
 export const postTestingSessionsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostTestingSessionsByIdRestoreData, ThrowOnError>) => {
   return (options.client ?? _heyApiClient).post<PostTestingSessionsByIdRestoreResponses, unknown, ThrowOnError>({
     url: '/testing/sessions/{id}/restore',
+    ...options,
+  });
+};
+
+export const getTestingPublicSessions = <ThrowOnError extends boolean = false>(options?: Options<GetTestingPublicSessionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetTestingPublicSessionsResponses, unknown, ThrowOnError>({
+    url: '/testing/public/sessions',
     ...options,
   });
 };
