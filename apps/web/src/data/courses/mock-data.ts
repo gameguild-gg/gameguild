@@ -2850,25 +2850,6 @@ portfolioProgram.programContents = [
     portfolioWeek10AssignmentContent,
     portfolioWeek11LectureContent,
     portfolioWeek11ActivityContent,
-
-    // DSA content
-    dsaSyllabusContent,
-    dsaIntroductionContent,
-    dsaAnalysisContent,
-    dsaDynamicDataContent,
-    dsaSortingContent,
-    dsaDivideAndConquerContent,
-    dsaHashtablesContent,
-    dsaMidtermContent,
-    dsaStackAndQueueContent,
-    dsaBreakContent,
-    dsaGraphsContent,
-    dsaDijkstraContent,
-    dsaMstContent,
-    dsaBstContent,
-    dsaHeapContent,
-    dsaProjectContent,
-    dsaFinalsContent,
 ];
 
 ai4games2Program.programContents = [
