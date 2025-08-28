@@ -1,3 +1,18 @@
+# [2.15.0](https://github.com/gameguild-gg/gameguild/compare/v2.14.0...v2.15.0) (2025-08-28)
+
+
+### Bug Fixes
+
+* Ferpa Waiver ([6b66fe2](https://github.com/gameguild-gg/gameguild/commit/6b66fe2a675d9a4a1c352f570767b9a9db49aa6f))
+
+
+### Features
+
+* **ai4games:** Add week 01 expectations content file ([346e24b](https://github.com/gameguild-gg/gameguild/commit/346e24b935af65a52ce7fe661e8ee45817f1166b))
+* **dsa:** Add week 01 expectations content file ([c27a23a](https://github.com/gameguild-gg/gameguild/commit/c27a23ae0692811a59fd7a3b81e9b0ff381f78ee))
+* **mock-data:** Integrate AI for Games expectations into mock data ([99308cc](https://github.com/gameguild-gg/gameguild/commit/99308cce7a9dbb4142b6ada94d5f3bd04fbc5e2f))
+* **mock-data:** Integrate DSA expectations and update sort orders ([45a7d58](https://github.com/gameguild-gg/gameguild/commit/45a7d588aa610ebde2c2e9db5b3745d14d2734bd))
+
 # [2.14.0](https://github.com/gameguild-gg/gameguild/compare/v2.13.0...v2.14.0) (2025-08-27)
 
 
