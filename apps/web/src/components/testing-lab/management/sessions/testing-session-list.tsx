@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, MapPin, Users, Edit, Eye, Play } from 'lucide-react';
-import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { TestingSession } from '@/lib/api/generated/types.gen';
+import { Calendar, Clock, Edit, MapPin, Users } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { SessionFilterControls } from './session-filter-controls';
 
 interface TestingSessionListProps {
@@ -190,28 +190,12 @@ export function TestingSessionList({ data }: TestingSessionListProps) {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  {session.status === 0 && (
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
-                      <Link href={`/dashboard/testing-lab/sessions/${session.id}/register`}>
-                        <Play className="h-4 w-4 mr-1" />
-                        Join Session
-                      </Link>
-                    </Button>
-                  )}
-                  <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700" asChild>
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
                     <Link href={`/dashboard/testing-lab/sessions/${session.id}`}>
-                      <Eye className="h-4 w-4 mr-1" />
-                      View Details
+                      <Edit className="h-4 w-4 mr-1" />
+                      Manage
                     </Link>
                   </Button>
-                  {session.status === 0 && (
-                    <Button size="sm" variant="outline" className="border-blue-600 text-blue-400 hover:bg-blue-600 hover:text-white" asChild>
-                      <Link href={`/dashboard/testing-lab/sessions/${session.id}/edit`}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Link>
-                    </Button>
-                  )}
                 </div>
               </CardContent>
             </Card>

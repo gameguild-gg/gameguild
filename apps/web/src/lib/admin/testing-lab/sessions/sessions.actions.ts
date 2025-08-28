@@ -15,7 +15,7 @@ export async function getTestingSessionsData(params?: { status?: string; testing
     console.log('Session token exists:', !!session?.api?.accessToken);
     console.log('Current tenant ID:', session?.currentTenant?.id);
 
-    const sessions = await getTestingSessionsApi();
+    const sessions = await getTestingSessionsApi({ tenantId: session?.currentTenant?.id });
 
     console.log('Sessions fetched:', sessions);
     console.log('Sessions count:', sessions?.length);
@@ -88,15 +88,41 @@ export async function getTestingSessionsData(params?: { status?: string; testing
 export const getAllTestingSessions = getTestingSessionsData;
 
 /**
+ * Unified getter used by both dashboard and public pages so we can ensure the same base dataset
+ * before role-based filtering. When publicOnly=true, we hide cancelled / completed sessions and
+ * only show sessions with status Scheduled (0) or Active (1) and that still have capacity.
+ */
+export async function getUnifiedTestingSessions(options?: { publicOnly?: boolean; status?: number }) {
+  const base = await getTestingSessionsData(options?.status !== undefined ? { status: options.status.toString() } : undefined);
+  const sessions = base.testingSessions || [];
+  if (!options?.publicOnly) {
+    return { testingSessions: sessions, total: sessions.length };
+  }
+  const filtered = sessions.filter(s => {
+    const status = (s as any).status;
+    const max = (s as any).maxTesters ?? 0;
+    const registered = (s as any).registeredTesterCount ?? 0;
+    const hasCapacity = max === 0 || registered < max; // max === 0 treated as unlimited
+    return [0, 1].includes(status) && hasCapacity;
+  });
+  return { testingSessions: filtered, total: filtered.length };
+}
+
+/**
  * Get available test sessions for the landing page
  */
 export async function getAvailableTestSessions() {
-  // Use generated client public helper (no auth)
   try {
-    return await getPublicTestingSessions(100);
-  } catch (error) {
-    console.error('Public fetch of available test sessions failed (returning empty list):', error instanceof Error ? error.message : error);
-    return [];
+    const unified = await getUnifiedTestingSessions({ publicOnly: true });
+    return unified.testingSessions;
+  } catch (e) {
+    console.warn('Unified public fetch failed, falling back to public endpoint:', e instanceof Error ? e.message : e);
+    try {
+      return await getPublicTestingSessions(100);
+    } catch (error) {
+      console.error('Public fetch of available test sessions failed (returning empty list):', error instanceof Error ? error.message : error);
+      return [];
+    }
   }
 }
 
@@ -116,7 +142,7 @@ export async function getTestingSessionBySlug(slug: string) {
   try {
     console.log('Fetching testing session by slug (as ID):', slug);
 
-    const sessions = await getTestingSessionsApi();
+    const sessions = await getTestingSessionsApi(); // public slug resolution keeps existing behavior (no tenant filter)
 
     if (!sessions || !Array.isArray(sessions)) {
       return null;

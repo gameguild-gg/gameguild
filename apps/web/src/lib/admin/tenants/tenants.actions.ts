@@ -42,6 +42,15 @@ import type {
 } from '@/lib/api/generated/types.gen';
 import { revalidateTag } from 'next/cache';
 
+// Helper to strip non-serializable fields (Request/Response objects) before crossing the RSC boundary
+function toPlainResult<TData = unknown, TError = unknown>(result: any): { data: TData | null; error: TError | null; status: number | null } {
+  return {
+    data: (result && 'data' in result ? result.data : null) ?? null,
+    error: (result && 'error' in result ? result.error : null) ?? null,
+    status: result?.response?.status ?? null,
+  };
+}
+
 /**
  * Get all tenants
  */
@@ -50,8 +59,7 @@ export async function getTenantsAction(params?: GetApiTenantsData) {
   const result = await getApiTenants({
     ...params,
   });
-
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -64,7 +72,7 @@ export async function createTenantAction(data: Omit<PostApiTenantsData, 'url'>) 
   });
 
   revalidateTag('tenants');
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -78,7 +86,7 @@ export async function deleteTenantAction(data: Omit<DeleteApiTenantsByIdData, 'u
 
   revalidateTag('tenants');
   revalidateTag(`tenant-${data.path.id}`);
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -89,8 +97,7 @@ export async function getTenantByIdAction(data: Omit<GetApiTenantsByIdData, 'url
   const result = await getApiTenantsById({
     path: { id: data.path.id },
   });
-
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -105,7 +112,7 @@ export async function updateTenantAction(data: Omit<PutApiTenantsByIdData, 'url'
 
   revalidateTag('tenants');
   revalidateTag(`tenant-${data.path.id}`);
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -116,8 +123,7 @@ export async function getTenantByNameAction(data: GetApiTenantsByNameByNameData)
   const result = await getApiTenantsByNameByName({
     path: { name: data.path.name },
   });
-
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -128,8 +134,7 @@ export async function getTenantBySlugAction(data: GetApiTenantsBySlugBySlugData)
   const result = await getApiTenantsBySlugBySlug({
     path: { slug: data.path.slug },
   });
-
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -140,8 +145,7 @@ export async function getDeletedTenantsAction(params?: GetApiTenantsDeletedData)
   const result = await getApiTenantsDeleted({
     ...params,
   });
-
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -152,8 +156,7 @@ export async function getActiveTenantsAction(params?: GetApiTenantsActiveData) {
   const result = await getApiTenantsActive({
     ...params,
   });
-
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -164,8 +167,7 @@ export async function searchTenantsAction(params?: Omit<GetApiTenantsSearchData,
   const result = await getApiTenantsSearch({
     ...params,
   });
-
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -176,8 +178,7 @@ export async function getTenantStatisticsAction(params?: Omit<GetApiTenantsStati
   const result = await getApiTenantsStatistics({
     ...params,
   });
-
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -192,7 +193,7 @@ export async function restoreTenantAction(data: Omit<PostApiTenantsByIdRestoreDa
   revalidateTag('tenants');
   revalidateTag('tenants-deleted');
   revalidateTag(`tenant-${data.path.id}`);
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -207,7 +208,7 @@ export async function permanentDeleteTenantAction(data: Omit<DeleteApiTenantsByI
   revalidateTag('tenants');
   revalidateTag('tenants-deleted');
   revalidateTag(`tenant-${data.path.id}`);
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -222,7 +223,7 @@ export async function activateTenantAction(data: Omit<PostApiTenantsByIdActivate
   revalidateTag('tenants');
   revalidateTag('tenants-active');
   revalidateTag(`tenant-${data.path.id}`);
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -237,7 +238,7 @@ export async function deactivateTenantAction(data: Omit<PostApiTenantsByIdDeacti
   revalidateTag('tenants');
   revalidateTag('tenants-active');
   revalidateTag(`tenant-${data.path.id}`);
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -251,7 +252,7 @@ export async function bulkDeleteTenantsAction(data?: PostApiTenantsBulkDeleteDat
 
   revalidateTag('tenants');
   revalidateTag('tenants-deleted');
-  return result;
+  return toPlainResult(result);
 }
 
 /**
@@ -265,5 +266,5 @@ export async function bulkRestoreTenantsAction(data?: PostApiTenantsBulkRestoreD
 
   revalidateTag('tenants');
   revalidateTag('tenants-deleted');
-  return result;
+  return toPlainResult(result);
 }

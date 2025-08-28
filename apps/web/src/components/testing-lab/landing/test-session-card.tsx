@@ -1,12 +1,12 @@
 'use client';
 
-import { adaptTestingSessionForComponent, SESSION_STATUS, TestSession } from '@/lib/admin';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Gamepad2, Users } from 'lucide-react';
-import { format } from 'date-fns';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link, useRouter } from '@/i18n/navigation';
+import { adaptTestingSessionForComponent, SESSION_STATUS, TestSession } from '@/lib/admin';
+import { format } from 'date-fns';
+import { Calendar, Clock, Gamepad2, Users } from 'lucide-react';
 
 interface TestSessionCardProps {
   session: TestSession;
@@ -124,7 +124,7 @@ export function TestSessionCard({ session }: TestSessionCardProps) {
                   size="sm"
                   className="w-full bg-gradient-to-r from-blue-600/30 to-blue-500/30 backdrop-blur-md border border-blue-400/40 text-white hover:from-blue-600/90 hover:to-blue-500/90 hover:border-blue-300/90 font-semibold transition-all duration-200 text-xs h-8"
                 >
-                  <Link href={`/testing-lab/sessions/${adaptedSession.slug}/join`}>Join Session</Link>
+                  <Link href={`/testing-lab/sessions/${adaptedSession.slug}`}>View Details</Link>
                 </Button>
               </div>
             ) : (
