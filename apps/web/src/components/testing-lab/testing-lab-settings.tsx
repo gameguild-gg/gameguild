@@ -1004,45 +1004,9 @@ export function TestingLabSettings({ initialSection = 'general', sectionOnly = f
     </>
   );
 
-  if (sectionOnly) {
-    return <div className="flex flex-col flex-1">{sectionContent}</div>;
-  }
-
-  return (
-    <div className="flex flex-row flex-1">
-      {/* Sidebar Navigation */}
-      <div className="w-64 border-r border-border bg-muted/30">
-        <div className="p-6">
-          <nav className="space-y-1">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentSection === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavigate(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                  {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-      {/* Main Content */}
-      <div className="flex flex-col flex-1 items-center justify-center">
-        <div className="flex flex-1 container">
-          <div className="flex flex-col flex-1 ">
-            {sectionContent}
-          </div>
-        </div>
-      </div>
+  // Shared dialogs (locations, confirmation, roles) need to be available in both full layout and sectionOnly modes
+  const dialogs = (
+    <>
       {/* Dialogs */}
       <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
         <DialogContent className="max-w-md">
@@ -1568,6 +1532,49 @@ export function TestingLabSettings({ initialSection = 'general', sectionOnly = f
           </form>
         </DialogContent>
       </Dialog>
+    </>
+  );
+
+  if (sectionOnly) {
+    return <div className="flex flex-col flex-1">{sectionContent}{dialogs}</div>;
+  }
+
+  return (
+    <div className="flex flex-row flex-1">
+      {/* Sidebar Navigation */}
+      <div className="w-64 border-r border-border bg-muted/30">
+        <div className="p-6">
+          <nav className="space-y-1">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentSection === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavigate(item.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 text-sm rounded-lg transition-colors ${isActive
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                  {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+      {/* Main Content */}
+      <div className="flex flex-col flex-1 items-center justify-center">
+        <div className="flex flex-1 container">
+          <div className="flex flex-col flex-1 ">
+            {sectionContent}
+          </div>
+        </div>
+      </div>
+      {dialogs}
     </div>
   );
 }
