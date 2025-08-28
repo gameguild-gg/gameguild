@@ -1,3 +1,10 @@
+## [2.15.2](https://github.com/gameguild-gg/gameguild/compare/v2.15.1...v2.15.2) (2025-08-28)
+
+
+### Bug Fixes
+
+* **ai_for_games:** Wrong image for Cohesion ([640d6c0](https://github.com/gameguild-gg/gameguild/commit/640d6c0557f6544bf780e6f9e1ff181aca28b590))
+
 ## [2.15.1](https://github.com/gameguild-gg/gameguild/compare/v2.15.0...v2.15.1) (2025-08-28)
 
 
