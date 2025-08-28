@@ -1,11 +1,11 @@
 'use client';
 
-import { TestSession } from '@/lib/api/testing-lab/test-sessions';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Monitor, Star, Trophy, Users } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { TestSession } from '@/lib/api/testing-lab/test-sessions';
 import { format } from 'date-fns';
+import { Calendar, Clock, Monitor, Star, Trophy, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -147,7 +147,7 @@ export function TestSessionCard({ session }: TestSessionCardProps) {
             <>
               <div onClick={(e) => e.stopPropagation()}>
                 <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0">
-                  <Link href={`/testing-lab/sessions/${session.slug}/join`}>Join Session</Link>
+                  <Link href={`/testing-lab/sessions/${session.slug}`}>View Details</Link>
                 </Button>
               </div>
             </>

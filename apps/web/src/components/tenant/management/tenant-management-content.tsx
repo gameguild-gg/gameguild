@@ -1,28 +1,28 @@
 'use client';
 
-import { useActionState, useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Tenant } from '@/lib/api/generated/types.gen';
-import { createTenantClient, updateTenantClient, updateTenantFormClient, deleteTenantClient } from '@/lib/admin/tenants/tenant-client-actions';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
+import { createTenantClient, deleteTenantClient, updateTenantFormClient } from '@/lib/admin/tenants/tenant-client-actions';
 import {
   activateTenantAction,
   deactivateTenantAction,
-  permanentDeleteTenantAction,
   getTenantStatisticsAction,
+  permanentDeleteTenantAction,
   searchTenantsAction,
 } from '@/lib/admin/tenants/tenants.actions';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { Tenant } from '@/lib/api/generated/types.gen';
 import { Building, Edit, Loader2, MoreHorizontal, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useActionState, useCallback, useEffect, useState } from 'react';
 
 interface TenantManagementContentProps {
   initialTenants: Tenant[];
@@ -37,7 +37,7 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
   const [searching, setSearching] = useState(false);
   // Fetch statistics on mount
   useEffect(() => {
-    getTenantStatisticsAction().then((res) => setStats(res.data || null));
+    getTenantStatisticsAction().then((res) => setStats(res.data || null)).catch(() => setStats(null));
   }, []);
 
   // Search/filter tenants
@@ -45,7 +45,7 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
     e.preventDefault();
     setSearching(true);
     try {
-  const res = await searchTenantsAction({ query: { searchTerm: search } });
+      const res = await searchTenantsAction({ query: { searchTerm: search } });
       setTenants(res.data || []);
     } finally {
       setSearching(false);
@@ -110,23 +110,8 @@ export function TenantManagementContent({ initialTenants, isAdmin = false }: Ten
     }
   }, [updateState.success, refreshData]);
 
+  // Soft delete (logical delete)
   const handleDelete = async (tenantId: string) => {
-  const handlePermanentDelete = async (tenantId: string) => {
-    await permanentDeleteTenantAction({ path: { id: tenantId } });
-    setTenantToDelete(null);
-    setIsDeleteDialogOpen(false);
-    refreshData();
-  };
-
-  const handleActivate = async (tenantId: string) => {
-    await activateTenantAction({ path: { id: tenantId } });
-    refreshData();
-  };
-
-  const handleDeactivate = async (tenantId: string) => {
-    await deactivateTenantAction({ path: { id: tenantId } });
-    refreshData();
-  };
     const result = await deleteTenantClient(tenantId);
     if (result.success) {
       setTenantToDelete(null);
