@@ -1,3 +1,10 @@
+## [2.15.1](https://github.com/gameguild-gg/gameguild/compare/v2.15.0...v2.15.1) (2025-08-28)
+
+
+### Bug Fixes
+
+* **dsa:** add more details to dsa content ([ed403f3](https://github.com/gameguild-gg/gameguild/commit/ed403f3443c82b8483dd6ab79bb9e4e7f0902bd8))
+
 # [2.15.0](https://github.com/gameguild-gg/gameguild/compare/v2.14.0...v2.15.0) (2025-08-28)
 
 
