@@ -55,7 +55,7 @@ $$
 \end{cases}
 $$
 
-![cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.gif)
+![cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Fcohesion.gif)
 
 ::: tip
 
