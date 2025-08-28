@@ -3,6 +3,7 @@ import { Product, ProductProgram, Program, ProgramContent } from '@/lib/api/gene
 // Intro to AI courses
 import ai4gamesSyllabus from './ai4games/syllabus.md';
 import ai4gamesSetup from './ai4games/week01/setup.md';
+import ai4gamesExpectations from './ai4games/week01/expectations.md';
 
 import ai4gamesFlocking from './ai4games/week02/flocking.md';
 import ai4gamesLife from './ai4games/week03/life.md';
@@ -1029,6 +1030,29 @@ export const ai4gamesSetupContent: ProgramContent = {
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
     slug: 'setup',
+};
+
+export const ai4gamesExpectationsContent: ProgramContent = {
+    id: 'ai4games-expectations',
+    programId: ai4gamesProgram.id!,
+    parentId: undefined,
+    title: 'Week 01: Course Expectations Report',
+    description: 'Student expectations and feedback analysis for the AI for Games course',
+    type: 0, // Page
+    body: ai4gamesExpectations,
+    sortOrder: 5,
+    isRequired: false,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: ai4gamesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'expectations',
 };
 
 export const ai4gamesFlockingContent: ProgramContent = {
@@ -2762,6 +2786,7 @@ pythonProgram.programContents = [
 ai4gamesProgram.programContents = [
     ai4gamesSyllabusContent,
     ai4gamesSetupContent,
+    ai4gamesExpectationsContent,
     ai4gamesFlockingContent,
     ai4gamesLifeContent,
     ai4gamesRngContent,
@@ -2908,6 +2933,7 @@ export const mockProgramContents: ProgramContent[] = [
     // AI4Games content
     ai4gamesSyllabusContent,
     ai4gamesSetupContent,
+    ai4gamesExpectationsContent,
     ai4gamesFlockingContent,
     ai4gamesLifeContent,
     ai4gamesRngContent,
