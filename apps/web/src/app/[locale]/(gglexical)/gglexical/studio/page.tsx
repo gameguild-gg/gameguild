@@ -7,12 +7,14 @@ import { Save, HardDrive, Eye, Blocks, Home } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import type { LexicalEditor } from "lexical"
 import { OpenProjectDialog } from "@/components/editor/extras/editor/open-project-dialog"
 import { CreateProjectDialog } from "@/components/editor/extras/editor/create-project-dialog"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
+import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 
 interface ProjectData {
   id: string
@@ -48,6 +50,7 @@ function formatSize(sizeInKB: number): string {
 }
 
 export default function Page() {
+  const router = useRouter()
   const [editorState, setEditorState] = useState<string>("")
   const [currentProjectId, setCurrentProjectId] = useState<string>("")
   const [currentProjectName, setCurrentProjectName] = useState<string>("")
@@ -85,6 +88,20 @@ export default function Page() {
   // Add these state variables after the existing state declarations:
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editingProjectName, setEditingProjectName] = useState("")
+
+  const handleLinkNavigation = (event: React.MouseEvent<HTMLAnchorElement>, url: string) => {
+    if (event.ctrlKey || event.metaKey || event.button === 1) {
+      return
+    }
+    event.preventDefault()
+
+    if (currentProjectId && editorState) {
+      setNextUrl(url)
+      setExitDialogOpen(true)
+    } else {
+      router.push(url)
+    }
+  }
 
   // Initialize IndexedDB and load projects
   useEffect(() => {
@@ -576,6 +593,18 @@ export default function Page() {
     setIsEditingTitle(false)
   }
 
+  const [exitDialogOpen, setExitDialogOpen] = useState(false)
+  const [nextUrl, setNextUrl] = useState<string>("")
+
+  const handleNavigation = (url: string) => {
+    if (currentProjectId && editorState) {
+      setNextUrl(url)
+      setExitDialogOpen(true)
+    } else {
+      router.push(url)
+    }
+  }
+
   return (
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -597,8 +626,9 @@ export default function Page() {
               <div className="p-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link href="/gglexical">
+                    <Link href="/gglexical" passHref>
                       <Button
+                        onClick={(e: any) => handleLinkNavigation(e, "/gglexical")}
                         variant="outline"
                         size="sm"
                         className="gap-2 border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
@@ -607,19 +637,18 @@ export default function Page() {
                         Home
                       </Button>
                     </Link>
-
-                    <Link href="/gglexical/viewer">
+                    <Link href="/gglexical/viewer" passHref>
                       <Button
+                        onClick={(e: any) => handleLinkNavigation(e, "/gglexical/viewer")}
                         variant="outline"
                         size="sm"
                         className="gap-2 border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
-                      >
-                        <Eye className="h-4 w-4" />
+                        >
+                        <Eye className="w-4" />
                         Viewer
                       </Button>
                     </Link>
                   </div>
-
                   <div className="flex flex-wrap items-center gap-3">
                     <Button
                       variant="outline"
@@ -917,6 +946,17 @@ export default function Page() {
           )}
         </DialogContent>
       </Dialog>
+      <ExitConfirmDialog
+        open={exitDialogOpen}
+        onOpenChange={setExitDialogOpen}
+        onConfirm={() => {
+          if (nextUrl) {
+            router.push(nextUrl)
+          }
+        }}
+        itemName={currentProjectName}
+        itemType="project"
+      />
     </>
   )
 }
