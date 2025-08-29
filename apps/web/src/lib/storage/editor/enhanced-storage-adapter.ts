@@ -30,7 +30,7 @@ export class EnhancedStorageAdapter {
   private isInitialized = false
 
   private readonly DB_NAME = "GGEditorDB"
-  private readonly DB_VERSION = 3 // Incremented for sync support
+  private readonly DB_VERSION = 2 // Incremented for sync support
   private readonly STORE_NAME = "projects"
   private readonly TAGS_STORE_NAME = "tags"
   private readonly METADATA_STORE_NAME = "project_metadata"

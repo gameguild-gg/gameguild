@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { BaseConfirmDialog } from "./base-confirm-dialog"
 import { DoorOpen } from 'lucide-react'
 
 interface ExitConfirmDialogProps {
@@ -35,44 +33,20 @@ export function ExitConfirmDialog({
     : `Tem certeza que deseja sair de ${itemType}? Salve para nao perder seu trabalho.`
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="text-center">{title}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-3">
-          <div className="flex flex-col items-center justify-center text-center">
-            <div className={`p-3 rounded-full mb-3 ${isDestructive ? 'bg-red-100' : 'bg-yellow-100'}`}>
-              <DoorOpen className={`w-6 h-6 ${isDestructive ? 'text-red-600' : 'text-yellow-600'}`} />
-            </div>
-            <h3 className="text-lg font-medium">
-              {itemName ? `Exit ${itemType}?` : `Exit confirm?`}
-            </h3>
-            <p className="text-sm text-gray-500 mt-2 mb-3">
-              {description || defaultDescription}
-            </p>
-          </div>
-          <div className="flex justify-between gap-3 pt-2">
-            <Button 
-              variant="outline" 
-              className="flex-1 bg-transparent" 
-              onClick={() => onOpenChange(false)}
-            >
-              {cancelText}
-            </Button>
-            <Button
-              variant={isDestructive ? "destructive" : "default"}
-              className="flex-1"
-              onClick={() => {
-                onConfirm()
-                onOpenChange(false)
-              }}
-            >
-              {confirmText}
-            </Button>
-          </div>
+    <BaseConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={title}
+      description={description || defaultDescription}
+      onConfirm={onConfirm}
+      confirmText={confirmText}
+      cancelText={cancelText}
+      confirmButtonClass={isDestructive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-primary text-primary-foreground hover:bg-primary/90"}
+      icon={
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isDestructive ? 'bg-red-100 dark:bg-red-900/20' : 'bg-yellow-100 dark:bg-yellow-900/20'}`}>
+          <DoorOpen className={`w-6 h-6 ${isDestructive ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'}`} />
         </div>
-      </DialogContent>
-    </Dialog>
+      }
+    />
   )
 }
