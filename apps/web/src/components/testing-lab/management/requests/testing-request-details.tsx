@@ -1,27 +1,35 @@
 'use client';
 
-import { useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { toast } from 'sonner';
-import { BarChart3, Calendar, Download, FileText, MessageSquare, Send, Star, TestTube, Users } from 'lucide-react';
-import Link from 'next/link';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
+import { approveTestingRequest, joinTestingRequest, leaveTestingRequest, rejectTestingRequest, submitTestingRequestFeedback } from '@/lib/admin';
 import type { TestingRequest } from '@/lib/api/generated/types.gen';
-import { joinTestingRequest, leaveTestingRequest, submitTestingRequestFeedback } from '@/lib/admin';
+import { BarChart3, Calendar, Download, FileText, MessageSquare, Send, Star, TestTube, Users } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
 
 interface TestingRequestDetailsProps {
   data: TestingRequest;
   participants?: unknown[];
   feedback?: unknown[];
-  statistics?: unknown;
+  statistics?: TestingRequestStatistics;
+  sessions?: { id?: string; sessionName?: string; status?: number }[];
+}
+
+interface TestingRequestStatistics {
+  averageRating?: number;
+  totalFeedback?: number;
+  completionRate?: number;
+  recommendationRate?: number;
 }
 
 interface FeedbackForm {
@@ -30,7 +38,7 @@ interface FeedbackForm {
   wouldRecommend: boolean;
 }
 
-export function TestingRequestDetails({ data: request, participants = [], feedback = [], statistics = {} }: TestingRequestDetailsProps) {
+export function TestingRequestDetails({ data: request, participants = [], feedback = [], statistics = {}, sessions = [] }: TestingRequestDetailsProps): React.ReactElement {
   const { data: session } = useSession();
   const router = useRouter();
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
@@ -41,6 +49,8 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
   });
   const [loading, setLoading] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
 
   const getStatusBadge = (status: number) => {
     switch (status) {
@@ -59,16 +69,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
     }
   };
 
-  const getInstructionsIcon = (type: string) => {
-    switch (type) {
-      case 'file':
-        return <FileText className="h-4 w-4" />;
-      case 'url':
-        return <FileText className="h-4 w-4" />;
-      default:
-        return <FileText className="h-4 w-4" />;
-    }
-  };
+  // Simplified: static icon (per-type icon removed due to transient typing issue)
 
   const handleJoinRequest = async () => {
     if (!session?.user?.id) return;
@@ -118,6 +119,36 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
     }
   };
 
+  const canModerate = session?.user && (session.user as any).isAdmin; // simplistic; replace with proper permission check
+  const isDraft = request.status === 0;
+  const hasLinkedSession = sessions.length > 0;
+
+  const handleApprove = async () => {
+    setApproving(true);
+    const res = await approveTestingRequest(request.id!);
+    if (res.success) {
+      toast.success('Request approved');
+      router.refresh();
+    } else {
+      toast.error(res.error || 'Approval failed');
+    }
+    setApproving(false);
+  };
+
+  const handleReject = async () => {
+    setRejecting(true);
+    const res = await rejectTestingRequest(request.id!);
+    if (res.success) {
+      toast.success('Request rejected');
+      router.refresh();
+    } else {
+      toast.error(res.error || 'Rejection failed');
+    }
+    setRejecting(false);
+  };
+
+  // const instructionsIcon: React.ReactNode = getInstructionsIcon(request.instructionsType as number | undefined);
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -130,6 +161,16 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
           <p className="text-gray-600 dark:text-gray-400">{request.description}</p>
         </div>
         <div className="flex gap-2">
+          {canModerate && isDraft && (
+            <>
+              <Button variant="outline" onClick={handleReject} disabled={rejecting || approving}>
+                {rejecting ? 'Rejecting...' : 'Reject'}
+              </Button>
+              <Button onClick={handleApprove} disabled={approving || rejecting || !hasLinkedSession}>
+                {approving ? 'Approving...' : hasLinkedSession ? 'Approve' : 'Link a Session First'}
+              </Button>
+            </>
+          )}
           {request.status === 1 && session?.user && !hasJoined && (
             <Button onClick={handleJoinRequest} disabled={loading}>
               <TestTube className="h-4 w-4 mr-2" />
@@ -247,24 +288,39 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                {getInstructionsIcon(request.instructionsType)}
+                <FileText className="h-4 w-4" />
                 Testing Instructions
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {request.instructionsType === 'inline' && request.instructionsContent && (
-                <div className="prose dark:prose-invert max-w-none">
-                  <p>{request.instructionsContent}</p>
+              {isDraft && canModerate && !hasLinkedSession && (
+                <div className="mb-4 border border-amber-400/30 bg-amber-500/10 rounded-md p-3 text-sm text-amber-300">
+                  Esta request ainda não possui uma Testing Session vinculada. Crie ou vincule uma sessão antes de aprovar.
                 </div>
               )}
-              {request.instructionsType === 'url' && request.instructionsUrl && (
-                <Button variant="outline" asChild>
-                  <Link href={request.instructionsUrl} target="_blank">
-                    <FileText className="h-4 w-4 mr-2" />
-                    View Instructions
-                  </Link>
-                </Button>
-              )}
+              {(() => {
+                const t = (request as any).instructionsType;
+                const isText = t === 0 || t === 'inline' || t === 'text';
+                const isUrl = t === 1 || t === 'url';
+                if (isText && request.instructionsContent) {
+                  return (
+                    <div className="prose dark:prose-invert max-w-none">
+                      <p>{request.instructionsContent}</p>
+                    </div>
+                  );
+                }
+                if (isUrl && request.instructionsUrl) {
+                  return (
+                    <Button variant="outline" asChild>
+                      <Link href={request.instructionsUrl} target="_blank">
+                        <FileText className="h-4 w-4 mr-2" />
+                        View Instructions
+                      </Link>
+                    </Button>
+                  );
+                }
+                return null;
+              })()}
             </CardContent>
           </Card>
 
@@ -286,7 +342,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
           )}
 
           {/* Statistics */}
-          {statistics && (
+          {!!statistics && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -300,23 +356,23 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
                     <Label className="text-sm font-medium">Average Rating</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Star className="h-4 w-4 text-yellow-500" />
-                      <span className="text-lg font-semibold">{statistics.averageRating || 'N/A'}</span>
+                      <span className="text-lg font-semibold">{statistics.averageRating ?? 'N/A'}</span>
                     </div>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Total Feedback</Label>
-                    <p className="text-lg font-semibold">{statistics.totalFeedback || 0}</p>
+                    <p className="text-lg font-semibold">{statistics.totalFeedback ?? 0}</p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Completion Rate</Label>
                     <div className="mt-1">
-                      <Progress value={statistics.completionRate || 0} className="h-2" />
-                      <p className="text-sm text-gray-600 mt-1">{statistics.completionRate || 0}%</p>
+                      <Progress value={statistics.completionRate ?? 0} className="h-2" />
+                      <p className="text-sm text-gray-600 mt-1">{statistics.completionRate ?? 0}%</p>
                     </div>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Would Recommend</Label>
-                    <p className="text-lg font-semibold">{statistics.recommendationRate || 0}%</p>
+                    <p className="text-lg font-semibold">{statistics.recommendationRate ?? 0}%</p>
                   </div>
                 </div>
               </CardContent>
@@ -326,6 +382,36 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Linked Sessions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Linked Sessions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {sessions.length === 0 && (
+                <div className="text-sm text-gray-400">
+                  Nenhuma sessão vinculada.
+                  {canModerate && (
+                    <div className="mt-2">
+                      <Button size="sm" asChild>
+                        <Link href={`/dashboard/testing-lab/sessions/create?testingRequestId=${request.id}`}>Criar sessão</Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+              {sessions.length > 0 && (
+                <ul className="space-y-2">
+                  {sessions.map(s => (
+                    <li key={s.id} className="rounded border border-slate-700 p-2 text-sm flex items-center justify-between">
+                      <span className="truncate max-w-[150px]" title={s.sessionName || s.id}>{s.sessionName || s.id}</span>
+                      <Link href={`/dashboard/testing-lab/sessions/${s.id}`} className="text-blue-400 hover:underline">ver</Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
           {/* Quick Info */}
           <Card>
             <CardHeader>

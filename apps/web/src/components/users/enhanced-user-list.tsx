@@ -2,7 +2,7 @@
 'use client';
 
 import { useTenant } from '@/components/tenant/context/tenant-provider';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { UserResponseDto } from '@/lib/api/generated/types.gen';
-import { useUserContext } from '@/lib/user-management/users/users.context';
 import { cn } from '@/lib/utils';
 import {
   Activity,
@@ -24,17 +23,13 @@ import {
   ChevronsRight,
   Clock,
   Columns,
-  Crown,
-  Database,
   Download,
   Eye,
   Filter,
-  Key,
   MessageSquare,
   MoreHorizontal,
   RefreshCw,
   Settings2,
-  Shield,
   SortAsc,
   SortDesc,
   UserCheck,
@@ -46,30 +41,19 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-// Enhanced types for user management
+// Enhanced types for user management - using only real API data
 interface EnhancedUser extends UserResponseDto {
-  lastActive?: string;
-  ownedObjectsCount?: number;
-  grantsReceivedCount?: number;
-  tenantMemberships?: {
-    tenantId: string;
-    tenantName: string;
-    role: 'owner' | 'admin' | 'member';
-  }[];
-  avatar?: string;
-  username?: string;
+  // Only add fields that come from the real API response
 }
 
 interface UserFilters {
   search: string;
-  status: 'all' | 'active' | 'suspended' | 'pending';
-  tenant: string;
-  lastActive: 'all' | '7days' | '30days' | '90days' | 'never';
-  accessType: 'all' | 'owns' | 'granted' | 'delegated';
+  status: 'all' | 'active' | 'suspended';
+  lastActive: 'all' | '7days' | '30days' | '90days';
 }
 
 interface UserSort {
-  field: 'name' | 'email' | 'lastActive' | 'createdAt' | 'status';
+  field: 'name' | 'email' | 'createdAt' | 'updatedAt' | 'status';
   direction: 'asc' | 'desc';
 }
 
@@ -90,47 +74,31 @@ interface ColumnConfig {
 const DEFAULT_COLUMNS: ColumnConfig[] = [
   { id: 'user', label: 'User', sortable: true, visible: true, required: true },
   { id: 'contact', label: 'Contact', sortable: true, visible: true },
-  { id: 'tenant', label: 'Tenant', sortable: false, visible: true },
   { id: 'status', label: 'Status', sortable: true, visible: true },
-  { id: 'lastActive', label: 'Last Active', sortable: true, visible: true },
-  { id: 'ownership', label: 'Ownership', sortable: false, visible: true },
-  { id: 'grants', label: 'Grants', sortable: false, visible: true },
-  { id: 'role', label: 'Role', sortable: false, visible: false },
-  { id: 'balance', label: 'Balance', sortable: true, visible: false },
+  { id: 'role', label: 'Role', sortable: false, visible: true },
+  { id: 'balance', label: 'Balance', sortable: true, visible: true },
   { id: 'subscription', label: 'Subscription', sortable: false, visible: false },
   { id: 'createdAt', label: 'Created', sortable: true, visible: false },
   { id: 'actions', label: 'Actions', sortable: false, visible: true, required: true },
 ];
 
-const AVAILABLE_TENANTS = [
-  'GameDev Studio',
-  'IndieCorp',
-  'MegaGames',
-  'PixelPerfect',
-  'CodeCrafters',
-  'GameForge'
-];
-
 const INITIAL_FILTERS: UserFilters = {
   search: '',
   status: 'all',
-  tenant: 'current', // Will be set to current tenant name in effect
   lastActive: 'all',
-  accessType: 'all',
 };
 
 const INITIAL_SORT: UserSort = {
-  field: 'lastActive',
+  field: 'createdAt',
   direction: 'desc',
 };
 
-export function EnhancedUserList() {
-  const { paginatedUsers: contextUsers } = useUserContext();
+interface EnhancedUserListProps { users: UserResponseDto[] }
+export function EnhancedUserList({ users: incomingUsers }: EnhancedUserListProps) {
   const { currentTenant } = useTenant();
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Enhanced state management
   const [users, setUsers] = useState<EnhancedUser[]>([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState<UserFilters>(INITIAL_FILTERS);
@@ -139,22 +107,18 @@ export function EnhancedUserList() {
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
   const [columns, setColumns] = useState<ColumnConfig[]>(DEFAULT_COLUMNS);
-  const [impersonatingUser, setImpersonatingUser] = useState<string | null>(null);
   const [bulkActionDialog, setBulkActionDialog] = useState<string | null>(null);
-  const [editingUserTenants, setEditingUserTenants] = useState<{ userId: string, tenants: string[] } | null>(null);
 
-  // Initialize from URL params and set default to current tenant
+  // Initialize from URL params
   useEffect(() => {
     const urlFilters: UserFilters = {
       search: searchParams.get('search') || '',
       status: (searchParams.get('status') as UserFilters['status']) || 'all',
-      tenant: searchParams.get('tenant') || (currentTenant?.name || 'all'),
       lastActive: (searchParams.get('lastActive') as UserFilters['lastActive']) || 'all',
-      accessType: (searchParams.get('accessType') as UserFilters['accessType']) || 'all',
     };
 
     const urlSort: UserSort = {
-      field: (searchParams.get('sortField') as UserSort['field']) || 'lastActive',
+      field: (searchParams.get('sortField') as UserSort['field']) || 'createdAt',
       direction: (searchParams.get('sortDirection') as UserSort['direction']) || 'desc',
     };
 
@@ -167,26 +131,20 @@ export function EnhancedUserList() {
     setFilters(urlFilters);
     setSort(urlSort);
     setPagination(urlPagination);
-  }, [searchParams, currentTenant?.name]);
+  }, [searchParams]);
 
-  // Enhanced users with real data filtered by current tenant
+  // Load real users from API
   useEffect(() => {
-    if (!contextUsers) return;
-    // Map API users without injecting fake metrics; keep placeholders if missing
-    const mapped: EnhancedUser[] = contextUsers.map((user: UserResponseDto) => ({
-      ...(user as any),
-      lastActive: (user as any).lastActive || user.updatedAt || user.createdAt || undefined,
-      tenantMemberships: (user as any).tenantMemberships || [],
-      avatar: (user as any).avatar || (user.email ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.email)}` : undefined),
-      username: (user as any).username || (user.email?.split('@')[0] ?? undefined),
+    if (!incomingUsers) return;
+    // Use real API data directly without adding fake properties
+    const mapped: EnhancedUser[] = incomingUsers.map((user: UserResponseDto) => ({
+      ...user,
     }));
 
-    // If a tenant is selected and backend eventually tags memberships, filter when data exists
-    const filtered = currentTenant
-      ? mapped.filter(u => !u.tenantMemberships?.length || u.tenantMemberships?.some(m => m.tenantId === currentTenant.id || m.tenantName === currentTenant.name))
-      : mapped;
-    setUsers(filtered);
-  }, [contextUsers, currentTenant]);
+    setUsers(mapped);
+    console.log('Users loaded in EnhancedUserList:', mapped.length);
+    console.log('First user sample:', mapped[0]);
+  }, [incomingUsers]);
 
   // Update URL when filters/sort/pagination change
   const updateURL = (newFilters: UserFilters, newSort: UserSort, newPagination: UserPagination) => {
@@ -196,7 +154,7 @@ export function EnhancedUserList() {
       if (value && value !== 'all') params.set(key, value);
     });
 
-    if (newSort.field !== 'lastActive') params.set('sortField', newSort.field);
+    if (newSort.field !== 'createdAt') params.set('sortField', newSort.field);
     if (newSort.direction !== 'desc') params.set('sortDirection', newSort.direction);
     if (newPagination.page !== 1) params.set('page', newPagination.page.toString());
     if (newPagination.limit !== 20) params.set('limit', newPagination.limit.toString());
@@ -206,6 +164,9 @@ export function EnhancedUserList() {
 
   // Filter and sort users
   const filteredAndSortedUsers = useMemo(() => {
+    console.log('Filtering users. Input users:', users.length);
+    console.log('Current filters:', filters);
+
     const filtered = users.filter((user) => {
       // Search filter
       if (filters.search) {
@@ -225,29 +186,14 @@ export function EnhancedUserList() {
       // Status filter
       if (filters.status !== 'all') {
         const userStatus = user.isActive ? 'active' : 'suspended';
-        if (userStatus !== filters.status && filters.status !== 'pending') {
+        if (userStatus !== filters.status) {
           return false;
         }
       }
 
-      // Tenant filter
-      if (filters.tenant !== 'all') {
-        if (filters.tenant === 'game-guild-only') {
-          // Show only users with no tenant memberships (Game Guild only)
-          if (user.tenantMemberships && user.tenantMemberships.length > 0) {
-            return false;
-          }
-        } else {
-          // Show users who belong to the selected tenant
-          if (!user.tenantMemberships || !user.tenantMemberships.some(m => m.tenantName === filters.tenant)) {
-            return false;
-          }
-        }
-      }
-
-      // Last active filter
-      if (filters.lastActive !== 'all' && user.lastActive) {
-        const lastActive = new Date(user.lastActive);
+      // Last active filter based on updatedAt (real field from API)
+      if (filters.lastActive !== 'all' && user.updatedAt) {
+        const lastActive = new Date(user.updatedAt);
         const now = new Date();
         const daysDiff = (now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24);
 
@@ -260,9 +206,6 @@ export function EnhancedUserList() {
             break;
           case '90days':
             if (daysDiff > 90) return false;
-            break;
-          case 'never':
-            if (daysDiff < 365) return false; // Assume never if > 1 year
             break;
         }
       }
@@ -277,20 +220,20 @@ export function EnhancedUserList() {
 
       switch (sort.field) {
         case 'name':
-          aValue = a.name || '';
-          bValue = b.name || '';
+          aValue = (a.name ?? '').toLowerCase();
+          bValue = (b.name ?? '').toLowerCase();
           break;
         case 'email':
-          aValue = a.email || '';
-          bValue = b.email || '';
-          break;
-        case 'lastActive':
-          aValue = a.lastActive ? new Date(a.lastActive).getTime() : 0;
-          bValue = b.lastActive ? new Date(b.lastActive).getTime() : 0;
+          aValue = (a.email ?? '').toLowerCase();
+          bValue = (b.email ?? '').toLowerCase();
           break;
         case 'createdAt':
           aValue = a.createdAt ? new Date(a.createdAt).getTime() : 0;
           bValue = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          break;
+        case 'updatedAt':
+          aValue = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+          bValue = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
           break;
         case 'status':
           aValue = a.isActive ? 'active' : 'suspended';
@@ -307,6 +250,7 @@ export function EnhancedUserList() {
       }
     });
 
+    console.log('Filtered users count:', filtered.length);
     return filtered;
   }, [users, filters, sort]);
 
@@ -314,7 +258,9 @@ export function EnhancedUserList() {
   const paginatedUsers = useMemo(() => {
     const startIndex = (pagination.page - 1) * pagination.limit;
     const endIndex = startIndex + pagination.limit;
-    return filteredAndSortedUsers.slice(startIndex, endIndex);
+    const paginated = filteredAndSortedUsers.slice(startIndex, endIndex);
+    console.log('Paginated users count:', paginated.length, 'of total:', filteredAndSortedUsers.length);
+    return paginated;
   }, [filteredAndSortedUsers, pagination]);
 
   // Update pagination total
@@ -413,49 +359,7 @@ export function EnhancedUserList() {
     }
   };
 
-  const handleImpersonate = (userId: string) => {
-    setImpersonatingUser(userId);
-    toast.success('Impersonation started', {
-      description: 'You are now viewing the platform as this user',
-    });
-  };
 
-  const stopImpersonation = () => {
-    setImpersonatingUser(null);
-    toast.success('Impersonation stopped');
-  };
-
-  const handleTenantEdit = (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    if (user) {
-      setEditingUserTenants({
-        userId,
-        tenants: user.tenantMemberships?.map(m => m.tenantName) || []
-      });
-    }
-  };
-
-  const handleTenantSave = async (userId: string, newTenantNames: string[]) => {
-    try {
-      // Update the user's tenant memberships
-      setUsers(prev => prev.map(user =>
-        user.id === userId
-          ? {
-            ...user,
-            tenantMemberships: newTenantNames.map(tenantName => ({
-              tenantId: `tenant-${tenantName.toLowerCase().replace(/\s+/g, '-')}`,
-              tenantName,
-              role: 'member' as const
-            }))
-          }
-          : user
-      ));
-      setEditingUserTenants(null);
-      toast.success('User tenant memberships updated successfully');
-    } catch {
-      toast.error('Failed to update user tenant memberships');
-    }
-  };
 
   const handleColumnToggle = (columnId: string) => {
     setColumns(prev => prev.map(col =>
@@ -475,7 +379,6 @@ export function EnhancedUserList() {
       'user': 'name',
       'contact': 'email',
       'status': 'status',
-      'lastActive': 'lastActive',
       'createdAt': 'createdAt',
       'balance': 'name', // Using name as fallback since balance isn't in sort options
     };
@@ -520,14 +423,13 @@ export function EnhancedUserList() {
           <TableCell key={column.id}>
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={user.avatar} />
                 <AvatarFallback>
                   {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <div className="font-medium">{user.name || 'Unknown User'}</div>
-                <div className="text-sm text-gray-500">@{user.username || 'No username'}</div>
+                <div className="text-sm text-gray-500">@{user.username || user.email?.split('@')[0] || 'No username'}</div>
               </div>
             </div>
           </TableCell>
@@ -545,64 +447,10 @@ export function EnhancedUserList() {
           </TableCell>
         );
 
-      case 'tenant':
-        return (
-          <TableCell key={column.id}>
-            <div
-              className="flex flex-wrap gap-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-1 rounded"
-              onClick={() => handleTenantEdit(user.id!)}
-              title="Click to edit tenant memberships"
-            >
-              {user.tenantMemberships && user.tenantMemberships.length > 0 ? (
-                user.tenantMemberships.map((membership, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {membership.tenantName}
-                    <span className="ml-1 text-[10px] opacity-75">({membership.role})</span>
-                  </Badge>
-                ))
-              ) : (
-                <Badge variant="secondary" className="text-xs">
-                  Game Guild Only
-                </Badge>
-              )}
-            </div>
-          </TableCell>
-        );
-
       case 'status':
         return (
           <TableCell key={column.id}>
             {getUserStatusBadge(user)}
-          </TableCell>
-        );
-
-      case 'lastActive':
-        return (
-          <TableCell key={column.id}>
-            <div className="flex items-center gap-1 text-sm text-gray-600">
-              <Clock className="h-3 w-3" />
-              {getLastActiveText(user.lastActive)}
-            </div>
-          </TableCell>
-        );
-
-      case 'ownership':
-        return (
-          <TableCell key={column.id}>
-            <div className="flex items-center gap-1 text-sm">
-              <Database className="h-3 w-3 text-blue-500" />
-              {user.ownedObjectsCount} items
-            </div>
-          </TableCell>
-        );
-
-      case 'grants':
-        return (
-          <TableCell key={column.id}>
-            <div className="flex items-center gap-1 text-sm">
-              <Key className="h-3 w-3 text-green-500" />
-              {user.grantsReceivedCount} grants
-            </div>
           </TableCell>
         );
 
@@ -655,14 +503,6 @@ export function EnhancedUserList() {
                   <Eye className="h-4 w-4 mr-2" />
                   View Details
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleImpersonate(user.id!)}>
-                  <Shield className="h-4 w-4 mr-2" />
-                  Impersonate
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleTenantEdit(user.id!)}>
-                  <Users className="h-4 w-4 mr-2" />
-                  Edit Tenants
-                </DropdownMenuItem>
                 <DropdownMenuItem>
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Send Message
@@ -692,21 +532,6 @@ export function EnhancedUserList() {
     } else {
       return <Badge variant="destructive">Suspended</Badge>;
     }
-  };
-
-  const getLastActiveText = (lastActive?: string) => {
-    if (!lastActive) return 'Never';
-
-    const date = new Date(lastActive);
-    const now = new Date();
-    const daysDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (daysDiff === 0) return 'Today';
-    if (daysDiff === 1) return 'Yesterday';
-    if (daysDiff < 7) return `${daysDiff} days ago`;
-    if (daysDiff < 30) return `${Math.floor(daysDiff / 7)} weeks ago`;
-    if (daysDiff < 365) return `${Math.floor(daysDiff / 30)} months ago`;
-    return `${Math.floor(daysDiff / 365)} years ago`;
   };
 
   const hasActiveFilters = Object.entries(filters).some(([key, value]) => {
@@ -791,28 +616,6 @@ export function EnhancedUserList() {
         </div>
       </div>
 
-      {/* Impersonation Banner */}
-      {impersonatingUser && (
-        <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950">
-          <CardContent className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-2">
-              <Crown className="h-5 w-5 text-orange-600" />
-              <span className="font-medium text-orange-800 dark:text-orange-200">
-                Impersonating User: {users.find(u => u.id === impersonatingUser)?.name}
-              </span>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={stopImpersonation}
-              className="border-orange-300 text-orange-700 hover:bg-orange-100"
-            >
-              Stop Impersonation
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Filters Panel */}
       {showFilters && (
         <Card>
@@ -857,32 +660,6 @@ export function EnhancedUserList() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Tenant</label>
-                <Select
-                  value={filters.tenant}
-                  onValueChange={(value) => handleFilterChange('tenant', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Users</SelectItem>
-                    <SelectItem value="game-guild-only">Game Guild Only</SelectItem>
-                    {currentTenant && (
-                      <SelectItem value={currentTenant.name}>
-                        {currentTenant.name} (Current)
-                      </SelectItem>
-                    )}
-                    {AVAILABLE_TENANTS.filter(t => t !== currentTenant?.name).map((tenant) => (
-                      <SelectItem key={tenant} value={tenant}>
-                        {tenant}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
                 <label className="text-sm font-medium mb-2 block">Last Active</label>
                 <Select
                   value={filters.lastActive}
@@ -897,24 +674,6 @@ export function EnhancedUserList() {
                     <SelectItem value="30days">Last 30 days</SelectItem>
                     <SelectItem value="90days">Last 90 days</SelectItem>
                     <SelectItem value="never">Never logged in</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium mb-2 block">Access Type</label>
-                <Select
-                  value={filters.accessType}
-                  onValueChange={(value) => handleFilterChange('accessType', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Access</SelectItem>
-                    <SelectItem value="owns">Object Owners</SelectItem>
-                    <SelectItem value="granted">Granted Access</SelectItem>
-                    <SelectItem value="delegated">Delegated Access</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -944,30 +703,12 @@ export function EnhancedUserList() {
               />
             </Badge>
           )}
-          {filters.tenant !== 'all' && (
-            <Badge variant="secondary" className="gap-1">
-              Tenant: {filters.tenant}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() => handleFilterChange('tenant', 'all')}
-              />
-            </Badge>
-          )}
           {filters.lastActive !== 'all' && (
             <Badge variant="secondary" className="gap-1">
               Last Active: {filters.lastActive}
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() => handleFilterChange('lastActive', 'all')}
-              />
-            </Badge>
-          )}
-          {filters.accessType !== 'all' && (
-            <Badge variant="secondary" className="gap-1">
-              Access: {filters.accessType}
-              <X
-                className="h-3 w-3 cursor-pointer"
-                onClick={() => handleFilterChange('accessType', 'all')}
               />
             </Badge>
           )}
@@ -1014,14 +755,6 @@ export function EnhancedUserList() {
                 >
                   <Download className="h-4 w-4 mr-1" />
                   Export
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setBulkActionDialog('revoke-grants')}
-                >
-                  <Key className="h-4 w-4 mr-1" />
-                  Revoke Grants
                 </Button>
               </div>
             </div>
@@ -1198,92 +931,6 @@ export function EnhancedUserList() {
             </Button>
             <Button onClick={() => handleBulkAction(bulkActionDialog!)}>
               Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Tenant Editing Dialog */}
-      <Dialog open={!!editingUserTenants} onOpenChange={() => setEditingUserTenants(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit User Tenants</DialogTitle>
-            <DialogDescription>
-              Select which tenants this user belongs to. Users with no tenants are Game Guild only.
-            </DialogDescription>
-          </DialogHeader>
-          {editingUserTenants && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Available Tenants:</p>
-                <div className="space-y-2">
-                  {currentTenant && (
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`tenant-${currentTenant.name}`}
-                        checked={editingUserTenants.tenants.includes(currentTenant.name)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setEditingUserTenants({
-                              ...editingUserTenants,
-                              tenants: [...editingUserTenants.tenants, currentTenant.name]
-                            });
-                          } else {
-                            setEditingUserTenants({
-                              ...editingUserTenants,
-                              tenants: editingUserTenants.tenants.filter(t => t !== currentTenant.name)
-                            });
-                          }
-                        }}
-                      />
-                      <label htmlFor={`tenant-${currentTenant.name}`} className="text-sm font-medium">
-                        {currentTenant.name} (Current)
-                      </label>
-                    </div>
-                  )}
-                  {AVAILABLE_TENANTS.filter(t => t !== currentTenant?.name).map((tenant) => (
-                    <div key={tenant} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`tenant-${tenant}`}
-                        checked={editingUserTenants.tenants.includes(tenant)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setEditingUserTenants({
-                              ...editingUserTenants,
-                              tenants: [...editingUserTenants.tenants, tenant]
-                            });
-                          } else {
-                            setEditingUserTenants({
-                              ...editingUserTenants,
-                              tenants: editingUserTenants.tenants.filter(t => t !== tenant)
-                            });
-                          }
-                        }}
-                      />
-                      <label htmlFor={`tenant-${tenant}`} className="text-sm">
-                        {tenant}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="text-xs text-gray-500">
-                <strong>Note:</strong> If no tenants are selected, the user will be marked as &ldquo;Game Guild Only&rdquo;.
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingUserTenants(null)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (editingUserTenants) {
-                  handleTenantSave(editingUserTenants.userId, editingUserTenants.tenants);
-                }
-              }}
-            >
-              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
