@@ -1052,8 +1052,47 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5" />
+            Send Message
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="subject">Subject</Label>
+            <Input id="subject" value={messageForm.subject} onChange={(e) => setMessageForm({ ...messageForm, subject: e.target.value })} placeholder="Enter message subject" />
+          </div>
+
+          <div>
+            <Label htmlFor="message">Message</Label>
+            <Textarea id="message" value={messageForm.message} onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })} placeholder="Enter your message" rows={5} />
+          </div>
+
+          <div>
+            <Label htmlFor="priority">Priority</Label>
+            <Select value={messageForm.priority} onValueChange={(value: 'low' | 'normal' | 'high') => setMessageForm({ ...messageForm, priority: value })}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button onClick={handleSendMessage}>
+            <Send className="h-4 w-4 mr-2" />
+            Send Message
+          </Button>
+        </CardContent>
+      </Card>
+
 
       {/* Dialogs */}
 
