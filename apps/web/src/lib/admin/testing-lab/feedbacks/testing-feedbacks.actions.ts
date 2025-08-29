@@ -72,7 +72,7 @@ export async function getTestingFeedbacksAction(): Promise<TestingFeedbackAction
 
 export async function searchTestingFeedbacksAction(query: string): Promise<TestingFeedbackActionResult<TestingFeedback[]>> {
     const result = await getTestingFeedbacksAction();
-    
+
     if (!result.success || !result.data) {
         return result;
     }
