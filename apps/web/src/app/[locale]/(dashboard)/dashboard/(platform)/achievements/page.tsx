@@ -1,6 +1,6 @@
 import { AchievementManagementContent } from '@/components/achievements/management/achievement-management-content';
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
-import { getAchievements } from '@/lib/achievements/achievements.actions';
+import { getAchievementsAction } from '@/lib/admin/achievements/achievements.actions';
 import type { AchievementDto } from '@/lib/core/api/generated/types.gen';
 import { Loader2 } from 'lucide-react';
 import { Metadata } from 'next';
@@ -15,9 +15,9 @@ export default async function AchievementsPage() {
   // Load achievements data
   let achievements: AchievementDto[] = [];
   try {
-    const result = await getAchievements();
-    if (result.success && result.data?.achievements) {
-      achievements = result.data.achievements;
+    const result = await getAchievementsAction();
+    if (result.success && result.data) {
+      achievements = result.data;
     }
   } catch (error) {
     console.error('Failed to load achievements:', error);

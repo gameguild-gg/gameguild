@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getUserById } from '@/lib/user-management/users/users.actions';
 import { getUserByUsername } from '@/lib/api/users';
-import { getUserAchievements } from '@/lib/user-management/achievements/achievements.actions';
 import { getUserProfileByUserId } from '@/lib/user-management/profiles/profiles.actions';
 import type { UserResponseDto } from '@/lib/api/generated/types.gen';
 import type { User } from '@/lib/api/users';
@@ -21,16 +20,6 @@ export interface UserDetail extends UserResponseDto {
   avatar?: string; // Generated avatar URL
 
   // Real data from API endpoints
-  achievements?: Array<{
-    id: string;
-    name: string;
-    description: string;
-    category: string;
-    isCompleted: boolean;
-    earnedAt?: string;
-    progress?: number;
-  }>;
-
   profile?: {
     bio?: string;
     website?: string;
@@ -39,13 +28,6 @@ export interface UserDetail extends UserResponseDto {
     organization?: string;
     skills?: string[];
     interests?: string[];
-  };
-
-  // Statistics from real API
-  achievementStats?: {
-    totalAchievements: number;
-    completedAchievements: number;
-    recentAchievements: number;
   };
 
   // Extended fields that don't exist in API yet - marked as placeholders
@@ -103,42 +85,9 @@ export function useUserDetail(identifierType: UserIdentifierType, identifier: st
 
   // Shared utility to fetch additional user data
   const fetchAdditionalUserData = async (userId: string) => {
-    const [achievementsResult, profileResult] = await Promise.allSettled([
-      getUserAchievements(userId),
+    const [profileResult] = await Promise.allSettled([
       getUserProfileByUserId(userId)
     ]);
-
-    // Process achievements
-    let achievements: UserDetail['achievements'] = [];
-    let achievementStats: UserDetail['achievementStats'] = {
-      totalAchievements: 0,
-      completedAchievements: 0,
-      recentAchievements: 0
-    };
-
-    if (achievementsResult.status === 'fulfilled' && achievementsResult.value.data?.userAchievements) {
-      achievements = achievementsResult.value.data.userAchievements.map(userAchievement => ({
-        id: userAchievement.id || '',
-        name: userAchievement.achievement?.name || 'Unknown Achievement',
-        description: userAchievement.achievement?.description || '',
-        category: userAchievement.achievement?.category || 'General',
-        isCompleted: userAchievement.isCompleted || false,
-        earnedAt: userAchievement.earnedAt,
-        progress: userAchievement.progress || 0
-      }));
-
-      achievementStats = {
-        totalAchievements: achievements.length,
-        completedAchievements: achievements.filter(a => a.isCompleted).length,
-        recentAchievements: achievements.filter(a => {
-          if (!a.earnedAt) return false;
-          const earnedDate = new Date(a.earnedAt);
-          const thirtyDaysAgo = new Date();
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-          return earnedDate > thirtyDaysAgo;
-        }).length
-      };
-    }
 
     // Process profile
     let profile: UserDetail['profile'];
@@ -155,14 +104,12 @@ export function useUserDetail(identifierType: UserIdentifierType, identifier: st
       };
     }
 
-    return { achievements, profile, achievementStats };
+    return { profile };
   };
 
   // Shared utility to create UserDetail object
   const createUserDetail = (userResponse: UserResponseDto | User, additionalData: {
-    achievements: UserDetail['achievements'];
     profile: UserDetail['profile'];
-    achievementStats: UserDetail['achievementStats'];
   }): UserDetail => {
     return {
       ...userResponse,
@@ -173,9 +120,7 @@ export function useUserDetail(identifierType: UserIdentifierType, identifier: st
       username: 'username' in userResponse ? userResponse.username : undefined,
       displayName: userResponse.name || userResponse.email?.split('@')[0] || 'Unknown User',
       avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userResponse.name || userResponse.email || 'User')}`,
-      achievements: additionalData.achievements,
       profile: additionalData.profile,
-      achievementStats: additionalData.achievementStats,
       
       // PLACEHOLDER fields - these are not available in the current API
       lastActive: undefined,
