@@ -5,7 +5,7 @@ import type { UserResponseDto } from '@/lib/api/generated/types.gen';
 import { RefreshCw } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
-import { EnhancedUserList } from './enhanced-user-list';
+import { UserList } from './user-list';
 
 interface UserManagementContentProps {
   users: UserResponseDto[]
@@ -55,7 +55,7 @@ export function UserManagementContent({ users: initialUsers }: UserManagementCon
           Refresh Users
         </Button>
       </div>
-      <EnhancedUserList users={users} />
+      <UserList users={users} />
     </div>
   );
 }
