@@ -1,103 +1,19 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Plus, Search, Trophy, Users, Award, Target } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { getAchievements, getAchievementsStatistics } from '@/lib/achievements/achievements.actions';
-import type { AchievementDto, AchievementStatisticsDto } from '@/lib/core/api/generated/types.gen';
-import { CreateAchievementDialog } from './create-achievement-dialog';
-import { AchievementCard } from './achievement-card';
+import type { AchievementDto } from '@/lib/core/api/generated/types.gen';
+import { AchievementsList } from '../achievements-list';
 
-export function AchievementManagementContent() {
-  const [achievements, setAchievements] = useState<AchievementDto[]>([]);
-  const [statistics, setStatistics] = useState<AchievementStatisticsDto | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+interface AchievementManagementContentProps {
+  achievements: AchievementDto[]
+}
 
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Load achievements and statistics in parallel
-      const [achievementsResponse, statisticsResponse] = await Promise.all([getAchievements(), getAchievementsStatistics()]);
-
-      // Handle achievements response
-      if (achievementsResponse.success && achievementsResponse.data?.achievements) {
-        setAchievements(achievementsResponse.data.achievements);
-      } else if (!achievementsResponse.success) {
-        setError(achievementsResponse.error || 'Failed to load achievements');
-        return;
-      }
-
-      // Handle statistics response
-      if (statisticsResponse.success && statisticsResponse.data) {
-        setStatistics(statisticsResponse.data);
-      } else if (!statisticsResponse.success) {
-        console.warn('Failed to load statistics:', statisticsResponse.error);
-        // Don't fail the entire page if just statistics fail
-      }
-    } catch (error) {
-      console.error('Error loading achievements data:', error);
-      setError('An unexpected error occurred while loading data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredAchievements = achievements.filter(
-    (achievement) => achievement.name?.toLowerCase().includes(searchTerm.toLowerCase()) || achievement.description?.toLowerCase().includes(searchTerm.toLowerCase()) || achievement.category?.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
-  const handleAchievementCreated = () => {
-    setIsCreateDialogOpen(false);
-    loadData(); // Refresh the data
-  };
-
-  const handleAchievementUpdated = () => {
-    loadData(); // Refresh the data
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="text-muted-foreground">Loading achievements...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col justify-center items-center min-h-[400px] space-y-4">
-        <div className="text-destructive text-center">
-          <h3 className="text-lg font-semibold mb-2">Error Loading Achievements</h3>
-          <p className="text-sm">{error}</p>
-        </div>
-        <Button onClick={loadData} variant="outline">
-          Try Again
-        </Button>
-      </div>
-    );
-  }
+export function AchievementManagementContent({ achievements }: AchievementManagementContentProps) {
+  console.log('AchievementManagementContent received achievements:', achievements.length);
 
   return (
-    <div className="space-y-6">
-      {/* Statistics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Achievements</CardTitle>
-            <Trophy className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
+    <AchievementsList achievements={achievements} />
+  );
+}
           <CardContent>
             <div className="text-2xl font-bold">{statistics?.totalAchievements || 0}</div>
           </CardContent>
