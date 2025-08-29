@@ -13,7 +13,7 @@ export default async function Page(): Promise<React.JSX.Element> {
         <DashboardPageDescription>Manage request submitted to testing sessions you coordinate</DashboardPageDescription>
       </DashboardPageHeader>
       <DashboardPageContent>
-        <TestingRequestList data={testingRequests} />
+        <TestingRequestList data={testingRequests} mode="admin" />
       </DashboardPageContent>
     </DashboardPage>
   );

@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Download, FileText, MessageSquare, Play, Users } from 'lucide-react';
-import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { TestingRequest } from '@/lib/api/generated/types.gen';
+import { Calendar, Download, FileText, MessageSquare, Play, Users } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { RequestFilterControls } from './request-filter-controls';
 
 interface UserRole {
@@ -22,9 +22,10 @@ interface TestingRequestListProps {
     testingRequests: TestingRequest[];
     total: number;
   };
+  mode?: 'admin' | 'user';
 }
 
-export function TestingRequestList({ data }: TestingRequestListProps) {
+export function TestingRequestList({ data, mode = 'user' }: TestingRequestListProps) {
   const { data: session } = useSession();
   const [requests, setRequests] = useState<TestingRequest[]>(data.testingRequests);
   const [filteredRequests, setFilteredRequests] = useState<TestingRequest[]>(data.testingRequests);
@@ -67,27 +68,30 @@ export function TestingRequestList({ data }: TestingRequestListProps) {
     let filtered = requests;
 
     if (searchTerm) {
-      filtered = filtered.filter(
-        (request) => request.title?.toLowerCase().includes(searchTerm.toLowerCase()) || request.description?.toLowerCase().includes(searchTerm.toLowerCase()) || request.createdByUserId?.toLowerCase().includes(searchTerm.toLowerCase()),
+      const q = searchTerm.toLowerCase();
+      filtered = filtered.filter((request) =>
+        (request.title || '').toLowerCase().includes(q) ||
+        (request.description || '').toLowerCase().includes(q) ||
+        (request.createdById || '').toLowerCase().includes(q),
       );
     }
 
     if (statusFilter.length > 0) {
-      filtered = filtered.filter((request) => statusFilter.includes(request.status));
+      filtered = filtered.filter((request) => statusFilter.includes(String(request.status)));
     }
 
     setFilteredRequests(filtered);
   }, [requests, searchTerm, statusFilter]);
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: any) => {
     switch (status) {
-      case 'open':
+      case 1:
         return 'bg-green-900/20 text-green-400 border-green-700';
-      case 'inProgress':
+      case 2:
         return 'bg-blue-900/20 text-blue-400 border-blue-700';
-      case 'completed':
+      case 3:
         return 'bg-gray-900/20 text-gray-400 border-gray-700';
-      case 'cancelled':
+      case 4:
         return 'bg-red-900/20 text-red-400 border-red-700';
       default:
         return 'bg-slate-900/20 text-slate-400 border-slate-700';
@@ -119,8 +123,20 @@ export function TestingRequestList({ data }: TestingRequestListProps) {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">{userRole.isStudent ? 'Available Testing Requests' : 'My Testing Requests'}</h1>
-            <p className="text-muted-foreground mt-2">{userRole.isStudent ? 'Find games to test and provide valuable feedback' : 'Manage your submitted testing requests'}</p>
+            <h1 className="text-3xl font-bold">
+              {mode === 'admin'
+                ? 'All Testing Requests'
+                : userRole.isStudent
+                  ? 'Available Testing Requests'
+                  : 'My Testing Requests'}
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              {mode === 'admin'
+                ? 'Manage and moderate every testing request in the system'
+                : userRole.isStudent
+                  ? 'Find games to test and provide valuable feedback'
+                  : 'Manage your submitted testing requests'}
+            </p>
           </div>
           {!userRole.isStudent && (
             <Button asChild>
@@ -148,7 +164,7 @@ export function TestingRequestList({ data }: TestingRequestListProps) {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-lg text-white line-clamp-2">{request.title}</CardTitle>
-                    <CardDescription className="text-slate-400 mt-1">by {request.createdBy.name}</CardDescription>
+                    {request.createdBy && <CardDescription className="text-slate-400 mt-1">by {request.createdBy.name}</CardDescription>}
                   </div>
                   <Badge variant="outline" className={getStatusColor(request.status)}>
                     {request.status}
@@ -180,10 +196,10 @@ export function TestingRequestList({ data }: TestingRequestListProps) {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  {userRole.isStudent && request.status === 'open' && (
+                  {userRole.isStudent && request.status === 1 && (
                     <>
                       {request.downloadUrl && (
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => window.open(request.downloadUrl, '_blank')}>
+                        <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => window.open(request.downloadUrl || undefined, '_blank')}>
                           <Download className="h-4 w-4 mr-1" />
                           Download
                         </Button>
@@ -196,7 +212,7 @@ export function TestingRequestList({ data }: TestingRequestListProps) {
                       </Button>
                     </>
                   )}
-                  {!userRole.isStudent && (
+                  {mode === 'admin' && !userRole.isStudent && (
                     <Button size="sm" variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-700" asChild>
                       <Link href={`/dashboard/testing-lab/requests/${request.id}/feedback`}>
                         <MessageSquare className="h-4 w-4 mr-1" />
@@ -216,7 +232,13 @@ export function TestingRequestList({ data }: TestingRequestListProps) {
               <FileText className="h-12 w-12 text-slate-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">No testing requests found</h3>
               <p className="text-slate-400 mb-4">
-                {searchTerm || statusFilter.length > 0 ? 'Try adjusting your search or filter criteria' : userRole.isStudent ? 'There are no testing requests available at the moment' : 'You have not submitted any testing requests yet'}
+                {searchTerm || statusFilter.length > 0
+                  ? 'Try adjusting your search or filter criteria'
+                  : mode === 'admin'
+                    ? 'No testing requests exist yet'
+                    : userRole.isStudent
+                      ? 'There are no testing requests available at the moment'
+                      : 'You have not submitted any testing requests yet'}
               </p>
               {!userRole.isStudent && (
                 <Button asChild className="bg-blue-600 hover:bg-blue-700">
