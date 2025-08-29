@@ -1,5 +1,5 @@
 // List components
-export { TestingFeedbackList } from '@/components/testing-lab/management/feedbacks/testing-feedback-list';
+export { TestingFeedbacksList } from '@/components/testing-lab/testing-feedbacks-list';
 export { TestingRequestsList } from '@/components/testing-lab/testing-requests-list';
 
 export { AttendanceTracker } from '@/components/testing-lab/management/attendance/attendance-tracker';
