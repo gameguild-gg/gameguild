@@ -14,7 +14,7 @@ import {
 } from '@/lib/api/generated/sdk.gen';
 import type { CreateSimpleTestingRequestDto, TestingFeedback, TestingRequest } from '@/lib/api/generated/types.gen';
 import { revalidateTag } from 'next/cache';
-import { getAvailableTestingOpportunities, getMyTestingRequests } from '../requests/requests.actions';
+import { getTestingRequestsAction } from '../requests/testing-requests.actions';
 
 // =============================================================================
 // TESTING FEEDBACK MANAGEMENT
@@ -312,7 +312,12 @@ export async function getUserTestingDashboard(userId?: string) {
   await configureAuthenticatedClient();
 
   try {
-    const [myRequests, availableOpportunities, myFeedback, userActivity] = await Promise.all([getMyTestingRequests(), getAvailableTestingOpportunities(), getMyTestingFeedback(), userId ? getTestingUserActivity(userId) : null]);
+    const [myRequests, availableOpportunities, myFeedback, userActivity] = await Promise.all([
+      getTestingRequestsAction().then(result => result.data || []),
+      getTestingRequestsAction().then(result => result.data || []), // For now, use same data for available opportunities
+      getMyTestingFeedback(),
+      userId ? getTestingUserActivity(userId) : null
+    ]);
 
     return {
       myRequests,
