@@ -1,21 +1,44 @@
 import { AchievementManagementContent } from '@/components/achievements/management/achievement-management-content';
-import { DashboardPage, DashboardPageContent, DashboardPageHeader, DashboardPageTitle, DashboardPageDescription } from '@/components/dashboard';
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
+import { getAchievements } from '@/lib/achievements/achievements.actions';
+import type { AchievementDto } from '@/lib/core/api/generated/types.gen';
+import { Loader2 } from 'lucide-react';
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Achievements | Dashboard',
   description: 'Manage achievements and view achievement statistics.',
 };
 
-export default function AchievementsPage() {
+export default async function AchievementsPage() {
+  // Load achievements data
+  let achievements: AchievementDto[] = [];
+  try {
+    const result = await getAchievements();
+    if (result.success && result.data?.achievements) {
+      achievements = result.data.achievements;
+    }
+  } catch (error) {
+    console.error('Failed to load achievements:', error);
+  }
+
   return (
     <DashboardPage>
       <DashboardPageHeader>
-        <DashboardPageTitle>Achievements</DashboardPageTitle>
-        <DashboardPageDescription>Manage and monitor achievement system performance.</DashboardPageDescription>
+        <DashboardPageTitle>Achievement Management</DashboardPageTitle>
+        <DashboardPageDescription>Manage and monitor achievement system performance</DashboardPageDescription>
       </DashboardPageHeader>
       <DashboardPageContent>
-        <AchievementManagementContent />
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center p-4">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
+          }
+        >
+          <AchievementManagementContent achievements={achievements} />
+        </Suspense>
       </DashboardPageContent>
     </DashboardPage>
   );
