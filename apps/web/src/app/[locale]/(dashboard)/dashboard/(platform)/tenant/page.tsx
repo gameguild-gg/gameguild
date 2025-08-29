@@ -23,7 +23,7 @@ export default async function Page(): Promise<React.JSX.Element> {
         <DashboardPageDescription>Manage tenants and organizations in the system</DashboardPageDescription>
       </DashboardPageHeader>
       <DashboardPageContent>
-        <TenantsList initialTenants={tenants} />
+        <TenantsList tenants={tenants} />
       </DashboardPageContent>
     </DashboardPage>
   );
