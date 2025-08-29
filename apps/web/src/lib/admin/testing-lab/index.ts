@@ -6,7 +6,7 @@
 export * from './types';
 
 // Testing Requests
-export * from './requests/requests.actions';
+export * from './requests/testing-requests.actions';
 
 // Testing Sessions
 export * from './sessions/sessions.actions';
@@ -26,3 +26,4 @@ export * from './analytics/testing-analytics.actions';
 
 // Attendance Management
 export * from './attendance/attendance.actions';
+
