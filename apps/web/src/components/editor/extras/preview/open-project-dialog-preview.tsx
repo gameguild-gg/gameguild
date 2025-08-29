@@ -30,7 +30,7 @@ interface OpenProjectDialogPreviewProps {
   onOpenChange: (open: boolean) => void
   isDbInitialized: boolean
   storageAdapter: StorageAdapter
-  availableTags: Array<{ name: string; usageCount: number }>
+  availableTags: Array<{ name: string }>
   onProjectLoad: (projectData: ProjectData) => void
 }
 

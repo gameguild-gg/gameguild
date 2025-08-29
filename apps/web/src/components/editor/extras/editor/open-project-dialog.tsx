@@ -39,7 +39,7 @@ interface OpenProjectDialogProps {
   isFirstTime: boolean
   isDbInitialized: boolean
   storageAdapter: StorageAdapter
-  availableTags: Array<{ name: string; usageCount: number }>
+  availableTags: Array<{ name: string }>
   editorRef: React.RefObject<LexicalEditor | null>
   setLoadingRef: React.RefObject<((loading: boolean) => void) | null>
   onProjectLoad: (projectData: ProjectData) => void

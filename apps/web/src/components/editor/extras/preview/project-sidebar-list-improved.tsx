@@ -23,7 +23,7 @@ interface ProjectSidebarListProps {
     list: () => Promise<ProjectData[]>
     searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any") => Promise<ProjectData[]>
   }
-  availableTags: Array<{ name: string; usageCount: number }>
+  availableTags: Array<{ name: string }>
   currentProject: ProjectData | null
   onProjectSelect: (project: ProjectData) => void
   isDbInitialized: boolean
@@ -260,7 +260,6 @@ export function ProjectSidebarList({
                           </div>
                           <span>{tag.name}</span>
                         </div>
-                        <span className="text-gray-400 text-xs">({tag.usageCount})</span>
                       </button>
                     ))
                   )}

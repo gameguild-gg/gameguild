@@ -31,7 +31,7 @@ interface ImportProjectDialogProps {
   onOpenChange: (open: boolean) => void
   isDbInitialized: boolean
   storageAdapter: StorageAdapter
-  availableTags: Array<{ name: string; usageCount: number }>
+  availableTags: Array<{ name: string }>
   onProjectCreate: (projectData: { id: string; name: string; tags: string[] }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
@@ -451,9 +451,6 @@ export function ImportProjectDialog({
                                     className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between"
                                   >
                                     <span className="text-sm">{tag.name}</span>
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                      ({tag.usageCount} uses)
-                                    </span>
                                   </button>
                                 ))}
                                 {tagInput.trim() &&
