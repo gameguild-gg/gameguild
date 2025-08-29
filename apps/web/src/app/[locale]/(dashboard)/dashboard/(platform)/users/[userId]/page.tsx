@@ -1,65 +1,66 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useUserDetail } from '@/hooks/use-user-detail';
-import { toast } from 'sonner';
-import { use } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { UserIdentifierType, useUserDetail } from '@/hooks/use-user-detail';
 import {
-  ArrowLeft,
-  Shield,
-  MessageSquare,
-  Key,
-  UserX,
-  Calendar,
-  Clock,
-  Verified,
-  Smartphone,
-  Monitor,
   Activity,
-  Database,
-  Crown,
-  Edit,
-  Save,
-  X,
-  Copy,
-  Mail,
-  Phone,
-  MapPin,
-  History,
-  RefreshCw,
-  CheckCircle,
   AlertCircle,
-  Users,
+  ArrowLeft,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Copy,
+  Crown,
+  Database,
+  Edit,
+  History,
+  Key,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Monitor,
+  Phone,
+  RefreshCw,
+  Save,
   Send,
+  Shield,
+  Smartphone,
+  Users,
+  UserX,
+  Verified,
+  X,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 // Admin functionality imports
+import { getUserPermissions, makeUserGlobalAdmin, removeUserGlobalAdmin } from '@/lib/api/permissions';
 import { updateUser } from '@/lib/api/users';
-import { makeUserGlobalAdmin, removeUserGlobalAdmin, getUserPermissions } from '@/lib/api/permissions';
 
 interface UserDetailPageProps {
-  userId: string;
+  params: {
+    userId: string;
+  };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export function UserDetailPage({ userId }: UserDetailPageProps) {
+export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  // Use the API hook for user data
-  const { user: apiUser, loading, error } = useUserDetail(userId);
+  // Use the API hook for user data - using ID as the identifier
+  const { user: apiUser, loading, error } = useUserDetail(UserIdentifierType.ID, params.userId);
 
   // Local state for optimistic updates
   const [user, setUser] = useState(apiUser);
@@ -161,7 +162,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
     const checkAdminStatus = async () => {
       try {
         // Check if the user being viewed has admin permissions
-        const permissions = await getUserPermissions(userId);
+        const permissions = await getUserPermissions(params.userId);
 
         // Check if the user is a global admin
         setIsAdmin(permissions?.isGlobalAdmin || false);
@@ -170,10 +171,10 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
       }
     };
 
-    if (userId) {
+    if (params.userId) {
       checkAdminStatus();
     }
-  }, [userId]);
+  }, [params.userId]);
 
   // Check current user's permissions (who is viewing this page)
   useEffect(() => {
@@ -226,9 +227,13 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
   // Handlers
   const handleBack = () => {
     const params = new URLSearchParams();
-    searchParams.forEach((value, key) => {
+    Object.entries(searchParams).forEach(([key, value]) => {
       if (key.startsWith('filter') || key.startsWith('sort') || key === 'page') {
-        params.set(key, value);
+        if (typeof value === 'string') {
+          params.set(key, value);
+        } else if (Array.isArray(value)) {
+          params.set(key, value[0] || '');
+        }
       }
     });
 
@@ -282,7 +287,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
         // Add other updateable fields as needed
       };
 
-      await updateUser(userId, updateData);
+      await updateUser(params.userId, updateData);
 
       // Update local state optimistically
       setUser({ ...user, ...updateData });
@@ -295,7 +300,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
 
   const handleMakeAdmin = async () => {
     try {
-      await makeUserGlobalAdmin(userId);
+      await makeUserGlobalAdmin(params.userId);
       setIsAdmin(true);
       setShowAdminDialog(false);
       toast.success('User granted admin privileges');
@@ -306,7 +311,7 @@ export function UserDetailPage({ userId }: UserDetailPageProps) {
 
   const handleRemoveAdmin = async () => {
     try {
-      await removeUserGlobalAdmin(userId);
+      await removeUserGlobalAdmin(params.userId);
       setIsAdmin(false);
       setShowAdminDialog(false);
       toast.success('Admin privileges revoked');
@@ -1236,7 +1241,6 @@ interface UserDetailPageRouteProps {
   }>;
 }
 
-export default function UserDetailPageRoute({ params }: UserDetailPageRouteProps) {
-  const { username } = use(params);
-  return <UserDetailPage userId={username} />;
+export default function UserDetailPageRoute({ params, searchParams }: UserDetailPageProps) {
+  return <UserDetailPage params={params} searchParams={searchParams} />;
 }
