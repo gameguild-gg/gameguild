@@ -453,3 +453,32 @@ export async function getTestingRequestsBySession(sessionSlug: string) {
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch testing requests by session');
   }
 }
+
+// =============================================================================
+// APPROVAL WORKFLOW (APPROVE / REJECT)
+// =============================================================================
+// NOTE: Current backend exposes only generic update endpoint. We model approval
+// as setting status to Open (1) and rejection as setting status to Cancelled (4).
+// Draft (0) -> Open (1) when approved; Draft (0) -> Cancelled (4) when rejected.
+// Adjust these mappings if backend introduces explicit approve/reject endpoints.
+
+/** Approve a testing request (transition Draft -> Open) */
+export async function approveTestingRequest(id: string) {
+  try {
+    const updated = await updateTestingRequest(id, { status: 1 as TestingRequestStatus });
+    return { success: true, data: updated };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to approve request' };
+  }
+}
+
+/** Reject a testing request (transition Draft -> Cancelled) */
+export async function rejectTestingRequest(id: string, _opts?: { reason?: string }) {
+  // reason currently unused (no backend field); kept for future extension
+  try {
+    const updated = await updateTestingRequest(id, { status: 4 as TestingRequestStatus });
+    return { success: true, data: updated };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to reject request' };
+  }
+}
