@@ -106,6 +106,7 @@ export function OpenProjectDialogPreview({
               onTagFilterModeChange={setTagFilterMode}
               itemsPerPage={itemsPerPage}
               onItemsPerPageChange={setItemsPerPage}
+              showFilters={true}
             />
           </div>
 
