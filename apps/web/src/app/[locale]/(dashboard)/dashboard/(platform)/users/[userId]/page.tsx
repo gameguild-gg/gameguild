@@ -712,19 +712,15 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
         </CardContent>
       </Card>
 
-      {/* Main Content Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="grants">Grants & Ownership</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-          <TabsTrigger value="communication">Communication</TabsTrigger>
-          <TabsTrigger value="audit">Audit Trail</TabsTrigger>
-        </TabsList>
+      {/* Main Content - GitHub Settings Style */}
+      <div className="space-y-8">
 
-        {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-6">
+        {/* Profile Section */}
+        <div className="space-y-6">
+          <div className="border-b pb-2">
+            <h2 className="text-xl font-semibold">Profile</h2>
+            <p className="text-sm text-gray-600 mt-1">Manage profile information and personal details</p>
+          </div>
           {/* Basic Info */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -918,16 +914,20 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
 
-        {/* Grants & Ownership Tab */}
-        <TabsContent value="grants" className="space-y-6">
+        {/* Security Section */}
+        <div className="space-y-6">
+          <div className="border-b pb-2">
+            <h2 className="text-xl font-semibold">Security</h2>
+            <p className="text-sm text-gray-600 mt-1">Manage security settings and authentication</p>
+          </div>
           {/* Owned Objects */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Database className="h-5 w-5" />
-                Owned Objects (Coming Soon)
+                Owned Objects
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -943,7 +943,7 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Key className="h-5 w-5" />
-                Grants Received (Coming Soon)
+                Grants Received
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -953,10 +953,14 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
 
-        {/* Security Tab */}
-        <TabsContent value="security" className="space-y-6">
+        {/* Access & Permissions Section */}
+        <div className="space-y-6">
+          <div className="border-b pb-2">
+            <h2 className="text-xl font-semibold">Access & Permissions</h2>
+            <p className="text-sm text-gray-600 mt-1">Manage user permissions and resource access</p>
+          </div>
           {/* Active Sessions */}
           <Card>
             <CardHeader>
@@ -1010,15 +1014,19 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
 
-        {/* Activity Tab */}
-        <TabsContent value="activity" className="space-y-6">
+        {/* Activity & Audit Section */}
+        <div className="space-y-6">
+          <div className="border-b pb-2">
+            <h2 className="text-xl font-semibold">Activity & Audit</h2>
+            <p className="text-sm text-gray-600 mt-1">View user activity and audit trails</p>
+          </div>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5" />
-                Recent Activity (Coming Soon)
+                Recent Activity
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1028,57 +1036,13 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Communication Tab */}
-        <TabsContent value="communication" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Send Message
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="subject">Subject</Label>
-                <Input id="subject" value={messageForm.subject} onChange={(e) => setMessageForm({ ...messageForm, subject: e.target.value })} placeholder="Enter message subject" />
-              </div>
-
-              <div>
-                <Label htmlFor="message">Message</Label>
-                <Textarea id="message" value={messageForm.message} onChange={(e) => setMessageForm({ ...messageForm, message: e.target.value })} placeholder="Enter your message" rows={5} />
-              </div>
-
-              <div>
-                <Label htmlFor="priority">Priority</Label>
-                <Select value={messageForm.priority} onValueChange={(value: 'low' | 'normal' | 'high') => setMessageForm({ ...messageForm, priority: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button onClick={handleSendMessage}>
-                <Send className="h-4 w-4 mr-2" />
-                Send Message
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Audit Trail Tab */}
-        <TabsContent value="audit" className="space-y-6">
+          {/* Audit Trail */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <History className="h-5 w-5" />
-                Audit Trail (Coming Soon)
+                Audit Trail
               </CardTitle>
             </CardHeader>
             <CardContent>
