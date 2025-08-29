@@ -1,8 +1,8 @@
-import React from 'react';
-import { CreateTestingSessionForm } from '@/components/testing-lab/management/sessions/create-testing-session-form';
-import { getAllTestingRequests } from '@/lib/admin/testing-lab/requests/requests.actions';
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
+import { CreateTestingSessionForm } from '@/components/testing-lab/management/sessions/create-testing-session-form';
+import { getTestingRequestsAction } from '@/lib/admin/testing-lab/requests/testing-requests.actions';
 import { Metadata } from 'next';
+import React from 'react';
 
 export const metadata: Metadata = {
   title: 'Create Testing Session | Game Guild Dashboard',
@@ -11,7 +11,8 @@ export const metadata: Metadata = {
 
 export default async function CreateSessionPage(): Promise<React.JSX.Element> {
   // Get testing requests to populate the dropdown
-  const testingRequests = await getAllTestingRequests();
+  const result = await getTestingRequestsAction();
+  const testingRequests = result.data || [];
 
   return (
     <DashboardPage>
@@ -20,7 +21,7 @@ export default async function CreateSessionPage(): Promise<React.JSX.Element> {
         <DashboardPageDescription>Schedule a new testing session and coordinate game testing activities</DashboardPageDescription>
       </DashboardPageHeader>
       <DashboardPageContent>
-        <CreateTestingSessionForm testingRequests={testingRequests.testingRequests} />
+        <CreateTestingSessionForm testingRequests={testingRequests} />
       </DashboardPageContent>
     </DashboardPage>
   );
