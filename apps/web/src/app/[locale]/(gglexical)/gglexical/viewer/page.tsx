@@ -211,8 +211,8 @@ export default function PreviewPage() {
                         size="sm"
                         className="gap-2 border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
                         >
-                        <Eye className="w-4" />
-                        Viewer
+                        <Blocks className="w-4" />
+                        Studio
                       </Button>
                     </Link>
                   </div>
