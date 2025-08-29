@@ -1,6 +1,6 @@
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
 import { TestingSessionManagementContent } from '@/components/testing-lab/sessions/testing-session-management-content';
-import { getTestingSessionsData } from '@/lib/admin/testing-lab';
+import { getTestingSessionsAction } from '@/lib/admin/testing-lab/sessions/sessions.actions';
 import { Metadata } from 'next';
 import React from 'react';
 
@@ -10,8 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page(): Promise<React.JSX.Element> {
-  const result = await getTestingSessionsData();
-  const testingSessions = result.testingSessions || [];
+  const testingSessions = await getTestingSessionsAction();
 
   return (
     <DashboardPage>
