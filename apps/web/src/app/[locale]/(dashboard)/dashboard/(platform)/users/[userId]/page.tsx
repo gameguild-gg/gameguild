@@ -42,7 +42,7 @@ import {
   X,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 // Admin functionality imports
@@ -50,17 +50,20 @@ import { getUserPermissions, makeUserGlobalAdmin, removeUserGlobalAdmin } from '
 import { updateUser } from '@/lib/api/users';
 
 interface UserDetailPageProps {
-  params: {
+  params: Promise<{
     userId: string;
-  };
+  }>;
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
   const router = useRouter();
 
+  // Unwrap the params promise
+  const resolvedParams = React.use(params);
+
   // Use the API hook for user data - using ID as the identifier
-  const { user: apiUser, loading, error } = useUserDetail(UserIdentifierType.ID, params.userId);
+  const { user: apiUser, loading, error } = useUserDetail(UserIdentifierType.ID, resolvedParams.userId);
 
   // Local state for optimistic updates
   const [user, setUser] = useState(apiUser);
@@ -162,7 +165,7 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
     const checkAdminStatus = async () => {
       try {
         // Check if the user being viewed has admin permissions
-        const permissions = await getUserPermissions(params.userId);
+        const permissions = await getUserPermissions(resolvedParams.userId);
 
         // Check if the user is a global admin
         setIsAdmin(permissions?.isGlobalAdmin || false);
@@ -171,10 +174,10 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
       }
     };
 
-    if (params.userId) {
+    if (resolvedParams.userId) {
       checkAdminStatus();
     }
-  }, [params.userId]);
+  }, [resolvedParams.userId]);
 
   // Check current user's permissions (who is viewing this page)
   useEffect(() => {
@@ -287,7 +290,7 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
         // Add other updateable fields as needed
       };
 
-      await updateUser(params.userId, updateData);
+      await updateUser(resolvedParams.userId, updateData);
 
       // Update local state optimistically
       setUser({ ...user, ...updateData });
@@ -300,7 +303,7 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
 
   const handleMakeAdmin = async () => {
     try {
-      await makeUserGlobalAdmin(params.userId);
+      await makeUserGlobalAdmin(resolvedParams.userId);
       setIsAdmin(true);
       setShowAdminDialog(false);
       toast.success('User granted admin privileges');
@@ -311,7 +314,7 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
 
   const handleRemoveAdmin = async () => {
     try {
-      await removeUserGlobalAdmin(params.userId);
+      await removeUserGlobalAdmin(resolvedParams.userId);
       setIsAdmin(false);
       setShowAdminDialog(false);
       toast.success('Admin privileges revoked');
@@ -1237,10 +1240,11 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
 
 interface UserDetailPageRouteProps {
   params: Promise<{
-    username: string;
+    userId: string;
   }>;
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default function UserDetailPageRoute({ params, searchParams }: UserDetailPageProps) {
+export default function UserDetailPageRoute({ params, searchParams }: UserDetailPageRouteProps) {
   return <UserDetailPage params={params} searchParams={searchParams} />;
 }
