@@ -1,8 +1,9 @@
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
-import { TenantsList } from '@/components/tenant/tenants-list';
+import { TenantManagementContent } from '@/components/tenant/tenant-management-content';
 import { getTenantsAction } from '@/lib/admin/tenants/tenants.actions';
 import type { Tenant } from '@/lib/api/generated/types.gen';
-import React from 'react';
+import { Loader2 } from 'lucide-react';
+import { Suspense } from 'react';
 
 export default async function Page(): Promise<React.JSX.Element> {
   // Load tenants data
@@ -23,7 +24,15 @@ export default async function Page(): Promise<React.JSX.Element> {
         <DashboardPageDescription>Manage tenants and organizations in the system</DashboardPageDescription>
       </DashboardPageHeader>
       <DashboardPageContent>
-        <TenantsList tenants={tenants} />
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center p-4">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
+          }
+        >
+          <TenantManagementContent tenants={tenants} />
+        </Suspense>
       </DashboardPageContent>
     </DashboardPage>
   );
