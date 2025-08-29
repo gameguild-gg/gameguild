@@ -68,9 +68,9 @@ export function TestingFeedbacksList({ testingFeedbacks: incomingTestingFeedback
         return [...filteredTestingFeedbacks].sort((a, b) => {
             const aVal = a[sort.field];
             const bVal = b[sort.field];
-            
+
             if (aVal === bVal) return 0;
-            
+
             const comparison = aVal < bVal ? -1 : 1;
             return sort.direction === 'asc' ? comparison : -comparison;
         });
@@ -110,9 +110,8 @@ export function TestingFeedbacksList({ testingFeedbacks: incomingTestingFeedback
         return Array.from({ length: 5 }, (_, i) => (
             <Star
                 key={i}
-                className={`h-4 w-4 ${
-                    i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                }`}
+                className={`h-4 w-4 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                    }`}
             />
         ));
     };
