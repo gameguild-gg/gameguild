@@ -1,3 +1,4 @@
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
 import { UserManagementContent } from '@/components/users/user-management-content';
 // Direct REST usage (bypass mixed SDK inconsistencies)
 import { auth } from '@/auth';
@@ -186,40 +187,52 @@ export default async function UsersPage({ searchParams = {} }: UsersPageProps) {
     };
 
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center p-4">
-              <Loader2 className="h-4 w-4 animate-spin" />
-            </div>
-          }
-        >
-          <UserManagementContent users={users} />
-        </Suspense>
+      <DashboardPage>
+        <DashboardPageHeader>
+          <DashboardPageTitle>User Management</DashboardPageTitle>
+          <DashboardPageDescription>Manage users, permissions, and access control in the Game Guild platform</DashboardPageDescription>
+        </DashboardPageHeader>
+        <DashboardPageContent>
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center p-4">
+                <Loader2 className="h-4 w-4 animate-spin" />
+              </div>
+            }
+          >
+            <UserManagementContent users={users} />
+          </Suspense>
 
-        {users.length === 0 && (
-          <div className="mt-8 rounded-md border border-dashed p-6 text-sm text-gray-600 dark:text-gray-400">
-            <p className="font-medium mb-1">No users found.</p>
-            <p className="mb-2">If you expected users to appear here, ensure:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>You are authenticated and have permission to list users.</li>
-              <li>The backend has seeded users (total reported: {total}).</li>
-              {search && <li>Your search term "{search}" matches existing users.</li>}
-            </ul>
-          </div>
-        )}
-      </div>
+          {users.length === 0 && (
+            <div className="mt-8 rounded-md border border-dashed p-6 text-sm text-gray-600 dark:text-gray-400">
+              <p className="font-medium mb-1">No users found.</p>
+              <p className="mb-2">If you expected users to appear here, ensure:</p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>You are authenticated and have permission to list users.</li>
+                <li>The backend has seeded users (total reported: {total}).</li>
+                {search && <li>Your search term "{search}" matches existing users.</li>}
+              </ul>
+            </div>
+          )}
+        </DashboardPageContent>
+      </DashboardPage>
     );
   } catch (error) {
     console.error('Error loading users page:', error);
 
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-red-800 mb-2">Unable to Load Users</h2>
-          <p className="text-red-600">There was an error loading the user data. Please check your connection and try again.</p>
-        </div>
-      </div>
+      <DashboardPage>
+        <DashboardPageHeader>
+          <DashboardPageTitle>User Management</DashboardPageTitle>
+          <DashboardPageDescription>Manage users, permissions, and access control in the Game Guild platform</DashboardPageDescription>
+        </DashboardPageHeader>
+        <DashboardPageContent>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-red-800 mb-2">Unable to Load Users</h2>
+            <p className="text-red-600">There was an error loading the user data. Please check your connection and try again.</p>
+          </div>
+        </DashboardPageContent>
+      </DashboardPage>
     );
   }
 }
