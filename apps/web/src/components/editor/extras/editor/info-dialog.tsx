@@ -31,7 +31,7 @@ interface InfoDialogProps {
   onOpenChange: (open: boolean) => void
   project: ProjectData | null
   onSave: (projectId: string, newName: string, newTags: string[]) => Promise<void>
-  availableTags: Array<{ name: string; usageCount: number }>
+  availableTags: Array<{ name: string }>
   storageAdapter: StorageAdapter
 }
 
@@ -212,9 +212,6 @@ export function InfoDialog({
                                   className="flex w-full items-center justify-between px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
                                 >
                                   <span className="text-sm">{tag.name}</span>
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    ({tag.usageCount} uses)
-                                  </span>
                                 </button>
                               ))}
                               {tagInput.trim() &&
