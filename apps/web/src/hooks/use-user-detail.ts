@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
-import { getUserById } from '@/lib/user-management/users/users.actions';
-import { getUserByUsername } from '@/lib/api/users';
-import { getUserProfileByUserId } from '@/lib/user-management/profiles/profiles.actions';
 import type { UserResponseDto } from '@/lib/api/generated/types.gen';
 import type { User } from '@/lib/api/users';
+import { getUserByUsername } from '@/lib/api/users';
+import { getUserProfileByUserId } from '@/lib/user-management/profiles/profiles.actions';
+import { getUserById } from '@/lib/user-management/users/users.actions';
+import { useCallback, useEffect, useState } from 'react';
 
 export enum UserIdentifierType {
   ID = 'id',
@@ -121,7 +121,7 @@ export function useUserDetail(identifierType: UserIdentifierType, identifier: st
       displayName: userResponse.name || userResponse.email?.split('@')[0] || 'Unknown User',
       avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userResponse.name || userResponse.email || 'User')}`,
       profile: additionalData.profile,
-      
+
       // PLACEHOLDER fields - these are not available in the current API
       lastActive: undefined,
       lastLogin: undefined,
@@ -141,7 +141,7 @@ export function useUserDetail(identifierType: UserIdentifierType, identifier: st
     const userData = await getUserById({
       path: { id: userId },
     });
-    
+
     if (!userData) {
       throw new Error('User not found');
     }
@@ -153,7 +153,7 @@ export function useUserDetail(identifierType: UserIdentifierType, identifier: st
   // Fetch user by username
   const fetchUserByUsername = async (username: string): Promise<UserDetail> => {
     const userData = await getUserByUsername(username);
-    
+
     if (!userData) {
       throw new Error('User not found');
     }
