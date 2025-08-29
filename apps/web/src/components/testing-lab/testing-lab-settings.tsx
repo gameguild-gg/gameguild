@@ -445,8 +445,29 @@ export function TestingLabSettings({ initialSection = 'general', sectionOnly = f
   // Placeholder manager loader (API not yet implemented)
   const loadManagers = async () => {
     try {
-      // If an API becomes available, replace this placeholder
-      return; // keep existing state (demo/manually managed)
+      // TODO: Replace with real API fetch when backend endpoint is available
+      if (managers.length === 0) {
+        // Provide a visible demo collaborator so the table isn't empty
+        setManagers([{
+          id: 'demo-manager-1',
+          userId: 'demo-user-1',
+          email: 'demo.admin@example.com',
+          firstName: 'Demo',
+          lastName: 'Admin',
+          role: 'Admin',
+          permissions: {
+            canManageLocations: true,
+            canScheduleSessions: true,
+            canManageUsers: true,
+            canViewReports: true,
+            canModifySettings: true,
+          },
+          assignedLocations: [],
+          status: 'Active',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }]);
+      }
     } catch (e) {
       console.error('Failed to load managers (placeholder):', e);
     }
@@ -1015,7 +1036,7 @@ export function TestingLabSettings({ initialSection = 'general', sectionOnly = f
               {editingLocation ? 'Update the location details' : 'Add a new testing location to your lab'}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <form onSubmit={handleSubmitLocation} className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Location Name *</Label>
               <Input
@@ -1102,97 +1123,15 @@ export function TestingLabSettings({ initialSection = 'general', sectionOnly = f
                 </SelectContent>
               </Select>
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsLocationDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={async () => {
-                // Enhanced validation
-                if (!formData.name.trim()) {
-                  toast.error('Location name is required');
-                  return;
-                }
-                if (!formData.description.trim()) {
-                  toast.error('Location description is required');
-                  return;
-                }
-                if (!formData.address.trim()) {
-                  toast.error('Location address is required');
-                  return;
-                }
-                if (formData.maxTestersCapacity <= 0 || formData.maxTestersCapacity > 1000) {
-                  toast.error('Max testers must be between 1 and 1000');
-                  return;
-                }
-                if (formData.maxProjectsCapacity <= 0 || formData.maxProjectsCapacity > 100) {
-                  toast.error('Max projects must be between 1 and 100');
-                  return;
-                }
-
-                try {
-                  const locationData = {
-                    ...formData,
-                    status: stringToLocationStatus(formData.status),
-                  };
-
-                  console.log('Form data before sending:', {
-                    formData,
-                    locationData,
-                    statusMapping: {
-                      originalStatus: formData.status,
-                      mappedStatus: locationData.status
-                    }
-                  });
-
-                  if (editingLocation) {
-                    const targetId = editingLocation.id!;
-                    if (!isGuid(targetId)) {
-                      console.warn('Non-GUID location id detected (dialog footer), creating new location instead of updating:', targetId);
-                      try {
-                        const created = await createTestingLocationAction(locationData as any);
-                        setLocations(locations.map((loc) => (loc.id === targetId ? (created as TestingLocation) : loc)));
-                        toast.success('Location synced successfully');
-                        setIsLocationDialogOpen(false);
-                        return;
-                      } catch (createErr) {
-                        console.error('Failed to sync placeholder location from dialog footer, using local update fallback:', createErr);
-                        const updatedLocal: TestingLocation = {
-                          ...editingLocation,
-                          ...locationData,
-                          updatedAt: new Date().toISOString(),
-                        } as TestingLocation;
-                        setLocations(locations.map((loc) => (loc.id === targetId ? updatedLocal : loc)));
-                        toast.success('Location updated locally (unsynced)');
-                        setIsLocationDialogOpen(false);
-                        return;
-                      }
-                    }
-                    const updatedLocation = await updateTestingLocationAction(targetId, locationData as any);
-                    setLocations(locations.map((loc) => (loc.id === targetId ? (updatedLocation as TestingLocation) : loc)));
-                    toast.success('Location updated successfully');
-                  } else {
-                    const newLocation = await createTestingLocationAction(locationData);
-                    setLocations([...locations, newLocation as TestingLocation]);
-                    toast.success('Location created successfully');
-                  }
-                  setIsLocationDialogOpen(false);
-                } catch (error) {
-                  console.error('Failed to save location:', error);
-
-                  if (error instanceof Error) {
-                    toast.error(error.message);
-                  } else {
-                    toast.error('An unexpected error occurred. Please try again.');
-                  }
-                }
-              }}
-              disabled={!formData.name.trim() || !formData.description.trim() || !formData.address.trim() || formData.maxTestersCapacity <= 0 || formData.maxProjectsCapacity <= 0}
-            >
-              {editingLocation ? 'Update Location' : 'Create Location'}
-            </Button>
-          </DialogFooter>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsLocationDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={!formData.name.trim() || formData.maxTestersCapacity <= 0 || formData.maxProjectsCapacity <= 0}>
+                {editingLocation ? 'Update Location' : 'Create Location'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
       {/* Confirmation Dialog */}
