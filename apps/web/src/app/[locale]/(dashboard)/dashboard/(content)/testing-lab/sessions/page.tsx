@@ -1,6 +1,6 @@
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
-import { TestingSessionList } from '@/components/testing-lab/management/sessions/testing-session-list';
-import { getUnifiedTestingSessions } from '@/lib/admin';
+import { TestingSessionManagementContent } from '@/components/testing-lab/sessions/testing-session-management-content';
+import { getTestingSessionsData } from '@/lib/admin/testing-lab';
 import { Metadata } from 'next';
 import React from 'react';
 
@@ -10,7 +10,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Page(): Promise<React.JSX.Element> {
-  const testingSessions = await getUnifiedTestingSessions();
+  const result = await getTestingSessionsData();
+  const testingSessions = result.testingSessions || [];
 
   return (
     <DashboardPage>
@@ -19,7 +20,7 @@ export default async function Page(): Promise<React.JSX.Element> {
         <DashboardPageDescription>Manage testing sessions and coordinate game testing activities</DashboardPageDescription>
       </DashboardPageHeader>
       <DashboardPageContent>
-        <TestingSessionList data={testingSessions} />
+        <TestingSessionManagementContent testingSessions={testingSessions} />
       </DashboardPageContent>
     </DashboardPage>
   );
