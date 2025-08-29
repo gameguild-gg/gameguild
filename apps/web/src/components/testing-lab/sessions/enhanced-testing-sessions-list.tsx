@@ -1,19 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Textarea } from '@/components/ui/textarea';
 import { BarChart3, Calendar, CalendarDays, CheckCircle, Clock, Download, Edit, ExternalLink, Eye, Gamepad2, MapPin, MoreHorizontal, Plus, RefreshCw, Timer, TrendingUp, Users, XCircle } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
 import { SessionFilterControls } from '../session-filter-controls';
 
 interface TestingSession {
@@ -158,9 +158,8 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
     setLoading(true);
     try {
       // Import the function dynamically to avoid build issues
-      const { getTestingSessionsData } = await import('@/lib/testing-lab/testing-lab.actions');
-      const sessionsData = await getTestingSessionsData();
-      const apiSessions = sessionsData?.testingSessions || [];
+      const { getTestingSessionsAction } = await import('@/lib/admin/testing-lab/sessions/sessions.actions');
+      const apiSessions = await getTestingSessionsAction();
       // Properly map the API response to match component interface
       setSessions(
         apiSessions.map((session: any) => ({
@@ -171,10 +170,10 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
           endTime: session.endTime,
           location: session.location
             ? {
-                id: session.location.id || '',
-                name: session.location.name,
-                capacity: session.location.capacity || 50,
-              }
+              id: session.location.id || '',
+              name: session.location.name,
+              capacity: session.location.capacity || 50,
+            }
             : undefined,
           maxTesters: session.maxTesters,
           registeredTesterCount: session.registeredTesterCount || 0,
@@ -183,10 +182,10 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
           status: typeof session.status === 'string' ? session.status : session.status === 0 ? 'scheduled' : session.status === 1 ? 'active' : session.status === 2 ? 'completed' : session.status === 3 ? 'cancelled' : 'scheduled',
           manager: session.manager
             ? {
-                id: session.manager.id || '',
-                name: session.manager.name,
-                email: session.manager.email || '',
-              }
+              id: session.manager.id || '',
+              name: session.manager.name,
+              email: session.manager.email || '',
+            }
             : undefined,
           testingRequests: session.testingRequests || session.testingRequest ? [session.testingRequest] : [],
           attendanceRate: session.attendanceRate || 85,
@@ -259,11 +258,11 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
   // Filter sessions based on search and status
   const filteredSessions = Array.isArray(sessions)
     ? sessions.filter((session) => {
-        const matchesSearch =
-          session.sessionName.toLowerCase().includes(searchTerm.toLowerCase()) || session.location?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || session.manager?.name?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter.length === 0 || (session.status && statusFilter.includes(session.status));
-        return matchesSearch && matchesStatus;
-      })
+      const matchesSearch =
+        session.sessionName.toLowerCase().includes(searchTerm.toLowerCase()) || session.location?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || session.manager?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter.length === 0 || (session.status && statusFilter.includes(session.status));
+      return matchesSearch && matchesStatus;
+    })
     : [];
 
   const getStatusColor = (status: string | null | undefined) => {
