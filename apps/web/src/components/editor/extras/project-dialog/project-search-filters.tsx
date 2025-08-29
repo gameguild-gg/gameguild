@@ -10,7 +10,7 @@ interface ProjectSearchFiltersProps {
   onSearchChange: (value: string) => void
   selectedTags: string[]
   onTagsChange: (tags: string[]) => void
-  availableTags: Array<{ name: string; usageCount: number }>
+  availableTags: Array<{ name: string }>
   tagFilterMode: "all" | "any"
   onTagFilterModeChange: (mode: "all" | "any") => void
   itemsPerPage: number
@@ -179,7 +179,6 @@ export function ProjectSearchFilters({
                           </div>
                           <span className="text-sm">{tag.name}</span>
                         </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">({tag.usageCount})</span>
                       </button>
                     ))
                   })()}
