@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { UserIdentifierType, useUserDetail } from '@/hooks/use-user-detail';
 import {
@@ -84,7 +83,6 @@ export function UserDetailPage({ params, searchParams }: UserDetailPageProps) {
   const [resetPasswordDialog, setResetPasswordDialog] = useState(false);
   const [transferOwnershipDialog, setTransferOwnershipDialog] = useState<string | null>(null);
   const [revokeGrantDialog, setRevokeGrantDialog] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('profile');
 
   // Form states
   const [profileForm, setProfileForm] = useState({
