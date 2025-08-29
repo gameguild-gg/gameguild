@@ -605,6 +605,14 @@ export default function Page() {
     }
   }
 
+  const handleSaveAndExit = async () => {
+    await handleSave()
+    if (nextUrl) {
+      router.push(nextUrl)
+    }
+    setExitDialogOpen(false)
+  }
+
   return (
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -956,6 +964,8 @@ export default function Page() {
         }}
         itemName={currentProjectName}
         itemType="project"
+        showSaveAndExit={true}
+        onSaveAndExit={handleSaveAndExit}
       />
     </>
   )
