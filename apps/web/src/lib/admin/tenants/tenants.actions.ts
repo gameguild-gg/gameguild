@@ -1,7 +1,7 @@
 'use server';
 
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import { getApiTenants, getApiTenantsSearch } from '@/lib/api/generated/sdk.gen';
+import { getApiTenants, getApiTenantsById, getApiTenantsSearch } from '@/lib/api/generated/sdk.gen';
 import type { GetApiTenantsData, GetApiTenantsSearchData } from '@/lib/api/generated/types.gen';
 
 // Helper to strip non-serializable fields (Request/Response objects) before crossing the RSC boundary
@@ -22,6 +22,23 @@ export async function getTenantsAction(params?: GetApiTenantsData) {
     try {
         const result = await getApiTenants({
             query: params?.query,
+        });
+
+        return toPlainResult(result);
+    } catch (error) {
+        return toPlainResult({ error });
+    }
+}
+
+/**
+ * Get tenant by ID
+ */
+export async function getTenantByIdAction(tenantId: string) {
+    await configureAuthenticatedClient();
+
+    try {
+        const result = await getApiTenantsById({
+            path: { id: tenantId },
         });
 
         return toPlainResult(result);

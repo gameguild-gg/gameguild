@@ -12,10 +12,12 @@ import {
     ChevronRight,
     ChevronsLeft,
     ChevronsRight,
+    Eye,
     Search,
     SortAsc,
     SortDesc
 } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 interface TenantsListProps {
@@ -195,12 +197,13 @@ export function TenantsList({ tenants: incomingTenants }: TenantsListProps) {
                                         )}
                                     </div>
                                 </TableHead>
+                                <TableHead>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {paginatedTenants.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                                         {filters.search ? 'No tenants found matching your search.' : 'No tenants found.'}
                                     </TableCell>
                                 </TableRow>
@@ -225,6 +228,14 @@ export function TenantsList({ tenants: incomingTenants }: TenantsListProps) {
                                             <div className="text-sm text-muted-foreground">
                                                 {formatDate(tenant.updatedAt)}
                                             </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Link href={`/dashboard/tenant/${tenant.id}`}>
+                                                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                                                    <Eye className="h-4 w-4" />
+                                                    View Details
+                                                </Button>
+                                            </Link>
                                         </TableCell>
                                     </TableRow>
                                 ))

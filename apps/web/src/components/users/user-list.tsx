@@ -12,11 +12,13 @@ import {
     ChevronRight,
     ChevronsLeft,
     ChevronsRight,
+    Eye,
     Search,
     SortAsc,
     SortDesc,
     Users
 } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 interface UserListProps {
@@ -194,12 +196,13 @@ export function UserList({ users: incomingUsers }: UserListProps) {
                                         )}
                                     </div>
                                 </TableHead>
+                                <TableHead>Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {paginatedUsers.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                                         {filters.search ? 'No users found matching your search.' : 'No users found.'}
                                     </TableCell>
                                 </TableRow>
@@ -236,6 +239,14 @@ export function UserList({ users: incomingUsers }: UserListProps) {
                                             <div className="text-sm text-muted-foreground">
                                                 {formatDate(user.updatedAt)}
                                             </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Link href={`/dashboard/users/${user.id}`}>
+                                                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                                                    <Eye className="h-4 w-4" />
+                                                    View Details
+                                                </Button>
+                                            </Link>
                                         </TableCell>
                                     </TableRow>
                                 ))
