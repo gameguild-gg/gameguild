@@ -1,16 +1,16 @@
 'use client';
 
-import type { TestingSession } from '@/lib/api/testing-types';
-import { TestingSessionsList } from '../testing-sessions-list';
+import { TestingSessionsList } from '@/components/testing-lab/testing-sessions-list';
+import React from 'react';
 
 interface TestingSessionManagementContentProps {
-    testingSessions: TestingSession[]
+    // Props not needed since TestingSessionsList loads its own data
 }
 
-export function TestingSessionManagementContent({ testingSessions }: TestingSessionManagementContentProps) {
-    console.log('TestingSessionManagementContent received testing sessions:', testingSessions.length);
+export function TestingSessionManagementContent(props: TestingSessionManagementContentProps): React.JSX.Element {
+    console.log('TestingSessionManagementContent: Rendering sessions list');
 
     return (
-        <TestingSessionsList testingSessions={testingSessions} />
+        <TestingSessionsList />
     );
 }
