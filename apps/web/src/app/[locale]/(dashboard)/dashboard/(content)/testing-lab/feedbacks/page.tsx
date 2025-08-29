@@ -1,10 +1,11 @@
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
-import { TestingFeedbackList } from '@/components/testing-lab';
-import { getTestingFeedbacks } from '@/lib/admin';
+import { TestingFeedbackManagementContent } from '@/components/testing-lab/feedbacks/testing-feedback-management-content';
+import { getTestingFeedbacksAction } from '@/lib/admin/testing-lab/feedbacks/testing-feedbacks.actions';
 import React from 'react';
 
 export default async function Page(): Promise<React.JSX.Element> {
-  const testingFeedbacks = await getTestingFeedbacks();
+  const result = await getTestingFeedbacksAction();
+  const testingFeedbacks = result.data || [];
 
   return (
     <DashboardPage>
@@ -13,7 +14,7 @@ export default async function Page(): Promise<React.JSX.Element> {
         <DashboardPageDescription>Manage feedbacks submitted to testing sessions you coordinate</DashboardPageDescription>
       </DashboardPageHeader>
       <DashboardPageContent>
-        <TestingFeedbackList data={testingFeedbacks} />
+        <TestingFeedbackManagementContent testingFeedbacks={testingFeedbacks} />
       </DashboardPageContent>
     </DashboardPage>
   );

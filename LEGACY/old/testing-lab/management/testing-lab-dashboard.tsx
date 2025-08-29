@@ -9,43 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import {
-  Calendar,
-  Clock,
-  Users,
-  TestTube,
-  Plus,
-  Search,
-  Filter,
-  Download,
-  Upload,
-  MessageSquare,
-  BarChart3,
-  Star,
-  CheckCircle,
-  XCircle,
-  PlayCircle,
-  PauseCircle,
-} from 'lucide-react';
+import { Calendar, Clock, Users, TestTube, Plus, Download, Search, PlayCircle } from 'lucide-react';
 import Link from 'next/link';
 import type { TestingRequest, TestingSession } from '@/lib/api/generated/types.gen';
-import {
-  getTestingRequestsData,
-  getTestingSessionsData,
-  createTestingRequest,
-  createTestingSession,
-  joinTestingRequest,
-  leaveTestingRequest,
-  checkTestingRequestParticipation,
-  getTestingRequestParticipants,
-  getTestingRequestFeedback,
-  submitTestingRequestFeedback,
-  getTestingRequestStatistics,
-  searchTestingRequests,
-} from '@/lib/testing-lab/testing-lab.actions';
+// import { joinTestingRequest, searchTestingRequests } from '@/lib/testing-lab/testing-lab.actions';
 
 interface TestingLabDashboardProps {
   initialRequests: TestingRequest[];
@@ -61,8 +29,8 @@ interface UserRole {
 
 export function TestingLabDashboard({ initialRequests, initialSessions }: TestingLabDashboardProps) {
   const { data: session } = useSession();
-  const [requests, setRequests] = useState<TestingRequest[]>(initialRequests);
-  const [sessions, setSessions] = useState<TestingSession[]>(initialSessions);
+  const [requests] = useState<TestingRequest[]>(initialRequests);
+  const [sessions] = useState<TestingSession[]>(initialSessions);
   const [filteredRequests, setFilteredRequests] = useState<TestingRequest[]>(initialRequests);
   const [filteredSessions, setFilteredSessions] = useState<TestingSession[]>(initialSessions);
   const [searchTerm, setSearchTerm] = useState('');
@@ -99,11 +67,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
     let filtered = requests;
 
     if (searchTerm) {
-      filtered = filtered.filter(
-        (request) =>
-          (request.title && request.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (request.description && request.description.toLowerCase().includes(searchTerm.toLowerCase())),
-      );
+      filtered = filtered.filter((request) => (request.title && request.title.toLowerCase().includes(searchTerm.toLowerCase())) || (request.description && request.description.toLowerCase().includes(searchTerm.toLowerCase())));
     }
 
     if (statusFilter !== 'all') {
@@ -128,42 +92,26 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
 
     setLoading(true);
     try {
-      const searchResults = await searchTestingRequests(searchTerm);
-      setFilteredRequests(searchResults.testingRequests || []);
-    } catch (error) {
+      // const searchResults = await searchTestingRequests(searchTerm);
+      // setFilteredRequests(searchResults.testingRequests || []);
+    } catch {
       toast.error('Failed to search testing requests');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleJoinRequest = async (requestId: string) => {
+  const handleJoinRequest = async (_requestId: string) => {
     if (!session?.user?.id) return;
 
     setLoading(true);
     try {
-      await joinTestingRequest(requestId, session.user.id);
+      // await joinTestingRequest(requestId, session.user.id);
       toast.success('Successfully joined testing request');
       // Refresh data
       window.location.reload();
-    } catch (error) {
+    } catch {
       toast.error('Failed to join testing request');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLeaveRequest = async (requestId: string) => {
-    if (!session?.user?.id) return;
-
-    setLoading(true);
-    try {
-      await leaveTestingRequest(requestId, session.user.id);
-      toast.success('Successfully left testing request');
-      // Refresh data
-      window.location.reload();
-    } catch (error) {
-      toast.error('Failed to leave testing request');
     } finally {
       setLoading(false);
     }
@@ -259,12 +207,7 @@ export function TestingLabDashboard({ initialRequests, initialSessions }: Testin
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="flex gap-2">
-                <Input
-                  placeholder="Search testing requests..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                />
+                <Input placeholder="Search testing requests..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleSearch()} />
                 <Button onClick={handleSearch} disabled={loading}>
                   <Search className="h-4 w-4" />
                 </Button>

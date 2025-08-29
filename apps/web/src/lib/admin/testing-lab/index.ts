@@ -8,6 +8,9 @@ export * from './types';
 // Testing Requests
 export * from './requests/testing-requests.actions';
 
+// Testing Feedbacks
+export * from './feedbacks/testing-feedbacks.actions';
+
 // Testing Sessions
 export * from './sessions/sessions.actions';
 
