@@ -103,175 +103,182 @@ export function TenantsList({ tenants: incomingTenants }: TenantsListProps) {
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return '-';
-        return new Date(dateString).toLocaleDateString('en-US', {
+        return new Date(dateString).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
             year: 'numeric',
-            month: 'short',
-            day: 'numeric'
+            hour: '2-digit',
+            minute: '2-digit'
         });
     };
 
-    const SortIcon = ({ field }: { field: keyof Tenant }) => {
-        if (sort.field !== field) return null;
-        return sort.direction === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />;
-    };
-
     return (
-        <div className="space-y-6">
-            {/* Search */}
-            <Card>
-                <CardHeader>
+        <Card>
+            <CardHeader>
+                <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
-                        <Search className="h-5 w-5" />
-                        Search Tenants
+                        <Building className="h-5 w-5" />
+                        Tenants ({sortedTenants.length})
                     </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex gap-4">
-                        <div className="flex-1">
-                            <Input
-                                placeholder="Search by name, description, or slug..."
-                                value={filters.search}
-                                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                            />
+                </div>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+                {/* Search Filter */}
+                <div className="flex items-center space-x-2">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            placeholder="Search tenants by name, description, or slug..."
+                            value={filters.search}
+                            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                            className="pl-9"
+                        />
+                    </div>
+                </div>
+
+                {/* Tenants Table */}
+                <div className="rounded-md border">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead
+                                    className="cursor-pointer hover:bg-muted/50"
+                                    onClick={() => handleSort('name')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        Name
+                                        {sort.field === 'name' && (
+                                            sort.direction === 'asc' ?
+                                                <SortAsc className="h-4 w-4" /> :
+                                                <SortDesc className="h-4 w-4" />
+                                        )}
+                                    </div>
+                                </TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead
+                                    className="cursor-pointer hover:bg-muted/50"
+                                    onClick={() => handleSort('isActive')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        Status
+                                        {sort.field === 'isActive' && (
+                                            sort.direction === 'asc' ?
+                                                <SortAsc className="h-4 w-4" /> :
+                                                <SortDesc className="h-4 w-4" />
+                                        )}
+                                    </div>
+                                </TableHead>
+                                <TableHead
+                                    className="cursor-pointer hover:bg-muted/50"
+                                    onClick={() => handleSort('createdAt')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        Created
+                                        {sort.field === 'createdAt' && (
+                                            sort.direction === 'asc' ?
+                                                <SortAsc className="h-4 w-4" /> :
+                                                <SortDesc className="h-4 w-4" />
+                                        )}
+                                    </div>
+                                </TableHead>
+                                <TableHead
+                                    className="cursor-pointer hover:bg-muted/50"
+                                    onClick={() => handleSort('updatedAt')}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        Updated
+                                        {sort.field === 'updatedAt' && (
+                                            sort.direction === 'asc' ?
+                                                <SortAsc className="h-4 w-4" /> :
+                                                <SortDesc className="h-4 w-4" />
+                                        )}
+                                    </div>
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {paginatedTenants.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                        {filters.search ? 'No tenants found matching your search.' : 'No tenants found.'}
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                paginatedTenants.map((tenant) => (
+                                    <TableRow key={tenant.id}>
+                                        <TableCell className="font-medium">
+                                            {tenant.name}
+                                        </TableCell>
+                                        <TableCell className="max-w-xs truncate">
+                                            {tenant.description || <span className="text-gray-400">No description</span>}
+                                        </TableCell>
+                                        <TableCell>
+                                            {getTenantStatusBadge(tenant)}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="text-sm text-muted-foreground">
+                                                {formatDate(tenant.createdAt)}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="text-sm text-muted-foreground">
+                                                {formatDate(tenant.updatedAt)}
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm text-muted-foreground">
+                            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, sortedTenants.length)} of {sortedTenants.length} tenants
                         </div>
-                        {filters.search && (
+                        <div className="flex items-center gap-2">
                             <Button
                                 variant="outline"
-                                onClick={() => setFilters(INITIAL_FILTERS)}
+                                size="sm"
+                                onClick={() => setCurrentPage(1)}
+                                disabled={currentPage === 1}
                             >
-                                Clear
+                                <ChevronsLeft className="h-4 w-4" />
                             </Button>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Tenants Table */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Tenant List</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {filteredTenants.length === 0 ? (
-                        <div className="text-center py-8">
-                            <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">No tenants found</h3>
-                            <p className="text-gray-500 mb-4">
-                                {filters.search ? 'No tenants match your search criteria.' : 'No tenants have been created yet.'}
-                            </p>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <span className="text-sm">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(totalPages)}
+                                disabled={currentPage === totalPages}
+                            >
+                                <ChevronsRight className="h-4 w-4" />
+                            </Button>
                         </div>
-                    ) : (
-                        <>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead
-                                            className="cursor-pointer hover:bg-gray-50"
-                                            onClick={() => handleSort('name')}
-                                        >
-                                            <div className="flex items-center gap-1">
-                                                Name
-                                                <SortIcon field="name" />
-                                            </div>
-                                        </TableHead>
-                                        <TableHead>Description</TableHead>
-                                        <TableHead
-                                            className="cursor-pointer hover:bg-gray-50"
-                                            onClick={() => handleSort('isActive')}
-                                        >
-                                            <div className="flex items-center gap-1">
-                                                Status
-                                                <SortIcon field="isActive" />
-                                            </div>
-                                        </TableHead>
-                                        <TableHead
-                                            className="cursor-pointer hover:bg-gray-50"
-                                            onClick={() => handleSort('createdAt')}
-                                        >
-                                            <div className="flex items-center gap-1">
-                                                Created
-                                                <SortIcon field="createdAt" />
-                                            </div>
-                                        </TableHead>
-                                        <TableHead
-                                            className="cursor-pointer hover:bg-gray-50"
-                                            onClick={() => handleSort('updatedAt')}
-                                        >
-                                            <div className="flex items-center gap-1">
-                                                Updated
-                                                <SortIcon field="updatedAt" />
-                                            </div>
-                                        </TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {paginatedTenants.map((tenant) => (
-                                        <TableRow key={tenant.id}>
-                                            <TableCell className="font-medium">
-                                                {tenant.name}
-                                            </TableCell>
-                                            <TableCell className="max-w-xs truncate">
-                                                {tenant.description || <span className="text-gray-400">No description</span>}
-                                            </TableCell>
-                                            <TableCell>
-                                                {getTenantStatusBadge(tenant)}
-                                            </TableCell>
-                                            <TableCell>{formatDate(tenant.createdAt)}</TableCell>
-                                            <TableCell>{formatDate(tenant.updatedAt)}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-
-                            {/* Pagination */}
-                            {totalPages > 1 && (
-                                <div className="flex items-center justify-between px-2 py-4">
-                                    <div className="text-sm text-gray-600">
-                                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, sortedTenants.length)} of {sortedTenants.length} results
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setCurrentPage(1)}
-                                            disabled={currentPage === 1}
-                                        >
-                                            <ChevronsLeft className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                            disabled={currentPage === 1}
-                                        >
-                                            <ChevronLeft className="h-4 w-4" />
-                                        </Button>
-                                        <span className="text-sm font-medium">
-                                            Page {currentPage} of {totalPages}
-                                        </span>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                            disabled={currentPage === totalPages}
-                                        >
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setCurrentPage(totalPages)}
-                                            disabled={currentPage === totalPages}
-                                        >
-                                            <ChevronsRight className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            )}
-                        </>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
     );
 }
