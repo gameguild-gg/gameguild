@@ -1348,16 +1348,24 @@ public class DatabaseSeeder(
       return;
     }
 
-    // Get mock projects and their versions
+    // Get mock projects and their versions - get ALL mock project versions instead of filtering
     var projectVersions = await context.Set<ProjectVersion>()
                                        .Include(pv => pv.Project)
-                                       .Where(pv => pv.Project.Title.Contains("Test") || pv.Project.Title.Contains("Demo"))
+                                       .Where(pv => pv.Project.Title.Contains("Test") ||
+                                                    pv.Project.Title.Contains("Demo") ||
+                                                    pv.Project.Title.Contains("Space") ||
+                                                    pv.Project.Title.Contains("Puzzle") ||
+                                                    pv.Project.Title.Contains("Racing") ||
+                                                    pv.Project.Title.Contains("Strategy") ||
+                                                    pv.Project.Title.Contains("Retro"))
                                        .ToListAsync();
 
     if (projectVersions.Count == 0) {
       logger.LogWarning("No mock project versions found, cannot create testing requests");
       return;
     }
+
+    logger.LogInformation("Found {VersionCount} project versions for testing requests", projectVersions.Count);
 
     var mockUsers = await context.Users
                                  .Where(u => u.Email.Contains("test"))
@@ -1386,7 +1394,7 @@ public class DatabaseSeeder(
         UpdatedAt = DateTime.UtcNow,
       },
       new TestingRequest {
-        ProjectVersionId = projectVersions[1].Id,
+        ProjectVersionId = projectVersions[Math.Min(1, projectVersions.Count - 1)].Id,
         Title = "Puzzle Quest Gameplay Testing",
         Description = "Help us test the new puzzle mechanics and difficulty balancing. We're particularly interested in the RPG progression system.",
         DownloadUrl = "https://downloads.example.com/puzzle-quest-alpha.zip",
@@ -1397,12 +1405,12 @@ public class DatabaseSeeder(
         StartDate = DateTime.UtcNow.AddDays(-3),
         EndDate = DateTime.UtcNow.AddDays(7),
         Status = TestingRequestStatus.Open,
-        CreatedById = mockUsers[1].Id,
+        CreatedById = mockUsers[Math.Min(1, mockUsers.Count - 1)].Id,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
       new TestingRequest {
-        ProjectVersionId = projectVersions[2].Id,
+        ProjectVersionId = projectVersions[Math.Min(2, projectVersions.Count - 1)].Id,
         Title = "Racing Sim Physics Testing",
         Description = "We need experienced racing game players to test our new physics engine and provide feedback on car handling and track design.",
         DownloadUrl = "https://downloads.example.com/racing-sim-demo.zip",
@@ -1413,12 +1421,12 @@ public class DatabaseSeeder(
         StartDate = DateTime.UtcNow.AddDays(-1),
         EndDate = DateTime.UtcNow.AddDays(14),
         Status = TestingRequestStatus.Open,
-        CreatedById = mockUsers[2].Id,
+        CreatedById = mockUsers[Math.Min(2, mockUsers.Count - 1)].Id,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
       },
       new TestingRequest {
-        ProjectVersionId = projectVersions[3].Id,
+        ProjectVersionId = projectVersions[Math.Min(3, projectVersions.Count - 1)].Id,
         Title = "Strategy War Balance Testing",
         Description = "Test the new faction balance changes and provide feedback on gameplay mechanics and AI behavior.",
         DownloadUrl = "https://downloads.example.com/strategy-war-beta.zip",
@@ -1472,8 +1480,35 @@ public class DatabaseSeeder(
 
     var baseDate = DateTime.UtcNow;
     var mockSessions = new List<TestingSession>();
+    var random = new Random();
 
-    // Create sessions for the next 2 weeks
+    // First, ensure each open testing request has at least one session
+    foreach (var request in testingRequests) {
+      var sessionDate = baseDate.AddDays(random.Next(1, 8)); // Next week
+      var randomLocation = testingLocations[random.Next(testingLocations.Count)];
+      var randomManager = mockUsers[random.Next(mockUsers.Count)];
+
+      mockSessions.Add(new TestingSession {
+        TestingRequestId = request.Id,
+        LocationId = randomLocation.Id,
+        SessionName = $"{request.Title.Replace(" Testing", "").Replace(" Test", "")} - Main Session",
+        SessionDate = sessionDate,
+        StartTime = sessionDate.Date.AddHours(14), // 2 PM
+        EndTime = sessionDate.Date.AddHours(16), // 4 PM
+        MaxTesters = Math.Min(randomLocation.MaxTestersCapacity, 15),
+        MaxProjects = Math.Min(randomLocation.MaxProjectsCapacity, 5),
+        RegisteredTesterCount = random.Next(2, 8),
+        RegisteredProjectCount = random.Next(1, 3),
+        Status = SessionStatus.Scheduled,
+        ManagerId = randomManager.Id,
+        ManagerUserId = randomManager.Id,
+        CreatedById = randomManager.Id,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow,
+      });
+    }
+
+    // Then create additional sessions for variety
     for (int day = 1; day <= 14; day++) {
       var sessionDate = baseDate.AddDays(day);
 
@@ -1482,29 +1517,29 @@ public class DatabaseSeeder(
         continue;
       }
 
-      // Create 1-3 sessions per day
-      var sessionsPerDay = new Random().Next(1, 4);
+      // Create 1-2 additional sessions per day for variety
+      var sessionsPerDay = random.Next(0, 2); // 0-1 additional sessions
 
       for (int session = 0; session < sessionsPerDay; session++) {
-        var startHour = 9 + (session * 4); // 9 AM, 1 PM, 5 PM
+        var startHour = 10 + (session * 3); // 10 AM or 1 PM
         var sessionStart = sessionDate.Date.AddHours(startHour);
         var sessionEnd = sessionStart.AddHours(2); // 2-hour sessions
 
-        var randomRequest = testingRequests[new Random().Next(testingRequests.Count)];
-        var randomLocation = testingLocations[new Random().Next(testingLocations.Count)];
-        var randomManager = mockUsers[new Random().Next(mockUsers.Count)];
+        var randomRequest = testingRequests[random.Next(testingRequests.Count)];
+        var randomLocation = testingLocations[random.Next(testingLocations.Count)];
+        var randomManager = mockUsers[random.Next(mockUsers.Count)];
 
         mockSessions.Add(new TestingSession {
           TestingRequestId = randomRequest.Id,
           LocationId = randomLocation.Id,
-          SessionName = $"{randomRequest.Title} - Session {session + 1}",
+          SessionName = $"{randomRequest.Title.Replace(" Testing", "").Replace(" Test", "")} - Extra Session {session + 1}",
           SessionDate = sessionDate,
           StartTime = sessionStart,
           EndTime = sessionEnd,
           MaxTesters = Math.Min(randomLocation.MaxTestersCapacity, 15),
-          MaxProjects = Math.Min(randomLocation.MaxProjectsCapacity, 5), // Add MaxProjects capacity
-          RegisteredTesterCount = new Random().Next(0, 8), // Random number of registered testers
-          RegisteredProjectCount = new Random().Next(1, 4), // Random number of registered projects
+          MaxProjects = Math.Min(randomLocation.MaxProjectsCapacity, 5),
+          RegisteredTesterCount = random.Next(0, 6),
+          RegisteredProjectCount = random.Next(1, 3),
           Status = SessionStatus.Scheduled,
           ManagerId = randomManager.Id,
           ManagerUserId = randomManager.Id,

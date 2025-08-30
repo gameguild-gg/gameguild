@@ -1,16 +1,16 @@
 'use client';
 
-import { CreditCard, FileText, LogOut, MoveUpRight, Settings, User } from 'lucide-react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { signOut, useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { environment } from '@/configs/environment';
 import { getApiUsersById } from '@/lib/api/generated';
 import { createClient } from '@/lib/api/generated/client';
-import { environment } from '@/configs/environment';
 import type { UserResponseDto } from '@/lib/api/generated/types.gen';
+import { CreditCard, FileText, FolderOpen, LogOut, MoveUpRight, Settings, User } from 'lucide-react';
+import { signOut, useSession } from 'next-auth/react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 interface MenuItem {
   label: string;
@@ -66,10 +66,8 @@ export function UserProfileDropdown() {
       }
     }
 
-    if (status !== 'loading') {
-      fetchUserData();
-    }
-  }, [session, status]);
+    fetchUserData();
+  }, [session]);
 
   // Handle logout
   const handleLogout = async () => {
@@ -80,7 +78,7 @@ export function UserProfileDropdown() {
   };
 
   // Return loading state if session or user data is loading
-  if (status === 'loading' || loading) {
+  if (loading) {
     return (
       <Avatar className="h-9 w-9">
         <AvatarFallback className="bg-zinc-800 text-zinc-200 font-medium animate-pulse">?</AvatarFallback>
@@ -156,6 +154,11 @@ export function UserProfileDropdown() {
       label: 'Profile',
       href: `/users/${username}`,
       icon: <User className="w-4 h-4" />,
+    },
+    {
+      label: 'My Projects',
+      href: `/users/${username}?tab=projects`,
+      icon: <FolderOpen className="w-4 h-4" />,
     },
     {
       label: 'Subscription',

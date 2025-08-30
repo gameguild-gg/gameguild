@@ -3,23 +3,32 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { TestingRequest } from '@/lib/api/testing-types';
+import type { EnhancedTestingRequest } from '@/lib/admin/testing-lab/requests/testing-requests.actions';
 import {
+    Calendar,
+    Check,
     ChevronLeft,
     ChevronRight,
     ChevronsLeft,
     ChevronsRight,
+    Clock,
+    ExternalLink,
+    Eye,
+    Gamepad2,
+    MapPin,
     Search,
-    SortAsc,
-    SortDesc,
-    TestTube
+    TestTube,
+    Users,
+    X
 } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 interface TestingRequestsListProps {
-    testingRequests: TestingRequest[];
+    testingRequests: EnhancedTestingRequest[];
 }
 
 interface TestingRequestFilters {
@@ -27,7 +36,7 @@ interface TestingRequestFilters {
 }
 
 interface TestingRequestSort {
-    field: keyof TestingRequest;
+    field: keyof EnhancedTestingRequest;
     direction: 'asc' | 'desc';
 }
 
@@ -54,7 +63,10 @@ export function TestingRequestsList({ testingRequests: incomingTestingRequests }
         if (filters.search) {
             const searchLower = filters.search.toLowerCase();
             result = result.filter(request =>
-                request.title?.toLowerCase().includes(searchLower)
+                request.title?.toLowerCase().includes(searchLower) ||
+                request.gameName?.toLowerCase().includes(searchLower) ||
+                request.gameVersion?.toLowerCase().includes(searchLower) ||
+                request.assignedSession?.sessionName?.toLowerCase().includes(searchLower)
             );
         }
 
@@ -84,16 +96,28 @@ export function TestingRequestsList({ testingRequests: incomingTestingRequests }
 
     const totalPages = Math.ceil(sortedTestingRequests.length / itemsPerPage);
 
-    const handleSort = (field: keyof TestingRequest) => {
+    const handleSort = (field: keyof EnhancedTestingRequest) => {
         setSort(prev => ({
             field,
             direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
         }));
     };
 
-    const getStatusBadge = (request: TestingRequest) => {
-        // Since the TestingRequest interface is minimal, we'll show a default status
-        return <Badge variant="outline">Active</Badge>;
+    const getStatusBadge = (request: EnhancedTestingRequest) => {
+        switch (request.status) {
+            case 0: // Draft
+                return <Badge variant="outline">Waiting</Badge>;
+            case 1: // Open
+                return <Badge variant="secondary">Under Review</Badge>;
+            case 2: // InProgress
+                return <Badge className="bg-green-500">Approved</Badge>;
+            case 3: // Completed
+                return <Badge className="bg-green-600">Approved</Badge>;
+            case 4: // Cancelled
+                return <Badge variant="destructive">Rejected</Badge>;
+            default:
+                return <Badge variant="outline">Unknown</Badge>;
+        }
     };
 
     const formatDate = (dateString?: string) => {
@@ -124,7 +148,7 @@ export function TestingRequestsList({ testingRequests: incomingTestingRequests }
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
-                            placeholder="Search testing requests by title..."
+                            placeholder="Search by title, game name, or session..."
                             value={filters.search}
                             onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                             className="pl-9"
@@ -137,54 +161,180 @@ export function TestingRequestsList({ testingRequests: incomingTestingRequests }
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead
-                                    className="cursor-pointer hover:bg-muted/50"
-                                    onClick={() => handleSort('title')}
-                                >
+                                <TableHead>
                                     <div className="flex items-center gap-1">
-                                        Title
-                                        {sort.field === 'title' && (
-                                            sort.direction === 'asc' ?
-                                                <SortAsc className="h-4 w-4" /> :
-                                                <SortDesc className="h-4 w-4" />
-                                        )}
+                                        <Gamepad2 className="h-4 w-4" />
+                                        Game
+                                    </div>
+                                </TableHead>
+                                <TableHead>
+                                    <div className="flex items-center gap-1">
+                                        <Calendar className="h-4 w-4" />
+                                        Session
+                                    </div>
+                                </TableHead>
+                                <TableHead>
+                                    <div className="flex items-center gap-1">
+                                        <Clock className="h-4 w-4" />
+                                        Submitted
                                     </div>
                                 </TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead
-                                    className="cursor-pointer hover:bg-muted/50"
-                                    onClick={() => handleSort('id')}
-                                >
-                                    <div className="flex items-center gap-1">
-                                        ID
-                                        {sort.field === 'id' && (
-                                            sort.direction === 'asc' ?
-                                                <SortAsc className="h-4 w-4" /> :
-                                                <SortDesc className="h-4 w-4" />
-                                        )}
-                                    </div>
-                                </TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {paginatedTestingRequests.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                                         {filters.search ? 'No testing requests found matching your search.' : 'No testing requests found.'}
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 paginatedTestingRequests.map((request) => (
                                     <TableRow key={request.id}>
-                                        <TableCell className="font-medium">
-                                            {request.title}
+                                        <TableCell>
+                                            <HoverCard>
+                                                <HoverCardTrigger asChild>
+                                                    <div className="cursor-pointer">
+                                                        <div className="font-medium text-sm hover:text-primary transition-colors">
+                                                            {request.gameName}
+                                                        </div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                            v{request.gameVersion}
+                                                        </div>
+                                                    </div>
+                                                </HoverCardTrigger>
+                                                <HoverCardContent className="w-80">
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-start gap-3">
+                                                            <Gamepad2 className="h-5 w-5 text-primary mt-0.5" />
+                                                            <div className="space-y-1">
+                                                                <h4 className="font-semibold">{request.gameName}</h4>
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    Version {request.gameVersion}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        {request.projectVersion?.project?.description && (
+                                                            <p className="text-sm text-muted-foreground">
+                                                                {request.projectVersion.project.description}
+                                                            </p>
+                                                        )}
+                                                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                                            {request.projectVersion?.createdAt && (
+                                                                <div className="flex items-center gap-1">
+                                                                    <Clock className="h-3 w-3" />
+                                                                    Created {formatDate(request.projectVersion.createdAt)}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </HoverCardContent>
+                                            </HoverCard>
+                                        </TableCell>
+                                        <TableCell>
+                                            {request.assignedSession ? (
+                                                <HoverCard>
+                                                    <HoverCardTrigger asChild>
+                                                        <Link
+                                                            href={`/dashboard/testing-lab/sessions/${request.assignedSession.id}`}
+                                                            className="block cursor-pointer"
+                                                        >
+                                                            <div className="font-medium text-sm flex items-center gap-1 hover:text-primary transition-colors">
+                                                                {request.assignedSession.sessionName}
+                                                                <ExternalLink className="h-3 w-3" />
+                                                            </div>
+                                                            <div className="text-xs text-muted-foreground">
+                                                                {formatDate(request.assignedSession.sessionDate)}
+                                                            </div>
+                                                        </Link>
+                                                    </HoverCardTrigger>
+                                                    <HoverCardContent className="w-80">
+                                                        <div className="space-y-3">
+                                                            <div className="flex items-start gap-3">
+                                                                <Calendar className="h-5 w-5 text-primary mt-0.5" />
+                                                                <div className="space-y-1">
+                                                                    <h4 className="font-semibold">{request.assignedSession.sessionName}</h4>
+                                                                    <p className="text-sm text-muted-foreground">
+                                                                        {formatDate(request.assignedSession.sessionDate)}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                                                <div className="flex items-center gap-1">
+                                                                    <Users className="h-3 w-3" />
+                                                                    Max {request.assignedSession.maxTesters} testers
+                                                                </div>
+                                                                {request.assignedSession.location?.name && (
+                                                                    <div className="flex items-center gap-1">
+                                                                        <MapPin className="h-3 w-3" />
+                                                                        {request.assignedSession.location.name}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-xs text-muted-foreground">
+                                                                <div>Start: {request.assignedSession.startTime}</div>
+                                                                <div>End: {request.assignedSession.endTime}</div>
+                                                            </div>
+                                                        </div>
+                                                    </HoverCardContent>
+                                                </HoverCard>
+                                            ) : (
+                                                <Badge variant="outline" className="text-xs">
+                                                    Not Assigned
+                                                </Badge>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="text-sm text-muted-foreground">
+                                                {formatDate(request.createdAt)}
+                                            </div>
                                         </TableCell>
                                         <TableCell>
                                             {getStatusBadge(request)}
                                         </TableCell>
-                                        <TableCell>
-                                            <div className="text-sm text-muted-foreground">
-                                                {request.id}
+                                        <TableCell className="text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    asChild
+                                                    className="h-8 w-8 p-0"
+                                                >
+                                                    <Link href={`/dashboard/testing-lab/requests/${request.id}`}>
+                                                        <Eye className="h-4 w-4" />
+                                                        <span className="sr-only">View details</span>
+                                                    </Link>
+                                                </Button>
+                                                {request.status === 1 && ( // Only show approve/reject for requests under review
+                                                    <>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="default"
+                                                            className="h-8 w-8 p-0"
+                                                            onClick={() => {
+                                                                // TODO: Implement approve action
+                                                                console.log('Approve request', request.id);
+                                                            }}
+                                                        >
+                                                            <Check className="h-4 w-4" />
+                                                            <span className="sr-only">Approve</span>
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="destructive"
+                                                            className="h-8 w-8 p-0"
+                                                            onClick={() => {
+                                                                // TODO: Implement reject action
+                                                                console.log('Reject request', request.id);
+                                                            }}
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                            <span className="sr-only">Reject</span>
+                                                        </Button>
+                                                    </>
+                                                )}
                                             </div>
                                         </TableCell>
                                     </TableRow>
