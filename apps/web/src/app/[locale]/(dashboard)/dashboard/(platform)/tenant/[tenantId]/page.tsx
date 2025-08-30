@@ -13,6 +13,23 @@ import type { Tenant } from '@/lib/api/generated/types.gen';
 import { AlertCircle, ArrowLeft, Building, Calendar, Copy, Edit, RefreshCw, Save, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use, useEffect, useState } from 'react';
+
+// Helper functions for access level display
+function getAccessLevelName(visibility: number): string {
+    switch (visibility) {
+        case 0: return 'Private';
+        case 1: return 'Public';
+        default: return 'Unknown';
+    }
+}
+
+function getVisibilityBadgeVariant(visibility: number): 'default' | 'secondary' | 'destructive' | 'outline' {
+    switch (visibility) {
+        case 0: return 'secondary';  // Private
+        case 1: return 'default';    // Public
+        default: return 'outline';
+    }
+}
 import { toast } from 'sonner';
 
 interface TenantDetailPageRouteProps {
