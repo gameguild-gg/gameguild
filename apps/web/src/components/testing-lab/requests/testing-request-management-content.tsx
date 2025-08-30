@@ -1,10 +1,10 @@
 'use client';
 
-import type { TestingRequest } from '@/lib/api/testing-types';
+import type { EnhancedTestingRequest } from '@/lib/admin/testing-lab/requests/testing-requests.actions';
 import { TestingRequestsList } from '../testing-requests-list';
 
 interface TestingRequestManagementContentProps {
-  testingRequests: TestingRequest[]
+  testingRequests: EnhancedTestingRequest[]
 }
 
 export function TestingRequestManagementContent({ testingRequests }: TestingRequestManagementContentProps) {
