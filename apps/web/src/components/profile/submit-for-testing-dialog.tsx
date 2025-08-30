@@ -3,13 +3,13 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Calendar, Clock, TestTube, Users } from 'lucide-react';
-import { useState } from 'react';
+import { Calendar, CalendarDays, Clock, TestTube, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface Project {
@@ -39,26 +39,14 @@ interface SubmitForTestingDialogProps {
     project: Project;
     availableSessions: TestingSession[];
     onSubmit: (submissionData: {
-        sessionType: 'existing' | 'new';
-        sessionId?: string;
+        sessionId: string;
         projectVersion: string;
-        title?: string;
-        description?: string;
-        scheduledDate?: string;
-        maxParticipants?: string;
-        requirements?: string;
     }) => void;
 }
 
 interface TestingFormData {
     sessionId: string;
-    sessionType: 'existing' | 'new';
     projectVersion: string;
-    title: string;
-    description: string;
-    scheduledDate: string;
-    maxParticipants: string;
-    requirements: string;
 }
 
 export function SubmitForTestingDialog({
@@ -70,59 +58,66 @@ export function SubmitForTestingDialog({
 }: SubmitForTestingDialogProps) {
     const [formData, setFormData] = useState<TestingFormData>({
         sessionId: '',
-        sessionType: 'existing',
-        projectVersion: project.version,
-        title: '',
-        description: '',
-        scheduledDate: '',
-        maxParticipants: '10',
-        requirements: ''
+        projectVersion: project.version
     });
 
-    const handleSubmit = () => {
-        if (formData.sessionType === 'existing') {
-            const selectedSession = availableSessions.find(s => s.id === formData.sessionId);
-            if (!selectedSession) {
-                toast.error('Please select a testing session');
-                return;
-            }
+    const [searchDate, setSearchDate] = useState<string>('');
 
-            onSubmit({
-                sessionType: 'existing',
-                sessionId: formData.sessionId,
-                projectVersion: formData.projectVersion
-            });
-        } else {
-            if (!formData.title.trim()) {
-                toast.error('Please enter a session title');
-                return;
-            }
-            if (!formData.scheduledDate) {
-                toast.error('Please select a scheduled date');
-                return;
-            }
+    // Filter and sort sessions
+    const getFilteredSessions = () => {
+        let filtered = availableSessions.filter(session =>
+            session.currentParticipants < session.maxParticipants &&
+            session.status === 'upcoming'
+        );
 
-            onSubmit({
-                sessionType: 'new',
-                projectVersion: formData.projectVersion,
-                title: formData.title,
-                description: formData.description,
-                scheduledDate: formData.scheduledDate,
-                maxParticipants: formData.maxParticipants,
-                requirements: formData.requirements
+        // Filter by date if search date is provided
+        if (searchDate) {
+            const searchDateObj = new Date(searchDate);
+            filtered = filtered.filter(session => {
+                const sessionDate = new Date(session.scheduledDate);
+                return sessionDate.toDateString() === searchDateObj.toDateString();
             });
         }
+
+        // Sort by date (nearest first)
+        return filtered.sort((a, b) =>
+            new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime()
+        );
+    };
+
+    // Set nearest session as default when dialog opens or sessions change
+    useEffect(() => {
+        if (open && !formData.sessionId) {
+            const filteredSessions = getFilteredSessions();
+            const firstSession = filteredSessions[0];
+            if (firstSession) {
+                setFormData(prev => ({ ...prev, sessionId: firstSession.id }));
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, availableSessions, searchDate]);
+
+    const handleSubmit = () => {
+        if (!formData.sessionId) {
+            toast.error('Please select a testing session');
+            return;
+        }
+
+        const selectedSession = availableSessions.find(s => s.id === formData.sessionId);
+        if (!selectedSession) {
+            toast.error('Selected session not found');
+            return;
+        }
+
+        onSubmit({
+            sessionId: formData.sessionId,
+            projectVersion: formData.projectVersion
+        });
 
         // Reset form
         setFormData({
             sessionId: '',
-            sessionType: 'existing',
-            projectVersion: project.version,
-            title: '',
-            description: '',
-            scheduledDate: '',
-            maxParticipants: '10',
-            requirements: ''
+            projectVersion: project.version
         });
     };
 
@@ -131,23 +126,17 @@ export function SubmitForTestingDialog({
         // Reset form when closing
         setFormData({
             sessionId: '',
-            sessionType: 'existing',
-            projectVersion: project.version,
-            title: '',
-            description: '',
-            scheduledDate: '',
-            maxParticipants: '10',
-            requirements: ''
+            projectVersion: project.version
         });
     };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl bg-slate-900 border-slate-700">
+            <DialogContent className="max-w-4xl bg-slate-900 border-slate-700">
                 <DialogHeader>
-                    <DialogTitle className="text-white">Submit for Testing</DialogTitle>
+                    <DialogTitle className="text-white">Submit Testing Request</DialogTitle>
                     <DialogDescription>
-                        Submit your project to a testing session to gather feedback from the community.
+                        Submit a request to join a testing session and get feedback from the community.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-6">
@@ -176,179 +165,149 @@ export function SubmitForTestingDialog({
                         </Select>
                     </div>
 
-                    {/* Session Type Selection */}
+                    {/* Date Filter */}
                     <div>
-                        <Label className="text-slate-300 text-sm font-medium">Testing Session</Label>
-                        <div className="grid grid-cols-2 gap-4 mt-2">
-                            <Card
-                                className={`cursor-pointer transition-colors ${formData.sessionType === 'existing'
-                                        ? 'border-purple-500 bg-purple-500/10'
-                                        : 'border-slate-600 hover:border-slate-500'
-                                    }`}
-                                onClick={() => setFormData({ ...formData, sessionType: 'existing' })}
-                            >
-                                <CardContent className="p-4 text-center">
-                                    <TestTube className="w-6 h-6 mx-auto mb-2 text-purple-400" />
-                                    <h3 className="text-white font-medium">Join Existing Session</h3>
-                                    <p className="text-xs text-slate-400 mt-1">Submit to an upcoming session</p>
-                                </CardContent>
-                            </Card>
-                            <Card
-                                className={`cursor-pointer transition-colors ${formData.sessionType === 'new'
-                                        ? 'border-purple-500 bg-purple-500/10'
-                                        : 'border-slate-600 hover:border-slate-500'
-                                    }`}
-                                onClick={() => setFormData({ ...formData, sessionType: 'new' })}
-                            >
-                                <CardContent className="p-4 text-center">
-                                    <Calendar className="w-6 h-6 mx-auto mb-2 text-purple-400" />
-                                    <h3 className="text-white font-medium">Create New Session</h3>
-                                    <p className="text-xs text-slate-400 mt-1">Schedule your own session</p>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-
-                    {/* Existing Session Selection */}
-                    {formData.sessionType === 'existing' && (
-                        <div className="space-y-4">
-                            <div>
-                                <Label className="text-slate-300">Available Sessions</Label>
-                                <Select
-                                    value={formData.sessionId}
-                                    onValueChange={(value) => setFormData({ ...formData, sessionId: value })}
-                                >
-                                    <SelectTrigger className="bg-slate-800 border-slate-600 text-white">
-                                        <SelectValue placeholder="Choose a testing session" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-700">
-                                        {availableSessions.map((session) => (
-                                            <SelectItem key={session.id} value={session.id} className="text-white hover:bg-slate-700">
-                                                <div className="flex flex-col">
-                                                    <span className="font-medium">{session.title}</span>
-                                                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                                                        <Calendar className="w-3 h-3" />
-                                                        {session.scheduledDate.toLocaleDateString()} at {session.scheduledDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                        <Users className="w-3 h-3 ml-2" />
-                                                        {session.currentParticipants}/{session.maxParticipants}
-                                                    </div>
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                        <Label className="text-slate-300 text-sm font-medium">Filter by Date (Optional)</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                            <div className="relative flex-1">
+                                <CalendarDays className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <Input
+                                    type="date"
+                                    value={searchDate}
+                                    onChange={(e) => setSearchDate(e.target.value)}
+                                    className="bg-slate-800 border-slate-600 text-white pl-10"
+                                    placeholder="Filter sessions by date"
+                                />
                             </div>
-
-                            {formData.sessionId && (
-                                <Card className="bg-slate-800/50 border-slate-600">
-                                    <CardContent className="p-4">
-                                        {(() => {
-                                            const selectedSession = availableSessions.find(s => s.id === formData.sessionId);
-                                            if (!selectedSession) return null;
-
-                                            return (
-                                                <div>
-                                                    <h4 className="text-white font-medium mb-2">{selectedSession.title}</h4>
-                                                    <p className="text-sm text-slate-300 mb-3">{selectedSession.description}</p>
-                                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                                        <div className="flex items-center gap-2 text-slate-400">
-                                                            <Calendar className="w-4 h-4" />
-                                                            <span>{selectedSession.scheduledDate.toLocaleDateString()}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2 text-slate-400">
-                                                            <Clock className="w-4 h-4" />
-                                                            <span>{selectedSession.scheduledDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2 text-slate-400">
-                                                            <Users className="w-4 h-4" />
-                                                            <span>{selectedSession.currentParticipants}/{selectedSession.maxParticipants} participants</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2 text-slate-400">
-                                                            <Badge variant="secondary" className="bg-green-500/20 text-green-400">
-                                                                {selectedSession.status}
-                                                            </Badge>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })()}
-                                    </CardContent>
-                                </Card>
+                            {searchDate && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSearchDate('')}
+                                    className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                                >
+                                    Clear
+                                </Button>
                             )}
                         </div>
-                    )}
+                        <p className="text-xs text-slate-400 mt-1">
+                            {searchDate ? `Showing sessions for ${new Date(searchDate).toLocaleDateString('pt-BR')}` : 'Showing all available sessions'}
+                        </p>
+                    </div>
 
-                    {/* New Session Creation */}
-                    {formData.sessionType === 'new' && (
-                        <div className="space-y-4">
-                            <div>
-                                <Label htmlFor="testingTitle" className="text-slate-300">Session Title</Label>
-                                <Input
-                                    id="testingTitle"
-                                    value={formData.title}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    className="bg-slate-800 border-slate-600 text-white"
-                                    placeholder="e.g., Beta Testing - Version 1.3.0"
-                                />
-                            </div>
-                            <div>
-                                <Label htmlFor="testingDescription" className="text-slate-300">Description</Label>
-                                <Textarea
-                                    id="testingDescription"
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    className="bg-slate-800 border-slate-600 text-white"
-                                    rows={3}
-                                    placeholder="What specific feedback are you looking for?"
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="scheduledDate" className="text-slate-300">Scheduled Date</Label>
-                                    <Input
-                                        id="scheduledDate"
-                                        type="datetime-local"
-                                        value={formData.scheduledDate}
-                                        onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
-                                        className="bg-slate-800 border-slate-600 text-white"
-                                    />
-                                </div>
-                                <div>
-                                    <Label htmlFor="maxParticipants" className="text-slate-300">Max Participants</Label>
-                                    <Input
-                                        id="maxParticipants"
-                                        type="number"
-                                        value={formData.maxParticipants}
-                                        onChange={(e) => setFormData({ ...formData, maxParticipants: e.target.value })}
-                                        className="bg-slate-800 border-slate-600 text-white"
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <Label htmlFor="requirements" className="text-slate-300">Requirements</Label>
-                                <Textarea
-                                    id="requirements"
-                                    value={formData.requirements}
-                                    onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
-                                    className="bg-slate-800 border-slate-600 text-white"
-                                    rows={2}
-                                    placeholder="Any specific requirements for testers?"
-                                />
-                            </div>
-                        </div>
-                    )}
+                    {/* Available Sessions Carousel */}
+                    <div>
+                        <Label className="text-slate-300 text-sm font-medium">Available Testing Sessions</Label>
+                        <p className="text-xs text-slate-400 mt-1 mb-4">
+                            Browse through available sessions. The nearest session is selected by default.
+                        </p>
+
+                        {(() => {
+                            const filteredSessions = getFilteredSessions();
+
+                            if (filteredSessions.length === 0) {
+                                return (
+                                    <Card className="bg-slate-800/50 border-slate-600">
+                                        <CardContent className="p-8 text-center">
+                                            <TestTube className="w-12 h-12 mx-auto mb-4 text-slate-400" />
+                                            <p className="text-slate-300 text-lg mb-2">No testing sessions available</p>
+                                            <p className="text-sm text-slate-400">
+                                                {searchDate ? 'Try selecting a different date or clear the date filter' : 'Check back later for new sessions'}
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            }
+
+                            return (
+                                <Carousel className="w-full">
+                                    <CarouselContent className="-ml-2 md:-ml-4">
+                                        {filteredSessions.map((session) => (
+                                            <CarouselItem key={session.id} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
+                                                <Card
+                                                    className={`cursor-pointer transition-all duration-200 h-full ${formData.sessionId === session.id
+                                                        ? 'border-purple-500 bg-purple-500/10 shadow-lg ring-2 ring-purple-500/20'
+                                                        : 'border-slate-600 hover:border-slate-500 hover:bg-slate-800/30'
+                                                        }`}
+                                                    onClick={() => setFormData({ ...formData, sessionId: session.id })}
+                                                >
+                                                    <CardContent className="p-5">
+                                                        <div className="flex items-start justify-between mb-3">
+                                                            <div className="flex-1">
+                                                                <h4 className="text-white font-semibold text-base mb-2">{session.title}</h4>
+                                                                <p className="text-sm text-slate-300 mb-4 line-clamp-3">{session.description}</p>
+                                                            </div>
+                                                            {formData.sessionId === session.id && (
+                                                                <div className="ml-3 flex-shrink-0">
+                                                                    <div className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center">
+                                                                        <div className="w-2 h-2 rounded-full bg-white"></div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="space-y-3">
+                                                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                                                <div className="flex items-center gap-2 text-slate-400">
+                                                                    <Calendar className="w-4 h-4 text-purple-400" />
+                                                                    <span>{session.scheduledDate.toLocaleDateString('pt-BR')}</span>
+                                                                </div>
+                                                                <div className="flex items-center gap-2 text-slate-400">
+                                                                    <Clock className="w-4 h-4 text-purple-400" />
+                                                                    <span>{session.scheduledDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2 text-slate-400">
+                                                                    <Users className="w-4 h-4 text-purple-400" />
+                                                                    <span>{session.currentParticipants}/{session.maxParticipants} participants</span>
+                                                                </div>
+                                                                <Badge
+                                                                    variant="secondary"
+                                                                    className="bg-green-500/20 text-green-400"
+                                                                >
+                                                                    Available
+                                                                </Badge>
+                                                            </div>
+                                                        </div>
+                                                    </CardContent>
+                                                </Card>
+                                            </CarouselItem>
+                                        ))}
+                                    </CarouselContent>
+                                    {filteredSessions.length > 3 && (
+                                        <>
+                                            <CarouselPrevious className="bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700" />
+                                            <CarouselNext className="bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700" />
+                                        </>
+                                    )}
+                                </Carousel>
+                            );
+                        })()}
+                    </div>
                 </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={handleClose} className="border-slate-600 text-slate-300">
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSubmit}
-                        className="bg-purple-600 hover:bg-purple-700"
-                        disabled={formData.sessionType === 'existing' && !formData.sessionId}
-                    >
-                        {formData.sessionType === 'existing' ? 'Submit to Session' : 'Create Session'}
-                    </Button>
+                <DialogFooter className="flex items-center justify-between">
+                    <div className="text-sm text-slate-400">
+                        {formData.sessionId && (() => {
+                            const filteredSessions = getFilteredSessions();
+                            const selectedSession = filteredSessions.find(s => s.id === formData.sessionId);
+                            return selectedSession ? (
+                                <span>Selected: v{formData.projectVersion} for {selectedSession.title}</span>
+                            ) : null;
+                        })()}
+                    </div>
+                    <div className="flex gap-3">
+                        <Button variant="outline" onClick={handleClose} className="border-slate-600 text-slate-300">
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleSubmit}
+                            className="bg-purple-600 hover:bg-purple-700"
+                            disabled={!formData.sessionId || getFilteredSessions().length === 0}
+                        >
+                            Submit Request
+                        </Button>
+                    </div>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
