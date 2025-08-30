@@ -13,6 +13,7 @@ import type { Tenant } from '@/lib/api/generated/types.gen';
 import { AlertCircle, ArrowLeft, Building, Calendar, Copy, Edit, RefreshCw, Save, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 // Helper functions for access level display
 function getAccessLevelName(visibility: number): string {
@@ -30,7 +31,6 @@ function getVisibilityBadgeVariant(visibility: number): 'default' | 'secondary' 
         default: return 'outline';
     }
 }
-import { toast } from 'sonner';
 
 interface TenantDetailPageRouteProps {
     params: Promise<{
@@ -310,7 +310,7 @@ function TenantDetailPage({ tenantId }: TenantDetailPageProps) {
                             {editingBasicInfo ? (
                                 <Select
                                     value={basicForm.visibility.toString()}
-                                    onValueChange={(value) => setBasicForm({ ...basicForm, visibility: parseInt(value) as AccessLevel })}
+                                    onValueChange={(value) => setBasicForm({ ...basicForm, visibility: parseInt(value) })}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
