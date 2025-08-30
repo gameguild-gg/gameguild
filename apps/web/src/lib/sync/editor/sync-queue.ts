@@ -1,9 +1,10 @@
 import { syncConfig } from "./sync-config"
+import { ApiClient } from "../../api/editor/api-client"
 
 interface SyncQueueItem {
   id: string
-  type: "create" | "update" | "delete"
-  projectId: string
+  type: "create" | "update" | "delete" | "tags_update"
+  projectId?: string
   data?: any
   timestamp: number
   retries: number
@@ -27,6 +28,11 @@ export class SyncQueue {
   private readonly STORE_NAME = "sync_queue"
   private isInitialized = false
   private processingInterval: NodeJS.Timeout | null = null
+  private apiClient: ApiClient
+
+  constructor(apiClient: ApiClient) {
+    this.apiClient = apiClient
+  }
 
   async init(): Promise<void> {
     if (this.isInitialized) return
@@ -298,9 +304,35 @@ export class SyncQueue {
     for (const item of batch) {
       try {
         await this.markAsProcessing(item.id)
-        // Process item logic would go here
-        // For now, just mark as completed
-        await this.markAsCompleted(item.id)
+
+        let response
+        switch (item.type) {
+          case "create":
+            if (!item.data) throw new Error("Missing data for create operation")
+            // Assuming createProject is on apiClient
+            response = await this.apiClient.createProject(item.data)
+            break
+          case "update":
+            if (!item.data) throw new Error("Missing data for update operation")
+            response = await this.apiClient.updateProject(item.data)
+            break
+          case "delete":
+            if (!item.projectId) throw new Error("Missing projectId for delete operation")
+            response = await this.apiClient.deleteProject(item.projectId)
+            break
+          case "tags_update":
+            if (!item.data) throw new Error("Missing data for tags_update operation")
+            response = await this.apiClient.syncTags(item.data)
+            break
+          default:
+            throw new Error(`Unknown sync item type: ${item.type}`)
+        }
+
+        if (response.success) {
+          await this.markAsCompleted(item.id)
+        } else {
+          throw new Error(response.message || "API operation failed")
+        }
       } catch (error) {
         let errorMessage = "Unknown error"
         if (error instanceof Error) {
