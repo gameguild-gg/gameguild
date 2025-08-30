@@ -86,7 +86,7 @@
     "mermaid": "^11.7.0",
     "monaco-editor": "^0.52.2",
     "newrelic": "latest",
-    "next": "15.4.1",
+    "next": "15.4.7",
     "next-auth": "^5.0.0-beta.27",
     "next-intl": "^4.1.0",
     "next-themes": "^0.4.6",
