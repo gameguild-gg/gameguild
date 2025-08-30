@@ -10,6 +10,6 @@ export { ProjectCard } from './project-card'
 export { ProjectDetails } from './project-details'
 export { SkillsSection } from './skills-section'
 export { SpecializationsBadges } from './specializations-badges'
-export { SubmitForTestingDialog } from './submit-for-testing-dialog'
+export { SubmitForTestingSheet } from './submit-for-testing-sheet'
 export { UserBadges } from './user-badges'
 

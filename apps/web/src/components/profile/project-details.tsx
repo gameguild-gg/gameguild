@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { SubmitForTestingDialog } from './submit-for-testing-dialog';
+import { SubmitForTestingSheet } from './submit-for-testing-sheet';
 
 interface Project {
     id: string;
@@ -193,52 +193,21 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
     };
 
     const handleSubmitForTesting = (submissionData: {
-        sessionType: 'existing' | 'new';
-        sessionId?: string;
+        sessionId: string;
         projectVersion: string;
-        title?: string;
-        description?: string;
-        scheduledDate?: string;
-        maxParticipants?: string;
-        requirements?: string;
     }) => {
-        if (submissionData.sessionType === 'existing' && submissionData.sessionId) {
-            // Submit to existing session
-            const selectedSession = AVAILABLE_TESTING_SESSIONS.find(s => s.id === submissionData.sessionId);
-            if (selectedSession) {
-                console.log('Submitting to existing session:', {
-                    sessionId: submissionData.sessionId,
-                    sessionTitle: selectedSession.title,
-                    projectVersion: submissionData.projectVersion,
-                    projectId: project.id,
-                    projectName: project.name
-                });
-
-                toast.success(`Project v${submissionData.projectVersion} submitted to "${selectedSession.title}" successfully!`);
-            }
-        } else if (submissionData.sessionType === 'new') {
-            // Create new session
-            const newSession = {
-                id: `ts${Date.now()}`,
-                title: submissionData.title || '',
-                status: 'pending' as const,
-                participantCount: 0,
-                scheduledDate: new Date(submissionData.scheduledDate || '')
-            };
-
-            setProject({
-                ...project,
-                testingSessions: [...(project.testingSessions || []), newSession]
-            });
-
-            console.log('Creating new session:', {
-                session: newSession,
+        // Submit to existing session
+        const selectedSession = AVAILABLE_TESTING_SESSIONS.find(s => s.id === submissionData.sessionId);
+        if (selectedSession) {
+            console.log('Submitting to existing session:', {
+                sessionId: submissionData.sessionId,
+                sessionTitle: selectedSession.title,
                 projectVersion: submissionData.projectVersion,
                 projectId: project.id,
                 projectName: project.name
             });
 
-            toast.success(`New testing session created for v${submissionData.projectVersion} successfully!`);
+            toast.success(`Project v${submissionData.projectVersion} submitted to "${selectedSession.title}" successfully!`);
         }
 
         setShowTestingDialog(false);
@@ -715,7 +684,7 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
             </Dialog>
 
             {/* Submit for Testing Dialog */}
-            <SubmitForTestingDialog
+            <SubmitForTestingSheet
                 open={showTestingDialog}
                 onOpenChange={setShowTestingDialog}
                 project={project}
