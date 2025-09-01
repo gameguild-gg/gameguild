@@ -5,14 +5,28 @@
 Day 1:
 
 - Talk about git repositories, github, and awesome curatorships
+- Game History
 - Talk about differences of game dev tools, engines, frameworks, and libraries
 - Talk about the most used game dev tools
 
 Day 2:
 
+- Game History
 - Track their progress and research
 
 </details>
+
+## Game history
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/8idegBmfzS8?si=7Esmh9eA8b5YJ_nD" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/4BfiVTHW7rY?si=FmE8dEz2dmQPV4jT" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/jF9c_DREITQ?si=fcwyVySGK7PM1KxQ" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/0_Bsv0wYBeU?si=zr3-3Ufo-LrA_sHG" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Game tools
 
 There are plenty of tools available for game development. I dont want to cover all of them this is just a brief overview of the most common ones.
 
