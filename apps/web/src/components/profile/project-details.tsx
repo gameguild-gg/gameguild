@@ -8,107 +8,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { updateProject } from '@/lib/api/projects-server.actions';
+import { type Project } from '@/lib/api/projects-simple';
 import { ArrowLeft, BarChart3, Calendar, CheckCircle, ChevronRight, Clock, Download, Edit2, Eye, FileText, Gamepad2, Package, Play, Settings, Share2, Star, TestTube, Users, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { SubmitForTestingSheet } from './submit-for-testing-sheet';
-
-interface Project {
-    id: string;
-    name: string;
-    description: string;
-    longDescription?: string;
-    category: string;
-    version: string;
-    status: 'development' | 'beta' | 'released' | 'archived';
-    createdAt: Date;
-    lastUpdated: Date;
-    rating?: number;
-    isPublic: boolean;
-    tags: string[];
-    downloadUrl?: string;
-    sourceCodeUrl?: string;
-    websiteUrl?: string;
-    screenshots: string[];
-    systemRequirements?: {
-        minimum: string;
-        recommended: string;
-    };
-    changelog?: Array<{
-        version: string;
-        date: Date;
-        changes: string[];
-    }>;
-    testingSessions?: Array<{
-        id: string;
-        title: string;
-        status: 'pending' | 'active' | 'completed';
-        participantCount: number;
-        scheduledDate: Date;
-    }>;
-}
 
 interface ProjectDetailsProps {
     projectId: string;
     username: string;
     isOwner: boolean;
+    project: Project;
 }
-
-// Mock data - replace with actual API call
-const MOCK_PROJECT: Project = {
-    id: '1',
-    name: 'Puzzle Adventure Game',
-    description: 'A challenging puzzle game with unique mechanics and beautiful art style.',
-    longDescription: 'This is an immersive puzzle adventure game that combines traditional puzzle-solving mechanics with modern storytelling. Players embark on a journey through mystical lands, solving intricate puzzles to progress through the story. The game features hand-drawn artwork, original soundtrack, and innovative gameplay mechanics that challenge players to think creatively.',
-    category: 'Puzzle',
-    version: '1.2.0',
-    status: 'released',
-    createdAt: new Date('2024-01-15'),
-    lastUpdated: new Date('2024-08-20'),
-    rating: 4.5,
-    isPublic: true,
-    tags: ['puzzle', 'adventure', 'indie', 'single-player'],
-    downloadUrl: 'https://example.com/download',
-    sourceCodeUrl: 'https://github.com/user/puzzle-game',
-    websiteUrl: 'https://puzzlegame.example.com',
-    screenshots: [
-        '/placeholder-screenshot1.jpg',
-        '/placeholder-screenshot2.jpg',
-        '/placeholder-screenshot3.jpg'
-    ],
-    systemRequirements: {
-        minimum: 'Windows 10, 4GB RAM, DirectX 11',
-        recommended: 'Windows 11, 8GB RAM, DirectX 12'
-    },
-    changelog: [
-        {
-            version: '1.2.0',
-            date: new Date('2024-08-20'),
-            changes: ['Added new puzzle mechanics', 'Fixed performance issues', 'Updated UI design']
-        },
-        {
-            version: '1.1.0',
-            date: new Date('2024-06-15'),
-            changes: ['New levels added', 'Bug fixes', 'Improved sound effects']
-        },
-        {
-            version: '1.0.0',
-            date: new Date('2024-01-15'),
-            changes: ['Initial release', 'Core gameplay mechanics', 'Basic UI implementation']
-        }
-    ],
-    testingSessions: [
-        {
-            id: 'ts2',
-            title: 'UI/UX Feedback Session',
-            status: 'completed',
-            participantCount: 8,
-            scheduledDate: new Date('2024-08-10')
-        }
-    ]
-};
 
 // Mock available testing sessions
 const AVAILABLE_TESTING_SESSIONS = [
@@ -153,10 +67,11 @@ const PROJECT_STATUSES = [
     { value: 'archived', label: 'Archived', color: 'bg-gray-500' }
 ];
 
-export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsProps) {
+export function ProjectDetails({ projectId, username, isOwner, project: initialProject }: ProjectDetailsProps) {
     const router = useRouter();
-    const [project, setProject] = useState<Project>(MOCK_PROJECT);
+    const [project, setProject] = useState<Project>(initialProject);
     const [isEditing, setIsEditing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [showTestingDialog, setShowTestingDialog] = useState(false);
     const [showNewVersionDialog, setShowNewVersionDialog] = useState(false);
     const [activeSection, setActiveSection] = useState<'overview' | 'testing' | 'analytics' | 'versions' | 'settings'>('overview');
@@ -165,13 +80,12 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
         description: project.description,
         longDescription: project.longDescription || '',
         category: project.category,
-        version: project.version,
+        gameVersion: project.gameVersion || '',
         status: project.status,
         isPublic: project.isPublic,
         tags: project.tags.join(', '),
         sourceCodeUrl: project.sourceCodeUrl || '',
-        websiteUrl: project.websiteUrl || '',
-        downloadUrl: project.downloadUrl || ''
+        websiteUrl: project.websiteUrl || ''
     });
     const [newVersionForm, setNewVersionForm] = useState({
         version: '',
@@ -179,16 +93,51 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
         releaseDate: new Date().toISOString().split('T')[0]
     });
 
-    const handleEdit = () => {
-        // Simulate API call
-        setProject({
-            ...project,
-            ...editForm,
-            tags: editForm.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag),
-            lastUpdated: new Date()
+    // Update form when project changes
+    useEffect(() => {
+        setEditForm({
+            name: project.name,
+            description: project.description,
+            longDescription: project.longDescription || '',
+            category: project.category,
+            gameVersion: project.gameVersion || '',
+            status: project.status,
+            isPublic: project.isPublic,
+            tags: project.tags.join(', '),
+            sourceCodeUrl: project.sourceCodeUrl || '',
+            websiteUrl: project.websiteUrl || ''
         });
-        setIsEditing(false);
-        toast.success('Project updated successfully!');
+    }, [project]);
+
+    const handleEdit = async () => {
+        setIsLoading(true);
+        try {
+            const updatedProject = await updateProject(project.id, {
+                name: editForm.name,
+                description: editForm.description,
+                longDescription: editForm.longDescription,
+                category: editForm.category,
+                gameVersion: editForm.gameVersion,
+                isPublic: editForm.isPublic,
+                tags: editForm.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag),
+                sourceCodeUrl: editForm.sourceCodeUrl || undefined,
+                websiteUrl: editForm.websiteUrl || undefined,
+                expectedVersion: project.version
+            });
+
+            if (updatedProject) {
+                setProject(updatedProject);
+                setIsEditing(false);
+                toast.success('Project updated successfully!');
+            } else {
+                toast.error('Failed to update project');
+            }
+        } catch (error) {
+            console.error('Error updating project:', error);
+            toast.error('Failed to update project');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleNewVersion = () => {
@@ -200,14 +149,14 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
         const releaseDate = newVersionForm.releaseDate ? new Date(newVersionForm.releaseDate) : new Date();
         const newChange = {
             version: newVersionForm.version,
-            date: releaseDate,
+            date: releaseDate.toISOString(),
             changes: newVersionForm.changes.split('\n').filter((change: string) => change.trim())
         };
 
         setProject({
             ...project,
-            version: newVersionForm.version,
-            lastUpdated: releaseDate,
+            gameVersion: newVersionForm.version,
+            updatedAt: releaseDate.toISOString(),
             changelog: [newChange, ...(project.changelog || [])]
         });
 
@@ -249,7 +198,7 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
                 title: selectedSession.title,
                 status: 'pending' as const,
                 participantCount: 0,
-                scheduledDate: selectedSession.scheduledDate
+                scheduledDate: selectedSession.scheduledDate.toISOString()
             };
 
             // Update project with new testing session
@@ -278,7 +227,7 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
     const getPendingTestingSession = () => {
         return project.testingSessions?.find(session =>
             session.status === 'pending' ||
-            (session.status === 'active' && session.scheduledDate > new Date())
+            (session.status === 'active' && new Date(session.scheduledDate) > new Date())
         );
     };
 
@@ -345,7 +294,7 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
                                         <div className="text-sm text-slate-300">
                                             <div className="font-medium">{pendingSession.title}</div>
                                             <div className="text-xs text-slate-400">
-                                                {pendingSession.scheduledDate.toLocaleDateString()}
+                                                {new Date(pendingSession.scheduledDate).toLocaleDateString()}
                                             </div>
                                         </div>
                                         <div className="ml-auto flex items-center gap-2">
@@ -519,7 +468,7 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <span className="font-medium text-white">v{entry.version}</span>
                                                         <span className="text-sm text-slate-400">
-                                                            {entry.date.toLocaleDateString()}
+                                                            {new Date(entry.date).toLocaleDateString()}
                                                         </span>
                                                     </div>
                                                     <ul className="text-sm text-slate-300 space-y-1">
@@ -549,7 +498,7 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
                                         {project.testingSessions && project.testingSessions.length > 0 ? (
                                             project.testingSessions.map((session) => {
                                                 const isPending = session.status === 'pending';
-                                                const isUpcoming = session.status === 'active' && session.scheduledDate > new Date();
+                                                const isUpcoming = session.status === 'active' && new Date(session.scheduledDate) > new Date();
                                                 const isCurrentPending = session.id === pendingSession?.id;
 
                                                 return (
@@ -590,7 +539,7 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
                                                             </span>
                                                             <span className="flex items-center gap-1">
                                                                 <Calendar className="w-4 h-4" />
-                                                                {session.scheduledDate.toLocaleDateString()}
+                                                                {new Date(session.scheduledDate).toLocaleDateString()}
                                                             </span>
                                                         </div>
                                                         {isCurrentPending && (
@@ -675,10 +624,10 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
                                     <CardContent>
                                         <div className="bg-slate-700/50 rounded-lg p-4 border-l-4 border-purple-500">
                                             <div className="flex items-center justify-between mb-2">
-                                                <h4 className="text-lg font-semibold text-white">v{project.version} (Current)</h4>
+                                                <h4 className="text-lg font-semibold text-white">v{project.gameVersion || '1.0.0'} (Current)</h4>
                                                 <Badge className="bg-green-600/20 text-green-300">Latest</Badge>
                                             </div>
-                                            <p className="text-slate-300 mb-3">Released on {project.lastUpdated.toLocaleDateString()}</p>
+                                            <p className="text-slate-300 mb-3">Released on {new Date(project.updatedAt).toLocaleDateString()}</p>
                                             <div className="flex gap-2">
                                                 <Button variant="outline" size="sm" className="border-slate-600 text-slate-300 hover:bg-slate-700">
                                                     <Download className="w-4 h-4 mr-2" />
@@ -709,7 +658,7 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
                                                         <div className="flex items-center justify-between mb-2">
                                                             <div>
                                                                 <h5 className="font-medium text-white">v{version.version}</h5>
-                                                                <p className="text-sm text-slate-400">Released on {version.date.toLocaleDateString()}</p>
+                                                                <p className="text-sm text-slate-400">Released on {new Date(version.date).toLocaleDateString()}</p>
                                                             </div>
                                                             <div className="flex gap-2">
                                                                 <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
@@ -756,13 +705,13 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
                                             </div>
                                             <div className="text-center p-4 bg-slate-700/50 rounded-lg">
                                                 <div className="text-2xl font-bold text-white mb-1">
-                                                    {Math.floor((new Date().getTime() - project.createdAt.getTime()) / (1000 * 60 * 60 * 24))}
+                                                    {Math.floor((new Date().getTime() - new Date(project.createdAt).getTime()) / (1000 * 60 * 60 * 24))}
                                                 </div>
                                                 <div className="text-sm text-slate-400">Days Since First Release</div>
                                             </div>
                                             <div className="text-center p-4 bg-slate-700/50 rounded-lg">
                                                 <div className="text-2xl font-bold text-white mb-1">
-                                                    {Math.floor((new Date().getTime() - project.lastUpdated.getTime()) / (1000 * 60 * 60 * 24))}
+                                                    {Math.floor((new Date().getTime() - new Date(project.updatedAt).getTime()) / (1000 * 60 * 60 * 24))}
                                                 </div>
                                                 <div className="text-sm text-slate-400">Days Since Last Update</div>
                                             </div>
@@ -818,11 +767,11 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
                                 </div>
                                 <div>
                                     <Label className="text-slate-400">Created</Label>
-                                    <p className="text-white">{project.createdAt.toLocaleDateString()}</p>
+                                    <p className="text-white">{new Date(project.createdAt).toLocaleDateString()}</p>
                                 </div>
                                 <div>
                                     <Label className="text-slate-400">Last Updated</Label>
-                                    <p className="text-white">{project.lastUpdated.toLocaleDateString()}</p>
+                                    <p className="text-white">{new Date(project.updatedAt).toLocaleDateString()}</p>
                                 </div>
                                 {project.tags && project.tags.length > 0 && (
                                     <div>
@@ -965,8 +914,8 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
                                 <Label htmlFor="version" className="text-slate-300">Version</Label>
                                 <Input
                                     id="version"
-                                    value={editForm.version}
-                                    onChange={(e) => setEditForm({ ...editForm, version: e.target.value })}
+                                    value={editForm.gameVersion}
+                                    onChange={(e) => setEditForm({ ...editForm, gameVersion: e.target.value })}
                                     className="bg-slate-800 border-slate-600 text-white"
                                 />
                             </div>
@@ -996,23 +945,13 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
                                 placeholder="puzzle, adventure, indie"
                             />
                         </div>
-                        <div>
-                            <Label htmlFor="downloadUrl" className="text-slate-300">Download URL</Label>
-                            <Input
-                                id="downloadUrl"
-                                value={editForm.downloadUrl}
-                                onChange={(e) => setEditForm({ ...editForm, downloadUrl: e.target.value })}
-                                className="bg-slate-800 border-slate-600 text-white"
-                                placeholder="https://..."
-                            />
-                        </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsEditing(false)} className="border-slate-600 text-slate-300">
                             Cancel
                         </Button>
-                        <Button onClick={handleEdit} className="bg-purple-600 hover:bg-purple-700">
-                            Save Changes
+                        <Button onClick={handleEdit} disabled={isLoading} className="bg-purple-600 hover:bg-purple-700">
+                            {isLoading ? 'Saving...' : 'Save Changes'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -1077,7 +1016,16 @@ export function ProjectDetails({ projectId, username, isOwner }: ProjectDetailsP
             <SubmitForTestingSheet
                 open={showTestingDialog}
                 onOpenChange={setShowTestingDialog}
-                project={project}
+                project={{
+                    id: project.id,
+                    name: project.name,
+                    version: project.gameVersion || '1.0.0',
+                    changelog: project.changelog?.map(entry => ({
+                        version: entry.version,
+                        date: new Date(entry.date),
+                        changes: entry.changes
+                    }))
+                }}
                 availableSessions={AVAILABLE_TESTING_SESSIONS}
                 onSubmit={handleSubmitForTesting}
             />
