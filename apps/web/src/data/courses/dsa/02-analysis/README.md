@@ -1,5 +1,25 @@
 # Algorthm Analysis
 
+<details>
+<summary> Teacher Notes </summary>
+
+Day 1:
+
+- Talk about the final project, ask them to start pairing
+- Intro to algorithms and time complexity
+- Invite them to try in class the two 2 sum code problem
+- Talk about the review assignment:
+    - The project structure
+    - The CSV generation
+    - CMake in general
+    
+Day 2:
+
+- Talk about the algrithm assignment
+- Ask them to start the assignment
+
+</details>
+
 Before starting, lets thin about 3 problems:
 
 For an array of size $N$, dont overthink. Just answer:
@@ -10,67 +30,73 @@ For an array of size $N$, dont overthink. Just answer:
 
 ## How to measure an algorithm mathematically?
 
-???+ example "find a number in a vector"
+::: example "find a number in a vector"
 
-    ```c++
-    int find(vector<int> v, int target) {
-        // how many iterations?
-        for (int i = 0; i < v.size(); i++) {
+``` c++
+int find(vector<int> v, int target) {
+    // how many iterations?
+    for (int i = 0; i < v.size(); i++) {
+        // how many comparisons?
+        if (v[i] == target) { 
+        return i;
+        }
+    }
+    return -1;
+}
+```
+
+:::
+
+::: example "find two numbers sum in an array"
+
+```c++
+vector<int> findsum2(vector<int> v, int target) {
+    // how many outer loop iterations?
+    for (int i = 0; i < v.size(); i++) {
+        // how many inner loop iterations?
+        for (int j = i+1; j < v.size(); j++) {
             // how many comparisons?
-            if (v[i] == target) { 
-            return i;
+            if (v[i] + v[j] == target) {
+                return {i, j};
             }
         }
-        return -1;
     }
-    ```
+    return {-1, -1};
+}
+```
+Check it out on [leetcode](https://leetcode.com/problems/two-sum/description/). Can you solve it better?
 
-???+ example "find two numbers sum in an array"
+:::
 
-    ```c++
-    vector<int> findsum2(vector<int> v, int target) {
-        // how many outer loop iterations?
-        for (int i = 0; i < v.size(); i++) {
-            // how many inner loop iterations?
-            for (int j = i+1; j < v.size(); j++) {
-                // how many comparisons?
-                if (v[i] + v[j] == target) {
-                    return {i, j};
-                }
-            }
+::: example "Print all pormutations of an array"
+
+```c++
+void generatePermutations(std::vector<int>& vec, int index) {
+    if (index == vec.size() - 1) {
+        // Print the current permutation
+        for (int num : vec) {
+            std::cout << num << " ";
         }
-        return {-1, -1};
+        std::cout << std::endl;
+        return;
     }
-    ```
-    Check it out on [leetcode](https://leetcode.com/problems/two-sum/description/). Can you solve it better?
-
-???+ example "Print all pormutations of an array"
-
-    ```c++
-    void generatePermutations(std::vector<int>& vec, int index) {
-        if (index == vec.size() - 1) {
-            // Print the current permutation
-            for (int num : vec) {
-                std::cout << num << " ";
-            }
-            std::cout << std::endl;
-            return;
-        }
         
-        // how many swaps for every recursive call?
-        for (int i = index; i < vec.size(); ++i) { 
-            // Swap the elements at indices index and i
-            std::swap(vec[index], vec[i]);
+    // how many swaps for every recursive call?
+    for (int i = index; i < vec.size(); ++i) { 
+        // Swap the elements at indices index and i
+        std::swap(vec[index], vec[i]);
 
-            // Recursively generate permutations for the rest of the vector
-            // How deep this can go?
-            generatePermutations(vec, index + 1);
+        // Recursively generate permutations for the rest of the vector
+        // How deep this can go?
+        generatePermutations(vec, index + 1);
 
-            // Backtrack: undo the swap to explore other possibilities
-            std::swap(vec[index], vec[i]);
-        }
+        // Backtrack: undo the swap to explore other possibilities
+        std::swap(vec[index], vec[i]);
     }
-    ```
+}
+```
+
+:::
 
 Trying to be mathematicaly correct, the number of instructions the first one should be a function similar to this:
 
@@ -86,10 +112,8 @@ To simplify, we remove the constants and the lower order terms:
 
 ## Difference between Big O vs Big Theta Θ vs Big Omega Ω Notations
 
-<figure markdown>
-  ![img.png](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?preview=true&prefix=dsa%2F02-analysis%2Fimg.png)
-  <figcaption>Source: bigocheatsheet.com</figcaption>
-</figure>
+
+![img.png](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?preview=true&prefix=dsa%2F02-analysis%2Fimg.png)
 
 ### Big O
 
@@ -104,7 +128,7 @@ To simplify, we remove the constants and the lower order terms:
 - Wrongly stated as average;
 - Theta is two-sided;
 - Tight bound between 2 constants of the same function 
-- $k1*Θ <= func <= k2*Θ$
+- $k_1*Θ <= func <= k_2*Θ$
 - When $N$ goes to infinite, it cannot be faster or slower than it;
 
 ### Honorable mentions
@@ -116,9 +140,11 @@ To simplify, we remove the constants and the lower order terms:
 
 ## Common Big Os
 
-!!! note inline end "Logarithm"
+::: note inline end "Logarithm"
     
-    In computer science, when we say log, assume base 2, unless expressely stated;
+In computer science, when we say log, assume base 2, unless expressely stated;
+
+:::
 
 | Big O | Name | Example |
 | --- | --- | --- |

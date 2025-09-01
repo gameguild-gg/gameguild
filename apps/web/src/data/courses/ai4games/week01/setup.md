@@ -26,6 +26,10 @@
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/mQGqwTuuq9Q?si=IM6pv91MO-k7Vuo7" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
+## Forking, and starting the assignment
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Gbkk_CBm09E?si=S0I3iIzwnHcciklF" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 ## Types of coding assignments
 
 There will be two types of coding assignments:
