@@ -1,4 +1,5 @@
 import { ProjectDetails } from '@/components/profile/project-details';
+import { getProjectById } from '@/lib/api/projects-server.actions';
 import { getUserByUsername } from '@/lib/api/users';
 import { auth } from '@/lib/auth';
 import { notFound } from 'next/navigation';
@@ -28,15 +29,23 @@ export default async function ProjectPage({ params }: Props) {
         notFound();
     }
 
-    // Check if the current user is the owner of this profile
+    // Fetch project data to verify the project exists
+    const projectData = await getProjectById(projectId);
+    if (!projectData || projectData.isDeleted) {
+        notFound();
+    }
+
+    // Check if the current user is the owner of this profile or project
     const isOwner = session?.user?.email === userData.email ||
-        session?.user?.id === userData.id;
+        session?.user?.id === userData.id ||
+        session?.user?.id === projectData.ownerId;
 
     return (
         <ProjectDetails
             projectId={projectId}
             username={user}
             isOwner={isOwner}
+            project={projectData}
         />
     );
 }
