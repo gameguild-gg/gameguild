@@ -1,3 +1,10 @@
+# [2.16.0](https://github.com/gameguild-gg/gameguild/compare/v2.15.3...v2.16.0) (2025-09-01)
+
+
+### Features
+
+* **courses:** Adds intro to game dev tools content ([4a61039](https://github.com/gameguild-gg/gameguild/commit/4a61039887463ca8e78c55c9eaae1b8d60d8d135))
+
 ## [2.15.3](https://github.com/gameguild-gg/gameguild/compare/v2.15.2...v2.15.3) (2025-08-28)
 
 
