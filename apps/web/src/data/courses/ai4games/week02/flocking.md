@@ -1,4 +1,31 @@
-# Flocking agents behavior formal assignment
+# Flocking agents behavior assignments
+
+<details>
+<summary> Teacher Notes </summary>
+
+Day 1:
+
+- Flocking Presentation
+- Talk about the formal vs interactive(freedom)
+- Ensure EVERYONE have the codebase ready
+- Explain where they should code in the formal and in the mobagen boilerplate;
+- For the interactive assignments: 
+    - Always record videos (optionally upload to youtube as unlisted) and submit the link on the assignment.
+    - If you are pursuing bonus extra points, state them as comment on the submission
+    - If you want to do things by yourself or in a game engine, remember always create debug interfaces.
+- For the formal assignment:
+    - There is no need to nail all of the tests, but at least the basic ones should pass.
+
+Day 2:
+
+- Explain in depth common problems the students may have, such as:
+    - Forgetting to normalize the force,
+    - The separation force should be inverse proportional to the distance,
+    - The alignment force should be proportional to the velocity,
+    - When a force should include itself or not.
+- Track the progress
+
+</details>
 
 You are in charge of implementing some functions to make some AI agents flock together in a game. After finishing it, you will be one step further to render it in a game engine, and start making reactive NPCs and enemies. You will learn the basic concepts needed to code and customize your own AI behaviors.
 
