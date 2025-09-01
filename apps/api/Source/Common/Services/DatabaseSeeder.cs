@@ -1348,24 +1348,16 @@ public class DatabaseSeeder(
       return;
     }
 
-    // Get mock projects and their versions - get ALL mock project versions instead of filtering
+    // Get mock projects and their versions
     var projectVersions = await context.Set<ProjectVersion>()
                                        .Include(pv => pv.Project)
-                                       .Where(pv => pv.Project.Title.Contains("Test") ||
-                                                    pv.Project.Title.Contains("Demo") ||
-                                                    pv.Project.Title.Contains("Space") ||
-                                                    pv.Project.Title.Contains("Puzzle") ||
-                                                    pv.Project.Title.Contains("Racing") ||
-                                                    pv.Project.Title.Contains("Strategy") ||
-                                                    pv.Project.Title.Contains("Retro"))
+                                       .Where(pv => pv.Project.Title.Contains("Test") || pv.Project.Title.Contains("Demo"))
                                        .ToListAsync();
 
     if (projectVersions.Count == 0) {
       logger.LogWarning("No mock project versions found, cannot create testing requests");
       return;
     }
-
-    logger.LogInformation("Found {VersionCount} project versions for testing requests", projectVersions.Count);
 
     var mockUsers = await context.Users
                                  .Where(u => u.Email.Contains("test"))
