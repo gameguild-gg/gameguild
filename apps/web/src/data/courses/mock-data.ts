@@ -112,7 +112,7 @@ import dsaSyllabus from './dsa/syllabus.md';
 import intro2gproSyllabus from './intro2gpro/syllabus.md';
 import intro2gproExpectations from './intro2gpro/week01/expectations.md';
 import intro2gproInterview from './intro2gpro/week01/interview-a-gamedev.md';
-import intro2gproGamedevTools from './intro2gpro/week02/ggamedev-tools.md';
+import intro2gproGamedevTools from './intro2gpro/week02/gamedev-tools.md';
 
 // Introduction to Game Programming syllabus content
 export const intro2gproSyllabusContent: ProgramContent = {
