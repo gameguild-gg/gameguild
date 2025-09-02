@@ -40,10 +40,16 @@ function convertContentStatus(status?: ContentStatus): 'development' | 'beta' | 
  * Convert API Project to our Project interface
  */
 function convertApiProjectToProject(apiProject: ApiProject): Project {
+    // Handle tags - API stores as string, we need array
+    let tagsArray: string[] = [];
+    if (apiProject.tags && typeof apiProject.tags === 'string') {
+        tagsArray = apiProject.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+    }
+
     return {
         id: apiProject.id || '',
         version: apiProject.version,
-        name: apiProject.title,
+        name: apiProject.title || '',
         description: apiProject.description || '',
         longDescription: apiProject.shortDescription || undefined,
         category: apiProject.category?.name || '',
@@ -55,7 +61,7 @@ function convertApiProjectToProject(apiProject: ApiProject): Project {
         isDeleted: apiProject.isDeleted || false,
         isPublic: apiProject.visibility === AccessLevel.PUBLIC,
         rating: 0, // Not available in API
-        tags: apiProject.tags ? apiProject.tags.split(',') : [],
+        tags: tagsArray,
         downloadUrl: apiProject.downloadUrl || undefined,
         sourceCodeUrl: apiProject.repositoryUrl || undefined,
         websiteUrl: apiProject.websiteUrl || undefined,
@@ -66,9 +72,9 @@ function convertApiProjectToProject(apiProject: ApiProject): Project {
         },
         changelog: [],
         testingSessions: [],
-        ownerId: '', // Will need to be set from context
-        ownerUsername: '', // Will need to be set from context
-        ownerName: '' // Will need to be set from context
+        ownerId: apiProject.createdById || '', // Use createdById as ownerId
+        ownerUsername: apiProject.createdBy?.username || '', // Extract from createdBy object
+        ownerName: apiProject.createdBy?.name || '' // Extract from createdBy object
     };
 }
 
@@ -92,6 +98,7 @@ export async function getProjects(params?: ProjectSearchParams): Promise<Project
         });
 
         const projects = response.data || [];
+        console.log(`Fetched ${projects.length} projects from API`);
         return projects.map(convertApiProjectToProject);
     } catch (error) {
         console.error('Error fetching projects:', error);
@@ -117,6 +124,13 @@ export async function getProjectById(id: string): Promise<Project | null> {
         return null;
     } catch (error) {
         console.error(`Error fetching project ${id}:`, error);
+        // Log additional details for debugging
+        if (error instanceof Error) {
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack
+            });
+        }
         return null;
     }
 }
@@ -181,28 +195,49 @@ export async function updateProject(id: string, updates: UpdateProjectRequest): 
     try {
         await configureAuthenticatedClient();
 
+        // Convert tags to array format expected by UpdateProjectRequest
+        let tagsArray: string[] | undefined = undefined;
+        if (updates.tags && Array.isArray(updates.tags)) {
+            tagsArray = updates.tags.filter(tag => tag.trim().length > 0);
+        }
+
         const apiRequest: ApiUpdateProjectRequest = {
             title: updates.name,
             description: updates.description,
             shortDescription: updates.longDescription,
             repositoryUrl: updates.sourceCodeUrl,
             websiteUrl: updates.websiteUrl,
-            tags: updates.tags || undefined,
+            tags: tagsArray,
             visibility: updates.isPublic !== undefined ?
                 (updates.isPublic ? AccessLevel.PUBLIC : AccessLevel.PRIVATE) : undefined
         };
+
+        console.log('Updating project:', id, 'with data:', apiRequest);
 
         const response = await putApiProjectsById({
             path: { id },
             body: apiRequest
         });
 
+        console.log('Update response:', response);
+
         if (response.data?.project) {
             return convertApiProjectToProject(response.data.project);
         }
+
+        // Check if the response has error data
+        if (response.error) {
+            console.error('API update error:', response.error);
+        }
+
         return null;
     } catch (error) {
         console.error(`Error updating project ${id}:`, error);
+        // Log more detailed error information
+        if (error instanceof Error) {
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+        }
         return null;
     }
 }
