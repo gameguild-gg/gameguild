@@ -299,3 +299,54 @@ export async function getTestingSessionByIdAction(sessionId: string): Promise<Te
         return null
     }
 }
+
+// Action to get a testing session by slug (could be ID or session name)
+export async function getTestSessionBySlug(slug: string): Promise<TestingSession | null> {
+    try {
+        console.log('Fetching testing session by slug:', slug)
+
+        await configureAuthenticatedClient()
+
+        // First try to get by ID
+        try {
+            const response = await getTestingSessionsById({
+                path: {
+                    id: slug
+                }
+            })
+
+            if (response.data) {
+                return response.data
+            }
+        } catch (error) {
+            // ID lookup failed, try searching by session name
+            console.log('ID lookup failed, trying session name search...')
+        }
+
+        // If ID lookup fails, search by session name
+        const searchResponse = await getTestingSessionsSearch({
+            query: {
+                searchTerm: slug
+            }
+        })
+
+        if (searchResponse.data && searchResponse.data.length > 0) {
+            // Return the first match that has a matching session name
+            const exactMatch = searchResponse.data.find(session =>
+                session.sessionName?.toLowerCase().replace(/\s+/g, '-') === slug.toLowerCase()
+            )
+
+            if (exactMatch) {
+                return exactMatch
+            }
+
+            // If no exact match, return the first result
+            return searchResponse.data[0] || null
+        }
+
+        return null
+    } catch (error) {
+        console.error('Error fetching testing session by slug:', error)
+        return null
+    }
+}
