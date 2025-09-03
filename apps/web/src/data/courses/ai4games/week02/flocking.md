@@ -82,17 +82,21 @@ $$
 \end{cases}
 $$
 
-![cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.gif)
-
 ::: tip
 
 Note that the maximum magnitude of $ \overrightarrow{F_c} $ is 1. Inclusive. This value can be multiplied by a constant $ K_c $ to increase or decrease the cohesion force to looks more appealing.
 
 :::
 
+In order for you to pass the formal assignment tests, normalize the force, then multiply by the cohesion constant $ K_c $.
+
 [![cohesionflow](https://app.code2flow.com/LjRYWNnhilPO.code.png)](https://app.code2flow.com/LjRYWNnhilPO)
 
-In order for you to pass the formal assignment tests, normalize the force, then multiply by the cohesion constant $ K_c $.
+::: example "Cohesion Example"
+
+![cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.gif)
+
+:::
 
 ### Alignment
 
@@ -108,15 +112,21 @@ $$
 \overrightarrow{V_{avg}} = \frac{\sum_{i=0}^{n-1} \vec{V_i}}{n}
 $$
 
+In order for you to pass the formal assignment tests, get the average velocity and multiply it by $ k $
+
+[![alignmentflow](https://app.code2flow.com/PyWDVmTaLS9W.code.png)](https://app.code2flow.com/PyWDVmTaLS9W)
+
+::: danger
+
+The alignment "force" is an weighted velocity normalization process, it is not a force. So the process to combining the velocities is not that precise here. In a real case, you should apply another process to improve look and feel. What we are doing here is a simplification acting as a force.
+
+:::
+
 ::: example "Alignment Example"
 
 ![alignment](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.gif)
 
 :::
-
-[![alignmentflow](https://app.code2flow.com/PyWDVmTaLS9W.code.png)](https://app.code2flow.com/PyWDVmTaLS9W)
-
-In order for you to pass the formal assignment tests, get the average velocity and multiply it by $ k $
 
 ### Separation
 
@@ -157,15 +167,15 @@ $$
 
 :::
 
+In order for the formal tests to pass, you have to accumulate forces $ k * hat / dist $ for each neighbor and then check for the max force.
+
+[![separationFlow](https://app.code2flow.com/EkvGThGW36SH.code.png)](https://app.code2flow.com/EkvGThGW36SH)
+
 ::: example "Separation Example"
 
 ![separation](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Fseparation.gif)
 
 :::
-
-[![separationFlow](https://app.code2flow.com/EkvGThGW36SH.code.png)](https://app.code2flow.com/EkvGThGW36SH)
-
-In order for the formal tests to pass, you have to accumulate forces $ k * hat / dist $ for each neighbor and then check for the max force.
 
 ## Behavior composition
 
@@ -195,6 +205,8 @@ Where:
 The $ \overrightarrow{V_{new}} $ and $ P_{new} $ are the ones that will be used in the next frame and you will have to print to the console at the end of every single frame.
 
 :::
+
+[![combinedFlow](https://app.code2flow.com/hBCfg7YGeA4P.code.png)](https://app.code2flow.com/hBCfg7YGeA4P)
 
 ::: note
 
