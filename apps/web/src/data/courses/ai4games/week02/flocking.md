@@ -114,6 +114,10 @@ $$
 
 :::
 
+[![alignmentflow](https://app.code2flow.com/PyWDVmTaLS9W.code.png)](https://app.code2flow.com/PyWDVmTaLS9W)
+
+In order for you to pass the formal assignment tests, get the average velocity and multiply it by $ k $
+
 ### Separation
 
 It will move the agent away from other agents when they get too close.
@@ -158,6 +162,10 @@ $$
 ![separation](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Fseparation.gif)
 
 :::
+
+[![separationFlow](https://app.code2flow.com/EkvGThGW36SH.code.png)](https://app.code2flow.com/EkvGThGW36SH)
+
+In order for the formal tests to pass, you have to accumulate forces $ k * hat / dist $ for each neighbor and then check for the max force.
 
 ## Behavior composition
 
