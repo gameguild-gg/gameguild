@@ -32,8 +32,8 @@ There are plenty of tools available for game development. I dont want to cover a
 
 The most types of tools for developers are:
 
-- Game Engines
-- Game Development Frameworks / Libraries
+- Game Engines. Editor vs Player
+- Game Development Frameworks vs Libraries
 - Programming editors and IDEs
 
 But there are other types of tools that are also important for game development:
