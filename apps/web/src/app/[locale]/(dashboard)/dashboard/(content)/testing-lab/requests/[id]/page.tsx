@@ -2,6 +2,7 @@ import { DashboardPage, DashboardPageContent, DashboardPageDescription, Dashboar
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TestingRequestActions } from '@/components/testing-lab/requests/testing-request-actions';
 import { getTestingRequestsWithDetailsAction } from '@/lib/admin/testing-lab/requests/testing-requests.actions';
 import { Calendar, Clock, ExternalLink, Gamepad2, User } from 'lucide-react';
 import Link from 'next/link';
@@ -65,28 +66,7 @@ export default async function Page({ params }: PageProps): Promise<React.JSX.Ele
                                 Back to Requests
                             </Link>
                         </Button>
-                        {testingRequest.status === 1 && (
-                            <>
-                                <Button
-                                    variant="default"
-                                    onClick={() => {
-                                        // TODO: Implement approve action
-                                        console.log('Approve request', testingRequest.id);
-                                    }}
-                                >
-                                    Approve
-                                </Button>
-                                <Button
-                                    variant="destructive"
-                                    onClick={() => {
-                                        // TODO: Implement reject action
-                                        console.log('Reject request', testingRequest.id);
-                                    }}
-                                >
-                                    Reject
-                                </Button>
-                            </>
-                        )}
+                        <TestingRequestActions requestId={testingRequest.id || ''} status={testingRequest.status} />
                     </div>
                 </div>
             </DashboardPageHeader>

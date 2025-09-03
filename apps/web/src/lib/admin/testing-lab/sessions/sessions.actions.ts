@@ -299,3 +299,27 @@ export async function getTestingSessionByIdAction(sessionId: string): Promise<Te
         return null
     }
 }
+
+// Action to get testing session by slug (assuming slug is the session ID)
+export async function getTestSessionBySlug(slug: string): Promise<TestingSession | null> {
+    try {
+        console.log('Fetching testing session by slug:', slug)
+
+        await configureAuthenticatedClient()
+
+        const response = await getTestingSessionsById({
+            path: {
+                id: slug
+            }
+        })
+
+        if (response.data) {
+            return response.data
+        }
+
+        return null
+    } catch (error) {
+        console.error('Error fetching testing session by slug:', error)
+        return null
+    }
+}
