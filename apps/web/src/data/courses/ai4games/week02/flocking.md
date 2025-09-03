@@ -90,6 +90,30 @@ Note that the maximum magnitude of $ \overrightarrow{F_c} $ is 1. Inclusive. Thi
 
 :::
 
+[![cohesionflow](https://app.code2flow.com/LjRYWNnhilPO.code.png)](https://app.code2flow.com/LjRYWNnhilPO)
+
+In order for you to pass the formal assignment tests, normalize the force, then multiply by the cohesion constant $ K_c $.
+
+### Alignment
+
+It is the force that will align the velocity of the agent with the average velocity of the group.
+
+1. The $ n $ neighbors of an agent are all the agents that are within the alignment radius $ r_a $ of the agent, including itself;
+2. Compute the average velocity of the group ($ \overrightarrow{V_{avg}} $);
+3. Compute the force that will move the agent towards the average velocity ($ \overrightarrow{F_{a}} $);
+
+![alignment](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.png)
+
+$$
+\overrightarrow{V_{avg}} = \frac{\sum_{i=0}^{n-1} \vec{V_i}}{n}
+$$
+
+::: example "Alignment Example"
+
+![alignment](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.gif)
+
+:::
+
 ### Separation
 
 It will move the agent away from other agents when they get too close.
@@ -132,26 +156,6 @@ $$
 ::: example "Separation Example"
 
 ![separation](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Fseparation.gif)
-
-:::
-
-### Alignment
-
-It is the force that will align the velocity of the agent with the average velocity of the group.
-
-1. The $ n $ neighbors of an agent are all the agents that are within the alignment radius $ r_a $ of the agent, including itself;
-2. Compute the average velocity of the group ($ \overrightarrow{V_{avg}} $);
-3. Compute the force that will move the agent towards the average velocity ($ \overrightarrow{F_{a}} $);
-
-![alignment](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.png)
-
-$$
-\overrightarrow{V_{avg}} = \frac{\sum_{i=0}^{n-1} \vec{V_i}}{n}
-$$
-
-::: example "Alignment Example"
-
-![alignment](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.gif)
 
 :::
 
