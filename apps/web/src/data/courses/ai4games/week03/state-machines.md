@@ -1,5 +1,7 @@
 # State Machines
 
+![old ocncept](https://i.imgflip.com/7j0nad.jpg)
+
 ::: note "Preamble: Considerations on Level of Difficulty"
 
 I do not cover State Machines in depth on the introductory AI class because in order to implement a good state machine involves:
@@ -21,7 +23,7 @@ I rather allow the students to implement a simple state machine on their own tha
 
 State machines are fundamental to game AI, providing a clear way to model behavior that changes over time. They're perfect for NPCs, UI systems, and any game entity that needs to behave differently based on current conditions.
 
-```mermaid
+``` mermaid
 stateDiagram-v2
     [*] --> Idle
     Idle --> Patrol : start_patrol
@@ -33,6 +35,8 @@ stateDiagram-v2
 ```
 
 ## Finite State Machines
+
+![state machine meme](https://miro.medium.com/1*jav6ZTW8vyZ-xqGoVPSvGg.jpeg)
 
 **Finite** means a limited, predefined set of states. Each state represents a distinct behavior or condition.
 
