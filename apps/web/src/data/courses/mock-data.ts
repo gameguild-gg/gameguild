@@ -6,6 +6,7 @@ import ai4gamesSetup from './ai4games/week01/setup.md';
 import ai4gamesExpectations from './ai4games/week01/expectations.md';
 
 import ai4gamesFlocking from './ai4games/week02/flocking.md';
+import ai4gamesStateMachines from './ai4games/week03/state-machines.md';
 import ai4gamesLife from './ai4games/week03/life.md';
 import ai4gamesRng from './ai4games/week04/rng.md';
 import ai4gamesMaze from './ai4games/week05/maze.md';
@@ -1151,6 +1152,29 @@ export const ai4gamesFlockingContent: ProgramContent = {
     slug: 'flocking',
 };
 
+export const ai4gamesStateMachinesContent: ProgramContent = {
+    id: 'ai4games-state-machines',
+    programId: ai4gamesProgram.id!,
+    parentId: undefined,
+    title: 'Week 03: State Machines',
+    description: 'Understanding and implementing state machines for game AI',
+    type: 0, // Page
+    body: ai4gamesStateMachines,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: ai4gamesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'state-machines',
+};
+
 export const ai4gamesLifeContent: ProgramContent = {
     id: 'ai4games-life',
     programId: ai4gamesProgram.id!,
@@ -1159,7 +1183,7 @@ export const ai4gamesLifeContent: ProgramContent = {
     description: 'Implementing Conway\'s Game of Life and cellular automata',
     type: 0, // Page
     body: ai4gamesLife,
-    sortOrder: 7,
+    sortOrder: 8,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -2884,6 +2908,7 @@ ai4gamesProgram.programContents = [
     ai4gamesSetupContent,
     ai4gamesExpectationsContent,
     ai4gamesFlockingContent,
+    ai4gamesStateMachinesContent,
     ai4gamesLifeContent,
     ai4gamesRngContent,
     ai4gamesMazeContent,
@@ -3019,6 +3044,7 @@ export const mockProgramContents: ProgramContent[] = [
     ai4gamesSetupContent,
     ai4gamesExpectationsContent,
     ai4gamesFlockingContent,
+    ai4gamesStateMachinesContent,
     ai4gamesLifeContent,
     ai4gamesRngContent,
     ai4gamesMazeContent,
