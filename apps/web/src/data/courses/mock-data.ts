@@ -787,7 +787,7 @@ export const pythonWeek05Exercise02Content: ProgramContent = {
     description: 'Practice exercise for list operations',
     type: 2, // Assignment
     body: week05Exercise02,
-    sortOrder: 8,
+    sortOrder: 15,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
