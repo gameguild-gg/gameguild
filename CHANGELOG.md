@@ -1,3 +1,16 @@
+# [2.17.0](https://github.com/gameguild-gg/gameguild/compare/v2.16.0...v2.17.0) (2025-09-04)
+
+
+### Bug Fixes
+
+* **ai4games:** Improve math notation in 'Conway's Game of Life' lesson ([de1331c](https://github.com/gameguild-gg/gameguild/commit/de1331c8274eac08aa59b2582a432c1f0ff2cfb8))
+
+
+### Features
+
+* **ai4games:** Add 'State Machines' lesson content ([741c1d5](https://github.com/gameguild-gg/gameguild/commit/741c1d5ef503b81e1372cec2fedcf8442ef2a79a))
+* **ai4games:** Integrate 'State Machines' content into course mock data ([dde83d5](https://github.com/gameguild-gg/gameguild/commit/dde83d539a6b97e965904c1a5046c073d20ed8d6))
+
 # [2.16.0](https://github.com/gameguild-gg/gameguild/compare/v2.15.3...v2.16.0) (2025-09-01)
 
 
