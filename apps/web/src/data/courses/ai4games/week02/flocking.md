@@ -88,7 +88,7 @@ Note that the maximum magnitude of $ \overrightarrow{F_c} $ is 1. Inclusive. Thi
 
 :::
 
-In order for you to pass the formal assignment tests, normalize the force, then multiply by the cohesion constant $ K_c $.
+In order for you to pass the formal assignment tests, normalize the force, then multiply by the cohesion constant $ K_c $. No need to divide by the radius here.
 
 [![cohesionflow](https://app.code2flow.com/LjRYWNnhilPO.code.png)](https://app.code2flow.com/LjRYWNnhilPO)
 
