@@ -405,7 +405,7 @@ export function FloatingTextFormatToolbarPlugin() {
                   <span>Caixa</span>
                   {currentCaseFormat && <Check className="ml-auto h-5 w-5" />}
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent side="right" align="start">
+                <DropdownMenuSubContent>
                   <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Transformar Texto</div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -541,7 +541,7 @@ export function FloatingTextFormatToolbarPlugin() {
                   <AlignLeft className="mr-2 h-5 w-5" />
                   <span>Headings {currentHeadingLevel ? `(${currentHeadingLevel.toUpperCase()})` : "(Paragraph)"}</span>
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent side="right" align="start">
+                <DropdownMenuSubContent>
                   <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Heading Levels</div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -691,7 +691,7 @@ export function FloatingTextFormatToolbarPlugin() {
                     )
                   </span>
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent side="right" align="start">
+                <DropdownMenuSubContent>
                   <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Text Alignment</div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
