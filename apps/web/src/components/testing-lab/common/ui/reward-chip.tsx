@@ -1,33 +1,21 @@
-'use client';
-
-import { Trophy } from 'lucide-react';
+"use client";
+import React from 'react';
 
 interface RewardChipProps {
-  value: string;
-  variant?: 'default' | 'compact' | 'inline';
-  className?: string;
+    reward?: string | number | null;
+    className?: string;
 }
 
-export function RewardChip({ value, variant = 'default', className = '' }: RewardChipProps) {
-  const baseClasses = 'inline-flex items-center gap-1.5 font-medium transition-all duration-200';
-
-  // Variant styles - more subtle styling
-  const variantStyles = {
-    default: 'px-3 py-1.5 rounded-lg text-sm bg-gradient-to-br from-yellow-900/20 to-amber-900/20 backdrop-blur-md border border-yellow-600/25 text-yellow-300 hover:from-yellow-900/30 hover:to-amber-900/30 hover:border-yellow-600/40',
-    compact: 'px-2 py-1 rounded-md text-xs bg-gradient-to-br from-yellow-900/18 to-amber-900/18 backdrop-blur-md border border-yellow-600/20 text-yellow-300 hover:from-yellow-900/25 hover:to-amber-900/25',
-    inline: 'px-1.5 py-0.5 rounded text-xs bg-gradient-to-br from-yellow-900/15 to-amber-900/15 backdrop-blur-md border border-yellow-600/15 text-yellow-300',
-  };
-
-  const iconSizes = {
-    default: 'h-4 w-4',
-    compact: 'h-3 w-3',
-    inline: 'h-3 w-3',
-  };
-
-  return (
-    <div className={`${baseClasses} ${variantStyles[variant]} ${className}`}>
-      <Trophy className={`${iconSizes[variant]} text-yellow-500/70`} />
-      <span>{value}</span>
-    </div>
-  );
-}
+export const RewardChip: React.FC<RewardChipProps> = ({ reward, className }) => {
+    if (reward === undefined || reward === null || reward === '') return null;
+    return (
+        <span
+            className={
+                'inline-flex items-center rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2 py-0.5 text-xs font-medium ring-1 ring-inset ring-amber-500/30 ' +
+                (className || '')
+            }
+        >
+            {typeof reward === 'number' ? reward.toLocaleString() : reward}
+        </span>
+    );
+};

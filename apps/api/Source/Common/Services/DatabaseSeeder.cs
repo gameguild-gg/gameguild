@@ -1472,8 +1472,35 @@ public class DatabaseSeeder(
 
     var baseDate = DateTime.UtcNow;
     var mockSessions = new List<TestingSession>();
+    var random = new Random();
 
-    // Create sessions for the next 2 weeks
+    // First, ensure each open testing request has at least one session
+    foreach (var request in testingRequests) {
+      var sessionDate = baseDate.AddDays(random.Next(1, 8)); // Next week
+      var randomLocation = testingLocations[random.Next(testingLocations.Count)];
+      var randomManager = mockUsers[random.Next(mockUsers.Count)];
+
+      mockSessions.Add(new TestingSession {
+        TestingRequestId = request.Id,
+        LocationId = randomLocation.Id,
+        SessionName = $"{request.Title.Replace(" Testing", "").Replace(" Test", "")} - Main Session",
+        SessionDate = sessionDate,
+        StartTime = sessionDate.Date.AddHours(14), // 2 PM
+        EndTime = sessionDate.Date.AddHours(16), // 4 PM
+        MaxTesters = Math.Min(randomLocation.MaxTestersCapacity, 15),
+        MaxProjects = Math.Min(randomLocation.MaxProjectsCapacity, 5),
+        RegisteredTesterCount = random.Next(2, 8),
+        RegisteredProjectCount = random.Next(1, 3),
+        Status = SessionStatus.Scheduled,
+        ManagerId = randomManager.Id,
+        ManagerUserId = randomManager.Id,
+        CreatedById = randomManager.Id,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow,
+      });
+    }
+
+    // Then create additional sessions for variety
     for (int day = 1; day <= 14; day++) {
       var sessionDate = baseDate.AddDays(day);
 
@@ -1482,29 +1509,29 @@ public class DatabaseSeeder(
         continue;
       }
 
-      // Create 1-3 sessions per day
-      var sessionsPerDay = new Random().Next(1, 4);
+      // Create 1-2 additional sessions per day for variety
+      var sessionsPerDay = random.Next(0, 2); // 0-1 additional sessions
 
       for (int session = 0; session < sessionsPerDay; session++) {
-        var startHour = 9 + (session * 4); // 9 AM, 1 PM, 5 PM
+        var startHour = 10 + (session * 3); // 10 AM or 1 PM
         var sessionStart = sessionDate.Date.AddHours(startHour);
         var sessionEnd = sessionStart.AddHours(2); // 2-hour sessions
 
-        var randomRequest = testingRequests[new Random().Next(testingRequests.Count)];
-        var randomLocation = testingLocations[new Random().Next(testingLocations.Count)];
-        var randomManager = mockUsers[new Random().Next(mockUsers.Count)];
+        var randomRequest = testingRequests[random.Next(testingRequests.Count)];
+        var randomLocation = testingLocations[random.Next(testingLocations.Count)];
+        var randomManager = mockUsers[random.Next(mockUsers.Count)];
 
         mockSessions.Add(new TestingSession {
           TestingRequestId = randomRequest.Id,
           LocationId = randomLocation.Id,
-          SessionName = $"{randomRequest.Title} - Session {session + 1}",
+          SessionName = $"{randomRequest.Title.Replace(" Testing", "").Replace(" Test", "")} - Extra Session {session + 1}",
           SessionDate = sessionDate,
           StartTime = sessionStart,
           EndTime = sessionEnd,
           MaxTesters = Math.Min(randomLocation.MaxTestersCapacity, 15),
-          MaxProjects = Math.Min(randomLocation.MaxProjectsCapacity, 5), // Add MaxProjects capacity
-          RegisteredTesterCount = new Random().Next(0, 8), // Random number of registered testers
-          RegisteredProjectCount = new Random().Next(1, 4), // Random number of registered projects
+          MaxProjects = Math.Min(randomLocation.MaxProjectsCapacity, 5),
+          RegisteredTesterCount = random.Next(0, 6),
+          RegisteredProjectCount = random.Next(1, 3),
           Status = SessionStatus.Scheduled,
           ManagerId = randomManager.Id,
           ManagerUserId = randomManager.Id,
