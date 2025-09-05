@@ -10,11 +10,13 @@ interface ProjectSearchFiltersProps {
   onSearchChange: (value: string) => void
   selectedTags: string[]
   onTagsChange: (tags: string[]) => void
-  availableTags: Array<{ name: string; usageCount: number }>
+  availableTags: Array<{ name: string }>
   tagFilterMode: "all" | "any"
   onTagFilterModeChange: (mode: "all" | "any") => void
   itemsPerPage: number
   onItemsPerPageChange: (value: number) => void
+  showFilters?: boolean
+  forceVerticalLayout?: boolean
 }
 
 export function ProjectSearchFilters({
@@ -27,6 +29,8 @@ export function ProjectSearchFilters({
   onTagFilterModeChange,
   itemsPerPage,
   onItemsPerPageChange,
+  showFilters = false,
+  forceVerticalLayout = false,
 }: ProjectSearchFiltersProps) {
   const [tagSearchInput, setTagSearchInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
@@ -47,19 +51,25 @@ export function ProjectSearchFilters({
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [showTagDropdown])
 
+  if (!showFilters) {
+    return null
+  }
+
   return (
     <div className="space-y-3 rounded-lg bg-gray-100/50 p-4 dark:bg-gray-900/50">
       <div className="flex cursor-pointer items-center justify-between" onClick={() => setIsCollapsed(!isCollapsed)}>
         <Label className="text-base font-medium">Filters</Label>
+        {!forceVerticalLayout && (
         <button
           className="rounded-full p-1.5 hover:bg-gray-200 dark:hover:bg-gray-800"
           aria-label={isCollapsed ? "Show filters" : "Hide filters"}
         >
           {isCollapsed ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
         </button>
+        )}
       </div>
       {!isCollapsed && (
-        <div className="flex flex-col gap-4 pt-2 md:flex-row md:gap-6">
+        <div className={`flex flex-col gap-4 pt-2 ${!forceVerticalLayout && "md:flex-row md:gap-6"}`}>
           {/* Project Search Section */}
           <div className="flex-1 space-y-3">
             <div className="flex items-center justify-between">
@@ -71,10 +81,11 @@ export function ProjectSearchFilters({
                   onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
                   className="rounded border bg-background px-2 py-1 text-sm"
                 >
-                  <option value={4}>4</option>
                   <option value={8}>8</option>
                   <option value={16}>16</option>
                   <option value={32}>32</option>
+                  <option value={64}>64</option>
+                  <option value={128}>128</option>
                 </select>
               </div>
             </div>
@@ -178,7 +189,6 @@ export function ProjectSearchFilters({
                           </div>
                           <span className="text-sm">{tag.name}</span>
                         </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">({tag.usageCount})</span>
                       </button>
                     ))
                   })()}

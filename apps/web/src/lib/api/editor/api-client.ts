@@ -21,6 +21,12 @@ interface SyncResponse {
   data?: any
 }
 
+interface TagData {
+  id: string
+  name: string
+  projectIds: string[]
+}
+
 interface ApiConfig {
   baseUrl: string
   timeout: number
@@ -260,6 +266,33 @@ export class ApiClient {
         console.warn(
           "⚠️ Sync Warning: Failed to update project:",
           error instanceof Error ? error.message : String(error)
+        )
+      }
+
+      return { success: false, message: error instanceof Error ? error.message : String(error) }
+    }
+  }
+
+  async syncTags(tags: Omit<TagData, "projectIds">[]): Promise<SyncResponse> {
+    if (!syncConfig.isEnabled()) {
+      return { success: false, message: "Sync is disabled" }
+    }
+
+    try {
+      const response = await this.fetchWithRetry("/tags/sync", {
+        method: "POST",
+        body: JSON.stringify({ tags }),
+      })
+
+      const data = await response.json()
+      return { success: true, data }
+    } catch (error) {
+      const syncConfigData = syncConfig.getConfig()
+
+      if (syncConfigData.debugMode) {
+        console.warn(
+          "⚠️ Sync Warning: Failed to sync tags:",
+          error instanceof Error ? error.message : String(error),
         )
       }
 

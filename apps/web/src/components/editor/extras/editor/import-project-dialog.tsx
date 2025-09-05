@@ -31,7 +31,7 @@ interface ImportProjectDialogProps {
   onOpenChange: (open: boolean) => void
   isDbInitialized: boolean
   storageAdapter: StorageAdapter
-  availableTags: Array<{ name: string; usageCount: number }>
+  availableTags: Array<{ name: string }>
   onProjectCreate: (projectData: { id: string; name: string; tags: string[] }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
@@ -130,7 +130,7 @@ export function ImportProjectDialog({
         }
 
         // Extract name from filename or metadata
-        const baseName = lexicalFile.name.replace(/\.(gglexical|lexical)$/, "")
+        const baseName = (lexicalFile as JSZip.JSZipObject).name.replace(/\.(gglexical|lexical)$/, "")
 
         projectData = {
           name: metadata?.name || baseName || "Imported Project",
@@ -184,7 +184,7 @@ export function ImportProjectDialog({
 
     const files = Array.from(e.dataTransfer.files)
     if (files.length > 0) {
-      handleFileUpload(files[0])
+      handleFileUpload(files[0] as File)
     }
   }
 
@@ -201,7 +201,7 @@ export function ImportProjectDialog({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (files && files.length > 0) {
-      handleFileUpload(files[0])
+      handleFileUpload(files[0] as File)
     }
   }
 
@@ -451,9 +451,6 @@ export function ImportProjectDialog({
                                     className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between"
                                   >
                                     <span className="text-sm">{tag.name}</span>
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                      ({tag.usageCount} uses)
-                                    </span>
                                   </button>
                                 ))}
                                 {tagInput.trim() &&
