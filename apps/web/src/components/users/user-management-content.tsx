@@ -1,17 +1,16 @@
 'use client';
 
-import { EnhancedUserList } from './enhanced-user-list';
+import type { UserResponseDto } from '@/lib/api/generated/types.gen';
+import { UserList } from './user-list';
 
 interface UserManagementContentProps {
-  initialPagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
+  users: UserResponseDto[]
 }
 
-export function UserManagementContent({ initialPagination }: UserManagementContentProps) {
-  console.log('initialPagination:', initialPagination); // Use parameter to avoid unused warning
-  return <EnhancedUserList />;
+export function UserManagementContent({ users }: UserManagementContentProps) {
+  console.log('UserManagementContent received users:', users.length);
+
+  return (
+    <UserList users={users} />
+  );
 }

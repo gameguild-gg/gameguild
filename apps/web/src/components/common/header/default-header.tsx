@@ -53,14 +53,20 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
                 </NavigationMenuContent>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <a 
-                  href="#" 
-                  data-github-issue="true" 
-                  data-route="/testing-lab"
-                  className="group inline-flex h-9 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=open]:hover:bg-accent data-[state=open]:text-accent-foreground data-[state=open]:focus:bg-accent data-[state=open]:bg-accent/50 focus-visible:ring-ring/50 outline-none focus-visible:ring-[3px] focus-visible:outline-1 group text-black dark:text-slate-200 hover:text-green-600 dark:hover:text-green-300 transition-colors duration-300 bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 backdrop-blur-sm"
-                >
-                  Testing Lab
-                </a>
+                <NavigationMenuTrigger className="text-black dark:text-slate-200 hover:text-green-600 dark:hover:text-green-300 transition-colors duration-300 bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 backdrop-blur-sm">Testing Lab</NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white/5 dark:bg-slate-900/80 backdrop-blur-xl border border-white/20 dark:border-slate-600/50 shadow-2xl">
+                    <ListItem href="/dashboard" title="Dashboard">
+                      Access the main dashboard
+                    </ListItem>
+                    <ListItem href="/testing-lab" title="Testing Lab">
+                      Access the game testing platform and manage testing sessions.
+                    </ListItem>
+                    <ListItem href="/testing-lab/sessions" title="Testing Sessions">
+                      View and manage available testing sessions.
+                    </ListItem>
+                  </ul>
+                </NavigationMenuContent>
               </NavigationMenuItem>
 
               <NavigationMenuItem>
@@ -108,8 +114,14 @@ const Header: React.FunctionComponent<Readonly<Props>> = ({ className, children,
             >
               Learning Tracks
             </a>
+            <Link href="/dashboard" className="block px-3 py-2 text-black dark:text-slate-200 hover:text-black dark:hover:text-white bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 rounded-md transition-colors">
+              Dashboard
+            </Link>
             <Link href="/testing-lab" className="block px-3 py-2 text-black dark:text-slate-200 hover:text-black dark:hover:text-white bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 rounded-md transition-colors">
               Testing Lab
+            </Link>
+            <Link href="/testing-lab/sessions" className="block px-3 py-2 text-black dark:text-slate-200 hover:text-black dark:hover:text-white bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 rounded-md transition-colors">
+              Testing Sessions
             </Link>
             <Link href="#" className="block px-3 py-2 text-black dark:text-slate-200 hover:text-black dark:hover:text-white bg-white/90 hover:bg-white dark:bg-slate-800/90 dark:hover:bg-slate-800 rounded-md transition-colors">
               About
