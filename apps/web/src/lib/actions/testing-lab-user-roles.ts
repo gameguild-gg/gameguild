@@ -1,9 +1,10 @@
 'use server';
 
 import { auth } from '@/auth';
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
-  postApiModulePermissionsAssignRole,
-  deleteApiModulePermissionsRevokeRole
+  deleteApiModulePermissionsRevokeRole,
+  postApiModulePermissionsAssignRole
 } from '@/lib/api/generated/sdk.gen';
 import { getUsers } from '@/lib/api/users';
 import { revalidatePath } from 'next/cache';
@@ -28,18 +29,20 @@ export async function getTestingLabUserRoleAssignmentsAction(): Promise<UserRole
   if (!session?.api.accessToken) {
     throw new Error('Authentication required');
   }
-  
+
   // Ensure fresh data by revalidating
   revalidatePath('/testing-lab-settings');
-  
+
   try {
+    // Ensure client configured for downstream getUsers API call
+    await configureAuthenticatedClient();
 
     const allUsers = await getUsers();
-    
+
     // For now, return mock data since the backend endpoint structure is complex
     // TODO: Implement proper API calls when backend supports simplified role assignments
     console.log('Getting user role assignments - using mock data for now');
-    
+
     return [
       {
         id: '1',
@@ -73,7 +76,8 @@ export async function removeUserRoleAction(userId: string, roleName: string): Pr
   if (!session?.api.accessToken) {
     throw new Error('Authentication required');
   }
-  
+  await configureAuthenticatedClient();
+
   try {
     const response = await deleteApiModulePermissionsRevokeRole({
       body: {
@@ -85,8 +89,8 @@ export async function removeUserRoleAction(userId: string, roleName: string): Pr
     });
 
     if (response.error) {
-      const errorMessage = typeof response.error === 'object' 
-        ? JSON.stringify(response.error) 
+      const errorMessage = typeof response.error === 'object'
+        ? JSON.stringify(response.error)
         : String(response.error);
       throw new Error(`Failed to remove role: ${errorMessage}`);
     }
@@ -121,7 +125,8 @@ export async function assignUserRoleAction(assignment: {
   if (!session?.api.accessToken) {
     throw new Error('Authentication required');
   }
-  
+  await configureAuthenticatedClient();
+
   try {
     const response = await postApiModulePermissionsAssignRole({
       body: {
@@ -135,8 +140,8 @@ export async function assignUserRoleAction(assignment: {
     });
 
     if (response.error) {
-      const errorMessage = typeof response.error === 'object' 
-        ? JSON.stringify(response.error) 
+      const errorMessage = typeof response.error === 'object'
+        ? JSON.stringify(response.error)
         : String(response.error);
       throw new Error(`Failed to assign role: ${errorMessage}`);
     }

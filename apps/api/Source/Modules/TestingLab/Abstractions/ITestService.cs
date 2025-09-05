@@ -1,7 +1,8 @@
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Service interface for Testing operations Comprehensive testing session and request management capabilities </summary>
-public interface ITestService {
+public interface ITestService
+{
   #region Testing Request Operations
 
   /// <summary> Get all testing requests (non-deleted only) </summary>
@@ -86,6 +87,9 @@ public interface ITestService {
 
   /// <summary> Search testing sessions by name </summary>
   Task<IEnumerable<TestingSession>> SearchTestingSessionsAsync(string searchTerm);
+
+  /// <summary> Get publicly visible ("published") testing sessions (Scheduled or Active, non-deleted) </summary>
+  Task<IEnumerable<TestingSession>> GetPublicTestingSessionsAsync(int take = 100);
 
   #endregion
 

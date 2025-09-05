@@ -1,174 +1,325 @@
-'use server';
+'use server'
 
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import { getTestingSessions as getTestingSessionsApi, createTestingSession as createTestingSessionApi } from '@/lib/api/testing-lab';
-import type { TestingSession } from '@/lib/api/testing-types';
+import { deleteTestingSessionsById, getTestingLocations, getTestingRequests, getTestingSessions, getTestingSessionsById, getTestingSessionsSearch, postTestingSessions } from '@/lib/api/generated/sdk.gen'
+import { SessionStatus, TestingLocation, TestingRequest, TestingSession } from '@/lib/api/generated/types.gen'
+import { configureAuthenticatedClient } from '@/lib/core/api/authenticated-client'
+import { TestingSessionCreateData } from '@/lib/schemas/testing-sessions.schema'
 
-/**
- * Get all testing sessions with optional filtering
- */
-export async function getTestingSessionsData(params?: { status?: string; testingRequestId?: string; locationId?: string; managerId?: string; skip?: number; take?: number }) {
-  const session = await configureAuthenticatedClient();
+// Action to get all testing sessions
+export async function getTestingSessionsAction(): Promise<TestingSession[]> {
+    try {
+        console.log('Fetching testing sessions from API...')
 
-  try {
-    console.log('Making request to getTestingSessions with params:', params);
-    console.log('Session token exists:', !!session?.api?.accessToken);
-    console.log('Current tenant ID:', session?.currentTenant?.id);
+        // Configure the client with authentication and base URL
+        await configureAuthenticatedClient()
 
-    const sessions = await getTestingSessionsApi();
+        const response = await getTestingSessions({
+            query: {
+                skip: 0,
+                take: 100 // Adjust based on your pagination needs
+            }
+        })
 
-    console.log('Sessions fetched:', sessions);
-    console.log('Sessions count:', sessions?.length);
+        if (response.data) {
+            return response.data
+        }
 
-    if (!sessions) {
-      console.log('No sessions returned from API');
-      return {
-        testingSessions: [],
-        total: 0,
-      };
+        return []
+    } catch (error) {
+        console.error('Error fetching testing sessions:', error)
+        throw new Error('Failed to fetch testing sessions')
     }
-
-    // For now, return all sessions without filtering
-    // TODO: Implement server-side filtering when backend supports it
-    let filteredSessions = sessions;
-
-    if (params) {
-      // Apply client-side filtering as a temporary solution
-      if (params.status) {
-        filteredSessions = filteredSessions.filter((session) => session.status?.toString() === params.status);
-      }
-      if (params.testingRequestId && params.testingRequestId !== 'none') {
-        filteredSessions = filteredSessions.filter((session) => session.testingRequestId === params.testingRequestId);
-      }
-      if (params.locationId && params.locationId !== 'none') {
-        filteredSessions = filteredSessions.filter((session) => session.locationId === params.locationId);
-      }
-      if (params.managerId) {
-        filteredSessions = filteredSessions.filter((session) => session.managerId === params.managerId);
-      }
-    }
-
-    return {
-      testingSessions: filteredSessions,
-      total: filteredSessions.length,
-    };
-
-    return {
-      testingSessions: sessions,
-      total: sessions.length,
-    };
-  } catch (error) {
-    console.error('Error fetching testing sessions:', error);
-
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
-
-    // Check for authentication errors
-    if (error && typeof error === 'object' && 'status' in error) {
-      const statusError = error as { status: number; message?: string };
-      if (statusError.status === 401) {
-        console.error('Authentication error - invalid or expired token');
-        throw new Error('Authentication failed. Please log in again.');
-      }
-    }
-
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch testing sessions');
-  }
 }
 
-// =============================================================================
-// COMPONENT-FRIENDLY ALIASES
-// =============================================================================
+// Action to search testing sessions
+export async function searchTestingSessionsAction(query: string): Promise<TestingSession[]> {
+    try {
+        console.log('Searching testing sessions for:', query)
 
-/**
- * Get all testing sessions (alias for getTestingSessionsData)
- */
-export const getAllTestingSessions = getTestingSessionsData;
+        if (!query.trim()) {
+            // If no search term, return all sessions
+            return await getTestingSessionsAction()
+        }
 
-/**
- * Get available test sessions for the landing page
- */
-export async function getAvailableTestSessions() {
-  try {
-    const result = await getTestingSessionsData();
-    return result.testingSessions || [];
-  } catch (error) {
-    console.error('Error fetching available test sessions:', error);
-    return [];
-  }
-}
+        // Configure the client with authentication and base URL
+        await configureAuthenticatedClient()
 
-/**
- * Get test session by slug (alias for getTestingSessionBySlug)
- */
-export const getTestSessionBySlug = getTestingSessionBySlug;
+        const response = await getTestingSessionsSearch({
+            query: {
+                searchTerm: query.trim()
+            }
+        })
 
-/**
- * Get testing session by slug (treating slug as ID for now)
- */
-export async function getTestingSessionBySlug(slug: string) {
-  // For now, treat slug as ID since testing sessions don't seem to have slug endpoints
-  // This could be updated if a proper slug-based endpoint becomes available
-  await configureAuthenticatedClient();
+        if (response.data) {
+            return response.data
+        }
 
-  try {
-    console.log('Fetching testing session by slug (as ID):', slug);
-
-    const sessions = await getTestingSessionsApi();
-
-    if (!sessions || !Array.isArray(sessions)) {
-      return null;
+        return []
+    } catch (error) {
+        console.error('Error searching testing sessions:', error)
+        throw new Error('Failed to search testing sessions')
     }
-
-    // For now, find by ID if slug looks like an ID, otherwise return first session
-    const foundSession = sessions.find((session: { id?: string; sessionName?: string }) => session.id === slug || session.sessionName?.toLowerCase().includes(slug.toLowerCase()));
-
-    return foundSession || null;
-  } catch (error) {
-    console.error('Error fetching testing session by slug:', error);
-    return null;
-  }
 }
 
-/**
- * Create a new testing session
- */
-export async function createTestingSession(sessionData: Partial<TestingSession>) {
-  await configureAuthenticatedClient();
+// Action to get available test sessions (for the main testing-lab page)
+export async function getAvailableTestSessions(): Promise<TestingSession[]> {
+    try {
+        console.log('Fetching available test sessions from API...')
 
-  try {
-    console.log('Creating testing session with data:', sessionData);
+        // Configure the client with authentication and base URL
+        await configureAuthenticatedClient()
 
-    // Convert form data to API request format
-    const requestData = {
-      sessionName: sessionData.sessionName || '',
-      sessionDate: sessionData.sessionDate || '',
-      startTime: sessionData.startTime || '',
-      endTime: sessionData.endTime || '',
-      locationId: sessionData.locationId || '',
-      maxTesters: sessionData.maxTesters || 10,
-      testingRequestId: sessionData.testingRequestId,
-      managerId: sessionData.managerId,
-    };
+        const response = await getTestingSessions({
+            query: {
+                skip: 0,
+                take: 100 // Adjust based on your needs
+            }
+        })
 
-    const newSession = await createTestingSessionApi(requestData);
+        if (response.data) {
+            // Filter for sessions that are scheduled or active
+            return response.data.filter(session =>
+                session.status === SessionStatus.SCHEDULED ||
+                session.status === SessionStatus.ACTIVE
+            )
+        }
 
-    console.log('Testing session created successfully:', newSession);
-    return {
-      success: true,
-      data: newSession,
-      error: null,
-    };
-  } catch (error) {
-    console.error('Error creating testing session:', error);
+        return []
+    } catch (error) {
+        console.error('Error fetching available test sessions:', error)
+        throw new Error('Failed to fetch available test sessions')
+    }
+}
 
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create testing session';
-    return {
-      success: false,
-      data: null,
-      error: errorMessage,
-    };
-  }
+// Action to get testing locations
+export async function getTestingLocationsAction(): Promise<TestingLocation[]> {
+    try {
+        console.log('Fetching testing locations from API...')
+
+        await configureAuthenticatedClient()
+
+        const response = await getTestingLocations({
+            query: {
+                skip: 0,
+                take: 100
+            }
+        })
+
+        if (response.data) {
+            return response.data
+        }
+
+        return []
+    } catch (error) {
+        console.error('Error fetching testing locations:', error)
+        throw new Error('Failed to fetch testing locations')
+    }
+}
+
+// Action to get testing requests
+export async function getTestingRequestsAction(): Promise<TestingRequest[]> {
+    try {
+        console.log('Fetching testing requests from API...')
+
+        await configureAuthenticatedClient()
+
+        const response = await getTestingRequests({
+            query: {
+                skip: 0,
+                take: 100
+            }
+        })
+
+        if (response.data) {
+            return response.data
+        }
+
+        return []
+    } catch (error) {
+        console.error('Error fetching testing requests:', error)
+        throw new Error('Failed to fetch testing requests')
+    }
+}
+
+// Action to create a new testing session (without testing requests initially)
+export async function createTestingSessionAction(data: TestingSessionCreateData): Promise<{ success: boolean; data?: TestingSession; error?: string }> {
+    try {
+        console.log('Creating testing session:', data)
+
+        await configureAuthenticatedClient()
+
+        // Create the testing session without any testing requests initially
+        const sessionData: Partial<TestingSession> = {
+            sessionName: data.sessionName,
+            sessionDate: data.sessionDate,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            maxTesters: data.maxTesters,
+            maxProjects: data.maxProjects,
+            locationId: data.locationId,
+            managerUserId: data.managerUserId || undefined,
+            status: data.status,
+        }
+
+        const response = await postTestingSessions({
+            body: sessionData as TestingSession
+        })
+
+        if (response.data) {
+            return {
+                success: true,
+                data: response.data
+            }
+        }
+
+        return {
+            success: false,
+            error: 'Failed to create session'
+        }
+    } catch (error) {
+        console.error('Error creating testing session:', error)
+
+        if (error instanceof Error) {
+            return {
+                success: false,
+                error: error.message
+            }
+        }
+
+        return {
+            success: false,
+            error: 'Failed to create testing session'
+        }
+    }
+}// Action to delete a testing session
+export async function deleteTestingSessionAction(sessionId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+        console.log('Deleting testing session:', sessionId)
+
+        await configureAuthenticatedClient()
+
+        await deleteTestingSessionsById({
+            path: {
+                id: sessionId
+            }
+        })
+
+        return {
+            success: true
+        }
+    } catch (error) {
+        console.error('Error deleting testing session:', error)
+
+        if (error instanceof Error) {
+            return {
+                success: false,
+                error: error.message
+            }
+        }
+
+        return {
+            success: false,
+            error: 'Failed to delete testing session'
+        }
+    }
+}
+
+// Action to get pending enrollment requests for sessions
+export async function getSessionEnrollmentRequestsAction(sessionId: string): Promise<{ success: boolean; data?: any[]; error?: string }> {
+    try {
+        console.log('Fetching enrollment requests for session:', sessionId)
+
+        await configureAuthenticatedClient()
+
+        // Note: This would use a real API endpoint for enrollment requests
+        // For now, we'll return empty array until the API is available
+        const enrollmentRequests: any[] = []
+
+        return {
+            success: true,
+            data: enrollmentRequests
+        }
+    } catch (error) {
+        console.error('Error fetching enrollment requests:', error)
+
+        return {
+            success: false,
+            error: 'Failed to fetch enrollment requests'
+        }
+    }
+}
+
+// Action to approve/reject enrollment requests
+export async function processEnrollmentDecisionAction(
+    enrollmentId: string,
+    decision: 'approved' | 'rejected',
+    adminMessage?: string
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        console.log('Processing enrollment decision:', { enrollmentId, decision, adminMessage })
+
+        await configureAuthenticatedClient()
+
+        // Note: This would use a real API endpoint for processing enrollment decisions
+        // Implementation depends on your backend API structure
+
+        return {
+            success: true
+        }
+    } catch (error) {
+        console.error('Error processing enrollment decision:', error)
+
+        return {
+            success: false,
+            error: 'Failed to process enrollment decision'
+        }
+    }
+}
+
+// Action to get a single testing session by ID
+export async function getTestingSessionByIdAction(sessionId: string): Promise<TestingSession | null> {
+    try {
+        console.log('Fetching testing session by ID:', sessionId)
+
+        await configureAuthenticatedClient()
+
+        const response = await getTestingSessionsById({
+            path: {
+                id: sessionId
+            }
+        })
+
+        if (response.data) {
+            return response.data
+        }
+
+        return null
+    } catch (error) {
+        console.error('Error fetching testing session by ID:', error)
+        return null
+    }
+}
+
+// Action to get testing session by slug (assuming slug is the session ID)
+export async function getTestSessionBySlug(slug: string): Promise<TestingSession | null> {
+    try {
+        console.log('Fetching testing session by slug:', slug)
+
+        await configureAuthenticatedClient()
+
+        const response = await getTestingSessionsById({
+            path: {
+                id: slug
+            }
+        })
+
+        if (response.data) {
+            return response.data
+        }
+
+        return null
+    } catch (error) {
+        console.error('Error fetching testing session by slug:', error)
+        return null
+    }
 }

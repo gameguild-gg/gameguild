@@ -1,5 +1,5 @@
-import { revalidateTag, unstable_cache } from 'next/cache';
-import { auth } from '@game-guild/web/src/auth';
+import {revalidateTag, unstable_cache} from 'next/cache';
+import {auth} from 'apps/web/src/lib/auth';
 
 // Types for Programs/Courses (same entity)
 export interface Program {
@@ -83,21 +83,21 @@ export async function getPrograms(page: number = 1, limit: number = 20, status?:
   try {
     const session = await auth();
     if (!session?.api.accessToken) {
-      return { success: false, error: 'Authentication required' };
+      return {success: false, error: 'Authentication required'};
     }
 
     const queryParams = new URLSearchParams({
       skip: ((page - 1) * limit).toString(),
       take: limit.toString(),
-      ...(status && { status }),
-      ...(visibility && { visibility }),
+      ...(status && {status}),
+      ...(visibility && {visibility}),
     });
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/program?${queryParams}`, {
       headers: {
         Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
+        ...(session.tenantId && {'X-Tenant-ID': session.tenantId}),
       },
       next: {
         revalidate: REVALIDATION_TIME,
@@ -107,7 +107,7 @@ export async function getPrograms(page: number = 1, limit: number = 20, status?:
 
     if (!response.ok) {
       const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
+      return {success: false, error: `API error: ${response.status} - ${errorText}`};
     }
 
     const programs: Program[] = await response.json();
@@ -153,7 +153,7 @@ export async function getPublishedPrograms(page: number = 1, limit: number = 20)
 
     if (!response.ok) {
       const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
+      return {success: false, error: `API error: ${response.status} - ${errorText}`};
     }
 
     const programs: Program[] = await response.json();
@@ -184,14 +184,14 @@ export async function getProgram(id: string): Promise<{ success: boolean; data?:
   try {
     const session = await auth();
     if (!session?.api.accessToken) {
-      return { success: false, error: 'Authentication required' };
+      return {success: false, error: 'Authentication required'};
     }
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/program/${id}`, {
       headers: {
         Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
+        ...(session.tenantId && {'X-Tenant-ID': session.tenantId}),
       },
       next: {
         revalidate: REVALIDATION_TIME,
@@ -201,11 +201,11 @@ export async function getProgram(id: string): Promise<{ success: boolean; data?:
 
     if (!response.ok) {
       const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
+      return {success: false, error: `API error: ${response.status} - ${errorText}`};
     }
 
     const program: Program = await response.json();
-    return { success: true, data: program };
+    return {success: true, data: program};
   } catch (error) {
     console.error('Error fetching program:', error);
     return {
@@ -222,14 +222,14 @@ export async function getProgramBySlug(slug: string): Promise<{ success: boolean
   try {
     const session = await auth();
     if (!session?.api.accessToken) {
-      return { success: false, error: 'Authentication required' };
+      return {success: false, error: 'Authentication required'};
     }
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/program/slug/${slug}`, {
       headers: {
         Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
+        ...(session.tenantId && {'X-Tenant-ID': session.tenantId}),
       },
       next: {
         revalidate: REVALIDATION_TIME,
@@ -239,11 +239,11 @@ export async function getProgramBySlug(slug: string): Promise<{ success: boolean
 
     if (!response.ok) {
       const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
+      return {success: false, error: `API error: ${response.status} - ${errorText}`};
     }
 
     const program: Program = await response.json();
-    return { success: true, data: program };
+    return {success: true, data: program};
   } catch (error) {
     console.error('Error fetching program by slug:', error);
     return {
@@ -260,14 +260,14 @@ export async function getProgramStatistics(): Promise<{ success: boolean; data?:
   try {
     const session = await auth();
     if (!session?.api.accessToken) {
-      return { success: false, error: 'Authentication required' };
+      return {success: false, error: 'Authentication required'};
     }
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/program/statistics`, {
       headers: {
         Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
+        ...(session.tenantId && {'X-Tenant-ID': session.tenantId}),
       },
       next: {
         revalidate: REVALIDATION_TIME,
@@ -296,11 +296,11 @@ export async function getProgramStatistics(): Promise<{ success: boolean; data?:
       }
 
       const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
+      return {success: false, error: `API error: ${response.status} - ${errorText}`};
     }
 
     const statistics: ProgramStatistics = await response.json();
-    return { success: true, data: statistics };
+    return {success: true, data: statistics};
   } catch (error) {
     console.error('Error fetching program statistics:', error);
     return {
@@ -313,13 +313,17 @@ export async function getProgramStatistics(): Promise<{ success: boolean; data?:
 /**
  * Create a new program
  */
-export async function createProgram(formData: ProgramFormData): Promise<{ success: boolean; data?: Program; error?: string }> {
+export async function createProgram(formData: ProgramFormData): Promise<{
+  success: boolean;
+  data?: Program;
+  error?: string
+}> {
   'use server';
 
   try {
     const session = await auth();
     if (!session?.api.accessToken) {
-      return { success: false, error: 'Authentication required' };
+      return {success: false, error: 'Authentication required'};
     }
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/programs`, {
@@ -327,14 +331,14 @@ export async function createProgram(formData: ProgramFormData): Promise<{ succes
       headers: {
         Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
+        ...(session.tenantId && {'X-Tenant-ID': session.tenantId}),
       },
       body: JSON.stringify(formData),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
+      return {success: false, error: `API error: ${response.status} - ${errorText}`};
     }
 
     const program: Program = await response.json();
@@ -343,7 +347,7 @@ export async function createProgram(formData: ProgramFormData): Promise<{ succes
     revalidateTag(CACHE_TAGS.PROGRAMS);
     revalidateTag(CACHE_TAGS.PROGRAM_STATISTICS);
 
-    return { success: true, data: program };
+    return {success: true, data: program};
   } catch (error) {
     console.error('Error creating program:', error);
     return {
@@ -356,13 +360,17 @@ export async function createProgram(formData: ProgramFormData): Promise<{ succes
 /**
  * Update an existing program
  */
-export async function updateProgram(id: string, formData: ProgramFormData): Promise<{ success: boolean; data?: Program; error?: string }> {
+export async function updateProgram(id: string, formData: ProgramFormData): Promise<{
+  success: boolean;
+  data?: Program;
+  error?: string
+}> {
   'use server';
 
   try {
     const session = await auth();
     if (!session?.api.accessToken) {
-      return { success: false, error: 'Authentication required' };
+      return {success: false, error: 'Authentication required'};
     }
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/programs/${id}`, {
@@ -370,14 +378,14 @@ export async function updateProgram(id: string, formData: ProgramFormData): Prom
       headers: {
         Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
+        ...(session.tenantId && {'X-Tenant-ID': session.tenantId}),
       },
       body: JSON.stringify(formData),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
+      return {success: false, error: `API error: ${response.status} - ${errorText}`};
     }
 
     const program: Program = await response.json();
@@ -388,7 +396,7 @@ export async function updateProgram(id: string, formData: ProgramFormData): Prom
     revalidateTag(`program-${id}`);
     revalidateTag(CACHE_TAGS.PROGRAM_STATISTICS);
 
-    return { success: true, data: program };
+    return {success: true, data: program};
   } catch (error) {
     console.error('Error updating program:', error);
     return {
@@ -407,7 +415,7 @@ export async function deleteProgram(id: string): Promise<{ success: boolean; err
   try {
     const session = await auth();
     if (!session?.api.accessToken) {
-      return { success: false, error: 'Authentication required' };
+      return {success: false, error: 'Authentication required'};
     }
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/programs/${id}`, {
@@ -415,13 +423,13 @@ export async function deleteProgram(id: string): Promise<{ success: boolean; err
       headers: {
         Authorization: `Bearer ${session.api.accessToken}`,
         'Content-Type': 'application/json',
-        ...(session.tenantId && { 'X-Tenant-ID': session.tenantId }),
+        ...(session.tenantId && {'X-Tenant-ID': session.tenantId}),
       },
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      return { success: false, error: `API error: ${response.status} - ${errorText}` };
+      return {success: false, error: `API error: ${response.status} - ${errorText}`};
     }
 
     // Revalidate cache
@@ -430,7 +438,7 @@ export async function deleteProgram(id: string): Promise<{ success: boolean; err
     revalidateTag(`program-${id}`);
     revalidateTag(CACHE_TAGS.PROGRAM_STATISTICS);
 
-    return { success: true };
+    return {success: true};
   } catch (error) {
     console.error('Error deleting program:', error);
     return {
