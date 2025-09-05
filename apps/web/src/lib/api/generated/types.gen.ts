@@ -12379,6 +12379,24 @@ export type PostTestingSessionsByIdRestoreResponses = {
   200: unknown;
 };
 
+export type GetTestingPublicSessionsData = {
+  body?: never;
+  path?: never;
+  query?: {
+    take?: number;
+  };
+  url: '/testing/public/sessions';
+};
+
+export type GetTestingPublicSessionsResponses = {
+  /**
+   * OK
+   */
+  200: Array<TestingSession>;
+};
+
+export type GetTestingPublicSessionsResponse = GetTestingPublicSessionsResponses[keyof GetTestingPublicSessionsResponses];
+
 export type GetTestingRequestsByProjectVersionByProjectVersionIdData = {
   body?: never;
   path: {
