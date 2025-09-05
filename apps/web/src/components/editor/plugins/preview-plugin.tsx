@@ -29,7 +29,7 @@ export function PreviewPlugin() {
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
+        <DialogContent className="max-w-screen-3xl sm:max-w-3xl max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Preview</DialogTitle>
             <DialogDescription>Preview of your content as it would appear to readers</DialogDescription>

@@ -217,7 +217,7 @@ export function SlideEditDialog({ open, onOpenChange, slide, onSave }: SlideEdit
                       </div>
                       <Slider
                         value={[editedSlide.filters?.brightness || 100]}
-                        onValueChange={([value]) => handleFilterChange("brightness", value)}
+                        onValueChange={([value]) => handleFilterChange("brightness", value ?? 100)}
                         min={0}
                         max={200}
                         step={1}
@@ -232,7 +232,7 @@ export function SlideEditDialog({ open, onOpenChange, slide, onSave }: SlideEdit
                       </div>
                       <Slider
                         value={[editedSlide.filters?.contrast || 100]}
-                        onValueChange={([value]) => handleFilterChange("contrast", value)}
+                        onValueChange={([value]) => handleFilterChange("contrast", value ?? 100)}
                         min={0}
                         max={200}
                         step={1}
@@ -247,7 +247,7 @@ export function SlideEditDialog({ open, onOpenChange, slide, onSave }: SlideEdit
                       </div>
                       <Slider
                         value={[editedSlide.filters?.saturation || 100]}
-                        onValueChange={([value]) => handleFilterChange("saturation", value)}
+                        onValueChange={([value]) => handleFilterChange("saturation", value ?? 100)}
                         min={0}
                         max={200}
                         step={1}
@@ -262,7 +262,7 @@ export function SlideEditDialog({ open, onOpenChange, slide, onSave }: SlideEdit
                       </div>
                       <Slider
                         value={[editedSlide.filters?.blur || 0]}
-                        onValueChange={([value]) => handleFilterChange("blur", value)}
+                        onValueChange={([value]) => handleFilterChange("blur", value ?? 0)}
                         min={0}
                         max={10}
                         step={0.1}
@@ -277,7 +277,7 @@ export function SlideEditDialog({ open, onOpenChange, slide, onSave }: SlideEdit
                       </div>
                       <Slider
                         value={[editedSlide.filters?.hueRotate || 0]}
-                        onValueChange={([value]) => handleFilterChange("hueRotate", value)}
+                        onValueChange={([value]) => handleFilterChange("hueRotate", value ?? 0)}
                         min={0}
                         max={360}
                         step={1}
@@ -292,7 +292,7 @@ export function SlideEditDialog({ open, onOpenChange, slide, onSave }: SlideEdit
                       </div>
                       <Slider
                         value={[editedSlide.filters?.opacity || 100]}
-                        onValueChange={([value]) => handleFilterChange("opacity", value)}
+                        onValueChange={([value]) => handleFilterChange("opacity", value ?? 100)}
                         min={0}
                         max={100}
                         step={1}
@@ -321,7 +321,7 @@ export function SlideEditDialog({ open, onOpenChange, slide, onSave }: SlideEdit
                       </div>
                       <Slider
                         value={[editedSlide.imageSize?.width || 100]}
-                        onValueChange={([value]) => handleSizeChange("width", value)}
+                        onValueChange={([value]) => handleSizeChange("width", value ?? 100)}
                         min={10}
                         max={200}
                         step={1}
@@ -336,7 +336,7 @@ export function SlideEditDialog({ open, onOpenChange, slide, onSave }: SlideEdit
                       </div>
                       <Slider
                         value={[editedSlide.imageSize?.height || 100]}
-                        onValueChange={([value]) => handleSizeChange("height", value)}
+                        onValueChange={([value]) => handleSizeChange("height", value ?? 100)}
                         min={10}
                         max={200}
                         step={1}
