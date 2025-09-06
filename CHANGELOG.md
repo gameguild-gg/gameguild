@@ -1,3 +1,10 @@
+## [2.17.2](https://github.com/gameguild-gg/gameguild/compare/v2.17.1...v2.17.2) (2025-09-06)
+
+
+### Bug Fixes
+
+* **ai4games:** Corrects cohesion image label ([71d896f](https://github.com/gameguild-gg/gameguild/commit/71d896f1a5075ecbe7f54815496312d3d030ac6d))
+
 ## [2.17.1](https://github.com/gameguild-gg/gameguild/compare/v2.17.0...v2.17.1) (2025-09-06)
 
 
