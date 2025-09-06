@@ -221,7 +221,7 @@ Alignment + Cohesion:
 
 ![alignment+cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment_cohesion.gif)
 
-Cohesion:
+Cohesion + Separation:
 
 ![separation+cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Fseparation_cohesion.gif)
 
