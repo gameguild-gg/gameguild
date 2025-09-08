@@ -1,3 +1,10 @@
+# [2.18.0](https://github.com/gameguild-gg/gameguild/compare/v2.17.2...v2.18.0) (2025-09-08)
+
+
+### Features
+
+* **web:** Adds game development careers content ([4e89619](https://github.com/gameguild-gg/gameguild/commit/4e8961979352c25984a9ce6a31cbc85c0c79b888))
+
 ## [2.17.2](https://github.com/gameguild-gg/gameguild/compare/v2.17.1...v2.17.2) (2025-09-06)
 
 
