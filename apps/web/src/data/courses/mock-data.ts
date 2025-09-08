@@ -114,6 +114,7 @@ import intro2gproSyllabus from './intro2gpro/syllabus.md';
 import intro2gproExpectations from './intro2gpro/week01/expectations.md';
 import intro2gproInterview from './intro2gpro/week01/interview-a-gamedev.md';
 import intro2gproGamedevTools from './intro2gpro/week02/gamedev-tools.md';
+import intro2gproGamedevCareers from './intro2gpro/week03/gamedev-careers.md';
 
 // Introduction to Game Programming syllabus content
 export const intro2gproSyllabusContent: ProgramContent = {
@@ -206,6 +207,29 @@ export const intro2gproGamedevToolsContent: ProgramContent = {
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
     slug: 'gamedev-tools',
+};
+
+export const intro2gproGamedevCareersContent: ProgramContent = {
+    id: 'intro2gpro-gamedev-careers',
+    programId: 'intro2gpro-program-1',
+    parentId: undefined,
+    title: 'Week 03: Game Development Careers',
+    description: 'Research and explore various career pathways in game development, including programming disciplines and job opportunities.',
+    type: 0, // Page
+    body: intro2gproGamedevCareers,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'gamedev-careers',
 };
 
 // Mock user for the creator
@@ -2999,6 +3023,7 @@ intro2gproProgram.programContents = [
     intro2gproExpectationsContent,
     intro2gproInterviewContent,
     intro2gproGamedevToolsContent,
+    intro2gproGamedevCareersContent,
 ];
 
 // Set program references
@@ -3006,6 +3031,7 @@ intro2gproSyllabusContent.program = intro2gproProgram;
 intro2gproExpectationsContent.program = intro2gproProgram;
 intro2gproInterviewContent.program = intro2gproProgram;
 intro2gproGamedevToolsContent.program = intro2gproProgram;
+intro2gproGamedevCareersContent.program = intro2gproProgram;
 
 pythonProduct.productPrograms = [pythonProductProgram];
 ai4gamesProduct.productPrograms = [ai4gamesProductProgram];
@@ -3108,6 +3134,7 @@ export const mockProgramContents: ProgramContent[] = [
     intro2gproExpectationsContent,
     intro2gproInterviewContent,
     intro2gproGamedevToolsContent,
+    intro2gproGamedevCareersContent,
 ];
 
 // Helper function to get program by slug

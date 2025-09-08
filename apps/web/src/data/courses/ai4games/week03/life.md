@@ -19,7 +19,7 @@ The map is continuous on every direction, so the cells on the edges have the cel
 
 The first line of the input are three numbers, C, L and T, the number of columns, lines and turns, respectively. The next L lines are the initial state of the cells, where each line has C characters, either `.` for dead cells or `#` for alive cells.
 
-```text
+``` text
 5 5 4
 .#...
 ..#..
@@ -32,7 +32,7 @@ The first line of the input are three numbers, C, L and T, the number of columns
 
 The output should be the state of the cells after T turns, in the same format as the input.
 
-```text
+``` text
 .....
 ..#..
 ...#.
@@ -44,4 +44,4 @@ The output should be the state of the cells after T turns, in the same format as
 
 - [Animated Example](https://playgameoflife.com/)
 - [Conway's Game of Life Wiki](https://conwaylife.com/wiki/Conway%27s_Game_of_Life)
-- [Wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)
+- [Hexagonal Game of Life](https://arunarjunakani.github.io/HexagonalGameOfLife/)
