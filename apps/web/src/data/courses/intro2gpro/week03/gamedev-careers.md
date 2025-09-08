@@ -1,5 +1,7 @@
 # Game Development Careers
 
+<blockquote class="reddit-embed-bq" style="height:500px" data-embed-height="659"><a href="https://www.reddit.com/r/memes/comments/2m367e/game_developers_what_people_thinks/">Game developers: what people thinks...</a><br> by<a href="https://www.reddit.com/user/alecdo/">u/alecdo</a> in<a href="https://www.reddit.com/r/memes/">memes</a></blockquote><script async="" src="https://embed.reddit.com/widgets.js" charset="UTF-8"></script>
+
 ## Read
 
 Game Programming Roadmap: Client-side: https://roadmap.sh/game-developer Server-side: https://roadmap.sh/server-side-game-developer
