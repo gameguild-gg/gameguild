@@ -4,26 +4,47 @@
 
 ## Read
 
-Game Programming Roadmap: Client-side: https://roadmap.sh/game-developer Server-side: https://roadmap.sh/server-side-game-developer
+### Career Roadmaps & Pathways
+- **Game Programming Roadmaps**: [Client-side Development](https://roadmap.sh/game-developer) | [Server-side Development](https://roadmap.sh/server-side-game-developer)
+- **Comprehensive Career Guide**: [How to Become a Game Developer](https://research.com/careers/how-to-become-a-game-developer) - Educational pathways, skills, and career outlook
+- **Industry Career Pathways**: [CG Spectrum Game Development Careers](https://www.cgspectrum.com/career-pathways/game-development)
+- **Complete Gaming Jobs List**: [Hitmarker Career Advice](https://hitmarker.net/career-advice/the-complete-list-of-gaming-jobs)
+- **AI Programming Specialization**: [CG Spectrum AI Programmer Guide](https://www.cgspectrum.com/career-pathways/ai-programmer)
 
-Game Programming books: https://github.com/miloyip/game-programmer
+### Technical Resources
+- **Game Programming Books**: [Curated Reading List](https://github.com/miloyip/game-programmer)
+- **Development Tools**: [Awesome Game Development Tools](https://github.com/Calinou/awesome-gamedev/) by Godot author
 
-Game dev tools by the godot author: https://github.com/Calinou/awesome-gamedev/
-
-https://hitmarker.net/career-advice/the-complete-list-of-gaming-jobs
-
-https://www.cgspectrum.com/career-pathways/game-development
+### Emerging Technologies
+- **AI in Game Development**: [Careers in AI for Game Programming](https://www.shawnee.edu/blog/careers-in-ai-game-programming-graduates) - Modern AI applications and career opportunities
 
 ## Homework
 
-Update your previously created Awesome Repository with the following sections:
+### Assignment Overview
+Update your previously created Awesome Repository by adding two comprehensive sections about game development careers.
 
-List and describe 5 items for both requests, but try to list 10:
+### Requirements
+**Target**: List and describe **5 items minimum** for each section, but aim for **10 items** to demonstrate thorough research.
 
-1. Research and list at least five game development career pathways. (Ex.: Game Design, Game Programming...) List and describe some of the big areas of game dev;
+### Section 1: Game Development Career Pathways
+Research and document at least five major game development career pathways.
+- **Examples**: Game Design, Game Programming, Game Art, Audio Design, Quality Assurance, etc.
+- **For each pathway**: Provide a clear description of the role and responsibilities
+- **Include**: The big areas and specializations within game development
 
-2. Specifically in game programming, research, list and explain the major disciplines. (Ex.: AI, Physics...) For every one of them, list some job position titles.
+### Section 2: Game Programming Disciplines
+Focus specifically on game programming and document the major technical disciplines.
+- **Examples**: AI Programming, Physics Programming, Graphics Programming, Gameplay Programming, etc.
+- **For each discipline**: 
+  - Explain what the discipline involves
+  - List specific job position titles related to that discipline
+  - Describe key responsibilities and skills required
 
-You can get inspired by job position titles by going to YouTube and watching some game credits, ex.: research God of War Credits;
+### Research Tips
+- **Game Credits Research**: Watch game credits on YouTube (e.g., "God of War Credits") to discover real job titles
+- **Industry Resources**: Use the reading materials above for comprehensive career information
+- **Job Boards**: Check current job postings to see what positions are actively being hired
 
-Your submission should be a GitHub URL.
+### Submission
+**Format**: GitHub repository URL containing your updated Awesome Repository
+**Due**: Submit the GitHub URL for your completed assignment
