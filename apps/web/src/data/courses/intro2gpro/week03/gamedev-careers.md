@@ -27,7 +27,7 @@ Update your previously created Awesome Repository by adding two comprehensive se
 **Target**: List and describe **5 items minimum** for each section, but aim for **10 items** to demonstrate thorough research.
 
 ### Section 1: Game Development Career Pathways
-Research and document at least five major game development career pathways.
+Research and document at least five major game development career pathways. Think this as the College Majors you pursue in order to get this career.
 - **Examples**: Game Design, Game Programming, Game Art, Audio Design, Quality Assurance, etc.
 - **For each pathway**: Provide a clear description of the role and responsibilities
 - **Include**: The big areas and specializations within game development
