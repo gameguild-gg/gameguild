@@ -125,7 +125,7 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
     }
 
     // Start from current service index and try all services
-    for (int attempt = 0; attempt < enabledServices.Count; attempt++) {
+    for (var attempt = 0; attempt < enabledServices.Count; attempt++) {
       var service = enabledServices[_currentServiceIndex];
       var ip = await TryGetExternalIpFromServiceAsync(service, cancellationToken);
 
