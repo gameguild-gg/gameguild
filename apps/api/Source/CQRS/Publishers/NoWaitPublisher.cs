@@ -11,7 +11,7 @@ public class NoWaitPublisher : INotificationPublisher
     /// <param name="handlerExecutors">Handler executors</param>
     /// <param name="notification">Notification</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    public Task Publish(IEnumerable<NotificationHandlerExecutor> handlerExecutors, INotification notification, CancellationToken cancellationToken)
+    public Task Publish(IEnumerable<NotificationHandlerExecutorBase> handlerExecutors, INotification notification, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(handlerExecutors);
 

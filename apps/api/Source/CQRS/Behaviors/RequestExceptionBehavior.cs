@@ -46,7 +46,7 @@ public class RequestExceptionBehavior<TRequest, TResponse> : IPipelineBehavior<T
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Response</returns>
     /// <exception cref="Exception">Re-throws if no handler processes the exception</exception>
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(next);
 
