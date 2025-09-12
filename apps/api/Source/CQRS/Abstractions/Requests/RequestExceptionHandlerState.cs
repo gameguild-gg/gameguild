@@ -13,5 +13,5 @@ public enum RequestExceptionHandlerState
     /// <summary>
     /// Stop processing and return response
     /// </summary>
-    Handled
+    Handled,
 }

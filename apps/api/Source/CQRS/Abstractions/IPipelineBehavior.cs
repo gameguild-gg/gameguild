@@ -15,5 +15,5 @@ public interface IPipelineBehavior<in TRequest, TResponse>
     /// <param name="next">Next delegate to call in pipeline</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Response from handler</returns>
-    Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken);
+    Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken);
 }

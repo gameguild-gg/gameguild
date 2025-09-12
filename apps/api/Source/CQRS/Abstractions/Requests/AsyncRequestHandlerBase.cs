@@ -4,7 +4,7 @@ namespace GameGuild.CQRS;
 /// Wrapper class for an async handler that handles a request and does not return a response
 /// </summary>
 /// <typeparam name="TRequest">The type of request being handled</typeparam>
-public abstract class AsyncRequestHandler<TRequest> : IRequestHandler<TRequest, Unit>
+public abstract class AsyncRequestHandlerBase<TRequest> : IRequestHandler<TRequest, Unit>
     where TRequest : IRequest<Unit>
 {
     /// <summary>

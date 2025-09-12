@@ -1,13 +1,13 @@
-﻿namespace GameGuild.Common;
+﻿namespace GameGuild.CQRS;
 
 /// <summary>
 /// Base class for paginated queries
 /// </summary>
-public abstract class PaginatedQuery<TResponse> : IQuery<PagedResult<TResponse>> {
+public abstract class PaginatedQueryBase<TResponse> : IQuery<PagedResult<TResponse>> {
   /// <summary>
   /// Number of items to skip (for pagination)
   /// </summary>
-  public int Skip { get; set; } = 0;
+  public int Skip { get; set; }
 
   /// <summary>
   /// Number of items to take (page size)
@@ -22,5 +22,5 @@ public abstract class PaginatedQuery<TResponse> : IQuery<PagedResult<TResponse>>
   /// <summary>
   /// Include soft-deleted entities
   /// </summary>
-  public bool IncludeDeleted { get; set; } = false;
+  public bool IncludeDeleted { get; set; }
 }

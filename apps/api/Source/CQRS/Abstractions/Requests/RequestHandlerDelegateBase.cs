@@ -5,4 +5,4 @@ namespace GameGuild.CQRS;
 /// </summary>
 /// <typeparam name="TResponse">Response type</typeparam>
 /// <returns>Response</returns>
-public delegate Task<TResponse> RequestHandlerDelegate<TResponse>();
+public delegate Task<TResponse> RequestHandlerDelegateBase<TResponse>();

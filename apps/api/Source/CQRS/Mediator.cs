@@ -234,12 +234,12 @@ public class Mediator : IMediator
             if (handlerArray.Length > 0)
             {
                 // Pre-allocate array for better performance - O(1) allocation  
-                var executors = new NotificationHandlerExecutorImpl<TNotification>[handlerArray.Length];
+                var executors = new NotificationHandlerExecutor<TNotification>[handlerArray.Length];
 
                 // Create executors - O(n)
                 for (var i = 0; i < handlerArray.Length; i++)
                 {
-                    executors[i] = new NotificationHandlerExecutorImpl<TNotification>(handlerArray[i]);
+                    executors[i] = new NotificationHandlerExecutor<TNotification>(handlerArray[i]);
                 }
 
                 await _notificationPublisher.Publish(executors, notification, cancellationToken).ConfigureAwait(false);
@@ -266,11 +266,11 @@ public class Mediator : IMediator
 
             if (handlers != null)
             {
-                var executors = new List<NotificationHandlerExecutor>();
+                var executors = new List<NotificationHandlerExecutorBase>();
                 foreach (var handler in handlers)
                 {
-                    var executorType = typeof(NotificationHandlerExecutorImpl<>).MakeGenericType(notificationType);
-                    var executor = Activator.CreateInstance(executorType, handler) as NotificationHandlerExecutor;
+                    var executorType = typeof(NotificationHandlerExecutor<>).MakeGenericType(notificationType);
+                    var executor = Activator.CreateInstance(executorType, handler) as NotificationHandlerExecutorBase;
                     if (executor != null)
                     {
                         executors.Add(executor);

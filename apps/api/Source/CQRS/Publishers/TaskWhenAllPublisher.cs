@@ -11,10 +11,10 @@ public class TaskWhenAllPublisher : INotificationPublisher
     /// <param name="handlerExecutors">Handler executors</param>
     /// <param name="notification">Notification</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    public async Task Publish(IEnumerable<NotificationHandlerExecutor> handlerExecutors, INotification notification, CancellationToken cancellationToken)
+    public async Task Publish(IEnumerable<NotificationHandlerExecutorBase> handlerExecutors, INotification notification, CancellationToken cancellationToken)
     {
         // Convert to array once for efficient parallel execution - O(n)
-        var executors = handlerExecutors as NotificationHandlerExecutor[] ?? handlerExecutors.ToArray();
+        var executors = handlerExecutors as NotificationHandlerExecutorBase[] ?? handlerExecutors.ToArray();
 
         if (executors.Length == 0) return;
 
