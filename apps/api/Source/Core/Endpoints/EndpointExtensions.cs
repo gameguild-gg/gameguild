@@ -15,7 +15,7 @@ internal static class EndpointExtensions {
     return services;
   }
 
-  public static IApplicationBuilder MapEndpoints(this WebApplication app, RouteGroupBuilder? routeGroupBuilder) {
+  public static IApplicationBuilder MapEndpoints(this WebApplication app, RouteGroupBuilder? routeGroupBuilder = null) {
     ArgumentNullException.ThrowIfNull(app);
 
     var endpoints = app.Services.GetRequiredService<IEnumerable<IEndpoint>>();
