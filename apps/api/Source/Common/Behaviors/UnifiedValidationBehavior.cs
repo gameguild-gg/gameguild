@@ -6,16 +6,9 @@ namespace GameGuild.Common;
 /// <summary>
 /// Unified validation behavior that supports both DataAnnotations and FluentValidation
 /// </summary>
-public class UnifiedValidationBehavior<TRequest, TResponse>(
-  IEnumerable<IValidator<TRequest>> fluentValidators,
-  ILogger<UnifiedValidationBehavior<TRequest, TResponse>> logger
-)
-  : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse> {
-  public async Task<TResponse> Handle(
-    TRequest request,
-    RequestHandlerDelegate<TResponse> next,
-    CancellationToken cancellationToken
-  ) {
+public class UnifiedValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> fluentValidators, ILogger<UnifiedValidationBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse>
+  where TRequest : IRequest<TResponse> {
+  public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken) {
     var requestName = typeof(TRequest).Name;
     logger.LogDebug("Validating {RequestName}", requestName);
 
@@ -33,36 +26,28 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(
     // If there are validation errors, handle them appropriately
     if (validationErrors.Count != 0) {
       var errorMessage = string.Join("; ", validationErrors);
-      logger.LogWarning(
-        "Validation failed for {RequestName}: {ValidationErrors}",
-        requestName,
-        errorMessage
-      );
+      logger.LogWarning("Validation failed for {RequestName}: {ValidationErrors}", requestName, errorMessage);
 
       // Handle Result pattern responses
-      if (typeof(TResponse).IsGenericType &&
-          typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>)) {
+      if (typeof(TResponse).IsGenericType && typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>)) {
         var resultType = typeof(TResponse).GetGenericArguments()[0];
         var error = Error.Failure("Validation.Failed", errorMessage);
 
         // Use the generic Failure method by getting all methods and finding the generic one
         var methods = typeof(Result).GetMethods();
-        var genericFailureMethod = methods.FirstOrDefault(m =>
-          m.Name == "Failure" &&
-          m.IsGenericMethod &&
-          m.GetParameters().Length == 1 &&
-          m.GetParameters()[0].ParameterType == typeof(Error));
+        var genericFailureMethod = methods.FirstOrDefault(m => m.Name == "Failure" && m.IsGenericMethod && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(Error));
 
         if (genericFailureMethod != null) {
           var typedFailureMethod = genericFailureMethod.MakeGenericMethod(resultType);
-          return (TResponse)typedFailureMethod.Invoke(null, [error])!;
+
+          return (TResponse) typedFailureMethod.Invoke(null, [error])!;
         }
       }
 
       if (typeof(TResponse) == typeof(Result)) {
         var error = Error.Failure("Validation.Failed", errorMessage);
 
-        return (TResponse)(object)Result.Failure(error);
+        return (TResponse) (object) Result.Failure(error);
       }
 
       // Fallback to exception for non-Result responses
@@ -81,12 +66,7 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(
 
     var isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
-    if (!isValid)
-      errors.AddRange(
-        validationResults
-          .Where(r => !string.IsNullOrEmpty(r.ErrorMessage))
-          .Select(r => r.ErrorMessage!)
-      );
+    if (!isValid) errors.AddRange(validationResults.Where(r => !string.IsNullOrEmpty(r.ErrorMessage)).Select(r => r.ErrorMessage!));
 
     return errors;
   }
@@ -98,20 +78,11 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(
 
     var context = new ValidationContext<TRequest>(request);
 
-    var validationResults = await Task.WhenAll(
-                              fluentValidators.Select(validator => validator.ValidateAsync(context, cancellationToken))
-                            );
+    var validationResults = await Task.WhenAll(fluentValidators.Select(validator => validator.ValidateAsync(context, cancellationToken)));
 
-    var validationFailures = validationResults
-                             .Where(result => !result.IsValid)
-                             .SelectMany(result => result.Errors)
-                             .ToArray();
+    var validationFailures = validationResults.Where(result => !result.IsValid).SelectMany(result => result.Errors).ToArray();
 
-    errors.AddRange(
-      validationFailures.Select(failure =>
-                                  $"{failure.PropertyName}: {failure.ErrorMessage}"
-      )
-    );
+    errors.AddRange(validationFailures.Select(failure => $"{failure.PropertyName}: {failure.ErrorMessage}"));
 
     return errors;
   }
