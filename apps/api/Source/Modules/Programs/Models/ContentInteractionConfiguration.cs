@@ -1,7 +1,7 @@
 ﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
-/// Entity Framework configuration for ContentInteraction entity
+/// EntityBase Framework configuration for ContentInteraction entity
 /// </summary>
 public class ContentInteractionConfiguration : IEntityTypeConfiguration<ContentInteraction> {
   public void Configure(EntityTypeBuilder<ContentInteraction> builder) {

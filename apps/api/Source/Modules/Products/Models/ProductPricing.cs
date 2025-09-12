@@ -1,10 +1,10 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Products;
 
 /// <summary>
-/// Entity representing pricing information for products
+/// EntityBase representing pricing information for products
 /// Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality
 /// </summary>
 [Table("product_pricing")]
@@ -13,7 +13,7 @@ namespace GameGuild.Modules.Products;
 [Index(nameof(Currency))]
 [Index(nameof(SaleStartDate))]
 [Index(nameof(SaleEndDate))]
-public class ProductPricing : Entity {
+public class ProductPricing : EntityBase {
   /// <summary>
   /// Foreign key to the Product entity
   /// </summary>

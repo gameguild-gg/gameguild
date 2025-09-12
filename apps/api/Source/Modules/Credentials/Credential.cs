@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 
@@ -11,7 +11,7 @@ namespace GameGuild.Modules.Credentials;
 /// </summary>
 [Table("Credentials")]
 [Index(nameof(UserId), nameof(Type))]
-public sealed class Credential : Entity, ITenantable {
+public sealed class Credential : EntityBase, ITenantable {
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>
@@ -80,7 +80,7 @@ public sealed class Credential : Entity, ITenantable {
   public DateTime? LastUsedAt { get; set; }
 
   /// <summary>
-  /// Default parameterless constructor (required by Entity Framework)
+  /// Default parameterless constructor (required by EntityBase Framework)
   /// </summary>
   public Credential() { }
 

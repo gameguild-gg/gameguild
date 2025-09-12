@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Credentials;
 
 
@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Users;
 [Table("Users")]
 [Index(nameof(Email), IsUnique = true)]
 [Index(nameof(Username), IsUnique = true)]
-public sealed class User : Entity {
+public sealed class User : EntityBase {
   [Required][MaxLength(100)] public string Name { get; set; } = string.Empty;
 
   [Required]

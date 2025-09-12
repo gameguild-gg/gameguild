@@ -1,7 +1,7 @@
 namespace GameGuild.Modules.Resources;
 
 /// <summary>
-/// Entity configuration for Resource
+/// EntityBase configuration for Resource
 /// </summary>
 public class ResourceConfiguration : IEntityTypeConfiguration<Resource> {
   public void Configure(EntityTypeBuilder<Resource> builder) {

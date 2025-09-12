@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants.Inputs;
 

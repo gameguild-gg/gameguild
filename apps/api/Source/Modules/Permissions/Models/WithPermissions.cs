@@ -1,5 +1,5 @@
 using System.Collections.ObjectModel;
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 
@@ -12,7 +12,7 @@ namespace GameGuild.Modules.Permissions;
 
 // this is a base permission model that can be used to store permissions for any entity
 [ObjectType]
-public abstract class WithPermissions : Entity {
+public abstract class WithPermissions : EntityBase {
   [GraphQLType(typeof(NonNullType<LongType>))]
   [GraphQLDescription("Permission flags for bits 0-63")]
   [Column(TypeName = "bigint")]

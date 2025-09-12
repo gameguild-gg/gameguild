@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Users;
 
 
@@ -12,7 +12,7 @@ namespace GameGuild.Modules.Programs;
 [Index(nameof(ReportType))]
 [Index(nameof(Status))]
 [Index(nameof(CreatedAt))]
-public class ContentReport : Entity {
+public class ContentReport : EntityBase {
   /// <summary>
   /// Foreign key to the user who submitted the report
   /// </summary>

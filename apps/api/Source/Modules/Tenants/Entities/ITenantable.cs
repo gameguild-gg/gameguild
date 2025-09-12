@@ -6,7 +6,7 @@
 public interface ITenantable {
   /// <summary>
   /// Navigation property to the tenant
-  /// Entity Framework will automatically create the TenantId foreign key
+  /// EntityBase Framework will automatically create the TenantId foreign key
   /// </summary>
   Tenant? Tenant { get; set; }
 

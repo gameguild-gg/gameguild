@@ -113,7 +113,7 @@ public class UserReputationHistory : Resource {
 
   /// <summary>
   /// Related resource that triggered this change (polymorphic relationship)
-  /// Entity Framework will create a shadow RelatedResourceId foreign key property automatically
+  /// EntityBase Framework will create a shadow RelatedResourceId foreign key property automatically
   /// </summary>
   public Resource? RelatedResource { get; set; }
 
@@ -124,7 +124,7 @@ public class UserReputationHistory : Resource {
 }
 
 /// <summary>
-/// Entity Framework configuration for UserReputationHistory
+/// EntityBase Framework configuration for UserReputationHistory
 /// Contains complex configurations that cannot be expressed with simple data annotations
 /// </summary>
 public class UserReputationHistoryConfiguration : IEntityTypeConfiguration<UserReputationHistory> {

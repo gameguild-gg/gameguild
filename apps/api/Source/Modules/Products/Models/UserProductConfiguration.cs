@@ -1,7 +1,7 @@
 ﻿namespace GameGuild.Modules.Products;
 
 /// <summary>
-/// Entity Framework configuration for UserProduct entity
+/// EntityBase Framework configuration for UserProduct entity
 /// </summary>
 public class UserProductConfiguration : IEntityTypeConfiguration<UserProduct> {
   public void Configure(EntityTypeBuilder<UserProduct> builder) {
