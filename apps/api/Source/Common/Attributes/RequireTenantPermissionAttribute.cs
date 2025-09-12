@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using GameGuild.Common.Results;
+using Results;
 using GameGuild.Common.Services;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions;
