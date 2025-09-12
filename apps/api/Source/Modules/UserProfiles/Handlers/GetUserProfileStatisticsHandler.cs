@@ -13,7 +13,7 @@ public class GetUserProfileStatisticsHandler(ApplicationDbContext context, ILogg
       var fromDate = request.FromDate ?? DateTime.MinValue;
       var toDate = request.ToDate ?? DateTime.MaxValue;
 
-      IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>();
+      var query = context.Resources.OfType<UserProfile>();
 
       // Apply tenant filter
       if (request.TenantId.HasValue) query = query.Where(up => EF.Property<Guid?>(up, "TenantId") == request.TenantId);

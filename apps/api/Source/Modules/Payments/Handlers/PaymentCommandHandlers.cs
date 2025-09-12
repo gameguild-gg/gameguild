@@ -112,7 +112,7 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
       await _context.SaveChangesAsync(cancellationToken);
 
       // Trigger auto-enrollment if payment succeeded and product has associated programs
-      bool autoEnrollTriggered = false;
+      var autoEnrollTriggered = false;
 
       if (payment.Status == PaymentStatus.Completed && payment.ProductId.HasValue) {
         // Get programs associated with the product
