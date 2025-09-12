@@ -5,7 +5,7 @@ using GameGuild.Modules.Resources;
 namespace GameGuild.Common;
 
 /// <summary>
-/// Extension methods for configuring base entity properties in Entity Framework
+/// Extension methods for configuring base entity properties in EntityBase Framework
 /// </summary>
 public static class ModelBuilderExtensions {
   /// <summary>
