@@ -23,7 +23,7 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
     /// <param name="next">Next handler delegate</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Response</returns>
-    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(next);
 
