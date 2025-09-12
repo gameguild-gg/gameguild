@@ -689,7 +689,7 @@ public static class DependencyInjection {
   /// Safely adds GraphQL types with comprehensive error handling
   /// </summary>
   private static void SafeAddGraphQLTypes(IRequestExecutorBuilder builder, (string Name, Type Type)[] types, ILogger? logger, bool[] isExtension, bool isOptional = false) {
-    for (int i = 0; i < types.Length; i++) {
+    for (var i = 0; i < types.Length; i++) {
       var (name, type) = types[i];
       var isExt = i < isExtension.Length ? isExtension[i] : false;
 
