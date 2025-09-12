@@ -7,16 +7,16 @@ namespace GameGuild;
 ///     Base implementation of the specification pattern
 /// </summary>
 /// <typeparam name="T">The entity type</typeparam>
-public abstract class BaseSpecification<T> : ISpecification<T>
+public abstract class SpecificationBase<T> : ISpecification<T>
 {
     private readonly List<Expression<Func<T, object>>> _includes = new();
     private readonly List<string> _includeStrings = new();
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="BaseSpecification{T}"/> class
+    ///     Initializes a new instance of the <see cref="SpecificationBase{T}"/> class
     /// </summary>
     /// <param name="criteria">The criteria expression</param>
-    protected BaseSpecification(Expression<Func<T, bool>>? criteria = null)
+    protected SpecificationBase(Expression<Func<T, bool>>? criteria = null)
     {
         Criteria = criteria;
     }
