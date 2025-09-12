@@ -4,5 +4,5 @@
 namespace GameGuild.Common;
 
 public interface ITokenProvider {
-  string Create(User user);
+  string Create(IUser user);
 }
