@@ -20,7 +20,7 @@ public abstract class Entity<TKey> : IEntity<TKey> where TKey : IEquatable<TKey>
   /// Unique identifier for the entity (IEntity implementation)
   /// </summary>
   Guid IEntity.Id {
-    get => Id is Guid guid ? guid : throw new InvalidOperationException("Entity ID is not a GUID");
+    get => Id is Guid guid ? guid : throw new InvalidOperationException("EntityBase ID is not a GUID");
     set => Id = (TKey)(object)value;
   }
 
