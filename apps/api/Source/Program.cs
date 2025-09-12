@@ -1,15 +1,24 @@
-using GameGuild.Common;
+using GameGuild;
 
 
-// Modern .NET top-level program with fluent configuration
-var app = await WebApplication
-                .CreateBuilder(args)
-                .ConfigureGameGuildApplication()
-                .BuildWithPipelineAsync();
+var builder = WebApplication.CreateBuilder(args);
 
-await app.RunAsync();
+builder.AddAppSettings();
+builder.Configuration.AddEnvironmentVariables();
+
+// Add services to the container
+// Order matters: Infrastructure -> Application -> Presentation.
+builder.AddInfrastructureLayer();
+builder.AddApplicationLayer();
+builder.AddPresentationLayer();
+
+var app = builder.Build();
+
+app.ConfigurePipeline();
+
+await app.RunAsync().ConfigureAwait(false);
 
 // REMARK: Required for functional and integration tests to work.
 namespace GameGuild {
-  public partial class Program;
+  internal partial class Program { };
 }
