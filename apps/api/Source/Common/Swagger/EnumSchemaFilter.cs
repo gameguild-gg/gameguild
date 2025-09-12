@@ -33,7 +33,7 @@ public class EnumSchemaFilter : ISchemaFilter {
             ""
         };
 
-    for (int i = 0; i < enumNames.Length; i++) {
+    for (var i = 0; i < enumNames.Length; i++) {
       var enumName = enumNames[i];
       var enumValue = enumValuesArray.GetValue(i);
       var numericValue = Convert.ToInt32(enumValue);

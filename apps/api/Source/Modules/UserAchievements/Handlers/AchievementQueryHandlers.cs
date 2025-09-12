@@ -679,10 +679,10 @@ public class CheckAchievementPrerequisitesQueryHandler : IQueryHandler<CheckAchi
         .ToListAsync(cancellationToken);
 
       var prerequisiteStatuses = new List<PrerequisiteStatusDto>();
-      bool canEarn = true;
+      var canEarn = true;
 
       foreach (var prerequisite in prerequisites) {
-        bool isMet = userAchievements.Contains(prerequisite.PrerequisiteAchievementId);
+        var isMet = userAchievements.Contains(prerequisite.PrerequisiteAchievementId);
         if (!isMet) {
           canEarn = false;
         }

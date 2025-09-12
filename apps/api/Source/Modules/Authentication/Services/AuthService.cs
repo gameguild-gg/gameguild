@@ -198,7 +198,7 @@ namespace GameGuild.Modules.Authentication {
               var userDtoAlready = new UserDto { Id = userAlready.Id, Username = userAlready.Name, Email = userAlready.Email };
               var rolesAlready = new[] { "User" }; // TODO: actual roles
 
-              int accessMinutesAlready = int.Parse(
+              var accessMinutesAlready = int.Parse(
                 configuration["Jwt:ExpirationMinutes"] ?? configuration["Jwt:ExpiryInMinutes"] ?? "60"
               );
               var newAccessTokenAlready = jwtTokenService.GenerateAccessToken(userDtoAlready, rolesAlready);
@@ -237,10 +237,10 @@ namespace GameGuild.Modules.Authentication {
           }
 
           // Config
-          int accessMinutes = int.Parse(
+          var accessMinutes = int.Parse(
             configuration["Jwt:ExpirationMinutes"] ?? configuration["Jwt:ExpiryInMinutes"] ?? "60"
           );
-          int refreshDays = int.Parse(
+          var refreshDays = int.Parse(
             configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7"
           );
 
@@ -489,7 +489,7 @@ namespace GameGuild.Modules.Authentication {
       var user =
         await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.Email == email);
 
-      bool isNewUser = false;
+      var isNewUser = false;
 
       if (user == null) {
         // Generate unique username from name using slugify (same as CreateUserHandler)

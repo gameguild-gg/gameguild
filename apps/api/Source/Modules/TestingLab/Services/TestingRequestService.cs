@@ -1,5 +1,3 @@
-using GameGuild.Common;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Database;
 
 namespace GameGuild.Modules.TestingLab;

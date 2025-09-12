@@ -793,7 +793,7 @@ public class DatabaseSeeder(
                           .Take(5)
                           .ToList();
 
-    for (int i = 0; i < beginnerCourses.Count; i++) {
+    for (var i = 0; i < beginnerCourses.Count; i++) {
       trackContentList.Add(
         new ProgramContent {
           Id = Guid.NewGuid(),
@@ -839,7 +839,7 @@ public class DatabaseSeeder(
                               .Take(6)
                               .ToList();
 
-    for (int i = 0; i < intermediateCourses.Count; i++) {
+    for (var i = 0; i < intermediateCourses.Count; i++) {
       trackContentList.Add(
         new ProgramContent {
           Id = Guid.NewGuid(),
@@ -882,7 +882,7 @@ public class DatabaseSeeder(
                           .Take(7)
                           .ToList();
 
-    for (int i = 0; i < advancedCourses.Count; i++) {
+    for (var i = 0; i < advancedCourses.Count; i++) {
       trackContentList.Add(
         new ProgramContent {
           Id = Guid.NewGuid(),
@@ -929,7 +929,7 @@ public class DatabaseSeeder(
                     .Take(5)
                     .ToList();
 
-    for (int i = 0; i < aiCourses.Count; i++) {
+    for (var i = 0; i < aiCourses.Count; i++) {
       trackContentList.Add(
         new ProgramContent {
           Id = Guid.NewGuid(),
@@ -969,7 +969,7 @@ public class DatabaseSeeder(
                           .Take(6)
                           .ToList();
 
-    for (int i = 0; i < creativeCourses.Count; i++) {
+    for (var i = 0; i < creativeCourses.Count; i++) {
       trackContentList.Add(
         new ProgramContent {
           Id = Guid.NewGuid(),
@@ -1013,7 +1013,7 @@ public class DatabaseSeeder(
                           .Take(4)
                           .ToList();
 
-    for (int i = 0; i < businessCourses.Count; i++) {
+    for (var i = 0; i < businessCourses.Count; i++) {
       trackContentList.Add(
         new ProgramContent {
           Id = Guid.NewGuid(),
@@ -1501,7 +1501,7 @@ public class DatabaseSeeder(
     }
 
     // Then create additional sessions for variety
-    for (int day = 1; day <= 14; day++) {
+    for (var day = 1; day <= 14; day++) {
       var sessionDate = baseDate.AddDays(day);
 
       // Skip weekends for some variety
@@ -1512,7 +1512,7 @@ public class DatabaseSeeder(
       // Create 1-2 additional sessions per day for variety
       var sessionsPerDay = random.Next(0, 2); // 0-1 additional sessions
 
-      for (int session = 0; session < sessionsPerDay; session++) {
+      for (var session = 0; session < sessionsPerDay; session++) {
         var startHour = 10 + (session * 3); // 10 AM or 1 PM
         var sessionStart = sessionDate.Date.AddHours(startHour);
         var sessionEnd = sessionStart.AddHours(2); // 2-hour sessions
@@ -1543,7 +1543,7 @@ public class DatabaseSeeder(
     }
 
     // Add some completed sessions in the past
-    for (int day = 1; day <= 7; day++) {
+    for (var day = 1; day <= 7; day++) {
       var pastDate = baseDate.AddDays(-day);
       if (pastDate.DayOfWeek == DayOfWeek.Saturday || pastDate.DayOfWeek == DayOfWeek.Sunday) {
         continue;
