@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Products;
@@ -11,7 +11,7 @@ namespace GameGuild.Modules.Products;
 [Index(nameof(ProductId), nameof(ProgramId), IsUnique = true)]
 [Index(nameof(ProductId), nameof(SortOrder))]
 [Index(nameof(ProgramId))]
-public class ProductProgram : Entity {
+public class ProductProgram : EntityBase {
   /// <summary>
   /// Foreign key to the Product entity
   /// </summary>

@@ -4,7 +4,7 @@
 namespace GameGuild.Modules.Projects;
 
 /// <summary>
-/// Entity configuration for Project
+/// EntityBase configuration for Project
 /// </summary>
 public class ProjectConfiguration : IEntityTypeConfiguration<Project> {
   public void Configure(EntityTypeBuilder<Project> builder) {

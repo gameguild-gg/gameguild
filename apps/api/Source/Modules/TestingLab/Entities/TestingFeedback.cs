@@ -1,10 +1,10 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.TestingLab;
 
-public class TestingFeedback : Entity {
+public class TestingFeedback : EntityBase {
   /// <summary> Foreign key to the testing request </summary>
   public Guid TestingRequestId { get; set; }
 

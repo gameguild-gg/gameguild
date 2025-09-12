@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Users;
 
 
@@ -12,7 +12,7 @@ namespace GameGuild.Modules.Posts.Models;
 [Index(nameof(UserId))]
 [Index(nameof(ViewedAt))]
 [Index(nameof(IpAddress))]
-public class PostView : Entity {
+public class PostView : EntityBase {
   /// <summary>
   /// The post that was viewed
   /// </summary>

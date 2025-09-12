@@ -1,11 +1,11 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.TestingLab;
 
-public class TestingRequest : Entity {
+public class TestingRequest : EntityBase {
   /// <summary> Foreign key to the project version </summary>
   public Guid ProjectVersionId { get; set; }
 

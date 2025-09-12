@@ -1,7 +1,7 @@
 namespace GameGuild.Modules.UserAchievements;
 
 /// <summary>
-/// Entity Framework configuration for UserAchievement entity
+/// EntityBase Framework configuration for UserAchievement entity
 /// </summary>
 internal sealed class UserAchievementConfiguration : IEntityTypeConfiguration<UserAchievement> {
   public void Configure(EntityTypeBuilder<UserAchievement> builder) {

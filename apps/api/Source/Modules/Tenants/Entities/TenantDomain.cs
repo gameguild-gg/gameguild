@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Tenants;
@@ -11,7 +11,7 @@ namespace GameGuild.Modules.Tenants;
 [Table("TenantDomains")]
 [Index(nameof(TopLevelDomain), nameof(Subdomain), IsUnique = true)]
 [Index(nameof(TenantId), nameof(IsMainDomain))]
-public class TenantDomain : Entity {
+public class TenantDomain : EntityBase {
   private string _topLevelDomain = string.Empty;
   private string? _subdomain;
 

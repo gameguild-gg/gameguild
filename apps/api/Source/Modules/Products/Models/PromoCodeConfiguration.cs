@@ -1,7 +1,7 @@
 ﻿namespace GameGuild.Modules.Products;
 
 /// <summary>
-/// Entity Framework configuration for PromoCode entity
+/// EntityBase Framework configuration for PromoCode entity
 /// </summary>
 public class PromoCodeConfiguration : IEntityTypeConfiguration<PromoCode> {
   public void Configure(EntityTypeBuilder<PromoCode> builder) {

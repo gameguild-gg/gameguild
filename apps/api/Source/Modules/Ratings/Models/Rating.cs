@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Users;
 
 
@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Ratings;
 /// <summary>
 /// Represents a rating (e.g., 1-5 stars) on a rateable entity.
 /// </summary>
-public class Rating : Entity {
+public class Rating : EntityBase {
   /// <summary>
   /// The rating value (e.g., 1-5 stars)
   /// </summary>
@@ -16,7 +16,7 @@ public class Rating : Entity {
 
   /// <summary>
   /// Navigation property to the user who provided this rating
-  /// Entity Framework will automatically create the UserId foreign key
+  /// EntityBase Framework will automatically create the UserId foreign key
   /// </summary>
   [Required]
   public virtual User User { get; set; } = null!;

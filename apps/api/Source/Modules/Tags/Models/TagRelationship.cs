@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Tags.Models;
@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Tags.Models;
 [Index(nameof(SourceId))]
 [Index(nameof(TargetId))]
 [Index(nameof(Type))]
-public class TagRelationship : Entity {
+public class TagRelationship : EntityBase {
   public Guid SourceId { get; set; }
 
   public Guid TargetId { get; set; }

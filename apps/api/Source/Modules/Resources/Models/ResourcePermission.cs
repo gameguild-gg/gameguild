@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Permissions;
 
 
@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Resources;
 /// Base class for resource-specific permissions (Layer 3 of the DAC permission system)
 /// Generic implementation allows strong typing for each content type
 /// </summary>
-public abstract class ResourcePermission<T> : WithPermissions where T : Entity {
+public abstract class ResourcePermission<T> : WithPermissions where T : EntityBase {
   /// <summary>
   /// Resource reference - strongly typed to the content entity
   /// </summary>

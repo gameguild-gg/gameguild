@@ -1,8 +1,8 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.GameJams.Models {
-  public class JamSubmission : Entity {
+  public class JamSubmission : EntityBase {
     [Required] public Guid JamId { get; set; }
 
     [Required] public Guid ProjectVersionId { get; set; }

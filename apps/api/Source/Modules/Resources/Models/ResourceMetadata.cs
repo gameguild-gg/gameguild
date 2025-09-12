@@ -1,15 +1,15 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Resources;
 
 /// <summary>
-/// Entity for storing additional metadata about resources
+/// EntityBase for storing additional metadata about resources
 /// Provides extensible metadata storage for resources
 /// </summary>
 [Table("ResourceMetadata")]
 [Index(nameof(ResourceType))]
-public class ResourceMetadata : Entity {
+public class ResourceMetadata : EntityBase {
   /// <summary>
   /// The type of resource this metadata belongs to
   /// </summary>

@@ -1,11 +1,11 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Authentication {
   /// <summary>
   /// Refresh token entity for managing user sessions
   /// </summary>
-  public class RefreshToken : Entity {
+  public class RefreshToken : EntityBase {
     public Guid UserId { get; set; }
 
     public string Token { get; set; } = string.Empty;

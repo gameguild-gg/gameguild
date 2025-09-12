@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Users;
 
 
@@ -14,7 +14,7 @@ namespace GameGuild.Modules.Programs;
 [Index(nameof(ProgramId))]
 [Index(nameof(EnrollmentStatus))]
 [Index(nameof(CompletionStatus))]
-public class ProgramEnrollment : Entity {
+public class ProgramEnrollment : EntityBase {
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>

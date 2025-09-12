@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Users;
 
@@ -6,7 +6,7 @@ using GameGuild.Modules.Users;
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Represents a project that is registered to be tested in a specific testing session </summary>
-public class SessionProject : Entity {
+public class SessionProject : EntityBase {
   /// <summary> Foreign key to the session </summary>
   public Guid SessionId { get; set; }
 

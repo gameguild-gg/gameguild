@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
 
 
@@ -7,7 +7,7 @@ namespace GameGuild.Modules.UserAchievements;
 /// <summary>
 /// Handler for getting achievements with pagination
 /// </summary>
-public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, GameGuild.Common.Result<AchievementsPageDto>> {
+public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, Result<AchievementsPageDto>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetAchievementsQueryHandler> _logger;
 
@@ -16,7 +16,7 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, G
     _logger = logger;
   }
 
-  public async Task<GameGuild.Common.Result<AchievementsPageDto>> Handle(GetAchievementsQuery request, CancellationToken cancellationToken) {
+  public async Task<Result<AchievementsPageDto>> Handle(GetAchievementsQuery request, CancellationToken cancellationToken) {
     try {
       var query = _context.Achievements
         .Include(a => a.Levels)
@@ -111,11 +111,11 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, G
 
       var result = new AchievementsPageDto(achievementDtos, totalCount, request.PageNumber, request.PageSize);
 
-      return GameGuild.Common.Result.Success(result);
+      return Result.Success(result);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting achievements");
-      return GameGuild.Common.Result.Failure<AchievementsPageDto>(GameGuild.Common.Error.Failure("GetAchievements", "Failed to get achievements"));
+      return Result.Failure<AchievementsPageDto>(Error.Failure("GetAchievements", "Failed to get achievements"));
     }
   }
 }
@@ -123,7 +123,7 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, G
 /// <summary>
 /// Handler for getting achievement by ID
 /// </summary>
-public class GetAchievementByIdQueryHandler : IQueryHandler<GetAchievementByIdQuery, GameGuild.Common.Result<Achievement>> {
+public class GetAchievementByIdQueryHandler : IQueryHandler<GetAchievementByIdQuery, Result<Achievement>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetAchievementByIdQueryHandler> _logger;
 
@@ -132,7 +132,7 @@ public class GetAchievementByIdQueryHandler : IQueryHandler<GetAchievementByIdQu
     _logger = logger;
   }
 
-  public async Task<GameGuild.Common.Result<Achievement>> Handle(GetAchievementByIdQuery request, CancellationToken cancellationToken) {
+  public async Task<Result<Achievement>> Handle(GetAchievementByIdQuery request, CancellationToken cancellationToken) {
     try {
       var query = _context.Achievements
         .Where(a => a.Id == request.AchievementId && a.TenantId == request.TenantId);
@@ -149,14 +149,14 @@ public class GetAchievementByIdQueryHandler : IQueryHandler<GetAchievementByIdQu
       var achievement = await query.FirstOrDefaultAsync(cancellationToken);
 
       if (achievement == null) {
-        return GameGuild.Common.Result.Failure<Achievement>(GameGuild.Common.Error.NotFound("AchievementNotFound", "Achievement not found"));
+        return Result.Failure<Achievement>(Error.NotFound("AchievementNotFound", "Achievement not found"));
       }
 
-      return GameGuild.Common.Result.Success(achievement);
+      return Result.Success(achievement);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting achievement {AchievementId}", request.AchievementId);
-      return GameGuild.Common.Result.Failure<Achievement>(GameGuild.Common.Error.Failure("GetAchievement", "Failed to get achievement"));
+      return Result.Failure<Achievement>(Error.Failure("GetAchievement", "Failed to get achievement"));
     }
   }
 }
@@ -164,7 +164,7 @@ public class GetAchievementByIdQueryHandler : IQueryHandler<GetAchievementByIdQu
 /// <summary>
 /// Handler for getting user achievements
 /// </summary>
-public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievementsQuery, GameGuild.Common.Result<UserAchievementsPageDto>> {
+public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievementsQuery, Result<UserAchievementsPageDto>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetUserAchievementsQueryHandler> _logger;
 
@@ -173,7 +173,7 @@ public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievements
     _logger = logger;
   }
 
-  public async Task<GameGuild.Common.Result<UserAchievementsPageDto>> Handle(GetUserAchievementsQuery request, CancellationToken cancellationToken) {
+  public async Task<Result<UserAchievementsPageDto>> Handle(GetUserAchievementsQuery request, CancellationToken cancellationToken) {
     try {
       var query = _context.UserAchievements
         .Include(ua => ua.Achievement)
@@ -259,11 +259,11 @@ public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievements
 
       var result = new UserAchievementsPageDto(userAchievementDtos, totalCount, request.PageNumber, request.PageSize);
 
-      return GameGuild.Common.Result.Success(result);
+      return Result.Success(result);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting user achievements for user {UserId}", request.UserId);
-      return GameGuild.Common.Result.Failure<UserAchievementsPageDto>(GameGuild.Common.Error.Failure("GetUserAchievements", "Failed to get user achievements"));
+      return Result.Failure<UserAchievementsPageDto>(Error.Failure("GetUserAchievements", "Failed to get user achievements"));
     }
   }
 }
@@ -271,7 +271,7 @@ public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievements
 /// <summary>
 /// Handler for getting user achievement progress
 /// </summary>
-public class GetUserAchievementProgressQueryHandler : IQueryHandler<GetUserAchievementProgressQuery, GameGuild.Common.Result<List<AchievementProgressDto>>> {
+public class GetUserAchievementProgressQueryHandler : IQueryHandler<GetUserAchievementProgressQuery, Result<List<AchievementProgressDto>>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetUserAchievementProgressQueryHandler> _logger;
 
@@ -280,7 +280,7 @@ public class GetUserAchievementProgressQueryHandler : IQueryHandler<GetUserAchie
     _logger = logger;
   }
 
-  public async Task<GameGuild.Common.Result<List<AchievementProgressDto>>> Handle(GetUserAchievementProgressQuery request, CancellationToken cancellationToken) {
+  public async Task<Result<List<AchievementProgressDto>>> Handle(GetUserAchievementProgressQuery request, CancellationToken cancellationToken) {
     try {
       var query = _context.AchievementProgress
         .Include(ap => ap.Achievement)
@@ -325,11 +325,11 @@ public class GetUserAchievementProgressQueryHandler : IQueryHandler<GetUserAchie
         Context = ap.Context,
       }).ToList();
 
-      return GameGuild.Common.Result.Success(progressDtos);
+      return Result.Success(progressDtos);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting achievement progress for user {UserId}", request.UserId);
-      return GameGuild.Common.Result.Failure<List<AchievementProgressDto>>(GameGuild.Common.Error.Failure("GetAchievementProgress", "Failed to get achievement progress"));
+      return Result.Failure<List<AchievementProgressDto>>(Error.Failure("GetAchievementProgress", "Failed to get achievement progress"));
     }
   }
 }
@@ -337,7 +337,7 @@ public class GetUserAchievementProgressQueryHandler : IQueryHandler<GetUserAchie
 /// <summary>
 /// Handler for getting user achievement summary
 /// </summary>
-public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchievementSummaryQuery, GameGuild.Common.Result<UserAchievementSummaryDto>> {
+public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchievementSummaryQuery, Result<UserAchievementSummaryDto>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetUserAchievementSummaryQueryHandler> _logger;
 
@@ -346,7 +346,7 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
     _logger = logger;
   }
 
-  public async Task<GameGuild.Common.Result<UserAchievementSummaryDto>> Handle(GetUserAchievementSummaryQuery request, CancellationToken cancellationToken) {
+  public async Task<Result<UserAchievementSummaryDto>> Handle(GetUserAchievementSummaryQuery request, CancellationToken cancellationToken) {
     try {
       var userAchievements = await _context.UserAchievements
         .Include(ua => ua.Achievement)
@@ -449,11 +449,11 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
         AchievementsByCategory = achievementsByCategory,
       };
 
-      return GameGuild.Common.Result.Success(summary);
+      return Result.Success(summary);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting achievement summary for user {UserId}", request.UserId);
-      return GameGuild.Common.Result.Failure<UserAchievementSummaryDto>(GameGuild.Common.Error.Failure("GetAchievementSummary", "Failed to get achievement summary"));
+      return Result.Failure<UserAchievementSummaryDto>(Error.Failure("GetAchievementSummary", "Failed to get achievement summary"));
     }
   }
 }
@@ -461,7 +461,7 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
 /// <summary>
 /// Handler for getting available achievements for a user
 /// </summary>
-public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAchievementsQuery, GameGuild.Common.Result<AchievementsPageDto>> {
+public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAchievementsQuery, Result<AchievementsPageDto>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetAvailableAchievementsQueryHandler> _logger;
 
@@ -470,7 +470,7 @@ public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAc
     _logger = logger;
   }
 
-  public async Task<GameGuild.Common.Result<AchievementsPageDto>> Handle(GetAvailableAchievementsQuery request, CancellationToken cancellationToken) {
+  public async Task<Result<AchievementsPageDto>> Handle(GetAvailableAchievementsQuery request, CancellationToken cancellationToken) {
     try {
       // Get user's earned achievements
       var earnedAchievementIds = await _context.UserAchievements
@@ -520,11 +520,11 @@ public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAc
       }).ToList();
 
       var result = new AchievementsPageDto(achievementDtos, totalCount, request.PageNumber, request.PageSize);
-      return GameGuild.Common.Result.Success(result);
+      return Result.Success(result);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting available achievements for user {UserId}", request.UserId);
-      return GameGuild.Common.Result.Failure<AchievementsPageDto>(GameGuild.Common.Error.Failure("GetAvailableAchievements", "Failed to get available achievements"));
+      return Result.Failure<AchievementsPageDto>(Error.Failure("GetAvailableAchievements", "Failed to get available achievements"));
     }
   }
 }
@@ -532,7 +532,7 @@ public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAc
 /// <summary>
 /// Handler for getting achievement leaderboard
 /// </summary>
-public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievementLeaderboardQuery, GameGuild.Common.Result<List<UserAchievementLeaderboardDto>>> {
+public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievementLeaderboardQuery, Result<List<UserAchievementLeaderboardDto>>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetAchievementLeaderboardQueryHandler> _logger;
 
@@ -541,7 +541,7 @@ public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievemen
     _logger = logger;
   }
 
-  public async Task<GameGuild.Common.Result<List<UserAchievementLeaderboardDto>>> Handle(GetAchievementLeaderboardQuery request, CancellationToken cancellationToken) {
+  public async Task<Result<List<UserAchievementLeaderboardDto>>> Handle(GetAchievementLeaderboardQuery request, CancellationToken cancellationToken) {
     try {
       var query = _context.UserAchievements
         .Include(ua => ua.User)
@@ -574,11 +574,11 @@ public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievemen
         TotalPoints = stats.TotalPoints,
       }).ToList();
 
-      return GameGuild.Common.Result.Success(leaderboard);
+      return Result.Success(leaderboard);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting achievement leaderboard");
-      return GameGuild.Common.Result.Failure<List<UserAchievementLeaderboardDto>>(GameGuild.Common.Error.Failure("GetAchievementLeaderboard", "Failed to get achievement leaderboard"));
+      return Result.Failure<List<UserAchievementLeaderboardDto>>(Error.Failure("GetAchievementLeaderboard", "Failed to get achievement leaderboard"));
     }
   }
 }
@@ -586,7 +586,7 @@ public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievemen
 /// <summary>
 /// Handler for getting achievement statistics
 /// </summary>
-public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievementStatisticsQuery, GameGuild.Common.Result<AchievementStatisticsDto>> {
+public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievementStatisticsQuery, Result<AchievementStatisticsDto>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetAchievementStatisticsQueryHandler> _logger;
 
@@ -595,13 +595,13 @@ public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievement
     _logger = logger;
   }
 
-  public async Task<GameGuild.Common.Result<AchievementStatisticsDto>> Handle(GetAchievementStatisticsQuery request, CancellationToken cancellationToken) {
+  public async Task<Result<AchievementStatisticsDto>> Handle(GetAchievementStatisticsQuery request, CancellationToken cancellationToken) {
     try {
       var achievement = await _context.Achievements
         .FirstOrDefaultAsync(a => a.Id == request.AchievementId && a.TenantId == request.TenantId, cancellationToken);
 
       if (achievement == null) {
-        return GameGuild.Common.Result.Failure<AchievementStatisticsDto>(GameGuild.Common.Error.NotFound("AchievementNotFound", "Achievement not found"));
+        return Result.Failure<AchievementStatisticsDto>(Error.NotFound("AchievementNotFound", "Achievement not found"));
       }
 
       var totalEarned = await _context.UserAchievements
@@ -637,11 +637,11 @@ public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievement
         LastEarned = lastEarned,
       };
 
-      return GameGuild.Common.Result.Success(statistics);
+      return Result.Success(statistics);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting achievement statistics for achievement {AchievementId}", request.AchievementId);
-      return GameGuild.Common.Result.Failure<AchievementStatisticsDto>(GameGuild.Common.Error.Failure("GetAchievementStatistics", "Failed to get achievement statistics"));
+      return Result.Failure<AchievementStatisticsDto>(Error.Failure("GetAchievementStatistics", "Failed to get achievement statistics"));
     }
   }
 }
@@ -649,7 +649,7 @@ public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievement
 /// <summary>
 /// Handler for checking achievement prerequisites
 /// </summary>
-public class CheckAchievementPrerequisitesQueryHandler : IQueryHandler<CheckAchievementPrerequisitesQuery, GameGuild.Common.Result<AchievementPrerequisiteCheckDto>> {
+public class CheckAchievementPrerequisitesQueryHandler : IQueryHandler<CheckAchievementPrerequisitesQuery, Result<AchievementPrerequisiteCheckDto>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<CheckAchievementPrerequisitesQueryHandler> _logger;
 
@@ -658,14 +658,14 @@ public class CheckAchievementPrerequisitesQueryHandler : IQueryHandler<CheckAchi
     _logger = logger;
   }
 
-  public async Task<GameGuild.Common.Result<AchievementPrerequisiteCheckDto>> Handle(CheckAchievementPrerequisitesQuery request, CancellationToken cancellationToken) {
+  public async Task<Result<AchievementPrerequisiteCheckDto>> Handle(CheckAchievementPrerequisitesQuery request, CancellationToken cancellationToken) {
     try {
       var achievement = await _context.Achievements
         .Where(a => a.Id == request.AchievementId)
         .FirstOrDefaultAsync(cancellationToken);
 
       if (achievement == null) {
-        return GameGuild.Common.Result.Failure<AchievementPrerequisiteCheckDto>(GameGuild.Common.Error.NotFound("Achievement", "Achievement not found"));
+        return Result.Failure<AchievementPrerequisiteCheckDto>(Error.NotFound("Achievement", "Achievement not found"));
       }
 
       var prerequisites = await _context.AchievementPrerequisites
@@ -700,11 +700,11 @@ public class CheckAchievementPrerequisitesQueryHandler : IQueryHandler<CheckAchi
         Prerequisites = prerequisiteStatuses,
       };
 
-      return GameGuild.Common.Result.Success(result);
+      return Result.Success(result);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error checking prerequisites for achievement {AchievementId} and user {UserId}", request.AchievementId, request.UserId);
-      return GameGuild.Common.Result.Failure<AchievementPrerequisiteCheckDto>(GameGuild.Common.Error.Failure("CheckAchievementPrerequisites", "Failed to check achievement prerequisites"));
+      return Result.Failure<AchievementPrerequisiteCheckDto>(Error.Failure("CheckAchievementPrerequisites", "Failed to check achievement prerequisites"));
     }
   }
 }

@@ -1,5 +1,5 @@
 using System.Text.Json;
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Programs;
@@ -13,7 +13,7 @@ namespace GameGuild.Modules.Programs;
 [Index(nameof(ProgramId), nameof(SortOrder))]
 [Index(nameof(ParentId), nameof(SortOrder))]
 [Index(nameof(IsRequired))]
-public class ProgramContent : Entity {
+public class ProgramContent : EntityBase {
   [Required]
   [ForeignKey(nameof(Program))]
   public Guid ProgramId { get; set; }

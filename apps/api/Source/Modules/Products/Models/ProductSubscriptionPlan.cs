@@ -1,11 +1,11 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Subscriptions.Models;
 
 
 namespace GameGuild.Modules.Products;
 
 /// <summary>
-/// Entity representing subscription plans for products
+/// EntityBase representing subscription plans for products
 /// Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality
 /// </summary>
 [Table("product_subscription_plans")]
@@ -15,7 +15,7 @@ namespace GameGuild.Modules.Products;
 [Index(nameof(IsDefault))]
 [Index(nameof(Price))]
 [Index(nameof(BillingInterval))]
-public class ProductSubscriptionPlan : Entity {
+public class ProductSubscriptionPlan : EntityBase {
   /// <summary>
   /// Foreign key to the Product entity
   /// </summary>

@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Resources;
 
 
@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Localization;
 /// Provides localization capabilities for resources
 /// Mirrors the TypeScript LocalizableResourceBase functionality
 /// </summary>
-public abstract class LocalizableResource : Entity {
+public abstract class LocalizableResource : EntityBase {
   /// <summary>
   /// Collection of localizations for this resource
   /// </summary>

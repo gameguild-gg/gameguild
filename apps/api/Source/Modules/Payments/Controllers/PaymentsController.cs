@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 using Microsoft.AspNetCore.Mvc;
 using IUserContext = GameGuild.Common.IUserContext;

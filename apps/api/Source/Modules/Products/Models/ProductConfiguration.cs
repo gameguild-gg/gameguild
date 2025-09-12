@@ -1,7 +1,7 @@
 ﻿namespace GameGuild.Modules.Products;
 
 /// <summary>
-/// Entity Framework configuration for Product entity
+/// EntityBase Framework configuration for Product entity
 /// </summary>
 internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product> {
   public void Configure(EntityTypeBuilder<Product> builder) {

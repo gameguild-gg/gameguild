@@ -1,6 +1,6 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
-using Error = GameGuild.Common.Error;
+using Error = Error;
 
 
 namespace GameGuild.Modules.UserAchievements;
@@ -8,7 +8,7 @@ namespace GameGuild.Modules.UserAchievements;
 /// <summary>
 /// Handler for awarding achievements to users
 /// </summary>
-public class AwardAchievementCommandHandler : IRequestHandler<AwardAchievementCommand, GameGuild.Common.Result<UserAchievement>> {
+public class AwardAchievementCommandHandler : IRequestHandler<AwardAchievementCommand, Result<UserAchievement>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<AwardAchievementCommandHandler> _logger;
   private readonly IPublisher _publisher;
@@ -22,7 +22,7 @@ public class AwardAchievementCommandHandler : IRequestHandler<AwardAchievementCo
     _publisher = publisher;
   }
 
-  public async Task<GameGuild.Common.Result<UserAchievement>> Handle(AwardAchievementCommand request, CancellationToken cancellationToken) {
+  public async Task<Result<UserAchievement>> Handle(AwardAchievementCommand request, CancellationToken cancellationToken) {
     try {
       // Get the achievement
       var achievement = await _context.Achievements
@@ -30,7 +30,7 @@ public class AwardAchievementCommandHandler : IRequestHandler<AwardAchievementCo
         .FirstOrDefaultAsync(a => a.Id == request.AchievementId && a.IsActive, cancellationToken);
 
       if (achievement == null) {
-        return GameGuild.Common.Result.Failure<UserAchievement>(Error.NotFound("Achievement", "Achievement not found or inactive"));
+        return Result.Failure<UserAchievement>(Error.NotFound("Achievement", "Achievement not found or inactive"));
       }
 
       // Check if user already has this achievement (for non-repeatable achievements)
@@ -40,7 +40,7 @@ public class AwardAchievementCommandHandler : IRequestHandler<AwardAchievementCo
             cancellationToken);
 
         if (existingAchievement != null) {
-          return GameGuild.Common.Result.Failure<UserAchievement>(Error.Conflict("UserAchievement", "User already has this achievement"));
+          return Result.Failure<UserAchievement>(Error.Conflict("UserAchievement", "User already has this achievement"));
         }
       }
 
@@ -121,11 +121,11 @@ public class AwardAchievementCommandHandler : IRequestHandler<AwardAchievementCo
 
       _logger.LogInformation("Awarded achievement {AchievementName} to user {UserId}", achievement.Name, request.UserId);
 
-      return GameGuild.Common.Result.Success(userAchievement);
+      return Result.Success(userAchievement);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error awarding achievement {AchievementId} to user {UserId}", request.AchievementId, request.UserId);
-      return GameGuild.Common.Result.Failure<UserAchievement>(Error.Failure("AwardAchievement", "Failed to award achievement"));
+      return Result.Failure<UserAchievement>(Error.Failure("AwardAchievement", "Failed to award achievement"));
     }
   }
 }
@@ -133,7 +133,7 @@ public class AwardAchievementCommandHandler : IRequestHandler<AwardAchievementCo
 /// <summary>
 /// Handler for updating achievement progress
 /// </summary>
-public class UpdateAchievementProgressCommandHandler : IRequestHandler<UpdateAchievementProgressCommand, GameGuild.Common.Result<AchievementProgress>> {
+public class UpdateAchievementProgressCommandHandler : IRequestHandler<UpdateAchievementProgressCommand, Result<AchievementProgress>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<UpdateAchievementProgressCommandHandler> _logger;
   private readonly IMediator _mediator;
@@ -150,13 +150,13 @@ public class UpdateAchievementProgressCommandHandler : IRequestHandler<UpdateAch
     _publisher = publisher;
   }
 
-  public async Task<GameGuild.Common.Result<AchievementProgress>> Handle(UpdateAchievementProgressCommand request, CancellationToken cancellationToken) {
+  public async Task<Result<AchievementProgress>> Handle(UpdateAchievementProgressCommand request, CancellationToken cancellationToken) {
     try {
       var achievement = await _context.Achievements
         .FirstOrDefaultAsync(a => a.Id == request.AchievementId && a.IsActive, cancellationToken);
 
       if (achievement == null) {
-        return GameGuild.Common.Result.Failure<AchievementProgress>(Error.NotFound("Achievement", "Achievement not found or inactive"));
+        return Result.Failure<AchievementProgress>(Error.NotFound("Achievement", "Achievement not found or inactive"));
       }
 
       // Get or create progress record
@@ -219,12 +219,12 @@ public class UpdateAchievementProgressCommandHandler : IRequestHandler<UpdateAch
       _logger.LogInformation("Updated achievement progress for user {UserId} on achievement {AchievementId}: {Progress}/{Target}",
         request.UserId, request.AchievementId, progress.CurrentProgress, progress.TargetProgress);
 
-      return GameGuild.Common.Result.Success(progress);
+      return Result.Success(progress);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error updating achievement progress for user {UserId} on achievement {AchievementId}",
         request.UserId, request.AchievementId);
-      return GameGuild.Common.Result.Failure<AchievementProgress>(Error.Failure("UpdateAchievementProgress", "Failed to update achievement progress"));
+      return Result.Failure<AchievementProgress>(Error.Failure("UpdateAchievementProgress", "Failed to update achievement progress"));
     }
   }
 }
@@ -253,7 +253,7 @@ public class RevokeAchievementCommandHandler : IRequestHandler<RevokeAchievement
         .FirstOrDefaultAsync(ua => ua.Id == request.UserAchievementId, cancellationToken);
 
       if (userAchievement == null) {
-        return GameGuild.Common.Result.Failure(Error.NotFound("UserAchievement", "User achievement not found"));
+        return Result.Failure(Error.NotFound("UserAchievement", "User achievement not found"));
       }
 
       var achievement = userAchievement.Achievement!;
@@ -288,11 +288,11 @@ public class RevokeAchievementCommandHandler : IRequestHandler<RevokeAchievement
       _logger.LogInformation("Revoked achievement {AchievementName} from user {UserId}. Reason: {Reason}",
         achievement.Name, userAchievement.UserId, request.Reason);
 
-      return GameGuild.Common.Result.Success();
+      return Result.Success();
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error revoking user achievement {UserAchievementId}", request.UserAchievementId);
-      return GameGuild.Common.Result.Failure(Error.Failure("RevokeAchievement", "Failed to revoke achievement"));
+      return Result.Failure(Error.Failure("RevokeAchievement", "Failed to revoke achievement"));
     }
   }
 }

@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Localization;
 using GameGuild.Modules.Tenants;
@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Resources;
 /// Abstract base class for resources that can have permissions and be localized.
 /// Provides common functionality for content resources like articles, courses, media, etc.
 /// </summary>
-public abstract class Resource : Entity, ILocalizable, ITenantable {
+public abstract class Resource : EntityBase, ILocalizable, ITenantable {
   /// <summary>
   /// The title/name of this resource
   /// </summary>
@@ -32,13 +32,13 @@ public abstract class Resource : Entity, ILocalizable, ITenantable {
 
   /// <summary>
   /// Navigation property to resource metadata
-  /// Entity Framework will automatically create the MetadataId foreign key
+  /// EntityBase Framework will automatically create the MetadataId foreign key
   /// </summary>
   public virtual ResourceMetadata? Metadata { get; set; }
 
   /// <summary>
   /// Navigation property to the tenant this resource belongs to (implements ITenantable)
-  /// Entity Framework will automatically create the TenantId foreign key
+  /// EntityBase Framework will automatically create the TenantId foreign key
   /// Null means the resource is global and accessible across all tenants
   /// </summary>
   public override Tenant? Tenant { get; set; }

@@ -1,16 +1,16 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Resources;
 
 
 namespace GameGuild.Modules.Localization;
 
 /// <summary>
-/// Entity representing supported languages for localization
+/// EntityBase representing supported languages for localization
 /// </summary>
 [Table("Languages")]
 [Index(nameof(Code), IsUnique = true)]
 [Index(nameof(Name))]
-public class Language : Entity {
+public class Language : EntityBase {
   /// <summary>
   /// Language code (e.g., 'en-US', 'pt-BR', 'es-ES')
   /// </summary>

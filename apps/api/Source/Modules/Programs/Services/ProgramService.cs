@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 using ProgramEntity = GameGuild.Modules.Programs.Program;

@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Posts.Models;
@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Posts.Models;
 /// Statistics and metrics for a post
 /// </summary>
 [Table("post_statistics")]
-public class PostStatistics : Entity {
+public class PostStatistics : EntityBase {
   /// <summary>
   /// The post this statistics belongs to
   /// </summary>

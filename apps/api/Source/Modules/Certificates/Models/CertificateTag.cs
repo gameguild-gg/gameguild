@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Tags.Models;
 
 
@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Certificates;
 [Index(nameof(CertificateId))]
 [Index(nameof(TagId))]
 [Index(nameof(RelationshipType))]
-public class CertificateTag : Entity {
+public class CertificateTag : EntityBase {
   public Guid CertificateId { get; set; }
 
   public Guid TagId { get; set; }

@@ -1,4 +1,3 @@
-using GameGuild.Common;
 using GameGuild.Modules.Users;
 
 
@@ -7,10 +6,10 @@ namespace GameGuild.Modules.Votes;
 /// <summary>
 /// Represents a vote (upvote/downvote) on a votable entity.
 /// </summary>
-public class Vote : Entity {
+public class Vote : EntityBase {
   /// <summary>
   /// Navigation property to the user who cast this vote
-  /// Entity Framework will automatically create the UserId foreign key
+  /// EntityBase Framework will automatically create the UserId foreign key
   /// </summary>
   [Required]
   public virtual User User { get; set; } = null!;

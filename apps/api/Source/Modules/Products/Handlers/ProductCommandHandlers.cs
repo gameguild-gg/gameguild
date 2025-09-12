@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 using IUserContext = GameGuild.Common.IUserContext;
@@ -150,7 +150,7 @@ public class ProductCommandHandlers :
       // Check permissions - only the creator can delete their product
       if (product.CreatorId != _userContext.UserId) { return new DeleteProductResult { Success = false, Error = "User does not have permission to delete this product" }; }
 
-      // Soft delete using Entity base class method
+      // Soft delete using EntityBase base class method
       product.SoftDelete();
 
       await _context.SaveChangesAsync(cancellationToken);

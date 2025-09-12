@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Users;
 
@@ -11,7 +11,7 @@ namespace GameGuild.Modules.Posts;
 [Table("post_content_references")]
 [Index(nameof(PostId))]
 [Index(nameof(ReferencedResourceId))]
-public class PostContentReference : Entity {
+public class PostContentReference : EntityBase {
   /// <summary>
   /// The post that contains this reference
   /// </summary>
@@ -46,7 +46,7 @@ public class PostContentReference : Entity {
 [Index(nameof(PostId))]
 [Index(nameof(AuthorId))]
 [Index(nameof(ParentCommentId))]
-public class PostComment : Entity {
+public class PostComment : EntityBase {
   /// <summary>
   /// The post this comment belongs to
   /// </summary>
@@ -93,7 +93,7 @@ public class PostComment : Entity {
 [Index(nameof(PostId))]
 [Index(nameof(UserId))]
 [Index(nameof(PostId), nameof(UserId), IsUnique = true)] // Prevent duplicate likes
-public class PostLike : Entity {
+public class PostLike : EntityBase {
   /// <summary>
   /// The post being liked
   /// </summary>

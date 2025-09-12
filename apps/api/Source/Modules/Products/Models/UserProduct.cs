@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.Modules.Users;
 
@@ -17,7 +17,7 @@ namespace GameGuild.Modules.Products;
 [Index(nameof(AcquisitionType))]
 [Index(nameof(AccessEndDate))]
 [Index(nameof(SubscriptionId))]
-public class UserProduct : Entity {
+public class UserProduct : EntityBase {
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>

@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
@@ -15,7 +15,7 @@ namespace GameGuild.Modules.Certificates;
 [Index(nameof(VerificationCode), IsUnique = true)]
 [Index(nameof(Status))]
 [Index(nameof(IssuedAt))]
-public class UserCertificate : Entity {
+public class UserCertificate : EntityBase {
   [Required][ForeignKey(nameof(User))] public Guid UserId { get; set; }
 
   [Required]

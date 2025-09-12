@@ -7,7 +7,7 @@ public class UserType : ObjectType<User> {
   protected override void Configure(IObjectTypeDescriptor<User> descriptor) {
     descriptor.Description("Represents a user in the CMS system with full EntityBase support.");
 
-    // Base Entity Properties
+    // Base EntityBase Properties
     descriptor.Field(u => u.Id).Type<IdType>().Description("The unique identifier for the user (UUID).");
 
     descriptor.Field(u => u.Version).Description("Version control for optimistic concurrency.");

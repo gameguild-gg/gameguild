@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Users;
 
 
@@ -13,7 +13,7 @@ namespace GameGuild.Modules.Programs;
 [Index(nameof(RevieweeId))]
 [Index(nameof(Status))]
 [Index(nameof(AssignedAt))]
-public class PeerReview : Entity {
+public class PeerReview : EntityBase {
   /// <summary>
   /// Foreign key to the content interaction being reviewed
   /// </summary>

@@ -1,8 +1,8 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.GameJams.Models {
-  public class JamJudgingCriteria : Entity {
+  public class JamJudgingCriteria : EntityBase {
     [Required] public Guid JamId { get; set; }
 
     [Required][MaxLength(100)] public string Name { get; set; } = string.Empty;

@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 
 namespace GameGuild.Source.Modules.Certificates.Dtos;
 

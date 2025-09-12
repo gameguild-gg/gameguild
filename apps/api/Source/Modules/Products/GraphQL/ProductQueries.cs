@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Contents;
 using ProductEntity = GameGuild.Modules.Products.Product;
 using ProductTypeEnum = GameGuild.Common.ProductType;

@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Users;
 
 
@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Programs;
 [Index(nameof(UserId))]
 [Index(nameof(ProgramId))]
 [Index(nameof(AddedAt))]
-public class ProgramWishlist : Entity {
+public class ProgramWishlist : EntityBase {
   public Guid UserId { get; set; }
 
   public Guid ProgramId { get; set; }

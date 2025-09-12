@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Certificates;
@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Certificates;
 [Index(nameof(BlockchainNetwork))]
 [Index(nameof(Status))]
 [Index(nameof(AnchoredAt))]
-public class CertificateBlockchainAnchor : Entity {
+public class CertificateBlockchainAnchor : EntityBase {
   public Guid CertificateId { get; set; }
 
   [Required][MaxLength(100)] public string BlockchainNetwork { get; set; } = string.Empty;

@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using Microsoft.AspNetCore.Mvc;
 
 

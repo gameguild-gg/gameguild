@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Certificates;
 
 
@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Tags.Models;
 [Index(nameof(Type))]
 [Index(nameof(ProficiencyLevel))]
 [Index(nameof(IsActive))]
-public class TagProficiency : Entity {
+public class TagProficiency : EntityBase {
   [Required][MaxLength(100)] public string Name { get; set; } = string.Empty;
 
   [MaxLength(500)] public string? Description { get; set; }

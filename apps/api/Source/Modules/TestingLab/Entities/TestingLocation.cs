@@ -1,9 +1,9 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.TestingLab;
 
-public class TestingLocation : Entity {
+public class TestingLocation : EntityBase {
   [Required][MaxLength(255)] public string Name { get; set; } = string.Empty;
 
   public string? Description { get; set; }

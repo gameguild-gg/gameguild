@@ -1,8 +1,8 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Teams.Models {
-  public class TeamMember : Entity {
+  public class TeamMember : EntityBase {
     public Guid TeamId { get; set; }
 
     public string UserId { get; set; } = string.Empty; // External user reference

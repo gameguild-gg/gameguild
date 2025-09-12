@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Users;
 
@@ -13,7 +13,7 @@ namespace GameGuild.Modules.Subscriptions.Models;
 [Index(nameof(CurrentPeriodEnd))]
 [Index(nameof(NextBillingAt))]
 [Index(nameof(ExternalSubscriptionId))]
-public class UserSubscription : Entity {
+public class UserSubscription : EntityBase {
   public Guid UserId { get; set; }
 
   public Guid SubscriptionPlanId { get; set; }

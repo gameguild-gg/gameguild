@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions;
@@ -178,7 +178,7 @@ public class ProjectCommandHandlers :
 
       if (request.SoftDelete) {
         // Mark as deleted but preserve data
-        // Use the DeletedAt property from the base Entity for soft delete
+        // Use the DeletedAt property from the base EntityBase for soft delete
         project.DeletedAt = DateTime.UtcNow;
         project.UpdatedAt = DateTime.UtcNow;
       }

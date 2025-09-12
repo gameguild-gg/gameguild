@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Permissions;
 using ProgramContentTypeEnum = GameGuild.Common.ProgramContentType;
 using VisibilityEnum = GameGuild.Common.Visibility;

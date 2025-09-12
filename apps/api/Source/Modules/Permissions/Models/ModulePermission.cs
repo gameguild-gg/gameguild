@@ -1,5 +1,5 @@
 using System.Text.Json;
-using GameGuild.Common;
+using GameGuild;
 
 namespace GameGuild.Modules.Permissions;
 
@@ -95,7 +95,7 @@ public class PermissionTemplate {
 /// User permission assignment - links user to specific resources with specific actions
 /// </summary>
 [Table("UserPermissions")]
-public class UserPermission : Entity {
+public class UserPermission : EntityBase {
   [Required]
   public Guid UserId { get; set; }
 
@@ -150,7 +150,7 @@ public class ModulePermissionDefinition {
 /// User role assignment - simple mapping of user to role template
 /// </summary>
 [Table("SimpleUserRoleAssignments")]
-public class SimpleUserRoleAssignment : Entity {
+public class SimpleUserRoleAssignment : EntityBase {
   [Required]
   public Guid UserId { get; set; }
 
@@ -173,7 +173,7 @@ public class SimpleUserRoleAssignment : Entity {
 /// Simple role template that defines what permissions a user gets
 /// </summary>
 [Table("RoleTemplates")]
-public class RoleTemplate : Entity {
+public class RoleTemplate : EntityBase {
   [Required]
   [MaxLength(100)]
   public string Name { get; set; } = string.Empty;

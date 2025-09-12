@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Programs;
@@ -11,7 +11,7 @@ namespace GameGuild.Modules.Programs;
 [Index(nameof(UserId))]
 [Index(nameof(Rating))]
 [Index(nameof(CreatedAt))]
-public class ProgramRating : Entity {
+public class ProgramRating : EntityBase {
   /// <summary>
   /// The ID of the program being rated
   /// </summary>

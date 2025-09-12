@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Users;
 
 
@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Payments;
 [Index(nameof(Status))]
 [Index(nameof(IsDefault))]
 [Index(nameof(ExternalId))]
-public class UserFinancialMethod : Entity {
+public class UserFinancialMethod : EntityBase {
   public Guid UserId { get; set; }
 
   public PaymentMethodType Type { get; set; }
