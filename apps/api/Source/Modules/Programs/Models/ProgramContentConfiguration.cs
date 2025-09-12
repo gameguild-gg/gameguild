@@ -1,7 +1,7 @@
 ﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
-/// Entity Framework configuration for ProgramContent entity
+/// EntityBase Framework configuration for ProgramContent entity
 /// </summary>
 public class ProgramContentConfiguration : IEntityTypeConfiguration<ProgramContent> {
   public void Configure(EntityTypeBuilder<ProgramContent> builder) {

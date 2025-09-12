@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Tenants;
@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Tenants;
 /// </summary>
 [Table("TenantUserGroups")]
 [Index(nameof(TenantId), nameof(Name), IsUnique = true)]
-public class TenantUserGroup : Entity {
+public class TenantUserGroup : EntityBase {
   /// <summary>
   /// Name of the user group (e.g., "Students", "Professors", "Administrators")
   /// </summary>

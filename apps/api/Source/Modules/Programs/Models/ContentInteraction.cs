@@ -1,11 +1,11 @@
 using System.Text.Json;
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Programs;
 
 [Table("content_interactions")]
-public class ContentInteraction : Entity {
+public class ContentInteraction : EntityBase {
   public Guid ProgramUserId { get; set; }
 
   public Guid ContentId { get; set; }

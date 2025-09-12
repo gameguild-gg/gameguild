@@ -11,7 +11,7 @@ public class TestingRequestType : ObjectType<TestingRequest> {
     descriptor.Name("TestingRequest");
     descriptor.Description("Represents a testing request in the TestingLab system.");
 
-    // Base Entity Properties
+    // Base EntityBase Properties
     descriptor.Field(p => p.Id)
               .Type<NonNullType<UuidType>>()
               .Description("The unique identifier for the testing request (UUID).");

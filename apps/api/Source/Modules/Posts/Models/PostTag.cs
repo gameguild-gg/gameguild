@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.Posts.Models;
@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Posts.Models;
 [Index(nameof(Name))]
 [Index(nameof(Category))]
 [Index(nameof(UsageCount))]
-public class PostTag : Entity {
+public class PostTag : EntityBase {
   /// <summary>
   /// Tag name (unique)
   /// </summary>
@@ -64,7 +64,7 @@ public class PostTag : Entity {
 [Table("post_tag_assignments")]
 [Index(nameof(PostId))]
 [Index(nameof(TagId))]
-public class PostTagAssignment : Entity {
+public class PostTagAssignment : EntityBase {
   /// <summary>
   /// The post
   /// </summary>

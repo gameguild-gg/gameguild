@@ -1,10 +1,10 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.TestingLab;
 
-public class SessionWaitlist : Entity {
+public class SessionWaitlist : EntityBase {
   /// <summary> Foreign key to the session </summary>
   public Guid SessionId { get; set; }
 

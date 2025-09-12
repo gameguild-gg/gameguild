@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.UserAchievements;
@@ -6,7 +6,7 @@ namespace GameGuild.Modules.UserAchievements;
 /// <summary>
 /// Command to create a new achievement
 /// </summary>
-public class CreateAchievementCommand : ICommand<GameGuild.Common.Result<Achievement>> {
+public class CreateAchievementCommand : ICommand<Result<Achievement>> {
   public string Name { get; set; } = string.Empty;
   public string? Description { get; set; }
   public string Category { get; set; } = string.Empty;
@@ -40,7 +40,7 @@ public class CreateAchievementLevelCommand {
 /// <summary>
 /// Command to update an existing achievement
 /// </summary>
-public class UpdateAchievementCommand : ICommand<GameGuild.Common.Result<Achievement>> {
+public class UpdateAchievementCommand : ICommand<Result<Achievement>> {
   public Guid AchievementId { get; set; }
   public string? Name { get; set; }
   public string? Description { get; set; }
@@ -68,7 +68,7 @@ public class DeleteAchievementCommand : ICommand<Result> {
 /// <summary>
 /// Command to award an achievement to a user
 /// </summary>
-public class AwardAchievementCommand : ICommand<GameGuild.Common.Result<UserAchievement>> {
+public class AwardAchievementCommand : ICommand<Result<UserAchievement>> {
   public Guid UserId { get; set; }
   public Guid AchievementId { get; set; }
   public int? Level { get; set; }
@@ -83,7 +83,7 @@ public class AwardAchievementCommand : ICommand<GameGuild.Common.Result<UserAchi
 /// <summary>
 /// Command to update achievement progress for a user
 /// </summary>
-public class UpdateAchievementProgressCommand : ICommand<GameGuild.Common.Result<AchievementProgress>> {
+public class UpdateAchievementProgressCommand : ICommand<Result<AchievementProgress>> {
   public Guid UserId { get; set; }
   public Guid AchievementId { get; set; }
   public int ProgressIncrement { get; set; } = 1;
@@ -104,7 +104,7 @@ public class RevokeAchievementCommand : ICommand<Result> {
 /// <summary>
 /// Command to bulk award achievements based on criteria
 /// </summary>
-public class BulkAwardAchievementCommand : ICommand<GameGuild.Common.Result<List<UserAchievement>>> {
+public class BulkAwardAchievementCommand : ICommand<Result<List<UserAchievement>>> {
   public Guid AchievementId { get; set; }
   public List<Guid>? UserIds { get; set; } // If null, applies to all eligible users
   public string? UserCriteria { get; set; } // JSON criteria for selecting users

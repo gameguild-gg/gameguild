@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Tenants;
 
@@ -11,7 +11,7 @@ namespace GameGuild.Modules.Certificates;
 [Index(nameof(ProductId))]
 [Index(nameof(CompletionPercentage))]
 [Index(nameof(TenantId))]
-public class Certificate : Entity, ITenantable {
+public class Certificate : EntityBase, ITenantable {
   [Required][MaxLength(255)] public string Name { get; set; } = string.Empty;
 
   public string Description { get; set; } = string.Empty;

@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using ProgramContentEntity = GameGuild.Modules.Programs.ProgramContent;
 
 
@@ -12,7 +12,7 @@ public class ProgramContentType : ObjectType<ProgramContent> {
     descriptor.Name("ProgramContent");
     descriptor.Description("Represents program content in the CMS system with hierarchical structure.");
 
-    // Base Entity Properties
+    // Base EntityBase Properties
     descriptor.Field(p => p.Id)
               .Type<NonNullType<UuidType>>()
               .Description("The unique identifier for the program content (UUID).");

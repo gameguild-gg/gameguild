@@ -1,11 +1,11 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Teams.Models;
 using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.TestingLab;
 
-public class SessionRegistration : Entity {
+public class SessionRegistration : EntityBase {
   /// <summary> Foreign key to the session </summary>
   public Guid SessionId { get; set; }
 

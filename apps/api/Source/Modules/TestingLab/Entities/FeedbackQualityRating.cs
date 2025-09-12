@@ -1,9 +1,9 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.TestingLab;
 
-internal class FeedbackQualityRating : Entity {
+internal class FeedbackQualityRating : EntityBase {
   [Required] public Guid FeedbackId { get; set; }
 
   [Required] public Guid RatedByUserId { get; set; }
