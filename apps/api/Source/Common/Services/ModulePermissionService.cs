@@ -5,7 +5,7 @@ using GameGuild.Modules.Permissions;
 namespace GameGuild.Common.Services;
 
 /// <summary>
-/// Implementation of module-based permission service using Entity Framework
+/// Implementation of module-based permission service using EntityBase Framework
 /// </summary>
 public class ModulePermissionService(ApplicationDbContext context, ILogger<ModulePermissionService> logger) : IModulePermissionService {
   private readonly ApplicationDbContext _context = context;

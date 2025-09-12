@@ -188,7 +188,7 @@ public static class InfrastructureConfiguration {
   }
 
   /// <summary>
-  /// Configures Entity Framework DbContext with the specified options.
+  /// Configures EntityBase Framework DbContext with the specified options.
   /// </summary>
   public static void ConfigureDbContext(DbContextOptionsBuilder options, DatabaseOptions dbOptions) {
     ArgumentNullException.ThrowIfNull(options);
