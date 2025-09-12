@@ -31,9 +31,7 @@ public class Vote : EntityBase {
   /// Calculated value of the vote based on type and weight
   /// Returns positive weight for upvotes and negative weight for downvotes
   /// </summary>
-  public int Value {
-    get => Type == VoteType.Upvote ? Weight : -Weight;
-  }
+  public int Value { get => Type == VoteType.Upvote ? Weight : -Weight; }
 
   /// <summary>
   /// Foreign key for the entity being voted on
