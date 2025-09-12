@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Payments;
 using GameGuild.Modules.Users;
 
@@ -6,7 +6,7 @@ using GameGuild.Modules.Users;
 namespace GameGuild.Modules.Products;
 
 /// <summary>
-/// Entity representing promotional codes for discounts
+/// EntityBase representing promotional codes for discounts
 /// Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality
 /// </summary>
 [Table("promo_codes")]
@@ -15,7 +15,7 @@ namespace GameGuild.Modules.Products;
 [Index(nameof(IsActive))]
 [Index(nameof(ValidFrom))]
 [Index(nameof(ValidUntil))]
-public class PromoCode : Entity {
+public class PromoCode : EntityBase {
   /// <summary>
   /// The promotional code that users enter
   /// </summary>

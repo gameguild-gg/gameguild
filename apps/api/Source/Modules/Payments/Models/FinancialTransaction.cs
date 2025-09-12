@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Users;
 
@@ -14,7 +14,7 @@ namespace GameGuild.Modules.Payments;
 [Index(nameof(PaymentMethodId))]
 [Index(nameof(ProcessedAt))]
 [Index(nameof(Amount))]
-public class FinancialTransaction : Entity {
+public class FinancialTransaction : EntityBase {
   /// <summary>
   /// User who initiated the transaction (payer)
   /// </summary>

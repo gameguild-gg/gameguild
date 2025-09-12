@@ -1,15 +1,15 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Localization;
 
 
 namespace GameGuild.Modules.Resources;
 
 /// <summary>
-/// Entity for storing localized content for resources
+/// EntityBase for storing localized content for resources
 /// Provides multi-language support for resources
 /// </summary>
 /// todo: field should be the one coming from the resource as a generic origin, and not a plain string. revisit the others entries too, such as resource type.
-public sealed class ResourceLocalization : Entity {
+public sealed class ResourceLocalization : EntityBase {
   // todo: apply polymorphism
   /// <summary>
   /// Type of the resource being localized
@@ -20,7 +20,7 @@ public sealed class ResourceLocalization : Entity {
 
   /// <summary>
   /// Navigation property to the language
-  /// Entity Framework will automatically create the LanguageId foreign key
+  /// EntityBase Framework will automatically create the LanguageId foreign key
   /// </summary>
   [Required]
   public Language Language { get; set; } = null!;

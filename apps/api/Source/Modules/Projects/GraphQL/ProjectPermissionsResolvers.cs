@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using GameGuild.Modules.Permissions;
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Authentication;
 
 namespace GameGuild.Modules.Projects {

@@ -1,7 +1,7 @@
 namespace GameGuild.Modules.UserAchievements;
 
 /// <summary>
-/// Entity configuration for Achievement
+/// EntityBase configuration for Achievement
 /// </summary>
 public class AchievementConfiguration : IEntityTypeConfiguration<Achievement> {
   public void Configure(EntityTypeBuilder<Achievement> builder) {
@@ -14,7 +14,7 @@ public class AchievementConfiguration : IEntityTypeConfiguration<Achievement> {
 }
 
 /// <summary>
-/// Entity configuration for AchievementPrerequisite
+/// EntityBase configuration for AchievementPrerequisite
 /// </summary>
 public class AchievementPrerequisiteConfiguration : IEntityTypeConfiguration<AchievementPrerequisite> {
   public void Configure(EntityTypeBuilder<AchievementPrerequisite> builder) {
@@ -27,7 +27,7 @@ public class AchievementPrerequisiteConfiguration : IEntityTypeConfiguration<Ach
 }
 
 /// <summary>
-/// Entity configuration for AchievementLevel
+/// EntityBase configuration for AchievementLevel
 /// </summary>
 public class AchievementLevelConfiguration : IEntityTypeConfiguration<AchievementLevel> {
   public void Configure(EntityTypeBuilder<AchievementLevel> builder) {

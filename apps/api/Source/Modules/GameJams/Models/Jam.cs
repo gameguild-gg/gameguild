@@ -1,8 +1,8 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.GameJams.Models {
-  public class Jam : Entity {
+  public class Jam : EntityBase {
     [Required][MaxLength(255)] public string Name { get; set; } = string.Empty;
 
     [Required][MaxLength(255)] public string Slug { get; set; } = string.Empty;

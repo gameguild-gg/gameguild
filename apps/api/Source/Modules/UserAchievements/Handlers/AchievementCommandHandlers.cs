@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
 
 
@@ -7,7 +7,7 @@ namespace GameGuild.Modules.UserAchievements;
 /// <summary>
 /// Handler for creating achievements
 /// </summary>
-public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievementCommand, GameGuild.Common.Result<Achievement>> {
+public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievementCommand, Result<Achievement>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<CreateAchievementCommandHandler> _logger;
   private readonly IPublisher _publisher;
@@ -21,7 +21,7 @@ public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievement
     _publisher = publisher;
   }
 
-  public async Task<GameGuild.Common.Result<Achievement>> Handle(CreateAchievementCommand request, CancellationToken cancellationToken) {
+  public async Task<Result<Achievement>> Handle(CreateAchievementCommand request, CancellationToken cancellationToken) {
     try {
       // Check if achievement with same name exists in tenant
       var existingAchievement = await _context.Achievements
@@ -29,7 +29,7 @@ public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievement
         .FirstOrDefaultAsync(cancellationToken);
 
       if (existingAchievement != null) {
-        return GameGuild.Common.Result.Failure<Achievement>(GameGuild.Common.Error.Conflict("Achievement", "Achievement with this name already exists"));
+        return Result.Failure<Achievement>(Error.Conflict("Achievement", "Achievement with this name already exists"));
       }
 
       var achievement = new Achievement {
@@ -94,11 +94,11 @@ public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievement
 
       _logger.LogInformation("Created achievement {AchievementName} with ID {AchievementId}", achievement.Name, achievement.Id);
 
-      return GameGuild.Common.Result.Success(achievement);
+      return Result.Success(achievement);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error creating achievement {AchievementName}", request.Name);
-      return GameGuild.Common.Result.Failure<Achievement>(GameGuild.Common.Error.Failure("CreateAchievement", "Failed to create achievement"));
+      return Result.Failure<Achievement>(Error.Failure("CreateAchievement", "Failed to create achievement"));
     }
   }
 }
@@ -106,7 +106,7 @@ public class CreateAchievementCommandHandler : IRequestHandler<CreateAchievement
 /// <summary>
 /// Handler for updating achievements
 /// </summary>
-public class UpdateAchievementCommandHandler : IRequestHandler<UpdateAchievementCommand, GameGuild.Common.Result<Achievement>> {
+public class UpdateAchievementCommandHandler : IRequestHandler<UpdateAchievementCommand, Result<Achievement>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<UpdateAchievementCommandHandler> _logger;
   private readonly IPublisher _publisher;
@@ -120,13 +120,13 @@ public class UpdateAchievementCommandHandler : IRequestHandler<UpdateAchievement
     _publisher = publisher;
   }
 
-  public async Task<GameGuild.Common.Result<Achievement>> Handle(UpdateAchievementCommand request, CancellationToken cancellationToken) {
+  public async Task<Result<Achievement>> Handle(UpdateAchievementCommand request, CancellationToken cancellationToken) {
     try {
       var achievement = await _context.Achievements
         .FirstOrDefaultAsync(a => a.Id == request.AchievementId, cancellationToken);
 
       if (achievement == null) {
-        return GameGuild.Common.Result.Failure<Achievement>(GameGuild.Common.Error.NotFound("Achievement", "Achievement not found"));
+        return Result.Failure<Achievement>(Error.NotFound("Achievement", "Achievement not found"));
       }
 
       // Update only provided fields
@@ -158,11 +158,11 @@ public class UpdateAchievementCommandHandler : IRequestHandler<UpdateAchievement
 
       _logger.LogInformation("Updated achievement {AchievementName} with ID {AchievementId}", achievement.Name, achievement.Id);
 
-      return GameGuild.Common.Result.Success(achievement);
+      return Result.Success(achievement);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error updating achievement {AchievementId}", request.AchievementId);
-      return GameGuild.Common.Result.Failure<Achievement>(GameGuild.Common.Error.Failure("UpdateAchievement", "Failed to update achievement"));
+      return Result.Failure<Achievement>(Error.Failure("UpdateAchievement", "Failed to update achievement"));
     }
   }
 }
@@ -190,7 +190,7 @@ public class DeleteAchievementCommandHandler : IRequestHandler<DeleteAchievement
         .FirstOrDefaultAsync(a => a.Id == request.AchievementId, cancellationToken);
 
       if (achievement == null) {
-        return GameGuild.Common.Result.Failure(GameGuild.Common.Error.NotFound("Achievement", "Achievement not found"));
+        return Result.Failure(Error.NotFound("Achievement", "Achievement not found"));
       }
 
       // Check if any users have earned this achievement
@@ -219,11 +219,11 @@ public class DeleteAchievementCommandHandler : IRequestHandler<DeleteAchievement
 
       _logger.LogInformation("Deleted achievement {AchievementName} with ID {AchievementId}", achievement.Name, achievement.Id);
 
-      return GameGuild.Common.Result.Success();
+      return Result.Success();
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error deleting achievement {AchievementId}", request.AchievementId);
-      return GameGuild.Common.Result.Failure(GameGuild.Common.Error.Failure("DeleteAchievement", "Failed to delete achievement"));
+      return Result.Failure(Error.Failure("DeleteAchievement", "Failed to delete achievement"));
     }
   }
 }

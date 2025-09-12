@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
 
 
@@ -8,11 +8,11 @@ namespace GameGuild.Modules.UserAchievements;
 /// Service interface for achievement management
 /// </summary>
 public interface IAchievementService {
-  Task<GameGuild.Common.Result<UserAchievement>> AwardAchievementAsync(Guid userId, Guid achievementId, string? context = null, Guid? tenantId = null);
-  Task<GameGuild.Common.Result<AchievementProgress>> UpdateProgressAsync(Guid userId, Guid achievementId, int progressIncrement = 1, string? context = null, Guid? tenantId = null);
-  Task<GameGuild.Common.Result<List<Achievement>>> GetEligibleAchievementsAsync(Guid userId, Guid? tenantId = null);
-  Task<GameGuild.Common.Result<bool>> CheckPrerequisitesAsync(Guid userId, Guid achievementId, Guid? tenantId = null);
-  Task<GameGuild.Common.Result<List<UserAchievement>>> GetUnnotifiedAchievementsAsync(Guid userId, Guid? tenantId = null);
+  Task<Result<UserAchievement>> AwardAchievementAsync(Guid userId, Guid achievementId, string? context = null, Guid? tenantId = null);
+  Task<Result<AchievementProgress>> UpdateProgressAsync(Guid userId, Guid achievementId, int progressIncrement = 1, string? context = null, Guid? tenantId = null);
+  Task<Result<List<Achievement>>> GetEligibleAchievementsAsync(Guid userId, Guid? tenantId = null);
+  Task<Result<bool>> CheckPrerequisitesAsync(Guid userId, Guid achievementId, Guid? tenantId = null);
+  Task<Result<List<UserAchievement>>> GetUnnotifiedAchievementsAsync(Guid userId, Guid? tenantId = null);
   Task<Result> MarkNotifiedAsync(Guid userAchievementId);
 }
 
@@ -36,7 +36,7 @@ public class AchievementService : IAchievementService {
   /// <summary>
   /// Award an achievement to a user
   /// </summary>
-  public async Task<GameGuild.Common.Result<UserAchievement>> AwardAchievementAsync(
+  public async Task<Result<UserAchievement>> AwardAchievementAsync(
     Guid userId,
     Guid achievementId,
     string? context = null,
@@ -53,14 +53,14 @@ public class AchievementService : IAchievementService {
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error awarding achievement {AchievementId} to user {UserId}", achievementId, userId);
-      return GameGuild.Common.Result.Failure<UserAchievement>(GameGuild.Common.Error.Failure("AwardAchievement", "Failed to award achievement"));
+      return Result.Failure<UserAchievement>(Error.Failure("AwardAchievement", "Failed to award achievement"));
     }
   }
 
   /// <summary>
   /// Update user's progress towards an achievement
   /// </summary>
-  public async Task<GameGuild.Common.Result<AchievementProgress>> UpdateProgressAsync(
+  public async Task<Result<AchievementProgress>> UpdateProgressAsync(
     Guid userId,
     Guid achievementId,
     int progressIncrement = 1,
@@ -79,14 +79,14 @@ public class AchievementService : IAchievementService {
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error updating progress for achievement {AchievementId} and user {UserId}", achievementId, userId);
-      return GameGuild.Common.Result.Failure<AchievementProgress>(GameGuild.Common.Error.Failure("UpdateProgress", "Failed to update achievement progress"));
+      return Result.Failure<AchievementProgress>(Error.Failure("UpdateProgress", "Failed to update achievement progress"));
     }
   }
 
   /// <summary>
   /// Get achievements that a user is eligible to earn
   /// </summary>
-  public async Task<GameGuild.Common.Result<List<Achievement>>> GetEligibleAchievementsAsync(Guid userId, Guid? tenantId = null) {
+  public async Task<Result<List<Achievement>>> GetEligibleAchievementsAsync(Guid userId, Guid? tenantId = null) {
     try {
       // Get all active achievements for the tenant
       var allAchievements = await _context.Achievements
@@ -115,40 +115,40 @@ public class AchievementService : IAchievementService {
         }
       }
 
-      return GameGuild.Common.Result.Success(eligibleAchievements);
+      return Result.Success(eligibleAchievements);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting eligible achievements for user {UserId}", userId);
-      return GameGuild.Common.Result.Failure<List<Achievement>>(GameGuild.Common.Error.Failure("GetEligibleAchievements", "Failed to get eligible achievements"));
+      return Result.Failure<List<Achievement>>(Error.Failure("GetEligibleAchievements", "Failed to get eligible achievements"));
     }
   }
 
   /// <summary>
   /// Check if a user meets the prerequisites for an achievement
   /// </summary>
-  public async Task<GameGuild.Common.Result<bool>> CheckPrerequisitesAsync(Guid userId, Guid achievementId, Guid? tenantId = null) {
+  public async Task<Result<bool>> CheckPrerequisitesAsync(Guid userId, Guid achievementId, Guid? tenantId = null) {
     try {
       var achievement = await _context.Achievements
         .Include(a => a.Prerequisites)
         .FirstOrDefaultAsync(a => a.Id == achievementId && a.TenantId == tenantId);
 
       if (achievement == null) {
-        return GameGuild.Common.Result.Failure<bool>(GameGuild.Common.Error.NotFound("Achievement", "Achievement not found"));
+        return Result.Failure<bool>(Error.NotFound("Achievement", "Achievement not found"));
       }
 
       var prerequisitesMet = await CheckPrerequisitesInternalAsync(userId, achievement, tenantId);
-      return GameGuild.Common.Result.Success(prerequisitesMet);
+      return Result.Success(prerequisitesMet);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error checking prerequisites for achievement {AchievementId} and user {UserId}", achievementId, userId);
-      return GameGuild.Common.Result.Failure<bool>(GameGuild.Common.Error.Failure("CheckPrerequisites", "Failed to check prerequisites"));
+      return Result.Failure<bool>(Error.Failure("CheckPrerequisites", "Failed to check prerequisites"));
     }
   }
 
   /// <summary>
   /// Get user's unnotified achievements
   /// </summary>
-  public async Task<GameGuild.Common.Result<List<UserAchievement>>> GetUnnotifiedAchievementsAsync(Guid userId, Guid? tenantId = null) {
+  public async Task<Result<List<UserAchievement>>> GetUnnotifiedAchievementsAsync(Guid userId, Guid? tenantId = null) {
     try {
       var unnotifiedAchievements = await _context.UserAchievements
         .Include(ua => ua.Achievement)
@@ -158,11 +158,11 @@ public class AchievementService : IAchievementService {
                      ua.IsCompleted)
         .ToListAsync();
 
-      return GameGuild.Common.Result.Success(unnotifiedAchievements);
+      return Result.Success(unnotifiedAchievements);
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting unnotified achievements for user {UserId}", userId);
-      return GameGuild.Common.Result.Failure<List<UserAchievement>>(GameGuild.Common.Error.Failure("GetUnnotifiedAchievements", "Failed to get unnotified achievements"));
+      return Result.Failure<List<UserAchievement>>(Error.Failure("GetUnnotifiedAchievements", "Failed to get unnotified achievements"));
     }
   }
 
@@ -180,7 +180,7 @@ public class AchievementService : IAchievementService {
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error marking achievement {UserAchievementId} as notified", userAchievementId);
-      return GameGuild.Common.Result.Failure(GameGuild.Common.Error.Failure("MarkAsNotified", "Failed to mark achievement as notified"));
+      return Result.Failure(Error.Failure("MarkAsNotified", "Failed to mark achievement as notified"));
     }
   }
 

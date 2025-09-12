@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Users;
 
 
@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Projects;
 /// <summary>
 /// Represents a version/release of a project
 /// </summary>
-public class ProjectVersion : Entity {
+public class ProjectVersion : EntityBase {
   /// <summary>
   /// The project this version belongs to
   /// </summary>

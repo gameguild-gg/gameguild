@@ -1,7 +1,7 @@
 ﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
-/// Entity Framework configuration for ActivityGrade entity
+/// EntityBase Framework configuration for ActivityGrade entity
 /// </summary>
 public class ActivityGradeConfiguration : IEntityTypeConfiguration<ActivityGrade> {
   public void Configure(EntityTypeBuilder<ActivityGrade> builder) {

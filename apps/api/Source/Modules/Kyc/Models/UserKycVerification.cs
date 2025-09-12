@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Users;
 
 
@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Kyc.Models;
 [Index(nameof(Status))]
 [Index(nameof(SubmittedAt))]
 [Index(nameof(ExternalVerificationId))]
-public class UserKycVerification : Entity {
+public class UserKycVerification : EntityBase {
   [Required] public Guid UserId { get; set; }
 
   [Required] public KycProvider Provider { get; set; }

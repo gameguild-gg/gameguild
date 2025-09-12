@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Payments;
 using GameGuild.Modules.Users;
 
@@ -6,11 +6,11 @@ using GameGuild.Modules.Users;
 namespace GameGuild.Modules.Products;
 
 /// <summary>
-/// Entity tracking when and how promo codes are used
+/// EntityBase tracking when and how promo codes are used
 /// Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality
 /// </summary>
 [Table("promo_code_uses")]
-public class PromoCodeUse : Entity {
+public class PromoCodeUse : EntityBase {
   /// <summary>
   /// Foreign key to the PromoCode entity
   /// </summary>

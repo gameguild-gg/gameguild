@@ -1,9 +1,9 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Modules.TestingLab;
 
-public class TestingFeedbackForm : Entity {
+public class TestingFeedbackForm : EntityBase {
   [Required] public Guid TestingRequestId { get; set; }
 
   [Required] public string FormSchema { get; set; } = string.Empty; // JSON

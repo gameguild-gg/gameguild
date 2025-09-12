@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
@@ -15,7 +15,7 @@ namespace GameGuild.Modules.Feedbacks;
 [Index(nameof(ProgramUserId))]
 [Index(nameof(OverallRating))]
 [Index(nameof(SubmittedAt))]
-public class ProgramFeedbackSubmission : Entity {
+public class ProgramFeedbackSubmission : EntityBase {
   public Guid UserId { get; set; }
 
   public Guid ProgramId { get; set; }

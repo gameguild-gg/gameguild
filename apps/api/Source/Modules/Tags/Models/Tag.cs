@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Tenants;
 
 
@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Tags.Models;
 [Index(nameof(IsActive))]
 [Index(nameof(TenantId))]
 [Index(nameof(Name), nameof(TenantId), IsUnique = true)]
-public class Tag : Entity, ITenantable {
+public class Tag : EntityBase, ITenantable {
   [Required][MaxLength(100)] public string Name { get; set; } = string.Empty;
 
   [MaxLength(500)] public string? Description { get; set; }

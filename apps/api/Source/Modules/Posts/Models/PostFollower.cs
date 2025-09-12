@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Users;
 
 
@@ -11,7 +11,7 @@ namespace GameGuild.Modules.Posts.Models;
 [Index(nameof(PostId))]
 [Index(nameof(UserId))]
 [Index(nameof(CreatedAt))]
-public class PostFollower : Entity {
+public class PostFollower : EntityBase {
   /// <summary>
   /// The post being followed
   /// </summary>

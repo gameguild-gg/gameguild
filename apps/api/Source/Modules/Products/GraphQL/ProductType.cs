@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants;
@@ -17,7 +17,7 @@ public class ProductType : ObjectType<Product> {
     descriptor.Name("Product");
     descriptor.Description("Represents a product in the CMS system with full EntityBase support and DAC permissions.");
 
-    // Base Entity Properties
+    // Base EntityBase Properties
     descriptor.Field(p => p.Id)
               .Type<NonNullType<UuidType>>()
               .Description("The unique identifier for the product (UUID).");

@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using UserModel = GameGuild.Modules.Users.User;
 
 
@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Tenants;
 /// </summary>
 [Table("TenantUserGroupMemberships")]
 [Index(nameof(UserId), nameof(UserGroupId), IsUnique = true)]
-public class TenantUserGroupMembership : Entity {
+public class TenantUserGroupMembership : EntityBase {
   /// <summary>
   /// ID of the user
   /// </summary>

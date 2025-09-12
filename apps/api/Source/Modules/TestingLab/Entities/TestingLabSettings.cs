@@ -1,11 +1,11 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Tenants;
 
 
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Represents the settings and configuration for the Testing Lab Can be global (TenantId = null) or tenant-specific (TenantId = specific value) </summary>
-public class TestingLabSettings : Entity, ITenantable {
+public class TestingLabSettings : EntityBase, ITenantable {
   /// <summary> Name of the testing lab </summary>
   [Required]
   [MaxLength(255)]

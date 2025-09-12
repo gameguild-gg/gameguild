@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Certificates;
 using GameGuild.Modules.Feedbacks;
 using GameGuild.Modules.Users;
@@ -17,7 +17,7 @@ namespace GameGuild.Modules.Programs;
 [Index(nameof(JoinedAt))]
 [Index(nameof(IsActive))]
 [Index(nameof(CompletionPercentage))]
-public class ProgramUser : Entity {
+public class ProgramUser : EntityBase {
   /// <summary>
   /// Foreign key to the User entity
   /// </summary>
