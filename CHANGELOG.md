@@ -1,3 +1,10 @@
+# [2.19.0](https://github.com/gameguild-gg/gameguild/compare/v2.18.0...v2.19.0) (2025-09-13)
+
+
+### Features
+
+* **web:** Adds game publishing course content ([cf9ad40](https://github.com/gameguild-gg/gameguild/commit/cf9ad40642d41cd8ee614b8eed7b6ce3e346e8cd))
+
 # [2.18.0](https://github.com/gameguild-gg/gameguild/compare/v2.17.2...v2.18.0) (2025-09-08)
 
 
