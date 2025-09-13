@@ -1,6 +1,6 @@
 # Dynamic data
 
-In C++'s Standard Library, we  have a bunch of data structures already implemented for us. But you need to understand what is inside it in order do ponder the best tool for your job. In this week we are going to cover Dynamic Arrays (equivalent of std::vector) and Linked Lists(equivalent of std::list) .
+In C++'s Standard Library, we  have a bunch of data structures already implemented for us. But you need to understand what is inside it in order do ponder the best tool for your job. In this week we are going to cover Dynamic Arrays (equivalent of std::vector) and Linked Lists(equivalent of std::list).
 
 ## Dynamic Arrays
 

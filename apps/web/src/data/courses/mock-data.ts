@@ -116,6 +116,27 @@ import intro2gproInterview from './intro2gpro/week01/interview-a-gamedev.md';
 import intro2gproGamedevTools from './intro2gpro/week02/gamedev-tools.md';
 import intro2gproGamedevCareers from './intro2gpro/week03/gamedev-careers.md';
 
+// Game Publishing Course Imports
+import gamePublishingSyllabus from './game-publishing/syllabus.md';
+import gamePublishingSteam from './game-publishing/desktop/steam/guide.md';
+import gamePublishingEpicGamesStore from './game-publishing/desktop/epic-games-store/guide.md';
+import gamePublishingGog from './game-publishing/desktop/gog/guide.md';
+import gamePublishingMicrosoftStore from './game-publishing/desktop/microsoft-store/guide.md';
+import gamePublishingPlaystationStore from './game-publishing/console/playstation-store/guide.md';
+import gamePublishingNintendoSwitch from './game-publishing/console/nintendo-store/guide.md';
+import gamePublishingXbox from './game-publishing/console/xbox/guide.md';
+import gamePublishingOculusQuest from './game-publishing/console/oculus-quest/guide.md';
+import gamePublishingGooglePlay from './game-publishing/mobile/google-play/guide.md';
+import gamePublishingAppStore from './game-publishing/mobile/app-store/guide.md';
+import gamePublishingPoki from './game-publishing/html5/poki/guide.md';
+import gamePublishingCrazyGames from './game-publishing/html5/crazy-games/guide.md';
+import gamePublishingSelfHosting from './game-publishing/html5/self-hosting/guide.md';
+import gamePublishingGithubPages from './game-publishing/html5/github-pages/guide.md';
+import gamePublishingFirebaseHosting from './game-publishing/html5/firebase-hosting/guide.md';
+import gamePublishingNetlify from './game-publishing/html5/netlify/guide.md';
+import gamePublishingVercel from './game-publishing/html5/vercel/guide.md';
+import gamePublishingItchio from './game-publishing/html5/itchio/guide.md';
+
 // Introduction to Game Programming syllabus content
 export const intro2gproSyllabusContent: ProgramContent = {
     id: 'intro2gpro-syllabus',
@@ -232,6 +253,446 @@ export const intro2gproGamedevCareersContent: ProgramContent = {
     slug: 'gamedev-careers',
 };
 
+// Game Publishing Course Content
+export const gamePublishingSyllabusContent: ProgramContent = {
+    id: 'game-publishing-syllabus',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Course Syllabus',
+    description: 'Game Publishing course syllabus and overview',
+    type: 0, // Page
+    body: gamePublishingSyllabus,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'syllabus',
+};
+
+export const gamePublishingSteamContent: ProgramContent = {
+    id: 'game-publishing-steam',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Steam Publishing Guide',
+    description: 'Complete guide to publishing games on Steam',
+    type: 0, // Page
+    body: gamePublishingSteam,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'steam',
+};
+
+export const gamePublishingEpicGamesStoreContent: ProgramContent = {
+    id: 'game-publishing-epic-games-store',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Epic Games Store Publishing Guide',
+    description: 'Guide to publishing games on Epic Games Store',
+    type: 0, // Page
+    body: gamePublishingEpicGamesStore,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 40,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'epic-games-store',
+};
+
+export const gamePublishingGogContent: ProgramContent = {
+    id: 'game-publishing-gog',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'GOG Publishing Guide',
+    description: 'Guide to publishing DRM-free games on GOG',
+    type: 0, // Page
+    body: gamePublishingGog,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 35,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'gog',
+};
+
+export const gamePublishingMicrosoftStoreContent: ProgramContent = {
+    id: 'game-publishing-microsoft-store',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Microsoft Store Publishing Guide',
+    description: 'Guide to publishing games on Microsoft Store',
+    type: 0, // Page
+    body: gamePublishingMicrosoftStore,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 40,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'microsoft-store',
+};
+
+
+
+export const gamePublishingGooglePlayContent: ProgramContent = {
+    id: 'game-publishing-google-play',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Google Play Store Publishing Guide',
+    description: 'Guide to publishing mobile games on Google Play Store',
+    type: 0, // Page
+    body: gamePublishingGooglePlay,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'google-play',
+};
+
+export const gamePublishingAppStoreContent: ProgramContent = {
+    id: 'game-publishing-app-store',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Apple App Store Publishing Guide',
+    description: 'Guide to publishing mobile games on Apple App Store',
+    type: 0, // Page
+    body: gamePublishingAppStore,
+    sortOrder: 8,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'app-store',
+};
+
+export const gamePublishingNintendoSwitchContent: ProgramContent = {
+    id: 'game-publishing-nintendo-switch',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Nintendo Store Publishing Guide',
+    description: 'Guide to publishing games on Nintendo Store',
+    type: 0, // Page
+    body: gamePublishingNintendoSwitch,
+    sortOrder: 9,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 50,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'nintendo-switch',
+};
+
+export const gamePublishingPlaystationStoreContent: ProgramContent = {
+    id: 'game-publishing-playstation-store',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'PlayStation Store Publishing Guide',
+    description: 'Guide to publishing games on PlayStation Store',
+    type: 0, // Page
+    body: gamePublishingPlaystationStore,
+    sortOrder: 9,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 50,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'playstation-store',
+};
+
+export const gamePublishingXboxContent: ProgramContent = {
+    id: 'game-publishing-xbox',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Xbox Store Publishing Guide',
+    description: 'Guide to publishing games on Xbox Store',
+    type: 0, // Page
+    body: gamePublishingXbox,
+    sortOrder: 10,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'xbox',
+};
+
+export const gamePublishingOculusQuestContent: ProgramContent = {
+    id: 'game-publishing-oculus-quest',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Oculus Quest Store Publishing Guide',
+    description: 'Guide to publishing VR games on Oculus Quest Store',
+    type: 0, // Page
+    body: gamePublishingOculusQuest,
+    sortOrder: 11,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 40,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'oculus-quest',
+};
+
+export const gamePublishingPokiContent: ProgramContent = {
+    id: 'game-publishing-poki',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Poki Publishing Guide',
+    description: 'Guide to publishing HTML5 games on Poki',
+    type: 0, // Page
+    body: gamePublishingPoki,
+    sortOrder: 12,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 35,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'poki',
+};
+
+export const gamePublishingCrazyGamesContent: ProgramContent = {
+    id: 'game-publishing-crazy-games',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'CrazyGames Publishing Guide',
+    description: 'Guide to publishing HTML5 games on CrazyGames',
+    type: 0, // Page
+    body: gamePublishingCrazyGames,
+    sortOrder: 13,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 35,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'crazy-games',
+};
+
+export const gamePublishingSelfHostingContent: ProgramContent = {
+    id: 'game-publishing-self-hosting',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Self-Hosting Games Guide',
+    description: 'Guide to self-hosting HTML5 games',
+    type: 0, // Page
+    body: gamePublishingSelfHosting,
+    sortOrder: 14,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 40,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'self-hosting',
+};
+
+export const gamePublishingGithubPagesContent: ProgramContent = {
+    id: 'game-publishing-github-pages',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'GitHub Pages Hosting Guide',
+    description: 'Guide to hosting HTML5 games on GitHub Pages',
+    type: 0, // Page
+    body: gamePublishingGithubPages,
+    sortOrder: 15,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'github-pages',
+};
+
+export const gamePublishingFirebaseHostingContent: ProgramContent = {
+    id: 'game-publishing-firebase-hosting',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Firebase Hosting Guide',
+    description: 'Guide to hosting HTML5 games on Firebase Hosting',
+    type: 0, // Page
+    body: gamePublishingFirebaseHosting,
+    sortOrder: 16,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 35,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'firebase-hosting',
+};
+
+export const gamePublishingNetlifyContent: ProgramContent = {
+    id: 'game-publishing-netlify',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Netlify Hosting Guide',
+    description: 'Guide to hosting HTML5 games on Netlify',
+    type: 0, // Page
+    body: gamePublishingNetlify,
+    sortOrder: 17,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'netlify',
+};
+
+export const gamePublishingVercelContent: ProgramContent = {
+    id: 'game-publishing-vercel',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Vercel Hosting Guide',
+    description: 'Guide to hosting HTML5 games on Vercel',
+    type: 0, // Page
+    body: gamePublishingVercel,
+    sortOrder: 18,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'vercel',
+};
+
+export const gamePublishingItchioContent: ProgramContent = {
+    id: 'game-publishing-itchio',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Itch.io Publishing Guide',
+    description: 'Guide to publishing HTML5 games on Itch.io',
+    type: 0, // Page
+    body: gamePublishingItchio,
+    sortOrder: 19,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'itchio',
+};
+
 // Mock user for the creator
 const mockUser = {
     id: '1',
@@ -257,6 +718,33 @@ export const pythonProgram: Program = {
     enrollmentDeadline: null,
     category: 0, // Programming
     difficulty: 0, // Beginner
+    visibility: 0, // Public
+    status: 1, // Published
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    programContents: [],
+    programUsers: [],
+    productPrograms: [],
+    certificates: [],
+    feedbackSubmissions: [],
+    programRatings: [],
+    programWishlists: [],
+};
+
+// Mock Game Publishing Program
+export const gamePublishingProgram: Program = {
+    id: 'game-publishing-program-1',
+    title: 'Game Publishing Mastery',
+    description: 'Comprehensive guide to publishing games across all major platforms including Steam, mobile app stores, console platforms, and web publishing solutions. Learn the complete publishing pipeline from submission to marketing.',
+    slug: 'game-publishing',
+    thumbnail: 'https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=400&h=300&fit=crop',
+    videoShowcaseUrl: null,
+    estimatedHours: 25,
+    enrollmentStatus: 0, // Open
+    maxEnrollments: null,
+    enrollmentDeadline: null,
+    category: 2, // Business
+    difficulty: 1, // Intermediate
     visibility: 0, // Public
     status: 1, // Published
     createdAt: '2023-01-01T00:00:00Z',
@@ -298,6 +786,23 @@ export const pythonProduct: Product = {
     promoCodes: [],
 };
 
+// Game Publishing Product
+export const gamePublishingProduct: Product = {
+    id: 'game-publishing-product-1',
+    name: 'Game Publishing Mastery',
+    title: 'Game Publishing Mastery',
+    description: 'Master the art of game publishing across multiple platforms including Steam, mobile stores, console platforms, and web distribution channels.',
+    slug: 'game-publishing',
+    imageUrl: 'https://placehold.co/400x225/1f2937/ffffff.png?text=Game+Publishing',
+    visibility: 0, // Public
+    status: 1, // Published
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    productPrograms: [],
+    userProducts: [],
+    promoCodes: [],
+};
+
 // Mock Product-Program relationship
 export const pythonProductProgram: ProductProgram = {
     id: 'python-product-program-1',
@@ -305,6 +810,17 @@ export const pythonProductProgram: ProductProgram = {
     product: pythonProduct,
     programId: pythonProgram.id!,
     program: pythonProgram,
+    sortOrder: 1,
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const gamePublishingProductProgram: ProductProgram = {
+    id: 'game-publishing-product-program-1',
+    productId: gamePublishingProduct.id!,
+    product: gamePublishingProduct,
+    programId: gamePublishingProgram.id!,
+    program: gamePublishingProgram,
     sortOrder: 1,
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
@@ -2904,6 +3420,12 @@ export const dsaFinalsContent: ProgramContent = {
     slug: 'finals',
 };
 
+// Program relationships
+
+
+
+
+
 // Update relationships
 pythonProgram.programContents = [
     pythonSyllabusContent,
@@ -3026,6 +3548,28 @@ intro2gproProgram.programContents = [
     intro2gproGamedevCareersContent,
 ];
 
+gamePublishingProgram.programContents = [
+    gamePublishingSyllabusContent,
+    gamePublishingSteamContent,
+    gamePublishingEpicGamesStoreContent,
+    gamePublishingGogContent,
+    gamePublishingMicrosoftStoreContent,
+    gamePublishingItchioContent,
+    gamePublishingPlaystationStoreContent,
+    gamePublishingNintendoSwitchContent,
+    gamePublishingXboxContent,
+    gamePublishingOculusQuestContent,
+    gamePublishingPokiContent,
+    gamePublishingCrazyGamesContent,
+    gamePublishingSelfHostingContent,
+    gamePublishingGithubPagesContent,
+    gamePublishingFirebaseHostingContent,
+    gamePublishingNetlifyContent,
+    gamePublishingVercelContent,
+    gamePublishingGooglePlayContent,
+    gamePublishingAppStoreContent,
+];
+
 // Set program references
 intro2gproSyllabusContent.program = intro2gproProgram;
 intro2gproExpectationsContent.program = intro2gproProgram;
@@ -3033,17 +3577,39 @@ intro2gproInterviewContent.program = intro2gproProgram;
 intro2gproGamedevToolsContent.program = intro2gproProgram;
 intro2gproGamedevCareersContent.program = intro2gproProgram;
 
+// Set game publishing program references
+gamePublishingSyllabusContent.program = gamePublishingProgram;
+gamePublishingSteamContent.program = gamePublishingProgram;
+gamePublishingEpicGamesStoreContent.program = gamePublishingProgram;
+gamePublishingGogContent.program = gamePublishingProgram;
+gamePublishingMicrosoftStoreContent.program = gamePublishingProgram;
+gamePublishingItchioContent.program = gamePublishingProgram;
+gamePublishingPlaystationStoreContent.program = gamePublishingProgram;
+gamePublishingNintendoSwitchContent.program = gamePublishingProgram;
+gamePublishingXboxContent.program = gamePublishingProgram;
+gamePublishingOculusQuestContent.program = gamePublishingProgram;
+gamePublishingPokiContent.program = gamePublishingProgram;
+gamePublishingCrazyGamesContent.program = gamePublishingProgram;
+gamePublishingSelfHostingContent.program = gamePublishingProgram;
+gamePublishingGithubPagesContent.program = gamePublishingProgram;
+gamePublishingFirebaseHostingContent.program = gamePublishingProgram;
+gamePublishingNetlifyContent.program = gamePublishingProgram;
+gamePublishingVercelContent.program = gamePublishingProgram;
+gamePublishingGooglePlayContent.program = gamePublishingProgram;
+gamePublishingAppStoreContent.program = gamePublishingProgram;
+
 pythonProduct.productPrograms = [pythonProductProgram];
 ai4gamesProduct.productPrograms = [ai4gamesProductProgram];
 ai4games2Product.productPrograms = [ai4games2ProductProgram];
 portfolioProduct.productPrograms = [portfolioProductProgram];
 dsaProduct.productPrograms = [dsaProductProgram];
 intro2gproProduct.productPrograms = [intro2gproProductProgram];
+gamePublishingProduct.productPrograms = [gamePublishingProductProgram];
 
 // Export all mock data
-export const mockPrograms: Program[] = [pythonProgram, ai4gamesProgram, ai4games2Program, portfolioProgram, dsaProgram, intro2gproProgram];
-export const mockProducts: Product[] = [pythonProduct, ai4gamesProduct, ai4games2Product, portfolioProduct, dsaProduct, intro2gproProduct];
-export const mockProductPrograms: ProductProgram[] = [pythonProductProgram, ai4gamesProductProgram, ai4games2ProductProgram, portfolioProductProgram, dsaProductProgram, intro2gproProductProgram];
+export const mockPrograms: Program[] = [pythonProgram, ai4gamesProgram, ai4games2Program, portfolioProgram, dsaProgram, intro2gproProgram, gamePublishingProgram];
+export const mockProducts: Product[] = [pythonProduct, ai4gamesProduct, ai4games2Product, portfolioProduct, dsaProduct, intro2gproProduct, gamePublishingProduct];
+export const mockProductPrograms: ProductProgram[] = [pythonProductProgram, ai4gamesProductProgram, ai4games2ProductProgram, portfolioProductProgram, dsaProductProgram, intro2gproProductProgram, gamePublishingProductProgram];
 export const mockProgramContents: ProgramContent[] = [
     // Python content
     pythonSyllabusContent,
@@ -3135,6 +3701,27 @@ export const mockProgramContents: ProgramContent[] = [
     intro2gproInterviewContent,
     intro2gproGamedevToolsContent,
     intro2gproGamedevCareersContent,
+    
+    // Game Publishing content
+    gamePublishingSyllabusContent,
+    gamePublishingSteamContent,
+    gamePublishingEpicGamesStoreContent,
+    gamePublishingGogContent,
+    gamePublishingMicrosoftStoreContent,
+    gamePublishingItchioContent,
+    gamePublishingPlaystationStoreContent,
+    gamePublishingNintendoSwitchContent,
+    gamePublishingXboxContent,
+    gamePublishingOculusQuestContent,
+    gamePublishingPokiContent,
+    gamePublishingCrazyGamesContent,
+    gamePublishingSelfHostingContent,
+    gamePublishingGithubPagesContent,
+    gamePublishingFirebaseHostingContent,
+    gamePublishingNetlifyContent,
+    gamePublishingVercelContent,
+    gamePublishingGooglePlayContent,
+    gamePublishingAppStoreContent,
 ];
 
 // Helper function to get program by slug

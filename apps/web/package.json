@@ -131,6 +131,8 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/reveal.js": "^5.2.0",
     "@types/speakingurl": "^13.0.6",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.4.1",
