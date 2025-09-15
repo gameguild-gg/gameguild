@@ -1,3 +1,4 @@
+using GameGuild.GraphQL;
 using GameGuild;
 using ValidationException = FluentValidation.ValidationException;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
@@ -23,7 +24,7 @@ public class AuthMutations {
   public async Task<SignInResponseDto> LocalSignUp(
     [GraphQLDescription("User registration details")]
     LocalSignUpRequestDto input,
-    [Service] IMediator mediator
+    [Service] GameGuild.CQRS.IMediator mediator
   ) {
     var command = new LocalSignUpCommand {
       Email = input.Email,
@@ -47,7 +48,7 @@ public class AuthMutations {
   public async Task<SignInResponseDto> LocalSignIn(
     [GraphQLDescription("User login credentials")]
     LocalSignInRequestDto input,
-    [Service] IMediator mediator
+    [Service] GameGuild.CQRS.IMediator mediator
   ) {
     var command = new LocalSignInCommand { Email = input.Email, Password = input.Password, TenantId = input.TenantId };
 
@@ -68,7 +69,7 @@ public class AuthMutations {
   public async Task<bool> RevokeToken(
     [GraphQLDescription("The refresh token to revoke")]
     string refreshToken,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IHttpContextAccessor contextAccessor
   ) {
     var ipAddress = contextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString() ?? "GraphQL";
@@ -95,7 +96,7 @@ public class AuthMutations {
     string refreshToken,
     [GraphQLDescription("Optional tenant ID")]
     Guid? tenantId,
-    [Service] IMediator mediator
+    [Service] GameGuild.CQRS.IMediator mediator
   ) {
     var command = new RefreshTokenCommand { RefreshToken = refreshToken, TenantId = tenantId };
 
@@ -113,7 +114,7 @@ public class AuthMutations {
   public async Task<Web3ChallengeResponseDto> GenerateWeb3Challenge(
     [GraphQLDescription("Web3 challenge request data")]
     Web3ChallengeRequestDto input,
-    [Service] IMediator mediator
+    [Service] GameGuild.CQRS.IMediator mediator
   ) {
     var command = new GenerateWeb3ChallengeCommand {
       WalletAddress = input.WalletAddress,
@@ -135,7 +136,7 @@ public class AuthMutations {
   public async Task<SignInResponseDto> VerifyWeb3Signature(
     [GraphQLDescription("Web3 signature verification data")]
     Web3VerifyRequestDto input,
-    [Service] IMediator mediator
+    [Service] GameGuild.CQRS.IMediator mediator
   ) {
     var command = new VerifyWeb3SignatureCommand {
       WalletAddress = input.WalletAddress,
