@@ -14,7 +14,7 @@ public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavio
 
   public async Task<TResponse> Handle(
     TRequest request,
-    RequestHandlerDelegate<TResponse> next,
+    RequestHandlerDelegateBase<TResponse> next,
     CancellationToken cancellationToken
   )
   {
