@@ -1,8 +1,12 @@
 # Sorting algorithms
 
+Sorting argorthims are a sequence of steps that are used to sort a list of elements in a particular order.
+
 ## Swap function
 
-```c++
+It is vital to the sorting algorithms that you have a swap function. It is used to swap two elements in the array.
+
+``` c++
 void swap(int &a, int &b) {
   int temp = a;
   a = b;
@@ -10,9 +14,15 @@ void swap(int &a, int &b) {
 }
 ```
 
+::: note
+
+Pay attention that in the swap, you need to use a third variable to swap them! If you don't, you will lose the value of the first variable.
+
+:::
+
 ## Bubble sort
 
-```c++
+``` c++
 void bubble_sort(int arr[], int n) {
   for (int i = 0; i < n; i++) { // n passes
     for (int j = 0; j < n - 1; j++) { // linear pass
@@ -39,7 +49,7 @@ Is it possible to optimize the bubble sort algorithm?
 
 ## Selection sort
 
-```c++
+``` c++
 void selection_sort(int arr[], int n) {
   for (int i = 0; i < n - 1; i++) { // n - 1 passes
     int min_index = i; // the minimum element in the unsorted part of the array
@@ -100,6 +110,6 @@ Table of differences between the sorting algorithms:
 
 | Algorithm | Best case | Worst case | Time complexity | Space complexity | Swaps |
 |-----------|-----------|------------|-----------------|------------------|-------|
-| Bubble    | O(n)      | O(n^2)     | O(N^2)          | O(1)             | O(n^2)|
-| Selection | O(n^2)    | O(n^2)     | O(N^2)          | O(1)             | O(n)  |
-| Insertion | O(n)      | O(n^2)     | O(N^2)          | O(1)             | O(n^2)|
+| Bubble    | O(n)      | O(n^2)     | O(n^2)          | O(1)             | O(n^2)|
+| Selection | O(n^2)    | O(n^2)     | O(n^2)          | O(1)             | O(n)  |
+| Insertion | O(n)      | O(n^2)     | O(n^2)          | O(1)             | O(n^2)|
