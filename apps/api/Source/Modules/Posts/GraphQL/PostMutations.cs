@@ -16,7 +16,7 @@ public class PostMutations {
   /// </summary>
   public async Task<Post> CreatePost(
     CreatePostInput input,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     CancellationToken cancellationToken = default
   ) {
     var command = new CreatePostCommand {
@@ -42,7 +42,7 @@ public class PostMutations {
   /// </summary>
   public async Task<Post> UpdatePost(
     UpdatePostInput input,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     CancellationToken cancellationToken = default
   ) {
     var command = new UpdatePostCommand {
@@ -65,7 +65,7 @@ public class PostMutations {
   /// </summary>
   public async Task<bool> DeletePost(
     Guid postId,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     CancellationToken cancellationToken = default
   ) {
     var command = new DeletePostCommand { PostId = postId };
@@ -83,7 +83,7 @@ public class PostMutations {
   public async Task<bool> TogglePostLike(
     Guid postId,
     Guid userId,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     string reactionType = "like",
     CancellationToken cancellationToken = default
   ) {
@@ -102,7 +102,7 @@ public class PostMutations {
   public async Task<Post> TogglePostPin(
     Guid postId,
     Guid userId,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     CancellationToken cancellationToken = default
   ) {
     var command = new TogglePostPinCommand { PostId = postId, UserId = userId };
@@ -139,7 +139,7 @@ public class PostMutations {
   /// </summary>
   public async Task<PostComment> AddComment(
     AddCommentInput input,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     CancellationToken cancellationToken = default
   ) {
     var command = new AddCommentCommand { PostId = input.PostId, AuthorId = input.UserId, Content = input.Content, ParentCommentId = input.ParentCommentId };

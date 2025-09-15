@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -10,8 +11,8 @@ namespace GameGuild.Modules.Posts;
 public class GetPostByIdHandler(
   ApplicationDbContext context,
   ILogger<GetPostByIdHandler> logger
-) : IQueryHandler<GetPostByIdQuery, Common.Result<Post>> {
-  public async Task<Common.Result<Post>> Handle(GetPostByIdQuery request, CancellationToken cancellationToken) {
+) : IQueryHandler<GetPostByIdQuery, Result<Post>> {
+  public async Task<Result<Post>> Handle(GetPostByIdQuery request, CancellationToken cancellationToken) {
     try {
       logger.LogInformation(
         "Getting post {PostId} for tenant {TenantId}",
@@ -67,8 +68,8 @@ public class UpdatePostHandler(
   ApplicationDbContext context,
   ILogger<UpdatePostHandler> logger,
   IDomainEventPublisher eventPublisher
-) : ICommandHandler<UpdatePostCommand, Common.Result<Post>> {
-  public async Task<Common.Result<Post>> Handle(UpdatePostCommand request, CancellationToken cancellationToken) {
+) : ICommandHandler<UpdatePostCommand, Result<Post>> {
+  public async Task<Result<Post>> Handle(UpdatePostCommand request, CancellationToken cancellationToken) {
     try {
       logger.LogInformation(
         "Updating post {PostId} by user {UserId}",
@@ -184,8 +185,8 @@ public class DeletePostHandler(
   ApplicationDbContext context,
   ILogger<DeletePostHandler> logger,
   IDomainEventPublisher eventPublisher
-) : ICommandHandler<DeletePostCommand, Common.Result<bool>> {
-  public async Task<Common.Result<bool>> Handle(DeletePostCommand request, CancellationToken cancellationToken) {
+) : ICommandHandler<DeletePostCommand, Result<bool>> {
+  public async Task<Result<bool>> Handle(DeletePostCommand request, CancellationToken cancellationToken) {
     try {
       logger.LogInformation(
         "Deleting post {PostId} by user {UserId}",
@@ -260,8 +261,8 @@ public class TogglePostLikeHandler(
   ApplicationDbContext context,
   ILogger<TogglePostLikeHandler> logger,
   IDomainEventPublisher eventPublisher
-) : ICommandHandler<TogglePostLikeCommand, Common.Result<bool>> {
-  public async Task<Common.Result<bool>> Handle(TogglePostLikeCommand request, CancellationToken cancellationToken) {
+) : ICommandHandler<TogglePostLikeCommand, Result<bool>> {
+  public async Task<Result<bool>> Handle(TogglePostLikeCommand request, CancellationToken cancellationToken) {
     try {
       logger.LogInformation(
         "Toggling like for post {PostId} by user {UserId}",

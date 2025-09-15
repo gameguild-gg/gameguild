@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Modules.Contents;
 
@@ -7,7 +8,7 @@ namespace GameGuild.Modules.Posts;
 /// <summary>
 /// Command to create a new post
 /// </summary>
-public class CreatePostCommand : ICommand<Common.Result<Post>> {
+public class CreatePostCommand : ICommand<Result<Post>> {
   public string Title { get; set; } = string.Empty;
 
   public string? Description { get; set; }
@@ -30,7 +31,7 @@ public class CreatePostCommand : ICommand<Common.Result<Post>> {
 /// <summary>
 /// Command to update an existing post
 /// </summary>
-public class UpdatePostCommand : ICommand<Common.Result<Post>> {
+public class UpdatePostCommand : ICommand<Result<Post>> {
   public Guid PostId { get; set; }
 
   public string? Title { get; set; }
@@ -51,7 +52,7 @@ public class UpdatePostCommand : ICommand<Common.Result<Post>> {
 /// <summary>
 /// Command to delete a post
 /// </summary>
-public class DeletePostCommand : ICommand<Common.Result<bool>> {
+public class DeletePostCommand : ICommand<Result<bool>> {
   public Guid PostId { get; set; }
 
   public Guid UserId { get; set; } // For authorization
@@ -60,7 +61,7 @@ public class DeletePostCommand : ICommand<Common.Result<bool>> {
 /// <summary>
 /// Command to like/unlike a post
 /// </summary>
-public class TogglePostLikeCommand : ICommand<Common.Result<bool>> {
+public class TogglePostLikeCommand : ICommand<Result<bool>> {
   public Guid PostId { get; set; }
 
   public Guid UserId { get; set; }
@@ -71,7 +72,7 @@ public class TogglePostLikeCommand : ICommand<Common.Result<bool>> {
 /// <summary>
 /// Command to add a comment to a post
 /// </summary>
-public class AddCommentCommand : ICommand<Common.Result<PostComment>> {
+public class AddCommentCommand : ICommand<Result<PostComment>> {
   public Guid PostId { get; set; }
 
   public Guid AuthorId { get; set; }
@@ -84,7 +85,7 @@ public class AddCommentCommand : ICommand<Common.Result<PostComment>> {
 /// <summary>
 /// Command to pin/unpin a post (admin only)
 /// </summary>
-public class TogglePostPinCommand : ICommand<Common.Result<Post>> {
+public class TogglePostPinCommand : ICommand<Result<Post>> {
   public Guid PostId { get; set; }
 
   public Guid UserId { get; set; } // For authorization

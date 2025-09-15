@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -11,7 +12,7 @@ public interface IPostAnnouncementService {
   /// <summary>
   /// Creates a system announcement post
   /// </summary>
-  Task<Common.Result<Post>> CreateSystemAnnouncementAsync(
+  Task<Result<Post>> CreateSystemAnnouncementAsync(
     Guid tenantId,
     Guid authorId,
     string title,
@@ -23,7 +24,7 @@ public interface IPostAnnouncementService {
   /// <summary>
   /// Creates a milestone celebration post
   /// </summary>
-  Task<Common.Result<Post>> CreateMilestoneCelebrationAsync(
+  Task<Result<Post>> CreateMilestoneCelebrationAsync(
     Guid tenantId,
     Guid authorId,
     string milestoneName,
@@ -35,7 +36,7 @@ public interface IPostAnnouncementService {
   /// <summary>
   /// Creates a community update post
   /// </summary>
-  Task<Common.Result<Post>> CreateCommunityUpdateAsync(
+  Task<Result<Post>> CreateCommunityUpdateAsync(
     Guid tenantId,
     Guid authorId,
     string title,
@@ -63,7 +64,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
     _logger = logger;
   }
 
-  public async Task<Common.Result<Post>> CreateSystemAnnouncementAsync(
+  public async Task<Result<Post>> CreateSystemAnnouncementAsync(
     Guid tenantId,
     Guid authorId,
     string title,
@@ -131,7 +132,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
     }
   }
 
-  public async Task<Common.Result<Post>> CreateMilestoneCelebrationAsync(
+  public async Task<Result<Post>> CreateMilestoneCelebrationAsync(
     Guid tenantId,
     Guid authorId,
     string milestoneName,
@@ -208,7 +209,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
     }
   }
 
-  public async Task<Common.Result<Post>> CreateCommunityUpdateAsync(
+  public async Task<Result<Post>> CreateCommunityUpdateAsync(
     Guid tenantId,
     Guid authorId,
     string title,
