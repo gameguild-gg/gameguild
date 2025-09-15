@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Users;
 [Table("Users")]
 [Index(nameof(Email), IsUnique = true)]
 [Index(nameof(Username), IsUnique = true)]
-public sealed class User : EntityBase
+public sealed class User : EntityBase, IUser
 {
   [Required][MaxLength(100)] public string Name { get; set; } = string.Empty;
 
