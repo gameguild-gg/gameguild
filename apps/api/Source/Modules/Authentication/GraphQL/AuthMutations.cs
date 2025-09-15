@@ -15,7 +15,7 @@ public class AuthMutations {
   /// Local sign-up mutation using CQRS pattern.
   /// </summary>
   /// <param name="input">Sign-up request data</param>
-  /// <param name="mediator">MediatR mediator for CQRS</param>
+  /// <param name="mediator">GameGuild.CQRS mediator for CQRS</param>
   /// <returns>Authentication response with tokens</returns>
   [GraphQLDescription("Registers a new user with email and password")]
   [Error<ValidationException>]
@@ -39,7 +39,7 @@ public class AuthMutations {
   /// Local sign-in mutation using CQRS pattern.
   /// </summary>
   /// <param name="input">Sign-in request data</param>
-  /// <param name="mediator">MediatR mediator for CQRS</param>
+  /// <param name="mediator">GameGuild.CQRS mediator for CQRS</param>
   /// <returns>Authentication response with tokens</returns>
   [GraphQLDescription("Authenticates a user with email and password")]
   [Error<UnauthorizedAccessException>]
@@ -58,7 +58,7 @@ public class AuthMutations {
   /// Revoke refresh token using CQRS pattern.
   /// </summary>
   /// <param name="refreshToken">The refresh token to revoke</param>
-  /// <param name="mediator">MediatR mediator for CQRS</param>
+  /// <param name="mediator">GameGuild.CQRS mediator for CQRS</param>
   /// <param name="contextAccessor">HTTP context for IP address</param>
   /// <returns>Success confirmation</returns>
   [GraphQLDescription("Revokes a refresh token to prevent future use")]
@@ -85,7 +85,7 @@ public class AuthMutations {
   /// </summary>
   /// <param name="refreshToken">The refresh token to use</param>
   /// <param name="tenantId">Optional tenant ID</param>
-  /// <param name="mediator">MediatR mediator for CQRS</param>
+  /// <param name="mediator">GameGuild.CQRS mediator for CQRS</param>
   /// <returns>New authentication response with refreshed tokens</returns>
   [GraphQLDescription("Refreshes access token using a valid refresh token")]
   [Error<UnauthorizedAccessException>]
@@ -106,7 +106,7 @@ public class AuthMutations {
   /// Generate Web3 challenge using CQRS pattern.
   /// </summary>
   /// <param name="input">Web3 challenge request</param>
-  /// <param name="mediator">MediatR mediator for CQRS</param>
+  /// <param name="mediator">GameGuild.CQRS mediator for CQRS</param>
   /// <returns>Challenge data for wallet signing</returns>
   [GraphQLDescription("Generates a challenge for Web3 wallet authentication")]
   [Error<ValidationException>]
@@ -127,7 +127,7 @@ public class AuthMutations {
   /// Verify Web3 signature using CQRS pattern.
   /// </summary>
   /// <param name="input">Web3 signature verification request</param>
-  /// <param name="mediator">MediatR mediator for CQRS</param>
+  /// <param name="mediator">GameGuild.CQRS mediator for CQRS</param>
   /// <returns>Authentication response with tokens</returns>
   [GraphQLDescription("Verifies a Web3 wallet signature and authenticates the user")]
   [Error<UnauthorizedAccessException>]

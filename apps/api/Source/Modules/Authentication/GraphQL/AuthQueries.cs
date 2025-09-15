@@ -15,7 +15,7 @@ public class AuthQueries {
   /// Gets user by email using CQRS pattern.
   /// </summary>
   /// <param name="email">The user's email address</param>
-  /// <param name="mediator">MediatR mediator for CQRS</param>
+  /// <param name="mediator">GameGuild.CQRS mediator for CQRS</param>
   /// <returns>The user if found, null otherwise</returns>
   [GraphQLDescription("Retrieves a user by their email address")]
   public async Task<User?> GetUserByEmail(
@@ -31,7 +31,7 @@ public class AuthQueries {
   /// <summary>
   /// Gets the current authenticated user's profile.
   /// </summary>
-  /// <param name="mediator">MediatR mediator for CQRS</param>
+  /// <param name="mediator">GameGuild.CQRS mediator for CQRS</param>
   /// <param name="contextAccessor">HTTP context accessor for user claims</param>
   /// <returns>The current user's profile</returns>
   [GraphQLDescription("Retrieves the current authenticated user's profile")]
@@ -52,7 +52,7 @@ public class AuthQueries {
   /// <summary>
   /// Gets the current authenticated user's complete profile information.
   /// </summary>
-  /// <param name="mediator">MediatR mediator for CQRS</param>
+  /// <param name="mediator">GameGuild.CQRS mediator for CQRS</param>
   /// <param name="contextAccessor">HTTP context accessor for user claims</param>
   /// <returns>The current user's complete profile</returns>
   [GraphQLDescription("Retrieves the current authenticated user's complete profile")]
@@ -75,7 +75,7 @@ public class AuthQueries {
   /// Validates if an email is available for registration.
   /// </summary>
   /// <param name="email">The email to validate</param>
-  /// <param name="mediator">MediatR mediator for CQRS</param>
+  /// <param name="mediator">GameGuild.CQRS mediator for CQRS</param>
   /// <returns>True if email is available, false otherwise</returns>
   [GraphQLDescription("Checks if an email address is available for registration")]
   public async Task<bool> IsEmailAvailable(
