@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Modules.Contents;
 
 
@@ -6,7 +7,8 @@ namespace GameGuild.Modules.Products;
 /// <summary>
 /// Command to create a new product
 /// </summary>
-public record CreateProductCommand : IRequest<CreateProductResult> {
+public record CreateProductCommand : IRequest<CreateProductResult>
+{
   public string Name { get; init; } = string.Empty;
 
   public string? Description { get; init; }
@@ -39,7 +41,8 @@ public record CreateProductCommand : IRequest<CreateProductResult> {
 /// <summary>
 /// Command to update an existing product
 /// </summary>
-public record UpdateProductCommand : IRequest<UpdateProductResult> {
+public record UpdateProductCommand : IRequest<UpdateProductResult>
+{
   public Guid ProductId { get; init; }
 
   public string? Name { get; init; }
@@ -72,7 +75,8 @@ public record UpdateProductCommand : IRequest<UpdateProductResult> {
 /// <summary>
 /// Command to delete a product
 /// </summary>
-public record DeleteProductCommand : IRequest<DeleteProductResult> {
+public record DeleteProductCommand : IRequest<DeleteProductResult>
+{
   public Guid ProductId { get; init; }
 
   public Guid DeletedBy { get; init; }
@@ -83,7 +87,8 @@ public record DeleteProductCommand : IRequest<DeleteProductResult> {
 /// <summary>
 /// Command to add pricing to a product
 /// </summary>
-public record AddProductPricingCommand : IRequest<AddProductPricingResult> {
+public record AddProductPricingCommand : IRequest<AddProductPricingResult>
+{
   public Guid ProductId { get; init; }
 
   public decimal Price { get; init; }
@@ -104,7 +109,8 @@ public record AddProductPricingCommand : IRequest<AddProductPricingResult> {
 /// <summary>
 /// Command to grant user access to a product
 /// </summary>
-public record GrantUserProductAccessCommand : IRequest<GrantUserProductAccessResult> {
+public record GrantUserProductAccessCommand : IRequest<GrantUserProductAccessResult>
+{
   public Guid UserId { get; init; }
 
   public Guid ProductId { get; init; }
@@ -123,7 +129,8 @@ public record GrantUserProductAccessCommand : IRequest<GrantUserProductAccessRes
 /// <summary>
 /// Command to revoke user access to a product
 /// </summary>
-public record RevokeUserProductAccessCommand : IRequest<RevokeUserProductAccessResult> {
+public record RevokeUserProductAccessCommand : IRequest<RevokeUserProductAccessResult>
+{
   public Guid UserId { get; init; }
 
   public Guid ProductId { get; init; }
@@ -136,7 +143,8 @@ public record RevokeUserProductAccessCommand : IRequest<RevokeUserProductAccessR
 /// <summary>
 /// Command to publish a product
 /// </summary>
-public record PublishProductCommand : IRequest<PublishProductResult> {
+public record PublishProductCommand : IRequest<PublishProductResult>
+{
   public Guid ProductId { get; init; }
 
   public Guid PublishedBy { get; init; }
@@ -145,7 +153,8 @@ public record PublishProductCommand : IRequest<PublishProductResult> {
 /// <summary>
 /// Command to unpublish a product
 /// </summary>
-public record UnpublishProductCommand : IRequest<UnpublishProductResult> {
+public record UnpublishProductCommand : IRequest<UnpublishProductResult>
+{
   public Guid ProductId { get; init; }
 
   public Guid UnpublishedBy { get; init; }
@@ -154,7 +163,8 @@ public record UnpublishProductCommand : IRequest<UnpublishProductResult> {
 /// <summary>
 /// Command to archive a product
 /// </summary>
-public record ArchiveProductCommand : IRequest<ArchiveProductResult> {
+public record ArchiveProductCommand : IRequest<ArchiveProductResult>
+{
   public Guid ProductId { get; init; }
 
   public Guid ArchivedBy { get; init; }
@@ -163,7 +173,8 @@ public record ArchiveProductCommand : IRequest<ArchiveProductResult> {
 /// <summary>
 /// Command to set product visibility
 /// </summary>
-public record SetProductVisibilityCommand : IRequest<SetProductVisibilityResult> {
+public record SetProductVisibilityCommand : IRequest<SetProductVisibilityResult>
+{
   public Guid ProductId { get; init; }
 
   public AccessLevel Visibility { get; init; }
@@ -174,7 +185,8 @@ public record SetProductVisibilityCommand : IRequest<SetProductVisibilityResult>
 /// <summary>
 /// Command to add product to bundle
 /// </summary>
-public record AddToBundleCommand : IRequest<AddToBundleResult> {
+public record AddToBundleCommand : IRequest<AddToBundleResult>
+{
   public Guid BundleId { get; init; }
 
   public Guid ProductId { get; init; }
@@ -185,7 +197,8 @@ public record AddToBundleCommand : IRequest<AddToBundleResult> {
 /// <summary>
 /// Command to remove product from bundle
 /// </summary>
-public record RemoveFromBundleCommand : IRequest<RemoveFromBundleResult> {
+public record RemoveFromBundleCommand : IRequest<RemoveFromBundleResult>
+{
   public Guid BundleId { get; init; }
 
   public Guid ProductId { get; init; }
@@ -196,7 +209,8 @@ public record RemoveFromBundleCommand : IRequest<RemoveFromBundleResult> {
 /// <summary>
 /// Command to set product pricing
 /// </summary>
-public record SetPricingCommand : IRequest<SetPricingResult> {
+public record SetPricingCommand : IRequest<SetPricingResult>
+{
   public Guid ProductId { get; init; }
 
   public decimal Price { get; init; }
@@ -215,7 +229,8 @@ public record SetPricingCommand : IRequest<SetPricingResult> {
 /// <summary>
 /// Command to create subscription plan
 /// </summary>
-public record CreateSubscriptionPlanCommand : IRequest<CreateSubscriptionPlanResult> {
+public record CreateSubscriptionPlanCommand : IRequest<CreateSubscriptionPlanResult>
+{
   public string Name { get; init; } = string.Empty;
 
   public string? Description { get; init; }
@@ -238,7 +253,8 @@ public record CreateSubscriptionPlanCommand : IRequest<CreateSubscriptionPlanRes
 /// <summary>
 /// Command to grant user access to product
 /// </summary>
-public record GrantUserAccessCommand : IRequest<GrantUserAccessResult> {
+public record GrantUserAccessCommand : IRequest<GrantUserAccessResult>
+{
   public Guid UserId { get; init; }
 
   public Guid ProductId { get; init; }
@@ -253,7 +269,8 @@ public record GrantUserAccessCommand : IRequest<GrantUserAccessResult> {
 /// <summary>
 /// Command to revoke user access to product
 /// </summary>
-public record RevokeUserAccessCommand : IRequest<RevokeUserAccessResult> {
+public record RevokeUserAccessCommand : IRequest<RevokeUserAccessResult>
+{
   public Guid UserId { get; init; }
 
   public Guid ProductId { get; init; }
@@ -266,7 +283,8 @@ public record RevokeUserAccessCommand : IRequest<RevokeUserAccessResult> {
 /// <summary>
 /// Result types for product commands
 /// </summary>
-public record CreateProductResult {
+public record CreateProductResult
+{
   public bool Success { get; init; }
 
   public Product? Product { get; init; }
@@ -274,7 +292,8 @@ public record CreateProductResult {
   public string? Error { get; init; }
 }
 
-public record UpdateProductResult {
+public record UpdateProductResult
+{
   public bool Success { get; init; }
 
   public Product? Product { get; init; }
@@ -282,13 +301,15 @@ public record UpdateProductResult {
   public string? Error { get; init; }
 }
 
-public record DeleteProductResult {
+public record DeleteProductResult
+{
   public bool Success { get; init; }
 
   public string? Error { get; init; }
 }
 
-public record AddProductPricingResult {
+public record AddProductPricingResult
+{
   public bool Success { get; init; }
 
   public ProductPricing? Pricing { get; init; }
@@ -296,7 +317,8 @@ public record AddProductPricingResult {
   public string? Error { get; init; }
 }
 
-public record GrantUserProductAccessResult {
+public record GrantUserProductAccessResult
+{
   public bool Success { get; init; }
 
   public UserProduct? UserProduct { get; init; }
@@ -304,21 +326,15 @@ public record GrantUserProductAccessResult {
   public string? Error { get; init; }
 }
 
-public record RevokeUserProductAccessResult {
+public record RevokeUserProductAccessResult
+{
   public bool Success { get; init; }
 
   public string? Error { get; init; }
 }
 
-public record PublishProductResult {
-  public bool Success { get; init; }
-
-  public Product? Product { get; init; }
-
-  public string? Error { get; init; }
-}
-
-public record UnpublishProductResult {
+public record PublishProductResult
+{
   public bool Success { get; init; }
 
   public Product? Product { get; init; }
@@ -326,7 +342,8 @@ public record UnpublishProductResult {
   public string? Error { get; init; }
 }
 
-public record ArchiveProductResult {
+public record UnpublishProductResult
+{
   public bool Success { get; init; }
 
   public Product? Product { get; init; }
@@ -334,7 +351,8 @@ public record ArchiveProductResult {
   public string? Error { get; init; }
 }
 
-public record SetProductVisibilityResult {
+public record ArchiveProductResult
+{
   public bool Success { get; init; }
 
   public Product? Product { get; init; }
@@ -342,19 +360,31 @@ public record SetProductVisibilityResult {
   public string? Error { get; init; }
 }
 
-public record AddToBundleResult {
+public record SetProductVisibilityResult
+{
+  public bool Success { get; init; }
+
+  public Product? Product { get; init; }
+
+  public string? Error { get; init; }
+}
+
+public record AddToBundleResult
+{
   public bool Success { get; init; }
 
   public string? Error { get; init; }
 }
 
-public record RemoveFromBundleResult {
+public record RemoveFromBundleResult
+{
   public bool Success { get; init; }
 
   public string? Error { get; init; }
 }
 
-public record SetPricingResult {
+public record SetPricingResult
+{
   public bool Success { get; init; }
 
   public ProductPricing? Pricing { get; init; }
@@ -362,7 +392,8 @@ public record SetPricingResult {
   public string? Error { get; init; }
 }
 
-public record CreateSubscriptionPlanResult {
+public record CreateSubscriptionPlanResult
+{
   public bool Success { get; init; }
 
   public ProductSubscriptionPlan? Plan { get; init; }
@@ -370,7 +401,8 @@ public record CreateSubscriptionPlanResult {
   public string? Error { get; init; }
 }
 
-public record GrantUserAccessResult {
+public record GrantUserAccessResult
+{
   public bool Success { get; init; }
 
   public UserProduct? UserProduct { get; init; }
@@ -378,7 +410,8 @@ public record GrantUserAccessResult {
   public string? Error { get; init; }
 }
 
-public record RevokeUserAccessResult {
+public record RevokeUserAccessResult
+{
   public bool Success { get; init; }
 
   public string? Error { get; init; }
