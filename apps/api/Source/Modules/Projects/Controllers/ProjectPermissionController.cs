@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Common.Attributes;
 using GameGuild.Common.Services;

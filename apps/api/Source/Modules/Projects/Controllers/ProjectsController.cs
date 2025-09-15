@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Modules.Contents;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
@@ -14,13 +15,13 @@ namespace GameGuild.Modules.Projects;
 [Route("api/[controller]")]
 [Authorize]
 public class ProjectsController : ControllerBase {
-  private readonly IMediator _mediator;
+  private readonly GameGuild.CQRS.IMediator _mediator;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;
   private readonly ILogger<ProjectsController> _logger;
 
   public ProjectsController(
-    IMediator mediator,
+    GameGuild.CQRS.IMediator mediator,
     IUserContext userContext,
     ITenantContext tenantContext,
     ILogger<ProjectsController> logger
