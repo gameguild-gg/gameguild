@@ -1,5 +1,4 @@
 using GameGuild.GraphQL;
-using GameGuild;
 using GameGuild.Modules.Permissions;
 using ProgramContentEntity = GameGuild.Modules.Programs.ProgramContent;
 

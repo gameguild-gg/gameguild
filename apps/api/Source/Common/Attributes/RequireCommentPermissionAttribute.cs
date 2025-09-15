@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Results;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions;

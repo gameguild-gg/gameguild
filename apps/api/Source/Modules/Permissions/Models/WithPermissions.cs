@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using GameGuild;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 

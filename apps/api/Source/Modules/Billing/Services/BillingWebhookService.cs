@@ -1,10 +1,8 @@
 using System.Text.Json;
 using GameGuild.Database;
 using GameGuild.Modules.Billing.Models;
-using GameGuild.Modules.Payments.Services;
 using GameGuild.Modules.Subscriptions.Services;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Billing.Services;
 

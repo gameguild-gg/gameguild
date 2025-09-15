@@ -1,8 +1,7 @@
 using System.Text.Json;
 using GameGuild.Database;
 using GameGuild.Modules.Resources.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Resources.Services;
 

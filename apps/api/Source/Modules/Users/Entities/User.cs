@@ -1,4 +1,3 @@
-using GameGuild;
 using GameGuild.Modules.Credentials;
 
 

@@ -1,4 +1,3 @@
-using GameGuild.CQRS;
 using GameGuild.Common.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

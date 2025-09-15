@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild;
 using GameGuild.Modules.Permissions;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 using Microsoft.AspNetCore.Mvc;

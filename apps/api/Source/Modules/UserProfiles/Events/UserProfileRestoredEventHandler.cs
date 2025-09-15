@@ -1,7 +1,4 @@
-﻿using GameGuild;
-
-
-namespace GameGuild.Modules.UserProfiles;
+﻿namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Handles UserProfileRestoredEvent - manages restoration and notifications

@@ -1,7 +1,4 @@
-﻿using GameGuild;
-
-
-namespace GameGuild.Modules.Programs;
+﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Interface for program content management services

@@ -1,6 +1,3 @@
-using GameGuild.CQRS;
-using GameGuild;
-using GameGuild.Common.Attributes;
 using GameGuild.Common.Services;
 using GameGuild.Modules.Permissions;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;

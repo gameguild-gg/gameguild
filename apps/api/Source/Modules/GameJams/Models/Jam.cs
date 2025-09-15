@@ -1,6 +1,3 @@
-using GameGuild;
-
-
 namespace GameGuild.Modules.GameJams.Models {
   public class Jam : EntityBase {
     [Required][MaxLength(255)] public string Name { get; set; } = string.Empty;
