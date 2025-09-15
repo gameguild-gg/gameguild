@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -8,7 +9,7 @@ namespace GameGuild.Modules.Payments;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class PaymentController(IMediator mediator) : ControllerBase {
+public class PaymentController(GameGuild.CQRS.IMediator mediator) : ControllerBase {
   /// <summary>
   /// Get current user's payment methods
   /// </summary>

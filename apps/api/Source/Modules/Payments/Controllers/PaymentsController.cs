@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 using Microsoft.AspNetCore.Mvc;
@@ -13,13 +14,13 @@ namespace GameGuild.Modules.Payments;
 [Route("api/[controller]")]
 [Authorize]
 public class PaymentsController : ControllerBase {
-  private readonly IMediator _mediator;
+  private readonly GameGuild.CQRS.IMediator _mediator;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;
   private readonly ILogger<PaymentsController> _logger;
 
   public PaymentsController(
-    IMediator mediator,
+    GameGuild.CQRS.IMediator mediator,
     IUserContext userContext,
     ITenantContext tenantContext,
     ILogger<PaymentsController> logger
