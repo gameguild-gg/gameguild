@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Common.Authorization;
 using GameGuild.Modules.Permissions;
 using Microsoft.AspNetCore.Mvc;
