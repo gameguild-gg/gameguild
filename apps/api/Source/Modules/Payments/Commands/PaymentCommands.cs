@@ -1,9 +1,12 @@
+using GameGuild.CQRS;
+
 namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// Command to create a payment intent
 /// </summary>
-public record CreatePaymentCommand : IRequest<CreatePaymentResult> {
+public record CreatePaymentCommand : IRequest<CreatePaymentResult>
+{
   public Guid UserId { get; init; }
 
   public Guid? ProductId { get; init; }
@@ -24,7 +27,8 @@ public record CreatePaymentCommand : IRequest<CreatePaymentResult> {
 /// <summary>
 /// Command to process a payment
 /// </summary>
-public record ProcessPaymentCommand : IRequest<ProcessPaymentResult> {
+public record ProcessPaymentCommand : IRequest<ProcessPaymentResult>
+{
   public Guid PaymentId { get; init; }
 
   public string ProviderTransactionId { get; init; } = string.Empty;
@@ -35,7 +39,8 @@ public record ProcessPaymentCommand : IRequest<ProcessPaymentResult> {
 /// <summary>
 /// Command to refund a payment
 /// </summary>
-public record RefundPaymentCommand : IRequest<RefundPaymentResult> {
+public record RefundPaymentCommand : IRequest<RefundPaymentResult>
+{
   public Guid PaymentId { get; init; }
 
   public decimal? RefundAmount { get; init; } // If null, full refund
@@ -48,7 +53,8 @@ public record RefundPaymentCommand : IRequest<RefundPaymentResult> {
 /// <summary>
 /// Command to cancel a payment
 /// </summary>
-public record CancelPaymentCommand : IRequest<CancelPaymentResult> {
+public record CancelPaymentCommand : IRequest<CancelPaymentResult>
+{
   public Guid PaymentId { get; init; }
 
   public string Reason { get; init; } = string.Empty;
@@ -59,7 +65,8 @@ public record CancelPaymentCommand : IRequest<CancelPaymentResult> {
 /// <summary>
 /// Command to apply discount to payment
 /// </summary>
-public record ApplyDiscountCommand : IRequest<ApplyDiscountResult> {
+public record ApplyDiscountCommand : IRequest<ApplyDiscountResult>
+{
   public Guid PaymentId { get; init; }
 
   public string DiscountCode { get; init; } = string.Empty;
@@ -70,7 +77,8 @@ public record ApplyDiscountCommand : IRequest<ApplyDiscountResult> {
 /// <summary>
 /// Result types for payment commands
 /// </summary>
-public record CreatePaymentResult {
+public record CreatePaymentResult
+{
   public bool Success { get; init; }
 
   public Payment? Payment { get; init; }
@@ -80,7 +88,8 @@ public record CreatePaymentResult {
   public string? ClientSecret { get; init; } // For Stripe-like integrations
 }
 
-public record ProcessPaymentResult {
+public record ProcessPaymentResult
+{
   public bool Success { get; init; }
 
   public Payment? Payment { get; init; }
@@ -90,7 +99,8 @@ public record ProcessPaymentResult {
   public bool AutoEnrollTriggered { get; init; }
 }
 
-public record RefundPaymentResult {
+public record RefundPaymentResult
+{
   public bool Success { get; init; }
 
   public PaymentRefund? Refund { get; init; }
@@ -98,7 +108,8 @@ public record RefundPaymentResult {
   public string? Error { get; init; }
 }
 
-public record CancelPaymentResult {
+public record CancelPaymentResult
+{
   public bool Success { get; init; }
 
   public Payment? Payment { get; init; }
@@ -106,7 +117,8 @@ public record CancelPaymentResult {
   public string? Error { get; init; }
 }
 
-public record ApplyDiscountResult {
+public record ApplyDiscountResult
+{
   public bool Success { get; init; }
 
   public Payment? Payment { get; init; }
