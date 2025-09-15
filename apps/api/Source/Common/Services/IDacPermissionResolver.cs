@@ -1,3 +1,4 @@
+using GameGuild.Core.Entities;
 using GameGuild.Modules.Permissions;
 
 namespace GameGuild.Common.Services;
@@ -6,7 +7,8 @@ namespace GameGuild.Common.Services;
 /// Enhanced DAC Permission Resolver for 3-layer permission system
 /// Provides flexible permission resolution across Global, Tenant, and Resource levels
 /// </summary>
-public interface IDacPermissionResolver {
+public interface IDacPermissionResolver
+{
   /// <summary>
   /// Resolve effective permission for a user across all DAC layers
   /// </summary>
@@ -22,7 +24,7 @@ public interface IDacPermissionResolver {
       Guid? tenantId,
       PermissionType permission,
       Guid? resourceId = null,
-      string? contentTypeName = null) where TResource : Entity;
+      string? contentTypeName = null) where TResource : EntityBase;
 
   /// <summary>
   /// Get all effective permissions for a user in a specific context
@@ -37,7 +39,7 @@ public interface IDacPermissionResolver {
       Guid userId,
       Guid? tenantId,
       Guid? resourceId = null,
-      string? contentTypeName = null) where TResource : Entity;
+      string? contentTypeName = null) where TResource : EntityBase;
 
   /// <summary>
   /// Check if a user can grant specific permissions to another user
@@ -70,7 +72,7 @@ public interface IDacPermissionResolver {
       Guid? tenantId,
       PermissionType permission,
       Guid? resourceId = null,
-      string? contentTypeName = null) where TResource : Entity;
+      string? contentTypeName = null) where TResource : EntityBase;
 
   /// <summary>
   /// Bulk resolve permissions for multiple resources
@@ -85,13 +87,14 @@ public interface IDacPermissionResolver {
       Guid userId,
       Guid? tenantId,
       Guid[] resourceIds,
-      PermissionType[] permissions) where TResource : Entity;
+      PermissionType[] permissions) where TResource : EntityBase;
 }
 
 /// <summary>
 /// Detailed permission resolution result
 /// </summary>
-public class PermissionResult {
+public class PermissionResult
+{
   public bool IsGranted { get; set; }
   public bool IsExplicitlyDenied { get; set; }
   public PermissionSource Source { get; set; }
@@ -106,7 +109,8 @@ public class PermissionResult {
 /// <summary>
 /// Effective permission with all metadata
 /// </summary>
-public class EffectivePermission {
+public class EffectivePermission
+{
   public PermissionType Permission { get; set; }
   public bool IsGranted { get; set; }
   public PermissionSource Source { get; set; }
@@ -122,7 +126,8 @@ public class EffectivePermission {
 /// <summary>
 /// Permission hierarchy for debugging and audit
 /// </summary>
-public class PermissionHierarchy {
+public class PermissionHierarchy
+{
   public PermissionType Permission { get; set; }
   public Guid UserId { get; set; }
   public Guid? TenantId { get; set; }
@@ -135,7 +140,8 @@ public class PermissionHierarchy {
 /// <summary>
 /// Individual permission layer in the hierarchy
 /// </summary>
-public class PermissionLayer {
+public class PermissionLayer
+{
   public PermissionSource Source { get; set; }
   public bool? IsGranted { get; set; }
   public bool IsDefault { get; set; }
@@ -149,7 +155,8 @@ public class PermissionLayer {
 /// <summary>
 /// Source of permission grant/denial
 /// </summary>
-public enum PermissionSource {
+public enum PermissionSource
+{
   None = 0,
   GlobalDefault = 1,
   TenantDefault = 2,
