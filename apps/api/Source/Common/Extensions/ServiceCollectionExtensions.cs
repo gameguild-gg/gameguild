@@ -187,7 +187,7 @@ public static class ServiceCollectionExtensions
     services.AddScoped<IPostCommentDataLoader, PostCommentDataLoader>();
     services.AddScoped<IPostLikeDataLoader, PostLikeDataLoader>();
 
-    // Domain event handlers are automatically registered by MediatR
+    // Domain event handlers are automatically registered by GameGuild.CQRS
     return services;
   }
 
