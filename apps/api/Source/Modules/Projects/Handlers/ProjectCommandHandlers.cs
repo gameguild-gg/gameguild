@@ -8,7 +8,8 @@ namespace GameGuild.Modules.Projects;
 /// <summary>
 /// Role constants for project collaborators
 /// </summary>
-public static class ProjectRoles {
+public static class ProjectRoles
+{
   public const string Owner = "Owner";
   public const string Editor = "Editor";
   public const string Viewer = "Viewer";
@@ -18,12 +19,13 @@ public static class ProjectRoles {
 /// Command handlers for project operations
 /// </summary>
 public class ProjectCommandHandlers :
-  GameGuild.CQRS.IRequestHandler<CreateProjectCommand, CreateProjectResult>,
-  GameGuild.CQRS.IRequestHandler<UpdateProjectCommand, UpdateProjectResult>,
-  GameGuild.CQRS.IRequestHandler<DeleteProjectCommand, DeleteProjectResult>,
-  GameGuild.CQRS.IRequestHandler<PublishProjectCommand, PublishProjectResult>,
-  GameGuild.CQRS.IRequestHandler<UnpublishProjectCommand, UnpublishProjectResult>,
-  GameGuild.CQRS.IRequestHandler<ArchiveProjectCommand, ArchiveProjectResult> {
+  IRequestHandler<CreateProjectCommand, CreateProjectResult>,
+  IRequestHandler<UpdateProjectCommand, UpdateProjectResult>,
+  IRequestHandler<DeleteProjectCommand, DeleteProjectResult>,
+  IRequestHandler<PublishProjectCommand, PublishProjectResult>,
+  IRequestHandler<UnpublishProjectCommand, UnpublishProjectResult>,
+  IRequestHandler<ArchiveProjectCommand, ArchiveProjectResult>
+{
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;
@@ -34,22 +36,26 @@ public class ProjectCommandHandlers :
     IUserContext userContext,
     ITenantContext tenantContext,
     ILogger<ProjectCommandHandlers> logger
-  ) {
+  )
+  {
     _context = context;
     _userContext = userContext;
     _tenantContext = tenantContext;
     _logger = logger;
   }
 
-  public async Task<CreateProjectResult> Handle(CreateProjectCommand request, CancellationToken cancellationToken) {
-    try {
+  public async Task<CreateProjectResult> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
+  {
+    try
+    {
       _logger.LogInformation("Creating project: {Title} by user {UserId}", request.Title, _userContext.UserId);
 
       // Validate user permissions
       if (!_userContext.IsAuthenticated || _userContext.UserId == null) { return new CreateProjectResult { Success = false, Error = "User must be authenticated" }; }
 
       // Create project entity
-      var project = new Project {
+      var project = new Project
+      {
         Id = Guid.NewGuid(),
         Title = request.Title,
         Description = request.Description,
@@ -80,7 +86,8 @@ public class ProjectCommandHandlers :
       _context.Projects.Add(project);
 
       // Add the creator as a collaborator with all permissions
-      var creatorCollaborator = new ProjectCollaborator {
+      var creatorCollaborator = new ProjectCollaborator
+      {
         Id = Guid.NewGuid(),
         ProjectId = project.Id,
         UserId = _userContext.UserId!.Value,
@@ -102,15 +109,18 @@ public class ProjectCommandHandlers :
 
       return new CreateProjectResult { Success = true, Project = project };
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error creating project: {Title}", request.Title);
 
       return new CreateProjectResult { Success = false, Error = "Failed to create project" };
     }
   }
 
-  public async Task<UpdateProjectResult> Handle(UpdateProjectCommand request, CancellationToken cancellationToken) {
-    try {
+  public async Task<UpdateProjectResult> Handle(UpdateProjectCommand request, CancellationToken cancellationToken)
+  {
+    try
+    {
       _logger.LogInformation("Updating project: {ProjectId} by user {UserId}", request.ProjectId, _userContext.UserId);
 
       var project = await _context.Projects
@@ -149,15 +159,18 @@ public class ProjectCommandHandlers :
 
       return new UpdateProjectResult { Success = true, Project = project };
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error updating project: {ProjectId}", request.ProjectId);
 
       return new UpdateProjectResult { Success = false, Error = "Failed to update project" };
     }
   }
 
-  public async Task<DeleteProjectResult> Handle(DeleteProjectCommand request, CancellationToken cancellationToken) {
-    try {
+  public async Task<DeleteProjectResult> Handle(DeleteProjectCommand request, CancellationToken cancellationToken)
+  {
+    try
+    {
       _logger.LogInformation("Deleting project: {ProjectId} by user {UserId}", request.ProjectId, _userContext.UserId);
 
       var project = await _context.Projects
@@ -175,7 +188,8 @@ public class ProjectCommandHandlers :
 
       if (!hasDeletePermission) { return new DeleteProjectResult { Success = false, Error = "Unauthorized to delete this project" }; }
 
-      if (request.SoftDelete) {
+      if (request.SoftDelete)
+      {
         // Mark as deleted but preserve data
         // Use the DeletedAt property from the base EntityBase for soft delete
         project.DeletedAt = DateTime.UtcNow;
@@ -189,15 +203,18 @@ public class ProjectCommandHandlers :
 
       return new DeleteProjectResult { Success = true };
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error deleting project: {ProjectId}", request.ProjectId);
 
       return new DeleteProjectResult { Success = false, Error = "Failed to delete project" };
     }
   }
 
-  public async Task<PublishProjectResult> Handle(PublishProjectCommand request, CancellationToken cancellationToken) {
-    try {
+  public async Task<PublishProjectResult> Handle(PublishProjectCommand request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var project = await _context.Projects
                                   .Include(p => p.Collaborators)
                                   .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
@@ -220,15 +237,18 @@ public class ProjectCommandHandlers :
 
       return new PublishProjectResult { Success = true, Project = project };
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error publishing project: {ProjectId}", request.ProjectId);
 
       return new PublishProjectResult { Success = false, Error = "Failed to publish project" };
     }
   }
 
-  public async Task<UnpublishProjectResult> Handle(UnpublishProjectCommand request, CancellationToken cancellationToken) {
-    try {
+  public async Task<UnpublishProjectResult> Handle(UnpublishProjectCommand request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var project = await _context.Projects
                                   .Include(p => p.Collaborators)
                                   .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
@@ -251,15 +271,18 @@ public class ProjectCommandHandlers :
 
       return new UnpublishProjectResult { Success = true, Project = project };
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error unpublishing project: {ProjectId}", request.ProjectId);
 
       return new UnpublishProjectResult { Success = false, Error = "Failed to unpublish project" };
     }
   }
 
-  public async Task<ArchiveProjectResult> Handle(ArchiveProjectCommand request, CancellationToken cancellationToken) {
-    try {
+  public async Task<ArchiveProjectResult> Handle(ArchiveProjectCommand request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var project = await _context.Projects
                                   .Include(p => p.Collaborators)
                                   .FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
@@ -282,7 +305,8 @@ public class ProjectCommandHandlers :
 
       return new ArchiveProjectResult { Success = true, Project = project };
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error archiving project: {ProjectId}", request.ProjectId);
 
       return new ArchiveProjectResult { Success = false, Error = "Failed to archive project" };
@@ -294,7 +318,8 @@ public class ProjectCommandHandlers :
   /// <summary>
   /// Format permissions for an owner collaborator
   /// </summary>
-  private static string FormatOwnerPermissions() {
+  private static string FormatOwnerPermissions()
+  {
     var ownerPermissions = new[] {
       PermissionType.Read, PermissionType.Edit, PermissionType.Delete, PermissionType.Publish, PermissionType.Unpublish, PermissionType.Archive, PermissionType.Create, PermissionType.Approve, PermissionType.Monetize,
     };
@@ -305,7 +330,8 @@ public class ProjectCommandHandlers :
   /// <summary>
   /// Format permissions for an editor collaborator
   /// </summary>
-  private static string FormatEditorPermissions() {
+  private static string FormatEditorPermissions()
+  {
     var editorPermissions = new[] { PermissionType.Read, PermissionType.Edit, PermissionType.Comment, PermissionType.Submit };
 
     return string.Join(",", editorPermissions.Select(p => p.ToString()));

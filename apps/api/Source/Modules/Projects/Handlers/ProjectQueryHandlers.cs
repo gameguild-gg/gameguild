@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 
@@ -8,18 +9,19 @@ namespace GameGuild.Modules.Projects;
 /// Query handlers for project operations
 /// </summary>
 public class ProjectQueryHandlers :
-  GameGuild.CQRS.IRequestHandler<GetAllProjectsQuery, IEnumerable<Project>>,
-  GameGuild.CQRS.IRequestHandler<GetProjectByIdQuery, Project?>,
-  GameGuild.CQRS.IRequestHandler<GetProjectBySlugQuery, Project?>,
-  GameGuild.CQRS.IRequestHandler<GetProjectsByCategoryQuery, IEnumerable<Project>>,
-  GameGuild.CQRS.IRequestHandler<GetProjectsByCreatorQuery, IEnumerable<Project>>,
-  GameGuild.CQRS.IRequestHandler<GetProjectsByStatusQuery, IEnumerable<Project>>,
-  GameGuild.CQRS.IRequestHandler<GetDeletedProjectsQuery, IEnumerable<Project>>,
-  GameGuild.CQRS.IRequestHandler<SearchProjectsQuery, IEnumerable<Project>>,
-  GameGuild.CQRS.IRequestHandler<GetProjectStatisticsQuery, ProjectStatistics>,
-  GameGuild.CQRS.IRequestHandler<GetPopularProjectsQuery, IEnumerable<Project>>,
-  GameGuild.CQRS.IRequestHandler<GetRecentProjectsQuery, IEnumerable<Project>>,
-  GameGuild.CQRS.IRequestHandler<GetFeaturedProjectsQuery, IEnumerable<Project>> {
+  IRequestHandler<GetAllProjectsQuery, IEnumerable<Project>>,
+  IRequestHandler<GetProjectByIdQuery, Project?>,
+  IRequestHandler<GetProjectBySlugQuery, Project?>,
+  IRequestHandler<GetProjectsByCategoryQuery, IEnumerable<Project>>,
+  IRequestHandler<GetProjectsByCreatorQuery, IEnumerable<Project>>,
+  IRequestHandler<GetProjectsByStatusQuery, IEnumerable<Project>>,
+  IRequestHandler<GetDeletedProjectsQuery, IEnumerable<Project>>,
+  IRequestHandler<SearchProjectsQuery, IEnumerable<Project>>,
+  IRequestHandler<GetProjectStatisticsQuery, ProjectStatistics>,
+  IRequestHandler<GetPopularProjectsQuery, IEnumerable<Project>>,
+  IRequestHandler<GetRecentProjectsQuery, IEnumerable<Project>>,
+  IRequestHandler<GetFeaturedProjectsQuery, IEnumerable<Project>>
+{
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;
@@ -30,15 +32,18 @@ public class ProjectQueryHandlers :
     IUserContext userContext,
     ITenantContext tenantContext,
     ILogger<ProjectQueryHandlers> logger
-  ) {
+  )
+  {
     _context = context;
     _userContext = userContext;
     _tenantContext = tenantContext;
     _logger = logger;
   }
 
-  public async Task<IEnumerable<Project>> Handle(GetAllProjectsQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<IEnumerable<Project>> Handle(GetAllProjectsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       _logger.LogDebug("Getting all projects with filters");
 
       var query = _context.Projects.AsQueryable();
@@ -56,7 +61,8 @@ public class ProjectQueryHandlers :
 
       if (request.CategoryId.HasValue) { query = query.Where(p => p.CategoryId == request.CategoryId.Value); }
 
-      if (!string.IsNullOrEmpty(request.SearchTerm)) {
+      if (!string.IsNullOrEmpty(request.SearchTerm))
+      {
         query = query.Where(p =>
                               p.Title.Contains(request.SearchTerm) ||
                               (p.Description != null && p.Description.Contains(request.SearchTerm)) ||
@@ -79,15 +85,18 @@ public class ProjectQueryHandlers :
 
       return await query.ToListAsync(cancellationToken);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting all projects");
 
       return Enumerable.Empty<Project>();
     }
   }
 
-  public async Task<Project?> Handle(GetProjectByIdQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<Project?> Handle(GetProjectByIdQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       _logger.LogDebug("Getting project by ID: {ProjectId}", request.ProjectId);
 
       var query = _context.Projects
@@ -109,7 +118,8 @@ public class ProjectQueryHandlers :
 
       var project = await query.FirstOrDefaultAsync(cancellationToken);
 
-      if (project != null && request.IncludeStatistics) {
+      if (project != null && request.IncludeStatistics)
+      {
         // Note: Statistics are retrieved separately via GetProjectStatisticsQuery
         // They are not directly attached to the Project entity
         _logger.LogInformation("Statistics retrieval requested for project {ProjectId}, but statistics are managed separately", project.Id);
@@ -117,15 +127,18 @@ public class ProjectQueryHandlers :
 
       return project;
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting project by ID: {ProjectId}", request.ProjectId);
 
       return null;
     }
   }
 
-  public async Task<Project?> Handle(GetProjectBySlugQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<Project?> Handle(GetProjectBySlugQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       _logger.LogDebug("Getting project by slug: {Slug}", request.Slug);
 
       var query = _context.Projects
@@ -147,15 +160,18 @@ public class ProjectQueryHandlers :
 
       return await query.FirstOrDefaultAsync(cancellationToken);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting project by slug: {Slug}", request.Slug);
 
       return null;
     }
   }
 
-  public async Task<IEnumerable<Project>> Handle(GetProjectsByCategoryQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<IEnumerable<Project>> Handle(GetProjectsByCategoryQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var query = _context.Projects
                           .Where(p => p.CategoryId == request.CategoryId && p.DeletedAt == null);
 
@@ -170,15 +186,18 @@ public class ProjectQueryHandlers :
 
       return await query.ToListAsync(cancellationToken);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting projects by category: {CategoryId}", request.CategoryId);
 
       return Enumerable.Empty<Project>();
     }
   }
 
-  public async Task<IEnumerable<Project>> Handle(GetProjectsByCreatorQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<IEnumerable<Project>> Handle(GetProjectsByCreatorQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var query = _context.Projects
                           .Where(p => p.Collaborators.Any(c => c.UserId == request.CreatorId && c.Role == ProjectRoles.Owner) && p.DeletedAt == null);
 
@@ -193,15 +212,18 @@ public class ProjectQueryHandlers :
 
       return await query.ToListAsync(cancellationToken);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting projects by creator: {CreatorId}", request.CreatorId);
 
       return Enumerable.Empty<Project>();
     }
   }
 
-  public async Task<IEnumerable<Project>> Handle(GetProjectsByStatusQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<IEnumerable<Project>> Handle(GetProjectsByStatusQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var query = _context.Projects
                           .Where(p => p.Status == request.Status && p.DeletedAt == null);
 
@@ -216,32 +238,39 @@ public class ProjectQueryHandlers :
 
       return await query.ToListAsync(cancellationToken);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting projects by status: {Status}", request.Status);
 
       return Enumerable.Empty<Project>();
     }
   }
 
-  public Task<IEnumerable<Project>> Handle(GetDeletedProjectsQuery request, CancellationToken cancellationToken) {
-    try {
+  public Task<IEnumerable<Project>> Handle(GetDeletedProjectsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       // Deleted projects are restricted
       return Task.FromResult(Enumerable.Empty<Project>());
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting deleted projects");
 
       return Task.FromResult(Enumerable.Empty<Project>());
     }
   }
 
-  public async Task<IEnumerable<Project>> Handle(SearchProjectsQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<IEnumerable<Project>> Handle(SearchProjectsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var query = _context.Projects
                           .Where(p => p.DeletedAt == null);
 
       // Search term
-      if (!string.IsNullOrEmpty(request.SearchTerm)) {
+      if (!string.IsNullOrEmpty(request.SearchTerm))
+      {
         query = query.Where(p =>
                               p.Title.Contains(request.SearchTerm) ||
                               (p.Description != null && p.Description.Contains(request.SearchTerm)) ||
@@ -268,24 +297,29 @@ public class ProjectQueryHandlers :
 
       return await query.ToListAsync(cancellationToken);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error searching projects");
 
       return Enumerable.Empty<Project>();
     }
   }
 
-  public async Task<ProjectStatistics> Handle(GetProjectStatisticsQuery request, CancellationToken cancellationToken) {
+  public async Task<ProjectStatistics> Handle(GetProjectStatisticsQuery request, CancellationToken cancellationToken)
+  {
     try { return await GetProjectStatistics(request.ProjectId, cancellationToken, request.FromDate, request.ToDate); }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting project statistics: {ProjectId}", request.ProjectId);
 
       return new ProjectStatistics();
     }
   }
 
-  public async Task<IEnumerable<Project>> Handle(GetPopularProjectsQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<IEnumerable<Project>> Handle(GetPopularProjectsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var query = _context.Projects
                           .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published);
 
@@ -300,15 +334,18 @@ public class ProjectQueryHandlers :
 
       return await query.ToListAsync(cancellationToken);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting popular projects");
 
       return Enumerable.Empty<Project>();
     }
   }
 
-  public async Task<IEnumerable<Project>> Handle(GetRecentProjectsQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<IEnumerable<Project>> Handle(GetRecentProjectsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var query = _context.Projects
                           .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published);
 
@@ -322,15 +359,18 @@ public class ProjectQueryHandlers :
 
       return await query.ToListAsync(cancellationToken);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting recent projects");
 
       return Enumerable.Empty<Project>();
     }
   }
 
-  public async Task<IEnumerable<Project>> Handle(GetFeaturedProjectsQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<IEnumerable<Project>> Handle(GetFeaturedProjectsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var query = _context.Projects
                           .Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published);
 
@@ -345,7 +385,8 @@ public class ProjectQueryHandlers :
 
       return await query.ToListAsync(cancellationToken);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting featured projects");
 
       return Enumerable.Empty<Project>();
@@ -355,11 +396,13 @@ public class ProjectQueryHandlers :
   /// <summary>
   /// Apply access control based on user context
   /// </summary>
-  private IQueryable<Project> ApplyAccessControl(IQueryable<Project> query) {
+  private IQueryable<Project> ApplyAccessControl(IQueryable<Project> query)
+  {
     // Public projects are always visible
     var accessibleQuery = query.Where(p => p.Visibility == AccessLevel.Public);
 
-    if (_userContext.IsAuthenticated) {
+    if (_userContext.IsAuthenticated)
+    {
       // Authenticated users can see their own private projects
       accessibleQuery = query.Where(p =>
                                       p.Visibility == AccessLevel.Public ||
@@ -376,10 +419,12 @@ public class ProjectQueryHandlers :
   /// <summary>
   /// Apply sorting to query
   /// </summary>
-  private static IQueryable<Project> ApplySorting(IQueryable<Project> query, string? sortBy, string? sortDirection) {
+  private static IQueryable<Project> ApplySorting(IQueryable<Project> query, string? sortBy, string? sortDirection)
+  {
     var descending = sortDirection?.ToUpperInvariant() == "DESC";
 
-    return sortBy?.ToLowerInvariant() switch {
+    return sortBy?.ToLowerInvariant() switch
+    {
       "name" => descending ? query.OrderByDescending(p => p.Title) : query.OrderBy(p => p.Title),
       "createdat" => descending ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
       "updatedat" => descending ? query.OrderByDescending(p => p.UpdatedAt) : query.OrderBy(p => p.UpdatedAt),
@@ -390,10 +435,12 @@ public class ProjectQueryHandlers :
   /// <summary>
   /// Get project statistics
   /// </summary>
-  private Task<ProjectStatistics> GetProjectStatistics(Guid projectId, CancellationToken cancellationToken, DateTime? fromDate = null, DateTime? toDate = null) {
+  private Task<ProjectStatistics> GetProjectStatistics(Guid projectId, CancellationToken cancellationToken, DateTime? fromDate = null, DateTime? toDate = null)
+  {
     // TODO: Implement actual statistics calculation
     // This would typically involve querying related tables for views, downloads, likes, etc.
-    return Task.FromResult(new ProjectStatistics {
+    return Task.FromResult(new ProjectStatistics
+    {
       ProjectId = projectId,
       FollowerCount = 0,
       FeedbackCount = 0,
