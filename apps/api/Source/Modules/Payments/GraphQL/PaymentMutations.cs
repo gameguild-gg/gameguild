@@ -13,7 +13,7 @@ public class PaymentMutations {
   /// </summary>
   public async Task<CreatePaymentPayload> CreatePaymentAsync(
     CreatePaymentInput input,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     CancellationToken cancellationToken
   ) {
@@ -41,7 +41,7 @@ public class PaymentMutations {
   /// </summary>
   public async Task<ProcessPaymentPayload> ProcessPaymentAsync(
     ProcessPaymentInput input,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     CancellationToken cancellationToken
   ) {
     try {
@@ -59,7 +59,7 @@ public class PaymentMutations {
   /// </summary>
   public async Task<RefundPaymentPayload> RefundPaymentAsync(
     RefundPaymentInput input,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     CancellationToken cancellationToken
   ) {
@@ -78,7 +78,7 @@ public class PaymentMutations {
   /// </summary>
   public async Task<CancelPaymentPayload> CancelPaymentAsync(
     CancelPaymentInput input,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     CancellationToken cancellationToken
   ) {
