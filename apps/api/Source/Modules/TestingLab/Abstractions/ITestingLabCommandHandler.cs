@@ -1,3 +1,5 @@
+using GameGuild.CQRS;
+
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Base interface for command handlers in the Testing Lab module </summary>

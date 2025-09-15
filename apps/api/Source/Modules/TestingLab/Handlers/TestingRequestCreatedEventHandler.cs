@@ -1,11 +1,17 @@
+using GameGuild.CQRS;
+
+using GameGuild.CQRS;
+
 namespace GameGuild.Modules.TestingLab;
 
-public class TestingRequestCreatedEventHandler : INotificationHandler<TestingRequestCreatedEvent> {
+public class TestingRequestCreatedEventHandler : INotificationHandler<TestingRequestCreatedEvent>
+{
   private readonly ILogger<TestingRequestCreatedEventHandler> _logger;
 
   public TestingRequestCreatedEventHandler(ILogger<TestingRequestCreatedEventHandler> logger) { _logger = logger; }
 
-  public async Task Handle(TestingRequestCreatedEvent notification, CancellationToken cancellationToken) {
+  public async Task Handle(TestingRequestCreatedEvent notification, CancellationToken cancellationToken)
+  {
     _logger.LogInformation(
       "Testing request created: {TestingRequestId} - {Title}",
       notification.TestingRequestId,
