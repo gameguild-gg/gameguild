@@ -6,7 +6,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MediatR;
+using GameGuild.CQRS;
 using Moq;
 
 namespace GameGuild.Tests.Modules.Payments;

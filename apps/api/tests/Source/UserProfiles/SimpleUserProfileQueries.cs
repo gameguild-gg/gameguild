@@ -2,7 +2,7 @@ using GameGuild.Common;
 using GameGuild.Modules.UserProfiles;
 using HotChocolate;
 using HotChocolate.Types;
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Tests.UserProfiles;
 

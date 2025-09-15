@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using FluentValidation;
 using GameGuild.Modules.Authentication;
-using MediatR;
+using GameGuild.CQRS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;

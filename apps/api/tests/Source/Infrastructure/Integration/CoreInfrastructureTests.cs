@@ -2,7 +2,7 @@ using System.Text;
 using System.Text.Json;
 using GameGuild.Tests.Fixtures;
 using GameGuild.Tests.MockModules;
-using MediatR;
+using GameGuild.CQRS;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
