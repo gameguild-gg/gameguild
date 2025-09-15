@@ -21,15 +21,13 @@ public interface ICommandHandler<in TCommand> : IRequestHandler<TCommand> where 
 /// </summary>
 /// <typeparam name="TCommand">The type of command being handled</typeparam>
 /// <typeparam name="TValue">The type of value wrapped in Result</typeparam>
-public interface IResultCommandHandler<in TCommand, TValue> : IRequestHandler<TCommand, Result<TValue>>
-    where TCommand : IResultCommand<TValue>
-{ }
+public interface IResultCommandHandler<in TCommand, TValue> : IRequestHandler<TCommand, GameGuild.CQRS.Result<TValue>>
+    where TCommand : IResultCommand<TValue> { }
 
 /// <summary>
 /// Defines a handler for a command that returns a Result.
 /// Commands represent write operations that modify system state with enhanced error handling.
 /// </summary>
 /// <typeparam name="TCommand">The type of command being handled</typeparam>
-public interface IResultCommandHandler<in TCommand> : IRequestHandler<TCommand, Result>
-    where TCommand : IResultCommand
-{ }
+public interface IResultCommandHandler<in TCommand> : IRequestHandler<TCommand, GameGuild.CQRS.Result>
+    where TCommand : IResultCommand { }
