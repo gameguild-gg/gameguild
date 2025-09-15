@@ -1,3 +1,4 @@
+using GameGuild.GraphQL;
 using GameGuild;
 
 
@@ -12,7 +13,7 @@ public class AchievementQueries {
   /// Get achievements with pagination and filtering
   /// </summary>
   public async Task<AchievementsPageDto> GetAchievements(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     int pageNumber = 1,
     int pageSize = 20,
     string? category = null,
@@ -46,7 +47,7 @@ public class AchievementQueries {
   /// Get achievement by ID
   /// </summary>
   public async Task<Achievement> GetAchievement(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     Guid achievementId,
     bool includeLevels = true,
     bool includePrerequisites = true,
@@ -66,7 +67,7 @@ public class AchievementQueries {
   /// Get user's achievements
   /// </summary>
   public async Task<UserAchievementsPageDto> GetUserAchievements(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     Guid userId,
     int pageNumber = 1,
     int pageSize = 20,
@@ -100,7 +101,7 @@ public class AchievementQueries {
   /// Get user's achievement progress
   /// </summary>
   public async Task<List<AchievementProgressDto>> GetUserAchievementProgress(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     Guid userId,
     string? category = null,
     bool onlyInProgress = false,
@@ -120,7 +121,7 @@ public class AchievementQueries {
   /// Get user's achievement summary
   /// </summary>
   public async Task<UserAchievementSummaryDto> GetUserAchievementSummary(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     Guid userId,
     int recentLimit = 5,
     int nearCompletionThreshold = 80,
@@ -140,7 +141,7 @@ public class AchievementQueries {
   /// Get achievement leaderboard
   /// </summary>
   public async Task<List<UserAchievementLeaderboardDto>> GetAchievementLeaderboard(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     string? category = null,
     int limit = 50,
     string orderBy = "TotalPoints",
@@ -162,7 +163,7 @@ public class AchievementQueries {
   /// Get available achievements for a user
   /// </summary>
   public async Task<AchievementsPageDto> GetAvailableAchievements(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     Guid userId,
     int pageNumber = 1,
     int pageSize = 20,
@@ -186,7 +187,7 @@ public class AchievementQueries {
   /// Check achievement prerequisites for a user
   /// </summary>
   public async Task<AchievementPrerequisiteCheckDto> CheckAchievementPrerequisites(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     Guid userId,
     Guid achievementId,
     Guid? tenantId = null) {
@@ -204,7 +205,7 @@ public class AchievementQueries {
   /// Get achievement statistics
   /// </summary>
   public async Task<AchievementStatisticsDto> GetAchievementStatistics(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     Guid achievementId,
     Guid? tenantId = null) {
     var query = new GetAchievementStatisticsQuery {
