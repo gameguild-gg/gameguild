@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 
@@ -11,7 +12,8 @@ public class ProductQueryHandlers :
   GameGuild.CQRS.IRequestHandler<GetProductByIdQuery, Product?>,
   GameGuild.CQRS.IRequestHandler<GetProductsQuery, IEnumerable<Product>>,
   GameGuild.CQRS.IRequestHandler<GetUserProductsQuery, IEnumerable<UserProduct>>,
-  GameGuild.CQRS.IRequestHandler<GetProductStatsQuery, ProductStats> {
+  GameGuild.CQRS.IRequestHandler<GetProductStatsQuery, ProductStats>
+{
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;
@@ -22,15 +24,18 @@ public class ProductQueryHandlers :
     IUserContext userContext,
     ITenantContext tenantContext,
     ILogger<ProductQueryHandlers> logger
-  ) {
+  )
+  {
     _context = context;
     _userContext = userContext;
     _tenantContext = tenantContext;
     _logger = logger;
   }
 
-  public async Task<Product?> Handle(GetProductByIdQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<Product?> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       _logger.LogDebug("Getting product by ID: {ProductId}", request.ProductId);
 
       var query = _context.Products
@@ -50,15 +55,18 @@ public class ProductQueryHandlers :
 
       return product;
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting product by ID: {ProductId}", request.ProductId);
 
       return null;
     }
   }
 
-  public async Task<IEnumerable<Product>> Handle(GetProductsQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<IEnumerable<Product>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       _logger.LogDebug(
         "Getting products with filters - Type: {Type}, Status: {Status}, Skip: {Skip}, Take: {Take}",
         request.Type,
@@ -79,7 +87,8 @@ public class ProductQueryHandlers :
 
       if (request.CreatorId.HasValue) { query = query.Where(p => p.CreatorId == request.CreatorId.Value); }
 
-      if (!string.IsNullOrEmpty(request.SearchTerm)) {
+      if (!string.IsNullOrEmpty(request.SearchTerm))
+      {
         var searchTerm = request.SearchTerm.ToLower();
         query = query.Where(p =>
                               p.Name.ToLower().Contains(searchTerm) ||
@@ -94,7 +103,8 @@ public class ProductQueryHandlers :
       query = ApplyAccessControl(query);
 
       // Apply sorting
-      query = request.SortBy?.ToLower() switch {
+      query = request.SortBy?.ToLower() switch
+      {
         "name" => request.SortDirection?.ToUpper() == "DESC" ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name),
         "createdat" => request.SortDirection?.ToUpper() == "DESC" ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
         _ => query.OrderByDescending(p => p.CreatedAt),
@@ -111,15 +121,18 @@ public class ProductQueryHandlers :
 
       return products;
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting products");
 
       return Enumerable.Empty<Product>();
     }
   }
 
-  public async Task<IEnumerable<UserProduct>> Handle(GetUserProductsQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<IEnumerable<UserProduct>> Handle(GetUserProductsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       _logger.LogDebug("Getting user products for user: {UserId}", request.UserId);
 
       // Temporarily disable access control for debugging
@@ -132,15 +145,19 @@ public class ProductQueryHandlers :
                           .Where(up => up.UserId == request.UserId && up.Product.DeletedAt == null);
 
       // Apply optional filters
-      if (request.AcquisitionType.HasValue) {
+      if (request.AcquisitionType.HasValue)
+      {
         query = query.Where(up => up.AcquisitionType == request.AcquisitionType.Value);
       }
 
-      if (request.IsActive.HasValue) {
-        if (request.IsActive.Value) {
+      if (request.IsActive.HasValue)
+      {
+        if (request.IsActive.Value)
+        {
           query = query.Where(up => up.AccessStatus == ProductAccessStatus.Active);
         }
-        else {
+        else
+        {
           query = query.Where(up => up.AccessStatus != ProductAccessStatus.Active);
         }
       }
@@ -155,7 +172,8 @@ public class ProductQueryHandlers :
 
       return userProducts;
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting user products for user: {UserId}", request.UserId);
 
       return Enumerable.Empty<UserProduct>();
@@ -165,9 +183,11 @@ public class ProductQueryHandlers :
   /// <summary>
   /// Apply access control based on user context and product access levels
   /// </summary>
-  private IQueryable<Product> ApplyAccessControl(IQueryable<Product> query) {
+  private IQueryable<Product> ApplyAccessControl(IQueryable<Product> query)
+  {
     // Anonymous users can only see public products that are published
-    if (!_userContext.IsAuthenticated) {
+    if (!_userContext.IsAuthenticated)
+    {
       return query.Where(p =>
                            p.Visibility == AccessLevel.Public &&
                            p.Status == ContentStatus.Published
@@ -187,8 +207,10 @@ public class ProductQueryHandlers :
     return accessibleQuery;
   }
 
-  public async Task<ProductStats> Handle(GetProductStatsQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<ProductStats> Handle(GetProductStatsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       _logger.LogDebug("Getting product statistics");
 
       var query = _context.Products.AsQueryable();
@@ -198,19 +220,23 @@ public class ProductQueryHandlers :
       query = query.Where(p => p.DeletedAt == null);
 
       // Apply optional filters
-      if (request.ProductId.HasValue) {
+      if (request.ProductId.HasValue)
+      {
         query = query.Where(p => p.Id == request.ProductId.Value);
       }
 
-      if (request.CreatorId.HasValue) {
+      if (request.CreatorId.HasValue)
+      {
         query = query.Where(p => p.CreatorId == request.CreatorId.Value);
       }
 
-      if (request.FromDate.HasValue) {
+      if (request.FromDate.HasValue)
+      {
         query = query.Where(p => p.CreatedAt >= request.FromDate.Value);
       }
 
-      if (request.ToDate.HasValue) {
+      if (request.ToDate.HasValue)
+      {
         query = query.Where(p => p.CreatedAt <= request.ToDate.Value);
       }
 
@@ -236,13 +262,17 @@ public class ProductQueryHandlers :
       var revenueByType = new Dictionary<string, decimal>();
 
       // Only calculate purchase/revenue stats if user has appropriate permissions
-      if (_userContext.IsAuthenticated) {
-        try {
+      if (_userContext.IsAuthenticated)
+      {
+        try
+        {
           // Apply product filter if specified
-          if (request.ProductId.HasValue) {
+          if (request.ProductId.HasValue)
+          {
             userProductsQuery = userProductsQuery.Where(up => up.ProductId == request.ProductId.Value);
           }
-          else {
+          else
+          {
             // Filter to only products the user can see
             var accessibleProductIds = await query.Select(p => p.Id).ToListAsync(cancellationToken);
             userProductsQuery = userProductsQuery.Where(up => accessibleProductIds.Contains(up.ProductId));
@@ -268,13 +298,15 @@ public class ProductQueryHandlers :
             kvp => kvp.Value * 10m // Placeholder calculation
           );
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
           _logger.LogWarning(ex, "Could not calculate purchase/revenue statistics");
           // Continue with basic stats even if purchase stats fail
         }
       }
 
-      var stats = new ProductStats {
+      var stats = new ProductStats
+      {
         TotalProducts = totalProducts,
         ActiveProducts = activeProducts,
         DraftProducts = draftProducts,
@@ -293,11 +325,13 @@ public class ProductQueryHandlers :
 
       return stats;
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting product statistics");
 
       // Return empty stats on error
-      return new ProductStats {
+      return new ProductStats
+      {
         TotalProducts = 0,
         ActiveProducts = 0,
         DraftProducts = 0,
