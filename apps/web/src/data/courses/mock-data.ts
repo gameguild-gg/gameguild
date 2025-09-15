@@ -8,10 +8,11 @@ import ai4gamesExpectations from './ai4games/week01/expectations.md';
 import ai4gamesFlocking from './ai4games/week02/flocking.md';
 import ai4gamesStateMachines from './ai4games/week03/state-machines.md';
 import ai4gamesLife from './ai4games/week03/life.md';
-import ai4gamesRng from './ai4games/week04/rng.md';
-import ai4gamesMaze from './ai4games/week05/maze.md';
-import ai4gamesPathfinding from './ai4games/week06/pathfinding.md';
-import ai4gamesCatchTheCat from './ai4games/week07/catchthecat.md';
+import ai4gamesMaze from './ai4games/week04/maze.md';
+import ai4gamesMazeDatastructure from './ai4games/week04/maze-datatructure.md';
+import ai4gamesRng from './ai4games/week10/rng.md';
+import ai4gamesPathfinding from './ai4games/week05/pathfinding.md';
+import ai4gamesCatchTheCat from './ai4games/week06/catchthecat.md';
 import ai4gamesSpatialQuantization from './ai4games/week08/spatial-quantization.md';
 import ai4gamesPathfindingContinuous from './ai4games/week09/pathfinding-continuous.md';
 import ai4gamesNoise from './ai4games/week10/noise.md';
@@ -1742,11 +1743,11 @@ export const ai4gamesRngContent: ProgramContent = {
     id: 'ai4games-rng',
     programId: ai4gamesProgram.id!,
     parentId: undefined,
-    title: 'Week 04: Random Number Generation',
+    title: 'Week 10: Random Number Generation',
     description: 'Understanding and implementing random number generators',
     type: 0, // Page
     body: ai4gamesRng,
-    sortOrder: 8,
+    sortOrder: 13,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -1765,11 +1766,11 @@ export const ai4gamesMazeContent: ProgramContent = {
     id: 'ai4games-maze',
     programId: ai4gamesProgram.id!,
     parentId: undefined,
-    title: 'Week 05: Maze Generation',
+    title: 'Week 04: Maze Generation',
     description: 'Algorithms for procedural maze generation',
     type: 0, // Page
     body: ai4gamesMaze,
-    sortOrder: 9,
+    sortOrder: 8,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -1784,11 +1785,34 @@ export const ai4gamesMazeContent: ProgramContent = {
     slug: 'maze',
 };
 
+export const ai4gamesMazeDatastructureContent: ProgramContent = {
+    id: 'ai4games-maze-datastructure',
+    programId: ai4gamesProgram.id!,
+    parentId: undefined,
+    title: 'Week 04: Maze Data Structures',
+    description: 'Understanding data structures for maze representation',
+    type: 0, // Page
+    body: ai4gamesMazeDatastructure,
+    sortOrder: 9,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: ai4gamesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'maze-datastructure',
+};
+
 export const ai4gamesPathfindingContent: ProgramContent = {
     id: 'ai4games-pathfinding',
     programId: ai4gamesProgram.id!,
     parentId: undefined,
-    title: 'Week 06: Pathfinding Algorithms',
+    title: 'Week 05: Pathfinding Algorithms',
     description: 'Implementing A* and other pathfinding algorithms',
     type: 0, // Page
     body: ai4gamesPathfinding,
@@ -3456,12 +3480,13 @@ ai4gamesProgram.programContents = [
     ai4gamesFlockingContent,
     ai4gamesStateMachinesContent,
     ai4gamesLifeContent,
-    ai4gamesRngContent,
     ai4gamesMazeContent,
+    ai4gamesMazeDatastructureContent,
     ai4gamesPathfindingContent,
     ai4gamesCatchTheCatContent,
     ai4gamesSpatialQuantizationContent,
     ai4gamesPathfindingContinuousContent,
+    ai4gamesRngContent,
     ai4gamesNoiseContent,
     ai4gamesFinalProjectContent
 ];
@@ -3638,12 +3663,13 @@ export const mockProgramContents: ProgramContent[] = [
     ai4gamesFlockingContent,
     ai4gamesStateMachinesContent,
     ai4gamesLifeContent,
-    ai4gamesRngContent,
     ai4gamesMazeContent,
+    ai4gamesMazeDatastructureContent,
     ai4gamesPathfindingContent,
     ai4gamesCatchTheCatContent,
     ai4gamesSpatialQuantizationContent,
     ai4gamesPathfindingContinuousContent,
+    ai4gamesRngContent,
     ai4gamesNoiseContent,
     ai4gamesFinalProjectContent,
     // AI4Games 2 content

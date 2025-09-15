@@ -74,18 +74,20 @@ College dates for the Fall 2025 semester:
   - Formal Assignment: [Formal Game of Life](life)
   - Interactive Assignment: [Interactive Game of Life](https://github.com/gameguild-gg/mobagen/tree/master/examples/life)
 - Week 04. 2025/09/15 - 2025/09/19
-  - Topic: **Random Numbers**
-  - Formal Assignment: [Formal](rng)
-- Week 05. 2025/09/22 - 2025/09/26
   - Topics:
     - **Depth First Search**
     - **Random walk**
     - **Maze Generation**
   - Formal Assignment: [Formal Maze](maze)
   - Interactive Assignment: [Interactive Maze](https://github.com/gameguild-gg/mobagen/tree/master/examples/maze)
-- Week 06. 2025/09/29 - 2025/10/03
+- Week 05. 2025/09/22 - 2025/09/26
   - Topics:
     - **Breadth First Search**
+    - **Path Finding**
+  - Interactive Assignment: [Catch the Cat](https://github.com/gameguild-gg/mobagen/tree/master/examples/catchthecat)
+- Week 06. 2025/09/29 - 2025/10/03
+  - Topics:
+    - **A\* Search**
     - **Path Finding**
   - Interactive Assignment: [Catch the Cat](https://github.com/gameguild-gg/mobagen/tree/master/examples/catchthecat)
 - Week 07. 2025/10/06 - 2025/10/10
@@ -102,7 +104,7 @@ College dates for the Fall 2025 semester:
     - **Pathfinding on Continuous Space**
   - Formal Assignment: [PathFinding on continuous space](pathfinding-continuous)
 - Week 10. 2025/10/27 - 2025/10/31
-  - Topic: **Noise functions**
+  - Topic: **Randomness** and **Noise functions**
   - Formal Assignment: [Noise functions](noise)
 - Week 11. 2025/11/03 - 2025/11/07
   - Topic:
