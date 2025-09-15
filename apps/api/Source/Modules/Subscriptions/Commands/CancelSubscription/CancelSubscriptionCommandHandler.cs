@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Subscriptions.Abstractions;
-using MediatR;
 
 
 namespace GameGuild.Modules.Subscriptions.Commands.CancelSubscription;
@@ -8,17 +7,14 @@ namespace GameGuild.Modules.Subscriptions.Commands.CancelSubscription;
 /// <summary>
 /// Command handler for cancelling a subscription
 /// </summary>
-public class CancelSubscriptionCommandHandler : ICommandHandler<CancelSubscriptionCommand>
-{
+public class CancelSubscriptionCommandHandler : ICommandHandler<CancelSubscriptionCommand> {
     private readonly ISubscriptionRepository _subscriptionRepository;
 
-    public CancelSubscriptionCommandHandler(ISubscriptionRepository subscriptionRepository)
-    {
+    public CancelSubscriptionCommandHandler(ISubscriptionRepository subscriptionRepository) {
         _subscriptionRepository = subscriptionRepository;
     }
 
-    public async Task<Unit> Handle(CancelSubscriptionCommand request, CancellationToken cancellationToken)
-    {
+    public async Task<Unit> Handle(CancelSubscriptionCommand request, CancellationToken cancellationToken) {
         var subscription = await _subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken);
 
         if (subscription == null)
