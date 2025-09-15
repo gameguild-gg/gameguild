@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using GameGuild.Core.Entities;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions;
@@ -20,7 +21,7 @@ namespace GameGuild.Common;
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
 public class RequireResourcePermissionAttribute<TPermission, TResource>(PermissionType requiredPermission, string resourceIdParameterName = "id") : Attribute, IAsyncAuthorizationFilter
   where TPermission : ResourcePermission<TResource>
-  where TResource : Entity
+  where TResource : EntityBase
 {
   public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
   {
