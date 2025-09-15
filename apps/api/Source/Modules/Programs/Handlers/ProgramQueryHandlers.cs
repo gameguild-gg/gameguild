@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 
@@ -12,39 +13,42 @@ public class ProgramQueryHandlers(
   ApplicationDbContext context,
   ILogger<ProgramQueryHandlers> logger
 ) :
-  GameGuild.CQRS.IRequestHandler<GetAllProgramsQuery, IEnumerable<Program>>,
-  GameGuild.CQRS.IRequestHandler<GetProgramByIdQuery, Program?>,
-  GameGuild.CQRS.IRequestHandler<GetProgramBySlugQuery, Program?>,
-  GameGuild.CQRS.IRequestHandler<GetPublishedProgramBySlugQuery, Program?>,
-  GameGuild.CQRS.IRequestHandler<SearchProgramsQuery, IEnumerable<Program>>,
-  GameGuild.CQRS.IRequestHandler<GetProgramsByCategoryQuery, IEnumerable<Program>>,
-  GameGuild.CQRS.IRequestHandler<GetProgramsByDifficultyQuery, IEnumerable<Program>>,
-  GameGuild.CQRS.IRequestHandler<GetProgramsByCreatorQuery, IEnumerable<Program>>,
-  GameGuild.CQRS.IRequestHandler<GetUserEnrolledProgramsQuery, IEnumerable<Program>>,
-  GameGuild.CQRS.IRequestHandler<GetProgramEnrollmentsQuery, IEnumerable<ProgramUser>>,
-  GameGuild.CQRS.IRequestHandler<CheckUserEnrollmentQuery, ProgramUser?>,
-  GameGuild.CQRS.IRequestHandler<GetProgramContentQuery, IEnumerable<ProgramContent>>,
-  GameGuild.CQRS.IRequestHandler<GetUserProgramProgressQuery, ProgramUserProgress?>,
-  GameGuild.CQRS.IRequestHandler<GetProgramStatisticsQuery, ProgramStatistics>,
-  GameGuild.CQRS.IRequestHandler<GetGlobalProgramStatisticsQuery, GlobalProgramStatistics>,
-  GameGuild.CQRS.IRequestHandler<GetCreatorProgramStatisticsQuery, CreatorProgramStatistics>,
-  GameGuild.CQRS.IRequestHandler<GetPopularProgramsQuery, IEnumerable<Program>>,
-  GameGuild.CQRS.IRequestHandler<GetRecentProgramsQuery, IEnumerable<Program>>,
-  GameGuild.CQRS.IRequestHandler<GetFeaturedProgramsQuery, IEnumerable<Program>>,
-  GameGuild.CQRS.IRequestHandler<GetRecommendedProgramsQuery, IEnumerable<Program>>,
-  GameGuild.CQRS.IRequestHandler<GetProgramRatingsQuery, IEnumerable<ProgramRating>>,
-  GameGuild.CQRS.IRequestHandler<GetUserProgramRatingQuery, ProgramRating?>,
-  GameGuild.CQRS.IRequestHandler<GetUserWishlistQuery, IEnumerable<Program>>,
-  GameGuild.CQRS.IRequestHandler<CheckProgramInWishlistQuery, bool> {
+  IRequestHandler<GetAllProgramsQuery, IEnumerable<Program>>,
+  IRequestHandler<GetProgramByIdQuery, Program?>,
+  IRequestHandler<GetProgramBySlugQuery, Program?>,
+  IRequestHandler<GetPublishedProgramBySlugQuery, Program?>,
+  IRequestHandler<SearchProgramsQuery, IEnumerable<Program>>,
+  IRequestHandler<GetProgramsByCategoryQuery, IEnumerable<Program>>,
+  IRequestHandler<GetProgramsByDifficultyQuery, IEnumerable<Program>>,
+  IRequestHandler<GetProgramsByCreatorQuery, IEnumerable<Program>>,
+  IRequestHandler<GetUserEnrolledProgramsQuery, IEnumerable<Program>>,
+  IRequestHandler<GetProgramEnrollmentsQuery, IEnumerable<ProgramUser>>,
+  IRequestHandler<CheckUserEnrollmentQuery, ProgramUser?>,
+  IRequestHandler<GetProgramContentQuery, IEnumerable<ProgramContent>>,
+  IRequestHandler<GetUserProgramProgressQuery, ProgramUserProgress?>,
+  IRequestHandler<GetProgramStatisticsQuery, ProgramStatistics>,
+  IRequestHandler<GetGlobalProgramStatisticsQuery, GlobalProgramStatistics>,
+  IRequestHandler<GetCreatorProgramStatisticsQuery, CreatorProgramStatistics>,
+  IRequestHandler<GetPopularProgramsQuery, IEnumerable<Program>>,
+  IRequestHandler<GetRecentProgramsQuery, IEnumerable<Program>>,
+  IRequestHandler<GetFeaturedProgramsQuery, IEnumerable<Program>>,
+  IRequestHandler<GetRecommendedProgramsQuery, IEnumerable<Program>>,
+  IRequestHandler<GetProgramRatingsQuery, IEnumerable<ProgramRating>>,
+  IRequestHandler<GetUserProgramRatingQuery, ProgramRating?>,
+  IRequestHandler<GetUserWishlistQuery, IEnumerable<Program>>,
+  IRequestHandler<CheckProgramInWishlistQuery, bool>
+{
   // ===== BASIC QUERY HANDLERS =====
 
-  public async Task<IEnumerable<Program>> Handle(GetAllProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetAllProgramsQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting all programs with filters");
 
     var query = context.Programs.Where(p => p.DeletedAt == null);
 
     // Apply filters
-    if (!string.IsNullOrEmpty(request.Search)) {
+    if (!string.IsNullOrEmpty(request.Search))
+    {
       query = query.Where(p => p.Title.Contains(request.Search) ||
                                (p.Description != null && p.Description.Contains(request.Search))
       );
@@ -66,7 +70,8 @@ public class ProgramQueryHandlers(
     if (!request.IncludeArchived) query = query.Where(p => p.Status != ContentStatus.Archived);
 
     // Apply sorting
-    query = request.SortBy?.ToLower() switch {
+    query = request.SortBy?.ToLower() switch
+    {
       "title" => request.SortDescending ? query.OrderByDescending(p => p.Title) : query.OrderBy(p => p.Title),
       "createdat" => request.SortDescending ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
       "updatedat" => request.SortDescending ? query.OrderByDescending(p => p.UpdatedAt) : query.OrderBy(p => p.UpdatedAt),
@@ -85,7 +90,8 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<Program?> Handle(GetProgramByIdQuery request, CancellationToken cancellationToken) {
+  public async Task<Program?> Handle(GetProgramByIdQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting program by ID: {ProgramId}", request.Id);
 
     var query = context.Programs.Where(p => p.Id == request.Id && p.DeletedAt == null);
@@ -106,7 +112,8 @@ public class ProgramQueryHandlers(
     return program;
   }
 
-  public async Task<Program?> Handle(GetProgramBySlugQuery request, CancellationToken cancellationToken) {
+  public async Task<Program?> Handle(GetProgramBySlugQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting program by slug: {Slug}", request.Slug);
 
     var query = context.Programs.Where(p => p.Slug == request.Slug && p.DeletedAt == null);
@@ -127,7 +134,8 @@ public class ProgramQueryHandlers(
     return program;
   }
 
-  public async Task<Program?> Handle(GetPublishedProgramBySlugQuery request, CancellationToken cancellationToken) {
+  public async Task<Program?> Handle(GetPublishedProgramBySlugQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting published program by slug: {Slug}", request.Slug);
 
     var query = context.Programs
@@ -151,7 +159,8 @@ public class ProgramQueryHandlers(
 
   // ===== SEARCH AND FILTER HANDLERS =====
 
-  public async Task<IEnumerable<Program>> Handle(SearchProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(SearchProgramsQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Searching programs with term: {SearchTerm}", request.SearchTerm);
 
     var query = context.Programs
@@ -174,13 +183,15 @@ public class ProgramQueryHandlers(
 
     if (request.MaxEstimatedHours.HasValue) query = query.Where(p => p.EstimatedHours <= request.MaxEstimatedHours.Value);
 
-    if (request.MinRating.HasValue) {
+    if (request.MinRating.HasValue)
+    {
       query = query.Where(p => p.ProgramRatings.Any() &&
                                p.ProgramRatings.Average(pr => pr.Rating) >= request.MinRating.Value
       );
     }
 
-    if (request.AvailableForEnrollment) {
+    if (request.AvailableForEnrollment)
+    {
       query = query.Where(p => p.EnrollmentStatus == EnrollmentStatus.Open &&
                                (p.MaxEnrollments == null || p.ProgramUsers.Count(pu => pu.IsActive) < p.MaxEnrollments) &&
                                (p.EnrollmentDeadline == null || p.EnrollmentDeadline > DateTime.UtcNow)
@@ -197,7 +208,8 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<Program>> Handle(GetProgramsByCategoryQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetProgramsByCategoryQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting programs by category: {Category}", request.Category);
 
     var query = context.Programs.Where(p => p.Category == request.Category && p.DeletedAt == null);
@@ -215,7 +227,8 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<Program>> Handle(GetProgramsByDifficultyQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetProgramsByDifficultyQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting programs by difficulty: {Difficulty}", request.Difficulty);
 
     var query = context.Programs.Where(p => p.Difficulty == request.Difficulty && p.DeletedAt == null);
@@ -233,7 +246,8 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<Program>> Handle(GetProgramsByCreatorQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetProgramsByCreatorQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting programs by creator: {CreatorId}", request.CreatorId);
 
     // CreatorId property doesn't exist in current Program model, return empty for now
@@ -255,7 +269,8 @@ public class ProgramQueryHandlers(
 
   // ===== ENROLLMENT QUERY HANDLERS =====
 
-  public async Task<IEnumerable<Program>> Handle(GetUserEnrolledProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetUserEnrolledProgramsQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting enrolled programs for user: {UserId}", request.UserId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
@@ -275,7 +290,8 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<ProgramUser>> Handle(GetProgramEnrollmentsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramUser>> Handle(GetProgramEnrollmentsQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting enrollments for program: {ProgramId}", request.ProgramId);
 
     var query = context.ProgramUsers.Where(pu => pu.ProgramId == request.ProgramId);
@@ -293,7 +309,8 @@ public class ProgramQueryHandlers(
     return enrollments;
   }
 
-  public async Task<ProgramUser?> Handle(CheckUserEnrollmentQuery request, CancellationToken cancellationToken) {
+  public async Task<ProgramUser?> Handle(CheckUserEnrollmentQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Checking enrollment for user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
@@ -306,13 +323,15 @@ public class ProgramQueryHandlers(
 
   // ===== CONTENT QUERY HANDLERS =====
 
-  public async Task<IEnumerable<ProgramContent>> Handle(GetProgramContentQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramContent>> Handle(GetProgramContentQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting content for program: {ProgramId}", request.ProgramId);
 
     var query = context.ProgramContents
                        .Where(pc => pc.ProgramId == request.ProgramId && !pc.IsDeleted);
 
-    if (request.OnlyVisible) {
+    if (request.OnlyVisible)
+    {
       query = query.Where(pc => pc.Visibility == Visibility.Published); // Fixed to use ProgramContent's own properties
     }
 
@@ -325,7 +344,8 @@ public class ProgramQueryHandlers(
     return content;
   }
 
-  public async Task<ProgramUserProgress?> Handle(GetUserProgramProgressQuery request, CancellationToken cancellationToken) {
+  public async Task<ProgramUserProgress?> Handle(GetUserProgramProgressQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting progress for user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
@@ -363,7 +383,8 @@ public class ProgramQueryHandlers(
 
   // ===== STATISTICS HANDLERS =====
 
-  public async Task<ProgramStatistics> Handle(GetProgramStatisticsQuery request, CancellationToken cancellationToken) {
+  public async Task<ProgramStatistics> Handle(GetProgramStatisticsQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting statistics for program: {ProgramId}", request.ProgramId);
 
     var totalEnrollments = await context.ProgramUsers
@@ -403,7 +424,8 @@ public class ProgramQueryHandlers(
     return statistics;
   }
 
-  public async Task<GlobalProgramStatistics> Handle(GetGlobalProgramStatisticsQuery request, CancellationToken cancellationToken) {
+  public async Task<GlobalProgramStatistics> Handle(GetGlobalProgramStatisticsQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting global program statistics");
 
     var query = context.Programs.Where(p => p.DeletedAt == null);
@@ -455,7 +477,8 @@ public class ProgramQueryHandlers(
     return statistics;
   }
 
-  public async Task<CreatorProgramStatistics> Handle(GetCreatorProgramStatisticsQuery request, CancellationToken cancellationToken) {
+  public async Task<CreatorProgramStatistics> Handle(GetCreatorProgramStatisticsQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting program statistics for creator: {CreatorId}", request.CreatorId);
 
     // CreatorId property doesn't exist in current Program model, return empty statistics for now
@@ -503,7 +526,8 @@ public class ProgramQueryHandlers(
 
   // ===== TRENDING AND RECOMMENDATION HANDLERS =====
 
-  public async Task<IEnumerable<Program>> Handle(GetPopularProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetPopularProgramsQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting popular programs");
 
     var sinceDate = DateTime.UtcNow.AddDays(-request.DaysBack);
@@ -524,7 +548,8 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<Program>> Handle(GetRecentProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetRecentProgramsQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting recent programs");
 
     var sinceDate = DateTime.UtcNow.AddDays(-request.DaysBack);
@@ -545,7 +570,8 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<Program>> Handle(GetFeaturedProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetFeaturedProgramsQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting featured programs");
 
     // Note: This is a simplified implementation. You might want to add a "Featured" flag to programs
@@ -565,7 +591,8 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<Program>> Handle(GetRecommendedProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetRecommendedProgramsQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting recommended programs for user: {UserId}", request.UserId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
@@ -598,7 +625,8 @@ public class ProgramQueryHandlers(
 
   // ===== RATING QUERY HANDLERS =====
 
-  public async Task<IEnumerable<ProgramRating>> Handle(GetProgramRatingsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramRating>> Handle(GetProgramRatingsQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting ratings for program: {ProgramId}", request.ProgramId);
 
     var ratings = await context.ProgramRatings
@@ -613,7 +641,8 @@ public class ProgramQueryHandlers(
     return ratings;
   }
 
-  public async Task<ProgramRating?> Handle(GetUserProgramRatingQuery request, CancellationToken cancellationToken) {
+  public async Task<ProgramRating?> Handle(GetUserProgramRatingQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 
     var rating = await context.ProgramRatings
@@ -625,7 +654,8 @@ public class ProgramQueryHandlers(
 
   // ===== WISHLIST QUERY HANDLERS =====
 
-  public async Task<IEnumerable<Program>> Handle(GetUserWishlistQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(GetUserWishlistQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Getting wishlist for user: {UserId}", request.UserId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
@@ -643,7 +673,8 @@ public class ProgramQueryHandlers(
     return programs;
   }
 
-  public async Task<bool> Handle(CheckProgramInWishlistQuery request, CancellationToken cancellationToken) {
+  public async Task<bool> Handle(CheckProgramInWishlistQuery request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Checking if program {ProgramId} is in wishlist for user {UserId}", request.ProgramId, request.UserId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
