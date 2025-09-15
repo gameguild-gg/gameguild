@@ -11,41 +11,43 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Asp.Versioning.Mvc"/>
-    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer"/>
+    <PackageReference Include="Asp.Versioning.Mvc" />
+    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
 
-    <PackageReference Include="BCrypt.Net-Next"/>
+    <PackageReference Include="BCrypt.Net-Next" />
 
-    <PackageReference Include="DotNetEnv"/>
+    <PackageReference Include="DotNetEnv" />
 
-    <PackageReference Include="FluentValidation"/>
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
 
-    <PackageReference Include="HotChocolate.AspNetCore"/>
-    <PackageReference Include="HotChocolate.Data.EntityFramework"/>
-    <PackageReference Include="HotChocolate.Types.Analyzers"/>
+    <PackageReference Include="HotChocolate.AspNetCore" />
+    <PackageReference Include="HotChocolate.Data.EntityFramework" />
+    <PackageReference Include="HotChocolate.Types.Analyzers" />
 
-    <PackageReference Include="MediatR"/>
-    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection"/>
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" />
 
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 
-    <PackageReference Include="Microsoft.EntityFrameworkCore"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools"/>
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
 
-    <PackageReference Include="Newtonsoft.Json"/>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"/>
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
 
-    <PackageReference Include="Serilog"/>
-    <PackageReference Include="Slugify.Core"/>
+    <PackageReference Include="OpenFeature" />
 
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt"/>
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Slugify.Core" />
 
-    <PackageReference Include="Swashbuckle.AspNetCore"/>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+
+    <PackageReference Include="Swashbuckle.AspNetCore" />
 
   </ItemGroup>
 
