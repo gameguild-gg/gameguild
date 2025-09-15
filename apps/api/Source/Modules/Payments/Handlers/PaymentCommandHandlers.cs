@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Payments;
 /// <summary>
 /// Handler for creating payment intents
 /// </summary>
-public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand, CreatePaymentResult> {
+public class CreatePaymentCommandHandler : GameGuild.CQRS.IRequestHandler<CreatePaymentCommand, CreatePaymentResult> {
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;
@@ -72,14 +72,14 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
 /// <summary>
 /// Handler for processing payments
 /// </summary>
-public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentCommand, ProcessPaymentResult> {
+public class ProcessPaymentCommandHandler : GameGuild.CQRS.IRequestHandler<ProcessPaymentCommand, ProcessPaymentResult> {
   private readonly ApplicationDbContext _context;
-  private readonly IMediator _mediator;
+  private readonly GameGuild.CQRS.IMediator _mediator;
   private readonly ILogger<ProcessPaymentCommandHandler> _logger;
 
   public ProcessPaymentCommandHandler(
     ApplicationDbContext context,
-    IMediator mediator,
+    GameGuild.CQRS.IMediator mediator,
     ILogger<ProcessPaymentCommandHandler> logger
   ) {
     _context = context;
@@ -173,7 +173,7 @@ public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentComman
 /// <summary>
 /// Handler for refunding payments
 /// </summary>
-public class RefundPaymentCommandHandler : IRequestHandler<RefundPaymentCommand, RefundPaymentResult> {
+public class RefundPaymentCommandHandler : GameGuild.CQRS.IRequestHandler<RefundPaymentCommand, RefundPaymentResult> {
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
   private readonly ILogger<RefundPaymentCommandHandler> _logger;
@@ -238,7 +238,7 @@ public class RefundPaymentCommandHandler : IRequestHandler<RefundPaymentCommand,
 /// <summary>
 /// Handler for cancelling payments
 /// </summary>
-public class CancelPaymentCommandHandler : IRequestHandler<CancelPaymentCommand, CancelPaymentResult> {
+public class CancelPaymentCommandHandler : GameGuild.CQRS.IRequestHandler<CancelPaymentCommand, CancelPaymentResult> {
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
   private readonly ILogger<CancelPaymentCommandHandler> _logger;
