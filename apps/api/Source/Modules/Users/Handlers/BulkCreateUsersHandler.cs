@@ -12,23 +12,18 @@ public class BulkCreateUsersHandler(
   ApplicationDbContext context,
   ILogger<BulkCreateUsersHandler> logger,
   IMediator mediator
-) : IResultCommandHandler<BulkCreateUsersCommand, BulkOperationResult>
-{
-  public async Task<Result<BulkOperationResult>> Handle(BulkCreateUsersCommand request, CancellationToken cancellationToken)
-  {
+) : IResultCommandHandler<BulkCreateUsersCommand, BulkOperationResult> {
+  public async Task<Result<BulkOperationResult>> Handle(BulkCreateUsersCommand request, CancellationToken cancellationToken) {
     var createdUsers = new List<User>();
     var errors = new List<string>();
     var successfulCount = 0;
 
-    foreach (var userDto in request.Users)
-    {
-      try
-      {
+    foreach (var userDto in request.Users) {
+      try {
         // Check if user with email already exists
         var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Email == userDto.Email, cancellationToken);
 
-        if (existingUser != null)
-        {
+        if (existingUser != null) {
           errors.Add($"User with email {userDto.Email} already exists");
 
           continue;
@@ -43,8 +38,7 @@ public class BulkCreateUsersHandler(
 
         var uniqueUsername = SlugCase.GenerateUnique(userDto.Name, existingUsernames, 50);
 
-        var user = new User
-        {
+        var user = new User {
           Name = userDto.Name,
           Username = uniqueUsername,
           Email = userDto.Email,
@@ -57,15 +51,13 @@ public class BulkCreateUsersHandler(
         createdUsers.Add(user);
         successfulCount++;
       }
-      catch (Exception ex)
-      {
+      catch (Exception ex) {
         errors.Add($"Failed to create user with email {userDto.Email}: {ex.Message}");
         logger.LogError(ex, "Failed to create user with email {Email}", userDto.Email);
       }
     }
 
-    if (createdUsers.Count != 0)
-    {
+    if (createdUsers.Count != 0) {
       await context.SaveChangesAsync(cancellationToken);
 
       // Publish domain events for created users
