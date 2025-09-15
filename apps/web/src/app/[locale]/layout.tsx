@@ -1,25 +1,24 @@
-import { auth } from '@/auth';
-import { WebVitals } from '@/components/analytics';
-import { ConditionalAnalytics, InitializeGoogleConsent } from '@/components/analytics/conditional-analytics';
-import { ErrorBoundaryProvider } from '@/components/common/errors/error-boundary-provider';
-import { Providers } from '@/components/providers';
-import { ApolloClientProvider } from '@/components/providers/apollo-provider';
-import { GitHubIssueProvider } from '@/components/providers/github-issue-provider';
-import { TenantProvider } from '@/components/tenant';
-import { ThemeProvider } from '@/components/theme';
-import { Toaster } from '@/components/ui/sonner';
-import { Web3Provider } from '@/components/web3';
-import { environment } from '@/configs/environment';
-import { routing } from '@/i18n';
-import { PropsWithLocaleParams } from '@/types';
-import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
-import { Metadata } from 'next';
-import { SessionProvider } from 'next-auth/react';
-import { hasLocale, NextIntlClientProvider } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
-import { Inter } from "next/font/google";
-import { notFound } from 'next/navigation';
-import React, { PropsWithChildren } from 'react';
+import {auth} from '@/auth';
+import {WebVitals} from '@/components/analytics';
+import {ErrorBoundaryProvider} from '@/components/common/errors/error-boundary-provider';
+import {Providers} from '@/components/providers';
+import {ApolloClientProvider} from '@/components/providers/apollo-provider';
+import {GitHubIssueProvider} from '@/components/providers/github-issue-provider';
+import {TenantProvider} from '@/components/tenant';
+import {ThemeProvider} from '@/components/theme';
+import {Toaster} from '@/components/ui/sonner';
+import {Web3Provider} from '@/components/web3';
+import {environment} from '@/configs/environment';
+import {routing} from '@/i18n';
+import {PropsWithLocaleParams} from '@/types';
+import {GoogleAnalytics, GoogleTagManager} from '@next/third-parties/google';
+import {Metadata} from 'next';
+import {SessionProvider} from 'next-auth/react';
+import {hasLocale, NextIntlClientProvider} from 'next-intl';
+import {getMessages, setRequestLocale} from 'next-intl/server';
+import {Inter} from "next/font/google";
+import {notFound} from 'next/navigation';
+import React, {PropsWithChildren} from 'react';
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -57,11 +56,11 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
         <WebVitals />
 
         {/* Initialize Google Consent Mode early */}
-        <InitializeGoogleConsent />
+        {/*<InitializeGoogleConsent />*/}
 
         <NextIntlClientProvider locale={locale} messages={messages}>
           {/* Conditional Analytics - only loads when the user consents */}
-          <ConditionalAnalytics />
+          {/*<ConditionalAnalytics />*/}
           <GoogleAnalytics gaId={environment.googleAnalyticsMeasurementId} />
           <GoogleTagManager gtmId={environment.googleTagManagerId} />
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
