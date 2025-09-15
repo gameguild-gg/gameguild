@@ -1,9 +1,12 @@
+using GameGuild.CQRS;
+
 namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// Query to get all users with optional filtering, pagination, and caching
 /// </summary>
-public class GetAllUsersQuery : IRequest<IEnumerable<User>>, ICachedRequest {
+public class GetAllUsersQuery : IRequest<IEnumerable<User>>, ICachedRequest
+{
   public bool IncludeDeleted { get; set; } = false;
 
   public bool? IsActive { get; set; }
@@ -13,15 +16,18 @@ public class GetAllUsersQuery : IRequest<IEnumerable<User>>, ICachedRequest {
   [Range(1, 100)] public int Take { get; set; } = 50;
 
   // Caching implementation
-  public string CacheKey {
+  public string CacheKey
+  {
     get => $"users:all:{IncludeDeleted}:{IsActive}:{Skip}:{Take}";
   }
 
-  public TimeSpan CacheExpiration {
+  public TimeSpan CacheExpiration
+  {
     get => TimeSpan.FromMinutes(10);
   }
 
-  public TimeSpan? SlidingExpiration {
+  public TimeSpan? SlidingExpiration
+  {
     get => TimeSpan.FromMinutes(2);
   }
 }

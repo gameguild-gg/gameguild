@@ -1,6 +1,7 @@
+using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
-
+using GameGuild.Modules.Users.Events;
 
 namespace GameGuild.Modules.Users;
 
@@ -11,23 +12,29 @@ public class BulkActivateUsersHandler(
   ApplicationDbContext context,
   ILogger<BulkActivateUsersHandler> logger,
   GameGuild.CQRS.IMediator mediator
-) : IResultCommandHandler<BulkActivateUsersCommand, BulkOperationResult> {
-  public async Task<Result<BulkOperationResult>> Handle(BulkActivateUsersCommand request, CancellationToken cancellationToken) {
+) : IResultCommandHandler<BulkActivateUsersCommand, BulkOperationResult>
+{
+  public async Task<Result<BulkOperationResult>> Handle(BulkActivateUsersCommand request, CancellationToken cancellationToken)
+  {
     var activatedUsers = new List<User>();
     var errors = new List<string>();
     var successfulCount = 0;
 
-    foreach (var userId in request.UserIds) {
-      try {
+    foreach (var userId in request.UserIds)
+    {
+      try
+      {
         var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null, cancellationToken);
 
-        if (user == null) {
+        if (user == null)
+        {
           errors.Add($"User with ID {userId} not found");
 
           continue;
         }
 
-        if (user.IsActive) {
+        if (user.IsActive)
+        {
           successfulCount++; // Already active, count as success
 
           continue;
@@ -38,13 +45,15 @@ public class BulkActivateUsersHandler(
         activatedUsers.Add(user);
         successfulCount++;
       }
-      catch (Exception ex) {
+      catch (Exception ex)
+      {
         errors.Add($"Failed to activate user {userId}: {ex.Message}");
         logger.LogError(ex, "Failed to activate user {UserId}", userId);
       }
     }
 
-    if (activatedUsers.Count != 0) {
+    if (activatedUsers.Count != 0)
+    {
       await context.SaveChangesAsync(cancellationToken);
 
       // Publish domain events for activated users
