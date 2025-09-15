@@ -3,7 +3,8 @@ using System.Reflection;
 
 namespace GameGuild;
 
-public static class DependencyInjection {
+public static class DependencyInjection
+{
   /// <summary>
   /// Adds the presentation layer services with custom options.
   /// </summary>
@@ -11,7 +12,8 @@ public static class DependencyInjection {
   /// <param name="configuration">The application configuration</param>
   /// <param name="options">Custom presentation layer options</param>
   /// <returns>The service collection for chaining</returns>
-  public static IServiceCollection AddPresentationLayer(this IServiceCollection services, IConfiguration configuration, PresentationLayerOptions? options = null) {
+  public static IServiceCollection AddPresentationLayer(this IServiceCollection services, IConfiguration configuration, PresentationLayerOptions? options = null)
+  {
     options ??= PresentationLayerOptionsBuilder.Create(configuration);
 
     // Validate the options to ensure they are correctly configured
@@ -98,11 +100,12 @@ public static class DependencyInjection {
   /// <summary>
   /// Gets all application assemblies to scan for types with explicit entry assembly
   /// </summary>
-  public static Assembly[ ] GetApplicationAssemblies(Assembly entryAssembly, params Assembly[ ] additionalAssemblies) {
+  public static Assembly[] GetApplicationAssemblies(Assembly entryAssembly, params Assembly[] additionalAssemblies)
+  {
     ArgumentNullException.ThrowIfNull(entryAssembly);
     ArgumentNullException.ThrowIfNull(additionalAssemblies);
 
-    var baseAssemblies = new[ ] {
+    var baseAssemblies = new[] {
       Assembly.GetExecutingAssembly(), // Core assembly
       entryAssembly // Explicitly provided entry assembly (e.g., API assembly)
     };
@@ -113,14 +116,16 @@ public static class DependencyInjection {
   /// <summary>
   /// Gets assemblies from the current application domain that match the specified pattern
   /// </summary>
-  public static Assembly[ ] GetAssembliesByPattern(string pattern = "GameGuild.*") {
+  public static Assembly[] GetAssembliesByPattern(string pattern = "GameGuild.*")
+  {
     return AppDomain.CurrentDomain.GetAssemblies().Where(assembly => assembly.FullName?.StartsWith(pattern, StringComparison.OrdinalIgnoreCase) == true).ToArray();
   }
 
   /// <summary>
   /// Retrieves registration metrics from the last registration operation
   /// </summary>
-  public static RegistrationMetrics GetRegistrationMetrics(IServiceProvider serviceProvider) {
+  public static RegistrationMetrics GetRegistrationMetrics(IServiceProvider serviceProvider)
+  {
     return serviceProvider.GetService<RegistrationMetrics>() ?? new RegistrationMetrics { TotalHandlersRegistered = 0, TotalValidatorsRegistered = 0, RegistrationDuration = TimeSpan.Zero };
   }
 
@@ -131,7 +136,8 @@ public static class DependencyInjection {
   /// <param name="services">The service collection</param>
   /// <param name="configuration">The application configuration</param>
   /// <returns>The service collection for chaining</returns>
-  public static IServiceCollection AddInfrastructureLayer(this IServiceCollection services, IConfiguration configuration) {
+  public static IServiceCollection AddInfrastructureLayer(this IServiceCollection services, IConfiguration configuration)
+  {
     ArgumentNullException.ThrowIfNull(services);
     ArgumentNullException.ThrowIfNull(configuration);
 
