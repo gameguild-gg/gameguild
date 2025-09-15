@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 
 
@@ -6,7 +7,7 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Command to create a new user profile with validation and business logic
 /// </summary>
-public class CreateUserProfileCommand : ICommand<Common.Result<UserProfile>> {
+public class CreateUserProfileCommand : ICommand<Result<UserProfile>> {
   [Required]
   [StringLength(100, MinimumLength = 1)]
   public string GivenName { get; set; } = string.Empty;

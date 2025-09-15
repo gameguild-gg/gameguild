@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 
 
@@ -6,7 +7,7 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Query to get all user profiles with optional filtering
 /// </summary>
-public class GetAllUserProfilesQuery : IQuery<Common.Result<IEnumerable<UserProfile>>> {
+public class GetAllUserProfilesQuery : IQuery<Result<IEnumerable<UserProfile>>> {
   public bool IncludeDeleted { get; set; } = false;
 
   public int Skip { get; set; } = 0;

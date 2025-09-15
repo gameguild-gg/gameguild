@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -11,8 +12,8 @@ public class CreateUserProfileHandler(
   ApplicationDbContext context,
   ILogger<CreateUserProfileHandler> logger,
   IDomainEventPublisher eventPublisher
-) : ICommandHandler<CreateUserProfileCommand, Common.Result<UserProfile>> {
-  public async Task<Common.Result<UserProfile>> Handle(CreateUserProfileCommand request, CancellationToken cancellationToken) {
+) : ICommandHandler<CreateUserProfileCommand, Result<UserProfile>> {
+  public async Task<Result<UserProfile>> Handle(CreateUserProfileCommand request, CancellationToken cancellationToken) {
     try {
       // Check if user profile already exists for this user
       var existingProfile = await context.Resources.OfType<UserProfile>()

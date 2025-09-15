@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -11,8 +12,8 @@ public class DeleteUserProfileHandler(
   ApplicationDbContext context,
   ILogger<DeleteUserProfileHandler> logger,
   IDomainEventPublisher eventPublisher
-) : ICommandHandler<DeleteUserProfileCommand, Common.Result<bool>> {
-  public async Task<Common.Result<bool>> Handle(DeleteUserProfileCommand request, CancellationToken cancellationToken) {
+) : ICommandHandler<DeleteUserProfileCommand, Result<bool>> {
+  public async Task<Result<bool>> Handle(DeleteUserProfileCommand request, CancellationToken cancellationToken) {
     try {
       // Find the user profile
       var userProfile = await context.Resources.OfType<UserProfile>()

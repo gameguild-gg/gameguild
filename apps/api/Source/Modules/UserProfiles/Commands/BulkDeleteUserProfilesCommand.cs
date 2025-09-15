@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 
 
@@ -6,7 +7,7 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Command to bulk delete multiple user profiles
 /// </summary>
-public sealed class BulkDeleteUserProfilesCommand : ICommand<Common.Result<int>> {
+public sealed class BulkDeleteUserProfilesCommand : ICommand<Result<int>> {
   /// <summary>
   /// User profile IDs to delete
   /// </summary>
