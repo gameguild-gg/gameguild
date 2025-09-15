@@ -1,9 +1,12 @@
+using GameGuild.CQRS;
+
 namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Command to handle token refresh using CQRS pattern
 /// </summary>
-public class RefreshTokenCommand : IRequest<SignInResponseDto> {
+public class RefreshTokenCommand : IRequest<SignInResponseDto>
+{
   /// <summary>
   /// The refresh token to use for generating new access/refresh tokens
   /// </summary>

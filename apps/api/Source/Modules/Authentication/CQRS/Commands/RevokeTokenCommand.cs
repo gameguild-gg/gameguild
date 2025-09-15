@@ -1,9 +1,12 @@
+using GameGuild.CQRS;
+
 namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Command to handle token revocation using CQRS pattern
 /// </summary>
-public class RevokeTokenCommand : IRequest<Unit> {
+public class RevokeTokenCommand : IRequest<Unit>
+{
   /// <summary>
   /// The refresh token to revoke
   /// </summary>

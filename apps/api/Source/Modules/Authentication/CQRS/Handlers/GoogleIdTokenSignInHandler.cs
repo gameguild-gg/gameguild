@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 namespace GameGuild.Modules.Authentication;
 
 /// <summary>
@@ -5,9 +6,9 @@ namespace GameGuild.Modules.Authentication;
 /// </summary>
 public class GoogleIdTokenSignInHandler(
   IAuthService authService,
-  GameGuild.CQRS.IMediator mediator,
+  IMediator mediator,
   ILogger<GoogleIdTokenSignInHandler> logger
-) : GameGuild.CQRS.IRequestHandler<GoogleIdTokenSignInCommand, SignInResponseDto> {
+) : IRequestHandler<GoogleIdTokenSignInCommand, SignInResponseDto> {
   public async Task<SignInResponseDto> Handle(GoogleIdTokenSignInCommand request, CancellationToken cancellationToken) {
     var signInRequest = new GoogleIdTokenRequestDto { IdToken = request.IdToken, TenantId = request.TenantId };
 
