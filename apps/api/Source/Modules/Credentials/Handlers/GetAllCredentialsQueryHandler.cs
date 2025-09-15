@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Credentials.Queries;
 
