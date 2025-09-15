@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -6,10 +7,10 @@ namespace GameGuild.Modules.Posts;
 [ApiController]
 [Route("api/[controller]")]
 public class PostsController : ControllerBase {
-  private readonly IMediator _mediator;
+  private readonly GameGuild.CQRS.IMediator _mediator;
   private readonly ILogger<PostsController> _logger;
 
-  public PostsController(IMediator mediator, ILogger<PostsController> logger) {
+  public PostsController(GameGuild.CQRS.IMediator mediator, ILogger<PostsController> logger) {
     _mediator = mediator;
     _logger = logger;
   }

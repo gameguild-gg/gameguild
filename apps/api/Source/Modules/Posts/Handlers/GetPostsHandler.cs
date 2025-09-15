@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -10,8 +11,8 @@ namespace GameGuild.Modules.Posts;
 public class GetPostsHandler(
   ApplicationDbContext context,
   ILogger<GetPostsHandler> logger
-) : IQueryHandler<GetPostsQuery, Common.Result<PostsPageDto>> {
-  public async Task<Common.Result<PostsPageDto>> Handle(GetPostsQuery request, CancellationToken cancellationToken) {
+) : IQueryHandler<GetPostsQuery, Result<PostsPageDto>> {
+  public async Task<Result<PostsPageDto>> Handle(GetPostsQuery request, CancellationToken cancellationToken) {
     try {
       logger.LogInformation(
         "Getting posts for tenant {TenantId}, page {PageNumber}",
