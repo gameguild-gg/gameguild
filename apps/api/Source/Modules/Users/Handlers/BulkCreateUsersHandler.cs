@@ -12,9 +12,9 @@ public class BulkCreateUsersHandler(
   ApplicationDbContext context,
   ILogger<BulkCreateUsersHandler> logger,
   GameGuild.CQRS.IMediator mediator
-) : ICommandHandler<BulkCreateUsersCommand, BulkOperationResult>
+) : IResultCommandHandler<BulkCreateUsersCommand, BulkOperationResult>
 {
-  public async Task<BulkOperationResult> Handle(BulkCreateUsersCommand request, CancellationToken cancellationToken)
+  public async Task<Result<BulkOperationResult>> Handle(BulkCreateUsersCommand request, CancellationToken cancellationToken)
   {
     var createdUsers = new List<User>();
     var errors = new List<string>();
@@ -83,6 +83,6 @@ public class BulkCreateUsersHandler(
       request.Reason ?? "Not specified"
     );
 
-    return result;
+    return Result<BulkOperationResult>.Success(result);
   }
 }

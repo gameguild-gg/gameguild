@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Users;
 public class CreateUserResultHandler(
     ApplicationDbContext context,
     ILogger<CreateUserResultHandler> logger,
-    IMediator mediator
+    GameGuild.CQRS.IMediator mediator
 ) : IResultCommandHandler<CreateUserResultCommand, User>
 {
     public async Task<Result<User>> Handle(CreateUserResultCommand request, CancellationToken cancellationToken)

@@ -1,9 +1,10 @@
+using GameGuild.CQRS;
 ﻿namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// Command to restore a soft-deleted user
 /// </summary>
-public sealed class RestoreUserCommand : IRequest<bool> {
+public sealed class RestoreUserCommand : ICommand<bool> {
   [Required] public Guid UserId { get; set; }
 
   /// <summary>
