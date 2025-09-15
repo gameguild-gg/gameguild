@@ -1,5 +1,5 @@
+using GameGuild.CQRS;
 using GameGuild.Modules.Billing.Models;
-
 
 namespace GameGuild.Modules.Billing.Commands;
 

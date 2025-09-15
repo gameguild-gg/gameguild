@@ -1,6 +1,6 @@
-using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
+using CqrsResult = GameGuild.CQRS.Result;
 
 
 namespace GameGuild.Modules.Users;
@@ -14,7 +14,7 @@ public class BulkDeactivateUsersHandler(
   IMediator mediator
 ) : IResultCommandHandler<BulkDeactivateUsersCommand, BulkOperationResult>
 {
-  public async Task<Result<BulkOperationResult>> Handle(BulkDeactivateUsersCommand request, CancellationToken cancellationToken)
+  public async Task<CqrsResult<BulkOperationResult>> Handle(BulkDeactivateUsersCommand request, CancellationToken cancellationToken)
   {
     var deactivatedUsers = new List<User>();
     var errors = new List<string>();
@@ -71,6 +71,6 @@ public class BulkDeactivateUsersHandler(
       request.Reason ?? "Not specified"
     );
 
-    return Result<BulkOperationResult>.Success(result);
+    return CqrsResult<BulkOperationResult>.Success(result);
   }
 }

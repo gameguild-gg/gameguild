@@ -1,6 +1,6 @@
-using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
+using CqrsResult = GameGuild.CQRS.Result;
 
 
 namespace GameGuild.Modules.Users;
@@ -14,7 +14,7 @@ public class CreateUserResultHandler(
     GameGuild.CQRS.IMediator mediator
 ) : IResultCommandHandler<CreateUserResultCommand, User>
 {
-    public async Task<Result<User>> Handle(CreateUserResultCommand request, CancellationToken cancellationToken)
+    public async Task<CqrsResult<User>> Handle(CreateUserResultCommand request, CancellationToken cancellationToken)
     {
         try
         {
