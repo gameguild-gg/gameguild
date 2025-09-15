@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using HotChocolate.Execution.Configuration;
-using MediatR;
+using GameGuild.CQRS;
 using System.Reflection;
 
 

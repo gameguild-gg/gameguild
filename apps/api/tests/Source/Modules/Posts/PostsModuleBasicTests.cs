@@ -3,7 +3,7 @@ using GameGuild.Modules.Posts;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Posts.Services;
 using GameGuild.Modules.Users;
-using MediatR;
+using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
