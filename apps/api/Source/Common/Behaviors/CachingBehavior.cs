@@ -9,7 +9,7 @@ namespace GameGuild.Common;
 /// </summary>
 public class CachingBehavior<TRequest, TResponse>(IMemoryCache cache, ILogger<CachingBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>, ICachedRequest
 {
-  public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+  public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken)
   {
     var cacheKey = request.CacheKey;
     var requestName = typeof(TRequest).Name;

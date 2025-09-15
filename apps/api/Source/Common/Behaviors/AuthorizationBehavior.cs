@@ -9,7 +9,7 @@ namespace GameGuild.Common;
 /// </summary>
 public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor httpContextAccessor, ILogger<AuthorizationBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>
 {
-  public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+  public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken)
   {
     var requestName = typeof(TRequest).Name;
     var user = httpContextAccessor.HttpContext?.User;

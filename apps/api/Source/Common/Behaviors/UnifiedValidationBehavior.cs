@@ -7,10 +7,10 @@ namespace GameGuild.Common;
 /// <summary>
 /// Unified validation behavior that supports both DataAnnotations and FluentValidation
 /// </summary>
-public class UnifiedValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> fluentValidators, ILogger<UnifiedValidationBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse>
+public class UnifiedValidationBehavior<TRequest, TResponse>(IEnumerable<FluentValidation.IValidator<TRequest>> fluentValidators, ILogger<UnifiedValidationBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse>
   where TRequest : IRequest<TResponse>
 {
-  public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+  public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken)
   {
     var requestName = typeof(TRequest).Name;
     logger.LogDebug("Validating {RequestName}", requestName);
