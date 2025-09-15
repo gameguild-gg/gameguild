@@ -1,7 +1,5 @@
 using GameGuild.CQRS;
 
-using GameGuild.CQRS;
-
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Base interface for query handlers in the Testing Lab module </summary>
@@ -9,11 +7,5 @@ namespace GameGuild.Modules.TestingLab;
 /// <typeparam name="TResult"> The result type </typeparam>
 public interface ITestingLabQueryHandler<in TQuery, TResult> : IRequestHandler<TQuery, TResult>
   where TQuery : IRequest<TResult>
-{ }
-
-/// <summary> Base interface for query handlers in the Testing Lab module </summary>
-/// <typeparam name="TQuery"> The query type </typeparam>
-/// <typeparam name="TResult"> The result type </typeparam>
-public interface ITestingLabQueryHandler<in TQuery, TResult> : IRequestHandler<TQuery, TResult>
-  where TQuery : IRequest<TResult>
-{ }
+{
+}
