@@ -6,6 +6,8 @@ using GameGuild.Modules.Posts.Services;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Projects;
+using GameGuild.Modules.Subscriptions.Abstractions;
+using GameGuild.Modules.Subscriptions.Infrastructure;
 using GameGuild.Modules.Subscriptions.Services;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.TestingLab;
@@ -107,6 +109,9 @@ public static class ServiceCollectionExtensions {
   public static IServiceCollection AddSubscriptionModule(this IServiceCollection services) {
     // Register Subscription module services
     services.AddScoped<ISubscriptionService, SubscriptionService>();
+    
+    // Register Subscription repositories
+    services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 
     return services;
   }
