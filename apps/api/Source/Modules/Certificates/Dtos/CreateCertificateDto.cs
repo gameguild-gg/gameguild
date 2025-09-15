@@ -1,5 +1,3 @@
-using GameGuild;
-
 namespace GameGuild.Source.Modules.Certificates.Dtos;
 
 public class CreateCertificateDto {

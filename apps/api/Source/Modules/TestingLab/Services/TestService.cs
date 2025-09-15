@@ -1,5 +1,3 @@
-using GameGuild.CQRS;
-using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Projects;

@@ -1,6 +1,5 @@
 using GameGuild.GraphQL;
 using GameGuild.CQRS;
-using GameGuild;
 using GameGuild.Modules.Users.Inputs;
 
 

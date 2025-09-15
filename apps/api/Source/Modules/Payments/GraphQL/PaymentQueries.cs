@@ -1,7 +1,3 @@
-using GameGuild;
-using IUserContext = GameGuild.Common.IUserContext;
-
-
 namespace GameGuild.Modules.Payments;
 
 /// <summary>

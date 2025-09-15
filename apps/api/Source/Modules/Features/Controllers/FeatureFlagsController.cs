@@ -1,8 +1,7 @@
 using GameGuild.Modules.Features.Models;
 using GameGuild.Modules.Features.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Features.Controllers;
 

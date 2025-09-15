@@ -1,5 +1,4 @@
 using GameGuild.GraphQL;
-using GameGuild;
 using ValidationException = FluentValidation.ValidationException;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 

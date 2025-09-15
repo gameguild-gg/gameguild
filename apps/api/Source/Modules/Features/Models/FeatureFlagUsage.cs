@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Core.Entities;
-
 namespace GameGuild.Modules.Features.Models;
 
 /// <summary>

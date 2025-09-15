@@ -1,6 +1,5 @@
 using GameGuild.GraphQL;
 using GameGuild.CQRS;
-using GameGuild;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants.Inputs;
 

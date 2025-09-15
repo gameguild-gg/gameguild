@@ -1,7 +1,6 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Subscriptions.Abstractions;
-using GameGuild.Modules.Subscriptions.Models;
-using GameGuild.CQRS.Abstractions.Commands;
+
 
 namespace GameGuild.Modules.Subscriptions.Commands.CancelSubscription;
 

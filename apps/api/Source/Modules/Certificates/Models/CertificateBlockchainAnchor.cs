@@ -1,6 +1,3 @@
-using GameGuild;
-
-
 namespace GameGuild.Modules.Certificates;
 
 [Table("certificate_blockchain_anchors")]

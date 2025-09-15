@@ -1,5 +1,4 @@
 using System.Text.Json;
-using GameGuild;
 using GameGuild.Modules.Certificates;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Feedbacks;

@@ -1,7 +1,6 @@
 using GameGuild.Database;
 using GameGuild.Modules.Subscriptions.Abstractions;
 using GameGuild.Modules.Subscriptions.Models;
-using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace GameGuild.Modules.Subscriptions.Infrastructure;

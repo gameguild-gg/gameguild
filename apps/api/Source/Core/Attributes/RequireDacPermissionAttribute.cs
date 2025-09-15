@@ -1,11 +1,9 @@
 using System.Security.Claims;
-using GameGuild;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild;
 

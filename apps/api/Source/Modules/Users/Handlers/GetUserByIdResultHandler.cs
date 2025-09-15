@@ -1,6 +1,6 @@
 using GameGuild.CQRS;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
+
 
 namespace GameGuild.Modules.Users;
 

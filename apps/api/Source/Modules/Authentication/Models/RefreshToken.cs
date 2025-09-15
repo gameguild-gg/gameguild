@@ -1,6 +1,3 @@
-using GameGuild;
-
-
 namespace GameGuild.Modules.Authentication {
   /// <summary>
   /// Refresh token entity for managing user sessions

@@ -1,7 +1,4 @@
-﻿using GameGuild;
-
-
-namespace GameGuild.Modules.Programs;
+﻿namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// DTO for content search operations

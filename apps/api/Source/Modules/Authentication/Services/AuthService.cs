@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Tenants;

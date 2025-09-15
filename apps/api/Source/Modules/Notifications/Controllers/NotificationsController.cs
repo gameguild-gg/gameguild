@@ -1,9 +1,5 @@
-using GameGuild.CQRS;
-using GameGuild.Infrastructure.Common.Attributes;
-using GameGuild.Infrastructure.Common.Extensions;
 using GameGuild.Modules.Notifications.Dtos;
 using GameGuild.Modules.Notifications.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Modules.Notifications.Controllers;
