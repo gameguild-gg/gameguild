@@ -1,5 +1,8 @@
-﻿namespace GameGuild.Modules.Authentication;
+﻿using GameGuild.Modules.Users;
 
-public interface ITokenProvider {
+namespace GameGuild.Modules.Authentication;
+
+public interface ITokenProvider
+{
   string Create(IUser user);
 }
