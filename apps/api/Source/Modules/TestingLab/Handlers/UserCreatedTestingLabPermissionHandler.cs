@@ -1,4 +1,5 @@
 using GameGuild.Common.Services;
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Users;
 
@@ -6,7 +7,8 @@ using GameGuild.Modules.Users;
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Handles UserCreatedEvent to grant basic TestingLab permissions to new users </summary>
-internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<UserCreatedEvent> {
+internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<UserCreatedEvent>
+{
   private readonly IConfiguration _configuration;
 
   private readonly ApplicationDbContext _context;
@@ -20,14 +22,16 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
     ApplicationDbContext context,
     IServiceProvider serviceProvider,
     IConfiguration configuration
-  ) {
+  )
+  {
     _logger = logger;
     _context = context;
     _serviceProvider = serviceProvider;
     _configuration = configuration;
   }
 
-  public async Task Handle(UserCreatedEvent domainEvent, CancellationToken cancellationToken) {
+  public async Task Handle(UserCreatedEvent domainEvent, CancellationToken cancellationToken)
+  {
     ArgumentNullException.ThrowIfNull(domainEvent);
 
     _logger.LogInformation(
@@ -36,7 +40,8 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
       domainEvent.Name
     );
 
-    try {
+    try
+    {
       // Query the user's tenant associations since UserCreatedEvent doesn't include tenant context
       var userTenants = await _context.TenantPermissions
                                       .Where(tp => tp.UserId == domainEvent.UserId &&
@@ -47,7 +52,8 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
                                       .Where(tenantId => tenantId.HasValue)
                                       .ToListAsync(cancellationToken);
 
-      if (userTenants.Count == 0) {
+      if (userTenants.Count == 0)
+      {
         _logger.LogWarning(
           "No tenant associations found for user {UserId}. Basic TestingLab permissions cannot be granted without tenant context.",
           domainEvent.UserId
@@ -65,7 +71,8 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
         userTenants.Count
       );
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(
         ex,
         "Failed to set up TestingLab permissions for user {UserId}",
@@ -76,10 +83,12 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
     }
   }
 
-  private async Task GrantBasicTestingLabPermissions(Guid userId, Guid tenantId, CancellationToken cancellationToken) {
+  private async Task GrantBasicTestingLabPermissions(Guid userId, Guid tenantId, CancellationToken cancellationToken)
+  {
     _logger.LogDebug("Granting basic TestingLab permissions to user {UserId} in tenant {TenantId}", userId, tenantId);
 
-    try {
+    try
+    {
       // Get the default role from configuration, fallback to "TestingLabTester"
       var defaultRoleName = _configuration["TestingLab:DefaultUserRole"] ?? "TestingLabTester";
 
@@ -99,7 +108,8 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
         tenantId
       );
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(
         ex,
         "Failed to assign default TestingLab role to user {UserId} in tenant {TenantId}",
