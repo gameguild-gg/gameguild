@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
@@ -12,8 +13,8 @@ public class CreatePostHandler(
   ApplicationDbContext context,
   ILogger<CreatePostHandler> logger,
   IDomainEventPublisher eventPublisher
-) : ICommandHandler<CreatePostCommand, Common.Result<Post>> {
-  public async Task<Common.Result<Post>> Handle(CreatePostCommand request, CancellationToken cancellationToken) {
+) : ICommandHandler<CreatePostCommand, Result<Post>> {
+  public async Task<Result<Post>> Handle(CreatePostCommand request, CancellationToken cancellationToken) {
     try {
       logger.LogInformation(
         "Creating post for user {AuthorId} in tenant {TenantId}",

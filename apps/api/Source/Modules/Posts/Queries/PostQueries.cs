@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 
 
@@ -6,7 +7,7 @@ namespace GameGuild.Modules.Posts;
 /// <summary>
 /// Query to get posts with pagination and filtering
 /// </summary>
-public class GetPostsQuery : IQuery<Common.Result<PostsPageDto>> {
+public class GetPostsQuery : IQuery<Result<PostsPageDto>> {
   public int PageNumber { get; set; } = 1;
 
   public int PageSize { get; set; } = 20;
@@ -33,7 +34,7 @@ public class GetPostsQuery : IQuery<Common.Result<PostsPageDto>> {
 /// <summary>
 /// Query to get a single post by ID
 /// </summary>
-public class GetPostByIdQuery : IQuery<Common.Result<Post>> {
+public class GetPostByIdQuery : IQuery<Result<Post>> {
   public Guid PostId { get; set; }
 
   public Guid? TenantId { get; set; }
@@ -42,7 +43,7 @@ public class GetPostByIdQuery : IQuery<Common.Result<Post>> {
 /// <summary>
 /// Query to get posts by a specific user
 /// </summary>
-public class GetUserPostsQuery : IQuery<Common.Result<PostsPageDto>> {
+public class GetUserPostsQuery : IQuery<Result<PostsPageDto>> {
   public Guid UserId { get; set; }
 
   public int PageNumber { get; set; } = 1;
@@ -57,7 +58,7 @@ public class GetUserPostsQuery : IQuery<Common.Result<PostsPageDto>> {
 /// <summary>
 /// Query to get trending posts (most liked/commented recently)
 /// </summary>
-public class GetTrendingPostsQuery : IQuery<Common.Result<PostsPageDto>> {
+public class GetTrendingPostsQuery : IQuery<Result<PostsPageDto>> {
   public int PageNumber { get; set; } = 1;
 
   public int PageSize { get; set; } = 20;

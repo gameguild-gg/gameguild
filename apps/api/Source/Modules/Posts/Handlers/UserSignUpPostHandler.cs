@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Posts;
 /// Integrates with the existing Content/Resource architecture
 /// </summary>
 public class UserSignUpPostHandler(
-  IMediator mediator,
+  GameGuild.CQRS.IMediator mediator,
   ILogger<UserSignUpPostHandler> logger
 ) : INotificationHandler<UserSignedUpNotification> {
   public async Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken) {
