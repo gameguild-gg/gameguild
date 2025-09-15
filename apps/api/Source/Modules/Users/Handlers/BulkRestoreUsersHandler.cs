@@ -1,4 +1,5 @@
 using GameGuild;
+using GameGuild.Common;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
@@ -13,7 +14,7 @@ public class BulkRestoreUsersHandler(
   ILogger<BulkRestoreUsersHandler> logger,
   IMediator mediator
 ) : IResultCommandHandler<BulkRestoreUsersCommand, BulkOperationResult> {
-  public async Task<Result<BulkOperationResult>> Handle(BulkRestoreUsersCommand request, CancellationToken cancellationToken) {
+  public async Task<GameGuild.CQRS.Result<BulkOperationResult>> Handle(BulkRestoreUsersCommand request, CancellationToken cancellationToken) {
     var users = await context.Users
                              .IgnoreQueryFilters()
                              .Where(u => request.UserIds.Contains(u.Id) && u.DeletedAt != null)
@@ -58,6 +59,6 @@ public class BulkRestoreUsersHandler(
       request.Reason ?? "Not specified"
     );
 
-    return Result<BulkOperationResult>.Success(result);
+    return GameGuild.CQRS.Result.Success(result);
   }
 }

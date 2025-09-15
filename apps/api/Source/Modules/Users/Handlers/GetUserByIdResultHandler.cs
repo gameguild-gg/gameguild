@@ -1,4 +1,3 @@
-using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
@@ -11,7 +10,7 @@ public class GetUserByIdResultHandler(
     ApplicationDbContext context,
     ILogger<GetUserByIdResultHandler> logger
 ) : IResultQueryHandler<GetUserByIdResultQuery, User> {
-    public async Task<Result<User>> Handle(GetUserByIdResultQuery request, CancellationToken cancellationToken) {
+    public async Task<GameGuild.CQRS.Result<User>> Handle(GetUserByIdResultQuery request, CancellationToken cancellationToken) {
         try {
             var user = await context.Users
                                   .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);

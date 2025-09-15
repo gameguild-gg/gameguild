@@ -1,4 +1,5 @@
 using GameGuild;
+using GameGuild.Common;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
@@ -13,7 +14,7 @@ public class BulkDeleteUsersHandler(
   ILogger<BulkDeleteUsersHandler> logger,
   IMediator mediator
 ) : IResultCommandHandler<BulkDeleteUsersCommand, BulkOperationResult> {
-  public async Task<Result<BulkOperationResult>> Handle(BulkDeleteUsersCommand request, CancellationToken cancellationToken) {
+  public async Task<GameGuild.CQRS.Result<BulkOperationResult>> Handle(BulkDeleteUsersCommand request, CancellationToken cancellationToken) {
     var users = await context.Users
                              .Where(u => request.UserIds.Contains(u.Id))
                              .ToListAsync(cancellationToken);
@@ -61,6 +62,6 @@ public class BulkDeleteUsersHandler(
       request.Reason ?? "Not specified"
     );
 
-    return Result<BulkOperationResult>.Success(result);
+    return GameGuild.CQRS.Result.Success(result);
   }
 }
