@@ -14,7 +14,7 @@ public class PaymentQueries {
   /// </summary>
   public async Task<Payment?> GetPaymentAsync(
     Guid id,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     CancellationToken cancellationToken
   ) {
@@ -27,7 +27,7 @@ public class PaymentQueries {
   /// Get payments for current user or specified user (admin only)
   /// </summary>
   public async Task<IEnumerable<Payment>> GetUserPaymentsAsync(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     Guid? userId = null,
     PaymentStatus? status = null,
@@ -53,7 +53,7 @@ public class PaymentQueries {
   /// Get payments for a specific product (admin only)
   /// </summary>
   public async Task<IEnumerable<Payment>> GetProductPaymentsAsync(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     Guid productId,
     PaymentStatus? status = null,
@@ -81,7 +81,7 @@ public class PaymentQueries {
   /// Get payment statistics
   /// </summary>
   public async Task<PaymentStats> GetPaymentStatsAsync(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     [Service] ITenantContext tenantContext,
     Guid? userId = null,
@@ -105,7 +105,7 @@ public class PaymentQueries {
   /// Get revenue report (admin only)
   /// </summary>
   public async Task<RevenueReport?> GetRevenueReportAsync(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     [Service] ITenantContext tenantContext,
     DateTime fromDate,

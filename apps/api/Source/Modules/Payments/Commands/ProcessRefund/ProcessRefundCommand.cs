@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Infrastructure.Common.ValueObjects;
 using GameGuild.Infrastructure.CQRS.Abstractions;
 using GameGuild.Modules.Payments.Models;
