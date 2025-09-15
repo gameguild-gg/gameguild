@@ -10,7 +10,8 @@ namespace GameGuild.Modules.UserAchievements;
 [Table("achievement_levels")]
 [Index(nameof(AchievementId))]
 [Index(nameof(Level))]
-public class AchievementLevel : BaseEntity {
+public class AchievementLevel : EntityBase
+{
   /// <summary>
   /// The achievement this level belongs to
   /// </summary>
@@ -68,7 +69,8 @@ public class AchievementLevel : BaseEntity {
 [Table("achievement_prerequisites")]
 [Index(nameof(AchievementId))]
 [Index(nameof(PrerequisiteAchievementId))]
-public class AchievementPrerequisite : BaseEntity {
+public class AchievementPrerequisite : EntityBase
+{
   /// <summary>
   /// The achievement that has the prerequisite
   /// </summary>
@@ -108,7 +110,8 @@ public class AchievementPrerequisite : BaseEntity {
 [Index(nameof(AchievementId))]
 [Index(nameof(TenantId))]
 [Index(nameof(UserId), nameof(AchievementId), IsUnique = true)]
-public class AchievementProgress : BaseEntity {
+public class AchievementProgress : EntityBase
+{
   /// <summary>
   /// The user making progress
   /// </summary>
