@@ -1,11 +1,15 @@
+using GameGuild.CQRS;
+
 namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Debug handler to verify UserSignedUpNotification events are working
 /// </summary>
 public class DebugUserSignUpHandler(ILogger<DebugUserSignUpHandler> logger)
-  : INotificationHandler<UserSignedUpNotification> {
-  public async Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken) {
+  : INotificationHandler<UserSignedUpNotification>
+{
+  public async Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken)
+  {
     logger.LogInformation("🎉 DEBUG: New user registration detected!");
     logger.LogInformation("User ID: {UserId}", notification.UserId);
     logger.LogInformation("Email: {Email}", notification.Email);
