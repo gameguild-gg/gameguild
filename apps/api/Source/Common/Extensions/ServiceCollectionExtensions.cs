@@ -119,9 +119,6 @@ public static class ServiceCollectionExtensions
   {
     // Register Subscription module services
     services.AddScoped<ISubscriptionService, SubscriptionService>();
-    
-    // Register Subscription repositories
-    services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 
     // Register Subscription repositories
     services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
@@ -177,13 +174,7 @@ public static class ServiceCollectionExtensions
     return services;
   }
 
-  public static IServiceCollection AddPostModule(this IServiceCollection services)
-  {
-    // Register Post module services
-    services.AddScoped<IPostService, PostService>();
-
-    return services;
-  }
+  // Note: Consolidated under AddPostsModule(); single canonical registration to avoid ambiguity.
 
   public static IServiceCollection AddTestingLabModule(this IServiceCollection services)
   {
