@@ -12,7 +12,7 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
 {
   public async Task<TResponse> Handle(
     TRequest request,
-    RequestHandlerDelegate<TResponse> next,
+    RequestHandlerDelegateBase<TResponse> next,
     CancellationToken cancellationToken
   )
   {
