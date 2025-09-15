@@ -1,9 +1,11 @@
 using System.Reflection;
 using GameGuild.Common;
 using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Billing.Models;
 using GameGuild.Modules.Certificates;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Credentials;
+using GameGuild.Modules.Features.Models;
 using GameGuild.Modules.Feedbacks;
 using GameGuild.Modules.Kyc.Models;
 using GameGuild.Modules.Localization;
@@ -15,6 +17,7 @@ using GameGuild.Modules.Programs;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Reputations;
 using GameGuild.Modules.Resources;
+using GameGuild.Modules.Resources.Models;
 using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.Modules.Tags.Models;
 using GameGuild.Modules.Tenants;
@@ -207,6 +210,20 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<UserFinancialMethod> UserFinancialMethods { get; set; }
 
+  public DbSet<FinancialTransaction> FinancialTransactions { get; set; }
+
+  // Billing Management DbSets
+  public DbSet<BillingWebhookEvent> BillingWebhookEvents { get; set; }
+
+  // Feature Flags Management DbSets
+  public DbSet<FeatureFlag> FeatureFlags { get; set; }
+  public DbSet<FeatureFlagTarget> FeatureFlagTargets { get; set; }
+  public DbSet<FeatureFlagUsage> FeatureFlagUsage { get; set; }
+
+  // Resource Management DbSets
+  public DbSet<ResourceQuota> ResourceQuotas { get; set; }
+  public DbSet<ResourceUsageRecord> ResourceUsageRecords { get; set; }
+
   // User Achievements Management DbSets
   public DbSet<Achievement> Achievements { get; set; }
 
@@ -217,8 +234,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<AchievementPrerequisite> AchievementPrerequisites { get; set; }
 
   public DbSet<AchievementProgress> AchievementProgress { get; set; }
-
-  public DbSet<FinancialTransaction> FinancialTransactions { get; set; }
 
   // KYC Management DbSets
   public DbSet<UserKycVerification> UserKycVerifications { get; set; }
