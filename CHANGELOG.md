@@ -1,3 +1,10 @@
+# [2.20.0](https://github.com/gameguild-gg/gameguild/compare/v2.19.0...v2.20.0) (2025-09-15)
+
+
+### Features
+
+* **web:** Add game development issues content ([06466e6](https://github.com/gameguild-gg/gameguild/commit/06466e63f878cca5ba571f4f7450ecae73a96753))
+
 # [2.19.0](https://github.com/gameguild-gg/gameguild/compare/v2.18.0...v2.19.0) (2025-09-13)
 
 
