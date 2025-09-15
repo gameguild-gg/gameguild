@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Infrastructure.CQRS.Abstractions;
 using GameGuild.Modules.Payments.Models;
 
 namespace GameGuild.Modules.Payments.Commands.RetryPayment;
