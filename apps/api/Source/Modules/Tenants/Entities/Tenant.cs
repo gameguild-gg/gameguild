@@ -5,17 +5,26 @@ namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Represents a tenant in a multi-tenant system
-/// Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality
+/// Inherits from Resource to provide UUID IDs, version control, timestamps, and soft delete functionality
+/// Enhanced with modu-state patterns for comprehensive tenant management
 /// </summary>
 [Table("Tenants")]
 [Index(nameof(Name), IsUnique = true)]
-public class Tenant : Resource {
+[Index(nameof(Slug), IsUnique = true)]
+public class Tenant : Resource
+{
   /// <summary>
   /// Name of the tenant
   /// </summary>
   [Required]
   [MaxLength(100)]
   public string Name { get; set; } = string.Empty;
+
+  /// <summary>
+  /// Description of the tenant
+  /// </summary>
+  [MaxLength(500)]
+  public string? Description { get; set; }
 
   /// <summary>
   /// Whether this tenant is currently active
@@ -30,6 +39,13 @@ public class Tenant : Resource {
   public string Slug { get; set; } = string.Empty;
 
   /// <summary>
+  /// Administrative email for the tenant
+  /// </summary>
+  [Required]
+  [MaxLength(255)]
+  public string AdminEmail { get; set; } = string.Empty;
+
+  /// <summary>
   /// Navigation property to tenant permissions and user memberships
   /// </summary>
   public virtual ICollection<TenantPermission> TenantPermissions { get; set; } = new List<TenantPermission>();
@@ -42,7 +58,8 @@ public class Tenant : Resource {
   /// <summary>
   /// Activate the tenant
   /// </summary>
-  public void Activate() {
+  public void Activate()
+  {
     IsActive = true;
     Touch();
   }
@@ -50,8 +67,19 @@ public class Tenant : Resource {
   /// <summary>
   /// Deactivate the tenant
   /// </summary>
-  public void Deactivate() {
+  public void Deactivate()
+  {
     IsActive = false;
+    Touch();
+  }
+
+  /// <summary>
+  /// Update tenant information
+  /// </summary>
+  public void Update(string name, string? description = null)
+  {
+    Name = name;
+    Description = description;
     Touch();
   }
 }
