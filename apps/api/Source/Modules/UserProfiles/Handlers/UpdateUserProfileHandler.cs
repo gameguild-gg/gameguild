@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -7,8 +8,8 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Handler for updating user profile with business logic and optimistic concurrency control
 /// </summary>
-public class UpdateUserProfileHandler(ApplicationDbContext context, ILogger<UpdateUserProfileHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<UpdateUserProfileCommand, Common.Result<UserProfile>> {
-  public async Task<Common.Result<UserProfile>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
+public class UpdateUserProfileHandler(ApplicationDbContext context, ILogger<UpdateUserProfileHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<UpdateUserProfileCommand, Result<UserProfile>> {
+  public async Task<Result<UserProfile>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
     try {
       var userProfile = await context.Resources.OfType<UserProfile>().FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 

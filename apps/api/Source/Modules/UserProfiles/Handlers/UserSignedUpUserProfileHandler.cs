@@ -4,7 +4,7 @@ namespace GameGuild.Modules.UserProfiles;
 /// Notification handler that automatically creates a UserProfile when a user signs up
 /// </summary>
 public class UserSignedUpUserProfileHandler(
-  IMediator mediator,
+  GameGuild.CQRS.IMediator mediator,
   ILogger<UserSignedUpUserProfileHandler> logger
 ) : INotificationHandler<Authentication.UserSignedUpNotification> {
   public async Task Handle(Authentication.UserSignedUpNotification notification, CancellationToken cancellationToken) {
