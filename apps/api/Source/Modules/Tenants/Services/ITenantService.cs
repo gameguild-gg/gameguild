@@ -3,7 +3,8 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Service interface for managing tenants
 /// </summary>
-public interface ITenantService {
+public interface ITenantService
+{
   /// <summary>
   /// Get all tenants
   /// </summary>
@@ -108,4 +109,39 @@ public interface ITenantService {
   /// <param name="userId">User ID</param>
   /// <returns>List of TenantPermission relationships</returns>
   Task<IEnumerable<TenantPermission>> GetTenantsForUserAsync(Guid userId);
+
+  // === DEFAULT TENANT FUNCTIONALITY ===
+
+  /// <summary>
+  /// Get the default tenant (creates one if none exists)
+  /// </summary>
+  /// <returns>Default tenant</returns>
+  Task<Tenant> GetOrCreateDefaultTenantAsync();
+
+  /// <summary>
+  /// Get the current default tenant
+  /// </summary>
+  /// <returns>Default tenant or null if none exists</returns>
+  Task<Tenant?> GetDefaultTenantAsync();
+
+  /// <summary>
+  /// Set a tenant as the default tenant
+  /// </summary>
+  /// <param name="tenantId">Tenant ID to set as default</param>
+  /// <returns>Updated tenant</returns>
+  Task<Tenant> SetDefaultTenantAsync(Guid tenantId);
+
+  /// <summary>
+  /// Check if a tenant is the default tenant
+  /// </summary>
+  /// <param name="tenantId">Tenant ID to check</param>
+  /// <returns>True if this is the default tenant</returns>
+  Task<bool> IsDefaultTenantAsync(Guid tenantId);
+
+  /// <summary>
+  /// Get effective tenant (returns specified tenant or default if null)
+  /// </summary>
+  /// <param name="tenantId">Tenant ID (null to get default)</param>
+  /// <returns>Effective tenant</returns>
+  Task<Tenant> GetEffectiveTenantAsync(Guid? tenantId);
 }
