@@ -1,4 +1,4 @@
-using GameGuild.Core.Entities;
+using GameGuild;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tenants;
@@ -12,8 +12,7 @@ namespace GameGuild.Common;
 /// Layer 2: Content-Type permissions (to be implemented)
 /// Layer 3: Resource-specific permissions (to be implemented)
 /// </summary>
-public interface IPermissionService
-{
+public interface IPermissionService {
   // ===== LAYER 1: TENANT-WIDE PERMISSIONS =====
 
   /// <summary>
