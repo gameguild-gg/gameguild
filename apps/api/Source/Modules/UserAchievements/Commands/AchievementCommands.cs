@@ -1,4 +1,5 @@
 using GameGuild;
+using GameGuild.CQRS;
 
 
 namespace GameGuild.Modules.UserAchievements;
@@ -6,7 +7,8 @@ namespace GameGuild.Modules.UserAchievements;
 /// <summary>
 /// Command to create a new achievement
 /// </summary>
-public class CreateAchievementCommand : ICommand<Result<Achievement>> {
+public class CreateAchievementCommand : ICommand<Result<Achievement>>
+{
   public string Name { get; set; } = string.Empty;
   public string? Description { get; set; }
   public string Category { get; set; } = string.Empty;
@@ -27,7 +29,8 @@ public class CreateAchievementCommand : ICommand<Result<Achievement>> {
 /// <summary>
 /// Command to create an achievement level
 /// </summary>
-public class CreateAchievementLevelCommand {
+public class CreateAchievementLevelCommand
+{
   public int Level { get; set; }
   public string Name { get; set; } = string.Empty;
   public string? Description { get; set; }
@@ -40,7 +43,8 @@ public class CreateAchievementLevelCommand {
 /// <summary>
 /// Command to update an existing achievement
 /// </summary>
-public class UpdateAchievementCommand : ICommand<Result<Achievement>> {
+public class UpdateAchievementCommand : ICommand<Result<Achievement>>
+{
   public Guid AchievementId { get; set; }
   public string? Name { get; set; }
   public string? Description { get; set; }
@@ -60,7 +64,8 @@ public class UpdateAchievementCommand : ICommand<Result<Achievement>> {
 /// <summary>
 /// Command to delete an achievement
 /// </summary>
-public class DeleteAchievementCommand : ICommand<Result> {
+public class DeleteAchievementCommand : ICommand<Result>
+{
   public Guid AchievementId { get; set; }
   public Guid UserId { get; set; } // For authorization
 }
@@ -68,7 +73,8 @@ public class DeleteAchievementCommand : ICommand<Result> {
 /// <summary>
 /// Command to award an achievement to a user
 /// </summary>
-public class AwardAchievementCommand : ICommand<Result<UserAchievement>> {
+public class AwardAchievementCommand : ICommand<Result<UserAchievement>>
+{
   public Guid UserId { get; set; }
   public Guid AchievementId { get; set; }
   public int? Level { get; set; }
@@ -83,7 +89,8 @@ public class AwardAchievementCommand : ICommand<Result<UserAchievement>> {
 /// <summary>
 /// Command to update achievement progress for a user
 /// </summary>
-public class UpdateAchievementProgressCommand : ICommand<Result<AchievementProgress>> {
+public class UpdateAchievementProgressCommand : ICommand<Result<AchievementProgress>>
+{
   public Guid UserId { get; set; }
   public Guid AchievementId { get; set; }
   public int ProgressIncrement { get; set; } = 1;
@@ -95,7 +102,8 @@ public class UpdateAchievementProgressCommand : ICommand<Result<AchievementProgr
 /// <summary>
 /// Command to revoke an achievement from a user
 /// </summary>
-public class RevokeAchievementCommand : ICommand<Result> {
+public class RevokeAchievementCommand : ICommand<Result>
+{
   public Guid UserAchievementId { get; set; }
   public string? Reason { get; set; }
   public Guid RevokedByUserId { get; set; } // For auditing
@@ -104,7 +112,8 @@ public class RevokeAchievementCommand : ICommand<Result> {
 /// <summary>
 /// Command to bulk award achievements based on criteria
 /// </summary>
-public class BulkAwardAchievementCommand : ICommand<Result<List<UserAchievement>>> {
+public class BulkAwardAchievementCommand : ICommand<Result<List<UserAchievement>>>
+{
   public Guid AchievementId { get; set; }
   public List<Guid>? UserIds { get; set; } // If null, applies to all eligible users
   public string? UserCriteria { get; set; } // JSON criteria for selecting users
@@ -117,7 +126,8 @@ public class BulkAwardAchievementCommand : ICommand<Result<List<UserAchievement>
 /// <summary>
 /// Command to mark user achievement as notified
 /// </summary>
-public class MarkAchievementNotifiedCommand : ICommand<Result> {
+public class MarkAchievementNotifiedCommand : ICommand<Result>
+{
   public Guid UserAchievementId { get; set; }
   public Guid UserId { get; set; } // For authorization
 }

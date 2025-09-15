@@ -1,23 +1,27 @@
 using GameGuild;
+using GameGuild.CQRS;
 using GameGuild.Database;
-
 
 namespace GameGuild.Modules.UserAchievements;
 
 /// <summary>
 /// Handler for getting achievements with pagination
 /// </summary>
-public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, Result<AchievementsPageDto>> {
+public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, Result<AchievementsPageDto>>
+{
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetAchievementsQueryHandler> _logger;
 
-  public GetAchievementsQueryHandler(ApplicationDbContext context, ILogger<GetAchievementsQueryHandler> logger) {
+  public GetAchievementsQueryHandler(ApplicationDbContext context, ILogger<GetAchievementsQueryHandler> logger)
+  {
     _context = context;
     _logger = logger;
   }
 
-  public async Task<Result<AchievementsPageDto>> Handle(GetAchievementsQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<Result<AchievementsPageDto>> Handle(GetAchievementsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var query = _context.Achievements
         .Include(a => a.Levels)
         .Include(a => a.Prerequisites)
@@ -25,32 +29,39 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, R
         .Where(a => a.TenantId == request.TenantId);
 
       // Apply filters
-      if (!string.IsNullOrEmpty(request.Category)) {
+      if (!string.IsNullOrEmpty(request.Category))
+      {
         query = query.Where(a => a.Category == request.Category);
       }
 
-      if (!string.IsNullOrEmpty(request.Type)) {
+      if (!string.IsNullOrEmpty(request.Type))
+      {
         query = query.Where(a => a.Type == request.Type);
       }
 
-      if (request.IsActive.HasValue) {
+      if (request.IsActive.HasValue)
+      {
         query = query.Where(a => a.IsActive == request.IsActive.Value);
       }
 
-      if (!request.IncludeSecrets) {
+      if (!request.IncludeSecrets)
+      {
         query = query.Where(a => !a.IsSecret);
       }
-      else if (request.IsSecret.HasValue) {
+      else if (request.IsSecret.HasValue)
+      {
         query = query.Where(a => a.IsSecret == request.IsSecret.Value);
       }
 
-      if (!string.IsNullOrEmpty(request.SearchTerm)) {
+      if (!string.IsNullOrEmpty(request.SearchTerm))
+      {
         query = query.Where(a => a.Name.Contains(request.SearchTerm) ||
                                 (a.Description != null && a.Description.Contains(request.SearchTerm)));
       }
 
       // Apply ordering
-      query = request.OrderBy.ToLower() switch {
+      query = request.OrderBy.ToLower() switch
+      {
         "name" => request.Descending ? query.OrderByDescending(a => a.Name) : query.OrderBy(a => a.Name),
         "points" => request.Descending ? query.OrderByDescending(a => a.Points) : query.OrderBy(a => a.Points),
         "createdat" => request.Descending ? query.OrderByDescending(a => a.CreatedAt) : query.OrderBy(a => a.CreatedAt),
@@ -64,7 +75,8 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, R
         .Take(request.PageSize)
         .ToListAsync(cancellationToken);
 
-      var achievementDtos = achievements.Select(a => new AchievementDto {
+      var achievementDtos = achievements.Select(a => new AchievementDto
+      {
         Id = a.Id,
         Name = a.Name,
         Description = a.Description,
@@ -80,7 +92,8 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, R
         DisplayOrder = a.DisplayOrder,
         CreatedAt = a.CreatedAt,
         UpdatedAt = a.UpdatedAt,
-        Levels = a.Levels?.Select(l => new AchievementLevelDto {
+        Levels = a.Levels?.Select(l => new AchievementLevelDto
+        {
           Id = l.Id,
           Level = l.Level,
           Name = l.Name,
@@ -90,7 +103,8 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, R
           IconUrl = l.IconUrl,
           Color = l.Color,
         }).ToList(),
-        Prerequisites = a.Prerequisites?.Select(p => new AchievementDto {
+        Prerequisites = a.Prerequisites?.Select(p => new AchievementDto
+        {
           Id = p.PrerequisiteAchievement!.Id,
           Name = p.PrerequisiteAchievement.Name,
           Description = p.PrerequisiteAchievement.Description,
@@ -113,7 +127,8 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, R
 
       return Result.Success(result);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting achievements");
       return Result.Failure<AchievementsPageDto>(Error.Failure("GetAchievements", "Failed to get achievements"));
     }
@@ -123,38 +138,46 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, R
 /// <summary>
 /// Handler for getting achievement by ID
 /// </summary>
-public class GetAchievementByIdQueryHandler : IQueryHandler<GetAchievementByIdQuery, Result<Achievement>> {
+public class GetAchievementByIdQueryHandler : IQueryHandler<GetAchievementByIdQuery, Result<Achievement>>
+{
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetAchievementByIdQueryHandler> _logger;
 
-  public GetAchievementByIdQueryHandler(ApplicationDbContext context, ILogger<GetAchievementByIdQueryHandler> logger) {
+  public GetAchievementByIdQueryHandler(ApplicationDbContext context, ILogger<GetAchievementByIdQueryHandler> logger)
+  {
     _context = context;
     _logger = logger;
   }
 
-  public async Task<Result<Achievement>> Handle(GetAchievementByIdQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<Result<Achievement>> Handle(GetAchievementByIdQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var query = _context.Achievements
         .Where(a => a.Id == request.AchievementId && a.TenantId == request.TenantId);
 
-      if (request.IncludeLevels) {
+      if (request.IncludeLevels)
+      {
         query = query.Include(a => a.Levels);
       }
 
-      if (request.IncludePrerequisites) {
+      if (request.IncludePrerequisites)
+      {
         query = query.Include(a => a.Prerequisites)
           .ThenInclude(p => p.PrerequisiteAchievement);
       }
 
       var achievement = await query.FirstOrDefaultAsync(cancellationToken);
 
-      if (achievement == null) {
+      if (achievement == null)
+      {
         return Result.Failure<Achievement>(Error.NotFound("AchievementNotFound", "Achievement not found"));
       }
 
       return Result.Success(achievement);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting achievement {AchievementId}", request.AchievementId);
       return Result.Failure<Achievement>(Error.Failure("GetAchievement", "Failed to get achievement"));
     }
@@ -164,45 +187,55 @@ public class GetAchievementByIdQueryHandler : IQueryHandler<GetAchievementByIdQu
 /// <summary>
 /// Handler for getting user achievements
 /// </summary>
-public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievementsQuery, Result<UserAchievementsPageDto>> {
+public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievementsQuery, Result<UserAchievementsPageDto>>
+{
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetUserAchievementsQueryHandler> _logger;
 
-  public GetUserAchievementsQueryHandler(ApplicationDbContext context, ILogger<GetUserAchievementsQueryHandler> logger) {
+  public GetUserAchievementsQueryHandler(ApplicationDbContext context, ILogger<GetUserAchievementsQueryHandler> logger)
+  {
     _context = context;
     _logger = logger;
   }
 
-  public async Task<Result<UserAchievementsPageDto>> Handle(GetUserAchievementsQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<Result<UserAchievementsPageDto>> Handle(GetUserAchievementsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var query = _context.UserAchievements
         .Include(ua => ua.Achievement)
         .ThenInclude(a => a!.Levels)
         .Where(ua => ua.UserId == request.UserId && ua.TenantId == request.TenantId);
 
       // Apply filters
-      if (!string.IsNullOrEmpty(request.Category)) {
+      if (!string.IsNullOrEmpty(request.Category))
+      {
         query = query.Where(ua => ua.Achievement!.Category == request.Category);
       }
 
-      if (!string.IsNullOrEmpty(request.Type)) {
+      if (!string.IsNullOrEmpty(request.Type))
+      {
         query = query.Where(ua => ua.Achievement!.Type == request.Type);
       }
 
-      if (request.IsCompleted.HasValue) {
+      if (request.IsCompleted.HasValue)
+      {
         query = query.Where(ua => ua.IsCompleted == request.IsCompleted.Value);
       }
 
-      if (request.EarnedAfter.HasValue) {
+      if (request.EarnedAfter.HasValue)
+      {
         query = query.Where(ua => ua.EarnedAt >= request.EarnedAfter.Value);
       }
 
-      if (request.EarnedBefore.HasValue) {
+      if (request.EarnedBefore.HasValue)
+      {
         query = query.Where(ua => ua.EarnedAt <= request.EarnedBefore.Value);
       }
 
       // Apply ordering
-      query = request.OrderBy.ToLower() switch {
+      query = request.OrderBy.ToLower() switch
+      {
         "points" => request.Descending ? query.OrderByDescending(ua => ua.PointsEarned) : query.OrderBy(ua => ua.PointsEarned),
         "achievementname" => request.Descending ? query.OrderByDescending(ua => ua.Achievement!.Name) : query.OrderBy(ua => ua.Achievement!.Name),
         _ => request.Descending ? query.OrderByDescending(ua => ua.EarnedAt) : query.OrderBy(ua => ua.EarnedAt),
@@ -215,11 +248,13 @@ public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievements
         .Take(request.PageSize)
         .ToListAsync(cancellationToken);
 
-      var userAchievementDtos = userAchievements.Select(ua => new UserAchievementDto {
+      var userAchievementDtos = userAchievements.Select(ua => new UserAchievementDto
+      {
         Id = ua.Id,
         UserId = ua.UserId ?? Guid.Empty,
         AchievementId = ua.AchievementId,
-        Achievement = ua.Achievement != null ? new AchievementDto {
+        Achievement = ua.Achievement != null ? new AchievementDto
+        {
           Id = ua.Achievement.Id,
           Name = ua.Achievement.Name,
           Description = ua.Achievement.Description,
@@ -235,7 +270,8 @@ public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievements
           DisplayOrder = ua.Achievement.DisplayOrder,
           CreatedAt = ua.Achievement.CreatedAt,
           UpdatedAt = ua.Achievement.UpdatedAt,
-          Levels = ua.Achievement.Levels?.Select(l => new AchievementLevelDto {
+          Levels = ua.Achievement.Levels?.Select(l => new AchievementLevelDto
+          {
             Id = l.Id,
             Level = l.Level,
             Name = l.Name,
@@ -261,7 +297,8 @@ public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievements
 
       return Result.Success(result);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting user achievements for user {UserId}", request.UserId);
       return Result.Failure<UserAchievementsPageDto>(Error.Failure("GetUserAchievements", "Failed to get user achievements"));
     }
@@ -271,37 +308,45 @@ public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievements
 /// <summary>
 /// Handler for getting user achievement progress
 /// </summary>
-public class GetUserAchievementProgressQueryHandler : IQueryHandler<GetUserAchievementProgressQuery, Result<List<AchievementProgressDto>>> {
+public class GetUserAchievementProgressQueryHandler : IQueryHandler<GetUserAchievementProgressQuery, Result<List<AchievementProgressDto>>>
+{
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetUserAchievementProgressQueryHandler> _logger;
 
-  public GetUserAchievementProgressQueryHandler(ApplicationDbContext context, ILogger<GetUserAchievementProgressQueryHandler> logger) {
+  public GetUserAchievementProgressQueryHandler(ApplicationDbContext context, ILogger<GetUserAchievementProgressQueryHandler> logger)
+  {
     _context = context;
     _logger = logger;
   }
 
-  public async Task<Result<List<AchievementProgressDto>>> Handle(GetUserAchievementProgressQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<Result<List<AchievementProgressDto>>> Handle(GetUserAchievementProgressQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var query = _context.AchievementProgress
         .Include(ap => ap.Achievement)
         .Where(ap => ap.UserId == request.UserId && ap.TenantId == request.TenantId);
 
       // Apply filters
-      if (!string.IsNullOrEmpty(request.Category)) {
+      if (!string.IsNullOrEmpty(request.Category))
+      {
         query = query.Where(ap => ap.Achievement!.Category == request.Category);
       }
 
-      if (request.OnlyInProgress) {
+      if (request.OnlyInProgress)
+      {
         query = query.Where(ap => ap.CurrentProgress > 0 && !ap.IsCompleted);
       }
 
       var progressRecords = await query.ToListAsync(cancellationToken);
 
-      var progressDtos = progressRecords.Select(ap => new AchievementProgressDto {
+      var progressDtos = progressRecords.Select(ap => new AchievementProgressDto
+      {
         Id = ap.Id,
         UserId = ap.UserId ?? Guid.Empty,
         AchievementId = ap.AchievementId,
-        Achievement = ap.Achievement != null ? new AchievementDto {
+        Achievement = ap.Achievement != null ? new AchievementDto
+        {
           Id = ap.Achievement.Id,
           Name = ap.Achievement.Name,
           Description = ap.Achievement.Description,
@@ -327,7 +372,8 @@ public class GetUserAchievementProgressQueryHandler : IQueryHandler<GetUserAchie
 
       return Result.Success(progressDtos);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting achievement progress for user {UserId}", request.UserId);
       return Result.Failure<List<AchievementProgressDto>>(Error.Failure("GetAchievementProgress", "Failed to get achievement progress"));
     }
@@ -337,17 +383,21 @@ public class GetUserAchievementProgressQueryHandler : IQueryHandler<GetUserAchie
 /// <summary>
 /// Handler for getting user achievement summary
 /// </summary>
-public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchievementSummaryQuery, Result<UserAchievementSummaryDto>> {
+public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchievementSummaryQuery, Result<UserAchievementSummaryDto>>
+{
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetUserAchievementSummaryQueryHandler> _logger;
 
-  public GetUserAchievementSummaryQueryHandler(ApplicationDbContext context, ILogger<GetUserAchievementSummaryQueryHandler> logger) {
+  public GetUserAchievementSummaryQueryHandler(ApplicationDbContext context, ILogger<GetUserAchievementSummaryQueryHandler> logger)
+  {
     _context = context;
     _logger = logger;
   }
 
-  public async Task<Result<UserAchievementSummaryDto>> Handle(GetUserAchievementSummaryQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<Result<UserAchievementSummaryDto>> Handle(GetUserAchievementSummaryQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var userAchievements = await _context.UserAchievements
         .Include(ua => ua.Achievement)
         .Where(ua => ua.UserId == request.UserId && ua.TenantId == request.TenantId)
@@ -368,11 +418,13 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
         .Where(ua => ua.IsCompleted)
         .OrderByDescending(ua => ua.EarnedAt)
         .Take(request.RecentLimit)
-        .Select(ua => new UserAchievementDto {
+        .Select(ua => new UserAchievementDto
+        {
           Id = ua.Id,
           UserId = ua.UserId ?? Guid.Empty,
           AchievementId = ua.AchievementId,
-          Achievement = ua.Achievement != null ? new AchievementDto {
+          Achievement = ua.Achievement != null ? new AchievementDto
+          {
             Id = ua.Achievement.Id,
             Name = ua.Achievement.Name,
             Description = ua.Achievement.Description,
@@ -404,11 +456,13 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
       var nearCompletion = progressRecords
         .Where(ap => ap.TargetProgress > 0)
         .Where(ap => (double)ap.CurrentProgress / ap.TargetProgress * 100 >= request.NearCompletionThreshold && !ap.IsCompleted)
-        .Select(ap => new AchievementProgressDto {
+        .Select(ap => new AchievementProgressDto
+        {
           Id = ap.Id,
           UserId = ap.UserId ?? Guid.Empty,
           AchievementId = ap.AchievementId,
-          Achievement = ap.Achievement != null ? new AchievementDto {
+          Achievement = ap.Achievement != null ? new AchievementDto
+          {
             Id = ap.Achievement.Id,
             Name = ap.Achievement.Name,
             Description = ap.Achievement.Description,
@@ -438,7 +492,8 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
         .GroupBy(ua => ua.Achievement!.Category)
         .ToDictionary(g => g.Key, g => g.Count());
 
-      var summary = new UserAchievementSummaryDto {
+      var summary = new UserAchievementSummaryDto
+      {
         UserId = request.UserId,
         TotalAchievements = totalAchievements,
         TotalPoints = totalPoints,
@@ -451,7 +506,8 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
 
       return Result.Success(summary);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting achievement summary for user {UserId}", request.UserId);
       return Result.Failure<UserAchievementSummaryDto>(Error.Failure("GetAchievementSummary", "Failed to get achievement summary"));
     }
@@ -461,17 +517,21 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
 /// <summary>
 /// Handler for getting available achievements for a user
 /// </summary>
-public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAchievementsQuery, Result<AchievementsPageDto>> {
+public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAchievementsQuery, Result<AchievementsPageDto>>
+{
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetAvailableAchievementsQueryHandler> _logger;
 
-  public GetAvailableAchievementsQueryHandler(ApplicationDbContext context, ILogger<GetAvailableAchievementsQueryHandler> logger) {
+  public GetAvailableAchievementsQueryHandler(ApplicationDbContext context, ILogger<GetAvailableAchievementsQueryHandler> logger)
+  {
     _context = context;
     _logger = logger;
   }
 
-  public async Task<Result<AchievementsPageDto>> Handle(GetAvailableAchievementsQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<Result<AchievementsPageDto>> Handle(GetAvailableAchievementsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       // Get user's earned achievements
       var earnedAchievementIds = await _context.UserAchievements
         .Where(ua => ua.UserId == request.UserId && ua.TenantId == request.TenantId && ua.IsCompleted)
@@ -483,11 +543,13 @@ public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAc
         .Where(a => !earnedAchievementIds.Contains(a.Id)); // Exclude earned achievements
 
       // Apply filters
-      if (!string.IsNullOrEmpty(request.Category)) {
+      if (!string.IsNullOrEmpty(request.Category))
+      {
         query = query.Where(a => a.Category == request.Category);
       }
 
-      if (request.ExcludeSecret) {
+      if (request.ExcludeSecret)
+      {
         query = query.Where(a => !a.IsSecret);
       }
 
@@ -501,7 +563,8 @@ public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAc
         .Take(request.PageSize)
         .ToListAsync(cancellationToken);
 
-      var achievementDtos = achievements.Select(a => new AchievementDto {
+      var achievementDtos = achievements.Select(a => new AchievementDto
+      {
         Id = a.Id,
         Name = a.Name,
         Description = a.Description,
@@ -522,7 +585,8 @@ public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAc
       var result = new AchievementsPageDto(achievementDtos, totalCount, request.PageNumber, request.PageSize);
       return Result.Success(result);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting available achievements for user {UserId}", request.UserId);
       return Result.Failure<AchievementsPageDto>(Error.Failure("GetAvailableAchievements", "Failed to get available achievements"));
     }
@@ -532,30 +596,36 @@ public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAc
 /// <summary>
 /// Handler for getting achievement leaderboard
 /// </summary>
-public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievementLeaderboardQuery, Result<List<UserAchievementLeaderboardDto>>> {
+public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievementLeaderboardQuery, Result<List<UserAchievementLeaderboardDto>>>
+{
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetAchievementLeaderboardQueryHandler> _logger;
 
-  public GetAchievementLeaderboardQueryHandler(ApplicationDbContext context, ILogger<GetAchievementLeaderboardQueryHandler> logger) {
+  public GetAchievementLeaderboardQueryHandler(ApplicationDbContext context, ILogger<GetAchievementLeaderboardQueryHandler> logger)
+  {
     _context = context;
     _logger = logger;
   }
 
-  public async Task<Result<List<UserAchievementLeaderboardDto>>> Handle(GetAchievementLeaderboardQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<Result<List<UserAchievementLeaderboardDto>>> Handle(GetAchievementLeaderboardQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var query = _context.UserAchievements
         .Include(ua => ua.User)
         .Where(ua => ua.TenantId == request.TenantId);
 
       // Apply filters
-      if (!string.IsNullOrEmpty(request.Category)) {
+      if (!string.IsNullOrEmpty(request.Category))
+      {
         query = query.Include(ua => ua.Achievement)
           .Where(ua => ua.Achievement!.Category == request.Category);
       }
 
       var userStats = await query
         .GroupBy(ua => ua.UserId)
-        .Select(g => new {
+        .Select(g => new
+        {
           UserId = g.Key,
           TotalAchievements = g.Count(),
           TotalPoints = g.Sum(ua => ua.PointsEarned),
@@ -566,7 +636,8 @@ public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievemen
         .Take(request.Limit)
         .ToListAsync(cancellationToken);
 
-      var leaderboard = userStats.Select((stats, index) => new UserAchievementLeaderboardDto {
+      var leaderboard = userStats.Select((stats, index) => new UserAchievementLeaderboardDto
+      {
         Rank = index + 1,
         UserId = stats.UserId ?? Guid.Empty,
         UserDisplayName = stats.User?.Name ?? "Unknown User",
@@ -576,7 +647,8 @@ public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievemen
 
       return Result.Success(leaderboard);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting achievement leaderboard");
       return Result.Failure<List<UserAchievementLeaderboardDto>>(Error.Failure("GetAchievementLeaderboard", "Failed to get achievement leaderboard"));
     }
@@ -586,21 +658,26 @@ public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievemen
 /// <summary>
 /// Handler for getting achievement statistics
 /// </summary>
-public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievementStatisticsQuery, Result<AchievementStatisticsDto>> {
+public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievementStatisticsQuery, Result<AchievementStatisticsDto>>
+{
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetAchievementStatisticsQueryHandler> _logger;
 
-  public GetAchievementStatisticsQueryHandler(ApplicationDbContext context, ILogger<GetAchievementStatisticsQueryHandler> logger) {
+  public GetAchievementStatisticsQueryHandler(ApplicationDbContext context, ILogger<GetAchievementStatisticsQueryHandler> logger)
+  {
     _context = context;
     _logger = logger;
   }
 
-  public async Task<Result<AchievementStatisticsDto>> Handle(GetAchievementStatisticsQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<Result<AchievementStatisticsDto>> Handle(GetAchievementStatisticsQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var achievement = await _context.Achievements
         .FirstOrDefaultAsync(a => a.Id == request.AchievementId && a.TenantId == request.TenantId, cancellationToken);
 
-      if (achievement == null) {
+      if (achievement == null)
+      {
         return Result.Failure<AchievementStatisticsDto>(Error.NotFound("AchievementNotFound", "Achievement not found"));
       }
 
@@ -627,7 +704,8 @@ public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievement
         .Select(ua => ua.EarnedAt)
         .FirstOrDefaultAsync(cancellationToken);
 
-      var statistics = new AchievementStatisticsDto {
+      var statistics = new AchievementStatisticsDto
+      {
         AchievementId = request.AchievementId,
         TotalEarned = totalEarned,
         TotalUsers = totalUsers,
@@ -639,7 +717,8 @@ public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievement
 
       return Result.Success(statistics);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error getting achievement statistics for achievement {AchievementId}", request.AchievementId);
       return Result.Failure<AchievementStatisticsDto>(Error.Failure("GetAchievementStatistics", "Failed to get achievement statistics"));
     }
@@ -649,22 +728,27 @@ public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievement
 /// <summary>
 /// Handler for checking achievement prerequisites
 /// </summary>
-public class CheckAchievementPrerequisitesQueryHandler : IQueryHandler<CheckAchievementPrerequisitesQuery, Result<AchievementPrerequisiteCheckDto>> {
+public class CheckAchievementPrerequisitesQueryHandler : IQueryHandler<CheckAchievementPrerequisitesQuery, Result<AchievementPrerequisiteCheckDto>>
+{
   private readonly ApplicationDbContext _context;
   private readonly ILogger<CheckAchievementPrerequisitesQueryHandler> _logger;
 
-  public CheckAchievementPrerequisitesQueryHandler(ApplicationDbContext context, ILogger<CheckAchievementPrerequisitesQueryHandler> logger) {
+  public CheckAchievementPrerequisitesQueryHandler(ApplicationDbContext context, ILogger<CheckAchievementPrerequisitesQueryHandler> logger)
+  {
     _context = context;
     _logger = logger;
   }
 
-  public async Task<Result<AchievementPrerequisiteCheckDto>> Handle(CheckAchievementPrerequisitesQuery request, CancellationToken cancellationToken) {
-    try {
+  public async Task<Result<AchievementPrerequisiteCheckDto>> Handle(CheckAchievementPrerequisitesQuery request, CancellationToken cancellationToken)
+  {
+    try
+    {
       var achievement = await _context.Achievements
         .Where(a => a.Id == request.AchievementId)
         .FirstOrDefaultAsync(cancellationToken);
 
-      if (achievement == null) {
+      if (achievement == null)
+      {
         return Result.Failure<AchievementPrerequisiteCheckDto>(Error.NotFound("Achievement", "Achievement not found"));
       }
 
@@ -681,20 +765,24 @@ public class CheckAchievementPrerequisitesQueryHandler : IQueryHandler<CheckAchi
       var prerequisiteStatuses = new List<PrerequisiteStatusDto>();
       var canEarn = true;
 
-      foreach (var prerequisite in prerequisites) {
+      foreach (var prerequisite in prerequisites)
+      {
         var isMet = userAchievements.Contains(prerequisite.PrerequisiteAchievementId);
-        if (!isMet) {
+        if (!isMet)
+        {
           canEarn = false;
         }
 
-        prerequisiteStatuses.Add(new PrerequisiteStatusDto {
+        prerequisiteStatuses.Add(new PrerequisiteStatusDto
+        {
           PrerequisiteAchievementId = prerequisite.PrerequisiteAchievementId,
           Name = prerequisite.PrerequisiteAchievement?.Name ?? "Unknown",
           IsMet = isMet,
         });
       }
 
-      var result = new AchievementPrerequisiteCheckDto {
+      var result = new AchievementPrerequisiteCheckDto
+      {
         AchievementId = request.AchievementId,
         CanEarn = canEarn,
         Prerequisites = prerequisiteStatuses,
@@ -702,7 +790,8 @@ public class CheckAchievementPrerequisitesQueryHandler : IQueryHandler<CheckAchi
 
       return Result.Success(result);
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       _logger.LogError(ex, "Error checking prerequisites for achievement {AchievementId} and user {UserId}", request.AchievementId, request.UserId);
       return Result.Failure<AchievementPrerequisiteCheckDto>(Error.Failure("CheckAchievementPrerequisites", "Failed to check achievement prerequisites"));
     }

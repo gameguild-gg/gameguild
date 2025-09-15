@@ -1,5 +1,6 @@
-using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
+using GameGuild.CQRS;
 using Microsoft.AspNetCore.Mvc;
+using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
 
 namespace GameGuild.Modules.UserAchievements;
@@ -10,11 +11,13 @@ namespace GameGuild.Modules.UserAchievements;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class AchievementsController : ControllerBase {
-  private readonly IMediator _mediator;
+public class AchievementsController : ControllerBase
+{
+  private readonly GameGuild.CQRS.IMediator _mediator;
   private readonly ILogger<AchievementsController> _logger;
 
-  public AchievementsController(IMediator mediator, ILogger<AchievementsController> logger) {
+  public AchievementsController(GameGuild.CQRS.IMediator mediator, ILogger<AchievementsController> logger)
+  {
     _mediator = mediator;
     _logger = logger;
   }
@@ -35,8 +38,10 @@ public class AchievementsController : ControllerBase {
     [FromQuery] string orderBy = "DisplayOrder",
     [FromQuery] bool descending = false,
     [FromQuery] Guid? tenantId = null
-  ) {
-    var query = new GetAchievementsQuery {
+  )
+  {
+    var query = new GetAchievementsQuery
+    {
       PageNumber = pageNumber,
       PageSize = pageSize,
       Category = category,
@@ -62,8 +67,10 @@ public class AchievementsController : ControllerBase {
   public async Task<ActionResult<Achievement>> GetAchievement(
     Guid achievementId,
     [FromQuery] bool includeLevels = true,
-    [FromQuery] bool includePrerequisites = true) {
-    var query = new GetAchievementByIdQuery {
+    [FromQuery] bool includePrerequisites = true)
+  {
+    var query = new GetAchievementByIdQuery
+    {
       AchievementId = achievementId,
       IncludeLevels = includeLevels,
       IncludePrerequisites = includePrerequisites,
@@ -80,7 +87,8 @@ public class AchievementsController : ControllerBase {
   /// </summary>
   [HttpPost]
   [Authorize(Roles = "Admin,Moderator")]
-  public async Task<ActionResult<Achievement>> CreateAchievement([FromBody] CreateAchievementCommand command) {
+  public async Task<ActionResult<Achievement>> CreateAchievement([FromBody] CreateAchievementCommand command)
+  {
     command.TenantId = GetCurrentTenantId();
     var result = await _mediator.Send(command);
 
@@ -94,7 +102,8 @@ public class AchievementsController : ControllerBase {
   /// </summary>
   [HttpPut("{achievementId:guid}")]
   [Authorize(Roles = "Admin,Moderator")]
-  public async Task<ActionResult<Achievement>> UpdateAchievement(Guid achievementId, [FromBody] UpdateAchievementCommand command) {
+  public async Task<ActionResult<Achievement>> UpdateAchievement(Guid achievementId, [FromBody] UpdateAchievementCommand command)
+  {
     command.AchievementId = achievementId;
     command.UserId = GetCurrentUserId();
     var result = await _mediator.Send(command);
@@ -107,8 +116,10 @@ public class AchievementsController : ControllerBase {
   /// </summary>
   [HttpDelete("{achievementId:guid}")]
   [Authorize(Roles = "Admin")]
-  public async Task<ActionResult> DeleteAchievement(Guid achievementId) {
-    var command = new DeleteAchievementCommand {
+  public async Task<ActionResult> DeleteAchievement(Guid achievementId)
+  {
+    var command = new DeleteAchievementCommand
+    {
       AchievementId = achievementId,
       UserId = GetCurrentUserId(),
     };
@@ -125,8 +136,10 @@ public class AchievementsController : ControllerBase {
   [Authorize(Roles = "Admin,Moderator")]
   public async Task<ActionResult<UserAchievement>> AwardAchievement(
     Guid achievementId,
-    [FromBody] AwardAchievementRequest request) {
-    var command = new AwardAchievementCommand {
+    [FromBody] AwardAchievementRequest request)
+  {
+    var command = new AwardAchievementCommand
+    {
       UserId = request.UserId,
       AchievementId = achievementId,
       Level = request.Level,
@@ -150,8 +163,10 @@ public class AchievementsController : ControllerBase {
   [Authorize(Roles = "Admin")]
   public async Task<ActionResult<List<UserAchievement>>> BulkAwardAchievement(
     Guid achievementId,
-    [FromBody] BulkAwardAchievementRequest request) {
-    var command = new BulkAwardAchievementCommand {
+    [FromBody] BulkAwardAchievementRequest request)
+  {
+    var command = new BulkAwardAchievementCommand
+    {
       AchievementId = achievementId,
       UserIds = request.UserIds,
       UserCriteria = request.UserCriteria,
@@ -170,8 +185,10 @@ public class AchievementsController : ControllerBase {
   /// Get achievement statistics
   /// </summary>
   [HttpGet("{achievementId:guid}/statistics")]
-  public async Task<ActionResult<AchievementStatisticsDto>> GetAchievementStatistics(Guid achievementId) {
-    var query = new GetAchievementStatisticsQuery {
+  public async Task<ActionResult<AchievementStatisticsDto>> GetAchievementStatistics(Guid achievementId)
+  {
+    var query = new GetAchievementStatisticsQuery
+    {
       AchievementId = achievementId,
       TenantId = GetCurrentTenantId(),
     };
@@ -185,8 +202,10 @@ public class AchievementsController : ControllerBase {
   /// Get overall achievement statistics
   /// </summary>
   [HttpGet("statistics")]
-  public async Task<ActionResult<AchievementStatisticsDto>> GetOverallStatistics() {
-    var query = new GetAchievementStatisticsQuery {
+  public async Task<ActionResult<AchievementStatisticsDto>> GetOverallStatistics()
+  {
+    var query = new GetAchievementStatisticsQuery
+    {
       TenantId = GetCurrentTenantId(),
     };
 
@@ -195,13 +214,15 @@ public class AchievementsController : ControllerBase {
     return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
   }
 
-  private Guid GetCurrentUserId() {
+  private Guid GetCurrentUserId()
+  {
     // This should be implemented to get the current user ID from the JWT token or user context
     // For now, returning empty GUID as placeholder
     return Guid.Empty;
   }
 
-  private Guid? GetCurrentTenantId() {
+  private Guid? GetCurrentTenantId()
+  {
     // This should be implemented to get the current tenant ID from the request context
     // For now, returning null as placeholder
     return null;
@@ -211,7 +232,8 @@ public class AchievementsController : ControllerBase {
 /// <summary>
 /// Request model for awarding achievements
 /// </summary>
-public class AwardAchievementRequest {
+public class AwardAchievementRequest
+{
   public Guid UserId { get; set; }
   public int? Level { get; set; }
   public int Progress { get; set; } = 1;
@@ -223,7 +245,8 @@ public class AwardAchievementRequest {
 /// <summary>
 /// Request model for bulk awarding achievements
 /// </summary>
-public class BulkAwardAchievementRequest {
+public class BulkAwardAchievementRequest
+{
   public List<Guid>? UserIds { get; set; }
   public string? UserCriteria { get; set; }
   public string? Context { get; set; }
