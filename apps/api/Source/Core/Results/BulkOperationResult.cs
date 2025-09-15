@@ -1,10 +1,12 @@
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Represents the result of a bulk operation
 /// </summary>
-public class BulkOperationResult {
-  public BulkOperationResult(int totalRequested, int successful, int failed) {
+public class BulkOperationResult
+{
+  public BulkOperationResult(int totalRequested, int successful, int failed)
+  {
     TotalRequested = totalRequested;
     Successful = successful;
     Failed = failed;
@@ -34,21 +36,24 @@ public class BulkOperationResult {
   /// <summary>
   /// Whether the operation was completely successful
   /// </summary>
-  public bool IsCompletelySuccessful {
+  public bool IsCompletelySuccessful
+  {
     get => Failed == 0;
   }
 
   /// <summary>
   /// Whether the operation was partially successful
   /// </summary>
-  public bool IsPartiallySuccessful {
+  public bool IsPartiallySuccessful
+  {
     get => Successful > 0 && Failed > 0;
   }
 
   /// <summary>
   /// Whether the operation completely failed
   /// </summary>
-  public bool IsCompletelyFailed {
+  public bool IsCompletelyFailed
+  {
     get => Successful == 0 && Failed > 0;
   }
 
