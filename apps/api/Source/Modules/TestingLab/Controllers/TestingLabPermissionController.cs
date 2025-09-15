@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using System.Security.Claims;
 using GameGuild.Common.Services;
 using GameGuild.Modules.Permissions;

@@ -3,7 +3,7 @@ namespace GameGuild.Modules.TestingLab;
 public class CreateTestingSessionCommandHandler : ITestingLabCommandHandler<CreateTestingSessionCommand, TestingSession> {
   private readonly ITestingLocationRepository _locationRepository;
 
-  private readonly IMediator _mediator;
+  private readonly GameGuild.CQRS.IMediator _mediator;
 
   private readonly ITestingRequestService _requestService;
 
@@ -13,7 +13,7 @@ public class CreateTestingSessionCommandHandler : ITestingLabCommandHandler<Crea
     ITestingSessionService sessionService,
     ITestingRequestService requestService,
     ITestingLocationRepository locationRepository,
-    IMediator mediator
+    GameGuild.CQRS.IMediator mediator
   ) {
     _sessionService = sessionService;
     _requestService = requestService;
