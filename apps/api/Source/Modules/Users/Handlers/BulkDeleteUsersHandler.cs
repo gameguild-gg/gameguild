@@ -1,6 +1,7 @@
+using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
-
+using GameGuild.Modules.Users.Events;
 
 namespace GameGuild.Modules.Users;
 
