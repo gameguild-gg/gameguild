@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Permissions;
 /// User role assignment for module-specific roles - matches the AddModulePermissionTables migration
 /// </summary>
 [Table("UserRoleAssignments")]
-public class UserRoleAssignment : BaseEntity
+public class UserRoleAssignment : EntityBase
 {
   [Required]
   public Guid UserId { get; set; }
