@@ -32,6 +32,11 @@ public class Tenant : Resource
   public bool IsActive { get; set; } = true;
 
   /// <summary>
+  /// Whether this is the default tenant (for null tenant scenarios)
+  /// </summary>
+  public bool IsDefault { get; set; } = false;
+
+  /// <summary>
   /// Slug for the tenant (URL-friendly unique identifier)
   /// </summary>
   [Required]
@@ -49,6 +54,11 @@ public class Tenant : Resource
   /// Navigation property to tenant permissions and user memberships
   /// </summary>
   public virtual ICollection<TenantPermission> TenantPermissions { get; set; } = new List<TenantPermission>();
+
+  /// <summary>
+  /// Navigation property to tenant settings
+  /// </summary>
+  public virtual TenantSettings? Settings { get; set; }
 
   /// <summary>
   /// Default constructor
