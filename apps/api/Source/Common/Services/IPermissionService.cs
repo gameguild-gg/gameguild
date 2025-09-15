@@ -1,3 +1,4 @@
+using GameGuild.Core.Entities;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tenants;
@@ -11,7 +12,8 @@ namespace GameGuild.Common;
 /// Layer 2: Content-Type permissions (to be implemented)
 /// Layer 3: Resource-specific permissions (to be implemented)
 /// </summary>
-public interface IPermissionService {
+public interface IPermissionService
+{
   // ===== LAYER 1: TENANT-WIDE PERMISSIONS =====
 
   /// <summary>
@@ -166,7 +168,7 @@ public interface IPermissionService {
   Task GrantResourcePermissionAsync<TPermission, TResource>(
     Guid? userId, Guid? tenantId, Guid resourceId,
     PermissionType[] permissions
-  ) where TPermission : ResourcePermission<TResource>, new() where TResource : Entity;
+  ) where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase;
 
   /// <summary>
   /// Check if user has a specific resource permission
@@ -180,7 +182,7 @@ public interface IPermissionService {
   Task<bool> HasResourcePermissionAsync<TPermission, TResource>(
     Guid userId, Guid? tenantId, Guid resourceId,
     PermissionType permission
-  ) where TPermission : ResourcePermission<TResource> where TResource : Entity;
+  ) where TPermission : ResourcePermission<TResource> where TResource : EntityBase;
 
   /// <summary>
   /// Get all resource permissions for a user on a specific resource
@@ -193,7 +195,7 @@ public interface IPermissionService {
   Task<IEnumerable<PermissionType>> GetResourcePermissionsAsync<TPermission, TResource>(
     Guid? userId, Guid? tenantId,
     Guid resourceId
-  ) where TPermission : ResourcePermission<TResource> where TResource : Entity;
+  ) where TPermission : ResourcePermission<TResource> where TResource : EntityBase;
 
   /// <summary>
   /// Revoke specific resource permissions from a user
@@ -207,7 +209,7 @@ public interface IPermissionService {
   Task RevokeResourcePermissionAsync<TPermission, TResource>(
     Guid? userId, Guid? tenantId, Guid resourceId,
     PermissionType[] permissions
-  ) where TPermission : ResourcePermission<TResource> where TResource : Entity;
+  ) where TPermission : ResourcePermission<TResource> where TResource : EntityBase;
 
   /// <summary>
   /// Get resource permissions for multiple resources at once (bulk operation)
@@ -219,7 +221,7 @@ public interface IPermissionService {
   /// <param name="resourceIds">IDs of the resources</param>
   Task<Dictionary<Guid, IEnumerable<PermissionType>>>
     GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds)
-    where TPermission : ResourcePermission<TResource> where TResource : Entity;
+    where TPermission : ResourcePermission<TResource> where TResource : EntityBase;
 
   /// <summary>
   /// Share a resource with another user with specific permissions
@@ -235,7 +237,7 @@ public interface IPermissionService {
     Guid resourceId, Guid targetUserId, Guid? tenantId,
     PermissionType[] permissions, DateTime? expiresAt = null
   )
-    where TPermission : ResourcePermission<TResource>, new() where TResource : Entity;
+    where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase;
 
   // === BULK RESOURCE OPERATIONS ===
 
@@ -252,7 +254,7 @@ public interface IPermissionService {
     Guid userId, Guid? tenantId, Guid[] resourceIds,
     PermissionType[] permissions
   )
-    where TPermission : ResourcePermission<TResource>, new() where TResource : Entity; // ===== HELPER METHODS =====
+    where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase; // ===== HELPER METHODS =====
 
   /// <summary>
   /// Get the tenant context for a specific resource
