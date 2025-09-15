@@ -16,7 +16,7 @@ public static class SubscriptionsModule
         // Register subscription repository
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 
-        // Domain event handlers and command handlers are automatically registered by MediatR
+        // Domain event handlers and command handlers are automatically registered by GameGuild.CQRS
         // via the assembly scanning in AddOptimizedHandlers
 
         return services;

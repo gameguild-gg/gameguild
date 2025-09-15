@@ -8,11 +8,13 @@ namespace GameGuild.Modules.Posts;
 /// <summary>
 /// Extension methods for registering Posts module services
 /// </summary>
-public static class PostsModule {
+public static class PostsModule
+{
   /// <summary>
   /// Registers all Posts module services and event handlers
   /// </summary>
-  public static IServiceCollection AddPostsModule(this IServiceCollection services) {
+  public static IServiceCollection AddPostsModule(this IServiceCollection services)
+  {
     // Register Posts module services
     services.AddScoped<IPostAnnouncementService, PostAnnouncementService>();
 
@@ -22,7 +24,7 @@ public static class PostsModule {
     services.AddScoped<IPostCommentDataLoader, PostCommentDataLoader>();
     services.AddScoped<IPostLikeDataLoader, PostLikeDataLoader>();
 
-    // Domain event handlers are automatically registered by MediatR
+    // Domain event handlers are automatically registered by GameGuild.CQRS
     // via the assembly scanning in AddOptimizedHandlers
 
     return services;
@@ -31,7 +33,8 @@ public static class PostsModule {
   /// <summary>
   /// Registers Posts GraphQL schema components
   /// </summary>
-  public static IRequestExecutorBuilder AddPostsGraphQL(this IRequestExecutorBuilder builder) {
+  public static IRequestExecutorBuilder AddPostsGraphQL(this IRequestExecutorBuilder builder)
+  {
     return builder
            .AddType<PostType>()
            .AddTypeExtension<PostQueries>()
