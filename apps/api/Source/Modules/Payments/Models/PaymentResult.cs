@@ -58,7 +58,7 @@ public class PaymentResult
     /// <summary>
     /// Create a successful payment result
     /// </summary>
-    public static PaymentResult Success(
+    public static PaymentResult CreateSuccess(
         Guid paymentId,
         string transactionId,
         Money amount,
