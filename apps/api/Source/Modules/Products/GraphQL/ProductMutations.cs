@@ -197,7 +197,7 @@ public class ProductMutations {
     // Note: This would need a specific CreatePromoCodeCommand in a real implementation
     await Task.CompletedTask;
 
-    throw new NotImplementedException("CreatePromoCode needs to be implemented with MediatR commands");
+    throw new NotImplementedException("CreatePromoCode needs to be implemented with GameGuild.CQRS commands");
   }
 
   /// <summary>
@@ -210,7 +210,7 @@ public class ProductMutations {
     // Note: This would need a specific UpdatePromoCodeCommand in a real implementation  
     await Task.CompletedTask;
 
-    throw new NotImplementedException("UpdatePromoCode needs to be implemented with MediatR commands");
+    throw new NotImplementedException("UpdatePromoCode needs to be implemented with GameGuild.CQRS commands");
   }
 
   /// <summary>
@@ -220,7 +220,7 @@ public class ProductMutations {
     // Note: This would need a specific DeletePromoCodeCommand in a real implementation
     await Task.CompletedTask;
 
-    throw new NotImplementedException("DeletePromoCode needs to be implemented with MediatR commands");
+    throw new NotImplementedException("DeletePromoCode needs to be implemented with GameGuild.CQRS commands");
   }
 
   /// <summary>
@@ -233,6 +233,6 @@ public class ProductMutations {
     // Note: This would need a specific UsePromoCodeCommand in a real implementation
     await Task.CompletedTask;
 
-    throw new NotImplementedException("UsePromoCode needs to be implemented with MediatR commands");
+    throw new NotImplementedException("UsePromoCode needs to be implemented with GameGuild.CQRS commands");
   }
 }
