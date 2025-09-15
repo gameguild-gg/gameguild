@@ -43,7 +43,7 @@ public class PaymentRetryResult
     /// <summary>
     /// Create a successful retry result
     /// </summary>
-    public static PaymentRetryResult Success(PaymentResult paymentResult, int attemptNumber, int maxRetries)
+    public static PaymentRetryResult CreateSuccess(PaymentResult paymentResult, int attemptNumber, int maxRetries)
     {
         return new PaymentRetryResult
         {
