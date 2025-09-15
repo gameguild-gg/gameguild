@@ -12,10 +12,8 @@ public class BulkDeleteUsersHandler(
   ApplicationDbContext context,
   ILogger<BulkDeleteUsersHandler> logger,
   IMediator mediator
-) : IResultCommandHandler<BulkDeleteUsersCommand, BulkOperationResult>
-{
-  public async Task<Result<BulkOperationResult>> Handle(BulkDeleteUsersCommand request, CancellationToken cancellationToken)
-  {
+) : IResultCommandHandler<BulkDeleteUsersCommand, BulkOperationResult> {
+  public async Task<Result<BulkOperationResult>> Handle(BulkDeleteUsersCommand request, CancellationToken cancellationToken) {
     var users = await context.Users
                              .Where(u => request.UserIds.Contains(u.Id))
                              .ToListAsync(cancellationToken);
@@ -23,10 +21,8 @@ public class BulkDeleteUsersHandler(
     var successCount = 0;
     var errors = new List<string>();
 
-    foreach (var user in users)
-    {
-      try
-      {
+    foreach (var user in users) {
+      try {
         if (request.SoftDelete)
           user.SoftDelete();
         else
@@ -37,8 +33,7 @@ public class BulkDeleteUsersHandler(
 
         successCount++;
       }
-      catch (Exception ex)
-      {
+      catch (Exception ex) {
         errors.Add($"Failed to delete user {user.Id}: {ex.Message}");
         logger.LogError(ex, "Failed to delete user {UserId}", user.Id);
       }
