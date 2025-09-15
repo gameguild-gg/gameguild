@@ -24,7 +24,7 @@ public class PermissionQueries {
     var targetUserId = string.IsNullOrEmpty(userId) ? currentUserId : Guid.Parse(userId);
 
     // Check if user can view permissions for this resource
-    var canView = await resolver.ResolvePermissionAsync<Entity>(currentUserId, tenantId, PermissionType.Read, resourceId, resourceType);
+    var canView = await resolver.ResolvePermissionAsync<EntityBase>(currentUserId, tenantId, PermissionType.Read, resourceId, resourceType);
 
     if (!canView.IsGranted) throw new UnauthorizedAccessException("You don't have permission to view permissions for this resource");
 
@@ -50,7 +50,7 @@ public class PermissionQueries {
     var targetUserId = string.IsNullOrEmpty(userId) ? currentUserId : Guid.Parse(userId);
 
     // Check if user can view permissions for this resource
-    var canView = await resolver.ResolvePermissionAsync<Entity>(currentUserId, tenantId, PermissionType.Read, resourceId, resourceType);
+    var canView = await resolver.ResolvePermissionAsync<EntityBase>(currentUserId, tenantId, PermissionType.Read, resourceId, resourceType);
 
     if (!canView.IsGranted) throw new UnauthorizedAccessException("You don't have permission to view permissions for this resource");
 
@@ -102,10 +102,10 @@ public class PermissionQueries {
   private static async Task<IEnumerable<EffectivePermission>> GetEffectivePermissionsByType(IDacPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, Guid resourceId) {
     return resourceType.ToLower() switch {
       "project" or "projects" => await resolver.GetEffectivePermissionsAsync<Project>(userId, tenantId, resourceId, "Project"),
-      "post" or "posts" => await resolver.GetEffectivePermissionsAsync<Entity>(userId, tenantId, resourceId, "Post"),
-      "content" or "contents" => await resolver.GetEffectivePermissionsAsync<Entity>(userId, tenantId, resourceId, "Content"),
-      "product" or "products" => await resolver.GetEffectivePermissionsAsync<Entity>(userId, tenantId, resourceId, "Product"),
-      "resource" or "resources" => await resolver.GetEffectivePermissionsAsync<Entity>(userId, tenantId, resourceId, "Resource"),
+      "post" or "posts" => await resolver.GetEffectivePermissionsAsync<EntityBase>(userId, tenantId, resourceId, "Post"),
+      "content" or "contents" => await resolver.GetEffectivePermissionsAsync<EntityBase>(userId, tenantId, resourceId, "Content"),
+      "product" or "products" => await resolver.GetEffectivePermissionsAsync<EntityBase>(userId, tenantId, resourceId, "Product"),
+      "resource" or "resources" => await resolver.GetEffectivePermissionsAsync<EntityBase>(userId, tenantId, resourceId, "Resource"),
       _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
     };
   }
@@ -113,10 +113,10 @@ public class PermissionQueries {
   private static async Task<PermissionHierarchy> GetPermissionHierarchyByType(IDacPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, PermissionType permission, Guid resourceId) {
     return resourceType.ToLower() switch {
       "project" or "projects" => await resolver.GetPermissionHierarchyAsync<Project>(userId, tenantId, permission, resourceId, "Project"),
-      "post" or "posts" => await resolver.GetPermissionHierarchyAsync<Entity>(userId, tenantId, permission, resourceId, "Post"),
-      "content" or "contents" => await resolver.GetPermissionHierarchyAsync<Entity>(userId, tenantId, permission, resourceId, "Content"),
-      "product" or "products" => await resolver.GetPermissionHierarchyAsync<Entity>(userId, tenantId, permission, resourceId, "Product"),
-      "resource" or "resources" => await resolver.GetPermissionHierarchyAsync<Entity>(userId, tenantId, permission, resourceId, "Resource"),
+      "post" or "posts" => await resolver.GetPermissionHierarchyAsync<EntityBase>(userId, tenantId, permission, resourceId, "Post"),
+      "content" or "contents" => await resolver.GetPermissionHierarchyAsync<EntityBase>(userId, tenantId, permission, resourceId, "Content"),
+      "product" or "products" => await resolver.GetPermissionHierarchyAsync<EntityBase>(userId, tenantId, permission, resourceId, "Product"),
+      "resource" or "resources" => await resolver.GetPermissionHierarchyAsync<EntityBase>(userId, tenantId, permission, resourceId, "Resource"),
       _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
     };
   }
@@ -124,10 +124,10 @@ public class PermissionQueries {
   private static async Task<PermissionResult> GetPermissionResultByType(IDacPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, PermissionType permission, Guid resourceId) {
     return resourceType.ToLower() switch {
       "project" or "projects" => await resolver.ResolvePermissionAsync<Project>(userId, tenantId, permission, resourceId, "Project"),
-      "post" or "posts" => await resolver.ResolvePermissionAsync<Entity>(userId, tenantId, permission, resourceId, "Post"),
-      "content" or "contents" => await resolver.ResolvePermissionAsync<Entity>(userId, tenantId, permission, resourceId, "Content"),
-      "product" or "products" => await resolver.ResolvePermissionAsync<Entity>(userId, tenantId, permission, resourceId, "Product"),
-      "resource" or "resources" => await resolver.ResolvePermissionAsync<Entity>(userId, tenantId, permission, resourceId, "Resource"),
+      "post" or "posts" => await resolver.ResolvePermissionAsync<EntityBase>(userId, tenantId, permission, resourceId, "Post"),
+      "content" or "contents" => await resolver.ResolvePermissionAsync<EntityBase>(userId, tenantId, permission, resourceId, "Content"),
+      "product" or "products" => await resolver.ResolvePermissionAsync<EntityBase>(userId, tenantId, permission, resourceId, "Product"),
+      "resource" or "resources" => await resolver.ResolvePermissionAsync<EntityBase>(userId, tenantId, permission, resourceId, "Resource"),
       _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
     };
   }
@@ -136,10 +136,10 @@ public class PermissionQueries {
     BulkResolvePermissionsByType(IDacPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, Guid[ ] resourceIds, PermissionType[ ] permissions) {
     return resourceType.ToLower() switch {
       "project" or "projects" => await resolver.BulkResolvePermissionsAsync<Project>(userId, tenantId, resourceIds, permissions),
-      "post" or "posts" => await resolver.BulkResolvePermissionsAsync<Entity>(userId, tenantId, resourceIds, permissions),
-      "content" or "contents" => await resolver.BulkResolvePermissionsAsync<Entity>(userId, tenantId, resourceIds, permissions),
-      "product" or "products" => await resolver.BulkResolvePermissionsAsync<Entity>(userId, tenantId, resourceIds, permissions),
-      "resource" or "resources" => await resolver.BulkResolvePermissionsAsync<Entity>(userId, tenantId, resourceIds, permissions),
+      "post" or "posts" => await resolver.BulkResolvePermissionsAsync<EntityBase>(userId, tenantId, resourceIds, permissions),
+      "content" or "contents" => await resolver.BulkResolvePermissionsAsync<EntityBase>(userId, tenantId, resourceIds, permissions),
+      "product" or "products" => await resolver.BulkResolvePermissionsAsync<EntityBase>(userId, tenantId, resourceIds, permissions),
+      "resource" or "resources" => await resolver.BulkResolvePermissionsAsync<EntityBase>(userId, tenantId, resourceIds, permissions),
       _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
     };
   }
@@ -162,7 +162,7 @@ public class PermissionMutations {
     var tenantId = GetTenantIdFromContext(context);
 
     // Check if user can share this resource
-    var canShare = await resolver.ResolvePermissionAsync<Entity>(userId, tenantId, PermissionType.Share, input.ResourceId, input.ResourceType);
+    var canShare = await resolver.ResolvePermissionAsync<EntityBase>(userId, tenantId, PermissionType.Share, input.ResourceId, input.ResourceType);
 
     if (!canShare.IsGranted) throw new UnauthorizedAccessException("You don't have permission to share this resource");
 
@@ -193,7 +193,7 @@ public class PermissionMutations {
     var tenantId = GetTenantIdFromContext(context);
 
     // Check if user can manage permissions for this resource
-    var canManage = await resolver.ResolvePermissionAsync<Entity>(userId, tenantId, PermissionType.Edit, input.ResourceId, input.ResourceType);
+    var canManage = await resolver.ResolvePermissionAsync<EntityBase>(userId, tenantId, PermissionType.Edit, input.ResourceId, input.ResourceType);
 
     if (!canManage.IsGranted) throw new UnauthorizedAccessException("You don't have permission to manage permissions for this resource");
 
@@ -215,7 +215,7 @@ public class PermissionMutations {
     var tenantId = GetTenantIdFromContext(context);
 
     // Check if user can manage permissions for this resource
-    var canManage = await resolver.ResolvePermissionAsync<Entity>(userId, tenantId, PermissionType.Edit, input.ResourceId, input.ResourceType);
+    var canManage = await resolver.ResolvePermissionAsync<EntityBase>(userId, tenantId, PermissionType.Edit, input.ResourceId, input.ResourceType);
 
     if (!canManage.IsGranted) throw new UnauthorizedAccessException("You don't have permission to manage permissions for this resource");
 

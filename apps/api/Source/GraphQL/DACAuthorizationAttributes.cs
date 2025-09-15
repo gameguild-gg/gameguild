@@ -1,13 +1,14 @@
+using GameGuild.Common.Authorization;
 using GameGuild.Modules.Permissions;
 
 
-namespace GameGuild.Common.Authorization;
+namespace GameGuild.Modules.Authorization;
 
 /// <summary>
 /// Backward-compatible resource permission attribute (infers permission type from entity)
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
-public class RequireResourcePermissionAttribute<TEntity> : DACAuthorizationAttribute where TEntity : Entity {
+public class RequireResourcePermissionAttribute<TEntity> : DACAuthorizationAttribute where TEntity : EntityBase {
   public override DACPermissionLevel PermissionLevel { get => DACPermissionLevel.Resource; }
 
   /// <summary>

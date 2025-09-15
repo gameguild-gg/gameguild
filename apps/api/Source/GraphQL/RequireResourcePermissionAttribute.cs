@@ -9,7 +9,7 @@ namespace GameGuild.Common.Authorization;
 /// Checks permissions for specific content entries within a tenant
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
-public class RequireResourcePermissionAttribute<TPermission, TEntity> : DACAuthorizationAttribute where TPermission : ResourcePermission<TEntity> where TEntity : Entity {
+public class RequireResourcePermissionAttribute<TPermission, TEntity> : DACAuthorizationAttribute where TPermission : ResourcePermission<TEntity> where TEntity : EntityBase {
   public override DACPermissionLevel PermissionLevel { get => DACPermissionLevel.Resource; }
 
   public override Type PermissionType { get => typeof(TPermission); }
