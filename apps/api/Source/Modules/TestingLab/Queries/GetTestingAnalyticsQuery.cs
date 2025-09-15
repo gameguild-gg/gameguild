@@ -5,4 +5,4 @@ public record GetTestingAnalyticsQuery(
   DateTime? FromDate = null,
   DateTime? ToDate = null,
   bool IncludeTrends = true
-) : IRequest<TestingAnalytics>;
+) : GameGuild.CQRS.IRequest<TestingAnalytics>;

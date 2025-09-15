@@ -6,4 +6,4 @@ public record GetTestingFeedbackQuery(
   int Take = 50,
   Guid? UserId = null,
   FeedbackQuality? MinQualityRating = null
-) : IRequest<IEnumerable<TestingFeedback>>;
+) : GameGuild.CQRS.IRequest<IEnumerable<TestingFeedback>>;
