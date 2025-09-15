@@ -1,14 +1,18 @@
+using GameGuild.CQRS;
+
 namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Handles UserProfileCreatedEvent - manages integrations and side effects
 /// </summary>
-public class UserProfileCreatedEventHandler : IDomainEventHandler<UserProfileCreatedEvent> {
+public class UserProfileCreatedEventHandler : IDomainEventHandler<UserProfileCreatedEvent>
+{
   private readonly ILogger<UserProfileCreatedEventHandler> _logger;
 
   public UserProfileCreatedEventHandler(ILogger<UserProfileCreatedEventHandler> logger) { _logger = logger; }
 
-  public async Task Handle(UserProfileCreatedEvent domainEvent, CancellationToken cancellationToken) {
+  public async Task Handle(UserProfileCreatedEvent domainEvent, CancellationToken cancellationToken)
+  {
     _logger.LogInformation(
       "User profile created: {UserProfileId} for user {UserId} with display name '{DisplayName}'",
       domainEvent.UserProfileId,

@@ -1,14 +1,18 @@
-﻿namespace GameGuild.Modules.UserProfiles;
+﻿using GameGuild.CQRS;
+
+namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Handles UserProfileDeletedEvent - manages cleanup and notifications
 /// </summary>
-public class UserProfileDeletedEventHandler : IDomainEventHandler<UserProfileDeletedEvent> {
+public class UserProfileDeletedEventHandler : IDomainEventHandler<UserProfileDeletedEvent>
+{
   private readonly ILogger<UserProfileDeletedEventHandler> _logger;
 
   public UserProfileDeletedEventHandler(ILogger<UserProfileDeletedEventHandler> logger) { _logger = logger; }
 
-  public async Task Handle(UserProfileDeletedEvent domainEvent, CancellationToken cancellationToken) {
+  public async Task Handle(UserProfileDeletedEvent domainEvent, CancellationToken cancellationToken)
+  {
     _logger.LogInformation(
       "User profile deleted: {UserProfileId} for user {UserId} (soft delete: {IsSoftDelete})",
       domainEvent.UserProfileId,
