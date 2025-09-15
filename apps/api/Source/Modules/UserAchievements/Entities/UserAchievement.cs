@@ -13,7 +13,8 @@ namespace GameGuild.Modules.UserAchievements;
 [Index(nameof(EarnedAt))]
 [Index(nameof(TenantId))]
 [Index(nameof(UserId), nameof(AchievementId), IsUnique = false)] // Allow repeatable achievements
-public class UserAchievement : BaseEntity {
+public class UserAchievement : EntityBase
+{
   /// <summary>
   /// The user who earned the achievement
   /// </summary>
