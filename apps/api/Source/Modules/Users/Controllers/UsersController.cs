@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +10,7 @@ namespace GameGuild.Modules.Users;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController(IMediator mediator) : ControllerBase {
+public class UsersController(GameGuild.CQRS.IMediator mediator) : ControllerBase {
   /// <summary>
   /// Get all users with optional filtering and pagination
   /// </summary>

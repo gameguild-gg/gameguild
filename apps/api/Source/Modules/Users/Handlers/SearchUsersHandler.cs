@@ -1,4 +1,5 @@
 ﻿using GameGuild;
+using GameGuild.CQRS;
 using GameGuild.Database;
 
 
@@ -10,8 +11,10 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Handler for searching users with filtering and pagination
 /// </summary>
-public class SearchUsersHandler(ApplicationDbContext context) : IRequestHandler<SearchUsersQuery, PagedResult<User>> {
-  public async Task<PagedResult<User>> Handle(SearchUsersQuery request, CancellationToken cancellationToken) {
+public class SearchUsersHandler(ApplicationDbContext context) : IQueryHandler<SearchUsersQuery, PagedResult<User>>
+{
+  public async Task<PagedResult<User>> Handle(SearchUsersQuery request, CancellationToken cancellationToken)
+  {
     IQueryable<User> query = context.Users.Include(u => u.Credentials);
 
     // Apply filters
@@ -19,7 +22,8 @@ public class SearchUsersHandler(ApplicationDbContext context) : IRequestHandler<
 
     if (request.IsActive.HasValue) query = query.Where(user => user.IsActive == request.IsActive.Value);
 
-    if (!string.IsNullOrWhiteSpace(request.SearchTerm)) {
+    if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+    {
       // Use ILIKE for case-insensitive search in PostgreSQL and include username matching
       var term = $"%{request.SearchTerm.Trim()}%";
       query = query.Where(user =>

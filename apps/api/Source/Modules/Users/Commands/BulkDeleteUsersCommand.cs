@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 ﻿using GameGuild;
 
 
@@ -6,7 +7,7 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Command to bulk delete users
 /// </summary>
-public sealed class BulkDeleteUsersCommand : IRequest<BulkOperationResult> {
+public sealed class BulkDeleteUsersCommand : IResultCommand<BulkOperationResult> {
   [Required][MinLength(1)] public IList<Guid> UserIds { get; set; } = new List<Guid>();
 
   public bool SoftDelete { get; set; } = true;

@@ -1,3 +1,5 @@
+using GameGuild.GraphQL;
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Modules.Users.Inputs;
 
@@ -13,7 +15,7 @@ public class UserQueries {
   /// Gets all users with optional filtering using CQRS pattern
   /// </summary>
   public async Task<IEnumerable<User>> Users(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     bool includeDeleted = false,
     bool? isActive = null,
     int skip = 0,
@@ -28,7 +30,7 @@ public class UserQueries {
   /// Gets a user by their unique identifier using CQRS pattern
   /// </summary>
   public async Task<User?> GetUserById(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     Guid id,
     bool includeDeleted = false
   ) {
@@ -41,7 +43,7 @@ public class UserQueries {
   /// Gets a user by their unique identifier (alias for GetUserById)
   /// </summary>
   public async Task<User?> User(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     Guid id,
     bool includeDeleted = false
   ) {
@@ -54,7 +56,7 @@ public class UserQueries {
   /// Gets a user by their email address using CQRS pattern
   /// </summary>
   public async Task<User?> GetUserByEmail(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     string email,
     bool includeDeleted = false
   ) {
@@ -67,7 +69,7 @@ public class UserQueries {
   /// Search users with advanced filtering and pagination using CQRS pattern
   /// </summary>
   public async Task<PagedResult<User>> SearchUsers(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     SearchUsersInput input
   ) {
     var query = new SearchUsersQuery {
@@ -93,7 +95,7 @@ public class UserQueries {
   /// Gets user statistics using CQRS pattern
   /// </summary>
   public async Task<UserStatistics> GetUserStatistics(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     UserStatisticsInput input
   ) {
     var query = new GetUserStatisticsQuery { FromDate = input.FromDate, ToDate = input.ToDate, IncludeDeleted = input.IncludeDeleted };
@@ -105,7 +107,7 @@ public class UserQueries {
   /// Gets users with low balance using CQRS pattern
   /// </summary>
   public async Task<PagedResult<User>> GetUsersWithLowBalance(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     decimal threshold = 10m,
     bool includeDeleted = false,
     int skip = 0,
@@ -119,7 +121,7 @@ public class UserQueries {
   /// <summary>
   /// Gets active users only using CQRS pattern
   /// </summary>
-  public async Task<IEnumerable<User>> GetActiveUsers([Service] IMediator mediator) {
+  public async Task<IEnumerable<User>> GetActiveUsers([Service] GameGuild.CQRS.IMediator mediator) {
     var query = new GetAllUsersQuery { IsActive = true };
 
     return await mediator.Send(query);
@@ -128,7 +130,7 @@ public class UserQueries {
   /// <summary>
   /// Gets soft-deleted users using CQRS pattern
   /// </summary>
-  public async Task<IEnumerable<User>> GetDeletedUsers([Service] IMediator mediator) {
+  public async Task<IEnumerable<User>> GetDeletedUsers([Service] GameGuild.CQRS.IMediator mediator) {
     var query = new GetAllUsersQuery { IncludeDeleted = true };
     var users = await mediator.Send(query);
 
@@ -138,6 +140,6 @@ public class UserQueries {
   /// <summary>
   /// Legacy method - Gets all users using traditional service pattern (deprecated)
   /// </summary>
-  [Obsolete("Use GetUsers with IMediator instead")]
+  [Obsolete("Use GetUsers with GameGuild.CQRS.IMediator instead")]
   public async Task<IEnumerable<User>> GetUsersLegacy([Service] IUserService userService) { return await userService.GetAllUsersAsync(); }
 }

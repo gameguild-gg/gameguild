@@ -1,9 +1,10 @@
+using GameGuild.CQRS;
 ﻿namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// Command to delete a user
 /// </summary>
-public sealed class DeleteUserCommand : IRequest<bool> {
+public sealed class DeleteUserCommand : ICommand<bool> {
   [Required] public Guid UserId { get; set; }
 
   public bool SoftDelete { get; set; } = true;

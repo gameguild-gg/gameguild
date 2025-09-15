@@ -1,4 +1,5 @@
 ﻿using GameGuild;
+using GameGuild.CQRS;
 
 
 namespace GameGuild.Modules.Users;
@@ -6,7 +7,8 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Query to get user by ID
 /// </summary>
-public sealed class GetUserByIdQuery : IQuery<User?> {
+public sealed class GetUserByIdQuery : IQuery<User?>
+{
   [Required] public Guid UserId { get; set; }
 
   public bool IncludeDeleted { get; set; } = false;

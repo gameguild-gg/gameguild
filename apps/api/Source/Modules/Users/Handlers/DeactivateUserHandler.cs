@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Handler for deactivating user
 /// </summary>
-public class DeactivateUserHandler(ApplicationDbContext context, ILogger<DeactivateUserHandler> logger, IMediator mediator) : IRequestHandler<DeactivateUserCommand, bool> {
+public class DeactivateUserHandler(ApplicationDbContext context, ILogger<DeactivateUserHandler> logger, GameGuild.CQRS.IMediator mediator) : GameGuild.CQRS.IRequestHandler<DeactivateUserCommand, bool> {
   public async Task<bool> Handle(DeactivateUserCommand request, CancellationToken cancellationToken) {
     var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
 
