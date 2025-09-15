@@ -16,9 +16,6 @@
     <PackageVersion Include="HotChocolate.Data.EntityFramework" Version="15.1.8" />
     <PackageVersion Include="HotChocolate.Types.Analyzers" Version="15.1.8" />
 
-    <PackageVersion Include="MediatR" Version="11.1.0" />
-    <PackageVersion Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.1.0" />
-
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.7" />
     <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.7" />
