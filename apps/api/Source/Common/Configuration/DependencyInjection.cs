@@ -5,6 +5,7 @@ using FluentValidation;
 using GameGuild.Common.Configuration;
 using GameGuild.Common.Extensions;
 using GameGuild.Common.Services;
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Payments;
@@ -85,7 +86,7 @@ public static class DependencyInjection
             )
             .ConfigureApiBehaviorOptions(options =>
             {
-              options.SuppressModelStateInvalidFilter = true; // We handle validation through MediatR
+              options.SuppressModelStateInvalidFilter = true; // We handle validation through GameGuild.CQRS
             }
             );
 
