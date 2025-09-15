@@ -19,12 +19,12 @@ public static class ProjectRoles {
 /// Command handlers for project operations
 /// </summary>
 public class ProjectCommandHandlers :
-  IRequestHandler<CreateProjectCommand, CreateProjectResult>,
-  IRequestHandler<UpdateProjectCommand, UpdateProjectResult>,
-  IRequestHandler<DeleteProjectCommand, DeleteProjectResult>,
-  IRequestHandler<PublishProjectCommand, PublishProjectResult>,
-  IRequestHandler<UnpublishProjectCommand, UnpublishProjectResult>,
-  IRequestHandler<ArchiveProjectCommand, ArchiveProjectResult> {
+  GameGuild.CQRS.IRequestHandler<CreateProjectCommand, CreateProjectResult>,
+  GameGuild.CQRS.IRequestHandler<UpdateProjectCommand, UpdateProjectResult>,
+  GameGuild.CQRS.IRequestHandler<DeleteProjectCommand, DeleteProjectResult>,
+  GameGuild.CQRS.IRequestHandler<PublishProjectCommand, PublishProjectResult>,
+  GameGuild.CQRS.IRequestHandler<UnpublishProjectCommand, UnpublishProjectResult>,
+  GameGuild.CQRS.IRequestHandler<ArchiveProjectCommand, ArchiveProjectResult> {
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;
