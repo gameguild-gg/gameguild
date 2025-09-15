@@ -2,13 +2,16 @@ using System.Collections.ObjectModel;
 using System.Text.Json;
 
 
+using GameGuild;
+
 namespace GameGuild.Modules.Permissions;
 
 /// <summary>
 /// User role assignment for module-specific roles - matches the AddModulePermissionTables migration
 /// </summary>
 [Table("UserRoleAssignments")]
-public class UserRoleAssignment : BaseEntity {
+public class UserRoleAssignment : BaseEntity
+{
   [Required]
   public Guid UserId { get; set; }
 
@@ -32,7 +35,8 @@ public class UserRoleAssignment : BaseEntity {
   /// Constraints that apply to this role assignment
   /// </summary>
   [NotMapped]
-  public ReadOnlyCollection<PermissionConstraint> Constraints {
+  public ReadOnlyCollection<PermissionConstraint> Constraints
+  {
     get => new ReadOnlyCollection<PermissionConstraint>(
         string.IsNullOrEmpty(ConstraintsJson)
             ? new List<PermissionConstraint>()
@@ -42,7 +46,8 @@ public class UserRoleAssignment : BaseEntity {
   /// <summary>
   /// Sets the constraints for this role assignment
   /// </summary>
-  public void SetConstraints(IEnumerable<PermissionConstraint> constraints) {
+  public void SetConstraints(IEnumerable<PermissionConstraint> constraints)
+  {
     ConstraintsJson = JsonSerializer.Serialize(constraints);
   }
 
@@ -57,8 +62,10 @@ public class UserRoleAssignment : BaseEntity {
 /// <summary>
 /// Configuration for UserRoleAssignment entity
 /// </summary>
-internal class UserRoleAssignmentConfiguration : IEntityTypeConfiguration<UserRoleAssignment> {
-  public void Configure(EntityTypeBuilder<UserRoleAssignment> builder) {
+internal class UserRoleAssignmentConfiguration : IEntityTypeConfiguration<UserRoleAssignment>
+{
+  public void Configure(EntityTypeBuilder<UserRoleAssignment> builder)
+  {
     builder.HasIndex(x => new { x.UserId, x.Module, x.RoleName }).IsUnique();
 
     builder.HasOne(x => x.Role)
