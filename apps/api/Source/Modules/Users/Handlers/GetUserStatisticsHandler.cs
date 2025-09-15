@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Database;
 
 
@@ -6,8 +7,10 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Handler for getting user statistics
 /// </summary>
-public class GetUserStatisticsHandler(ApplicationDbContext context) : IRequestHandler<GetUserStatisticsQuery, UserStatistics> {
-  public async Task<UserStatistics> Handle(GetUserStatisticsQuery request, CancellationToken cancellationToken) {
+public class GetUserStatisticsHandler(ApplicationDbContext context) : IQueryHandler<GetUserStatisticsQuery, UserStatistics>
+{
+  public async Task<UserStatistics> Handle(GetUserStatisticsQuery request, CancellationToken cancellationToken)
+  {
     var query = context.Users.AsQueryable();
 
     // Apply date filters if provided
@@ -23,7 +26,8 @@ public class GetUserStatisticsHandler(ApplicationDbContext context) : IRequestHa
     var weekStart = today.AddDays(-(int)today.DayOfWeek);
     var monthStart = new DateTime(today.Year, today.Month, 1);
 
-    var statistics = new UserStatistics {
+    var statistics = new UserStatistics
+    {
       TotalUsers = await query.CountAsync(cancellationToken),
       ActiveUsers = await query.CountAsync(u => u.IsActive && u.DeletedAt == null, cancellationToken),
       InactiveUsers = await query.CountAsync(u => !u.IsActive && u.DeletedAt == null, cancellationToken),

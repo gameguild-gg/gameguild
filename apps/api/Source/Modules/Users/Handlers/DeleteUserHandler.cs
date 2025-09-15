@@ -9,8 +9,8 @@ namespace GameGuild.Modules.Users;
 public class DeleteUserHandler(
   ApplicationDbContext context,
   ILogger<DeleteUserHandler> logger,
-  IMediator mediator
-) : IRequestHandler<DeleteUserCommand, bool> {
+  GameGuild.CQRS.IMediator mediator
+) : GameGuild.CQRS.IRequestHandler<DeleteUserCommand, bool> {
   public async Task<bool> Handle(DeleteUserCommand request, CancellationToken cancellationToken) {
     var user = await context.Users
                             .FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);

@@ -10,8 +10,8 @@ namespace GameGuild.Modules.Users;
 public class CreateUserHandler(
   ApplicationDbContext context,
   ILogger<CreateUserHandler> logger,
-  IMediator mediator
-) : IRequestHandler<CreateUserCommand, User> {
+  GameGuild.CQRS.IMediator mediator
+) : GameGuild.CQRS.IRequestHandler<CreateUserCommand, User> {
   public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken) {
     // Check if email already exists
     var existingUser = await context.Users
