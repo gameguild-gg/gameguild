@@ -115,17 +115,22 @@ public static class ServiceCollectionExtensions
     return services;
   }
 
-  public static IServiceCollection AddSubscriptionModule(this IServiceCollection services) {
+  public static IServiceCollection AddSubscriptionModule(this IServiceCollection services)
+  {
     // Register Subscription module services
     services.AddScoped<ISubscriptionService, SubscriptionService>();
     
     // Register Subscription repositories
     services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 
+    // Register Subscription repositories
+    services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+
     return services;
   }
 
-  public static IServiceCollection AddPaymentModule(this IServiceCollection services) {
+  public static IServiceCollection AddPaymentModule(this IServiceCollection services)
+  {
     // Register Payment module services
     services.AddScoped<IPaymentService, PaymentService>();
 
