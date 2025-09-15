@@ -12,29 +12,23 @@ public class BulkDeactivateUsersHandler(
   ApplicationDbContext context,
   ILogger<BulkDeactivateUsersHandler> logger,
   IMediator mediator
-) : IResultCommandHandler<BulkDeactivateUsersCommand, BulkOperationResult>
-{
-  public async Task<Result<BulkOperationResult>> Handle(BulkDeactivateUsersCommand request, CancellationToken cancellationToken)
-  {
+) : IResultCommandHandler<BulkDeactivateUsersCommand, BulkOperationResult> {
+  public async Task<Result<BulkOperationResult>> Handle(BulkDeactivateUsersCommand request, CancellationToken cancellationToken) {
     var deactivatedUsers = new List<User>();
     var errors = new List<string>();
     var successfulCount = 0;
 
-    foreach (var userId in request.UserIds)
-    {
-      try
-      {
+    foreach (var userId in request.UserIds) {
+      try {
         var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null, cancellationToken);
 
-        if (user == null)
-        {
+        if (user == null) {
           errors.Add($"User with ID {userId} not found");
 
           continue;
         }
 
-        if (!user.IsActive)
-        {
+        if (!user.IsActive) {
           successfulCount++; // Already inactive, count as success
 
           continue;
@@ -45,15 +39,13 @@ public class BulkDeactivateUsersHandler(
         deactivatedUsers.Add(user);
         successfulCount++;
       }
-      catch (Exception ex)
-      {
+      catch (Exception ex) {
         errors.Add($"Failed to deactivate user {userId}: {ex.Message}");
         logger.LogError(ex, "Failed to deactivate user {UserId}", userId);
       }
     }
 
-    if (deactivatedUsers.Count != 0)
-    {
+    if (deactivatedUsers.Count != 0) {
       await context.SaveChangesAsync(cancellationToken);
 
       // Publish domain events for deactivated users

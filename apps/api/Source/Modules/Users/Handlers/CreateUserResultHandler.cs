@@ -12,18 +12,14 @@ public class CreateUserResultHandler(
     ApplicationDbContext context,
     ILogger<CreateUserResultHandler> logger,
     GameGuild.CQRS.IMediator mediator
-) : IResultCommandHandler<CreateUserResultCommand, User>
-{
-    public async Task<Result<User>> Handle(CreateUserResultCommand request, CancellationToken cancellationToken)
-    {
-        try
-        {
+) : IResultCommandHandler<CreateUserResultCommand, User> {
+    public async Task<Result<User>> Handle(CreateUserResultCommand request, CancellationToken cancellationToken) {
+        try {
             // Check if email already exists
             var existingUser = await context.Users
                                         .FirstOrDefaultAsync(user => user.Email == request.Email, cancellationToken);
 
-            if (existingUser != null)
-            {
+            if (existingUser != null) {
                 return Result.Failure<User>(Error.Conflict("Users.EmailExists", $"User with email {request.Email} already exists"));
             }
 
@@ -39,8 +35,7 @@ public class CreateUserResultHandler(
             // Normalize negative balance to zero - business rule
             var normalizedBalance = Math.Max(0, request.InitialBalance);
 
-            var user = new User
-            {
+            var user = new User {
                 Name = request.Name,
                 Username = uniqueUsername,
                 Email = request.Email,
@@ -59,13 +54,11 @@ public class CreateUserResultHandler(
 
             return Result.Success(user);
         }
-        catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate key") == true)
-        {
+        catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate key") == true) {
             logger.LogWarning(ex, "Attempted to create user with duplicate data");
             return Result.Failure<User>(Error.Conflict("Users.DuplicateData", "A user with this information already exists"));
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             logger.LogError(ex, "Error creating user with email {Email}", request.Email);
             return Result.Failure<User>(Error.Create("Users.CreateFailed", "An error occurred while creating the user"));
         }
