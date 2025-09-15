@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -7,8 +8,8 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Handler for getting user profile statistics
 /// </summary>
-public class GetUserProfileStatisticsHandler(ApplicationDbContext context, ILogger<GetUserProfileStatisticsHandler> logger) : IQueryHandler<GetUserProfileStatisticsQuery, Common.Result<UserProfileStatistics>> {
-  public async Task<Common.Result<UserProfileStatistics>> Handle(GetUserProfileStatisticsQuery request, CancellationToken cancellationToken) {
+public class GetUserProfileStatisticsHandler(ApplicationDbContext context, ILogger<GetUserProfileStatisticsHandler> logger) : IQueryHandler<GetUserProfileStatisticsQuery, Result<UserProfileStatistics>> {
+  public async Task<Result<UserProfileStatistics>> Handle(GetUserProfileStatisticsQuery request, CancellationToken cancellationToken) {
     try {
       var fromDate = request.FromDate ?? DateTime.MinValue;
       var toDate = request.ToDate ?? DateTime.MaxValue;

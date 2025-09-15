@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -7,8 +8,8 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Handler for getting all user profiles with filtering and pagination
 /// </summary>
-public class GetAllUserProfilesHandler(ApplicationDbContext context, ILogger<GetAllUserProfilesHandler> logger) : IQueryHandler<GetAllUserProfilesQuery, Common.Result<IEnumerable<UserProfile>>> {
-  public async Task<Common.Result<IEnumerable<UserProfile>>> Handle(GetAllUserProfilesQuery request, CancellationToken cancellationToken) {
+public class GetAllUserProfilesHandler(ApplicationDbContext context, ILogger<GetAllUserProfilesHandler> logger) : IQueryHandler<GetAllUserProfilesQuery, Result<IEnumerable<UserProfile>>> {
+  public async Task<Result<IEnumerable<UserProfile>>> Handle(GetAllUserProfilesQuery request, CancellationToken cancellationToken) {
     try {
       IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>().Include(up => up.Metadata);
 

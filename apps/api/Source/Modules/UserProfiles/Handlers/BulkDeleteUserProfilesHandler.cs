@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -7,8 +8,8 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Handler for bulk deleting user profiles
 /// </summary>
-public class BulkDeleteUserProfilesHandler(ApplicationDbContext context, ILogger<BulkDeleteUserProfilesHandler> logger) : ICommandHandler<BulkDeleteUserProfilesCommand, Common.Result<int>> {
-  public async Task<Common.Result<int>> Handle(BulkDeleteUserProfilesCommand request, CancellationToken cancellationToken) {
+public class BulkDeleteUserProfilesHandler(ApplicationDbContext context, ILogger<BulkDeleteUserProfilesHandler> logger) : ICommandHandler<BulkDeleteUserProfilesCommand, Result<int>> {
+  public async Task<Result<int>> Handle(BulkDeleteUserProfilesCommand request, CancellationToken cancellationToken) {
     try {
       var userProfileIds = request.UserProfileIds.ToList();
 
