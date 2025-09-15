@@ -1,7 +1,7 @@
 using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
-using GameGuild.Modules.Users.Events;
+
 
 namespace GameGuild.Modules.Users;
 
@@ -12,7 +12,7 @@ public class BulkCreateUsersHandler(
   ApplicationDbContext context,
   ILogger<BulkCreateUsersHandler> logger,
   IMediator mediator
-) : IRequestHandler<BulkCreateUsersCommand, Result<BulkOperationResult>>
+) : IResultCommandHandler<BulkCreateUsersCommand, BulkOperationResult>
 {
   public async Task<Result<BulkOperationResult>> Handle(BulkCreateUsersCommand request, CancellationToken cancellationToken)
   {
