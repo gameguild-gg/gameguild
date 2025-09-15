@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Infrastructure.Common.ValueObjects;
 using GameGuild.Modules.Subscriptions.Abstractions;
 using GameGuild.Modules.Subscriptions.Commands.CancelSubscription;
@@ -15,10 +16,10 @@ namespace GameGuild.Modules.Subscriptions.Controllers;
 [Route("api/[controller]")]
 public class SubscriptionsController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly GameGuild.CQRS.IMediator _mediator;
     private readonly ISubscriptionRepository _subscriptionRepository;
 
-    public SubscriptionsController(IMediator mediator, ISubscriptionRepository subscriptionRepository)
+    public SubscriptionsController(GameGuild.CQRS.IMediator mediator, ISubscriptionRepository subscriptionRepository)
     {
         _mediator = mediator;
         _subscriptionRepository = subscriptionRepository;

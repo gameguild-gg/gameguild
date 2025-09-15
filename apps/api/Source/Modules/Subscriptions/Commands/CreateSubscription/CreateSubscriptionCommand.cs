@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Infrastructure.Common.ValueObjects;
 using GameGuild.CQRS.Abstractions.Commands;
 
