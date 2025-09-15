@@ -181,10 +181,17 @@ public static class DependencyInjection
   // }
 
   /// <summary>
-  ///    Registers external service implementations
+  ///    Registers external service implementations and module services
   /// </summary>
-  private static IServiceCollection AddExternalServices(this IServiceCollection services) {
-    // External services will be added here as modules are implemented
+  private static IServiceCollection AddExternalServices(this IServiceCollection services)
+  {
+    // Module services
+    services.AddScoped<GameGuild.Modules.Billing.Services.IBillingWebhookService, GameGuild.Modules.Billing.Services.BillingWebhookService>();
+    services.AddScoped<GameGuild.Modules.Features.Services.IFeatureFlagService, GameGuild.Modules.Features.Services.FeatureFlagService>();
+    services.AddScoped<GameGuild.Modules.Notifications.Services.INotificationService, GameGuild.Modules.Notifications.Services.NotificationService>();
+    services.AddScoped<GameGuild.Modules.Resources.Services.IResourceQuotaService, GameGuild.Modules.Resources.Services.ResourceQuotaService>();
+
+    // External services will be added here as they are implemented
     // Email service, payment providers, notification services, etc.
 
     return services;
