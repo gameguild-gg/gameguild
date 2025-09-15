@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Contents;
