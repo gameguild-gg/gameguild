@@ -11,8 +11,8 @@ namespace GameGuild.Modules.Users;
 public class BulkDeactivateUsersHandler(
   ApplicationDbContext context,
   ILogger<BulkDeactivateUsersHandler> logger,
-  GameGuild.CQRS.IMediator mediator
-) : IResultCommandHandler<BulkDeactivateUsersCommand, BulkOperationResult>
+  IMediator mediator
+) : IRequestHandler<BulkDeactivateUsersCommand, Result<BulkOperationResult>>
 {
   public async Task<Result<BulkOperationResult>> Handle(BulkDeactivateUsersCommand request, CancellationToken cancellationToken)
   {
