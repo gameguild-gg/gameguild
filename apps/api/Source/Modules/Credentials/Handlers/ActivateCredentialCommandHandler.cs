@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Credentials.Handlers;
 /// <summary>
 /// Handler for ActivateCredentialCommand using CQRS pattern
 /// </summary>
-public class ActivateCredentialCommandHandler : IRequestHandler<ActivateCredentialCommand, bool> {
+public class ActivateCredentialCommandHandler : GameGuild.CQRS.IRequestHandler<ActivateCredentialCommand, bool> {
   private readonly ICredentialService _credentialService;
 
   public ActivateCredentialCommandHandler(ICredentialService credentialService) { _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService)); }

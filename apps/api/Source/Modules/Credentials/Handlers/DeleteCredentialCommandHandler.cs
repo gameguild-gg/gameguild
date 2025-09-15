@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Credentials.Handlers;
 /// <summary>
 /// Handler for DeleteCredentialCommand using CQRS pattern
 /// </summary>
-public class DeleteCredentialCommandHandler : IRequestHandler<DeleteCredentialCommand, bool> {
+public class DeleteCredentialCommandHandler : GameGuild.CQRS.IRequestHandler<DeleteCredentialCommand, bool> {
   private readonly ICredentialService _credentialService;
   private readonly ILogger<DeleteCredentialCommandHandler> _logger;
 
