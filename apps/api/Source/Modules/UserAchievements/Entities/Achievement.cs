@@ -11,7 +11,8 @@ namespace GameGuild.Modules.UserAchievements;
 [Index(nameof(IsActive))]
 [Index(nameof(Type))]
 [Index(nameof(TenantId))]
-public class Achievement : BaseEntity {
+public class Achievement : EntityBase
+{
   /// <summary>
   /// The name of the achievement
   /// </summary>
