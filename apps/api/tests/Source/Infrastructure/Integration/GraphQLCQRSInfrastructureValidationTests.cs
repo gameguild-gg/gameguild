@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using GameGuild.Tests.Fixtures;
-using MediatR;
+using GameGuild.CQRS;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 
