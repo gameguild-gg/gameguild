@@ -25,9 +25,6 @@
     <PackageReference Include="HotChocolate.Data.EntityFramework" />
     <PackageReference Include="HotChocolate.Types.Analyzers" />
 
-    <PackageReference Include="MediatR" />
-    <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" />
-
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 
@@ -72,7 +69,6 @@
     <Using Include="HotChocolate.Types.Descriptors" />
     <Using Include="HotChocolate.Data" />
 
-    <Using Include="MediatR" />
     <Using Include="Microsoft.AspNetCore.Authorization" />
     <Using Include="Microsoft.EntityFrameworkCore" />
     <Using Include="Microsoft.EntityFrameworkCore.Metadata.Builders" />
