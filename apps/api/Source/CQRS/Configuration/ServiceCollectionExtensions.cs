@@ -7,12 +7,24 @@ namespace GameGuild.CQRS;
 /// <summary>
 /// Extension methods for adding CQRS to the service collection
 /// </summary>
-public static class ServiceCollectionExtensions {
+public static class ServiceCollectionExtensions
+{
   /// <summary>
   /// Cached handler interface type definitions for faster lookup - O(1) performance
   /// </summary>
   private static readonly HashSet<Type> HandlerInterfaceTypes =
-    new HashSet<Type> { typeof(IRequestHandler<,>), typeof(IRequestHandler<>), typeof(IStreamRequestHandler<,>), typeof(ICommandHandler<,>), typeof(ICommandHandler<>), typeof(IQueryHandler<,>) };
+    new HashSet<Type> {
+      typeof(IRequestHandler<,>),
+      typeof(IRequestHandler<>),
+      typeof(IStreamRequestHandler<,>),
+      typeof(ICommandHandler<,>),
+      typeof(ICommandHandler<>),
+      typeof(IQueryHandler<,>),
+      // Add new Result-based handler types
+      typeof(IResultCommandHandler<,>),
+      typeof(IResultCommandHandler<>),
+      typeof(IResultQueryHandler<,>)
+    };
 
   /// <summary>
   /// Adds CQRS services to the service collection
@@ -20,7 +32,7 @@ public static class ServiceCollectionExtensions {
   /// <param name="services">Service collection</param>
   /// <param name="assemblies">Assemblies to scan for handlers</param>
   /// <returns>Service collection</returns>
-  public static IServiceCollection AddCQRS(this IServiceCollection services, params Assembly[ ] assemblies) { return services.AddCQRS(_ => { }, assemblies); }
+  public static IServiceCollection AddCQRS(this IServiceCollection services, params Assembly[] assemblies) { return services.AddCQRS(_ => { }, assemblies); }
 
   /// <summary>
   ///  Adds CQRS services to the service collection
@@ -29,7 +41,8 @@ public static class ServiceCollectionExtensions {
   /// <param name="configuration">Configuration action</param>
   /// <param name="assemblies">Assemblies to scan for handlers</param>
   /// <returns>Service collection</returns>
-  public static IServiceCollection AddCQRS(this IServiceCollection services, Action<CqrsConfiguration>? configuration, params Assembly[ ] assemblies) {
+  public static IServiceCollection AddCQRS(this IServiceCollection services, Action<CqrsConfiguration>? configuration, params Assembly[] assemblies)
+  {
     ArgumentNullException.ThrowIfNull(services);
     ArgumentNullException.ThrowIfNull(assemblies);
 
@@ -48,7 +61,8 @@ public static class ServiceCollectionExtensions {
     services.TryAddSingleton(config.NotificationPublisher);
 
     // Register handlers
-    foreach (var assembly in assemblies) {
+    foreach (var assembly in assemblies)
+    {
       services.AddRequestHandlers(assembly);
       services.AddNotificationHandlers(assembly);
     }
@@ -62,12 +76,14 @@ public static class ServiceCollectionExtensions {
   /// <param name="services">Service collection</param>
   /// <param name="assembly">Assembly to scan</param>
   /// <returns>Service collection</returns>
-  private static IServiceCollection AddRequestHandlers(this IServiceCollection services, Assembly assembly) {
+  private static IServiceCollection AddRequestHandlers(this IServiceCollection services, Assembly assembly)
+  {
     var types = assembly.GetTypes();
     var handlerRegistrations = new List<(Type serviceType, Type implementationType)>();
 
     // O(n) scan instead of O(n²) with optimized filtering
-    foreach (var type in types) {
+    foreach (var type in types)
+    {
       // Quick filter - avoid expensive checks on obviously invalid types
       if (!type.IsClass || type.IsAbstract || type.IsGenericTypeDefinition) { continue; }
 
@@ -75,10 +91,12 @@ public static class ServiceCollectionExtensions {
       var interfaces = type.GetInterfaces();
 
       // Use for loop instead of LINQ for better performance
-      for (var i = 0; i < interfaces.Length; i++) {
+      for (var i = 0; i < interfaces.Length; i++)
+      {
         var @interface = interfaces[i];
 
-        if (@interface.IsGenericType) {
+        if (@interface.IsGenericType)
+        {
           var genericDefinition = @interface.GetGenericTypeDefinition();
 
           // O(1) lookup instead of multiple equality checks
@@ -99,13 +117,15 @@ public static class ServiceCollectionExtensions {
   /// <param name="services">Service collection</param>
   /// <param name="assembly">Assembly to scan</param>
   /// <returns>Service collection</returns>
-  private static IServiceCollection AddNotificationHandlers(this IServiceCollection services, Assembly assembly) {
+  private static IServiceCollection AddNotificationHandlers(this IServiceCollection services, Assembly assembly)
+  {
     var types = assembly.GetTypes();
     var handlerRegistrations = new List<(Type serviceType, Type implementationType)>();
     var notificationHandlerType = typeof(INotificationHandler<>);
 
     // O(n) scan with optimized filtering
-    foreach (var type in types) {
+    foreach (var type in types)
+    {
       // Quick filter - avoid expensive checks on obviously invalid types
       if (!type.IsClass || type.IsAbstract || type.IsGenericTypeDefinition) { continue; }
 
@@ -113,7 +133,8 @@ public static class ServiceCollectionExtensions {
       var interfaces = type.GetInterfaces();
 
       // Use for loop for better performance than LINQ
-      for (var i = 0; i < interfaces.Length; i++) {
+      for (var i = 0; i < interfaces.Length; i++)
+      {
         var @interface = interfaces[i];
 
         if (@interface.IsGenericType && @interface.GetGenericTypeDefinition() == notificationHandlerType) { handlerRegistrations.Add((@interface, type)); }
@@ -132,7 +153,8 @@ public static class ServiceCollectionExtensions {
   /// <typeparam name="TBehavior">Behavior type</typeparam>
   /// <param name="services">Service collection</param>
   /// <returns>Service collection</returns>
-  public static IServiceCollection AddPipelineBehavior<TBehavior>(this IServiceCollection services) where TBehavior : class {
+  public static IServiceCollection AddPipelineBehavior<TBehavior>(this IServiceCollection services) where TBehavior : class
+  {
     ArgumentNullException.ThrowIfNull(services);
     services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TBehavior));
 
@@ -146,7 +168,8 @@ public static class ServiceCollectionExtensions {
   /// <param name="services">Service collection</param>
   /// <param name="lifetime">Service lifetime</param>
   /// <returns>Service collection</returns>
-  public static IServiceCollection AddPipelineBehavior<TBehavior>(this IServiceCollection services, ServiceLifetime lifetime) where TBehavior : class {
+  public static IServiceCollection AddPipelineBehavior<TBehavior>(this IServiceCollection services, ServiceLifetime lifetime) where TBehavior : class
+  {
     ArgumentNullException.ThrowIfNull(services);
     services.Add(new ServiceDescriptor(typeof(IPipelineBehavior<,>), typeof(TBehavior), lifetime));
 
@@ -159,7 +182,8 @@ public static class ServiceCollectionExtensions {
   /// <param name="services">Service collection</param>
   /// <param name="assembly">Assembly to scan</param>
   /// <returns>Service collection</returns>
-  public static IServiceCollection AddRequestPreProcessors(this IServiceCollection services, Assembly assembly) {
+  public static IServiceCollection AddRequestPreProcessors(this IServiceCollection services, Assembly assembly)
+  {
     ArgumentNullException.ThrowIfNull(services);
     ArgumentNullException.ThrowIfNull(assembly);
 
@@ -168,12 +192,14 @@ public static class ServiceCollectionExtensions {
     var preProcessorType = typeof(IRequestPreProcessor<>);
 
     // O(n) optimized scan
-    foreach (var type in types) {
+    foreach (var type in types)
+    {
       if (!type.IsClass || type.IsAbstract) continue;
 
       var interfaces = type.GetInterfaces();
 
-      for (var i = 0; i < interfaces.Length; i++) {
+      for (var i = 0; i < interfaces.Length; i++)
+      {
         var @interface = interfaces[i];
 
         if (@interface.IsGenericType && @interface.GetGenericTypeDefinition() == preProcessorType) { handlerRegistrations.Add((@interface, type)); }
@@ -192,7 +218,8 @@ public static class ServiceCollectionExtensions {
   /// <param name="services">Service collection</param>
   /// <param name="assembly">Assembly to scan</param>
   /// <returns>Service collection</returns>
-  public static IServiceCollection AddRequestPostProcessors(this IServiceCollection services, Assembly assembly) {
+  public static IServiceCollection AddRequestPostProcessors(this IServiceCollection services, Assembly assembly)
+  {
     ArgumentNullException.ThrowIfNull(services);
     ArgumentNullException.ThrowIfNull(assembly);
 
@@ -201,12 +228,14 @@ public static class ServiceCollectionExtensions {
     var postProcessorType = typeof(IRequestPostProcessor<,>);
 
     // O(n) optimized scan
-    foreach (var type in types) {
+    foreach (var type in types)
+    {
       if (!type.IsClass || type.IsAbstract) continue;
 
       var interfaces = type.GetInterfaces();
 
-      for (var i = 0; i < interfaces.Length; i++) {
+      for (var i = 0; i < interfaces.Length; i++)
+      {
         var @interface = interfaces[i];
 
         if (@interface.IsGenericType && @interface.GetGenericTypeDefinition() == postProcessorType) { handlerRegistrations.Add((@interface, type)); }
@@ -225,7 +254,8 @@ public static class ServiceCollectionExtensions {
   /// <param name="services">Service collection</param>
   /// <param name="assembly">Assembly to scan</param>
   /// <returns>Service collection</returns>
-  public static IServiceCollection AddExceptionHandlers(this IServiceCollection services, Assembly assembly) {
+  public static IServiceCollection AddExceptionHandlers(this IServiceCollection services, Assembly assembly)
+  {
     ArgumentNullException.ThrowIfNull(services);
     ArgumentNullException.ThrowIfNull(assembly);
 
@@ -234,12 +264,14 @@ public static class ServiceCollectionExtensions {
     var exceptionHandlerType = typeof(IRequestExceptionHandler<,,>);
 
     // O(n) optimized scan
-    foreach (var type in types) {
+    foreach (var type in types)
+    {
       if (!type.IsClass || type.IsAbstract) continue;
 
       var interfaces = type.GetInterfaces();
 
-      for (var i = 0; i < interfaces.Length; i++) {
+      for (var i = 0; i < interfaces.Length; i++)
+      {
         var @interface = interfaces[i];
 
         if (@interface.IsGenericType && @interface.GetGenericTypeDefinition() == exceptionHandlerType) { handlerRegistrations.Add((@interface, type)); }
@@ -257,7 +289,8 @@ public static class ServiceCollectionExtensions {
   /// </summary>
   /// <param name="services">Service collection</param>
   /// <returns>Service collection</returns>
-  public static IServiceCollection AddAdvancedPipelineBehaviors(this IServiceCollection services) {
+  public static IServiceCollection AddAdvancedPipelineBehaviors(this IServiceCollection services)
+  {
     ArgumentNullException.ThrowIfNull(services);
 
     services.AddTransient(typeof(IPipelineBehavior<,>), typeof(RequestPreProcessorBehavior<,>));
@@ -272,7 +305,8 @@ public static class ServiceCollectionExtensions {
   /// </summary>
   /// <param name="services">Service collection</param>
   /// <returns>Service collection</returns>
-  public static IServiceCollection AddCachingBehavior(this IServiceCollection services) {
+  public static IServiceCollection AddCachingBehavior(this IServiceCollection services)
+  {
     ArgumentNullException.ThrowIfNull(services);
     services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
 
@@ -286,14 +320,16 @@ public static class ServiceCollectionExtensions {
   /// <param name="assemblies">Assemblies to scan</param>
   /// <param name="configurator">Configuration action</param>
   /// <returns>Service collection</returns>
-  public static IServiceCollection AddCQRSFromAssemblies(this IServiceCollection services, IEnumerable<Assembly> assemblies, Action<CQRSAssemblyConfiguration>? configurator = null) {
+  public static IServiceCollection AddCQRSFromAssemblies(this IServiceCollection services, IEnumerable<Assembly> assemblies, Action<CQRSAssemblyConfiguration>? configurator = null)
+  {
     ArgumentNullException.ThrowIfNull(services);
     ArgumentNullException.ThrowIfNull(assemblies);
 
     var config = new CQRSAssemblyConfiguration();
     configurator?.Invoke(config);
 
-    foreach (var assembly in assemblies) {
+    foreach (var assembly in assemblies)
+    {
       if (config.IncludeRequestHandlers) services.AddRequestHandlers(assembly);
 
       if (config.IncludeNotificationHandlers) services.AddNotificationHandlers(assembly);
