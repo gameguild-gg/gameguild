@@ -1,8 +1,12 @@
 ﻿using System.Globalization;
+using GameGuild.Core.WebApplication;
+using GameGuild.Modules.Features.Infrastructure;
+using GameGuild.Modules.Features.Services;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
+using OpenFeature;
 
 
 namespace GameGuild;
@@ -153,22 +157,29 @@ public static class ServiceCollectionExtensions
     return services;
   }
 
-  public static IServiceCollection SetupFeatureFlags(this IServiceCollection services, IConfiguration configuration, FeatureFlagsOptions? options) {
+  public static IServiceCollection SetupFeatureFlags(this IServiceCollection services, IConfiguration configuration, FeatureFlagsOptions? options)
+  {
     options ??= FeatureFlagsOptionsBuilder.Create(configuration);
     options.Validate();
 
-    // TODO: Implement OpenFeature services
-    // Register OpenFeature API singleton and a thin service wrapper.
-    // services.AddSingleton(Api.Instance);
-    // services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
+    // Register OpenFeature API singleton and services
+    services.AddSingleton(OpenFeature.Api.Instance);
+    services.AddSingleton<FeatureClient>(provider => provider.GetRequiredService<OpenFeature.Api>().GetFeatureClient());
+
+    // Register the main feature flag service
+    services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
+
+    // Register OpenFeature-specific service for advanced scenarios
+    services.AddSingleton<IOpenFeatureFlagService, FeatureFlagOpenFeatureService>();
 
     // Add hosted service to initialize OpenFeature provider during startup
-    // services.AddHostedService<OpenFeatureHostedInitializer>();
+    services.AddHostedService<OpenFeatureHostedInitializer>();
 
     return services;
   }
 
-  public static IServiceCollection SetupAuthorization(this IServiceCollection services, IConfiguration configuration, AuthorizationOptions? options) {
+  public static IServiceCollection SetupAuthorization(this IServiceCollection services, IConfiguration configuration, AuthorizationOptions? options)
+  {
     options ??= AuthorizationOptionsBuilder.Create(configuration);
     options.Validate();
 
