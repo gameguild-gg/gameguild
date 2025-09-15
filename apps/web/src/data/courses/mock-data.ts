@@ -116,6 +116,7 @@ import intro2gproExpectations from './intro2gpro/week01/expectations.md';
 import intro2gproInterview from './intro2gpro/week01/interview-a-gamedev.md';
 import intro2gproGamedevTools from './intro2gpro/week02/gamedev-tools.md';
 import intro2gproGamedevCareers from './intro2gpro/week03/gamedev-careers.md';
+import intro2gproGamedevIssues from './intro2gpro/week04/gamedev-issues.md';
 
 // Game Publishing Course Imports
 import gamePublishingSyllabus from './game-publishing/syllabus.md';
@@ -252,6 +253,29 @@ export const intro2gproGamedevCareersContent: ProgramContent = {
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
     slug: 'gamedev-careers',
+};
+
+export const intro2gproGamedevIssuesContent: ProgramContent = {
+    id: 'intro2gpro-gamedev-issues',
+    programId: 'intro2gpro-program-1',
+    parentId: undefined,
+    title: 'Week 04: Game Development Issues',
+    description: 'Explore common issues and challenges in the game development industry and learn how to address them.',
+    type: 0, // Page
+    body: intro2gproGamedevIssues,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'gamedev-issues',
 };
 
 // Game Publishing Course Content
@@ -3571,6 +3595,7 @@ intro2gproProgram.programContents = [
     intro2gproInterviewContent,
     intro2gproGamedevToolsContent,
     intro2gproGamedevCareersContent,
+    intro2gproGamedevIssuesContent,
 ];
 
 gamePublishingProgram.programContents = [
@@ -3601,6 +3626,7 @@ intro2gproExpectationsContent.program = intro2gproProgram;
 intro2gproInterviewContent.program = intro2gproProgram;
 intro2gproGamedevToolsContent.program = intro2gproProgram;
 intro2gproGamedevCareersContent.program = intro2gproProgram;
+intro2gproGamedevIssuesContent.program = intro2gproProgram;
 
 // Set game publishing program references
 gamePublishingSyllabusContent.program = gamePublishingProgram;
