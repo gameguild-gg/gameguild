@@ -1,6 +1,6 @@
-using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
+using CqrsResult = GameGuild.CQRS.Result;
 
 namespace GameGuild.Modules.Users;
 
@@ -12,7 +12,7 @@ public class GetUserByIdResultHandler(
     ILogger<GetUserByIdResultHandler> logger
 ) : IResultQueryHandler<GetUserByIdResultQuery, User>
 {
-    public async Task<Result<User>> Handle(GetUserByIdResultQuery request, CancellationToken cancellationToken)
+    public async Task<CqrsResult<User>> Handle(GetUserByIdResultQuery request, CancellationToken cancellationToken)
     {
         try
         {
