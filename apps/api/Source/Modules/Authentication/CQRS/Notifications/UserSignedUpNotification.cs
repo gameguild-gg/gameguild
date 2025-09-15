@@ -1,9 +1,12 @@
+using GameGuild.CQRS;
+
 namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Notification sent when a user successfully signs up
 /// </summary>
-public class UserSignedUpNotification : INotification {
+public class UserSignedUpNotification : INotification
+{
   public Guid UserId { get; set; }
 
   public string Email { get; set; } = string.Empty;
