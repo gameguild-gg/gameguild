@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Modules.Permissions;
 using GameGuild.Source.Modules.Certificates.Dtos;
