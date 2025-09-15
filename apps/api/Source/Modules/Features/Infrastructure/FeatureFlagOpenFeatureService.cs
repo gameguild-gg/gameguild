@@ -1,3 +1,4 @@
+using GameGuild.Modules.Features.Models;
 using OpenFeature;
 
 
@@ -17,7 +18,7 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
     /// <param name="context">Evaluation context with user/tenant information</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>The evaluated boolean value</returns>
-    public async Task<bool> GetBooleanAsync(string key, bool defaultValue = false, FeatureEvaluationContext? context = null, CancellationToken ct = default)
+    public async Task<bool> GetBooleanAsync(string key, bool defaultValue = false, FeatureContext? context = null, CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
 
@@ -36,7 +37,7 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
     /// <param name="context">Evaluation context with user/tenant information</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>The evaluated string value</returns>
-    public async Task<string> GetStringAsync(string key, string defaultValue = "", FeatureEvaluationContext? context = null, CancellationToken ct = default)
+    public async Task<string> GetStringAsync(string key, string defaultValue = "", FeatureContext? context = null, CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
 
@@ -55,7 +56,7 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
     /// <param name="context">Evaluation context with user/tenant information</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>The evaluated integer value</returns>
-    public async Task<int> GetIntAsync(string key, int defaultValue = 0, FeatureEvaluationContext? context = null, CancellationToken ct = default)
+    public async Task<int> GetIntAsync(string key, int defaultValue = 0, FeatureContext? context = null, CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
 
@@ -74,7 +75,7 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
     /// <param name="context">Evaluation context with user/tenant information</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>The evaluated double value</returns>
-    public async Task<double> GetDoubleAsync(string key, double defaultValue = 0d, FeatureEvaluationContext? context = null, CancellationToken ct = default)
+    public async Task<double> GetDoubleAsync(string key, double defaultValue = 0d, FeatureContext? context = null, CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
 
@@ -90,7 +91,7 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
     /// </summary>
     /// <param name="context">Game Guild evaluation context</param>
     /// <returns>OpenFeature evaluation context</returns>
-    private static OpenFeature.Model.EvaluationContext? ConvertToOpenFeatureContext(FeatureEvaluationContext? context)
+    private static OpenFeature.Model.EvaluationContext? ConvertToOpenFeatureContext(FeatureContext? context)
     {
         if (context == null)
             return null;
@@ -144,20 +145,20 @@ public interface IOpenFeatureFlagService
     /// <summary>
     /// Gets a boolean feature flag value.
     /// </summary>
-    Task<bool> GetBooleanAsync(string key, bool defaultValue = false, FeatureEvaluationContext? context = null, CancellationToken ct = default);
+    Task<bool> GetBooleanAsync(string key, bool defaultValue = false, FeatureContext? context = null, CancellationToken ct = default);
 
     /// <summary>
     /// Gets a string feature flag value.
     /// </summary>
-    Task<string> GetStringAsync(string key, string defaultValue = "", FeatureEvaluationContext? context = null, CancellationToken ct = default);
+    Task<string> GetStringAsync(string key, string defaultValue = "", FeatureContext? context = null, CancellationToken ct = default);
 
     /// <summary>
     /// Gets an integer feature flag value.
     /// </summary>
-    Task<int> GetIntAsync(string key, int defaultValue = 0, FeatureEvaluationContext? context = null, CancellationToken ct = default);
+    Task<int> GetIntAsync(string key, int defaultValue = 0, FeatureContext? context = null, CancellationToken ct = default);
 
     /// <summary>
     /// Gets a double feature flag value.
     /// </summary>
-    Task<double> GetDoubleAsync(string key, double defaultValue = 0d, FeatureEvaluationContext? context = null, CancellationToken ct = default);
+    Task<double> GetDoubleAsync(string key, double defaultValue = 0d, FeatureContext? context = null, CancellationToken ct = default);
 }
