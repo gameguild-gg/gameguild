@@ -1,4 +1,3 @@
-using GameGuild.CQRS;
 using GameGuild.Modules.Contents;
 
 
@@ -7,7 +6,7 @@ namespace GameGuild.Modules.Projects;
 /// <summary>
 /// Command to create a new project
 /// </summary>
-public record CreateProjectCommand : IRequest<CreateProjectResult>
+public record CreateProjectCommand : GameGuild.CQRS.IRequest<CreateProjectResult>
 {
   public string Title { get; init; } = string.Empty;
 
@@ -41,7 +40,7 @@ public record CreateProjectCommand : IRequest<CreateProjectResult>
 /// <summary>
 /// Command to update an existing project
 /// </summary>
-public record UpdateProjectCommand : IRequest<UpdateProjectResult>
+public record UpdateProjectCommand : GameGuild.CQRS.IRequest<UpdateProjectResult>
 {
   public Guid ProjectId { get; init; }
 
@@ -75,7 +74,7 @@ public record UpdateProjectCommand : IRequest<UpdateProjectResult>
 /// <summary>
 /// Command to delete a project
 /// </summary>
-public record DeleteProjectCommand : IRequest<DeleteProjectResult>
+public record DeleteProjectCommand : GameGuild.CQRS.IRequest<DeleteProjectResult>
 {
   public Guid ProjectId { get; init; }
 
@@ -89,7 +88,7 @@ public record DeleteProjectCommand : IRequest<DeleteProjectResult>
 /// <summary>
 /// Command to publish a project
 /// </summary>
-public record PublishProjectCommand : IRequest<PublishProjectResult>
+public record PublishProjectCommand : GameGuild.CQRS.IRequest<PublishProjectResult>
 {
   public Guid ProjectId { get; init; }
 
@@ -99,7 +98,7 @@ public record PublishProjectCommand : IRequest<PublishProjectResult>
 /// <summary>
 /// Command to unpublish a project
 /// </summary>
-public record UnpublishProjectCommand : IRequest<UnpublishProjectResult>
+public record UnpublishProjectCommand : GameGuild.CQRS.IRequest<UnpublishProjectResult>
 {
   public Guid ProjectId { get; init; }
 
@@ -109,7 +108,7 @@ public record UnpublishProjectCommand : IRequest<UnpublishProjectResult>
 /// <summary>
 /// Command to archive a project
 /// </summary>
-public record ArchiveProjectCommand : IRequest<ArchiveProjectResult>
+public record ArchiveProjectCommand : GameGuild.CQRS.IRequest<ArchiveProjectResult>
 {
   public Guid ProjectId { get; init; }
 

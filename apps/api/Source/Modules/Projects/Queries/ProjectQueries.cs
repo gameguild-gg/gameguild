@@ -1,4 +1,3 @@
-using GameGuild.CQRS;
 using GameGuild.Modules.Contents;
 
 
@@ -7,7 +6,7 @@ namespace GameGuild.Modules.Projects;
 /// <summary>
 /// Query to get all projects
 /// </summary>
-public record GetAllProjectsQuery : IRequest<IEnumerable<Project>>
+public record GetAllProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
 {
   public Common.ProjectType? Type { get; init; }
 
@@ -37,7 +36,7 @@ public record GetAllProjectsQuery : IRequest<IEnumerable<Project>>
 /// <summary>
 /// Query to get project by ID
 /// </summary>
-public record GetProjectByIdQuery : IRequest<Project?>
+public record GetProjectByIdQuery : GameGuild.CQRS.IRequest<Project?>
 {
   public Guid ProjectId { get; init; }
 
@@ -53,7 +52,7 @@ public record GetProjectByIdQuery : IRequest<Project?>
 /// <summary>
 /// Query to get project by slug
 /// </summary>
-public record GetProjectBySlugQuery : IRequest<Project?>
+public record GetProjectBySlugQuery : GameGuild.CQRS.IRequest<Project?>
 {
   public string Slug { get; init; } = string.Empty;
 
@@ -67,7 +66,7 @@ public record GetProjectBySlugQuery : IRequest<Project?>
 /// <summary>
 /// Query to get projects by category
 /// </summary>
-public record GetProjectsByCategoryQuery : IRequest<IEnumerable<Project>>
+public record GetProjectsByCategoryQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
 {
   public Guid CategoryId { get; init; }
 
@@ -81,7 +80,7 @@ public record GetProjectsByCategoryQuery : IRequest<IEnumerable<Project>>
 /// <summary>
 /// Query to get projects by creator
 /// </summary>
-public record GetProjectsByCreatorQuery : IRequest<IEnumerable<Project>>
+public record GetProjectsByCreatorQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
 {
   public Guid CreatorId { get; init; }
 
@@ -95,7 +94,7 @@ public record GetProjectsByCreatorQuery : IRequest<IEnumerable<Project>>
 /// <summary>
 /// Query to get projects by status
 /// </summary>
-public record GetProjectsByStatusQuery : IRequest<IEnumerable<Project>>
+public record GetProjectsByStatusQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
 {
   public ContentStatus Status { get; init; }
 
@@ -109,7 +108,7 @@ public record GetProjectsByStatusQuery : IRequest<IEnumerable<Project>>
 /// <summary>
 /// Query to get deleted projects (admin only)
 /// </summary>
-public record GetDeletedProjectsQuery : IRequest<IEnumerable<Project>>
+public record GetDeletedProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
 {
   public int Skip { get; init; } = 0;
 
@@ -119,7 +118,7 @@ public record GetDeletedProjectsQuery : IRequest<IEnumerable<Project>>
 /// <summary>
 /// Query to search projects
 /// </summary>
-public record SearchProjectsQuery : IRequest<IEnumerable<Project>>
+public record SearchProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
 {
   public string SearchTerm { get; init; } = string.Empty;
 
@@ -145,7 +144,7 @@ public record SearchProjectsQuery : IRequest<IEnumerable<Project>>
 /// <summary>
 /// Query to get project statistics
 /// </summary>
-public record GetProjectStatisticsQuery : IRequest<ProjectStatistics>
+public record GetProjectStatisticsQuery : GameGuild.CQRS.IRequest<ProjectStatistics>
 {
   public Guid ProjectId { get; init; }
 
@@ -157,7 +156,7 @@ public record GetProjectStatisticsQuery : IRequest<ProjectStatistics>
 /// <summary>
 /// Query to get popular projects
 /// </summary>
-public record GetPopularProjectsQuery : IRequest<IEnumerable<Project>>
+public record GetPopularProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
 {
   public Common.ProjectType? Type { get; init; }
 
@@ -169,7 +168,7 @@ public record GetPopularProjectsQuery : IRequest<IEnumerable<Project>>
 /// <summary>
 /// Query to get recent projects
 /// </summary>
-public record GetRecentProjectsQuery : IRequest<IEnumerable<Project>>
+public record GetRecentProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
 {
   public Common.ProjectType? Type { get; init; }
 
@@ -179,7 +178,7 @@ public record GetRecentProjectsQuery : IRequest<IEnumerable<Project>>
 /// <summary>
 /// Query to get featured projects
 /// </summary>
-public record GetFeaturedProjectsQuery : IRequest<IEnumerable<Project>>
+public record GetFeaturedProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
 {
   public Common.ProjectType? Type { get; init; }
 
