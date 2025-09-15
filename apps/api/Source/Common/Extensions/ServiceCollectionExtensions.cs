@@ -17,15 +17,18 @@ using GameGuild.Modules.Users;
 
 namespace GameGuild.Common;
 
-public static class ServiceCollectionExtensions {
-  public static IServiceCollection AddUserModule(this IServiceCollection services) {
+public static class ServiceCollectionExtensions
+{
+  public static IServiceCollection AddUserModule(this IServiceCollection services)
+  {
     // Register User module services
     services.AddScoped<IUserService, UserService>();
 
     return services;
   }
 
-  public static IServiceCollection AddTenantModule(this IServiceCollection services) {
+  public static IServiceCollection AddTenantModule(this IServiceCollection services)
+  {
     // Register Tenant module services
     services.AddScoped<ITenantService, TenantService>();
     services.AddScoped<ITenantContextService, TenantContextService>();
@@ -34,7 +37,8 @@ public static class ServiceCollectionExtensions {
     return services;
   }
 
-  public static IServiceCollection AddUserProfileModule(this IServiceCollection services) {
+  public static IServiceCollection AddUserProfileModule(this IServiceCollection services)
+  {
     // Register UserProfile module services
     services
       .AddScoped<IUserProfileService, UserProfileService>();
@@ -42,21 +46,24 @@ public static class ServiceCollectionExtensions {
     return services;
   }
 
-  public static IServiceCollection AddProjectModule(this IServiceCollection services) {
+  public static IServiceCollection AddProjectModule(this IServiceCollection services)
+  {
     // Register Project module services
     services.AddScoped<IProjectService, ProjectService>();
 
     return services;
   }
 
-  public static IServiceCollection AddTestModule(this IServiceCollection services) {
+  public static IServiceCollection AddTestModule(this IServiceCollection services)
+  {
     // Register Test module services
     services.AddScoped<ITestService, TestService>();
 
     return services;
   }
 
-  public static IServiceCollection AddProgramModule(this IServiceCollection services) {
+  public static IServiceCollection AddProgramModule(this IServiceCollection services)
+  {
     // Register Program module services
     services.AddScoped<IProgramService, ProgramService>();
     services
@@ -69,7 +76,8 @@ public static class ServiceCollectionExtensions {
     return services;
   }
 
-  public static IServiceCollection AddCommonServices(this IServiceCollection services) {
+  public static IServiceCollection AddCommonServices(this IServiceCollection services)
+  {
     // Add logging
     services.AddLogging();
 
@@ -91,7 +99,8 @@ public static class ServiceCollectionExtensions {
     return services;
   }
 
-  public static IServiceCollection AddProductModule(this IServiceCollection services) {
+  public static IServiceCollection AddProductModule(this IServiceCollection services)
+  {
     // Register Product module services
     services.AddScoped<IProductService, ProductService>();
 
@@ -139,14 +148,16 @@ public static class ServiceCollectionExtensions {
     return services;
   }
 
-  public static IServiceCollection AddCredentialsModule(this IServiceCollection services) {
+  public static IServiceCollection AddCredentialsModule(this IServiceCollection services)
+  {
     // Register Credentials module services
     services.AddScoped<ICredentialService, CredentialService>();
 
     return services;
   }
 
-  public static IServiceCollection AddPostsModule(this IServiceCollection services) {
+  public static IServiceCollection AddPostsModule(this IServiceCollection services)
+  {
     // Register Posts module services
     services.AddScoped<IPostAnnouncementService, PostAnnouncementService>();
     services.AddScoped<IPostService, PostService>();
@@ -161,14 +172,16 @@ public static class ServiceCollectionExtensions {
     return services;
   }
 
-  public static IServiceCollection AddPostModule(this IServiceCollection services) {
+  public static IServiceCollection AddPostModule(this IServiceCollection services)
+  {
     // Register Post module services
     services.AddScoped<IPostService, PostService>();
 
     return services;
   }
 
-  public static IServiceCollection AddTestingLabModule(this IServiceCollection services) {
+  public static IServiceCollection AddTestingLabModule(this IServiceCollection services)
+  {
     // Register TestingLab module services
     services.AddScoped<ITestService, TestService>();
     services.AddScoped<ITestingLabSettingsService, TestingLabSettingsService>();
@@ -180,7 +193,8 @@ public static class ServiceCollectionExtensions {
     return services;
   }
 
-  public static IServiceCollection AddUserAchievementsModule(this IServiceCollection services) {
+  public static IServiceCollection AddUserAchievementsModule(this IServiceCollection services)
+  {
     // Register UserAchievements module services
     return services.AddUserAchievementsModule();
   }
