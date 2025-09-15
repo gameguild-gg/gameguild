@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using System.Security.Claims;
 using GameGuild;
 
@@ -7,7 +8,7 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Command to create a new user with validation and authorization
 /// </summary>
-public class CreateUserCommand : IRequest<User>, IAuthorizedRequest {
+public class CreateUserCommand : ICommand<User>, IAuthorizedRequest {
   [Required]
   [StringLength(100, MinimumLength = 1)]
   public string Name { get; init; } = string.Empty;

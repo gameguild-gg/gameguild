@@ -40,7 +40,7 @@ public class UserType : ObjectType<User> {
 public class UserResolvers {
   public async Task<UserProfile?> GetProfileAsync(
     [Parent] User user,
-    [Service] IMediator mediator
+    [Service] GameGuild.CQRS.IMediator mediator
   ) {
     var query = new GetUserProfileByUserIdQuery { UserId = user.Id, IncludeDeleted = false };
 
