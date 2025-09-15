@@ -47,7 +47,7 @@ public class BulkRestoreUsersHandler(
     await context.SaveChangesAsync(cancellationToken);
 
     var failedCount = request.UserIds.Count - successCount;
-    var result = new BulkOperationResult(request.UserIds.Count, successCount, failedCount);
+    var result = new BulkOperationResult(request.UserIds.Count, successCount, failedUserIds.Count);
 
     // Add all errors to the result
     foreach (var error in errors) result.AddError(error);
