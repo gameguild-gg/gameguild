@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Commands for Program management using CQRS pattern
-/// All commands implement IRequest pattern for MediatR handling
+/// All commands implement IRequest pattern for GameGuild.CQRS handling
 /// </summary>
 
 // ===== CRUD COMMANDS =====

@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// Queries for Program data retrieval using CQRS pattern
-/// All queries implement IRequest pattern for MediatR handling
+/// All queries implement IRequest pattern for GameGuild.CQRS handling
 /// </summary>
 
 // ===== BASIC QUERIES =====

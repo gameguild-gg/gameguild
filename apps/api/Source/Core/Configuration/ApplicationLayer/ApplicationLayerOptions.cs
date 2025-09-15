@@ -6,7 +6,7 @@ namespace GameGuild;
 public class ApplicationLayerOptions
 {
     /// <summary>
-    /// Enables MediatR for CQRS pattern implementation.
+    /// Enables GameGuild.CQRS for CQRS pattern implementation.
     /// </summary>
     public bool EnableMediatR { get; set; } = true;
 
