@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Authentication;
 /// <summary>
 /// Handler for get user profile query using CQRS pattern
 /// </summary>
-public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, UserProfileDto> {
+public class GetUserProfileQueryHandler : GameGuild.CQRS.IRequestHandler<GetUserProfileQuery, UserProfileDto> {
   private readonly IUserService _userService;
   private readonly ILogger<GetUserProfileQueryHandler> _logger;
 

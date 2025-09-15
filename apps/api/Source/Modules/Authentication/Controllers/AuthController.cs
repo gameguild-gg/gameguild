@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 using ValidationException = FluentValidation.ValidationException;
@@ -12,8 +13,8 @@ namespace GameGuild.Modules.Authentication;
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Authentication")]
-public class AuthController(IMediator mediator, ILogger<AuthController> logger) : ControllerBase {
-  private readonly IMediator _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+public class AuthController(GameGuild.CQRS.IMediator mediator, ILogger<AuthController> logger) : ControllerBase {
+  private readonly GameGuild.CQRS.IMediator _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 
   private readonly ILogger<AuthController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
