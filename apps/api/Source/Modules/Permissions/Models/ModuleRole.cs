@@ -1,13 +1,16 @@
 using System.Text.Json;
 
 
+using GameGuild;
+
 namespace GameGuild.Modules.Permissions;
 
 /// <summary>
 /// Module-specific role definition that contains a set of permissions for a specific module
 /// </summary>
 [Table("ModuleRoles")]
-public class ModuleRole : BaseEntity {
+public class ModuleRole : BaseEntity
+{
   [Required]
   [MaxLength(100)]
   public string Name { get; set; } = string.Empty;
@@ -29,7 +32,8 @@ public class ModuleRole : BaseEntity {
   /// Permissions defined in this module role
   /// </summary>
   [NotMapped]
-  public List<ModulePermissionDefinition> Permissions {
+  public List<ModulePermissionDefinition> Permissions
+  {
     get => string.IsNullOrEmpty(PermissionsJson)
         ? new List<ModulePermissionDefinition>()
         : JsonSerializer.Deserialize<List<ModulePermissionDefinition>>(PermissionsJson) ?? new List<ModulePermissionDefinition>();
@@ -49,8 +53,10 @@ public class ModuleRole : BaseEntity {
 /// <summary>
 /// Configuration for ModuleRole entity
 /// </summary>
-public class ModuleRoleConfiguration : IEntityTypeConfiguration<ModuleRole> {
-  public void Configure(EntityTypeBuilder<ModuleRole> builder) {
+public class ModuleRoleConfiguration : IEntityTypeConfiguration<ModuleRole>
+{
+  public void Configure(EntityTypeBuilder<ModuleRole> builder)
+  {
     ArgumentNullException.ThrowIfNull(builder);
 
     builder.HasIndex(x => new { x.Name, x.Module, x.TenantId }).IsUnique();
