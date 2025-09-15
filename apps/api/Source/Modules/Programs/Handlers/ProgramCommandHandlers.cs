@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 
@@ -12,29 +13,31 @@ public class ProgramCommandHandlers(
   ApplicationDbContext context,
   ILogger<ProgramCommandHandlers> logger
 ) :
-  GameGuild.CQRS.IRequestHandler<CreateProgramCommand, Program>,
-  GameGuild.CQRS.IRequestHandler<UpdateProgramCommand, Program>,
-  GameGuild.CQRS.IRequestHandler<DeleteProgramCommand, bool>,
-  GameGuild.CQRS.IRequestHandler<PublishProgramCommand, Program>,
-  GameGuild.CQRS.IRequestHandler<UnpublishProgramCommand, Program>,
-  GameGuild.CQRS.IRequestHandler<ArchiveProgramCommand, Program>,
-  GameGuild.CQRS.IRequestHandler<RestoreProgramCommand, Program>,
-  GameGuild.CQRS.IRequestHandler<EnrollUserCommand, ProgramUser>,
-  GameGuild.CQRS.IRequestHandler<UnenrollUserCommand, bool>,
-  GameGuild.CQRS.IRequestHandler<UpdateEnrollmentStatusCommand, Program>,
-  GameGuild.CQRS.IRequestHandler<AddProgramContentCommand, ProgramContent>,
-  GameGuild.CQRS.IRequestHandler<RemoveProgramContentCommand, bool>,
-  GameGuild.CQRS.IRequestHandler<ReorderProgramContentCommand, IEnumerable<ProgramContent>>,
-  GameGuild.CQRS.IRequestHandler<RateProgramCommand, ProgramRating>,
-  GameGuild.CQRS.IRequestHandler<UpdateProgramRatingCommand, ProgramRating>,
-  GameGuild.CQRS.IRequestHandler<DeleteProgramRatingCommand, bool>,
-  GameGuild.CQRS.IRequestHandler<AddToWishlistCommand, ProgramWishlist>,
-  GameGuild.CQRS.IRequestHandler<RemoveFromWishlistCommand, bool>,
-  GameGuild.CQRS.IRequestHandler<BulkUpdateProgramVisibilityCommand, IEnumerable<Program>>,
-  GameGuild.CQRS.IRequestHandler<BulkArchiveProgramsCommand, IEnumerable<Program>> {
+  IRequestHandler<CreateProgramCommand, Program>,
+  IRequestHandler<UpdateProgramCommand, Program>,
+  IRequestHandler<DeleteProgramCommand, bool>,
+  IRequestHandler<PublishProgramCommand, Program>,
+  IRequestHandler<UnpublishProgramCommand, Program>,
+  IRequestHandler<ArchiveProgramCommand, Program>,
+  IRequestHandler<RestoreProgramCommand, Program>,
+  IRequestHandler<EnrollUserCommand, ProgramUser>,
+  IRequestHandler<UnenrollUserCommand, bool>,
+  IRequestHandler<UpdateEnrollmentStatusCommand, Program>,
+  IRequestHandler<AddProgramContentCommand, ProgramContent>,
+  IRequestHandler<RemoveProgramContentCommand, bool>,
+  IRequestHandler<ReorderProgramContentCommand, IEnumerable<ProgramContent>>,
+  IRequestHandler<RateProgramCommand, ProgramRating>,
+  IRequestHandler<UpdateProgramRatingCommand, ProgramRating>,
+  IRequestHandler<DeleteProgramRatingCommand, bool>,
+  IRequestHandler<AddToWishlistCommand, ProgramWishlist>,
+  IRequestHandler<RemoveFromWishlistCommand, bool>,
+  IRequestHandler<BulkUpdateProgramVisibilityCommand, IEnumerable<Program>>,
+  IRequestHandler<BulkArchiveProgramsCommand, IEnumerable<Program>>
+{
   // ===== CRUD HANDLERS =====
 
-  public async Task<Program> Handle(CreateProgramCommand request, CancellationToken cancellationToken) {
+  public async Task<Program> Handle(CreateProgramCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Creating new program: {Title}", request.Title);
 
     // Generate slug from title
@@ -47,7 +50,8 @@ public class ProgramCommandHandlers(
 
     if (existingSlug != null) { slug = $"{slug}-{Guid.NewGuid().ToString("N")[..8]}"; }
 
-    var program = new Program {
+    var program = new Program
+    {
       Id = Guid.NewGuid(),
       Title = request.Title,
       Description = request.Description,
@@ -74,7 +78,8 @@ public class ProgramCommandHandlers(
     return program;
   }
 
-  public async Task<Program> Handle(UpdateProgramCommand request, CancellationToken cancellationToken) {
+  public async Task<Program> Handle(UpdateProgramCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Updating program: {ProgramId}", request.Id);
 
     var program = await context.Programs
@@ -84,7 +89,8 @@ public class ProgramCommandHandlers(
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
     // Update only provided fields
-    if (request.Title != null) {
+    if (request.Title != null)
+    {
       program.Title = request.Title;
       program.Slug = request.Title.ToSlugCase();
     }
@@ -108,7 +114,8 @@ public class ProgramCommandHandlers(
     return program;
   }
 
-  public async Task<bool> Handle(DeleteProgramCommand request, CancellationToken cancellationToken) {
+  public async Task<bool> Handle(DeleteProgramCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Deleting program: {ProgramId}", request.Id);
 
     var program = await context.Programs
@@ -130,7 +137,8 @@ public class ProgramCommandHandlers(
 
   // ===== STATUS HANDLERS =====
 
-  public async Task<Program> Handle(PublishProgramCommand request, CancellationToken cancellationToken) {
+  public async Task<Program> Handle(PublishProgramCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Publishing program: {ProgramId}", request.Id);
 
     var program = await context.Programs
@@ -150,7 +158,8 @@ public class ProgramCommandHandlers(
     return program;
   }
 
-  public async Task<Program> Handle(UnpublishProgramCommand request, CancellationToken cancellationToken) {
+  public async Task<Program> Handle(UnpublishProgramCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Unpublishing program: {ProgramId}", request.Id);
 
     var program = await context.Programs
@@ -170,7 +179,8 @@ public class ProgramCommandHandlers(
     return program;
   }
 
-  public async Task<Program> Handle(ArchiveProgramCommand request, CancellationToken cancellationToken) {
+  public async Task<Program> Handle(ArchiveProgramCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Archiving program: {ProgramId}", request.Id);
 
     var program = await context.Programs
@@ -189,7 +199,8 @@ public class ProgramCommandHandlers(
     return program;
   }
 
-  public async Task<Program> Handle(RestoreProgramCommand request, CancellationToken cancellationToken) {
+  public async Task<Program> Handle(RestoreProgramCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Restoring program: {ProgramId}", request.Id);
 
     var program = await context.Programs
@@ -210,7 +221,8 @@ public class ProgramCommandHandlers(
 
   // ===== ENROLLMENT HANDLERS =====
 
-  public async Task<ProgramUser> Handle(EnrollUserCommand request, CancellationToken cancellationToken) {
+  public async Task<ProgramUser> Handle(EnrollUserCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Enrolling user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);
 
     var program = await context.Programs
@@ -228,7 +240,8 @@ public class ProgramCommandHandlers(
 
     if (existingEnrollment != null && existingEnrollment.IsActive) { throw new InvalidOperationException("User is already enrolled in this program"); }
 
-    var enrollment = new ProgramUser {
+    var enrollment = new ProgramUser
+    {
       ProgramId = request.ProgramId,
       UserId = Guid.Parse(request.UserId),
       JoinedAt = request.EnrollmentDate ?? DateTime.UtcNow,
@@ -245,7 +258,8 @@ public class ProgramCommandHandlers(
     return enrollment;
   }
 
-  public async Task<bool> Handle(UnenrollUserCommand request, CancellationToken cancellationToken) {
+  public async Task<bool> Handle(UnenrollUserCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Unenrolling user {UserId} from program {ProgramId}", request.UserId, request.ProgramId);
 
     var enrollment = await context.ProgramUsers
@@ -264,7 +278,8 @@ public class ProgramCommandHandlers(
     return true;
   }
 
-  public async Task<Program> Handle(UpdateEnrollmentStatusCommand request, CancellationToken cancellationToken) {
+  public async Task<Program> Handle(UpdateEnrollmentStatusCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Updating enrollment status for program: {ProgramId}", request.ProgramId);
 
     var program = await context.Programs
@@ -287,10 +302,12 @@ public class ProgramCommandHandlers(
 
   // ===== CONTENT MANAGEMENT HANDLERS =====
 
-  public async Task<ProgramContent> Handle(AddProgramContentCommand request, CancellationToken cancellationToken) {
+  public async Task<ProgramContent> Handle(AddProgramContentCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Adding content {ContentId} to program {ProgramId}", request.ContentId, request.ProgramId);
 
-    var programContent = new ProgramContent {
+    var programContent = new ProgramContent
+    {
       ProgramId = request.ProgramId,
       // ContentId = request.ContentId,  // This property doesn't exist in the current model
       SortOrder = request.Order,
@@ -308,7 +325,8 @@ public class ProgramCommandHandlers(
     return programContent;
   }
 
-  public async Task<bool> Handle(RemoveProgramContentCommand request, CancellationToken cancellationToken) {
+  public async Task<bool> Handle(RemoveProgramContentCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Removing content {ContentId} from program {ProgramId}", request.ContentId, request.ProgramId);
 
     var programContent = await context.ProgramContents
@@ -325,15 +343,18 @@ public class ProgramCommandHandlers(
     return true;
   }
 
-  public async Task<IEnumerable<ProgramContent>> Handle(ReorderProgramContentCommand request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramContent>> Handle(ReorderProgramContentCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Reordering content for program {ProgramId}", request.ProgramId);
 
     var programContents = await context.ProgramContents
                                        .Where(pc => pc.ProgramId == request.ProgramId && request.ContentOrders.Keys.Contains(pc.Id))
                                        .ToListAsync(cancellationToken);
 
-    foreach (var programContent in programContents) {
-      if (request.ContentOrders.TryGetValue(programContent.Id, out var newOrder)) {
+    foreach (var programContent in programContents)
+    {
+      if (request.ContentOrders.TryGetValue(programContent.Id, out var newOrder))
+      {
         programContent.SortOrder = newOrder;
         programContent.UpdatedAt = DateTime.UtcNow;
       }
@@ -348,7 +369,8 @@ public class ProgramCommandHandlers(
 
   // ===== RATING HANDLERS =====
 
-  public async Task<ProgramRating> Handle(RateProgramCommand request, CancellationToken cancellationToken) {
+  public async Task<ProgramRating> Handle(RateProgramCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Adding rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 
     var existingRating = await context.ProgramRatings
@@ -357,7 +379,8 @@ public class ProgramCommandHandlers(
 
     if (existingRating != null) { throw new InvalidOperationException("User has already rated this program"); }
 
-    var rating = new ProgramRating {
+    var rating = new ProgramRating
+    {
       ProgramId = request.ProgramId,
       UserId = request.UserId,
       Rating = request.Rating,
@@ -374,7 +397,8 @@ public class ProgramCommandHandlers(
     return rating;
   }
 
-  public async Task<ProgramRating> Handle(UpdateProgramRatingCommand request, CancellationToken cancellationToken) {
+  public async Task<ProgramRating> Handle(UpdateProgramRatingCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Updating rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 
     var rating = await context.ProgramRatings
@@ -394,7 +418,8 @@ public class ProgramCommandHandlers(
     return rating;
   }
 
-  public async Task<bool> Handle(DeleteProgramRatingCommand request, CancellationToken cancellationToken) {
+  public async Task<bool> Handle(DeleteProgramRatingCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Deleting rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 
     var rating = await context.ProgramRatings
@@ -413,7 +438,8 @@ public class ProgramCommandHandlers(
 
   // ===== WISHLIST HANDLERS =====
 
-  public async Task<ProgramWishlist> Handle(AddToWishlistCommand request, CancellationToken cancellationToken) {
+  public async Task<ProgramWishlist> Handle(AddToWishlistCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Adding program {ProgramId} to wishlist for user {UserId}", request.ProgramId, request.UserId);
 
     var existingWishlist = await context.ProgramWishlists
@@ -432,7 +458,8 @@ public class ProgramCommandHandlers(
     return wishlist;
   }
 
-  public async Task<bool> Handle(RemoveFromWishlistCommand request, CancellationToken cancellationToken) {
+  public async Task<bool> Handle(RemoveFromWishlistCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Removing program {ProgramId} from wishlist for user {UserId}", request.ProgramId, request.UserId);
 
     var wishlist = await context.ProgramWishlists
@@ -451,14 +478,16 @@ public class ProgramCommandHandlers(
 
   // ===== BULK OPERATION HANDLERS =====
 
-  public async Task<IEnumerable<Program>> Handle(BulkUpdateProgramVisibilityCommand request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(BulkUpdateProgramVisibilityCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Bulk updating visibility for {Count} programs", request.ProgramIds.Count());
 
     var programs = await context.Programs
                                 .Where(p => request.ProgramIds.Contains(p.Id) && p.DeletedAt == null)
                                 .ToListAsync(cancellationToken);
 
-    foreach (var program in programs) {
+    foreach (var program in programs)
+    {
       program.Visibility = request.Visibility;
       program.UpdatedAt = DateTime.UtcNow;
     }
@@ -470,14 +499,16 @@ public class ProgramCommandHandlers(
     return programs;
   }
 
-  public async Task<IEnumerable<Program>> Handle(BulkArchiveProgramsCommand request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<Program>> Handle(BulkArchiveProgramsCommand request, CancellationToken cancellationToken)
+  {
     logger.LogInformation("Bulk archiving {Count} programs", request.ProgramIds.Count());
 
     var programs = await context.Programs
                                 .Where(p => request.ProgramIds.Contains(p.Id) && p.DeletedAt == null)
                                 .ToListAsync(cancellationToken);
 
-    foreach (var program in programs) {
+    foreach (var program in programs)
+    {
       program.Status = ContentStatus.Archived;
       program.UpdatedAt = DateTime.UtcNow;
     }
