@@ -27,8 +27,10 @@ namespace GameGuild.Common;
 /// - Performance monitoring and error handling
 /// - Registration validation and startup diagnostics
 /// </summary>
-public static class DependencyInjection {
-  public static IServiceCollection AddPresentation(this IServiceCollection services, PresentationOptions? options = null) {
+public static class DependencyInjection
+{
+  public static IServiceCollection AddPresentation(this IServiceCollection services, PresentationOptions? options = null)
+  {
     options ??= new PresentationOptions();
 
     // Validate configuration
@@ -38,118 +40,134 @@ public static class DependencyInjection {
     services.AddEndpointsApiExplorer();
 
     if (options.EnableSwagger)
-      services.AddSwaggerGen(c => {
-          c.SwaggerDoc(
-            "v1",
-            new OpenApiInfo {
-              Title = options.ApiTitle,
-              Version = options.ApiVersion,
-              Description = "A comprehensive API for GameGuild platform with CQRS architecture",
-              Contact = options.Contact ??
-                        new OpenApiContact {
-                          Name = "GameGuild Team", Email = "support@gameguild.com",
-                        },
-            }
-          );
+      services.AddSwaggerGen(c =>
+      {
+        c.SwaggerDoc(
+          "v1",
+          new OpenApiInfo
+          {
+            Title = options.ApiTitle,
+            Version = options.ApiVersion,
+            Description = "A comprehensive API for GameGuild platform with CQRS architecture",
+            Contact = options.Contact ??
+                      new OpenApiContact
+                      {
+                        Name = "GameGuild Team",
+                        Email = "support@gameguild.com",
+                      },
+          }
+        );
 
-          // Include XML comments for better documentation
-          var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-          var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
+        // Include XML comments for better documentation
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
 
-          if (File.Exists(xmlPath)) c.IncludeXmlComments(xmlPath);
+        if (File.Exists(xmlPath)) c.IncludeXmlComments(xmlPath);
 
-          // Add custom schema filter for enhanced enum documentation
-          c.SchemaFilter<GameGuild.Common.Swagger.EnumSchemaFilter>();
-        }
+        // Add custom schema filter for enhanced enum documentation
+        c.SchemaFilter<GameGuild.Common.Swagger.EnumSchemaFilter>();
+      }
       );
 
     // Controllers (for backward compatibility with existing REST endpoints)
     services.AddControllers()
-            .AddJsonOptions(options => {
-                // Handle circular references in navigation properties
-                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+            .AddJsonOptions(options =>
+            {
+              // Handle circular references in navigation properties
+              options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 
-                // Configure JSON naming policy
-                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-                options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
-                options.JsonSerializerOptions.WriteIndented = true; // Pretty print in development
-                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true; // Accept both cases on input
-              }
+              // Configure JSON naming policy
+              options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+              options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+              options.JsonSerializerOptions.WriteIndented = true; // Pretty print in development
+              options.JsonSerializerOptions.PropertyNameCaseInsensitive = true; // Accept both cases on input
+            }
             )
-            .ConfigureApiBehaviorOptions(options => {
-                options.SuppressModelStateInvalidFilter = true; // We handle validation through MediatR
-              }
+            .ConfigureApiBehaviorOptions(options =>
+            {
+              options.SuppressModelStateInvalidFilter = true; // We handle validation through MediatR
+            }
             );
 
     // Configure HTTP JSON options for minimal APIs (for consistency)
-    services.ConfigureHttpJsonOptions(options => {
-        options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        options.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
-        options.SerializerOptions.WriteIndented = true;
-        options.SerializerOptions.PropertyNameCaseInsensitive = true;
-        options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-      }
+    services.ConfigureHttpJsonOptions(options =>
+    {
+      options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+      options.SerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+      options.SerializerOptions.WriteIndented = true;
+      options.SerializerOptions.PropertyNameCaseInsensitive = true;
+      options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    }
     );
 
     // Configure routing to use lowercase URLs
-    services.Configure<RouteOptions>(options => {
-        options.LowercaseUrls = true;
-        options.LowercaseQueryStrings = true;
-      }
+    services.Configure<RouteOptions>(options =>
+    {
+      options.LowercaseUrls = true;
+      options.LowercaseQueryStrings = true;
+    }
     );
 
     // Exception Handling
     services.AddExceptionHandler<GlobalExceptionHandler>();
-    services.AddProblemDetails(options => {
-        options.CustomizeProblemDetails = context => {
-          context.ProblemDetails.Instance = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}";
-          context.ProblemDetails.Extensions.TryAdd("traceId", context.HttpContext.TraceIdentifier);
-        };
-      }
+    services.AddProblemDetails(options =>
+    {
+      options.CustomizeProblemDetails = context =>
+      {
+        context.ProblemDetails.Instance = $"{context.HttpContext.Request.Method} {context.HttpContext.Request.Path}";
+        context.ProblemDetails.Extensions.TryAdd("traceId", context.HttpContext.TraceIdentifier);
+      };
+    }
     );
 
     // CORS for frontend integration
-    services.AddCors(corsOptions => {
-        corsOptions.AddDefaultPolicy(builder => {
-            builder
-              .WithOrigins(options.AllowedOrigins)
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
-          }
-        );
+    services.AddCors(corsOptions =>
+    {
+      corsOptions.AddDefaultPolicy(builder =>
+      {
+        builder
+          .WithOrigins(options.AllowedOrigins)
+          .AllowAnyMethod()
+          .AllowAnyHeader()
+          .AllowCredentials();
       }
+      );
+    }
     );
 
     // Response Compression
     if (options.EnableResponseCompression)
-      services.AddResponseCompression(compressionOptions => {
-          compressionOptions.EnableForHttps = true;
-          compressionOptions.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
-          compressionOptions.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
-        }
+      services.AddResponseCompression(compressionOptions =>
+      {
+        compressionOptions.EnableForHttps = true;
+        compressionOptions.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
+        compressionOptions.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+      }
       );
 
     // Rate Limiting
     if (options.EnableRateLimiting)
-      services.AddRateLimiter(limiterOptions => {
-          limiterOptions.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-          limiterOptions.AddFixedWindowLimiter(
-            "DefaultPolicy",
-            policyOptions => {
-              policyOptions.PermitLimit = options.RateLimitRequests;
-              policyOptions.Window = options.RateLimitWindow;
-              policyOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
-              policyOptions.QueueLimit = options.RateLimitQueueLimit;
-            }
-          );
-        }
+      services.AddRateLimiter(limiterOptions =>
+      {
+        limiterOptions.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        limiterOptions.AddFixedWindowLimiter(
+          "DefaultPolicy",
+          policyOptions =>
+          {
+            policyOptions.PermitLimit = options.RateLimitRequests;
+            policyOptions.Window = options.RateLimitWindow;
+            policyOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+            policyOptions.QueueLimit = options.RateLimitQueueLimit;
+          }
+        );
+      }
       );
 
     return services;
   }
 
-  public static IServiceCollection AddApplication(this IServiceCollection services, ServiceRegistrationOptions? options = null) {
+  public static IServiceCollection AddApplication(this IServiceCollection services, ServiceRegistrationOptions? options = null)
+  {
     // Register domain event infrastructure early (needed by handlers)
     services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
     services.AddScoped<IDomainEventsDispatcher, DomainEventsDispatcher>();
@@ -157,14 +175,26 @@ public static class DependencyInjection {
     // Add context services for user and tenant context
     services.AddContextServices();
 
-    // MediatR for CQRS
-    services.AddMediatR(Assembly.GetExecutingAssembly(), typeof(Program).Assembly);
+    // Add CQRS with custom implementation
+    services.AddCQRS(Assembly.GetExecutingAssembly(), typeof(Program).Assembly);
 
-    // MediatR Pipeline Behaviors (order matters - reverse execution order!)
+    // CQRS Pipeline Behaviors (order matters - reverse execution order!)
+    // Performance monitoring should be outermost
     services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
+
+    // Caching layer
     services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
+
+    // Authorization (security) - runs before business logic
     services.AddTransient(typeof(IPipelineBehavior<,>), typeof(AuthorizationBehavior<,>));
+
+    // Validation - runs before business logic but after authorization
     services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnifiedValidationBehavior<,>));
+
+    // Transaction management for commands (wraps business logic)
+    services.AddTransient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>));
+
+    // Logging should be innermost to capture actual handler execution
     services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 
     // Optimized CQRS Handler Registration (includes domain event handlers and validators)
@@ -184,10 +214,11 @@ public static class DependencyInjection {
   /// <param name="configuration">Application configuration</param>
   /// <param name="excludeAuth">Whether to exclude authentication (useful for testing)</param>
   /// <returns>The configured service collection</returns>
-  public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration, bool excludeAuth = false) {
+  public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration, bool excludeAuth = false)
+  {
     // Choose GraphQL configuration based on environment
     var graphqlOptions = GetEnvironmentSpecificGraphQLOptions();
-    
+
     return services
            .AddCoreServices()
            .AddDatabase(configuration)
@@ -203,10 +234,12 @@ public static class DependencyInjection {
   /// <summary>
   /// Gets environment-specific GraphQL options based on ASPNETCORE_ENVIRONMENT.
   /// </summary>
-  private static GraphQLOptions GetEnvironmentSpecificGraphQLOptions() {
+  private static GraphQLOptions GetEnvironmentSpecificGraphQLOptions()
+  {
     var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-    
-    return environment?.ToUpperInvariant() switch {
+
+    return environment?.ToUpperInvariant() switch
+    {
       "DEVELOPMENT" => GraphQLOptionsFactory.ForDevelopment(),
       "TESTING" => GraphQLOptionsFactory.ForTesting(),
       _ => GraphQLOptionsFactory.ForProduction()
@@ -217,7 +250,8 @@ public static class DependencyInjection {
   /// Adds core infrastructure services that are fundamental to the application.
   /// These services provide cross-cutting concerns like time, domain events, and data access.
   /// </summary>
-  private static IServiceCollection AddCoreServices(this IServiceCollection services) {
+  private static IServiceCollection AddCoreServices(this IServiceCollection services)
+  {
     // Time abstraction for testability and consistency.
     services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
@@ -234,91 +268,100 @@ public static class DependencyInjection {
   /// <summary>
   /// Adds Cloudflare Dynamic DNS services.
   /// </summary>
-  private static IServiceCollection AddCloudflareServices(this IServiceCollection services, IConfiguration configuration) {
+  private static IServiceCollection AddCloudflareServices(this IServiceCollection services, IConfiguration configuration)
+  {
     // Configure Cloudflare Dynamic DNS options with manual binding for better environment variable support
-    services.Configure<CloudflareDynamicDnsOptions>(options => {
-        var section = configuration.GetSection(CloudflareDynamicDnsOptions.SectionName);
-        section.Bind(options);
+    services.Configure<CloudflareDynamicDnsOptions>(options =>
+    {
+      var section = configuration.GetSection(CloudflareDynamicDnsOptions.SectionName);
+      section.Bind(options);
 
-        // Manual binding for DNS records - always run to ensure proper binding
-        Console.WriteLine($"DNS records before manual binding: {options.DnsRecords?.Count ?? 0}");
+      // Manual binding for DNS records - always run to ensure proper binding
+      Console.WriteLine($"DNS records before manual binding: {options.DnsRecords?.Count ?? 0}");
 
-        if (options.DnsRecords?.Any() == true) {
-          foreach (var (record, index) in options.DnsRecords.Select((r, i) => (r, i))) { Console.WriteLine($"Existing DNS Record {index}: Type='{record.Type}', Name='{record.Name}'"); }
-        }
+      if (options.DnsRecords?.Any() == true)
+      {
+        foreach (var (record, index) in options.DnsRecords.Select((r, i) => (r, i))) { Console.WriteLine($"Existing DNS Record {index}: Type='{record.Type}', Name='{record.Name}'"); }
+      }
 
-        // Always run manual binding to ensure proper configuration
+      // Always run manual binding to ensure proper configuration
+      {
+        Console.WriteLine("Manual DNS records binding triggered - no DNS records found in normal binding");
+
+        // Test if we can read any environment variables
+        var testKey = $"{CloudflareDynamicDnsOptions.SectionName}__Enabled";
+        var testValue = configuration[testKey];
+        Console.WriteLine($"Test read: {testKey} = '{testValue}'");
+
+        // Try reading directly from environment variables
+        var envEnabled = Environment.GetEnvironmentVariable("CLOUDFLARE_DYNAMIC_DNS__ENABLED");
+        Console.WriteLine($"Direct env read: CLOUDFLARE_DYNAMIC_DNS__ENABLED = '{envEnabled}'");
+
+        // Manual binding for other configuration values
+        var apiToken = Environment.GetEnvironmentVariable("CLOUDFLARE_DYNAMIC_DNS__API_TOKEN");
+        var zoneId = Environment.GetEnvironmentVariable("CLOUDFLARE_DYNAMIC_DNS__ZONE_ID");
+        var intervalMinutes = Environment.GetEnvironmentVariable("CLOUDFLARE_DYNAMIC_DNS__INTERVAL_MINUTES");
+
+        Console.WriteLine($"Manual binding - ApiToken: {(string.IsNullOrEmpty(apiToken) ? "NULL" : "SET")}");
+        Console.WriteLine($"Manual binding - ZoneId: {(string.IsNullOrEmpty(zoneId) ? "NULL" : "SET")}");
+        Console.WriteLine($"Manual binding - IntervalMinutes: {intervalMinutes}");
+
+        // Set the configuration values manually
+        if (!string.IsNullOrEmpty(apiToken)) options.ApiToken = apiToken;
+        if (!string.IsNullOrEmpty(zoneId)) options.ZoneId = zoneId;
+        if (!string.IsNullOrEmpty(intervalMinutes) && int.TryParse(intervalMinutes, out var interval)) options.IntervalMinutes = interval;
+        if (!string.IsNullOrEmpty(envEnabled) && bool.TryParse(envEnabled, out var enabled)) options.Enabled = enabled;
+
+        var dnsRecords = new List<DnsRecordConfiguration>();
+        var index = 0;
+
+        while (true)
         {
-          Console.WriteLine("Manual DNS records binding triggered - no DNS records found in normal binding");
+          var nameKey = $"CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__{index}__NAME";
+          var typeKey = $"CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__{index}__TYPE";
 
-          // Test if we can read any environment variables
-          var testKey = $"{CloudflareDynamicDnsOptions.SectionName}__Enabled";
-          var testValue = configuration[testKey];
-          Console.WriteLine($"Test read: {testKey} = '{testValue}'");
+          Console.WriteLine($"Looking for env vars: '{nameKey}' and '{typeKey}'");
 
-          // Try reading directly from environment variables
-          var envEnabled = Environment.GetEnvironmentVariable("CLOUDFLARE_DYNAMIC_DNS__ENABLED");
-          Console.WriteLine($"Direct env read: CLOUDFLARE_DYNAMIC_DNS__ENABLED = '{envEnabled}'");
+          var name = Environment.GetEnvironmentVariable(nameKey);
+          var type = Environment.GetEnvironmentVariable(typeKey);
 
-          // Manual binding for other configuration values
-          var apiToken = Environment.GetEnvironmentVariable("CLOUDFLARE_DYNAMIC_DNS__API_TOKEN");
-          var zoneId = Environment.GetEnvironmentVariable("CLOUDFLARE_DYNAMIC_DNS__ZONE_ID");
-          var intervalMinutes = Environment.GetEnvironmentVariable("CLOUDFLARE_DYNAMIC_DNS__INTERVAL_MINUTES");
+          Console.WriteLine($"Checking index {index}: Name='{name}' Type='{type}'");
 
-          Console.WriteLine($"Manual binding - ApiToken: {(string.IsNullOrEmpty(apiToken) ? "NULL" : "SET")}");
-          Console.WriteLine($"Manual binding - ZoneId: {(string.IsNullOrEmpty(zoneId) ? "NULL" : "SET")}");
-          Console.WriteLine($"Manual binding - IntervalMinutes: {intervalMinutes}");
+          if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(type))
+          {
+            Console.WriteLine($"Stopping at index {index} - missing name or type");
 
-          // Set the configuration values manually
-          if (!string.IsNullOrEmpty(apiToken)) options.ApiToken = apiToken;
-          if (!string.IsNullOrEmpty(zoneId)) options.ZoneId = zoneId;
-          if (!string.IsNullOrEmpty(intervalMinutes) && int.TryParse(intervalMinutes, out var interval)) options.IntervalMinutes = interval;
-          if (!string.IsNullOrEmpty(envEnabled) && bool.TryParse(envEnabled, out var enabled)) options.Enabled = enabled;
-
-          var dnsRecords = new List<DnsRecordConfiguration>();
-          var index = 0;
-
-          while (true) {
-            var nameKey = $"CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__{index}__NAME";
-            var typeKey = $"CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__{index}__TYPE";
-
-            Console.WriteLine($"Looking for env vars: '{nameKey}' and '{typeKey}'");
-
-            var name = Environment.GetEnvironmentVariable(nameKey);
-            var type = Environment.GetEnvironmentVariable(typeKey);
-
-            Console.WriteLine($"Checking index {index}: Name='{name}' Type='{type}'");
-
-            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(type)) {
-              Console.WriteLine($"Stopping at index {index} - missing name or type");
-
-              break;
-            }
-
-            var ttlKey = $"CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__{index}__TTL";
-            var proxiedKey = $"CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__{index}__PROXIED";
-
-            var ttlStr = Environment.GetEnvironmentVariable(ttlKey);
-            var proxiedStr = Environment.GetEnvironmentVariable(proxiedKey);
-
-            var ttl = int.TryParse(ttlStr, out var ttlValue) ? ttlValue : 300;
-            var proxied = bool.TryParse(proxiedStr, out var proxiedValue) ? proxiedValue : true;
-
-            Console.WriteLine($"Adding DNS record {index}: {name} ({type}) TTL={ttl} Proxied={proxied}");
-
-            dnsRecords.Add(
-              new DnsRecordConfiguration {
-                Name = name, Type = type, Ttl = ttl, Proxied = proxied
-              }
-            );
-
-            index++;
+            break;
           }
 
-          Console.WriteLine($"Manual binding complete. Found {dnsRecords.Count} DNS records");
-          options.DnsRecords = dnsRecords;
+          var ttlKey = $"CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__{index}__TTL";
+          var proxiedKey = $"CLOUDFLARE_DYNAMIC_DNS__DNS_RECORDS__{index}__PROXIED";
+
+          var ttlStr = Environment.GetEnvironmentVariable(ttlKey);
+          var proxiedStr = Environment.GetEnvironmentVariable(proxiedKey);
+
+          var ttl = int.TryParse(ttlStr, out var ttlValue) ? ttlValue : 300;
+          var proxied = bool.TryParse(proxiedStr, out var proxiedValue) ? proxiedValue : true;
+
+          Console.WriteLine($"Adding DNS record {index}: {name} ({type}) TTL={ttl} Proxied={proxied}");
+
+          dnsRecords.Add(
+            new DnsRecordConfiguration
+            {
+              Name = name,
+              Type = type,
+              Ttl = ttl,
+              Proxied = proxied
+            }
+          );
+
+          index++;
         }
+
+        Console.WriteLine($"Manual binding complete. Found {dnsRecords.Count} DNS records");
+        options.DnsRecords = dnsRecords;
       }
+    }
     );
 
     // Add HTTP client for Cloudflare API
@@ -337,18 +380,20 @@ public static class DependencyInjection {
   /// Configures Entity Framework with PostgreSQL database provider.
   /// Supports in-memory database for testing only.
   /// </summary>
-  private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration) {
+  private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
+  {
     var dbOptions = InfrastructureConfiguration.CreateDatabaseOptions(configuration);
 
     // Add DbContext factory for GraphQL DataLoaders with proper lifetime management
     services.AddDbContextFactory<ApplicationDbContext>(options => { InfrastructureConfiguration.ConfigureDbContext(options, dbOptions); });
 
     // Add regular DbContext using the factory (this ensures compatible lifetimes)
-    services.AddScoped<ApplicationDbContext>(provider => {
-        var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+    services.AddScoped<ApplicationDbContext>(provider =>
+    {
+      var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
 
-        return factory.CreateDbContext();
-      }
+      return factory.CreateDbContext();
+    }
     );
 
     return services;
@@ -381,8 +426,10 @@ public static class DependencyInjection {
     this IServiceCollection services,
     IConfiguration configuration,
     bool excludeAuth = false
-  ) {
-    if (configuration != null && !excludeAuth) {
+  )
+  {
+    if (configuration != null && !excludeAuth)
+    {
       // Use the new modular Auth configuration
       services = AuthModuleDependencyInjection.AddAuthModule(services, configuration);
     }
@@ -396,12 +443,14 @@ public static class DependencyInjection {
   private static IServiceCollection AddHealthChecksInternal(
     this IServiceCollection services,
     IConfiguration configuration
-  ) {
+  )
+  {
     var healthOptions = InfrastructureConfiguration.CreateHealthCheckOptions(configuration);
 
     var builder = services.AddHealthChecks();
 
-    if (healthOptions.EnableDatabaseCheck) {
+    if (healthOptions.EnableDatabaseCheck)
+    {
       builder.AddCheck(
         "database",
         () => HealthCheckResult.Healthy("Database is accessible"),
@@ -410,7 +459,8 @@ public static class DependencyInjection {
       );
     }
 
-    if (healthOptions.EnableApiHealthCheck) {
+    if (healthOptions.EnableApiHealthCheck)
+    {
       builder.AddCheck(
         "api",
         () => HealthCheckResult.Healthy("API is responding"),
@@ -434,13 +484,15 @@ public static class DependencyInjection {
   /// <param name="services">The service collection</param>
   /// <param name="options">Optional GraphQL configuration options</param>
   /// <returns>The service collection for method chaining</returns>
-  public static IServiceCollection AddGraphQLInfrastructure(this IServiceCollection services, GraphQLOptions? options = null) {
+  public static IServiceCollection AddGraphQLInfrastructure(this IServiceCollection services, GraphQLOptions? options = null)
+  {
     options ??= new GraphQLOptions();
     options.Validate();
 
     var logger = services.BuildServiceProvider().GetService<ILogger<object>>(); // Temporary logger for setup
 
-    try {
+    try
+    {
       var stopwatch = Stopwatch.StartNew();
 
       // Add DAC authorization services first
@@ -471,7 +523,8 @@ public static class DependencyInjection {
 
       return services;
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       logger?.LogError(ex, "Failed to configure GraphQL infrastructure");
 
       throw new InvalidOperationException("GraphQL infrastructure configuration failed. See inner exception for details.", ex);
@@ -481,7 +534,8 @@ public static class DependencyInjection {
   /// <summary>
   /// Configures core GraphQL features like filtering, sorting, projections, etc.
   /// </summary>
-  private static void ConfigureGraphQLFeatures(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger = null) {
+  private static void ConfigureGraphQLFeatures(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger = null)
+  {
     // Add global object identification if enabled
     if (options.EnableGlobalObjectIdentification) { builder.AddGlobalObjectIdentification(); }
 
@@ -493,12 +547,15 @@ public static class DependencyInjection {
     if (options.EnableProjections) { builder.AddProjections(); }
 
     // Add authorization if enabled
-    if (options.EnableAuthorization) {
-      try {
+    if (options.EnableAuthorization)
+    {
+      try
+      {
         builder.AddDACAuthorization();
         logger?.LogInformation("DAC Authorization enabled");
       }
-      catch (Exception ex) {
+      catch (Exception ex)
+      {
         // In test environments, DAC authorization might not be available
         if (!options.IsTestEnvironment) { throw new InvalidOperationException("Failed to configure DAC authorization. Ensure AddDACAuthorizationServices() is called first.", ex); }
         else { logger?.LogWarning("DAC Authorization failed in test environment (expected): {Message}", ex.Message); }
@@ -510,10 +567,13 @@ public static class DependencyInjection {
   /// <summary>
   /// Registers core modules that are always required for the GraphQL schema
   /// </summary>
-  private static void RegisterCoreModules(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger) {
-    var coreModules = new Dictionary<string, Action<IRequestExecutorBuilder>> {
+  private static void RegisterCoreModules(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger)
+  {
+    var coreModules = new Dictionary<string, Action<IRequestExecutorBuilder>>
+    {
       ["Users"] =
-        b => {
+        b =>
+        {
           SafeAddGraphQLTypes(
             b,
             [("UserQueries", typeof(Modules.Users.UserQueries)), ("UserMutations", typeof(Modules.Users.UserMutations)), ("UserType", typeof(Modules.Users.UserType))],
@@ -522,7 +582,8 @@ public static class DependencyInjection {
           );
         },
       ["UserProfiles"] =
-        b => {
+        b =>
+        {
           SafeAddGraphQLTypes(
             b,
             [("UserProfileQueries", typeof(Modules.UserProfiles.UserProfileQueries)), ("UserProfileMutations", typeof(Modules.UserProfiles.UserProfileMutations)), ("UserProfileType", typeof(Modules.UserProfiles.UserProfileType)),],
@@ -530,7 +591,8 @@ public static class DependencyInjection {
             isExtension: [true, true, false]
           );
         },
-      ["Tenants"] = b => {
+      ["Tenants"] = b =>
+      {
         SafeAddGraphQLTypes(
           b,
           [
@@ -543,7 +605,8 @@ public static class DependencyInjection {
           isExtension: [true, true, false, false]
         );
       },
-      ["Projects"] = b => {
+      ["Projects"] = b =>
+      {
         SafeAddGraphQLTypes(
           b,
           [("ProjectQueries", typeof(Modules.Projects.ProjectQueries)), ("ProjectMutations", typeof(Modules.Projects.ProjectMutations)), ("ProjectPermissionsResolvers", typeof(GameGuild.Modules.Projects.ProjectPermissionsResolvers))],
@@ -559,13 +622,17 @@ public static class DependencyInjection {
                             AppDomain.CurrentDomain.GetAssemblies()
                                      .Any(a => a.FullName?.Contains("GameGuild.API.Tests") == true);
 
-    if (isTestEnvironment) {
-      coreModules["TestModule"] = b => {
-        try {
+    if (isTestEnvironment)
+    {
+      coreModules["TestModule"] = b =>
+      {
+        try
+        {
           // Try to register test module if available
           var testModuleType = Type.GetType("GameGuild.Tests.MockModules.TestModuleQueries, GameGuild.API.Tests");
 
-          if (testModuleType != null) {
+          if (testModuleType != null)
+          {
             SafeAddGraphQLTypes(
               b,
               [("TestModuleQueries", testModuleType)],
@@ -575,19 +642,23 @@ public static class DependencyInjection {
             logger?.LogDebug("Registered test module: TestModuleQueries");
           }
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
           logger?.LogDebug("Test module not available: {Error}", ex.Message);
           // Ignore test module registration failures
         }
       };
     }
 
-    foreach (var (moduleName, registration) in coreModules) {
-      try {
+    foreach (var (moduleName, registration) in coreModules)
+    {
+      try
+      {
         registration(builder);
         logger?.LogDebug("Registered core module: {ModuleName}", moduleName);
       }
-      catch (Exception ex) {
+      catch (Exception ex)
+      {
         logger?.LogError(ex, "Failed to register core module: {ModuleName}", moduleName);
 
         throw;
@@ -598,13 +669,16 @@ public static class DependencyInjection {
   /// <summary>
   /// Registers optional modules based on configuration settings
   /// </summary>
-  private static void RegisterOptionalModules(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger) {
+  private static void RegisterOptionalModules(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger)
+  {
     // Authentication module
-    if (options.EnableAuthentication) {
+    if (options.EnableAuthentication)
+    {
       TryRegisterModule(
         builder,
         "Authentication",
-        () => {
+        () =>
+        {
           SafeAddGraphQLTypes(builder, [("AuthQueries", typeof(AuthQueries)), ("AuthMutations", typeof(AuthMutations))], logger, isExtension: [true, true]);
 
           // Try to add CredentialType if it exists
@@ -615,11 +689,13 @@ public static class DependencyInjection {
     }
 
     // TestingLab module
-    if (options.EnableTestingModule) {
+    if (options.EnableTestingModule)
+    {
       TryRegisterModule(
         builder,
         "TestingLab",
-        () => {
+        () =>
+        {
           SafeAddGraphQLTypes(
             builder,
             [
@@ -642,9 +718,12 @@ public static class DependencyInjection {
   /// <summary>
   /// Registers advanced modules like Programs, Products, etc.
   /// </summary>
-  private static void RegisterAdvancedModules(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger) {
-    var advancedModules = new Dictionary<string, Action> {
-      ["Programs"] = () => {
+  private static void RegisterAdvancedModules(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger)
+  {
+    var advancedModules = new Dictionary<string, Action>
+    {
+      ["Programs"] = () =>
+      {
         SafeAddGraphQLTypes(
           builder,
           [
@@ -662,7 +741,8 @@ public static class DependencyInjection {
           isExtension: [true, true, true, true, true, true, false, false, false]
         );
       },
-      ["Products"] = () => {
+      ["Products"] = () =>
+      {
         SafeAddGraphQLTypes(
           builder,
           [("ProductQueries", typeof(ProductQueries)), ("ProductMutations", typeof(ProductMutations)), ("ProductType", typeof(Modules.Products.ProductType))],
@@ -671,7 +751,8 @@ public static class DependencyInjection {
           isOptional: true
         );
       },
-      ["Payments"] = () => {
+      ["Payments"] = () =>
+      {
         SafeAddGraphQLTypes(
           builder,
           [("PaymentQueries", typeof(PaymentQueries)), ("PaymentMutations", typeof(PaymentMutations))],
@@ -688,40 +769,49 @@ public static class DependencyInjection {
   /// <summary>
   /// Safely adds GraphQL types with comprehensive error handling
   /// </summary>
-  private static void SafeAddGraphQLTypes(IRequestExecutorBuilder builder, (string Name, Type Type)[] types, ILogger? logger, bool[] isExtension, bool isOptional = false) {
-    for (var i = 0; i < types.Length; i++) {
+  private static void SafeAddGraphQLTypes(IRequestExecutorBuilder builder, (string Name, Type Type)[] types, ILogger? logger, bool[] isExtension, bool isOptional = false)
+  {
+    for (var i = 0; i < types.Length; i++)
+    {
       var (name, type) = types[i];
       var isExt = i < isExtension.Length ? isExtension[i] : false;
 
-      try {
-        if (isExt) {
+      try
+      {
+        if (isExt)
+        {
           // Use reflection to call AddTypeExtension<T>()
           var method = typeof(RequestExecutorBuilderExtensions)
                        .GetMethods()
                        .FirstOrDefault(m => m.Name == "AddTypeExtension" && m.IsGenericMethodDefinition);
 
-          if (method != null) {
+          if (method != null)
+          {
             var genericMethod = method.MakeGenericMethod(type);
             genericMethod.Invoke(null, [builder]);
             logger?.LogDebug("Added GraphQL type extension: {TypeName}", name);
           }
         }
-        else {
+        else
+        {
           // Use reflection to call AddType<T>()
           var method = typeof(RequestExecutorBuilderExtensions)
                        .GetMethods()
                        .FirstOrDefault(m => m.Name == "AddType" && m.IsGenericMethodDefinition && m.GetParameters().Length == 1);
 
-          if (method != null) {
+          if (method != null)
+          {
             var genericMethod = method.MakeGenericMethod(type);
             genericMethod.Invoke(null, [builder]);
             logger?.LogDebug("Added GraphQL type: {TypeName}", name);
           }
         }
       }
-      catch (Exception ex) {
+      catch (Exception ex)
+      {
         if (isOptional) { logger?.LogDebug("Optional GraphQL type {TypeName} not available: {Error}", name, ex.Message); }
-        else {
+        else
+        {
           logger?.LogWarning(ex, "Failed to register GraphQL type {TypeName}", name);
           // In test environments, be more permissive with missing types
           // Note: We can't access options here, so we'll just log and continue
@@ -733,8 +823,10 @@ public static class DependencyInjection {
   /// <summary>
   /// Safely registers a module with error handling
   /// </summary>
-  private static void TryRegisterModule(IRequestExecutorBuilder builder, string moduleName, Action registration, ILogger? logger) {
-    try {
+  private static void TryRegisterModule(IRequestExecutorBuilder builder, string moduleName, Action registration, ILogger? logger)
+  {
+    try
+    {
       registration();
       logger?.LogDebug("Registered optional module: {ModuleName}", moduleName);
     }
@@ -744,17 +836,20 @@ public static class DependencyInjection {
   /// <summary>
   /// Configures GraphQL server options based on provided configuration
   /// </summary>
-  private static void ConfigureServerOptions(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger = null) {
-    builder.ModifyOptions(opt => {
-        opt.RemoveUnreachableTypes = options.RemoveUnreachableTypes;
-        opt.EnsureAllNodesCanBeResolved = options.EnsureAllNodesCanBeResolved;
-        opt.StrictValidation = options.StrictValidation;
-        opt.EnableDirectiveIntrospection = options.EnableDirectiveIntrospection;
-      }
+  private static void ConfigureServerOptions(IRequestExecutorBuilder builder, GraphQLOptions options, ILogger? logger = null)
+  {
+    builder.ModifyOptions(opt =>
+    {
+      opt.RemoveUnreachableTypes = options.RemoveUnreachableTypes;
+      opt.EnsureAllNodesCanBeResolved = options.EnsureAllNodesCanBeResolved;
+      opt.StrictValidation = options.StrictValidation;
+      opt.EnableDirectiveIntrospection = options.EnableDirectiveIntrospection;
+    }
     );
 
     // Configure introspection
-    if (!options.EnableIntrospection) {
+    if (!options.EnableIntrospection)
+    {
       builder.DisableIntrospection();
       logger?.LogInformation("Introspection disabled for non-test environment");
     }
@@ -767,7 +862,8 @@ public static class DependencyInjection {
   /// <summary>
   /// Configuration options for service registration
   /// </summary>
-  public class ServiceRegistrationOptions {
+  public class ServiceRegistrationOptions
+  {
     public bool EnablePerformanceLogging { get; set; } = true;
 
     public bool EnableDetailedErrors { get; set; } = false;
@@ -788,7 +884,8 @@ public static class DependencyInjection {
   /// <summary>
   /// Configuration options for presentation layer
   /// </summary>
-  public class PresentationOptions {
+  public class PresentationOptions
+  {
     public string[] AllowedOrigins { get; set; } = ["http://localhost:3000", "https://localhost:3001"];
 
     public int RateLimitRequests { get; set; } = 100;
@@ -814,7 +911,8 @@ public static class DependencyInjection {
     /// <summary>
     /// Validates the configuration options
     /// </summary>
-    public void Validate() {
+    public void Validate()
+    {
       if (AllowedOrigins == null || AllowedOrigins.Length == 0) throw new InvalidOperationException("At least one allowed origin must be specified");
 
       if (RateLimitRequests <= 0) throw new ArgumentOutOfRangeException(nameof(RateLimitRequests), "Rate limit requests must be greater than 0");
@@ -830,7 +928,8 @@ public static class DependencyInjection {
   /// <summary>
   /// Configuration options for GraphQL infrastructure
   /// </summary>
-  public class GraphQLOptions {
+  public class GraphQLOptions
+  {
     /// <summary>
     /// Enable authentication types and queries
     /// </summary>
@@ -909,7 +1008,8 @@ public static class DependencyInjection {
     /// <summary>
     /// Validates the GraphQL configuration options
     /// </summary>
-    public void Validate() {
+    public void Validate()
+    {
       // No specific validation needed currently
       // This method is here for future validation requirements
     }
@@ -918,12 +1018,15 @@ public static class DependencyInjection {
   /// <summary>
   /// Factory methods for creating GraphQL configuration for different environments
   /// </summary>
-  public static class GraphQLOptionsFactory {
+  public static class GraphQLOptionsFactory
+  {
     /// <summary>
     /// Creates a production-ready GraphQL configuration
     /// </summary>
-    public static GraphQLOptions ForProduction() {
-      return new GraphQLOptions {
+    public static GraphQLOptions ForProduction()
+    {
+      return new GraphQLOptions
+      {
         EnableAuthentication = true,
         EnableTestingModule = true,
         EnableAdvancedModules = true,
@@ -945,8 +1048,10 @@ public static class DependencyInjection {
     /// <summary>
     /// Creates a development-friendly GraphQL configuration
     /// </summary>
-    public static GraphQLOptions ForDevelopment() {
-      return new GraphQLOptions {
+    public static GraphQLOptions ForDevelopment()
+    {
+      return new GraphQLOptions
+      {
         EnableAuthentication = true,
         EnableTestingModule = true,
         EnableAdvancedModules = true,
@@ -968,8 +1073,10 @@ public static class DependencyInjection {
     /// <summary>
     /// Creates a test-friendly GraphQL configuration
     /// </summary>
-    public static GraphQLOptions ForTesting() {
-      return new GraphQLOptions {
+    public static GraphQLOptions ForTesting()
+    {
+      return new GraphQLOptions
+      {
         EnableAuthentication = false, // Avoid auth conflicts in tests
         EnableTestingModule = true,
         EnableAdvancedModules = false, // Keep tests minimal
@@ -991,8 +1098,10 @@ public static class DependencyInjection {
     /// <summary>
     /// Creates a minimal GraphQL configuration for basic functionality
     /// </summary>
-    public static GraphQLOptions Minimal() {
-      return new GraphQLOptions {
+    public static GraphQLOptions Minimal()
+    {
+      return new GraphQLOptions
+      {
         EnableAuthentication = false,
         EnableTestingModule = false,
         EnableAdvancedModules = false,
@@ -1015,7 +1124,8 @@ public static class DependencyInjection {
   /// <summary>
   /// Gets all application assemblies to scan for types
   /// </summary>
-  private static Assembly[] GetApplicationAssemblies(Assembly[]? additionalAssemblies = null) {
+  private static Assembly[] GetApplicationAssemblies(Assembly[]? additionalAssemblies = null)
+  {
     var baseAssemblies = new[] {
       Assembly.GetExecutingAssembly(), typeof(Program).Assembly,
     };
@@ -1028,32 +1138,37 @@ public static class DependencyInjection {
   /// <summary>
   /// Optimized registration for all CQRS and domain event handlers
   /// </summary>
-  private static IServiceCollection AddOptimizedHandlers(this IServiceCollection services, ServiceRegistrationOptions? options = null) {
+  private static IServiceCollection AddOptimizedHandlers(this IServiceCollection services, ServiceRegistrationOptions? options = null)
+  {
     options ??= new ServiceRegistrationOptions();
     var stopwatch = options.EnablePerformanceLogging ? Stopwatch.StartNew() : null;
 
-    try {
+    try
+    {
       var assemblies = GetApplicationAssemblies(options.AdditionalAssemblies);
       options.Logger?.LogInformation("Scanning {AssemblyCount} assemblies for handlers", assemblies.Length);
 
       // Cache type scanning for better performance
       var allTypes = assemblies
-                     .SelectMany(assembly => {
-                         try { return assembly.GetTypes(); }
-                         catch (ReflectionTypeLoadException ex) {
-                           // Handle assembly loading issues gracefully
-                           options.Logger?.LogWarning(ex, "Failed to load some types from assembly {AssemblyName}", assembly.GetName().Name);
+                     .SelectMany(assembly =>
+                     {
+                       try { return assembly.GetTypes(); }
+                       catch (ReflectionTypeLoadException ex)
+                       {
+                         // Handle assembly loading issues gracefully
+                         options.Logger?.LogWarning(ex, "Failed to load some types from assembly {AssemblyName}", assembly.GetName().Name);
 
-                           return ex.Types.Where(t => t != null).Cast<Type>();
-                         }
-                         catch (Exception ex) {
-                           options.Logger?.LogError(ex, "Failed to load types from assembly {AssemblyName}", assembly.GetName().Name);
-
-                           if (options.ThrowOnRegistrationFailure) throw;
-
-                           return [];
-                         }
+                         return ex.Types.Where(t => t != null).Cast<Type>();
                        }
+                       catch (Exception ex)
+                       {
+                         options.Logger?.LogError(ex, "Failed to load types from assembly {AssemblyName}", assembly.GetName().Name);
+
+                         if (options.ThrowOnRegistrationFailure) throw;
+
+                         return [];
+                       }
+                     }
                      )
                      .Where(t => t is { IsClass: true, IsAbstract: false })
                      .ToArray();
@@ -1074,7 +1189,8 @@ public static class DependencyInjection {
       // Execute custom registration if provided
       options.CustomRegistrationAction?.Invoke(services, allTypes, options);
 
-      if (options.EnablePerformanceLogging && stopwatch != null) {
+      if (options.EnablePerformanceLogging && stopwatch != null)
+      {
         stopwatch.Stop();
         options.Logger?.LogInformation(
           "Handler registration completed in {ElapsedMs}ms. Registered {HandlerCount} handlers and {ValidatorCount} validators",
@@ -1086,7 +1202,8 @@ public static class DependencyInjection {
 
       return services;
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       options.Logger?.LogError(ex, "Failed to register handlers");
 
       if (options.ThrowOnRegistrationFailure) throw;
@@ -1098,11 +1215,13 @@ public static class DependencyInjection {
   /// <summary>
   /// Optimized handler registration using single type scan
   /// </summary>
-  private static int RegisterHandlerTypes(IServiceCollection services, Type[] allTypes, Type[] handlerInterfaces, ServiceRegistrationOptions? options = null) {
+  private static int RegisterHandlerTypes(IServiceCollection services, Type[] allTypes, Type[] handlerInterfaces, ServiceRegistrationOptions? options = null)
+  {
     var registrationCache = new Dictionary<Type, Type[]>();
     var registeredCount = 0;
 
-    foreach (var handlerInterfaceType in handlerInterfaces) {
+    foreach (var handlerInterfaceType in handlerInterfaces)
+    {
       if (!registrationCache.ContainsKey(handlerInterfaceType))
         registrationCache[handlerInterfaceType] = allTypes
                                                   .Where(type => type.GetInterfaces()
@@ -1117,12 +1236,14 @@ public static class DependencyInjection {
         handlerInterfaceType.Name
       );
 
-      foreach (var implementingType in implementingTypes) {
+      foreach (var implementingType in implementingTypes)
+      {
         var serviceInterfaces = implementingType.GetInterfaces()
                                                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == handlerInterfaceType)
                                                 .ToArray();
 
-        foreach (var serviceInterface in serviceInterfaces) {
+        foreach (var serviceInterface in serviceInterfaces)
+        {
           services.AddScoped(serviceInterface, implementingType);
           registeredCount++;
           options?.Logger?.LogTrace(
@@ -1140,7 +1261,8 @@ public static class DependencyInjection {
   /// <summary>
   /// Optimized FluentValidation validator registration
   /// </summary>
-  private static int RegisterValidators(IServiceCollection services, Type[] allTypes, ServiceRegistrationOptions? options = null) {
+  private static int RegisterValidators(IServiceCollection services, Type[] allTypes, ServiceRegistrationOptions? options = null)
+  {
     var validatorTypes = allTypes
                          .Where(t => t.GetInterfaces()
                                       .Any(i => i.IsGenericType &&
@@ -1152,12 +1274,14 @@ public static class DependencyInjection {
     var registeredCount = 0;
     options?.Logger?.LogDebug("Found {Count} validator types", validatorTypes.Length);
 
-    foreach (var validatorType in validatorTypes) {
+    foreach (var validatorType in validatorTypes)
+    {
       var interfaces = validatorType.GetInterfaces()
                                     .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IValidator<>))
                                     .ToArray();
 
-      foreach (var @interface in interfaces) {
+      foreach (var @interface in interfaces)
+      {
         services.AddScoped(@interface, validatorType);
         registeredCount++;
         options?.Logger?.LogTrace(
@@ -1174,10 +1298,14 @@ public static class DependencyInjection {
   /// <summary>
   /// Retrieves registration metrics from the last registration operation
   /// </summary>
-  public static RegistrationMetrics GetRegistrationMetrics(IServiceProvider serviceProvider) {
+  public static RegistrationMetrics GetRegistrationMetrics(IServiceProvider serviceProvider)
+  {
     return serviceProvider.GetService<RegistrationMetrics>() ??
-           new RegistrationMetrics {
-             TotalHandlersRegistered = 0, TotalValidatorsRegistered = 0, RegistrationDuration = TimeSpan.Zero,
+           new RegistrationMetrics
+           {
+             TotalHandlersRegistered = 0,
+             TotalValidatorsRegistered = 0,
+             RegistrationDuration = TimeSpan.Zero,
            };
   }
 }
