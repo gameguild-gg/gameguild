@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Credentials.Handlers;
 /// <summary>
 /// Handler for GetDeletedCredentialsQuery using CQRS pattern
 /// </summary>
-public class GetDeletedCredentialsQueryHandler : IRequestHandler<GetDeletedCredentialsQuery, IEnumerable<Credential>> {
+public class GetDeletedCredentialsQueryHandler : GameGuild.CQRS.IRequestHandler<GetDeletedCredentialsQuery, IEnumerable<Credential>> {
   private readonly ICredentialService _credentialService;
 
   public GetDeletedCredentialsQueryHandler(ICredentialService credentialService) { _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService)); }

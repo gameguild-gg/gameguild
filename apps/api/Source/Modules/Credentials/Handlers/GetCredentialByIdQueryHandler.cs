@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Credentials.Handlers;
 /// <summary>
 /// Handler for getting credential by ID query using CQRS pattern
 /// </summary>
-public class GetCredentialByIdQueryHandler : IRequestHandler<GetCredentialByIdQuery, Credential?> {
+public class GetCredentialByIdQueryHandler : GameGuild.CQRS.IRequestHandler<GetCredentialByIdQuery, Credential?> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetCredentialByIdQueryHandler> _logger;
 

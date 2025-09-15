@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Credentials.Handlers;
 /// <summary>
 /// Handler for GetCredentialByUserIdAndTypeQuery using CQRS pattern
 /// </summary>
-public class GetCredentialByUserIdAndTypeQueryHandler : IRequestHandler<GetCredentialByUserIdAndTypeQuery, Credential?> {
+public class GetCredentialByUserIdAndTypeQueryHandler : GameGuild.CQRS.IRequestHandler<GetCredentialByUserIdAndTypeQuery, Credential?> {
   private readonly ICredentialService _credentialService;
 
   public GetCredentialByUserIdAndTypeQueryHandler(ICredentialService credentialService) { _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService)); }
