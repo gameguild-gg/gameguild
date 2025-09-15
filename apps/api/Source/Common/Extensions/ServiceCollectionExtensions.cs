@@ -10,7 +10,6 @@ using GameGuild.Modules.Subscriptions.Abstractions;
 using GameGuild.Modules.Subscriptions.Infrastructure;
 using GameGuild.Modules.Subscriptions.Services;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Tenants.Abstractions;
 using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
