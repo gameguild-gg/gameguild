@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Credentials.Handlers;
 /// <summary>
 /// Handler for UpdateCredentialCommand using CQRS pattern
 /// </summary>
-public class UpdateCredentialCommandHandler : IRequestHandler<UpdateCredentialCommand, Credential> {
+public class UpdateCredentialCommandHandler : GameGuild.CQRS.IRequestHandler<UpdateCredentialCommand, Credential> {
   private readonly ICredentialService _credentialService;
   private readonly ILogger<UpdateCredentialCommandHandler> _logger;
 

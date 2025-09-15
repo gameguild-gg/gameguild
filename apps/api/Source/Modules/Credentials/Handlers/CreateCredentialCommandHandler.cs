@@ -7,15 +7,15 @@ namespace GameGuild.Modules.Credentials.Handlers;
 /// <summary>
 /// Handler for creating credential command using CQRS pattern
 /// </summary>
-public class CreateCredentialCommandHandler : IRequestHandler<CreateCredentialCommand, Credential> {
+public class CreateCredentialCommandHandler : GameGuild.CQRS.IRequestHandler<CreateCredentialCommand, Credential> {
   private readonly ICredentialService _credentialService;
   private readonly ILogger<CreateCredentialCommandHandler> _logger;
-  private readonly IMediator _mediator;
+  private readonly GameGuild.CQRS.IMediator _mediator;
 
   public CreateCredentialCommandHandler(
     ICredentialService credentialService,
     ILogger<CreateCredentialCommandHandler> logger,
-    IMediator mediator
+    GameGuild.CQRS.IMediator mediator
   ) {
     _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService));
     _logger = logger ?? throw new ArgumentNullException(nameof(logger));

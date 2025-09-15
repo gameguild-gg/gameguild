@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Modules.Credentials.Commands;
 using GameGuild.Modules.Credentials.Queries;
 using GameGuild.Modules.Users;
@@ -12,10 +13,10 @@ namespace GameGuild.Modules.Credentials;
 [ApiController]
 [Route("[controller]")]
 public class CredentialsController : ControllerBase {
-  private readonly IMediator _mediator;
+  private readonly GameGuild.CQRS.IMediator _mediator;
   private readonly ILogger<CredentialsController> _logger;
 
-  public CredentialsController(IMediator mediator, ILogger<CredentialsController> logger) {
+  public CredentialsController(GameGuild.CQRS.IMediator mediator, ILogger<CredentialsController> logger) {
     _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     _logger = logger ?? throw new ArgumentNullException(nameof(logger));
   }
