@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
 using GameGuild.Database;
-using CqrsResult = GameGuild.CQRS.Result;
 
 
 namespace GameGuild.Modules.Users;
@@ -12,10 +11,8 @@ public class BulkRestoreUsersHandler(
   ApplicationDbContext context,
   ILogger<BulkRestoreUsersHandler> logger,
   IMediator mediator
-) : IResultCommandHandler<BulkRestoreUsersCommand, BulkOperationResult>
-{
-  public async Task<CqrsResult<BulkOperationResult>> Handle(BulkRestoreUsersCommand request, CancellationToken cancellationToken)
-  {
+) : IResultCommandHandler<BulkRestoreUsersCommand, BulkOperationResult> {
+  public async Task<Result<BulkOperationResult>> Handle(BulkRestoreUsersCommand request, CancellationToken cancellationToken) {
     var users = await context.Users
                              .IgnoreQueryFilters()
                              .Where(u => request.UserIds.Contains(u.Id) && u.DeletedAt != null)
@@ -24,10 +21,8 @@ public class BulkRestoreUsersHandler(
     var successCount = 0;
     var errors = new List<string>();
 
-    foreach (var user in users)
-    {
-      try
-      {
+    foreach (var user in users) {
+      try {
         user.Restore();
 
         // Publish domain event for each user
@@ -35,8 +30,7 @@ public class BulkRestoreUsersHandler(
 
         successCount++;
       }
-      catch (Exception ex)
-      {
+      catch (Exception ex) {
         errors.Add($"Failed to restore user {user.Id}: {ex.Message}");
         logger.LogError(ex, "Failed to restore user {UserId}", user.Id);
       }
@@ -63,6 +57,6 @@ public class BulkRestoreUsersHandler(
       request.Reason ?? "Not specified"
     );
 
-    return CqrsResult<BulkOperationResult>.Success(result);
+    return Result<BulkOperationResult>.Success(result);
   }
 }
