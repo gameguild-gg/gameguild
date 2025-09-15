@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -21,12 +22,12 @@ public interface IAchievementService {
 /// </summary>
 public class AchievementService : IAchievementService {
   private readonly ApplicationDbContext _context;
-  private readonly IMediator _mediator;
+  private readonly GameGuild.CQRS.IMediator _mediator;
   private readonly ILogger<AchievementService> _logger;
 
   public AchievementService(
     ApplicationDbContext context,
-    IMediator mediator,
+    GameGuild.CQRS.IMediator mediator,
     ILogger<AchievementService> logger) {
     _context = context;
     _mediator = mediator;

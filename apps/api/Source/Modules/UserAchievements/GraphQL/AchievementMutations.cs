@@ -1,3 +1,4 @@
+using GameGuild.GraphQL;
 using GameGuild;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 
@@ -14,7 +15,7 @@ public class AchievementMutations {
   /// </summary>
   [Authorize(Roles = new[] { "Admin", "Moderator" })]
   public async Task<Achievement> CreateAchievement(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     CreateAchievementInput input) {
     var command = new CreateAchievementCommand {
       Name = input.Name,
@@ -51,7 +52,7 @@ public class AchievementMutations {
   /// </summary>
   [Authorize(Roles = new[] { "Admin", "Moderator" })]
   public async Task<Achievement> UpdateAchievement(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     UpdateAchievementInput input) {
     var command = new UpdateAchievementCommand {
@@ -80,7 +81,7 @@ public class AchievementMutations {
   /// </summary>
   [Authorize(Roles = new[] { "Admin" })]
   public async Task<bool> DeleteAchievement(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     Guid achievementId) {
     var command = new DeleteAchievementCommand {
@@ -97,7 +98,7 @@ public class AchievementMutations {
   /// </summary>
   [Authorize(Roles = new[] { "Admin", "Moderator" })]
   public async Task<UserAchievement> AwardAchievement(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     [Service] ITenantContext tenantContext,
     AwardAchievementInput input) {
@@ -122,7 +123,7 @@ public class AchievementMutations {
   /// </summary>
   [Authorize]
   public async Task<AchievementProgress> UpdateAchievementProgress(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     [Service] ITenantContext tenantContext,
     UpdateAchievementProgressInput input) {
@@ -151,7 +152,7 @@ public class AchievementMutations {
   /// </summary>
   [Authorize(Roles = new[] { "Admin", "Moderator" })]
   public async Task<bool> RevokeAchievement(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     RevokeAchievementInput input) {
     var command = new RevokeAchievementCommand {
@@ -169,7 +170,7 @@ public class AchievementMutations {
   /// </summary>
   [Authorize(Roles = new[] { "Admin" })]
   public async Task<List<UserAchievement>> BulkAwardAchievement(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     [Service] ITenantContext tenantContext,
     BulkAwardAchievementInput input) {
@@ -192,7 +193,7 @@ public class AchievementMutations {
   /// </summary>
   [Authorize]
   public async Task<bool> MarkAchievementNotified(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     Guid userAchievementId) {
     var command = new MarkAchievementNotifiedCommand {
