@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions;
@@ -18,7 +19,7 @@ namespace GameGuild.Modules.Products;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class ProductController(IMediator mediator) : ControllerBase {
+public class ProductController(GameGuild.CQRS.IMediator mediator) : ControllerBase {
   // ===== CONTENT-TYPE LEVEL OPERATIONS =====
 
   /// <summary>

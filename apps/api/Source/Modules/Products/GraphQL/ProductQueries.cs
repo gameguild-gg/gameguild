@@ -15,7 +15,7 @@ public class ProductQueries {
   /// Gets all products accessible to the current user using CQRS pattern
   /// </summary>
   public async Task<IEnumerable<ProductEntity>> GetProducts(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     int skip = 0,
     int take = 50,
     ProductTypeEnum? type = null,
@@ -42,7 +42,7 @@ public class ProductQueries {
   /// </summary>
   public async Task<ProductEntity?> GetProductById(
     Guid id,
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     bool includePricing = true,
     bool includePrograms = true
   ) {

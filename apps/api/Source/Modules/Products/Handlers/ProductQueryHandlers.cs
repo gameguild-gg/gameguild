@@ -10,10 +10,10 @@ namespace GameGuild.Modules.Products;
 /// Query handlers for product operations
 /// </summary>
 public class ProductQueryHandlers :
-  IRequestHandler<GetProductByIdQuery, Product?>,
-  IRequestHandler<GetProductsQuery, IEnumerable<Product>>,
-  IRequestHandler<GetUserProductsQuery, IEnumerable<UserProduct>>,
-  IRequestHandler<GetProductStatsQuery, ProductStats> {
+  GameGuild.CQRS.IRequestHandler<GetProductByIdQuery, Product?>,
+  GameGuild.CQRS.IRequestHandler<GetProductsQuery, IEnumerable<Product>>,
+  GameGuild.CQRS.IRequestHandler<GetUserProductsQuery, IEnumerable<UserProduct>>,
+  GameGuild.CQRS.IRequestHandler<GetProductStatsQuery, ProductStats> {
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;
