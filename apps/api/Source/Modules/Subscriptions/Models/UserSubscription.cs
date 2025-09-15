@@ -1,7 +1,10 @@
-using GameGuild.Modules.Products;
-using GameGuild.Modules.Users;
-using GameGuild.Modules.Subscriptions.Events;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
+using GameGuild.Modules.Products;
+using GameGuild.Modules.Subscriptions.Events;
+using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Subscriptions.Models;
@@ -14,7 +17,8 @@ namespace GameGuild.Modules.Subscriptions.Models;
 [Index(nameof(CurrentPeriodEnd))]
 [Index(nameof(NextBillingAt))]
 [Index(nameof(ExternalSubscriptionId))]
-public class UserSubscription : EntityBase {
+public class UserSubscription : EntityBase
+{
   public Guid UserId { get; set; }
 
   public Guid SubscriptionPlanId { get; set; }
@@ -197,7 +201,7 @@ public class UserSubscription : EntityBase {
     {
       Cancel(Models.CancellationReason.TrialEnded, "Trial period ended without conversion");
     }
-    
+
     Touch();
     AddDomainEvent(new SubscriptionTrialEndedEvent(Id, UserId, convertToPaid));
   }
@@ -269,7 +273,7 @@ public class UserSubscription : EntityBase {
   public void RecordPayment(DateTime paymentDate)
   {
     LastPaymentAt = paymentDate;
-    
+
     // Calculate next billing date based on billing cycle
     NextBillingAt = BillingCycle switch
     {
@@ -324,10 +328,10 @@ public class UserSubscription : EntityBase {
     subscription.NextBillingAt = subscription.CurrentPeriodEnd;
 
     subscription.AddDomainEvent(new SubscriptionCreatedEvent(
-      subscription.Id, 
-      userId, 
-      subscriptionPlanId, 
-      startDate, 
+      subscription.Id,
+      userId,
+      subscriptionPlanId,
+      startDate,
       trialEndDate));
 
     return subscription;
