@@ -1,4 +1,4 @@
-using GameGuild;
+using GameGuild.Common;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
@@ -75,6 +75,6 @@ public class BulkCreateUsersHandler(
       request.Reason ?? "Not specified"
     );
 
-    return Result<BulkOperationResult>.Success(result);
+    return Result.Success(result);
   }
 }
