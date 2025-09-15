@@ -1,7 +1,7 @@
 namespace GameGuild.Modules.TestingLab;
 
 public class CreateTestingRequestCommandHandler : ITestingLabCommandHandler<CreateTestingRequestCommand, TestingRequest> {
-  private readonly IMediator _mediator;
+  private readonly GameGuild.CQRS.IMediator _mediator;
 
   private readonly ITestingRequestRepository _repository;
 
@@ -10,7 +10,7 @@ public class CreateTestingRequestCommandHandler : ITestingLabCommandHandler<Crea
   public CreateTestingRequestCommandHandler(
     ITestingRequestRepository repository,
     ITestingRequestService service,
-    IMediator mediator
+    GameGuild.CQRS.IMediator mediator
   ) {
     _repository = repository;
     _service = service;
