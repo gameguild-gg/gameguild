@@ -1,3 +1,4 @@
+using GameGuild.GraphQL;
 using GameGuild;
 using GameGuild.Modules.Tenants.Inputs;
 
@@ -13,7 +14,7 @@ public class TenantQueries {
   /// Get all tenants (non-deleted only)
   /// </summary>
   public async Task<IEnumerable<Tenant>> GetTenants(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IHttpContextAccessor httpContextAccessor
   ) {
     // Require authentication for tenant queries
@@ -33,7 +34,7 @@ public class TenantQueries {
   /// Get a tenant by ID
   /// </summary>
   public async Task<Tenant?> GetTenantById(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IHttpContextAccessor httpContextAccessor,
     Guid id
   ) {
@@ -54,7 +55,7 @@ public class TenantQueries {
   /// Get a tenant by name
   /// </summary>
   public async Task<Tenant?> GetTenantByName(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IHttpContextAccessor httpContextAccessor,
     string name
   ) {
@@ -75,7 +76,7 @@ public class TenantQueries {
   /// Get a tenant by slug
   /// </summary>
   public async Task<Tenant?> GetTenantBySlug(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IHttpContextAccessor httpContextAccessor,
     string slug
   ) {
@@ -96,7 +97,7 @@ public class TenantQueries {
   /// Get soft-deleted tenants
   /// </summary>
   public async Task<IEnumerable<Tenant>> GetDeletedTenants(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IHttpContextAccessor httpContextAccessor
   ) {
     // Require authentication for tenant queries
@@ -116,7 +117,7 @@ public class TenantQueries {
   /// Get active tenants
   /// </summary>
   public async Task<IEnumerable<Tenant>> GetActiveTenants(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IHttpContextAccessor httpContextAccessor
   ) {
     // Require authentication for tenant queries
@@ -136,7 +137,7 @@ public class TenantQueries {
   /// Search tenants with advanced filtering
   /// </summary>
   public async Task<IEnumerable<Tenant>> SearchTenants(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IHttpContextAccessor httpContextAccessor,
     SearchTenantsInput input
   ) {
@@ -165,7 +166,7 @@ public class TenantQueries {
   /// Get tenant statistics
   /// </summary>
   public async Task<TenantStatistics> GetTenantStatistics(
-    [Service] IMediator mediator,
+    [Service] GameGuild.CQRS.IMediator mediator,
     [Service] IHttpContextAccessor httpContextAccessor
   ) {
     // Require authentication for tenant queries

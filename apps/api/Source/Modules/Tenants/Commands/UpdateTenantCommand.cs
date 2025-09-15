@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 ﻿using GameGuild;
 
 
@@ -6,7 +7,7 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Command to update an existing tenant
 /// </summary>
-public class UpdateTenantCommand : ICommand<Common.Result<Tenant>> {
+public class UpdateTenantCommand : ICommand<Result<Tenant>> {
   public Guid Id { get; init; }
 
   public string? Name { get; init; }

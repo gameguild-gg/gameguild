@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 ﻿using GameGuild;
 using GameGuild.Database;
 
@@ -11,8 +12,8 @@ public class DeactivateTenantHandler(
   ApplicationDbContext context,
   ILogger<DeactivateTenantHandler> logger,
   IDomainEventPublisher eventPublisher
-) : ICommandHandler<DeactivateTenantCommand, Common.Result<bool>> {
-  public async Task<Common.Result<bool>> Handle(DeactivateTenantCommand request, CancellationToken cancellationToken) {
+) : ICommandHandler<DeactivateTenantCommand, Result<bool>> {
+  public async Task<Result<bool>> Handle(DeactivateTenantCommand request, CancellationToken cancellationToken) {
     try {
       var tenant = await context.Resources.OfType<Tenant>()
                                 .FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);

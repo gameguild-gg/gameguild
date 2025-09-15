@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 ﻿using GameGuild;
 using GameGuild.Database;
 
@@ -7,8 +8,8 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Handler for permanently deleting a tenant
 /// </summary>
-public class HardDeleteTenantHandler(ApplicationDbContext context, ILogger<HardDeleteTenantHandler> logger) : ICommandHandler<HardDeleteTenantCommand, Common.Result<bool>> {
-  public async Task<Common.Result<bool>> Handle(HardDeleteTenantCommand request, CancellationToken cancellationToken) {
+public class HardDeleteTenantHandler(ApplicationDbContext context, ILogger<HardDeleteTenantHandler> logger) : ICommandHandler<HardDeleteTenantCommand, Result<bool>> {
+  public async Task<Result<bool>> Handle(HardDeleteTenantCommand request, CancellationToken cancellationToken) {
     try {
       var tenant = await context.Resources.OfType<Tenant>()
                                 .FirstOrDefaultAsync(t => t.Id == request.Id, cancellationToken);

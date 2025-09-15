@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -7,8 +8,8 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Handler for creating a new tenant
 /// </summary>
-public class CreateTenantHandler(ApplicationDbContext context, ILogger<CreateTenantHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<CreateTenantCommand, Common.Result<Tenant>> {
-  public async Task<Common.Result<Tenant>> Handle(CreateTenantCommand request, CancellationToken cancellationToken) {
+public class CreateTenantHandler(ApplicationDbContext context, ILogger<CreateTenantHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<CreateTenantCommand, Result<Tenant>> {
+  public async Task<Result<Tenant>> Handle(CreateTenantCommand request, CancellationToken cancellationToken) {
     try {
       // Check if tenant with same name already exists
       var existingTenant = await context.Resources.OfType<Tenant>()

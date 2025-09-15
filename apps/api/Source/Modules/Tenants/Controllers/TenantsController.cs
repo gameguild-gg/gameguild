@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Modules.Permissions;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
@@ -13,23 +14,23 @@ namespace GameGuild.Modules.Tenants;
 [Route("api/[controller]")]
 [Authorize]
 public class TenantsController(
-  ICommandHandler<CreateTenantCommand, Common.Result<Tenant>> createTenantHandler,
-  ICommandHandler<UpdateTenantCommand, Common.Result<Tenant>> updateTenantHandler,
-  ICommandHandler<DeleteTenantCommand, Common.Result<bool>> deleteTenantHandler,
-  ICommandHandler<RestoreTenantCommand, Common.Result<bool>> restoreTenantHandler,
-  ICommandHandler<HardDeleteTenantCommand, Common.Result<bool>> hardDeleteTenantHandler,
-  ICommandHandler<ActivateTenantCommand, Common.Result<bool>> activateTenantHandler,
-  ICommandHandler<DeactivateTenantCommand, Common.Result<bool>> deactivateTenantHandler,
-  IQueryHandler<SearchTenantsQuery, Common.Result<IEnumerable<Tenant>>> searchTenantsHandler,
-  ICommandHandler<BulkDeleteTenantsCommand, Common.Result<int>> bulkDeleteTenantsHandler,
-  ICommandHandler<BulkRestoreTenantsCommand, Common.Result<int>> bulkRestoreTenantsHandler,
-  IQueryHandler<GetAllTenantsQuery, Common.Result<IEnumerable<Tenant>>> getAllTenantsHandler,
-  IQueryHandler<GetTenantByIdQuery, Common.Result<Tenant?>> getTenantByIdHandler,
-  IQueryHandler<GetTenantByNameQuery, Common.Result<Tenant?>> getTenantByNameHandler,
-  IQueryHandler<GetTenantBySlugQuery, Common.Result<Tenant?>> getTenantBySlugHandler,
-  IQueryHandler<GetDeletedTenantsQuery, Common.Result<IEnumerable<Tenant>>> getDeletedTenantsHandler,
-  IQueryHandler<GetActiveTenantsQuery, Common.Result<IEnumerable<Tenant>>> getActiveTenantsHandler,
-  IQueryHandler<GetTenantStatisticsQuery, Common.Result<TenantStatistics>> getTenantStatisticsHandler
+  ICommandHandler<CreateTenantCommand, Result<Tenant>> createTenantHandler,
+  ICommandHandler<UpdateTenantCommand, Result<Tenant>> updateTenantHandler,
+  ICommandHandler<DeleteTenantCommand, Result<bool>> deleteTenantHandler,
+  ICommandHandler<RestoreTenantCommand, Result<bool>> restoreTenantHandler,
+  ICommandHandler<HardDeleteTenantCommand, Result<bool>> hardDeleteTenantHandler,
+  ICommandHandler<ActivateTenantCommand, Result<bool>> activateTenantHandler,
+  ICommandHandler<DeactivateTenantCommand, Result<bool>> deactivateTenantHandler,
+  IQueryHandler<SearchTenantsQuery, Result<IEnumerable<Tenant>>> searchTenantsHandler,
+  ICommandHandler<BulkDeleteTenantsCommand, Result<int>> bulkDeleteTenantsHandler,
+  ICommandHandler<BulkRestoreTenantsCommand, Result<int>> bulkRestoreTenantsHandler,
+  IQueryHandler<GetAllTenantsQuery, Result<IEnumerable<Tenant>>> getAllTenantsHandler,
+  IQueryHandler<GetTenantByIdQuery, Result<Tenant?>> getTenantByIdHandler,
+  IQueryHandler<GetTenantByNameQuery, Result<Tenant?>> getTenantByNameHandler,
+  IQueryHandler<GetTenantBySlugQuery, Result<Tenant?>> getTenantBySlugHandler,
+  IQueryHandler<GetDeletedTenantsQuery, Result<IEnumerable<Tenant>>> getDeletedTenantsHandler,
+  IQueryHandler<GetActiveTenantsQuery, Result<IEnumerable<Tenant>>> getActiveTenantsHandler,
+  IQueryHandler<GetTenantStatisticsQuery, Result<TenantStatistics>> getTenantStatisticsHandler
 ) : ControllerBase {
   /// <summary>
   /// Get all tenants

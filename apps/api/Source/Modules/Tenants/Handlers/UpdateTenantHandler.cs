@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 ﻿using GameGuild;
 using GameGuild.Database;
 
@@ -7,8 +8,8 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Handler for updating an existing tenant
 /// </summary>
-public class UpdateTenantHandler(ApplicationDbContext context, ILogger<UpdateTenantHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<UpdateTenantCommand, Common.Result<Tenant>> {
-  public async Task<Common.Result<Tenant>> Handle(UpdateTenantCommand request, CancellationToken cancellationToken) {
+public class UpdateTenantHandler(ApplicationDbContext context, ILogger<UpdateTenantHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<UpdateTenantCommand, Result<Tenant>> {
+  public async Task<Result<Tenant>> Handle(UpdateTenantCommand request, CancellationToken cancellationToken) {
     try {
       var tenant = await context.Resources.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
 

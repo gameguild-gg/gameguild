@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -10,8 +11,8 @@ namespace GameGuild.Modules.Tenants;
 public class GetAllTenantsHandler(
   ApplicationDbContext context,
   ILogger<GetAllTenantsHandler> logger
-) : IQueryHandler<GetAllTenantsQuery, Common.Result<IEnumerable<Tenant>>> {
-  public async Task<Common.Result<IEnumerable<Tenant>>> Handle(GetAllTenantsQuery request, CancellationToken cancellationToken) {
+) : IQueryHandler<GetAllTenantsQuery, Result<IEnumerable<Tenant>>> {
+  public async Task<Result<IEnumerable<Tenant>>> Handle(GetAllTenantsQuery request, CancellationToken cancellationToken) {
     try {
       var query = context.Resources.OfType<Tenant>();
 

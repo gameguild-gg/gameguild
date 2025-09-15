@@ -1,4 +1,5 @@
 using GameGuild;
+using GameGuild.CQRS;
 
 
 namespace GameGuild.Modules.Tenants;
@@ -6,6 +7,7 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Query to get all tenants
 /// </summary>
-public class GetAllTenantsQuery(bool includeDeleted = false) : IQuery<Common.Result<IEnumerable<Tenant>>> {
+public class GetAllTenantsQuery(bool includeDeleted = false) : IQuery<Result<IEnumerable<Tenant>>>
+{
   public bool IncludeDeleted { get; init; } = includeDeleted;
 }
