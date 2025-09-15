@@ -1,5 +1,4 @@
-﻿using GameGuild;
-using GameGuild.Modules.Programs;
+﻿using GameGuild.Modules.Programs;
 
 
 namespace GameGuild.Modules.Feedbacks;

@@ -1,7 +1,4 @@
-﻿using GameGuild;
-
-
-namespace GameGuild.Modules.Payments;
+﻿namespace GameGuild.Modules.Payments;
 
 /// <summary>
 /// DTO for creating a transaction

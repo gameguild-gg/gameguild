@@ -1,4 +1,3 @@
-using GameGuild;
 using UserModel = GameGuild.Modules.Users.User;
 
 

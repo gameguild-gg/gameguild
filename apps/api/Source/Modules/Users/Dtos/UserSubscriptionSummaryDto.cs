@@ -1,7 +1,4 @@
-﻿using GameGuild;
-
-
-namespace GameGuild.Modules.Users;
+﻿namespace GameGuild.Modules.Users;
 
 public class UserSubscriptionSummaryDto {
   public Guid Id { get; set; }

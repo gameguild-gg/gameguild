@@ -1,7 +1,4 @@
-﻿using GameGuild;
-
-
-namespace GameGuild.Modules.Products;
+﻿namespace GameGuild.Modules.Products;
 
 public class GrantProductAccessInput {
   public required Guid ProductId { get; set; }

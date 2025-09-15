@@ -1,8 +1,5 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using GameGuild.Core.Entities;
-using Microsoft.EntityFrameworkCore;
+
 
 namespace GameGuild.Modules.Notifications.Models;
 

@@ -1,6 +1,4 @@
-using GameGuild.CQRS;
 using System.Security.Claims;
-using GameGuild;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants;
 using Microsoft.AspNetCore.Mvc;

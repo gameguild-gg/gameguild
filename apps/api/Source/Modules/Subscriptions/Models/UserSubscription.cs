@@ -1,12 +1,8 @@
-using GameGuild;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Subscriptions.Events;
-using GameGuild.Infrastructure.Common.ValueObjects;
 using System.Text.Json;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
+
 
 namespace GameGuild.Modules.Subscriptions.Models;
 

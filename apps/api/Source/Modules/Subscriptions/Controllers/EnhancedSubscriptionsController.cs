@@ -1,10 +1,7 @@
-using GameGuild.CQRS;
-using GameGuild.Infrastructure.Common.ValueObjects;
 using GameGuild.Modules.Subscriptions.Abstractions;
 using GameGuild.Modules.Subscriptions.Commands.CancelSubscription;
 using GameGuild.Modules.Subscriptions.Commands.CreateSubscription;
 using GameGuild.Modules.Subscriptions.Models;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Modules.Subscriptions.Controllers;

@@ -1,6 +1,3 @@
-using GameGuild;
-
-
 namespace GameGuild.Modules.Teams.Models {
   public class TeamMember : EntityBase {
     public Guid TeamId { get; set; }

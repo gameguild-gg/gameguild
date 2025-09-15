@@ -1,6 +1,5 @@
 using GameGuild.GraphQL;
 using System.Security.Claims;
-using GameGuild;
 
 
 namespace GameGuild.Modules.TestingLab;

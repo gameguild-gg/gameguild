@@ -1,4 +1,3 @@
-using GameGuild;
 using GameGuild.Modules.Certificates;
 using GameGuild.Modules.Feedbacks;
 using GameGuild.Modules.Users;

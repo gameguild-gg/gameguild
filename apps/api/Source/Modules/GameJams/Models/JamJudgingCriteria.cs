@@ -1,6 +1,3 @@
-using GameGuild;
-
-
 namespace GameGuild.Modules.GameJams.Models {
   public class JamJudgingCriteria : EntityBase {
     [Required] public Guid JamId { get; set; }
