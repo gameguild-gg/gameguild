@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 
 
@@ -6,7 +7,7 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Command to search tenants with advanced filtering
 /// </summary>
-public class SearchTenantsCommand : ICommand<Common.Result<IEnumerable<Tenant>>> {
+public class SearchTenantsCommand : ICommand<Result<IEnumerable<Tenant>>> {
   public string? SearchTerm { get; init; }
 
   public bool? IsActive { get; init; }
