@@ -10,11 +10,11 @@ namespace GameGuild.Modules.Products;
 /// Command handlers for product operations
 /// </summary>
 public class ProductCommandHandlers :
-  IRequestHandler<CreateProductCommand, CreateProductResult>,
-  IRequestHandler<UpdateProductCommand, UpdateProductResult>,
-  IRequestHandler<DeleteProductCommand, DeleteProductResult>,
-  IRequestHandler<PublishProductCommand, PublishProductResult>,
-  IRequestHandler<UnpublishProductCommand, UnpublishProductResult> {
+  GameGuild.CQRS.IRequestHandler<CreateProductCommand, CreateProductResult>,
+  GameGuild.CQRS.IRequestHandler<UpdateProductCommand, UpdateProductResult>,
+  GameGuild.CQRS.IRequestHandler<DeleteProductCommand, DeleteProductResult>,
+  GameGuild.CQRS.IRequestHandler<PublishProductCommand, PublishProductResult>,
+  GameGuild.CQRS.IRequestHandler<UnpublishProductCommand, UnpublishProductResult> {
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;
