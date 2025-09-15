@@ -1,5 +1,5 @@
 using GameGuild.Modules.Authentication;
-using MediatR;
+using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 using Moq;
 
