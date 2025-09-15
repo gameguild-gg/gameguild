@@ -1,9 +1,10 @@
+using GameGuild.CQRS;
 namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// Handler for local sign-up command
 /// </summary>
-public class LocalSignUpHandler(IAuthService authService, GameGuild.CQRS.IMediator mediator) : GameGuild.CQRS.IRequestHandler<LocalSignUpCommand, SignInResponseDto> {
+public class LocalSignUpHandler(IAuthService authService, IMediator mediator) : IRequestHandler<LocalSignUpCommand, SignInResponseDto> {
   public async Task<SignInResponseDto> Handle(LocalSignUpCommand request, CancellationToken cancellationToken) {
     var signUpRequest = new LocalSignUpRequestDto { Email = request.Email, Password = request.Password, Username = request.Username, TenantId = request.TenantId };
 
