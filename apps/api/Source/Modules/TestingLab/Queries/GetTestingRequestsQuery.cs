@@ -6,4 +6,4 @@ public record GetTestingRequestsQuery(
   Guid? ProjectVersionId = null,
   TestingRequestStatus? Status = null,
   bool? IsActive = null
-) : IRequest<IEnumerable<TestingRequest>>;
+) : GameGuild.CQRS.IRequest<IEnumerable<TestingRequest>>;
