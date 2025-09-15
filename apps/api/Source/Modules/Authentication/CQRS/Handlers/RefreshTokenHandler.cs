@@ -3,12 +3,12 @@ namespace GameGuild.Modules.Authentication;
 /// <summary>
 /// Handler for refresh token command using CQRS pattern
 /// </summary>
-public class RefreshTokenHandler : IRequestHandler<RefreshTokenCommand, SignInResponseDto> {
+public class RefreshTokenHandler : GameGuild.CQRS.IRequestHandler<RefreshTokenCommand, SignInResponseDto> {
   private readonly IAuthService _authService;
-  private readonly IMediator _mediator;
+  private readonly GameGuild.CQRS.IMediator _mediator;
   private readonly ILogger<RefreshTokenHandler> _logger;
 
-  public RefreshTokenHandler(IAuthService authService, IMediator mediator, ILogger<RefreshTokenHandler> logger) {
+  public RefreshTokenHandler(IAuthService authService, GameGuild.CQRS.IMediator mediator, ILogger<RefreshTokenHandler> logger) {
     _authService = authService ?? throw new ArgumentNullException(nameof(authService));
     _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     _logger = logger ?? throw new ArgumentNullException(nameof(logger));
