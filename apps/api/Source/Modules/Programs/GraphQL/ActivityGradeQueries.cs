@@ -1,3 +1,4 @@
+using GameGuild.GraphQL;
 using GameGuild;
 using GameGuild.Modules.Permissions;
 
