@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Database;
 
@@ -7,8 +8,8 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Handler for bulk restoring soft-deleted user profiles
 /// </summary>
-public class BulkRestoreUserProfilesHandler(ApplicationDbContext context, ILogger<BulkRestoreUserProfilesHandler> logger) : ICommandHandler<BulkRestoreUserProfilesCommand, Common.Result<int>> {
-  public async Task<Common.Result<int>> Handle(BulkRestoreUserProfilesCommand request, CancellationToken cancellationToken) {
+public class BulkRestoreUserProfilesHandler(ApplicationDbContext context, ILogger<BulkRestoreUserProfilesHandler> logger) : ICommandHandler<BulkRestoreUserProfilesCommand, Result<int>> {
+  public async Task<Result<int>> Handle(BulkRestoreUserProfilesCommand request, CancellationToken cancellationToken) {
     try {
       var userProfileIds = request.UserProfileIds.ToList();
 

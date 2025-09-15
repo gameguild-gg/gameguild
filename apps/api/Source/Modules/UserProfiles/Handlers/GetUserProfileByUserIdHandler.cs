@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 ﻿using GameGuild;
 using GameGuild.Database;
 
@@ -8,8 +9,8 @@ namespace GameGuild.Modules.UserProfiles;
 /// Handler for getting user profile by user ID
 /// </summary>
 public class GetUserProfileByUserIdHandler(ApplicationDbContext context, ILogger<GetUserProfileByUserIdHandler> logger)
-  : IQueryHandler<GetUserProfileByUserIdQuery, Common.Result<UserProfile?>> {
-  public async Task<Common.Result<UserProfile?>> Handle(GetUserProfileByUserIdQuery request, CancellationToken cancellationToken) {
+  : IQueryHandler<GetUserProfileByUserIdQuery, Result<UserProfile?>> {
+  public async Task<Result<UserProfile?>> Handle(GetUserProfileByUserIdQuery request, CancellationToken cancellationToken) {
     try {
       IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>()
                                              .Include(up => up.Metadata);
