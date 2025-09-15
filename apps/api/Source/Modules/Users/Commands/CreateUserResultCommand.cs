@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using System.Transactions;
 using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Users;
