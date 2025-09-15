@@ -8,7 +8,8 @@ namespace GameGuild.Common;
 /// Modern .NET extension methods for WebApplicationBuilder following best practices.
 /// Provides fluent configuration with clean separation of concerns.
 /// </summary>
-public static class WebApplicationBuilderExtensions {
+public static class WebApplicationBuilderExtensions
+{
   /// <summary>
   /// Main entry point for configuring the GameGuild application.
   /// Combines all configuration steps in a single, fluent call.
@@ -24,7 +25,8 @@ public static class WebApplicationBuilderExtensions {
   /// </summary>
   /// <param name="builder">The WebApplicationBuilder instance</param>
   /// <returns>The WebApplicationBuilder for method chaining</returns>
-  public static WebApplicationBuilder ConfigureEnvironment(this WebApplicationBuilder builder) {
+  public static WebApplicationBuilder ConfigureEnvironment(this WebApplicationBuilder builder)
+  {
     // Load .env file for local development
     Env.Load();
 
@@ -43,11 +45,12 @@ public static class WebApplicationBuilderExtensions {
   /// </summary>
   /// <param name="builder">The WebApplicationBuilder instance</param>
   /// <returns>The WebApplicationBuilder for method chaining</returns>
-  public static WebApplicationBuilder ConfigureServices(this WebApplicationBuilder builder) {
+  public static WebApplicationBuilder ConfigureServices(this WebApplicationBuilder builder)
+  {
     builder.Services
            .AddPresentation(CreatePresentationOptionsInternal(builder))
-           .AddInfrastructure(builder.Configuration)  // Register domain modules BEFORE MediatR
-           .AddApplication();  // Register MediatR handlers after their dependencies
+           .AddInfrastructure(builder.Configuration)  // Register domain modules BEFORE GameGuild.CQRS
+           .AddApplication();  // Register GameGuild.CQRS handlers after their dependencies
 
     return builder;
   }
@@ -57,7 +60,8 @@ public static class WebApplicationBuilderExtensions {
   /// </summary>
   /// <param name="builder">The configured WebApplicationBuilder</param>
   /// <returns>A fully configured WebApplication ready to run</returns>
-  public static async Task<WebApplication> BuildWithPipelineAsync(this WebApplicationBuilder builder) {
+  public static async Task<WebApplication> BuildWithPipelineAsync(this WebApplicationBuilder builder)
+  {
     var app = builder.Build();
 
     await app.ConfigureApplicationAsync();
@@ -68,7 +72,8 @@ public static class WebApplicationBuilderExtensions {
   /// <summary>
   /// Creates environment-specific presentation options.
   /// </summary>
-  internal static DependencyInjection.PresentationOptions CreatePresentationOptionsInternal(WebApplicationBuilder builder) {
+  internal static DependencyInjection.PresentationOptions CreatePresentationOptionsInternal(WebApplicationBuilder builder)
+  {
     var corsOptions = builder.Configuration
                              .GetSection(CorsOptions.SectionName)
                              .Get<CorsOptions>() ??
@@ -80,13 +85,15 @@ public static class WebApplicationBuilderExtensions {
 
     Console.WriteLine("CORS Environment Variable Debug:");
 
-    while (true) {
+    while (true)
+    {
       var originKey = $"CORS__ALLOWED_ORIGINS__{index}";
       var origin = Environment.GetEnvironmentVariable(originKey);
 
       Console.WriteLine($"  {originKey} = '{origin}'");
 
-      if (string.IsNullOrEmpty(origin)) {
+      if (string.IsNullOrEmpty(origin))
+      {
         break;
       }
 
@@ -95,12 +102,14 @@ public static class WebApplicationBuilderExtensions {
     }
 
     Console.WriteLine($"Found {allowedOrigins.Count} CORS origins from environment variables");
-    foreach (var origin in allowedOrigins) {
+    foreach (var origin in allowedOrigins)
+    {
       Console.WriteLine($"  - {origin}");
     }
 
     // If no environment variables found, use the configuration or defaults
-    if (allowedOrigins.Count == 0) {
+    if (allowedOrigins.Count == 0)
+    {
       allowedOrigins = corsOptions.AllowedOrigins?.Length > 0
         ? corsOptions.AllowedOrigins.ToList()
         : ["http://localhost:3000", "https://localhost:3001"];
@@ -115,7 +124,8 @@ public static class WebApplicationBuilderExtensions {
     Console.WriteLine($"CORS AllowCredentials from env: '{allowCredentialsStr}' -> {allowCredentials}");
     Console.WriteLine($"Final CORS configuration: {allowedOrigins.Count} origins, AllowCredentials: {allowCredentials}");
 
-    return new DependencyInjection.PresentationOptions {
+    return new DependencyInjection.PresentationOptions
+    {
       AllowedOrigins = allowedOrigins.ToArray(),
       EnableSwagger = builder.Environment.IsDevelopment(),
       EnableHealthChecks = true,
@@ -130,18 +140,21 @@ public static class WebApplicationBuilderExtensions {
 /// <summary>
 /// Extension methods for WebApplication to configure the request pipeline and application concerns.
 /// </summary>
-public static class WebApplicationExtensions {
+public static class WebApplicationExtensions
+{
   /// <summary>
   /// Configures application-specific concerns like database migration and seeding.
   /// </summary>
   /// <param name="app">The WebApplication instance</param>
   /// <returns>A task representing the async operation</returns>
-  public static async Task<WebApplication> ConfigureApplicationAsync(this WebApplication app) {
+  public static async Task<WebApplication> ConfigureApplicationAsync(this WebApplication app)
+  {
     using var scope = app.Services.CreateScope();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     try { await app.EnsureDatabaseAsync(scope, logger); }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       logger.LogCritical(ex, "Application failed to start due to database initialization error");
 
       throw;
@@ -155,7 +168,8 @@ public static class WebApplicationExtensions {
   /// </summary>
   /// <param name="app">The WebApplication instance</param>
   /// <returns>The WebApplication for method chaining</returns>
-  public static WebApplication ConfigurePipeline(this WebApplication app) {
+  public static WebApplication ConfigurePipeline(this WebApplication app)
+  {
     // Exception handling (should be first)
     app.UseExceptionHandler();
 
@@ -195,10 +209,12 @@ public static class WebApplicationExtensions {
   /// </summary>
   /// <param name="app">The WebApplication instance</param>
   /// <returns>The WebApplication for method chaining</returns>
-  public static WebApplication ConfigureDevelopmentPipeline(this WebApplication app) {
+  public static WebApplication ConfigureDevelopmentPipeline(this WebApplication app)
+  {
     app.MapOpenApi();
     app.UseSwagger();
-    app.UseSwaggerUI(options => {
+    app.UseSwaggerUI(options =>
+    {
       options.SwaggerEndpoint("/swagger/v1/swagger.json", "GameGuild CMS API v1");
       options.RoutePrefix = "swagger";
       options.EnableDeepLinking();
@@ -217,15 +233,18 @@ public static class WebApplicationExtensions {
   /// <param name="scope">The service scope for dependency resolution</param>
   /// <param name="logger">Logger instance for tracking operations</param>
   /// <returns>A task representing the async operation</returns>
-  private static async Task EnsureDatabaseAsync(this WebApplication app, IServiceScope scope, ILogger logger) {
+  private static async Task EnsureDatabaseAsync(this WebApplication app, IServiceScope scope, ILogger logger)
+  {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
     logger.LogInformation("Applying database migrations...");
-    try {
+    try
+    {
       await context.Database.MigrateAsync();
       logger.LogInformation("Database migrations applied successfully");
     }
-    catch (InvalidOperationException ex) when (ex.Message.Contains("PendingModelChangesWarning")) {
+    catch (InvalidOperationException ex) when (ex.Message.Contains("PendingModelChangesWarning"))
+    {
       logger.LogWarning("Pending model changes detected, but continuing with application startup. This is expected after project renaming.");
       // Try to apply migrations without validation
       await context.Database.MigrateAsync();
@@ -243,14 +262,17 @@ public static class WebApplicationExtensions {
   /// </summary>
   /// <param name="app">The configured WebApplication</param>
   /// <returns>A task representing the application lifetime</returns>
-  public static async Task RunGameGuildApiAsync(this WebApplication app) {
+  public static async Task RunGameGuildApiAsync(this WebApplication app)
+  {
     var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
-    try {
+    try
+    {
       logger.LogInformation("Starting GameGuild API application...");
       await app.RunAsync();
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       logger.LogCritical(ex, "Application terminated unexpectedly");
 
       throw;
@@ -262,13 +284,15 @@ public static class WebApplicationExtensions {
 /// <summary>
 /// Factory class for creating pre-configured WebApplicationBuilder instances for different scenarios.
 /// </summary>
-public static class GameGuildApiBuilderFactory {
+public static class GameGuildApiBuilderFactory
+{
   /// <summary>
   /// Creates a WebApplicationBuilder configured for development with enhanced debugging and testing features.
   /// </summary>
   /// <param name="args">Command line arguments</param>
   /// <returns>A pre-configured WebApplicationBuilder for development</returns>
-  public static WebApplicationBuilder CreateForDevelopment(string[] args) {
+  public static WebApplicationBuilder CreateForDevelopment(string[] args)
+  {
     var builder = WebApplication.CreateBuilder(args);
 
     // Development-specific configuration
@@ -282,7 +306,8 @@ public static class GameGuildApiBuilderFactory {
   /// </summary>
   /// <param name="args">Command line arguments</param>
   /// <returns>A pre-configured WebApplicationBuilder for production</returns>
-  public static WebApplicationBuilder CreateForProduction(string[] args) {
+  public static WebApplicationBuilder CreateForProduction(string[] args)
+  {
     var builder = WebApplication.CreateBuilder(args);
 
     // Production-specific configuration
@@ -296,7 +321,8 @@ public static class GameGuildApiBuilderFactory {
   /// </summary>
   /// <param name="args">Command line arguments</param>
   /// <returns>A pre-configured WebApplicationBuilder for testing</returns>
-  public static WebApplicationBuilder CreateForTesting(string[] args) {
+  public static WebApplicationBuilder CreateForTesting(string[] args)
+  {
     var builder = WebApplication.CreateBuilder(args);
 
     // Testing-specific configuration
@@ -311,7 +337,8 @@ public static class GameGuildApiBuilderFactory {
   /// <param name="args">Command line arguments</param>
   /// <param name="configureBuilder">Custom configuration action for the builder</param>
   /// <returns>A configured WebApplicationBuilder</returns>
-  public static WebApplicationBuilder CreateCustom(string[] args, Action<WebApplicationBuilder> configureBuilder) {
+  public static WebApplicationBuilder CreateCustom(string[] args, Action<WebApplicationBuilder> configureBuilder)
+  {
     var builder = WebApplication.CreateBuilder(args);
 
     configureBuilder(builder);
@@ -323,7 +350,8 @@ public static class GameGuildApiBuilderFactory {
 /// <summary>
 /// Additional builder extensions for more granular control over configuration.
 /// </summary>
-public static class AdvancedWebApplicationBuilderExtensions {
+public static class AdvancedWebApplicationBuilderExtensions
+{
   /// <summary>
   /// Configures the WebApplicationBuilder with custom options for specific hosting scenarios.
   /// </summary>
@@ -333,7 +361,8 @@ public static class AdvancedWebApplicationBuilderExtensions {
   public static WebApplicationBuilder ConfigureGameGuildApi(
     this WebApplicationBuilder builder,
     Action<DependencyInjection.PresentationOptions> configureOptions
-  ) {
+  )
+  {
     builder.ConfigureEnvironment();
 
     // Create and configure presentation options using the shared helper
@@ -358,8 +387,10 @@ public static class AdvancedWebApplicationBuilderExtensions {
   public static WebApplicationBuilder ConfigureAuthentication(
     this WebApplicationBuilder builder,
     bool excludeAuth = false
-  ) {
-    if (!excludeAuth) {
+  )
+  {
+    if (!excludeAuth)
+    {
       // Additional authentication configuration can be added here
       // This provides a hook for future authentication enhancements
     }
@@ -376,7 +407,8 @@ public static class AdvancedWebApplicationBuilderExtensions {
   public static WebApplication UseCustomMiddleware(
     this WebApplication app,
     Action<WebApplication> configureMiddleware
-  ) {
+  )
+  {
     configureMiddleware(app);
 
     return app;
@@ -391,16 +423,21 @@ public static class AdvancedWebApplicationBuilderExtensions {
   public static WebApplication MapHealthChecks(
     this WebApplication app,
     string healthCheckPath = "/health"
-  ) {
+  )
+  {
     app.MapHealthChecks(
       healthCheckPath,
-      new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions {
-        ResponseWriter = async (context, report) => {
+      new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+      {
+        ResponseWriter = async (context, report) =>
+        {
           context.Response.ContentType = "application/json";
           var result = System.Text.Json.JsonSerializer.Serialize(
-            new {
+            new
+            {
               status = report.Status.ToString(),
-              checks = report.Entries.Select(entry => new {
+              checks = report.Entries.Select(entry => new
+              {
                 name = entry.Key,
                 status = entry.Value.Status.ToString(),
                 duration = entry.Value.Duration.ToString(),
