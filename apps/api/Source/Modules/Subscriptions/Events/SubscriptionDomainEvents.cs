@@ -1,4 +1,4 @@
-using GameGuild.CQRS.Abstractions.Events;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Subscriptions.Events;
 
