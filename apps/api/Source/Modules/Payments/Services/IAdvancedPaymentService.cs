@@ -1,4 +1,4 @@
-using GameGuild.Infrastructure.Common.ValueObjects;
+using GameGuild;
 using GameGuild.Modules.Payments.Models;
 
 namespace GameGuild.Modules.Payments.Services;
