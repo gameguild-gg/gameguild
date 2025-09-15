@@ -10,6 +10,7 @@ using GameGuild.Modules.Subscriptions.Abstractions;
 using GameGuild.Modules.Subscriptions.Infrastructure;
 using GameGuild.Modules.Subscriptions.Services;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Tenants.Abstractions;
 using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
@@ -19,6 +20,22 @@ namespace GameGuild.Common;
 
 public static class ServiceCollectionExtensions
 {
+  /// <summary>
+  /// Register all context services for request-scoped context management
+  /// </summary>
+  public static IServiceCollection AddContextServices(this IServiceCollection services)
+  {
+    // Core context services
+    services.AddScoped<IUserContext, UsersContext>();
+    services.AddScoped<ITenantContext, TenantContext>();
+
+    // Advanced context services
+    services.AddScoped<IPermissionsContext, PermissionsContext>();
+    services.AddScoped<IResourceContext, ResourceContext>();
+    services.AddScoped<ILocalizationContext, LocalizationContext>();
+
+    return services;
+  }
   public static IServiceCollection AddUserModule(this IServiceCollection services)
   {
     // Register User module services
@@ -33,6 +50,7 @@ public static class ServiceCollectionExtensions
     services.AddScoped<ITenantService, TenantService>();
     services.AddScoped<ITenantContextService, TenantContextService>();
     services.AddScoped<ITenantDomainService, TenantDomainService>();
+    services.AddScoped<ITenantSettingsService, TenantSettingsService>();
 
     return services;
   }

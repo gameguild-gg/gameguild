@@ -404,6 +404,7 @@ public static class DependencyInjection
   /// Each module encapsulates its own business logic and data access.
   /// </summary>
   private static IServiceCollection AddDomainModules(this IServiceCollection services) => services
+                                                                                          .AddContextServices()
                                                                                           .AddUserModule()
                                                                                           .AddUserProfileModule()
                                                                                           .AddCredentialsModule()
