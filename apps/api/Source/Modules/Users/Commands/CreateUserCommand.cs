@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
 using System.Security.Claims;
-using GameGuild;
 
 
 namespace GameGuild.Modules.Users;

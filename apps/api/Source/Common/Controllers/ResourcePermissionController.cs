@@ -1,4 +1,3 @@
-using GameGuild.Common.Attributes;
 using GameGuild.Common.Services;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Projects;

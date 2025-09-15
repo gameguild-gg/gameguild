@@ -1,7 +1,4 @@
-﻿using GameGuild;
-
-
-namespace GameGuild.Modules.Products;
+﻿namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Interface for user product access services

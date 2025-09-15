@@ -1,4 +1,3 @@
-using GameGuild;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Users;
 

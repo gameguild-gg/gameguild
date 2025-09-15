@@ -1,9 +1,7 @@
-using System.Text.Json;
 using GameGuild.Database;
 using GameGuild.Modules.Notifications.Dtos;
 using GameGuild.Modules.Notifications.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Notifications.Services;
 

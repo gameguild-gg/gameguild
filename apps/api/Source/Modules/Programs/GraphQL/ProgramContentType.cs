@@ -1,4 +1,3 @@
-using GameGuild;
 using ProgramContentEntity = GameGuild.Modules.Programs.ProgramContent;
 
 
