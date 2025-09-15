@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Permissions;
 /// Module-specific role definition that contains a set of permissions for a specific module
 /// </summary>
 [Table("ModuleRoles")]
-public class ModuleRole : BaseEntity
+public class ModuleRole : EntityBase
 {
   [Required]
   [MaxLength(100)]
