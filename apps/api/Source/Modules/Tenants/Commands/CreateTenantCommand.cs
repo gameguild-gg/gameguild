@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild;
 
 
@@ -7,7 +8,7 @@ namespace GameGuild.Modules.Tenants;
 /// Command to create a new tenant
 /// </summary>
 public class CreateTenantCommand(string name, string? description = null, bool isActive = true, string? slug = null)
-  : ICommand<Common.Result<Tenant>>, IAuthorizedRequest {
+  : ICommand<Result<Tenant>>, IAuthorizedRequest {
   public string Name { get; init; } = name;
 
   public string? Description { get; init; } = description;

@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 ﻿using GameGuild;
 using GameGuild.Database;
 
@@ -11,8 +12,8 @@ public class BulkRestoreTenantsHandler(
   ApplicationDbContext context,
   ILogger<BulkRestoreTenantsHandler> logger,
   IDomainEventPublisher eventPublisher
-) : ICommandHandler<BulkRestoreTenantsCommand, Common.Result<int>> {
-  public async Task<Common.Result<int>> Handle(BulkRestoreTenantsCommand request, CancellationToken cancellationToken) {
+) : ICommandHandler<BulkRestoreTenantsCommand, Result<int>> {
+  public async Task<Result<int>> Handle(BulkRestoreTenantsCommand request, CancellationToken cancellationToken) {
     try {
       var tenantIds = request.TenantIds.ToList();
 

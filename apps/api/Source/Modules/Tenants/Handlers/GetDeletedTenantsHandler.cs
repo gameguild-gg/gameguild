@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 ﻿using GameGuild;
 using GameGuild.Database;
 
@@ -10,8 +11,8 @@ namespace GameGuild.Modules.Tenants;
 public class GetDeletedTenantsHandler(
   ApplicationDbContext context,
   ILogger<GetDeletedTenantsHandler> logger
-) : IQueryHandler<GetDeletedTenantsQuery, Common.Result<IEnumerable<Tenant>>> {
-  public async Task<Common.Result<IEnumerable<Tenant>>> Handle(GetDeletedTenantsQuery request, CancellationToken cancellationToken) {
+) : IQueryHandler<GetDeletedTenantsQuery, Result<IEnumerable<Tenant>>> {
+  public async Task<Result<IEnumerable<Tenant>>> Handle(GetDeletedTenantsQuery request, CancellationToken cancellationToken) {
     try {
       var tenants = await context.Resources.OfType<Tenant>()
                                  .Where(t => t.DeletedAt != null)

@@ -1,3 +1,5 @@
+using GameGuild.GraphQL;
+using GameGuild.CQRS;
 using GameGuild;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants.Inputs;
@@ -16,7 +18,7 @@ public class TenantMutations {
   [RequireTenantPermission(PermissionType.Create)]
   public async Task<Tenant> CreateTenant(
     CreateTenantInput input,
-    [Service] ICommandHandler<CreateTenantCommand, Common.Result<Tenant>> createTenantHandler
+    [Service] ICommandHandler<CreateTenantCommand, Result<Tenant>> createTenantHandler
   ) {
     var command = new CreateTenantCommand(input.Name, input.Description, input.IsActive, null);
     var result = await createTenantHandler.Handle(command, CancellationToken.None);
