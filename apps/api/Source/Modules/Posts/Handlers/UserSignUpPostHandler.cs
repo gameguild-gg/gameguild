@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Contents;
 
@@ -11,9 +12,12 @@ namespace GameGuild.Modules.Posts;
 public class UserSignUpPostHandler(
   GameGuild.CQRS.IMediator mediator,
   ILogger<UserSignUpPostHandler> logger
-) : INotificationHandler<UserSignedUpNotification> {
-  public async Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken) {
-    try {
+) : INotificationHandler<UserSignedUpNotification>
+{
+  public async Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken)
+  {
+    try
+    {
       logger.LogInformation(
         "Creating welcome post for new user {UserId} ({Email})",
         notification.UserId,
@@ -24,7 +28,8 @@ public class UserSignUpPostHandler(
       var (title, description) = GenerateWelcomeContent(notification);
       var richContent = GenerateRichWelcomeContent(notification);
 
-      var createPostCommand = new CreatePostCommand {
+      var createPostCommand = new CreatePostCommand
+      {
         Title = title,
         Description = description,
         PostType = "user_signup",
@@ -37,14 +42,16 @@ public class UserSignUpPostHandler(
 
       var result = await mediator.Send(createPostCommand, cancellationToken);
 
-      if (result.IsSuccess) {
+      if (result.IsSuccess)
+      {
         logger.LogInformation(
           "Successfully created welcome post {PostId} for user {UserId}",
           result.Value?.Id,
           notification.UserId
         );
       }
-      else {
+      else
+      {
         logger.LogWarning(
           "Failed to create welcome post for user {UserId}: {Error}",
           notification.UserId,
@@ -52,7 +59,8 @@ public class UserSignUpPostHandler(
         );
       }
     }
-    catch (Exception ex) {
+    catch (Exception ex)
+    {
       logger.LogError(ex, "Error creating welcome post for user {UserId} during signup", notification.UserId);
       // Don't rethrow - we don't want to break the signup process if post creation fails
     }
@@ -61,7 +69,8 @@ public class UserSignUpPostHandler(
   /// <summary>
   /// Generates personalized welcome content for the new user
   /// </summary>
-  private static (string Title, string Description) GenerateWelcomeContent(UserSignedUpNotification notification) {
+  private static (string Title, string Description) GenerateWelcomeContent(UserSignedUpNotification notification)
+  {
     var displayName = notification.Username ?? GetDisplayNameFromEmail(notification.Email);
     var signUpMethod = DetermineSignUpMethod(notification);
 
@@ -86,20 +95,24 @@ public class UserSignUpPostHandler(
   /// <summary>
   /// Generates rich content for the welcome post
   /// </summary>
-  private static string GenerateRichWelcomeContent(UserSignedUpNotification notification) {
+  private static string GenerateRichWelcomeContent(UserSignedUpNotification notification)
+  {
     var displayName = notification.Username ?? GetDisplayNameFromEmail(notification.Email);
     var signUpMethod = DetermineSignUpMethod(notification);
 
-    var richContent = new {
+    var richContent = new
+    {
       type = "welcome_post",
-      user = new {
+      user = new
+      {
         id = notification.UserId,
         displayName = displayName,
         email = notification.Email,
         signUpMethod = signUpMethod,
         signUpTime = notification.SignUpTime,
       },
-      welcome = new {
+      welcome = new
+      {
         message = $"Welcome to Game Guild, {displayName}! 🎮",
         tips = new[] { "Explore our community programs and projects", "Connect with other creators and learners", "Share your own projects and achievements", "Participate in community challenges and events" },
       },
@@ -112,7 +125,8 @@ public class UserSignUpPostHandler(
   /// <summary>
   /// Determines the signup method based on available information
   /// </summary>
-  private static string DetermineSignUpMethod(UserSignedUpNotification notification) {
+  private static string DetermineSignUpMethod(UserSignedUpNotification notification)
+  {
     // This is a heuristic - in a real implementation, you might want to add 
     // a SignUpMethod property to the notification
     if (notification.Username == notification.Email) return "Google"; // Google OAuth typically sets username to email
@@ -123,7 +137,8 @@ public class UserSignUpPostHandler(
   /// <summary>
   /// Extracts a display name from email address
   /// </summary>
-  private static string GetDisplayNameFromEmail(string email) {
+  private static string GetDisplayNameFromEmail(string email)
+  {
     if (string.IsNullOrWhiteSpace(email)) return "New Member";
 
     var localPart = email.Split('@')[0];
