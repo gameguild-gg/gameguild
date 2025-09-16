@@ -1,3 +1,14 @@
+# [2.21.0](https://github.com/gameguild-gg/gameguild/compare/v2.20.0...v2.21.0) (2025-09-16)
+
+
+### Features
+
+* **api:** Add TestingLab adapter services ([407fdde](https://github.com/gameguild-gg/gameguild/commit/407fddeebfbb8e4e27882aa8a5286a30e595e73d))
+* **api:** Add TestingLab repositories ([e0bba37](https://github.com/gameguild-gg/gameguild/commit/e0bba376e2def4a79844c7212b0d3687c19985df))
+* **web:** Add nested content for 'Gamedev Issues' in mock data ([c051067](https://github.com/gameguild-gg/gameguild/commit/c0510671c48775f78ce58e62eea05653bba055b7))
+* **web:** Group game publishing content by platform in mock data ([2c6cd95](https://github.com/gameguild-gg/gameguild/commit/2c6cd95b044382f757456a17bd4fc40b830072d5))
+* **web:** Refactor course content sidebar for hierarchical display ([0898092](https://github.com/gameguild-gg/gameguild/commit/08980928f7c4826f150544a185409f8bd0d97297))
+
 # [2.20.0](https://github.com/gameguild-gg/gameguild/compare/v2.19.0...v2.20.0) (2025-09-15)
 
 
