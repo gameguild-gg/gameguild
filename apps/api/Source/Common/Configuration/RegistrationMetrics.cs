@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common;
+﻿namespace GameGuild;
 
 public class RegistrationMetrics {
   public int TotalHandlersRegistered { get; set; }
