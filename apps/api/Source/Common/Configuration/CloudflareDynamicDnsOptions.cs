@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Configuration;
+namespace GameGuild.Configuration;
 
 /// <summary>
 /// Configuration options for Cloudflare Dynamic DNS service.
