@@ -1,5 +1,5 @@
-using GameGuild.GraphQL;
 using GameGuild.CQRS;
+using GameGuild.GraphQL;
 using GameGuild.Modules.Users.Inputs;
 
 
@@ -81,8 +81,8 @@ public class UserQueries {
       UpdatedAfter = input.UpdatedAfter,
       UpdatedBefore = input.UpdatedBefore,
       IncludeDeleted = input.IncludeDeleted,
-      Skip = input.Skip,
-      Take = input.Take,
+      PageNumber = (input.Skip / input.Take) + 1,
+      PageSize = input.Take,
       SortBy = input.SortBy,
       SortDirection = input.SortDirection,
     };
@@ -112,7 +112,7 @@ public class UserQueries {
     int skip = 0,
     int take = 50
   ) {
-    var query = new GetUsersWithLowBalanceQuery { ThresholdBalance = threshold, IncludeDeleted = includeDeleted, Skip = skip, Take = take };
+    var query = new GetUsersWithLowBalanceQuery { ThresholdBalance = threshold, IncludeDeleted = includeDeleted, PageNumber = (skip / take) + 1, PageSize = take };
 
     return await mediator.Send(query);
   }

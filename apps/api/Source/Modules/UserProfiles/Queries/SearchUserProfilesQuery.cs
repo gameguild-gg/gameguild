@@ -29,12 +29,27 @@ public sealed class SearchUserProfilesQuery : PaginatedQuery<UserProfile>, IQuer
   public Guid? TenantId { get; set; }
 
   /// <summary>
+  /// Whether to include deleted items in the results
+  /// </summary>
+  public bool IncludeDeleted { get; set; }
+
+  /// <summary>
+  /// Number of items to skip for pagination
+  /// </summary>
+  public int Skip { get; set; }
+
+  /// <summary>
+  /// Number of items to take for pagination
+  /// </summary>
+  public int Take { get; set; } = 20;
+
+  /// <summary>
   /// Sort field options
   /// </summary>
-  public UserProfileSortField SortBy { get; set; } = UserProfileSortField.UpdatedAt;
+  public new UserProfileSortField SortBy { get; set; } = UserProfileSortField.UpdatedAt;
 
   /// <summary>
   /// Sort direction
   /// </summary>
-  public SortDirection SortDirection { get; set; } = SortDirection.Descending;
+  public new SortDirection SortDirection { get; set; } = SortDirection.Descending;
 }

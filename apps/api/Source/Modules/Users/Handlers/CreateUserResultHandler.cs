@@ -1,6 +1,7 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
+using CqrsError = GameGuild.CQRS.Error;
 using Result = GameGuild.CQRS.Result;
 
 
@@ -21,7 +22,7 @@ public class CreateUserResultHandler(
                                   .FirstOrDefaultAsync(user => user.Email == request.Email, cancellationToken);
 
       if (existingUser != null) {
-        return Result.Failure<User>(Error.Conflict("Users.EmailExists", $"User with email {request.Email} already exists"));
+        return GameGuild.CQRS.Result.Failure<User>(CqrsError.Conflict("Users.EmailExists", $"User with email {request.Email} already exists"));
       }
 
       // Generate unique username from name using slugify
@@ -53,15 +54,15 @@ public class CreateUserResultHandler(
       // Publish domain event
       await mediator.Publish(new UserCreatedEvent(user.Id, user.Email, user.Name, user.CreatedAt), cancellationToken);
 
-      return Result.Success(user);
+      return GameGuild.CQRS.Result.Success(user);
     }
     catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate key") == true) {
       logger.LogWarning(ex, "Attempted to create user with duplicate data");
-      return Result.Failure<User>(Error.Conflict("Users.DuplicateData", "A user with this information already exists"));
+      return GameGuild.CQRS.Result.Failure<User>(CqrsError.Conflict("Users.DuplicateData", "A user with this information already exists"));
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error creating user with email {Email}", request.Email);
-      return Result.Failure<User>(Error.Create("Users.CreateFailed", "An error occurred while creating the user"));
+      return GameGuild.CQRS.Result.Failure<User>(CqrsError.Create("Users.CreateFailed", "An error occurred while creating the user"));
     }
   }
 }

@@ -7,8 +7,7 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Enhanced command to create a new user using Result<T> pattern for better error handling
 /// </summary>
-public class CreateUserResultCommand : IResultCommand<User>, IAuthorizedRequest, ITransactionalRequest
-{
+public class CreateUserResultCommand : IResultCommand<User>, IAuthorizedRequest, ITransactionalRequest {
     [Required]
     [StringLength(100, MinimumLength = 1)]
     public string Name { get; init; } = string.Empty;
@@ -28,12 +27,11 @@ public class CreateUserResultCommand : IResultCommand<User>, IAuthorizedRequest,
 
     public string[]? RequiredPermissions { get; } = ["users.create"];
 
-    public Task<bool> IsAuthorizedAsync(ClaimsPrincipal? user, CancellationToken cancellationToken)
-    {
+    public Task<bool> IsAuthorizedAsync(ClaimsPrincipal? user, CancellationToken cancellationToken) {
         // Custom authorization logic - example: check if user can create users in their tenant
         return Task.FromResult(true); // Simplified for example
     }
 
     // Transaction settings
-    public IsolationLevel? IsolationLevel => System.Data.IsolationLevel.ReadCommitted;
+    public IsolationLevel? IsolationLevel => System.Transactions.IsolationLevel.ReadCommitted;
 }
