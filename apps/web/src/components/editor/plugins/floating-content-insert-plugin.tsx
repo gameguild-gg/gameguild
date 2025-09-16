@@ -328,6 +328,7 @@ export function FloatingContentInsertPlugin() {
   }
 
   const primaryOptions = [
+    /*
     {
       icon: Heading,
       label: "Header",
@@ -340,6 +341,7 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    */
     {
       icon: ImageIcon,
       label: "Image",
@@ -358,11 +360,13 @@ export function FloatingContentInsertPlugin() {
       label: "Video",
       action: handleVideoOption,
     },
+    /*
     {
       icon: Youtube,
       label: "YouTube",
       action: handleYouTubeOption,
     },
+    */
     {
       icon: Music,
       label: "Audio",
@@ -376,6 +380,7 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    /*
     {
       icon: MarkdownIcon,
       label: "Markdown",
@@ -392,6 +397,7 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    */
     {
       icon: SeparatorHorizontal,
       label: "Divider",
@@ -416,6 +422,7 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    /*
     {
       icon: LayoutPresentationIcon,
       label: "Presentation",
@@ -424,6 +431,8 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    */
+   /*
     {
       icon: BookOpen,
       label: "Sources & References",
@@ -432,6 +441,8 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    */
+   /*
     {
       icon: CodeIcon,
       label: "Source Code",
@@ -440,6 +451,7 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    */
     {
       icon: GitBranch,
       label: "Mermaid Diagram",
@@ -454,6 +466,7 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    /*
     { icon: Bookmark, label: "Bookmark", action: () => console.log("Bookmark clicked") },
     { icon: Mail, label: "Email content", action: () => console.log("Email content clicked") },
     { icon: MousePointerClick, label: "Email call to action", action: () => console.log("Email CTA clicked") },
@@ -462,6 +475,7 @@ export function FloatingContentInsertPlugin() {
     { icon: FileIcon, label: "File", action: () => console.log("File clicked") },
     { icon: ShoppingBag, label: "Product", action: () => console.log("Product clicked") },
     { icon: UserPlus, label: "Signup", action: () => console.log("Signup clicked") },
+     */
   ]
 
   const embedOptions = [
@@ -507,10 +521,13 @@ export function FloatingContentInsertPlugin() {
             side="left"
             className="w-80 p-0 max-h-[500px] overflow-y-auto shadow-lg border-0 bg-background/95 backdrop-blur-sm"
           >
+            {/*
             <div className="px-2 py-1.5">
               <h4 className="text-xs font-medium text-muted-foreground">PRIMARY</h4>
             </div>
+            */}
             <div className="grid gap-1 p-2">
+              {/*
               {primaryOptions.slice(0, 8).map((option) => (
                 <button
                   key={option.label}
@@ -525,15 +542,16 @@ export function FloatingContentInsertPlugin() {
                   <span className="font-medium">{option.label}</span>
                 </button>
               ))}
+              */}
 
-              {primaryOptions.length > 8 && (
+              {primaryOptions.length > 0 && (
                 <>
-                  <Separator className="my-2" />
+                  {/*<Separator className="my-2" />*/}
                   <div className="px-2 py-1">
-                    <h4 className="text-xs font-medium text-muted-foreground">MORE OPTIONS</h4>
+                    <h4 className="text-xs font-medium text-muted-foreground">PLUGINS</h4>
                   </div>
                   <div className="grid grid-cols-2 gap-1">
-                    {primaryOptions.slice(8).map((option) => (
+                    {primaryOptions.slice(0).map((option) => (
                       <button
                         key={option.label}
                         onClick={() => {
@@ -551,6 +569,7 @@ export function FloatingContentInsertPlugin() {
                 </>
               )}
             </div>
+            {/*
             <Separator className="my-1" />
             <div className="px-2 py-1.5">
               <h4 className="text-xs font-medium text-muted-foreground">EMBEDS</h4>
@@ -572,6 +591,7 @@ export function FloatingContentInsertPlugin() {
                 </button>
               ))}
             </div>
+            */}
           </PopoverContent>
         </Popover>
       </div>
