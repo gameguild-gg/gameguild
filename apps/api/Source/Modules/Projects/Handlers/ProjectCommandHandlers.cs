@@ -64,7 +64,7 @@ public class ProjectCommandHandlers :
         RepositoryUrl = request.RepositoryUrl,
         WebsiteUrl = request.WebsiteUrl,
         DownloadUrl = request.DownloadUrl,
-        Type = (GameGuild.Common.ProjectType)request.Type,
+        Type = (GameGuild.ProjectType)request.Type,
         CategoryId = request.CategoryId,
         Visibility = request.Visibility,
         Status = request.Status,
@@ -146,7 +146,7 @@ public class ProjectCommandHandlers :
       if (request.RepositoryUrl != null) project.RepositoryUrl = request.RepositoryUrl;
       if (request.WebsiteUrl != null) project.WebsiteUrl = request.WebsiteUrl;
       if (request.DownloadUrl != null) project.DownloadUrl = request.DownloadUrl;
-      if (request.Type.HasValue) project.Type = (GameGuild.Common.ProjectType)request.Type.Value;
+      if (request.Type.HasValue) project.Type = (GameGuild.ProjectType)request.Type.Value;
       if (request.CategoryId.HasValue) project.CategoryId = request.CategoryId;
       if (request.Visibility.HasValue) project.Visibility = request.Visibility.Value;
       if (request.Status.HasValue) project.Status = request.Status.Value;

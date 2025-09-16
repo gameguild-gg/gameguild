@@ -1,7 +1,7 @@
 using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum CertificateStatus {
   [Description("Certificate is valid and can be verified")]

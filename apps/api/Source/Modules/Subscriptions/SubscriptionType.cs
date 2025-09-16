@@ -1,7 +1,7 @@
 using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum SubscriptionType {
   [Description("Subscription billed on a monthly basis")]

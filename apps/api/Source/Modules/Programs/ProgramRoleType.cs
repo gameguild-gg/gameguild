@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum ProgramRoleType {
   [Description("Standard learner role with access to content and ability to submit assignments")]

@@ -1,10 +1,10 @@
-﻿using GameGuild.Common.Authorization;
+﻿using GameGuild.Authorization;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Resources;
 using HotChocolate.Language;
 
 
-namespace GameGuild.Common.Extensions;
+namespace GameGuild.Extensions;
 
 /// <summary>
 /// Extension methods for applying DAC authorization to GraphQL field descriptors

@@ -1,7 +1,7 @@
 ﻿using GameGuild.Modules.Permissions;
 
 
-namespace GameGuild.Common.Authorization;
+namespace GameGuild.Authorization;
 
 /// <summary>
 /// Base attribute for 3-layer DAC authorization in GraphQL resolvers

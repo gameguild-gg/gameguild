@@ -1,6 +1,6 @@
 using GameGuild.Modules.Permissions;
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Interface for accessing current user's permissions and authorization context

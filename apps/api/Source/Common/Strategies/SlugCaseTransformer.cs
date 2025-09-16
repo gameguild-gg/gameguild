@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 using Slugify;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Slug case transformer implementation using Slugify.Core.

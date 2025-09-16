@@ -4,7 +4,7 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace GameGuild.Common.Swagger;
+namespace GameGuild.Swagger;
 
 /// <summary>
 /// Swagger schema filter that enhances enum documentation by adding descriptions and value mappings.

@@ -1,7 +1,7 @@
 ﻿using GameGuild.Modules.Permissions;
 
 
-namespace GameGuild.Common.Authorization;
+namespace GameGuild.Authorization;
 
 /// <summary>
 /// Tenant-level DAC authorization attribute for GraphQL resolvers

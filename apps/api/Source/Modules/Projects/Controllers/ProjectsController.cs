@@ -394,7 +394,7 @@ public record CreateProjectRequest {
   [Url(ErrorMessage = "Download URL must be a valid URL")]
   public string? DownloadUrl { get; init; }
 
-  public GameGuild.Common.ProjectType Type { get; init; } = GameGuild.Common.ProjectType.Game;
+  public GameGuild.ProjectType Type { get; init; } = GameGuild.ProjectType.Game;
 
   public Guid? CategoryId { get; init; }
 
@@ -420,7 +420,7 @@ public record UpdateProjectRequest {
 
   public string? DownloadUrl { get; init; }
 
-  public GameGuild.Common.ProjectType? Type { get; init; }
+  public GameGuild.ProjectType? Type { get; init; }
 
   public Guid? CategoryId { get; init; }
 

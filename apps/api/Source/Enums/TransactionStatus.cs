@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum TransactionStatus {
   [Description("Transaction has been initiated but not completed")]

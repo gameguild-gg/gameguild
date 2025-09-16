@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common;
+﻿namespace GameGuild;
 
 public static class MiddlewareExtensions {
   public static IApplicationBuilder UseRequestContextLogging(this IApplicationBuilder app) {

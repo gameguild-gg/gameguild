@@ -1,7 +1,7 @@
 using System.Security.Claims;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public static class ClaimsPrincipalExtensions {
   public static Guid? GetUserId(this ClaimsPrincipal user) {

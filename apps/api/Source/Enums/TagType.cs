@@ -1,7 +1,7 @@
 using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum TagType {
   [Description("Tag represents a learnable or teachable skill")]

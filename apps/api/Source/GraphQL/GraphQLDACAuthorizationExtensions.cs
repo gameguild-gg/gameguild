@@ -1,9 +1,9 @@
-using GameGuild.Common.Authorization;
+using GameGuild.Authorization;
 using GameGuild.Modules.Permissions;
 using HotChocolate.Execution.Configuration;
 
 
-namespace GameGuild.Common.Extensions;
+namespace GameGuild.Extensions;
 
 /// <summary>
 /// Extension methods for configuring 3-layer DAC authorization in HotChocolate GraphQL

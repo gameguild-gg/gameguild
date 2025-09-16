@@ -14,7 +14,7 @@ public record CreateProjectInput(
   string? RepositoryUrl,
   string? WebsiteUrl,
   string? DownloadUrl,
-  GameGuild.Common.ProjectType Type,
+  GameGuild.ProjectType Type,
   Guid? CategoryId,
   ContentStatus? Status,
   AccessLevel? Visibility,
@@ -34,7 +34,7 @@ public record CreateProjectInput(
 
   public string? DownloadUrl { get; init; } = DownloadUrl;
 
-  public GameGuild.Common.ProjectType Type { get; init; } = Type;
+  public GameGuild.ProjectType Type { get; init; } = Type;
 
   public Guid? CategoryId { get; init; } = CategoryId;
 

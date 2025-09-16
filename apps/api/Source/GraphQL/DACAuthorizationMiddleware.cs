@@ -3,7 +3,7 @@ using GameGuild.Modules.Permissions;
 using HotChocolate.Resolvers;
 
 
-namespace GameGuild.Common.Authorization;
+namespace GameGuild.Authorization;
 
 /// <summary>
 /// HotChocolate middleware for 3-layer DAC permission system

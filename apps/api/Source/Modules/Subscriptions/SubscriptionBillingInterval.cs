@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum SubscriptionBillingInterval {
   [Description("Billing occurs daily")] Day,

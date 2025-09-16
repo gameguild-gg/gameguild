@@ -1,7 +1,7 @@
-using GameGuild.Common.Services;
+using GameGuild.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GameGuild.Common.Controllers;
+namespace GameGuild.Controllers;
 
 /// <summary>
 /// Controller for Cloudflare Dynamic DNS service management and monitoring.
