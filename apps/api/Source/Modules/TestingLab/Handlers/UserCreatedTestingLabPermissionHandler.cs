@@ -1,4 +1,4 @@
-using GameGuild.Common.Services;
+using GameGuild.Services;
 using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Users;

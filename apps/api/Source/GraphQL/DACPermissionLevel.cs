@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common.Authorization;
+﻿namespace GameGuild.Authorization;
 
 /// <summary>
 /// Permission levels for the 3-layer DAC system

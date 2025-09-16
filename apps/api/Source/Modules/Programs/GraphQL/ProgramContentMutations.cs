@@ -1,8 +1,8 @@
 using GameGuild.GraphQL;
 using GameGuild.Modules.Permissions;
-using ProgramContentTypeEnum = GameGuild.Common.ProgramContentType;
-using VisibilityEnum = GameGuild.Common.Visibility;
-using GradingMethodEnum = GameGuild.Common.GradingMethod;
+using ProgramContentTypeEnum = GameGuild.ProgramContentType;
+using VisibilityEnum = GameGuild.Visibility;
+using GradingMethodEnum = GameGuild.GradingMethod;
 
 
 namespace GameGuild.Modules.Programs;

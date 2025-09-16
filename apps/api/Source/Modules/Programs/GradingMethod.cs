@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum GradingMethod {
   [Description("Graded manually by an instructor or teaching assistant")]

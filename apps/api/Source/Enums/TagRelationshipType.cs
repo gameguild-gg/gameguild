@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum TagRelationshipType {
   [Description("Tags that are related or complementary")]

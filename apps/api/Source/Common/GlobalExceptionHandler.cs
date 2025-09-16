@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
   : IExceptionHandler {

@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
+using GameGuild;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Subscriptions.Events;
 using GameGuild.Modules.Users;

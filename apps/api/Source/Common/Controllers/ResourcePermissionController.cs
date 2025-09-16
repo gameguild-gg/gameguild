@@ -1,11 +1,12 @@
-using GameGuild.Common.Services;
+using System.Security.Claims;
+using GameGuild;
+using GameGuild.Services;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Projects;
-using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
-namespace GameGuild.Common.Controllers;
+namespace GameGuild.Controllers;
 
 /// <summary>
 /// Controller for managing resource-level permissions and sharing

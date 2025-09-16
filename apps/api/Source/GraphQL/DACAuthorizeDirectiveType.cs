@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Authorization;
+namespace GameGuild.Authorization;
 
 /// <summary>
 /// GraphQL directive for 3-layer DAC authorization

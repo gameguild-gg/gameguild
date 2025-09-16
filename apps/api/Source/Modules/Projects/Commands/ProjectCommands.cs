@@ -22,7 +22,7 @@ public record CreateProjectCommand : GameGuild.CQRS.IRequest<CreateProjectResult
 
   public string? DownloadUrl { get; init; }
 
-  public GameGuild.Common.ProjectType Type { get; init; } = Common.ProjectType.Game;
+  public GameGuild.ProjectType Type { get; init; } = Common.ProjectType.Game;
 
   public Guid CreatedById { get; init; }
 
@@ -58,7 +58,7 @@ public record UpdateProjectCommand : GameGuild.CQRS.IRequest<UpdateProjectResult
 
   public string? DownloadUrl { get; init; }
 
-  public GameGuild.Common.ProjectType? Type { get; init; }
+  public GameGuild.ProjectType? Type { get; init; }
 
   public Guid? CategoryId { get; init; }
 

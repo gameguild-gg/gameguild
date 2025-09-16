@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Base class for cached case transformers providing common caching functionality.
