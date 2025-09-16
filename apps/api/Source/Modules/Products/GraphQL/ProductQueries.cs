@@ -1,7 +1,7 @@
 using GameGuild.GraphQL;
 using GameGuild.Modules.Contents;
 using ProductEntity = GameGuild.Modules.Products.Product;
-using ProductTypeEnum = GameGuild.Common.ProductType;
+using ProductTypeEnum = GameGuild.ProductType;
 
 
 namespace GameGuild.Modules.Products;

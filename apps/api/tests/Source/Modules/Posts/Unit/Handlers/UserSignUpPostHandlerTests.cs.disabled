@@ -34,7 +34,7 @@ public class UserSignUpPostHandlerTests
             SignUpTime = DateTime.UtcNow
         };
 
-        var mockResult = GameGuild.Common.Result.Success(new Post
+        var mockResult = GameGuild.Result.Success(new Post
         {
             Id = Guid.NewGuid(),
             Content = "Welcome message",
@@ -92,12 +92,12 @@ public class UserSignUpPostHandlerTests
         var capturedCommands = new List<CreatePostCommand>();
         _mediatorMock
             .Setup(m => m.Send(It.IsAny<CreatePostCommand>(), It.IsAny<CancellationToken>()))
-            .Callback<IRequest<GameGuild.Common.Result<Post>>, CancellationToken>((cmd, _) => 
+            .Callback<IRequest<GameGuild.Result<Post>>, CancellationToken>((cmd, _) => 
             {
                 if (cmd is CreatePostCommand createCmd)
                     capturedCommands.Add(createCmd);
             })
-            .ReturnsAsync(GameGuild.Common.Result.Success(new Post()));
+            .ReturnsAsync(GameGuild.Result.Success(new Post()));
 
         // Act - Run multiple times to see different messages
         for (int i = 0; i < 5; i++)
@@ -135,7 +135,7 @@ public class UserSignUpPostHandlerTests
 
         _mediatorMock
             .Setup(m => m.Send(It.IsAny<CreatePostCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(GameGuild.Common.Result.Success(new Post()));
+            .ReturnsAsync(GameGuild.Result.Success(new Post()));
 
         // Act
         await _handler.Handle(notification, CancellationToken.None);
@@ -170,7 +170,7 @@ public class UserSignUpPostHandlerTests
 
         _mediatorMock
             .Setup(m => m.Send(It.IsAny<CreatePostCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(GameGuild.Common.Result.Success(new Post()));
+            .ReturnsAsync(GameGuild.Result.Success(new Post()));
 
         // Act
         await _handler.Handle(notification, CancellationToken.None);
@@ -205,7 +205,7 @@ public class UserSignUpPostHandlerTests
             SignUpTime = DateTime.UtcNow
         };
 
-        var mockResult = GameGuild.Common.Result.Failure<Post>(new GameGuild.Common.Error(
+        var mockResult = GameGuild.Result.Failure<Post>(new GameGuild.Error(
             "CreatePost.Failed",
             "Failed to create post"
         ));

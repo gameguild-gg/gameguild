@@ -1,4 +1,4 @@
-using GameGuild.Common.Services;
+using GameGuild.Services;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Payments;
 using GameGuild.Modules.Posts.GraphQL;
@@ -15,7 +15,7 @@ using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public static class ServiceCollectionExtensions
 {

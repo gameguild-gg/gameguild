@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace GameGuild.Common.Models.Cloudflare;
+namespace GameGuild.Models.Cloudflare;
 
 /// <summary>
 /// Cloudflare API response wrapper.

@@ -1,4 +1,4 @@
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Factory for creating case transformer instances.

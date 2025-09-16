@@ -1,4 +1,4 @@
-using GameGuild.Common.Authorization;
+using GameGuild.Authorization;
 using GameGuild.Modules.Permissions;
 
 

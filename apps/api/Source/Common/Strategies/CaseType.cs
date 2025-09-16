@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common;
+﻿namespace GameGuild;
 
 /// <summary>
 /// Enumeration of supported case types.

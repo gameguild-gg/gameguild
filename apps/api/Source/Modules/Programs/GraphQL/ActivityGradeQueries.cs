@@ -14,7 +14,7 @@ public class ActivityGradeQueries {
   /// Get grade for a specific content interaction using CQRS pattern
   /// Requires Read permission on the parent Program
   /// </summary>
-  [GameGuild.Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActivityGrade?> GetActivityGrade(
     Guid programId,
     Guid contentInteractionId,

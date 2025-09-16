@@ -1,4 +1,4 @@
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Transforms route parameters from PascalCase to kebab-case

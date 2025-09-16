@@ -1,4 +1,4 @@
-using GameGuild.Common.Services;
+using GameGuild.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 

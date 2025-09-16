@@ -1,5 +1,5 @@
 using GameGuild.Modules.Contents;
-using ProgramAvailabilityStatus = GameGuild.Common.EnrollmentStatus;
+using ProgramAvailabilityStatus = GameGuild.EnrollmentStatus;
 
 
 namespace GameGuild.Modules.Programs;

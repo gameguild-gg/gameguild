@@ -1,12 +1,12 @@
 using System.Security.Claims;
-using GameGuild.Common.Services;
+using GameGuild.Services;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Projects;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 
 
-namespace GameGuild.Common.GraphQL;
+namespace GameGuild.GraphQL;
 
 /// <summary>
 /// GraphQL extensions for permission management and querying
