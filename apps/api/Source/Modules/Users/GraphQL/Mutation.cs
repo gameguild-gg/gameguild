@@ -80,8 +80,8 @@ public class UserMutations {
   /// </summary>
   public async Task<BulkOperationResult> BulkDeleteUsers(BulkDeleteUsersInput input, [Service] GameGuild.CQRS.IMediator mediator) {
     var command = new BulkDeleteUsersCommand { UserIds = input.UserIds, SoftDelete = input.SoftDelete, Reason = input.Reason };
-
-    return await mediator.Send(command);
+    var result = await mediator.Send(command);
+    return result.IsSuccess ? result.Value! : throw new GraphQLException(result.Error?.Message ?? "Unknown error");
   }
 
   /// <summary>
@@ -89,8 +89,8 @@ public class UserMutations {
   /// </summary>
   public async Task<BulkOperationResult> BulkRestoreUsers(BulkRestoreUsersInput input, [Service] GameGuild.CQRS.IMediator mediator) {
     var command = new BulkRestoreUsersCommand { UserIds = input.UserIds, Reason = input.Reason };
-
-    return await mediator.Send(command);
+    var result = await mediator.Send(command);
+    return result.IsSuccess ? result.Value! : throw new GraphQLException(result.Error?.Message ?? "Unknown error");
   }
 
   /// <summary>
@@ -98,8 +98,8 @@ public class UserMutations {
   /// </summary>
   public async Task<BulkOperationResult> BulkCreateUsers(BulkCreateUsersInput input, [Service] GameGuild.CQRS.IMediator mediator) {
     var command = new BulkCreateUsersCommand { Users = input.Users.Select(u => new CreateUserDto { Name = u.Name, Email = u.Email, IsActive = u.IsActive, InitialBalance = u.InitialBalance }).ToList(), Reason = input.Reason };
-
-    return await mediator.Send(command);
+    var result = await mediator.Send(command);
+    return result.IsSuccess ? result.Value! : throw new GraphQLException(result.Error?.Message ?? "Unknown error");
   }
 
   /// <summary>
@@ -107,8 +107,8 @@ public class UserMutations {
   /// </summary>
   public async Task<BulkOperationResult> BulkActivateUsers(BulkActivateUsersInput input, [Service] GameGuild.CQRS.IMediator mediator) {
     var command = new BulkActivateUsersCommand { UserIds = input.UserIds, Reason = input.Reason };
-
-    return await mediator.Send(command);
+    var result = await mediator.Send(command);
+    return result.IsSuccess ? result.Value! : throw new GraphQLException(result.Error?.Message ?? "Unknown error");
   }
 
   /// <summary>
@@ -116,8 +116,8 @@ public class UserMutations {
   /// </summary>
   public async Task<BulkOperationResult> BulkDeactivateUsers(BulkDeactivateUsersInput input, [Service] GameGuild.CQRS.IMediator mediator) {
     var command = new BulkDeactivateUsersCommand { UserIds = input.UserIds, Reason = input.Reason };
-
-    return await mediator.Send(command);
+    var result = await mediator.Send(command);
+    return result.IsSuccess ? result.Value! : throw new GraphQLException(result.Error?.Message ?? "Unknown error");
   }
 
   /// <summary>

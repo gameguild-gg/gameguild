@@ -1,3 +1,4 @@
+using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
@@ -11,10 +12,8 @@ public class CreateUserHandler(
   ApplicationDbContext context,
   ILogger<CreateUserHandler> logger,
   GameGuild.CQRS.IMediator mediator
-) : IRequestHandler<CreateUserCommand, User>
-{
-  public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken)
-  {
+) : IRequestHandler<CreateUserCommand, User> {
+  public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken) {
     // Check if email already exists
     var existingUser = await context.Users
                                     .FirstOrDefaultAsync(user => user.Email == request.Email, cancellationToken);
@@ -33,8 +32,7 @@ public class CreateUserHandler(
     // Normalize negative balance to zero - business rule
     var normalizedBalance = Math.Max(0, request.InitialBalance);
 
-    var user = new User
-    {
+    var user = new User {
       Name = request.Name,
       Username = uniqueUsername,
       Email = request.Email,
