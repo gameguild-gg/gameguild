@@ -2,7 +2,7 @@ using GameGuild.CQRS;
 using Microsoft.Extensions.Caching.Memory;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Caching behavior for read operations (queries) to improve performance

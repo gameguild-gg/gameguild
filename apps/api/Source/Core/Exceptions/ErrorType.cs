@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common;
+﻿namespace GameGuild;
 
 public enum ErrorType {
   Failure = 0,

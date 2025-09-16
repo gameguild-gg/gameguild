@@ -34,7 +34,7 @@ public class AwardAchievementCommandHandler : ICommandHandler<AwardAchievementCo
 
       if (achievement == null)
       {
-        return Result.Failure<UserAchievement>(Error.NotFound("Achievement", "Achievement not found or inactive"));
+        return Result.Failure<UserAchievement>(GameGuild.CQRS.Error.NotFound("Achievement", "Achievement not found or inactive"));
       }
 
       // Check if user already has this achievement (for non-repeatable achievements)
@@ -46,7 +46,7 @@ public class AwardAchievementCommandHandler : ICommandHandler<AwardAchievementCo
 
         if (existingAchievement != null)
         {
-          return Result.Failure<UserAchievement>(Error.Conflict("UserAchievement", "User already has this achievement"));
+          return Result.Failure<UserAchievement>(GameGuild.CQRS.Error.Conflict("UserAchievement", "User already has this achievement"));
         }
       }
 
@@ -140,7 +140,7 @@ public class AwardAchievementCommandHandler : ICommandHandler<AwardAchievementCo
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error awarding achievement {AchievementId} to user {UserId}", request.AchievementId, request.UserId);
-      return Result.Failure<UserAchievement>(Error.Failure("AwardAchievement", "Failed to award achievement"));
+      return Result.Failure<UserAchievement>(GameGuild.CQRS.Error.Failure("AwardAchievement", "Failed to award achievement"));
     }
   }
 }
@@ -176,7 +176,7 @@ public class UpdateAchievementProgressCommandHandler : ICommandHandler<UpdateAch
 
       if (achievement == null)
       {
-        return Result.Failure<AchievementProgress>(Error.NotFound("Achievement", "Achievement not found or inactive"));
+        return Result.Failure<AchievementProgress>(GameGuild.CQRS.Error.NotFound("Achievement", "Achievement not found or inactive"));
       }
 
       // Get or create progress record
@@ -250,7 +250,7 @@ public class UpdateAchievementProgressCommandHandler : ICommandHandler<UpdateAch
     {
       _logger.LogError(ex, "Error updating achievement progress for user {UserId} on achievement {AchievementId}",
         request.UserId, request.AchievementId);
-      return Result.Failure<AchievementProgress>(Error.Failure("UpdateAchievementProgress", "Failed to update achievement progress"));
+      return Result.Failure<AchievementProgress>(GameGuild.CQRS.Error.Failure("UpdateAchievementProgress", "Failed to update achievement progress"));
     }
   }
 }
@@ -284,7 +284,7 @@ public class RevokeAchievementCommandHandler : ICommandHandler<RevokeAchievement
 
       if (userAchievement == null)
       {
-        return Result.Failure(Error.NotFound("UserAchievement", "User achievement not found"));
+        return Result.Failure(GameGuild.CQRS.Error.NotFound("UserAchievement", "User achievement not found"));
       }
 
       var achievement = userAchievement.Achievement!;
@@ -326,7 +326,7 @@ public class RevokeAchievementCommandHandler : ICommandHandler<RevokeAchievement
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error revoking user achievement {UserAchievementId}", request.UserAchievementId);
-      return Result.Failure(Error.Failure("RevokeAchievement", "Failed to revoke achievement"));
+      return Result.Failure(GameGuild.CQRS.Error.Failure("RevokeAchievement", "Failed to revoke achievement"));
     }
   }
 }
