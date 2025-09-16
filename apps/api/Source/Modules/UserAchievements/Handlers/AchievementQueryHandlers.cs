@@ -129,7 +129,7 @@ public class GetAchievementsQueryHandler : IQueryHandler<GetAchievementsQuery, R
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error getting achievements");
-      return Result.Failure<AchievementsPageDto>(Error.Failure("GetAchievements", "Failed to get achievements"));
+      return Result.Failure<AchievementsPageDto>(GameGuild.CQRS.Error.Failure("GetAchievements", "Failed to get achievements"));
     }
   }
 }
@@ -170,7 +170,7 @@ public class GetAchievementByIdQueryHandler : IQueryHandler<GetAchievementByIdQu
 
       if (achievement == null)
       {
-        return Result.Failure<Achievement>(Error.NotFound("AchievementNotFound", "Achievement not found"));
+        return Result.Failure<Achievement>(GameGuild.CQRS.Error.NotFound("AchievementNotFound", "Achievement not found"));
       }
 
       return Result.Success(achievement);
@@ -178,7 +178,7 @@ public class GetAchievementByIdQueryHandler : IQueryHandler<GetAchievementByIdQu
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error getting achievement {AchievementId}", request.AchievementId);
-      return Result.Failure<Achievement>(Error.Failure("GetAchievement", "Failed to get achievement"));
+      return Result.Failure<Achievement>(GameGuild.CQRS.Error.Failure("GetAchievement", "Failed to get achievement"));
     }
   }
 }
@@ -299,7 +299,7 @@ public class GetUserAchievementsQueryHandler : IQueryHandler<GetUserAchievements
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error getting user achievements for user {UserId}", request.UserId);
-      return Result.Failure<UserAchievementsPageDto>(Error.Failure("GetUserAchievements", "Failed to get user achievements"));
+      return Result.Failure<UserAchievementsPageDto>(GameGuild.CQRS.Error.Failure("GetUserAchievements", "Failed to get user achievements"));
     }
   }
 }
@@ -374,7 +374,7 @@ public class GetUserAchievementProgressQueryHandler : IQueryHandler<GetUserAchie
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error getting achievement progress for user {UserId}", request.UserId);
-      return Result.Failure<List<AchievementProgressDto>>(Error.Failure("GetAchievementProgress", "Failed to get achievement progress"));
+      return Result.Failure<List<AchievementProgressDto>>(GameGuild.CQRS.Error.Failure("GetAchievementProgress", "Failed to get achievement progress"));
     }
   }
 }
@@ -508,7 +508,7 @@ public class GetUserAchievementSummaryQueryHandler : IQueryHandler<GetUserAchiev
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error getting achievement summary for user {UserId}", request.UserId);
-      return Result.Failure<UserAchievementSummaryDto>(Error.Failure("GetAchievementSummary", "Failed to get achievement summary"));
+      return Result.Failure<UserAchievementSummaryDto>(GameGuild.CQRS.Error.Failure("GetAchievementSummary", "Failed to get achievement summary"));
     }
   }
 }
@@ -587,7 +587,7 @@ public class GetAvailableAchievementsQueryHandler : IQueryHandler<GetAvailableAc
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error getting available achievements for user {UserId}", request.UserId);
-      return Result.Failure<AchievementsPageDto>(Error.Failure("GetAvailableAchievements", "Failed to get available achievements"));
+      return Result.Failure<AchievementsPageDto>(GameGuild.CQRS.Error.Failure("GetAvailableAchievements", "Failed to get available achievements"));
     }
   }
 }
@@ -649,7 +649,7 @@ public class GetAchievementLeaderboardQueryHandler : IQueryHandler<GetAchievemen
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error getting achievement leaderboard");
-      return Result.Failure<List<UserAchievementLeaderboardDto>>(Error.Failure("GetAchievementLeaderboard", "Failed to get achievement leaderboard"));
+      return Result.Failure<List<UserAchievementLeaderboardDto>>(GameGuild.CQRS.Error.Failure("GetAchievementLeaderboard", "Failed to get achievement leaderboard"));
     }
   }
 }
@@ -677,7 +677,7 @@ public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievement
 
       if (achievement == null)
       {
-        return Result.Failure<AchievementStatisticsDto>(Error.NotFound("AchievementNotFound", "Achievement not found"));
+        return Result.Failure<AchievementStatisticsDto>(GameGuild.CQRS.Error.NotFound("AchievementNotFound", "Achievement not found"));
       }
 
       var totalEarned = await _context.UserAchievements
@@ -719,7 +719,7 @@ public class GetAchievementStatisticsQueryHandler : IQueryHandler<GetAchievement
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error getting achievement statistics for achievement {AchievementId}", request.AchievementId);
-      return Result.Failure<AchievementStatisticsDto>(Error.Failure("GetAchievementStatistics", "Failed to get achievement statistics"));
+      return Result.Failure<AchievementStatisticsDto>(GameGuild.CQRS.Error.Failure("GetAchievementStatistics", "Failed to get achievement statistics"));
     }
   }
 }
@@ -748,7 +748,7 @@ public class CheckAchievementPrerequisitesQueryHandler : IQueryHandler<CheckAchi
 
       if (achievement == null)
       {
-        return Result.Failure<AchievementPrerequisiteCheckDto>(Error.NotFound("Achievement", "Achievement not found"));
+        return Result.Failure<AchievementPrerequisiteCheckDto>(GameGuild.CQRS.Error.NotFound("Achievement", "Achievement not found"));
       }
 
       var prerequisites = await _context.AchievementPrerequisites
@@ -792,7 +792,7 @@ public class CheckAchievementPrerequisitesQueryHandler : IQueryHandler<CheckAchi
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error checking prerequisites for achievement {AchievementId} and user {UserId}", request.AchievementId, request.UserId);
-      return Result.Failure<AchievementPrerequisiteCheckDto>(Error.Failure("CheckAchievementPrerequisites", "Failed to check achievement prerequisites"));
+      return Result.Failure<AchievementPrerequisiteCheckDto>(GameGuild.CQRS.Error.Failure("CheckAchievementPrerequisites", "Failed to check achievement prerequisites"));
     }
   }
 }

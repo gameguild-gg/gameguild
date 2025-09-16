@@ -2,7 +2,7 @@ using System.Diagnostics;
 using GameGuild.CQRS;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Performance monitoring behavior for tracking slow requests and memory usage

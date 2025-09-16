@@ -53,7 +53,7 @@ public class AchievementService : IAchievementService {
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error awarding achievement {AchievementId} to user {UserId}", achievementId, userId);
-      return Result.Failure<UserAchievement>(Error.Failure("AwardAchievement", "Failed to award achievement"));
+      return Result.Failure<UserAchievement>(GameGuild.CQRS.Error.Failure("AwardAchievement", "Failed to award achievement"));
     }
   }
 
@@ -79,7 +79,7 @@ public class AchievementService : IAchievementService {
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error updating progress for achievement {AchievementId} and user {UserId}", achievementId, userId);
-      return Result.Failure<AchievementProgress>(Error.Failure("UpdateProgress", "Failed to update achievement progress"));
+      return Result.Failure<AchievementProgress>(GameGuild.CQRS.Error.Failure("UpdateProgress", "Failed to update achievement progress"));
     }
   }
 
@@ -119,7 +119,7 @@ public class AchievementService : IAchievementService {
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting eligible achievements for user {UserId}", userId);
-      return Result.Failure<List<Achievement>>(Error.Failure("GetEligibleAchievements", "Failed to get eligible achievements"));
+      return Result.Failure<List<Achievement>>(GameGuild.CQRS.Error.Failure("GetEligibleAchievements", "Failed to get eligible achievements"));
     }
   }
 
@@ -133,7 +133,7 @@ public class AchievementService : IAchievementService {
         .FirstOrDefaultAsync(a => a.Id == achievementId && a.TenantId == tenantId);
 
       if (achievement == null) {
-        return Result.Failure<bool>(Error.NotFound("Achievement", "Achievement not found"));
+        return Result.Failure<bool>(GameGuild.CQRS.Error.NotFound("Achievement", "Achievement not found"));
       }
 
       var prerequisitesMet = await CheckPrerequisitesInternalAsync(userId, achievement, tenantId);
@@ -141,7 +141,7 @@ public class AchievementService : IAchievementService {
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error checking prerequisites for achievement {AchievementId} and user {UserId}", achievementId, userId);
-      return Result.Failure<bool>(Error.Failure("CheckPrerequisites", "Failed to check prerequisites"));
+      return Result.Failure<bool>(GameGuild.CQRS.Error.Failure("CheckPrerequisites", "Failed to check prerequisites"));
     }
   }
 
@@ -162,7 +162,7 @@ public class AchievementService : IAchievementService {
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting unnotified achievements for user {UserId}", userId);
-      return Result.Failure<List<UserAchievement>>(Error.Failure("GetUnnotifiedAchievements", "Failed to get unnotified achievements"));
+      return Result.Failure<List<UserAchievement>>(GameGuild.CQRS.Error.Failure("GetUnnotifiedAchievements", "Failed to get unnotified achievements"));
     }
   }
 
@@ -180,7 +180,7 @@ public class AchievementService : IAchievementService {
     }
     catch (Exception ex) {
       _logger.LogError(ex, "Error marking achievement {UserAchievementId} as notified", userAchievementId);
-      return Result.Failure(Error.Failure("MarkAsNotified", "Failed to mark achievement as notified"));
+      return Result.Failure(GameGuild.CQRS.Error.Failure("MarkAsNotified", "Failed to mark achievement as notified"));
     }
   }
 
