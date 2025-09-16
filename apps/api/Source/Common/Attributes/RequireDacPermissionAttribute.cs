@@ -4,7 +4,7 @@ using GameGuild.Modules.Permissions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace GameGuild.Common.Attributes;
+namespace GameGuild.Attributes;
 
 /// <summary>
 /// Enhanced attribute for DAC permission checks across all 3 layers
@@ -48,7 +48,7 @@ public class RequireDacPermissionAttribute : Attribute, IAsyncAuthorizationFilte
 
     try {
       // Check DAC permission
-      var permissionResult = await resolver.ResolvePermissionAsync<Entity>(
+      var permissionResult = await resolver.ResolvePermissionAsync<EntityBase>(
           userId, tenantId, RequiredPermission, resourceId, ContentTypeName);
 
       if (permissionResult.IsGranted) {
