@@ -16,6 +16,10 @@ public enum SubscriptionStatus {
   [Description("User has canceled the subscription")]
   Canceled,
 
+  /// <summary>Alias for Canceled to support both spellings</summary>
+  [Description("User has cancelled the subscription")]
+  Cancelled = Canceled,
+
   [Description("Initial payment failed, subscription not fully activated")]
   Incomplete,
 
@@ -24,4 +28,10 @@ public enum SubscriptionStatus {
 
   [Description("Payment failed after retries, subscription suspended")]
   Unpaid,
+
+  [Description("Subscription is pending activation")]
+  PendingActivation,
+
+  [Description("Subscription has been suspended")]
+  Suspended,
 }
