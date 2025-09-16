@@ -372,22 +372,115 @@ export const gamePublishingSyllabusContent: ProgramContent = {
     slug: 'syllabus',
 };
 
+// Platform Categories
+export const gamePublishingDesktopContent: ProgramContent = {
+    id: 'game-publishing-desktop',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Desktop Publishing',
+    description: 'Publishing games on desktop platforms',
+    type: 0, // Page
+    body: 'Desktop publishing platforms overview...',
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'desktop',
+};
+
+export const gamePublishingMobileContent: ProgramContent = {
+    id: 'game-publishing-mobile',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Mobile Publishing',
+    description: 'Publishing games on mobile platforms',
+    type: 0, // Page
+    body: 'Mobile publishing platforms overview...',
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'mobile',
+};
+
+export const gamePublishingConsoleContent: ProgramContent = {
+    id: 'game-publishing-console',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'Console Publishing',
+    description: 'Publishing games on console platforms',
+    type: 0, // Page
+    body: 'Console publishing platforms overview...',
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'console',
+};
+
+export const gamePublishingHtml5Content: ProgramContent = {
+    id: 'game-publishing-html5',
+    programId: 'game-publishing-program-1',
+    parentId: undefined,
+    title: 'HTML5 Publishing',
+    description: 'Publishing HTML5 games on web platforms',
+    type: 0, // Page
+    body: 'HTML5 publishing platforms overview...',
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: {} as Program,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'html5',
+};
+
 export const gamePublishingSteamContent: ProgramContent = {
     id: 'game-publishing-steam',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-desktop',
     title: 'Steam Publishing Guide',
     description: 'Complete guide to publishing games on Steam',
     type: 0, // Page
     body: gamePublishingSteam,
-    sortOrder: 2,
+    sortOrder: 1,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingDesktopContent,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -398,19 +491,19 @@ export const gamePublishingSteamContent: ProgramContent = {
 export const gamePublishingEpicGamesStoreContent: ProgramContent = {
     id: 'game-publishing-epic-games-store',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-desktop',
     title: 'Epic Games Store Publishing Guide',
     description: 'Guide to publishing games on Epic Games Store',
     type: 0, // Page
     body: gamePublishingEpicGamesStore,
-    sortOrder: 3,
+    sortOrder: 2,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingDesktopContent,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -421,19 +514,19 @@ export const gamePublishingEpicGamesStoreContent: ProgramContent = {
 export const gamePublishingGogContent: ProgramContent = {
     id: 'game-publishing-gog',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-desktop',
     title: 'GOG Publishing Guide',
     description: 'Guide to publishing DRM-free games on GOG',
     type: 0, // Page
     body: gamePublishingGog,
-    sortOrder: 4,
+    sortOrder: 3,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 35,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingDesktopContent,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -444,19 +537,19 @@ export const gamePublishingGogContent: ProgramContent = {
 export const gamePublishingMicrosoftStoreContent: ProgramContent = {
     id: 'game-publishing-microsoft-store',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-desktop',
     title: 'Microsoft Store Publishing Guide',
     description: 'Guide to publishing games on Microsoft Store',
     type: 0, // Page
     body: gamePublishingMicrosoftStore,
-    sortOrder: 5,
+    sortOrder: 4,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingDesktopContent,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -469,19 +562,19 @@ export const gamePublishingMicrosoftStoreContent: ProgramContent = {
 export const gamePublishingGooglePlayContent: ProgramContent = {
     id: 'game-publishing-google-play',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-mobile',
     title: 'Google Play Store Publishing Guide',
     description: 'Guide to publishing mobile games on Google Play Store',
     type: 0, // Page
     body: gamePublishingGooglePlay,
-    sortOrder: 7,
+    sortOrder: 1,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingMobileContent,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -492,19 +585,19 @@ export const gamePublishingGooglePlayContent: ProgramContent = {
 export const gamePublishingAppStoreContent: ProgramContent = {
     id: 'game-publishing-app-store',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-mobile',
     title: 'Apple App Store Publishing Guide',
     description: 'Guide to publishing mobile games on Apple App Store',
     type: 0, // Page
     body: gamePublishingAppStore,
-    sortOrder: 8,
+    sortOrder: 2,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingMobileContent,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -515,19 +608,19 @@ export const gamePublishingAppStoreContent: ProgramContent = {
 export const gamePublishingNintendoSwitchContent: ProgramContent = {
     id: 'game-publishing-nintendo-switch',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-console',
     title: 'Nintendo Store Publishing Guide',
     description: 'Guide to publishing games on Nintendo Store',
     type: 0, // Page
     body: gamePublishingNintendoSwitch,
-    sortOrder: 9,
+    sortOrder: 1,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 50,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingConsoleContent,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -538,19 +631,19 @@ export const gamePublishingNintendoSwitchContent: ProgramContent = {
 export const gamePublishingPlaystationStoreContent: ProgramContent = {
     id: 'game-publishing-playstation-store',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-console',
     title: 'PlayStation Store Publishing Guide',
     description: 'Guide to publishing games on PlayStation Store',
     type: 0, // Page
     body: gamePublishingPlaystationStore,
-    sortOrder: 9,
+    sortOrder: 2,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 50,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingConsoleContent,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -561,19 +654,19 @@ export const gamePublishingPlaystationStoreContent: ProgramContent = {
 export const gamePublishingXboxContent: ProgramContent = {
     id: 'game-publishing-xbox',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-console',
     title: 'Xbox Store Publishing Guide',
     description: 'Guide to publishing games on Xbox Store',
     type: 0, // Page
     body: gamePublishingXbox,
-    sortOrder: 10,
+    sortOrder: 3,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingConsoleContent,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -584,19 +677,19 @@ export const gamePublishingXboxContent: ProgramContent = {
 export const gamePublishingOculusQuestContent: ProgramContent = {
     id: 'game-publishing-oculus-quest',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-console',
     title: 'Oculus Quest Store Publishing Guide',
     description: 'Guide to publishing VR games on Oculus Quest Store',
     type: 0, // Page
     body: gamePublishingOculusQuest,
-    sortOrder: 11,
+    sortOrder: 4,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingConsoleContent,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -607,19 +700,19 @@ export const gamePublishingOculusQuestContent: ProgramContent = {
 export const gamePublishingPokiContent: ProgramContent = {
     id: 'game-publishing-poki',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-html5',
     title: 'Poki Publishing Guide',
     description: 'Guide to publishing HTML5 games on Poki',
     type: 0, // Page
     body: gamePublishingPoki,
-    sortOrder: 12,
+    sortOrder: 1,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 35,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingHtml5Content,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -630,19 +723,19 @@ export const gamePublishingPokiContent: ProgramContent = {
 export const gamePublishingCrazyGamesContent: ProgramContent = {
     id: 'game-publishing-crazy-games',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-html5',
     title: 'CrazyGames Publishing Guide',
     description: 'Guide to publishing HTML5 games on CrazyGames',
     type: 0, // Page
     body: gamePublishingCrazyGames,
-    sortOrder: 13,
+    sortOrder: 2,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 35,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingHtml5Content,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -653,19 +746,19 @@ export const gamePublishingCrazyGamesContent: ProgramContent = {
 export const gamePublishingSelfHostingContent: ProgramContent = {
     id: 'game-publishing-self-hosting',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-html5',
     title: 'Self-Hosting Games Guide',
     description: 'Guide to self-hosting HTML5 games',
     type: 0, // Page
     body: gamePublishingSelfHosting,
-    sortOrder: 14,
+    sortOrder: 3,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingHtml5Content,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -676,19 +769,19 @@ export const gamePublishingSelfHostingContent: ProgramContent = {
 export const gamePublishingGithubPagesContent: ProgramContent = {
     id: 'game-publishing-github-pages',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-html5',
     title: 'GitHub Pages Hosting Guide',
     description: 'Guide to hosting HTML5 games on GitHub Pages',
     type: 0, // Page
     body: gamePublishingGithubPages,
-    sortOrder: 15,
+    sortOrder: 4,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingHtml5Content,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -699,19 +792,19 @@ export const gamePublishingGithubPagesContent: ProgramContent = {
 export const gamePublishingFirebaseHostingContent: ProgramContent = {
     id: 'game-publishing-firebase-hosting',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-html5',
     title: 'Firebase Hosting Guide',
     description: 'Guide to hosting HTML5 games on Firebase Hosting',
     type: 0, // Page
     body: gamePublishingFirebaseHosting,
-    sortOrder: 16,
+    sortOrder: 5,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 35,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingHtml5Content,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -722,19 +815,19 @@ export const gamePublishingFirebaseHostingContent: ProgramContent = {
 export const gamePublishingNetlifyContent: ProgramContent = {
     id: 'game-publishing-netlify',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-html5',
     title: 'Netlify Hosting Guide',
     description: 'Guide to hosting HTML5 games on Netlify',
     type: 0, // Page
     body: gamePublishingNetlify,
-    sortOrder: 17,
+    sortOrder: 6,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingHtml5Content,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -745,19 +838,19 @@ export const gamePublishingNetlifyContent: ProgramContent = {
 export const gamePublishingVercelContent: ProgramContent = {
     id: 'game-publishing-vercel',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-html5',
     title: 'Vercel Hosting Guide',
     description: 'Guide to hosting HTML5 games on Vercel',
     type: 0, // Page
     body: gamePublishingVercel,
-    sortOrder: 18,
+    sortOrder: 7,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingHtml5Content,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -768,19 +861,19 @@ export const gamePublishingVercelContent: ProgramContent = {
 export const gamePublishingItchioContent: ProgramContent = {
     id: 'game-publishing-itchio',
     programId: 'game-publishing-program-1',
-    parentId: undefined,
+    parentId: 'game-publishing-html5',
     title: 'Itch.io Publishing Guide',
     description: 'Guide to publishing HTML5 games on Itch.io',
     type: 0, // Page
     body: gamePublishingItchio,
-    sortOrder: 19,
+    sortOrder: 8,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
     program: {} as Program,
-    parent: undefined,
+    parent: gamePublishingHtml5Content,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -3670,24 +3763,11 @@ intro2gproProgram.programContents = [
 
 gamePublishingProgram.programContents = [
     gamePublishingSyllabusContent,
-    gamePublishingSteamContent,
-    gamePublishingEpicGamesStoreContent,
-    gamePublishingGogContent,
-    gamePublishingMicrosoftStoreContent,
-    gamePublishingItchioContent,
-    gamePublishingPlaystationStoreContent,
-    gamePublishingNintendoSwitchContent,
-    gamePublishingXboxContent,
-    gamePublishingOculusQuestContent,
-    gamePublishingPokiContent,
-    gamePublishingCrazyGamesContent,
-    gamePublishingSelfHostingContent,
-    gamePublishingGithubPagesContent,
-    gamePublishingFirebaseHostingContent,
-    gamePublishingNetlifyContent,
-    gamePublishingVercelContent,
-    gamePublishingGooglePlayContent,
-    gamePublishingAppStoreContent,
+    // Platform Categories (individual platforms are nested as children)
+    gamePublishingDesktopContent,
+    gamePublishingMobileContent,
+    gamePublishingConsoleContent,
+    gamePublishingHtml5Content,
 ];
 
 // Set program references
@@ -3728,6 +3808,43 @@ gamePublishingNetlifyContent.program = gamePublishingProgram;
 gamePublishingVercelContent.program = gamePublishingProgram;
 gamePublishingGooglePlayContent.program = gamePublishingProgram;
 gamePublishingAppStoreContent.program = gamePublishingProgram;
+
+// Set program references for platform categories
+gamePublishingDesktopContent.program = gamePublishingProgram;
+gamePublishingMobileContent.program = gamePublishingProgram;
+gamePublishingConsoleContent.program = gamePublishingProgram;
+gamePublishingHtml5Content.program = gamePublishingProgram;
+
+// Set parent-child relationships for game publishing
+gamePublishingDesktopContent.children = [
+    gamePublishingSteamContent,
+    gamePublishingEpicGamesStoreContent,
+    gamePublishingGogContent,
+    gamePublishingMicrosoftStoreContent,
+];
+
+gamePublishingMobileContent.children = [
+    gamePublishingGooglePlayContent,
+    gamePublishingAppStoreContent,
+];
+
+gamePublishingConsoleContent.children = [
+    gamePublishingNintendoSwitchContent,
+    gamePublishingPlaystationStoreContent,
+    gamePublishingXboxContent,
+    gamePublishingOculusQuestContent,
+];
+
+gamePublishingHtml5Content.children = [
+    gamePublishingPokiContent,
+    gamePublishingCrazyGamesContent,
+    gamePublishingSelfHostingContent,
+    gamePublishingGithubPagesContent,
+    gamePublishingFirebaseHostingContent,
+    gamePublishingNetlifyContent,
+    gamePublishingVercelContent,
+    gamePublishingItchioContent,
+];
 
 pythonProduct.productPrograms = [pythonProductProgram];
 ai4gamesProduct.productPrograms = [ai4gamesProductProgram];
@@ -3836,6 +3953,11 @@ export const mockProgramContents: ProgramContent[] = [
     
     // Game Publishing content
     gamePublishingSyllabusContent,
+    // Game Publishing parent categories
+    gamePublishingDesktopContent,
+    gamePublishingMobileContent,
+    gamePublishingConsoleContent,
+    gamePublishingHtml5Content,
     gamePublishingSteamContent,
     gamePublishingEpicGamesStoreContent,
     gamePublishingGogContent,
