@@ -278,6 +278,76 @@ export const intro2gproGamedevIssuesContent: ProgramContent = {
     slug: 'gamedev-issues',
 };
 
+// Child content for gamedev-issues
+export const intro2gproTechnicalChallengesContent: ProgramContent = {
+    id: 'intro2gpro-technical-challenges',
+    programId: 'intro2gpro-program-1',
+    parentId: 'intro2gpro-gamedev-issues',
+    title: 'Technical Challenges',
+    description: 'Common technical challenges in game development',
+    type: 0, // Page
+    body: 'Technical challenges content here...',
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: intro2gproGamedevIssuesContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'technical-challenges',
+};
+
+export const intro2gproDesignChallengesContent: ProgramContent = {
+    id: 'intro2gpro-design-challenges',
+    programId: 'intro2gpro-program-1',
+    parentId: 'intro2gpro-gamedev-issues',
+    title: 'Design Challenges',
+    description: 'Common design challenges in game development',
+    type: 0, // Page
+    body: 'Design challenges content here...',
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: intro2gproGamedevIssuesContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'design-challenges',
+};
+
+export const intro2gproBusinessChallengesContent: ProgramContent = {
+    id: 'intro2gpro-business-challenges',
+    programId: 'intro2gpro-program-1',
+    parentId: 'intro2gpro-gamedev-issues',
+    title: 'Business Challenges',
+    description: 'Common business challenges in game development',
+    type: 0, // Page
+    body: 'Business challenges content here...',
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: intro2gproGamedevIssuesContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'business-challenges',
+};
+
 // Game Publishing Course Content
 export const gamePublishingSyllabusContent: ProgramContent = {
     id: 'game-publishing-syllabus',
@@ -3627,6 +3697,16 @@ intro2gproInterviewContent.program = intro2gproProgram;
 intro2gproGamedevToolsContent.program = intro2gproProgram;
 intro2gproGamedevCareersContent.program = intro2gproProgram;
 intro2gproGamedevIssuesContent.program = intro2gproProgram;
+intro2gproTechnicalChallengesContent.program = intro2gproProgram;
+intro2gproDesignChallengesContent.program = intro2gproProgram;
+intro2gproBusinessChallengesContent.program = intro2gproProgram;
+
+// Set up parent-child relationships
+intro2gproGamedevIssuesContent.children = [
+    intro2gproTechnicalChallengesContent,
+    intro2gproDesignChallengesContent,
+    intro2gproBusinessChallengesContent,
+];
 
 // Set game publishing program references
 gamePublishingSyllabusContent.program = gamePublishingProgram;
