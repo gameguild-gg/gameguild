@@ -1,7 +1,7 @@
 using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum SkillProficiencyLevel {
   [Description("Basic awareness and understanding of concepts")]

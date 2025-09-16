@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Serialization;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Snake case transformer implementation using Newtonsoft.Json.

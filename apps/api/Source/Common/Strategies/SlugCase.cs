@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common;
+﻿namespace GameGuild;
 
 /// <summary>
 /// Provides utilities for converting strings to URL-friendly slug format.

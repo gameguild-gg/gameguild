@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum PaymentMethodStatus {
   [Description("Payment method is valid and can be used")]

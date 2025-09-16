@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum CertificateTagRelationshipType {
   [Description("Tag is required for this certificate")]

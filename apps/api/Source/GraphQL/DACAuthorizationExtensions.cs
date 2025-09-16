@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common.Authorization;
+﻿namespace GameGuild.Authorization;
 
 /// <summary>
 /// Extension methods for applying DAC authorization middleware

@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
 

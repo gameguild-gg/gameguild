@@ -2,7 +2,7 @@ using DotNetEnv;
 using GameGuild.Database;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Modern .NET extension methods for WebApplicationBuilder following best practices.

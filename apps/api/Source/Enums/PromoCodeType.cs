@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum PromoCodeType {
   [Description("Applies a percentage discount to the total price")]

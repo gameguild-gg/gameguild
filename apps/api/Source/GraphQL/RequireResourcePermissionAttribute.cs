@@ -2,7 +2,7 @@
 using GameGuild.Modules.Resources;
 
 
-namespace GameGuild.Common.Authorization;
+namespace GameGuild.Authorization;
 
 /// <summary>
 /// Resource-level DAC authorization attribute for GraphQL resolvers

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public enum SubscriptionStatus {
   [Description("Subscription is currently valid and paid up")]

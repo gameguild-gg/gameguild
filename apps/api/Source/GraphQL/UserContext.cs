@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Authorization;
+namespace GameGuild.Authorization;
 
 /// <summary>
 /// Represents user context for 3-layer DAC authorization
