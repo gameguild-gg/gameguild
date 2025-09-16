@@ -1,5 +1,7 @@
 using GameGuild.CQRS;
 using GameGuild.Database;
+using CqrsError = GameGuild.CQRS.Error;
+using CqrsResult = GameGuild.CQRS.Result;
 
 namespace GameGuild.Modules.Users;
 
@@ -17,14 +19,14 @@ public class GetUserByIdResultHandler(
 
             if (user == null) {
                 logger.LogDebug("User with ID {UserId} not found", request.UserId);
-                return Result.Failure<User>(Error.NotFound("Users.NotFound", $"User with ID {request.UserId} was not found"));
+                return CqrsResult.Failure<User>(CqrsError.NotFound("Users.NotFound", $"User with ID {request.UserId} was not found"));
             }
 
-            return Result.Success(user);
+            return CqrsResult.Success(user);
         }
         catch (Exception ex) {
             logger.LogError(ex, "Error retrieving user with ID {UserId}", request.UserId);
-            return Result.Failure<User>(Error.Create("Users.RetrievalFailed", "An error occurred while retrieving the user"));
+            return CqrsResult.Failure<User>(CqrsError.Create("Users.RetrievalFailed", "An error occurred while retrieving the user"));
         }
     }
 }
