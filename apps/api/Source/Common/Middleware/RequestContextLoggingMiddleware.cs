@@ -1,7 +1,7 @@
 ﻿using Serilog.Context;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public class RequestContextLoggingMiddleware(RequestDelegate next) {
   private const string CorrelationIdHeaderName = "Correlation-Id";

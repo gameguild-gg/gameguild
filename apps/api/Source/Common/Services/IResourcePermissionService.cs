@@ -1,6 +1,6 @@
 using GameGuild.Modules.Permissions;
 
-namespace GameGuild.Common.Services;
+namespace GameGuild.Services;
 
 /// <summary>
 /// Service for managing resource-level permission sharing and collaboration
