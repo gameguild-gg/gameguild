@@ -2,7 +2,7 @@ using GameGuild.Database;
 using GameGuild.Modules.Permissions;
 
 
-namespace GameGuild.Common.Services;
+namespace GameGuild.Services;
 
 /// <summary>
 /// Simple permission service - roles are just templates that create individual user permissions

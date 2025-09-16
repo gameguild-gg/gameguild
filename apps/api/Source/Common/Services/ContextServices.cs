@@ -1,7 +1,7 @@
 using System.Security.Claims;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Implementation of user context from HTTP context
