@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ProgramContent } from '@/lib/api/generated/types.gen';
 import { cn } from '@/lib/utils';
-import { BarChart3, BookOpen, ChevronDown, ChevronRight, ClipboardList, Code, FileText, HelpCircle, MessageSquare, Trophy } from 'lucide-react';
+import { BarChart3, BookOpen, ChevronDown, ChevronRight, ClipboardList, Code, FileText, HelpCircle, MessageSquare, Trophy, Folder, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -50,50 +50,67 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '', isMobile
   const contentSlug = item.slug || item.id || 'untitled';
   const currentPath = parentPath ? `${parentPath}/${contentSlug}` : contentSlug;
   const href = `/p/${courseSlug}/${currentPath}`;
-  const isActive = pathname === href || pathname.startsWith(`${href}/`);
+  const isActive = pathname === href;
   const Icon = getContentIcon(item.type || 0);
 
   const hasChildren = item.children && item.children.length > 0;
+  const hasActiveChild = hasChildren && item.children?.some(child => {
+    const childSlug = child.slug || child.id || 'untitled';
+    const childPath = `${currentPath}/${childSlug}`;
+    const childHref = `/p/${courseSlug}/${childPath}`;
+    return pathname === childHref || pathname.startsWith(`${childHref}/`);
+  });
   const paddingLeft = level * 16;
+
+  const handleToggleExpand = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
+  };
+
+  const handleItemClick = () => {
+    // Toggle expansion if has children
+    if (hasChildren) {
+      setIsExpanded(!isExpanded);
+    }
+    
+    // Close sidebar on mobile when clicking a content item
+    if (isMobile) {
+      closeSidebar();
+    }
+  };
 
   return (
     <div>
       <div className={cn(
         "flex items-center gap-2 p-2 rounded-lg transition-colors cursor-pointer",
-        isActive
-          ? "bg-primary text-primary-foreground"
-          : "hover:bg-muted"
+        level === 0 ? (
+          isActive && !hasActiveChild
+            ? "bg-primary text-primary-foreground"
+            : "hover:bg-muted"
+        ) : (
+          isActive
+            ? "bg-primary text-primary-foreground"
+            : "hover:bg-muted/50"
+        )
       )} style={{ paddingLeft: `${paddingLeft + 12}px` }}>
-        {hasChildren && (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              setIsExpanded(!isExpanded);
-            }}
-            className="p-1 hover:bg-black/10 rounded"
-          >
-            {isExpanded ? (
-              <ChevronDown className="h-3 w-3" />
-            ) : (
-              <ChevronRight className="h-3 w-3" />
-            )}
-          </button>
-        )}
+
 
         <Link
           href={href}
           className="flex items-center gap-2 flex-1 min-w-0"
-          onClick={() => {
-            // Close sidebar on mobile when clicking a content item
-            if (isMobile) {
-              closeSidebar();
-            }
-          }}
+          onClick={handleItemClick}
         >
-          <div className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary font-medium text-xs">
-            {index + 1}
-          </div>
-          <Icon className="h-3 w-3" />
+
+          {hasChildren ? (
+              isExpanded ? (
+                <FolderOpen className="h-3 w-3" />
+              ) : (
+                <Folder className="h-3 w-3" />
+              )
+            ) : (
+              <Icon className="h-3 w-3" />
+            )}
           <div className="flex-1 min-w-0">
             <div className="font-medium text-sm break-words">{item.title || 'Untitled'}</div>
             {item.estimatedMinutes && (
@@ -105,20 +122,25 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '', isMobile
         </Link>
       </div>
 
-      {hasChildren && isExpanded && (
-        <div className="mt-1">
-          {item.children!.map((child, childIndex) => (
-            <ContentItem
-              key={child.id}
-              item={child}
-              courseSlug={courseSlug}
-              index={childIndex}
-              level={level + 1}
-              parentPath={currentPath}
-              isMobile={isMobile}
-              closeSidebar={closeSidebar}
-            />
-          ))}
+      {hasChildren && (
+        <div className={cn(
+          "overflow-hidden transition-all duration-300 ease-in-out",
+          isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+        )}>
+          <div className="mt-1">
+            {item.children!.map((child, childIndex) => (
+              <ContentItem
+                key={child.id}
+                item={child}
+                courseSlug={courseSlug}
+                index={childIndex}
+                level={level + 1}
+                parentPath={currentPath}
+                isMobile={isMobile}
+                closeSidebar={closeSidebar}
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>
