@@ -34,7 +34,7 @@ public class CreateAchievementCommandHandler : ICommandHandler<CreateAchievement
 
       if (existingAchievement != null)
       {
-        return Result.Failure<Achievement>(Error.Conflict("Achievement", "Achievement with this name already exists"));
+        return Result.Failure<Achievement>(GameGuild.CQRS.Error.Conflict("Achievement", "Achievement with this name already exists"));
       }
 
       var achievement = new Achievement
@@ -112,7 +112,7 @@ public class CreateAchievementCommandHandler : ICommandHandler<CreateAchievement
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error creating achievement {AchievementName}", request.Name);
-      return Result.Failure<Achievement>(Error.Failure("CreateAchievement", "Failed to create achievement"));
+      return Result.Failure<Achievement>(GameGuild.CQRS.Error.Failure("CreateAchievement", "Failed to create achievement"));
     }
   }
 }
@@ -145,7 +145,7 @@ public class UpdateAchievementCommandHandler : ICommandHandler<UpdateAchievement
 
       if (achievement == null)
       {
-        return Result.Failure<Achievement>(Error.NotFound("Achievement", "Achievement not found"));
+        return Result.Failure<Achievement>(GameGuild.CQRS.Error.NotFound("Achievement", "Achievement not found"));
       }
 
       // Update only provided fields
@@ -183,7 +183,7 @@ public class UpdateAchievementCommandHandler : ICommandHandler<UpdateAchievement
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error updating achievement {AchievementId}", request.AchievementId);
-      return Result.Failure<Achievement>(Error.Failure("UpdateAchievement", "Failed to update achievement"));
+      return Result.Failure<Achievement>(GameGuild.CQRS.Error.Failure("UpdateAchievement", "Failed to update achievement"));
     }
   }
 }
@@ -216,7 +216,7 @@ public class DeleteAchievementCommandHandler : ICommandHandler<DeleteAchievement
 
       if (achievement == null)
       {
-        return Result.Failure(Error.NotFound("Achievement", "Achievement not found"));
+        return Result.Failure(GameGuild.CQRS.Error.NotFound("Achievement", "Achievement not found"));
       }
 
       // Check if any users have earned this achievement
@@ -253,7 +253,7 @@ public class DeleteAchievementCommandHandler : ICommandHandler<DeleteAchievement
     catch (Exception ex)
     {
       _logger.LogError(ex, "Error deleting achievement {AchievementId}", request.AchievementId);
-      return Result.Failure(Error.Failure("DeleteAchievement", "Failed to delete achievement"));
+      return Result.Failure(GameGuild.CQRS.Error.Failure("DeleteAchievement", "Failed to delete achievement"));
     }
   }
 }

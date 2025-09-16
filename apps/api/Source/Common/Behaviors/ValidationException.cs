@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Common;
+﻿namespace GameGuild;
 
 /// <summary>
 /// Custom validation exception for better error handling
