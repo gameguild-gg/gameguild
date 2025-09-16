@@ -2,6 +2,8 @@
 
 Sorting argorthims are a sequence of steps that are used to sort a list of elements in a particular order.
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/kPRA0W1kECg?si=m80vTaP3rxdJxvQ0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 ## Swap function
 
 It is vital to the sorting algorithms that you have a swap function. It is used to swap two elements in the array.
