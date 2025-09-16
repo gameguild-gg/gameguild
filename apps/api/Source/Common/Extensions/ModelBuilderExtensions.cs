@@ -1,8 +1,9 @@
 using System.Linq.Expressions;
+using GameGuild;
 using GameGuild.Modules.Resources;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Extension methods for configuring base entity properties in EntityBase Framework
@@ -32,9 +33,9 @@ public static class ModelBuilderExtensions {
           // Skip key configuration for TPC inheritance entities - EF handles it automatically
           if (!isTpcInheritanceType) {
             // Id configuration (UUID) - for entities not using TPC inheritance
-            builder.HasKey(nameof(Entity.Id));
+            builder.HasKey(nameof(EntityBase.Id));
 
-            builder.Property(nameof(Entity.Id))
+            builder.Property(nameof(EntityBase.Id))
                    .HasDefaultValueSql("gen_random_uuid()") // PostgreSQL UUID generation
                    .ValueGeneratedOnAdd();
           }
@@ -42,27 +43,27 @@ public static class ModelBuilderExtensions {
           // Version configuration for optimistic concurrency
           // Use ConcurrencyCheck instead of IsRowVersion for cross-database compatibility
           // Database default ensures new entities start with Version = 1
-          builder.Property(nameof(Entity.Version))
+          builder.Property(nameof(EntityBase.Version))
                  .IsConcurrencyToken()
                  .HasDefaultValue(1)
                  .ValueGeneratedOnAdd();
 
           // Timestamp and soft delete configuration - for all concrete types in TPC
-          builder.Property(nameof(Entity.CreatedAt))
+          builder.Property(nameof(EntityBase.CreatedAt))
                  .IsRequired()
                  .HasDefaultValueSql("CURRENT_TIMESTAMP")
                  .ValueGeneratedOnAdd();
 
-          builder.Property(nameof(Entity.UpdatedAt))
+          builder.Property(nameof(EntityBase.UpdatedAt))
                  .IsRequired()
                  .HasDefaultValueSql("CURRENT_TIMESTAMP")
                  .ValueGeneratedOnAddOrUpdate();
 
-          builder.Property(nameof(Entity.DeletedAt)).IsRequired(false);
+          builder.Property(nameof(EntityBase.DeletedAt)).IsRequired(false);
 
           // Add indexes for performance - for all concrete types in TPC
-          builder.HasIndex(nameof(Entity.CreatedAt));
-          builder.HasIndex(nameof(Entity.DeletedAt));
+          builder.HasIndex(nameof(EntityBase.CreatedAt));
+          builder.HasIndex(nameof(EntityBase.DeletedAt));
         }
       );
     }
@@ -89,7 +90,7 @@ public static class ModelBuilderExtensions {
       // Add global query filter to exclude soft-deleted entities for concrete types
       // that are NOT part of TPC inheritance hierarchies
       var parameter = Expression.Parameter(entityType.ClrType, "e");
-      var deletedAtProperty = Expression.Property(parameter, nameof(Entity.DeletedAt));
+      var deletedAtProperty = Expression.Property(parameter, nameof(EntityBase.DeletedAt));
       var condition = Expression.Equal(deletedAtProperty, Expression.Constant(null, typeof(DateTime?)));
       var lambda = Expression.Lambda(condition, parameter);
 
@@ -104,13 +105,13 @@ public static class ModelBuilderExtensions {
     if (type == null) return false;
 
     // Check for direct inheritance from BaseEntity
-    if (typeof(Entity).IsAssignableFrom(type)) return true;
+    if (typeof(EntityBase).IsAssignableFrom(type)) return true;
 
     // Check for inheritance from BaseEntity<T>
     var baseType = type.BaseType;
 
     while (baseType != null) {
-      if (baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(Entity<>)) return true;
+      if (baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(EntityBase<>)) return true;
 
       baseType = baseType.BaseType;
     }
