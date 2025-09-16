@@ -254,13 +254,13 @@ public class ResourcePermissionController : ControllerBase {
     return resourceType.ToLower() switch {
       "projects" => await _permissionResolver.ResolvePermissionAsync<Project>(
           userId, tenantId, permission, resourceId, "Project"),
-      "posts" => await _permissionResolver.ResolvePermissionAsync<Entity>(
+      "posts" => await _permissionResolver.ResolvePermissionAsync<EntityBase>(
           userId, tenantId, permission, resourceId, "Post"),
-      "contents" => await _permissionResolver.ResolvePermissionAsync<Entity>(
+      "contents" => await _permissionResolver.ResolvePermissionAsync<EntityBase>(
           userId, tenantId, permission, resourceId, "Content"),
-      "products" => await _permissionResolver.ResolvePermissionAsync<Entity>(
+      "products" => await _permissionResolver.ResolvePermissionAsync<EntityBase>(
           userId, tenantId, permission, resourceId, "Product"),
-      "resources" => await _permissionResolver.ResolvePermissionAsync<Entity>(
+      "resources" => await _permissionResolver.ResolvePermissionAsync<EntityBase>(
           userId, tenantId, permission, resourceId, "Resource"),
       _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
     };
@@ -271,13 +271,13 @@ public class ResourcePermissionController : ControllerBase {
     return resourceType.ToLower() switch {
       "projects" => await _permissionResolver.GetEffectivePermissionsAsync<Project>(
           userId, tenantId, resourceId, "Project"),
-      "posts" => await _permissionResolver.GetEffectivePermissionsAsync<Entity>(
+      "posts" => await _permissionResolver.GetEffectivePermissionsAsync<EntityBase>(
           userId, tenantId, resourceId, "Post"),
-      "contents" => await _permissionResolver.GetEffectivePermissionsAsync<Entity>(
+      "contents" => await _permissionResolver.GetEffectivePermissionsAsync<EntityBase>(
           userId, tenantId, resourceId, "Content"),
-      "products" => await _permissionResolver.GetEffectivePermissionsAsync<Entity>(
+      "products" => await _permissionResolver.GetEffectivePermissionsAsync<EntityBase>(
           userId, tenantId, resourceId, "Product"),
-      "resources" => await _permissionResolver.GetEffectivePermissionsAsync<Entity>(
+      "resources" => await _permissionResolver.GetEffectivePermissionsAsync<EntityBase>(
           userId, tenantId, resourceId, "Resource"),
       _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
     };
@@ -288,13 +288,13 @@ public class ResourcePermissionController : ControllerBase {
     return resourceType.ToLower() switch {
       "projects" => await _permissionResolver.GetPermissionHierarchyAsync<Project>(
           userId, tenantId, permission, resourceId, "Project"),
-      "posts" => await _permissionResolver.GetPermissionHierarchyAsync<Entity>(
+      "posts" => await _permissionResolver.GetPermissionHierarchyAsync<EntityBase>(
           userId, tenantId, permission, resourceId, "Post"),
-      "contents" => await _permissionResolver.GetPermissionHierarchyAsync<Entity>(
+      "contents" => await _permissionResolver.GetPermissionHierarchyAsync<EntityBase>(
           userId, tenantId, permission, resourceId, "Content"),
-      "products" => await _permissionResolver.GetPermissionHierarchyAsync<Entity>(
+      "products" => await _permissionResolver.GetPermissionHierarchyAsync<EntityBase>(
           userId, tenantId, permission, resourceId, "Product"),
-      "resources" => await _permissionResolver.GetPermissionHierarchyAsync<Entity>(
+      "resources" => await _permissionResolver.GetPermissionHierarchyAsync<EntityBase>(
           userId, tenantId, permission, resourceId, "Resource"),
       _ => throw new ArgumentException($"Unknown resource type: {resourceType}"),
     };
