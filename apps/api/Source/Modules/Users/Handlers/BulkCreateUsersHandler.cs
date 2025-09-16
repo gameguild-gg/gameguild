@@ -13,7 +13,7 @@ public class BulkCreateUsersHandler(
   ILogger<BulkCreateUsersHandler> logger,
   IMediator mediator
 ) : IResultCommandHandler<BulkCreateUsersCommand, BulkOperationResult> {
-  public async Task<Result<BulkOperationResult>> Handle(BulkCreateUsersCommand request, CancellationToken cancellationToken) {
+  public async Task<GameGuild.CQRS.Result<BulkOperationResult>> Handle(BulkCreateUsersCommand request, CancellationToken cancellationToken) {
     var createdUsers = new List<User>();
     var errors = new List<string>();
     var successfulCount = 0;
@@ -75,6 +75,6 @@ public class BulkCreateUsersHandler(
       request.Reason ?? "Not specified"
     );
 
-    return Result.Success(result);
+    return GameGuild.CQRS.Result.Success(result);
   }
 }

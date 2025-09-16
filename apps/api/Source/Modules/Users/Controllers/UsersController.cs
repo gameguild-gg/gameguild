@@ -236,8 +236,8 @@ public class UsersController(GameGuild.CQRS.IMediator mediator) : ControllerBase
       CreatedAfter = createdAfter,
       CreatedBefore = createdBefore,
       IncludeDeleted = includeDeleted,
-      Skip = skip,
-      Take = take,
+      PageNumber = (skip / take) + 1,
+      PageSize = take,
       SortBy = sortBy,
       SortDirection = sortDirection,
     };
@@ -261,7 +261,7 @@ public class UsersController(GameGuild.CQRS.IMediator mediator) : ControllerBase
                         )
                         .ToList();
 
-    return Ok(new PagedResult<UserResponseDto>(userDtos, users.TotalCount, users.Skip, users.Take));
+    return Ok(new PagedResult<UserResponseDto>(userDtos, users.TotalCount, skip, take));
   }
 
   /// <summary>
