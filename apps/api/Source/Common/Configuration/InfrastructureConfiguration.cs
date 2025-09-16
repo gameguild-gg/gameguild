@@ -1,4 +1,4 @@
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Contains infrastructure-specific configuration methods for dependency injection.
