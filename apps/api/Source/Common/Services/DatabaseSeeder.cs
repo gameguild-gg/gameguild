@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using GameGuild.Common.Services;
+using GameGuild.Services;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Credentials;
@@ -11,7 +11,7 @@ using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Database seeder for initial data setup
@@ -299,8 +299,8 @@ public class DatabaseSeeder(
         Slug = "intro-game-programming",
         EstimatedHours = 40,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Programming,
-        Difficulty = ProgramDifficulty.Beginner,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Programming,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -312,8 +312,8 @@ public class DatabaseSeeder(
         Slug = "python-game-development",
         EstimatedHours = 30,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Programming,
-        Difficulty = ProgramDifficulty.Beginner,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Programming,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -325,8 +325,8 @@ public class DatabaseSeeder(
         Slug = "javascript-game-development",
         EstimatedHours = 35,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Programming,
-        Difficulty = ProgramDifficulty.Beginner,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Programming,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -340,8 +340,8 @@ public class DatabaseSeeder(
         Slug = "unity-3d-game-development",
         EstimatedHours = 60,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Programming,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Programming,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -353,8 +353,8 @@ public class DatabaseSeeder(
         Slug = "unreal-cpp-programming",
         EstimatedHours = 70,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Programming,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Programming,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -366,8 +366,8 @@ public class DatabaseSeeder(
         Slug = "flutter-mobile-games",
         EstimatedHours = 45,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.MobileDevelopment,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.MobileDevelopment,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -381,8 +381,8 @@ public class DatabaseSeeder(
         Slug = "game-engine-architecture",
         EstimatedHours = 120,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Programming,
-        Difficulty = ProgramDifficulty.Advanced,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Programming,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Advanced,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -394,8 +394,8 @@ public class DatabaseSeeder(
         Slug = "multiplayer-networking",
         EstimatedHours = 80,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Programming,
-        Difficulty = ProgramDifficulty.Advanced,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Programming,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Advanced,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -409,8 +409,8 @@ public class DatabaseSeeder(
         Slug = "2d-game-art",
         EstimatedHours = 35,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.CreativeArts,
-        Difficulty = ProgramDifficulty.Beginner,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.CreativeArts,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -422,8 +422,8 @@ public class DatabaseSeeder(
         Slug = "pixel-art-fundamentals",
         EstimatedHours = 25,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.CreativeArts,
-        Difficulty = ProgramDifficulty.Beginner,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.CreativeArts,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -435,8 +435,8 @@ public class DatabaseSeeder(
         Slug = "game-ui-ux-design",
         EstimatedHours = 40,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Design,
-        Difficulty = ProgramDifficulty.Beginner,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Design,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -450,8 +450,8 @@ public class DatabaseSeeder(
         Slug = "3d-modeling-games",
         EstimatedHours = 55,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.CreativeArts,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.CreativeArts,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -463,8 +463,8 @@ public class DatabaseSeeder(
         Slug = "character-animation",
         EstimatedHours = 65,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.CreativeArts,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.CreativeArts,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -476,8 +476,8 @@ public class DatabaseSeeder(
         Slug = "environment-art-level-design",
         EstimatedHours = 50,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.CreativeArts,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.CreativeArts,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -491,8 +491,8 @@ public class DatabaseSeeder(
         Slug = "game-design-fundamentals",
         EstimatedHours = 30,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Design,
-        Difficulty = ProgramDifficulty.Beginner,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Design,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -504,8 +504,8 @@ public class DatabaseSeeder(
         Slug = "advanced-game-design",
         EstimatedHours = 50,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Design,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Design,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -517,8 +517,8 @@ public class DatabaseSeeder(
         Slug = "narrative-design",
         EstimatedHours = 35,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Design,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Design,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -530,8 +530,8 @@ public class DatabaseSeeder(
         Slug = "game-analytics-monetization",
         EstimatedHours = 25,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Business,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Business,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -545,8 +545,8 @@ public class DatabaseSeeder(
         Slug = "game-audio-design",
         EstimatedHours = 40,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.CreativeArts,
-        Difficulty = ProgramDifficulty.Beginner,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.CreativeArts,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -558,8 +558,8 @@ public class DatabaseSeeder(
         Slug = "music-composition-games",
         EstimatedHours = 45,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.CreativeArts,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.CreativeArts,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -573,8 +573,8 @@ public class DatabaseSeeder(
         Slug = "vr-game-development",
         EstimatedHours = 60,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.GameDevelopment,
-        Difficulty = ProgramDifficulty.Advanced,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.GameDevelopment,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Advanced,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -586,8 +586,8 @@ public class DatabaseSeeder(
         Slug = "ar-game-development",
         EstimatedHours = 50,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.GameDevelopment,
-        Difficulty = ProgramDifficulty.Advanced,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.GameDevelopment,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Advanced,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -601,8 +601,8 @@ public class DatabaseSeeder(
         Slug = "ai-game-development",
         EstimatedHours = 55,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.AI,
-        Difficulty = ProgramDifficulty.Advanced,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.AI,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Advanced,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -614,8 +614,8 @@ public class DatabaseSeeder(
         Slug = "procedural-generation",
         EstimatedHours = 65,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Programming,
-        Difficulty = ProgramDifficulty.Advanced,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Programming,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Advanced,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -627,8 +627,8 @@ public class DatabaseSeeder(
         Slug = "game-physics-programming",
         EstimatedHours = 70,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Programming,
-        Difficulty = ProgramDifficulty.Advanced,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Programming,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Advanced,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -640,8 +640,8 @@ public class DatabaseSeeder(
         Slug = "game-security-anti-cheat",
         EstimatedHours = 45,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Cybersecurity,
-        Difficulty = ProgramDifficulty.Expert,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Cybersecurity,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Expert,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -655,8 +655,8 @@ public class DatabaseSeeder(
         Slug = "indie-game-marketing",
         EstimatedHours = 30,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Marketing,
-        Difficulty = ProgramDifficulty.Beginner,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Marketing,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -668,8 +668,8 @@ public class DatabaseSeeder(
         Slug = "game-project-management",
         EstimatedHours = 35,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.ProjectManagement,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.ProjectManagement,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -681,8 +681,8 @@ public class DatabaseSeeder(
         Slug = "game-publishing-distribution",
         EstimatedHours = 25,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.Business,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.Business,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -696,8 +696,8 @@ public class DatabaseSeeder(
         Slug = "retro-game-development",
         EstimatedHours = 40,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.GameDevelopment,
-        Difficulty = ProgramDifficulty.Intermediate,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.GameDevelopment,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -709,8 +709,8 @@ public class DatabaseSeeder(
         Slug = "game-jam-survival",
         EstimatedHours = 15,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.GameDevelopment,
-        Difficulty = ProgramDifficulty.Beginner,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.GameDevelopment,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -722,8 +722,8 @@ public class DatabaseSeeder(
         Slug = "game-dev-portfolio",
         EstimatedHours = 20,
         Thumbnail = "/placeholder.svg",
-        Category = ProgramCategory.PersonalDevelopment,
-        Difficulty = ProgramDifficulty.Beginner,
+        Category = (GameGuild.ProgramCategory)ProgramCategory.PersonalDevelopment,
+        Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner,
         Visibility = AccessLevel.Public,
         Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
@@ -775,8 +775,8 @@ public class DatabaseSeeder(
       Slug = "beginner-track-game-dev-fundamentals",
       EstimatedHours = 100,
       Thumbnail = "/placeholder.svg",
-      Category = ProgramCategory.GameDevelopment,
-      Difficulty = ProgramDifficulty.Beginner,
+      Category = (GameGuild.ProgramCategory)ProgramCategory.GameDevelopment,
+      Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner,
       Visibility = AccessLevel.Public,
       Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
@@ -785,10 +785,10 @@ public class DatabaseSeeder(
 
     // Add related courses to beginner track as ProgramContent
     var beginnerCourses = coursePrograms
-                          .Where(c => c.Difficulty == ProgramDifficulty.Beginner &&
-                                      (c.Category == ProgramCategory.Programming ||
-                                       c.Category == ProgramCategory.GameDevelopment ||
-                                       c.Category == ProgramCategory.Design)
+                          .Where(c => c.Difficulty == (GameGuild.ProgramDifficulty)ProgramDifficulty.Beginner &&
+                                      (c.Category == (GameGuild.ProgramCategory)ProgramCategory.Programming ||
+                                       c.Category == (GameGuild.ProgramCategory)ProgramCategory.GameDevelopment ||
+                                       c.Category == (GameGuild.ProgramCategory)ProgramCategory.Design)
                           )
                           .Take(5)
                           .ToList();
@@ -804,7 +804,7 @@ public class DatabaseSeeder(
           Body = $"{{\"programId\": \"{beginnerCourses[i].Id}\", \"type\": \"program_reference\"}}",
           SortOrder = i + 1,
           IsRequired = true,
-          Visibility = Visibility.Published,
+          Visibility = GameGuild.Visibility.Published,
           CreatedAt = DateTime.UtcNow,
           UpdatedAt = DateTime.UtcNow,
         }
@@ -819,8 +819,8 @@ public class DatabaseSeeder(
       Slug = "intermediate-track-2d-game-dev",
       EstimatedHours = 120,
       Thumbnail = "/placeholder.svg",
-      Category = ProgramCategory.GameDevelopment,
-      Difficulty = ProgramDifficulty.Intermediate,
+      Category = (GameGuild.ProgramCategory)ProgramCategory.GameDevelopment,
+      Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
       Visibility = AccessLevel.Public,
       Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
@@ -829,12 +829,12 @@ public class DatabaseSeeder(
 
     // Add related courses to intermediate track
     var intermediateCourses = coursePrograms
-                              .Where(c => c.Difficulty == ProgramDifficulty.Intermediate &&
-                                          (c.Category == ProgramCategory.Programming ||
-                                           c.Category == ProgramCategory.GameDevelopment ||
-                                           c.Category == ProgramCategory.CreativeArts ||
-                                           c.Category == ProgramCategory.Design ||
-                                           c.Category == ProgramCategory.MobileDevelopment)
+                              .Where(c => c.Difficulty == (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate &&
+                                          (c.Category == (GameGuild.ProgramCategory)ProgramCategory.Programming ||
+                                           c.Category == (GameGuild.ProgramCategory)ProgramCategory.GameDevelopment ||
+                                           c.Category == (GameGuild.ProgramCategory)ProgramCategory.CreativeArts ||
+                                           c.Category == (GameGuild.ProgramCategory)ProgramCategory.Design ||
+                                           c.Category == (GameGuild.ProgramCategory)ProgramCategory.MobileDevelopment)
                               )
                               .Take(6)
                               .ToList();
@@ -850,7 +850,7 @@ public class DatabaseSeeder(
           Body = $"{{\"programId\": \"{intermediateCourses[i].Id}\", \"type\": \"program_reference\"}}",
           SortOrder = i + 1,
           IsRequired = i < 4, // First 4 courses are required
-          Visibility = Visibility.Published,
+          Visibility = GameGuild.Visibility.Published,
           CreatedAt = DateTime.UtcNow,
           UpdatedAt = DateTime.UtcNow,
         }
@@ -865,8 +865,8 @@ public class DatabaseSeeder(
       Slug = "advanced-track-multiplayer-game-dev",
       EstimatedHours = 150,
       Thumbnail = "/placeholder.svg",
-      Category = ProgramCategory.GameDevelopment,
-      Difficulty = ProgramDifficulty.Advanced,
+      Category = (GameGuild.ProgramCategory)ProgramCategory.GameDevelopment,
+      Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Advanced,
       Visibility = AccessLevel.Public,
       Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
@@ -875,9 +875,9 @@ public class DatabaseSeeder(
 
     // Add related courses to advanced track
     var advancedCourses = coursePrograms
-                          .Where(c => c.Difficulty == ProgramDifficulty.Advanced &&
-                                      (c.Category == ProgramCategory.GameDevelopment ||
-                                       c.Category == ProgramCategory.Programming)
+                          .Where(c => c.Difficulty == (GameGuild.ProgramDifficulty)ProgramDifficulty.Advanced &&
+                                      (c.Category == (GameGuild.ProgramCategory)ProgramCategory.GameDevelopment ||
+                                       c.Category == (GameGuild.ProgramCategory)ProgramCategory.Programming)
                           )
                           .Take(7)
                           .ToList();
@@ -893,7 +893,7 @@ public class DatabaseSeeder(
           Body = $"{{\"programId\": \"{advancedCourses[i].Id}\", \"type\": \"program_reference\"}}",
           SortOrder = i + 1,
           IsRequired = i < 5, // First 5 courses are required
-          Visibility = Visibility.Published,
+          Visibility = GameGuild.Visibility.Published,
           CreatedAt = DateTime.UtcNow,
           UpdatedAt = DateTime.UtcNow,
         }
@@ -908,8 +908,8 @@ public class DatabaseSeeder(
       Slug = "specialization-track-ai-in-games",
       EstimatedHours = 110,
       Thumbnail = "/placeholder.svg",
-      Category = ProgramCategory.AI,
-      Difficulty = ProgramDifficulty.Advanced,
+      Category = (GameGuild.ProgramCategory)ProgramCategory.AI,
+      Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Advanced,
       Visibility = AccessLevel.Public,
       Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
@@ -918,13 +918,13 @@ public class DatabaseSeeder(
 
     // Add AI-related courses
     var aiCourses = coursePrograms
-                    .Where(c => c.Category == ProgramCategory.AI ||
-                                (c.Category == ProgramCategory.Programming &&
+                    .Where(c => c.Category == (GameGuild.ProgramCategory)ProgramCategory.AI ||
+                                (c.Category == (GameGuild.ProgramCategory)ProgramCategory.Programming &&
                                  (c.Title.Contains("AI") ||
                                   c.Title.Contains("Algorithm") ||
                                   c.Title.Contains("Procedural") ||
                                   c.Title.Contains("Physics") ||
-                                  c.Difficulty == ProgramDifficulty.Advanced))
+                                  c.Difficulty == (GameGuild.ProgramDifficulty)ProgramDifficulty.Advanced))
                     )
                     .Take(5)
                     .ToList();
@@ -940,7 +940,7 @@ public class DatabaseSeeder(
           Body = $"{{\"programId\": \"{aiCourses[i].Id}\", \"type\": \"program_reference\"}}",
           SortOrder = i + 1,
           IsRequired = true,
-          Visibility = Visibility.Published,
+          Visibility = GameGuild.Visibility.Published,
           CreatedAt = DateTime.UtcNow,
           UpdatedAt = DateTime.UtcNow,
         }
@@ -955,8 +955,8 @@ public class DatabaseSeeder(
       Slug = "creative-track-game-art-animation",
       EstimatedHours = 130,
       Thumbnail = "/placeholder.svg",
-      Category = ProgramCategory.CreativeArts,
-      Difficulty = ProgramDifficulty.Intermediate,
+      Category = (GameGuild.ProgramCategory)ProgramCategory.CreativeArts,
+      Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
       Visibility = AccessLevel.Public,
       Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
@@ -965,7 +965,7 @@ public class DatabaseSeeder(
 
     // Add creative arts courses
     var creativeCourses = coursePrograms
-                          .Where(c => c.Category == ProgramCategory.CreativeArts)
+                          .Where(c => c.Category == (GameGuild.ProgramCategory)ProgramCategory.CreativeArts)
                           .Take(6)
                           .ToList();
 
@@ -980,7 +980,7 @@ public class DatabaseSeeder(
           Body = $"{{\"programId\": \"{creativeCourses[i].Id}\", \"type\": \"program_reference\"}}",
           SortOrder = i + 1,
           IsRequired = i < 4, // First 4 courses are required
-          Visibility = Visibility.Published,
+          Visibility = GameGuild.Visibility.Published,
           CreatedAt = DateTime.UtcNow,
           UpdatedAt = DateTime.UtcNow,
         }
@@ -995,8 +995,8 @@ public class DatabaseSeeder(
       Slug = "business-track-game-marketing-monetization",
       EstimatedHours = 90,
       Thumbnail = "/placeholder.svg",
-      Category = ProgramCategory.Business,
-      Difficulty = ProgramDifficulty.Intermediate,
+      Category = (GameGuild.ProgramCategory)ProgramCategory.Business,
+      Difficulty = (GameGuild.ProgramDifficulty)ProgramDifficulty.Intermediate,
       Visibility = AccessLevel.Public,
       Status = ContentStatus.Published,
       CreatedAt = DateTime.UtcNow,
@@ -1005,10 +1005,10 @@ public class DatabaseSeeder(
 
     // Add business courses
     var businessCourses = coursePrograms
-                          .Where(c => c.Category == ProgramCategory.Business ||
-                                      c.Category == ProgramCategory.Marketing ||
-                                      c.Category == ProgramCategory.ProjectManagement ||
-                                      (c.Category == ProgramCategory.PersonalDevelopment)
+                          .Where(c => c.Category == (GameGuild.ProgramCategory)ProgramCategory.Business ||
+                                      c.Category == (GameGuild.ProgramCategory)ProgramCategory.Marketing ||
+                                      c.Category == (GameGuild.ProgramCategory)ProgramCategory.ProjectManagement ||
+                                      (c.Category == (GameGuild.ProgramCategory)ProgramCategory.PersonalDevelopment)
                           )
                           .Take(4)
                           .ToList();
@@ -1024,7 +1024,7 @@ public class DatabaseSeeder(
           Body = $"{{\"programId\": \"{businessCourses[i].Id}\", \"type\": \"program_reference\"}}",
           SortOrder = i + 1,
           IsRequired = true,
-          Visibility = Visibility.Published,
+          Visibility = GameGuild.Visibility.Published,
           CreatedAt = DateTime.UtcNow,
           UpdatedAt = DateTime.UtcNow,
         }
@@ -1162,7 +1162,7 @@ public class DatabaseSeeder(
         Description = "A 3D space exploration game where players navigate through different planets and collect resources. Features stunning visuals and engaging gameplay mechanics.",
         ShortDescription = "Explore the universe in this immersive 3D space adventure game.",
         Type = Common.ProjectType.Game,
-        DevelopmentStatus = DevelopmentStatus.InDevelopment,
+        DevelopmentStatus = GameGuild.DevelopmentStatus.InDevelopment,
         ImageUrl = "/placeholder.svg",
         WebsiteUrl = "https://spaceexplorer.demo",
         Status = ContentStatus.Published,
@@ -1177,7 +1177,7 @@ public class DatabaseSeeder(
         Description = "A challenging puzzle game that combines classic match-3 mechanics with RPG elements. Players solve puzzles to progress through an epic adventure.",
         ShortDescription = "Match-3 puzzle game with RPG elements and epic storyline.",
         Type = Common.ProjectType.Game,
-        DevelopmentStatus = DevelopmentStatus.Beta,
+        DevelopmentStatus = GameGuild.DevelopmentStatus.Beta,
         ImageUrl = "/placeholder.svg",
         Status = ContentStatus.Published,
         Visibility = AccessLevel.Public,
@@ -1191,7 +1191,7 @@ public class DatabaseSeeder(
         Description = "Realistic racing simulator with authentic physics, detailed car models, and multiple racing tracks from around the world.",
         ShortDescription = "Realistic racing simulation with authentic physics and detailed tracks.",
         Type = Common.ProjectType.Game,
-        DevelopmentStatus = DevelopmentStatus.Alpha,
+        DevelopmentStatus = GameGuild.DevelopmentStatus.Alpha,
         ImageUrl = "/placeholder.svg",
         RepositoryUrl = "https://github.com/demo/racing-sim",
         Status = ContentStatus.Published,
@@ -1206,7 +1206,7 @@ public class DatabaseSeeder(
         Description = "Turn-based strategy game where players build armies, manage resources, and conquer territories in a medieval fantasy setting.",
         ShortDescription = "Medieval fantasy turn-based strategy with army building and conquest.",
         Type = Common.ProjectType.Game,
-        DevelopmentStatus = DevelopmentStatus.InDevelopment,
+        DevelopmentStatus = GameGuild.DevelopmentStatus.InDevelopment,
         ImageUrl = "/placeholder.svg",
         Status = ContentStatus.Published,
         Visibility = AccessLevel.Public,
@@ -1220,7 +1220,7 @@ public class DatabaseSeeder(
         Description = "Classic 2D platformer inspired by the golden age of gaming. Features pixel art graphics, challenging levels, and nostalgic gameplay.",
         ShortDescription = "Classic 2D platformer with pixel art and challenging gameplay.",
         Type = Common.ProjectType.Game,
-        DevelopmentStatus = DevelopmentStatus.Released,
+        DevelopmentStatus = GameGuild.DevelopmentStatus.Released,
         ImageUrl = "/placeholder.svg",
         DownloadUrl = "https://store.example.com/retro-platformer",
         Status = ContentStatus.Published,
