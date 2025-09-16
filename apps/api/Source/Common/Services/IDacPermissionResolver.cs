@@ -1,7 +1,7 @@
 using GameGuild;
 using GameGuild.Modules.Permissions;
 
-namespace GameGuild.Common.Services;
+namespace GameGuild.Services;
 
 /// <summary>
 /// Enhanced DAC Permission Resolver for 3-layer permission system

@@ -1,12 +1,12 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using GameGuild.Common.Configuration;
-using GameGuild.Common.Models.Cloudflare;
+using GameGuild.Configuration;
+using GameGuild.Models.Cloudflare;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 
-namespace GameGuild.Common.Services;
+namespace GameGuild.Services;
 
 /// <summary>
 /// Service that periodically checks external IP and updates Cloudflare DNS records.

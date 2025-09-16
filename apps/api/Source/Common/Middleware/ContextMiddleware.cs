@@ -1,4 +1,4 @@
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Middleware to set up user and tenant context for requests
@@ -13,8 +13,8 @@ public class ContextMiddleware {
   }
 
   public async Task InvokeAsync(
-    HttpContext context, 
-    IUserContext userContext, 
+    HttpContext context,
+    IUserContext userContext,
     ITenantContext tenantContext,
     IPermissionsContext permissionsContext,
     IResourceContext resourceContext,
@@ -45,8 +45,7 @@ public class ContextMiddleware {
         );
 
         // Log resource context if available
-        if (resourceContext.IsAccessingResource())
-        {
+        if (resourceContext.ResourceId.HasValue) {
           _logger.LogDebug(
             "Resource context: ResourceId={ResourceId}, ResourceType={ResourceType}",
             resourceContext.ResourceId,
@@ -81,8 +80,7 @@ public class ContextMiddleware {
       context.Items["TenantId"] = tenantContext.TenantId;
 
       // Initialize resource context from HTTP context
-      if (resourceContext is ResourceContext resContext)
-      {
+      if (resourceContext is ResourceContext resContext) {
         await Task.Run(() => resContext.GetType()
           .GetMethod("InitializeFromHttpContext", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
           ?.Invoke(resContext, null));
@@ -109,71 +107,59 @@ public class ContextMiddleware {
   /// </summary>
   private async Task ValidateContextsAsync(
     IUserContext userContext,
-    ITenantContext tenantContext, 
+    ITenantContext tenantContext,
     IPermissionsContext permissionsContext,
     IResourceContext resourceContext,
-    ILocalizationContext localizationContext)
-  {
-    try
-    {
+    ILocalizationContext localizationContext) {
+    try {
       // Validate user context consistency
-      if (userContext.IsAuthenticated)
-      {
-        if (userContext.UserId == null)
-        {
+      if (userContext.IsAuthenticated) {
+        if (userContext.UserId == null) {
           _logger.LogWarning("User is authenticated but UserId is null");
         }
 
-        if (string.IsNullOrEmpty(userContext.Email))
-        {
+        if (string.IsNullOrEmpty(userContext.Email)) {
           _logger.LogWarning("Authenticated user {UserId} has no email", userContext.UserId);
         }
       }
 
       // Validate tenant context consistency
-      if (tenantContext.TenantId.HasValue && string.IsNullOrEmpty(tenantContext.TenantName))
-      {
+      if (tenantContext.TenantId.HasValue && string.IsNullOrEmpty(tenantContext.TenantName)) {
         _logger.LogWarning("Tenant {TenantId} has no name configured", tenantContext.TenantId);
       }
 
       // Validate permissions context consistency
-      if (userContext.IsAuthenticated)
-      {
-        if (permissionsContext.UserId != userContext.UserId)
-        {
-          _logger.LogWarning("Permission context UserId {PermUserId} doesn't match UserContext UserId {UserUserId}", 
+      if (userContext.IsAuthenticated) {
+        if (permissionsContext.UserId != userContext.UserId) {
+          _logger.LogWarning("Permission context UserId {PermUserId} doesn't match UserContext UserId {UserUserId}",
             permissionsContext.UserId, userContext.UserId);
         }
 
-        if (permissionsContext.TenantId != tenantContext.TenantId)
-        {
-          _logger.LogWarning("Permission context TenantId {PermTenantId} doesn't match TenantContext TenantId {TenantTenantId}", 
+        if (permissionsContext.TenantId != tenantContext.TenantId) {
+          _logger.LogWarning("Permission context TenantId {PermTenantId} doesn't match TenantContext TenantId {TenantTenantId}",
             permissionsContext.TenantId, tenantContext.TenantId);
         }
       }
 
       // Validate localization context
-      if (localizationContext.CurrentCulture == null)
-      {
+      if (localizationContext.CurrentCulture == null) {
         _logger.LogWarning("Localization context has null CurrentCulture");
       }
 
-      if (localizationContext.CurrentTimeZone == null)
-      {
+      if (localizationContext.CurrentTimeZone == null) {
         _logger.LogWarning("Localization context has null CurrentTimeZone");
       }
 
       // Test basic functionality of each context (non-destructive operations only)
       _ = userContext.Claims.Count; // Ensure claims can be accessed
       _ = tenantContext.Settings.Count; // Ensure settings can be accessed
-      _ = await permissionsContext.IsAuthenticatedAsync(); // Test permissions context
+      _ = permissionsContext.IsAuthenticated; // Test permissions context
       _ = resourceContext.GetResourceIdentifier(); // Test resource context
       _ = localizationContext.GetCurrentLocalTime(); // Test localization context
 
       _logger.LogDebug("All context validations passed successfully");
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Context validation failed");
       // Don't throw here - allow request to continue with potentially degraded context
     }

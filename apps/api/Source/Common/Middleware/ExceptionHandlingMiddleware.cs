@@ -2,7 +2,7 @@ using System.Net;
 using System.Text.Json;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger) {
   public async Task InvokeAsync(HttpContext context) {

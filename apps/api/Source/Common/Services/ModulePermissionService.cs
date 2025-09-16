@@ -2,7 +2,7 @@ using GameGuild.Database;
 using GameGuild.Modules.Permissions;
 
 
-namespace GameGuild.Common.Services;
+namespace GameGuild.Services;
 
 /// <summary>
 /// Implementation of module-based permission service using EntityBase Framework

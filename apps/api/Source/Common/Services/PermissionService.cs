@@ -5,7 +5,7 @@ using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tenants;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Implementation of the three-layer permission service

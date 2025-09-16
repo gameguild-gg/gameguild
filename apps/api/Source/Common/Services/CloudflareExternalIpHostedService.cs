@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Services;
+namespace GameGuild.Services;
 
 /// <summary>
 /// Hosted service that manages the Cloudflare Dynamic DNS service lifecycle.
