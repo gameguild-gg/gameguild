@@ -3,7 +3,7 @@ using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Resources;
 
 
-namespace GameGuild.Common.Services;
+namespace GameGuild.Services;
 
 /// <summary>
 /// Implementation of the enhanced DAC Permission Resolver

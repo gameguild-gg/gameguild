@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 
 
-namespace GameGuild.Common;
+namespace GameGuild;
 
 /// <summary>
 /// Implementation of resource context for tracking current resource access

@@ -1,4 +1,4 @@
-namespace GameGuild.Common.Services;
+namespace GameGuild.Services;
 
 /// <summary>
 /// Service for updating Cloudflare DNS records with external IP address.
