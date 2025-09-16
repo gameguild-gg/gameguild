@@ -1,5 +1,5 @@
 using System.Reflection;
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Billing.Models;
 using GameGuild.Modules.Certificates;
@@ -32,8 +32,7 @@ using UserRoleAssignment = GameGuild.Modules.Permissions.UserRoleAssignment;
 namespace GameGuild.Database;
 
 // NOTE: do not add fluent api configurations here, they should be in the same file of the entity. On the entity, use notations for simple configurations, and fluent API for complex ones.
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
-{
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options) {
   // DbSets
   public DbSet<User> Users { get; set; }
 
@@ -52,6 +51,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<TenantUserGroup> TenantUserGroups { get; set; } = null!;
 
   public DbSet<TenantUserGroupMembership> TenantUserGroupMemberships { get; set; } = null!;
+
+  public DbSet<TenantSettings> TenantSettings { get; set; } = null!;
 
   // Resource hierarchy DbSet - Required for proper inheritance configuration
   public DbSet<Resource> Resources { get; set; }
@@ -246,8 +247,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<ProgramWishlist> ProgramWishlists { get; set; }
 
-  protected override void OnModelCreating(ModelBuilder modelBuilder)
-  {
+  protected override void OnModelCreating(ModelBuilder modelBuilder) {
     base.OnModelCreating(modelBuilder);
 
     // Apply all entity configurations from the assembly
@@ -257,8 +257,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     // Configure ITenantable entities (this logic needs to stay in OnModelCreating)
     foreach (var entityType in modelBuilder.Model.GetEntityTypes()
-                                           .Where(t => typeof(ITenantable).IsAssignableFrom(t.ClrType)))
-    {
+                                           .Where(t => typeof(ITenantable).IsAssignableFrom(t.ClrType))) {
       modelBuilder.Entity(entityType.ClrType)
                   .HasOne(typeof(Tenant).Name)
                   .WithMany()
@@ -280,8 +279,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   /// <summary>
   /// Automatically update timestamps when saving changes
   /// </summary>
-  public override int SaveChanges()
-  {
+  public override int SaveChanges() {
     UpdateTimestamps();
 
     return base.SaveChanges();
@@ -290,8 +288,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   /// <summary>
   /// Automatically update timestamps when saving changes asynchronously
   /// </summary>
-  public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-  {
+  public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) {
     UpdateTimestamps();
 
     return await base.SaveChangesAsync(cancellationToken);
@@ -301,23 +298,19 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   /// Updates CreatedAt and UpdatedAt timestamps for entities that inherit from BaseEntity
   /// Also handles Version incrementing for optimistic concurrency control
   /// </summary>
-  private void UpdateTimestamps()
-  {
+  private void UpdateTimestamps() {
     var entries = ChangeTracker.Entries()
                                .Where(e => e is { Entity: IEntity, State: EntityState.Added or EntityState.Modified });
 
-    foreach (var entry in entries)
-    {
+    foreach (var entry in entries) {
       var entity = (IEntity)entry.Entity;
 
-      if (entry.State == EntityState.Added)
-      {
+      if (entry.State == EntityState.Added) {
         entity.CreatedAt = DateTime.UtcNow;
         entity.UpdatedAt = DateTime.UtcNow;
         entity.Version = 1;
       }
-      else if (entry.State == EntityState.Modified)
-      {
+      else if (entry.State == EntityState.Modified) {
         // Don't update CreatedAt on modifications
         entry.Property(nameof(IEntity.CreatedAt)).IsModified = false;
         entity.UpdatedAt = DateTime.UtcNow;
@@ -330,8 +323,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   /// Include soft-deleted entities in queries
   /// </summary>
   /// <returns>DbContext with soft-deleted entities included</returns>
-  public ApplicationDbContext IncludeDeleted()
-  {
+  public ApplicationDbContext IncludeDeleted() {
     ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
 
     return this;
@@ -340,8 +332,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   /// <summary>
   /// Configure inheritance strategies for the content and resource hierarchies
   /// </summary>
-  private static void ConfigureInheritanceStrategies(ModelBuilder modelBuilder)
-  {
+  private static void ConfigureInheritanceStrategies(ModelBuilder modelBuilder) {
     // Configure Table-Per-Concrete-Type (TPC) for ResourceBase inheritance
     // Each concrete entity that inherits from ResourceBase gets its own complete table
     // with all inherited properties included
