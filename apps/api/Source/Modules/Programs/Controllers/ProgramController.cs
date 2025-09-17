@@ -1,3 +1,4 @@
+using GameGuild.Authorization;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions;
@@ -14,8 +15,8 @@ namespace GameGuild.Modules.Programs;
 /// DAC Attribute Usage Examples:
 /// - Tenant Level: [RequireTenantPermission(PermissionType.Create)]
 /// - Content-Type Level: [RequireContentTypePermission<ProgramEntity>(PermissionType.Read)]
-/// - Resource Level (Preferred): [RequireResourcePermission<ProgramEntity>(PermissionType.Update)]
-/// - Resource Level (Explicit): [RequireResourcePermission<ProgramPermission, ProgramEntity>(PermissionType.Update)]
+/// - Resource Level (Preferred): [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Update)]
+/// - Resource Level (Explicit): [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramPermission, ProgramEntity>(PermissionType.Update)]
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
@@ -147,7 +148,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Get a specific program by ID (resource-level read permission)
   /// </summary>
   [HttpGet("{id}")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<ProgramEntity>> GetProgram(Guid id) {
     var program = await programService.GetProgramByIdAsync(id);
 
@@ -160,7 +161,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Get a specific program with all content included (resource-level read permission)
   /// </summary>
   [HttpGet("{id}/with-content")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<ProgramEntity>> GetProgramWithContent(Guid id) {
     var program = await programService.GetProgramWithContentAsync(id);
 
@@ -173,7 +174,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Update a program (resource-level edit permission)
   /// </summary>
   [HttpPut("{id}")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProgramEntity>> UpdateProgram(Guid id, [FromBody] UpdateProgramDto updateDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -188,7 +189,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Delete a program (resource-level delete permission)
   /// </summary>
   [HttpDelete("{id}")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Delete)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteProgram(Guid id) {
     var existingProgram = await programService.GetProgramByIdAsync(id);
 
@@ -203,7 +204,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Clone/duplicate a program (resource-level clone permission)
   /// </summary>
   [HttpPost("{id}/clone")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Clone)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Clone)]
   public async Task<ActionResult<ProgramEntity>> CloneProgram(Guid id, [FromBody] CloneProgramDto cloneDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -251,7 +252,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Add content to a program (resource-level edit permission)
   /// </summary>
   [HttpPost("{id}/content")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProgramContent>> AddContent(Guid id, [FromBody] CreateContentDto contentDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -266,7 +267,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Update program content (resource-level edit permission)
   /// </summary>
   [HttpPut("{id}/content/{contentId}")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProgramContent>> UpdateContent(
     Guid id, Guid contentId,
     [FromBody] UpdateContentDto contentDto
@@ -284,7 +285,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Remove content from a program (resource-level edit permission)
   /// </summary>
   [HttpDelete("{id}/content/{contentId}")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> RemoveContent(Guid id, Guid contentId) {
     var success = await programService.RemoveContentAsync(id, contentId);
 
@@ -297,7 +298,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Reorder content in a program (resource-level edit permission)
   /// </summary>
   [HttpPost("{id}/content/reorder")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> ReorderContent(Guid id, [FromBody] ReorderContentDto reorderDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -314,7 +315,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Add a user to a program (resource-level edit permission)
   /// </summary>
   [HttpPost("{id}/users/{userId}")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult<UserProgressDto>> AddUserToProgram(Guid id, Guid userId) {
     var progress = await programService.AddUserToProgramAsync(id, userId);
 
@@ -327,7 +328,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Remove a user from a program (resource-level edit permission)
   /// </summary>
   [HttpDelete("{id}/users/{userId}")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> RemoveUserFromProgram(Guid id, Guid userId) {
     var success = await programService.RemoveUserFromProgramAsync(id, userId);
 
@@ -340,7 +341,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Get all users in a program (resource-level read permission)
   /// </summary>
   [HttpGet("{id}/users")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<UserProgressDto>>> GetProgramUsers(
     Guid id, [FromQuery] int skip = 0,
     [FromQuery] int take = 50
@@ -354,7 +355,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Get a specific user's progress in a program (resource-level read permission)
   /// </summary>
   [HttpGet("{id}/users/{userId}/progress")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<UserProgressDto>> GetUserProgress(Guid id, Guid userId) {
     var progress = await programService.GetUserProgressDtoAsync(id, userId);
 
@@ -367,7 +368,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Update a user's progress in a program (resource-level edit permission)
   /// </summary>
   [HttpPut("{id}/users/{userId}/progress")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult<UserProgressDto>> UpdateUserProgress(
     Guid id, Guid userId,
     [FromBody] UpdateProgressDto progressDto
@@ -385,7 +386,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Mark content as completed for a user (resource-level edit permission)
   /// </summary>
   [HttpPost("{id}/users/{userId}/content/{contentId}/complete")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> MarkContentCompleted(Guid id, Guid userId, Guid contentId) {
     var success = await programService.MarkContentCompletedAsync(id, userId, contentId);
 
@@ -398,7 +399,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Reset user progress in a program (resource-level edit permission)
   /// </summary>
   [HttpPost("{id}/users/{userId}/reset")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> ResetUserProgress(Guid id, Guid userId) {
     var success = await programService.ResetUserProgressAsync(id, userId);
 
@@ -413,7 +414,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Submit a program for review (resource-level submit permission)
   /// </summary>
   [HttpPost("{id}/submit")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Submit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Submit)]
   public async Task<ActionResult<ProgramEntity>> SubmitProgram(Guid id) {
     var program = await programService.SubmitProgramAsync(id);
 
@@ -426,7 +427,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Approve a program (resource-level approve permission)
   /// </summary>
   [HttpPost("{id}/approve")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Approve)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Approve)]
   public async Task<ActionResult<ProgramEntity>> ApproveProgram(Guid id) {
     var program = await programService.ApproveProgramAsync(id);
 
@@ -439,7 +440,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Reject a program (resource-level reject permission)
   /// </summary>
   [HttpPost("{id}/reject")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Reject)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Reject)]
   public async Task<ActionResult<ProgramEntity>> RejectProgram(Guid id, [FromBody] RejectProgramDto rejectDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -454,7 +455,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Withdraw a program from review (resource-level withdraw permission)
   /// </summary>
   [HttpPost("{id}/withdraw")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Withdraw)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Withdraw)]
   public async Task<ActionResult<ProgramEntity>> WithdrawProgram(Guid id) {
     var program = await programService.WithdrawProgramAsync(id);
 
@@ -467,7 +468,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Archive a program (resource-level archive permission)
   /// </summary>
   [HttpPost("{id}/archive")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Archive)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Archive)]
   public async Task<ActionResult<ProgramEntity>> ArchiveProgram(Guid id) {
     var program = await programService.ArchiveProgramAsync(id);
 
@@ -480,7 +481,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Restore an archived program (resource-level restore permission)
   /// </summary>
   [HttpPost("{id}/restore")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Restore)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Restore)]
   public async Task<ActionResult<ProgramEntity>> RestoreProgram(Guid id) {
     var program = await programService.RestoreProgramAsync(id);
 
@@ -495,7 +496,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Publish a program (resource-level publish permission)
   /// </summary>
   [HttpPost("{id}/publish")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Publish)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Publish)]
   public async Task<ActionResult<ProgramEntity>> PublishProgram(Guid id) {
     var program = await programService.PublishProgramAsync(id);
 
@@ -508,7 +509,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Unpublish a program (resource-level unpublish permission)
   /// </summary>
   [HttpPost("{id}/unpublish")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Unpublish)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Unpublish)]
   public async Task<ActionResult<ProgramEntity>> UnpublishProgram(Guid id) {
     var program = await programService.UnpublishProgramAsync(id);
 
@@ -521,7 +522,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Schedule a program for publishing (resource-level schedule permission)
   /// </summary>
   [HttpPost("{id}/schedule")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Schedule)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Schedule)]
   public async Task<ActionResult<ProgramEntity>> ScheduleProgram(Guid id, [FromBody] ScheduleProgramDto scheduleDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -538,7 +539,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Enable monetization for a program (resource-level monetize permission)
   /// </summary>
   [HttpPost("{id}/monetize")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Monetize)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Monetize)]
   public async Task<ActionResult<ProgramEntity>> EnableMonetization(Guid id, [FromBody] MonetizationDto monetizationDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -553,7 +554,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Disable monetization for a program (resource-level monetize permission)
   /// </summary>
   [HttpPost("{id}/disable-monetization")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Monetize)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Monetize)]
   public async Task<ActionResult<ProgramEntity>> DisableMonetization(Guid id) {
     var program = await programService.DisableMonetizationAsync(id);
 
@@ -566,7 +567,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Get program pricing information (resource-level read permission)
   /// </summary>
   [HttpGet("{id}/pricing")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<PricingDto>> GetProgramPricing(Guid id) {
     var pricing = await programService.GetProgramPricingAsync(id);
 
@@ -579,7 +580,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Update program pricing (resource-level pricing permission)
   /// </summary>
   [HttpPut("{id}/pricing")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Pricing)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Pricing)]
   public async Task<ActionResult<PricingDto>> UpdateProgramPricing(Guid id, [FromBody] UpdatePricingDto pricingDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -596,7 +597,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Get program analytics (resource-level analytics permission)
   /// </summary>
   [HttpGet("{id}/analytics")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Analytics)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Analytics)]
   public async Task<ActionResult<ProgramAnalyticsDto>> GetProgramAnalytics(Guid id) {
     var analytics = await programService.GetProgramAnalyticsAsync(id);
 
@@ -609,7 +610,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Get user completion rates for a program (resource-level analytics permission)
   /// </summary>
   [HttpGet("{id}/analytics/completion-rates")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Analytics)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Analytics)]
   public async Task<ActionResult<CompletionRatesDto>> GetCompletionRates(Guid id) {
     var rates = await programService.GetCompletionRatesAsync(id);
 
@@ -622,7 +623,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Get program engagement metrics (resource-level analytics permission)
   /// </summary>
   [HttpGet("{id}/analytics/engagement")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Analytics)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Analytics)]
   public async Task<ActionResult<EngagementMetricsDto>> GetEngagementMetrics(Guid id) {
     var metrics = await programService.GetEngagementMetricsAsync(id);
 
@@ -635,7 +636,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Get program revenue analytics (resource-level revenue permission)
   /// </summary>
   [HttpGet("{id}/analytics/revenue")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Revenue)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Revenue)]
   public async Task<ActionResult<RevenueAnalyticsDto>> GetRevenueAnalytics(Guid id) {
     var revenue = await programService.GetRevenueAnalyticsAsync(id);
 
@@ -650,7 +651,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Create a product from a program (resource-level edit permission for program, content-type level draft permission for product)
   /// </summary>
   [HttpPost("{id}/create-product")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult<Guid>> CreateProductFromProgram(
     Guid id,
     [FromBody] CreateProductFromProgramDto productDto
@@ -668,7 +669,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Link a program to an existing product (resource-level edit permission)
   /// </summary>
   [HttpPost("{id}/link-product/{productId}")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> LinkProgramToProduct(Guid id, Guid productId) {
     var success = await programService.LinkProgramToProductAsync(id, productId);
 
@@ -681,7 +682,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Unlink a program from a product (resource-level edit permission)
   /// </summary>
   [HttpDelete("{id}/link-product/{productId}")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Edit)]
   public async Task<ActionResult> UnlinkProgramFromProduct(Guid id, Guid productId) {
     var success = await programService.UnlinkProgramFromProductAsync(id, productId);
 
@@ -694,7 +695,7 @@ public class ProgramController(IProgramService programService) : ControllerBase 
   /// Get all products linked to a program (resource-level read permission)
   /// </summary>
   [HttpGet("{id}/products")]
-  [RequireResourcePermission<ProgramEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<Guid>>> GetLinkedProducts(Guid id) {
     var productIds = await programService.GetLinkedProductsAsync(id);
 
