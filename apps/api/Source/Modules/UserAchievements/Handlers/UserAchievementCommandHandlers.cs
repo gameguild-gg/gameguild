@@ -11,12 +11,12 @@ public class AwardAchievementCommandHandler : ICommandHandler<AwardAchievementCo
 {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<AwardAchievementCommandHandler> _logger;
-  private readonly GameGuild.CQRS.IPublisher _publisher;
+  private readonly IPublisher _publisher;
 
   public AwardAchievementCommandHandler(
     ApplicationDbContext context,
     ILogger<AwardAchievementCommandHandler> logger,
-    GameGuild.CQRS.IPublisher publisher)
+    IPublisher publisher)
   {
     _context = context;
     _logger = logger;
@@ -152,14 +152,14 @@ public class UpdateAchievementProgressCommandHandler : ICommandHandler<UpdateAch
 {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<UpdateAchievementProgressCommandHandler> _logger;
-  private readonly GameGuild.CQRS.IMediator _mediator;
-  private readonly GameGuild.CQRS.IPublisher _publisher;
+  private readonly IMediator _mediator;
+  private readonly IPublisher _publisher;
 
   public UpdateAchievementProgressCommandHandler(
     ApplicationDbContext context,
     ILogger<UpdateAchievementProgressCommandHandler> logger,
-    GameGuild.CQRS.IMediator mediator,
-    GameGuild.CQRS.IPublisher publisher)
+    IMediator mediator,
+    IPublisher publisher)
   {
     _context = context;
     _logger = logger;
@@ -262,12 +262,12 @@ public class RevokeAchievementCommandHandler : ICommandHandler<RevokeAchievement
 {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<RevokeAchievementCommandHandler> _logger;
-  private readonly GameGuild.CQRS.IPublisher _publisher;
+  private readonly IPublisher _publisher;
 
   public RevokeAchievementCommandHandler(
     ApplicationDbContext context,
     ILogger<RevokeAchievementCommandHandler> logger,
-    GameGuild.CQRS.IPublisher publisher)
+    IPublisher publisher)
   {
     _context = context;
     _logger = logger;
