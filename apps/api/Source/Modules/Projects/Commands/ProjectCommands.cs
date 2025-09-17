@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Projects;
 /// <summary>
 /// Command to create a new project
 /// </summary>
-public record CreateProjectCommand : GameGuild.CQRS.IRequest<CreateProjectResult>
+public record CreateProjectCommand : CQRS.IRequest<CreateProjectResult>
 {
   public string Title { get; init; } = string.Empty;
 
@@ -22,7 +22,7 @@ public record CreateProjectCommand : GameGuild.CQRS.IRequest<CreateProjectResult
 
   public string? DownloadUrl { get; init; }
 
-  public GameGuild.ProjectType Type { get; init; } = Common.ProjectType.Game;
+  public GameGuild.ProjectType Type { get; init; } = ProjectType.Game;
 
   public Guid CreatedById { get; init; }
 
@@ -40,7 +40,7 @@ public record CreateProjectCommand : GameGuild.CQRS.IRequest<CreateProjectResult
 /// <summary>
 /// Command to update an existing project
 /// </summary>
-public record UpdateProjectCommand : GameGuild.CQRS.IRequest<UpdateProjectResult>
+public record UpdateProjectCommand : CQRS.IRequest<UpdateProjectResult>
 {
   public Guid ProjectId { get; init; }
 
@@ -74,7 +74,7 @@ public record UpdateProjectCommand : GameGuild.CQRS.IRequest<UpdateProjectResult
 /// <summary>
 /// Command to delete a project
 /// </summary>
-public record DeleteProjectCommand : GameGuild.CQRS.IRequest<DeleteProjectResult>
+public record DeleteProjectCommand : CQRS.IRequest<DeleteProjectResult>
 {
   public Guid ProjectId { get; init; }
 
@@ -88,7 +88,7 @@ public record DeleteProjectCommand : GameGuild.CQRS.IRequest<DeleteProjectResult
 /// <summary>
 /// Command to publish a project
 /// </summary>
-public record PublishProjectCommand : GameGuild.CQRS.IRequest<PublishProjectResult>
+public record PublishProjectCommand : CQRS.IRequest<PublishProjectResult>
 {
   public Guid ProjectId { get; init; }
 
@@ -98,7 +98,7 @@ public record PublishProjectCommand : GameGuild.CQRS.IRequest<PublishProjectResu
 /// <summary>
 /// Command to unpublish a project
 /// </summary>
-public record UnpublishProjectCommand : GameGuild.CQRS.IRequest<UnpublishProjectResult>
+public record UnpublishProjectCommand : CQRS.IRequest<UnpublishProjectResult>
 {
   public Guid ProjectId { get; init; }
 
@@ -108,7 +108,7 @@ public record UnpublishProjectCommand : GameGuild.CQRS.IRequest<UnpublishProject
 /// <summary>
 /// Command to archive a project
 /// </summary>
-public record ArchiveProjectCommand : GameGuild.CQRS.IRequest<ArchiveProjectResult>
+public record ArchiveProjectCommand : CQRS.IRequest<ArchiveProjectResult>
 {
   public Guid ProjectId { get; init; }
 
