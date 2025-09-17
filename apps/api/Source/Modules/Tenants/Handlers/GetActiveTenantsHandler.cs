@@ -25,7 +25,7 @@ public class GetActiveTenantsHandler(
       logger.LogError(ex, "Error retrieving active tenants");
 
       return Result.Failure<IEnumerable<Tenant>>(
-        Common.Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve active tenants")
+        Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve active tenants")
       );
     }
   }

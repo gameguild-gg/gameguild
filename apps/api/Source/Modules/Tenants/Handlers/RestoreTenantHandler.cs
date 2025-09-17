@@ -19,7 +19,7 @@ public class RestoreTenantHandler(
 
       if (tenant == null)
         return Result.Failure<bool>(
-          Common.Error.NotFound("Tenant.NotFound", $"Deleted tenant with ID {request.Id} not found")
+          Error.NotFound("Tenant.NotFound", $"Deleted tenant with ID {request.Id} not found")
         );
 
       tenant.Restore();
@@ -39,7 +39,7 @@ public class RestoreTenantHandler(
       logger.LogError(ex, "Error restoring tenant {TenantId}", request.Id);
 
       return Result.Failure<bool>(
-        Common.Error.Failure("Tenant.RestoreFailed", "Failed to restore tenant")
+        Error.Failure("Tenant.RestoreFailed", "Failed to restore tenant")
       );
     }
   }

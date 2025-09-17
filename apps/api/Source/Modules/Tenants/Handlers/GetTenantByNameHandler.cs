@@ -28,7 +28,7 @@ public class GetTenantByNameHandler(
       logger.LogError(ex, "Error retrieving tenant by name '{TenantName}'", request.Name);
 
       return Result.Failure<Tenant?>(
-        Common.Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant by name")
+        Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant by name")
       );
     }
   }
