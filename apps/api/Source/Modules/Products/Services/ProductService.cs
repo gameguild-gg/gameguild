@@ -39,7 +39,7 @@ public class ProductService(ApplicationDbContext context) : IProductService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<ProductEntity>> GetProductsByTypeAsync(Common.ProductType type, int skip = 0, int take = 50) {
+  public async Task<IEnumerable<ProductEntity>> GetProductsByTypeAsync(ProductType type, int skip = 0, int take = 50) {
     return await context.Products.Include(p => p.Creator)
                         .Include(p => p.ProductPricings)
                         .Where(p => p.DeletedAt == null && p.Type == type)
@@ -443,7 +443,7 @@ public class ProductService(ApplicationDbContext context) : IProductService {
   }
 
   // Analytics and statistics
-  public async Task<int> GetProductCountAsync(Common.ProductType? type = null, AccessLevel? visibility = null) {
+  public async Task<int> GetProductCountAsync(ProductType? type = null, AccessLevel? visibility = null) {
     var query = context.Products.Where(p => p.DeletedAt == null);
 
     if (type.HasValue) query = query.Where(p => p.Type == type.Value);

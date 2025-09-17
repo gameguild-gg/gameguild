@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Products;
 /// <summary>
 /// Command to create a new product
 /// </summary>
-public record CreateProductCommand : GameGuild.CQRS.IRequest<CreateProductResult>
+public record CreateProductCommand : CQRS.IRequest<CreateProductResult>
 {
   public string Name { get; init; } = string.Empty;
 
@@ -16,7 +16,7 @@ public record CreateProductCommand : GameGuild.CQRS.IRequest<CreateProductResult
 
   public string? ImageUrl { get; init; }
 
-  public Common.ProductType Type { get; init; } = Common.ProductType.Program;
+  public ProductType Type { get; init; } = ProductType.Program;
 
   public bool IsBundle { get; init; }
 
@@ -40,7 +40,7 @@ public record CreateProductCommand : GameGuild.CQRS.IRequest<CreateProductResult
 /// <summary>
 /// Command to update an existing product
 /// </summary>
-public record UpdateProductCommand : GameGuild.CQRS.IRequest<UpdateProductResult>
+public record UpdateProductCommand : CQRS.IRequest<UpdateProductResult>
 {
   public Guid ProductId { get; init; }
 
@@ -52,7 +52,7 @@ public record UpdateProductCommand : GameGuild.CQRS.IRequest<UpdateProductResult
 
   public string? ImageUrl { get; init; }
 
-  public Common.ProductType? Type { get; init; }
+  public ProductType? Type { get; init; }
 
   public bool? IsBundle { get; init; }
 
@@ -74,7 +74,7 @@ public record UpdateProductCommand : GameGuild.CQRS.IRequest<UpdateProductResult
 /// <summary>
 /// Command to delete a product
 /// </summary>
-public record DeleteProductCommand : GameGuild.CQRS.IRequest<DeleteProductResult>
+public record DeleteProductCommand : CQRS.IRequest<DeleteProductResult>
 {
   public Guid ProductId { get; init; }
 
@@ -86,7 +86,7 @@ public record DeleteProductCommand : GameGuild.CQRS.IRequest<DeleteProductResult
 /// <summary>
 /// Command to add pricing to a product
 /// </summary>
-public record AddProductPricingCommand : GameGuild.CQRS.IRequest<AddProductPricingResult>
+public record AddProductPricingCommand : CQRS.IRequest<AddProductPricingResult>
 {
   public Guid ProductId { get; init; }
 
@@ -108,7 +108,7 @@ public record AddProductPricingCommand : GameGuild.CQRS.IRequest<AddProductPrici
 /// <summary>
 /// Command to grant user access to a product
 /// </summary>
-public record GrantUserProductAccessCommand : GameGuild.CQRS.IRequest<GrantUserProductAccessResult>
+public record GrantUserProductAccessCommand : CQRS.IRequest<GrantUserProductAccessResult>
 {
   public Guid UserId { get; init; }
 
@@ -128,7 +128,7 @@ public record GrantUserProductAccessCommand : GameGuild.CQRS.IRequest<GrantUserP
 /// <summary>
 /// Command to revoke user access to a product
 /// </summary>
-public record RevokeUserProductAccessCommand : GameGuild.CQRS.IRequest<RevokeUserProductAccessResult>
+public record RevokeUserProductAccessCommand : CQRS.IRequest<RevokeUserProductAccessResult>
 {
   public Guid UserId { get; init; }
 
@@ -142,7 +142,7 @@ public record RevokeUserProductAccessCommand : GameGuild.CQRS.IRequest<RevokeUse
 /// <summary>
 /// Command to publish a product
 /// </summary>
-public record PublishProductCommand : GameGuild.CQRS.IRequest<PublishProductResult>
+public record PublishProductCommand : CQRS.IRequest<PublishProductResult>
 {
   public Guid ProductId { get; init; }
 
@@ -152,7 +152,7 @@ public record PublishProductCommand : GameGuild.CQRS.IRequest<PublishProductResu
 /// <summary>
 /// Command to unpublish a product
 /// </summary>
-public record UnpublishProductCommand : GameGuild.CQRS.IRequest<UnpublishProductResult>
+public record UnpublishProductCommand : CQRS.IRequest<UnpublishProductResult>
 {
   public Guid ProductId { get; init; }
 
@@ -162,7 +162,7 @@ public record UnpublishProductCommand : GameGuild.CQRS.IRequest<UnpublishProduct
 /// <summary>
 /// Command to archive a product
 /// </summary>
-public record ArchiveProductCommand : GameGuild.CQRS.IRequest<ArchiveProductResult>
+public record ArchiveProductCommand : CQRS.IRequest<ArchiveProductResult>
 {
   public Guid ProductId { get; init; }
 
@@ -172,7 +172,7 @@ public record ArchiveProductCommand : GameGuild.CQRS.IRequest<ArchiveProductResu
 /// <summary>
 /// Command to set product visibility
 /// </summary>
-public record SetProductVisibilityCommand : GameGuild.CQRS.IRequest<SetProductVisibilityResult>
+public record SetProductVisibilityCommand : CQRS.IRequest<SetProductVisibilityResult>
 {
   public Guid ProductId { get; init; }
 
@@ -184,7 +184,7 @@ public record SetProductVisibilityCommand : GameGuild.CQRS.IRequest<SetProductVi
 /// <summary>
 /// Command to add product to bundle
 /// </summary>
-public record AddToBundleCommand : GameGuild.CQRS.IRequest<AddToBundleResult>
+public record AddToBundleCommand : CQRS.IRequest<AddToBundleResult>
 {
   public Guid BundleId { get; init; }
 
@@ -196,7 +196,7 @@ public record AddToBundleCommand : GameGuild.CQRS.IRequest<AddToBundleResult>
 /// <summary>
 /// Command to remove product from bundle
 /// </summary>
-public record RemoveFromBundleCommand : GameGuild.CQRS.IRequest<RemoveFromBundleResult>
+public record RemoveFromBundleCommand : CQRS.IRequest<RemoveFromBundleResult>
 {
   public Guid BundleId { get; init; }
 
@@ -208,7 +208,7 @@ public record RemoveFromBundleCommand : GameGuild.CQRS.IRequest<RemoveFromBundle
 /// <summary>
 /// Command to set product pricing
 /// </summary>
-public record SetPricingCommand : GameGuild.CQRS.IRequest<SetPricingResult>
+public record SetPricingCommand : CQRS.IRequest<SetPricingResult>
 {
   public Guid ProductId { get; init; }
 
@@ -228,7 +228,7 @@ public record SetPricingCommand : GameGuild.CQRS.IRequest<SetPricingResult>
 /// <summary>
 /// Command to create subscription plan
 /// </summary>
-public record CreateSubscriptionPlanCommand : GameGuild.CQRS.IRequest<CreateSubscriptionPlanResult>
+public record CreateSubscriptionPlanCommand : CQRS.IRequest<CreateSubscriptionPlanResult>
 {
   public string Name { get; init; } = string.Empty;
 
@@ -252,7 +252,7 @@ public record CreateSubscriptionPlanCommand : GameGuild.CQRS.IRequest<CreateSubs
 /// <summary>
 /// Command to grant user access to product
 /// </summary>
-public record GrantUserAccessCommand : GameGuild.CQRS.IRequest<GrantUserAccessResult>
+public record GrantUserAccessCommand : CQRS.IRequest<GrantUserAccessResult>
 {
   public Guid UserId { get; init; }
 
@@ -268,7 +268,7 @@ public record GrantUserAccessCommand : GameGuild.CQRS.IRequest<GrantUserAccessRe
 /// <summary>
 /// Command to revoke user access to product
 /// </summary>
-public record RevokeUserAccessCommand : GameGuild.CQRS.IRequest<RevokeUserAccessResult>
+public record RevokeUserAccessCommand : CQRS.IRequest<RevokeUserAccessResult>
 {
   public Guid UserId { get; init; }
 

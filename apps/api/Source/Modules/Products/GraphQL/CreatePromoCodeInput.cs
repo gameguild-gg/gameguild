@@ -9,7 +9,7 @@ public class CreatePromoCodeInput {
 
   public DateTime? ExpiryDate { get; set; }
 
-  public required Common.PromoCodeType DiscountType { get; set; }
+  public required PromoCodeType DiscountType { get; set; }
 
   public DateTime? ValidFrom { get; set; }
 

@@ -12,7 +12,7 @@ public class UpdateProductInput {
 
   public string? Description { get; set; }
 
-  public Common.ProductType? Type { get; set; }
+  public ProductType? Type { get; set; }
 
   public bool? IsBundle { get; set; }
 

@@ -16,7 +16,7 @@ public interface IProductService {
 
   Task<IEnumerable<ProductEntity>> GetProductsAsync(int skip = 0, int take = 50);
 
-  Task<IEnumerable<ProductEntity>> GetProductsByTypeAsync(Common.ProductType type, int skip = 0, int take = 50);
+  Task<IEnumerable<ProductEntity>> GetProductsByTypeAsync(ProductType type, int skip = 0, int take = 50);
 
   Task<IEnumerable<ProductEntity>> GetPublishedProductsAsync(int skip = 0, int take = 50);
 
@@ -94,7 +94,7 @@ public interface IProductService {
   Task<bool> IsPromoCodeValidAsync(string code, Guid? productId = null);
 
   // Analytics and statistics
-  Task<int> GetProductCountAsync(Common.ProductType? type = null, AccessLevel? visibility = null);
+  Task<int> GetProductCountAsync(ProductType? type = null, AccessLevel? visibility = null);
 
   Task<int> GetUserCountForProductAsync(Guid productId);
 
