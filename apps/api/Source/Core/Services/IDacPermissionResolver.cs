@@ -1,7 +1,4 @@
-using GameGuild;
-using GameGuild.Modules.Permissions;
-
-namespace GameGuild.Services;
+namespace GameGuild;
 
 /// <summary>
 /// Enhanced DAC Permission Resolver for 3-layer permission system
@@ -18,12 +15,7 @@ public interface IDacPermissionResolver {
   /// <param name="resourceId">Optional resource ID for resource-level permissions</param>
   /// <param name="contentTypeName">Optional content type for content-type level permissions</param>
   /// <returns>Detailed permission result with source and metadata</returns>
-  Task<PermissionResult> ResolvePermissionAsync<TResource>(
-      Guid userId,
-      Guid? tenantId,
-      PermissionType permission,
-      Guid? resourceId = null,
-      string? contentTypeName = null) where TResource : EntityBase;
+  Task<PermissionResult> ResolvePermissionAsync<TResource>(Guid userId, Guid? tenantId, PermissionType permission, Guid? resourceId = null, string? contentTypeName = null) where TResource : EntityBase;
 
   /// <summary>
   /// Get all effective permissions for a user in a specific context
@@ -34,11 +26,7 @@ public interface IDacPermissionResolver {
   /// <param name="resourceId">Optional resource ID</param>
   /// <param name="contentTypeName">Optional content type</param>
   /// <returns>List of effective permissions with their sources</returns>
-  Task<IEnumerable<EffectivePermission>> GetEffectivePermissionsAsync<TResource>(
-      Guid userId,
-      Guid? tenantId,
-      Guid? resourceId = null,
-      string? contentTypeName = null) where TResource : EntityBase;
+  Task<IEnumerable<EffectivePermission>> GetEffectivePermissionsAsync<TResource>(Guid userId, Guid? tenantId, Guid? resourceId = null, string? contentTypeName = null) where TResource : EntityBase;
 
   /// <summary>
   /// Check if a user can grant specific permissions to another user
@@ -49,12 +37,7 @@ public interface IDacPermissionResolver {
   /// <param name="resourceId">Optional resource context</param>
   /// <param name="contentTypeName">Optional content type context</param>
   /// <returns>True if user can grant all specified permissions</returns>
-  Task<bool> CanGrantPermissionsAsync(
-      Guid grantorUserId,
-      Guid? tenantId,
-      PermissionType[] permissions,
-      Guid? resourceId = null,
-      string? contentTypeName = null);
+  Task<bool> CanGrantPermissionsAsync(Guid grantorUserId, Guid? tenantId, PermissionType[ ] permissions, Guid? resourceId = null, string? contentTypeName = null);
 
   /// <summary>
   /// Get permission hierarchy for debugging and audit purposes
@@ -66,12 +49,7 @@ public interface IDacPermissionResolver {
   /// <param name="resourceId">Optional resource ID</param>
   /// <param name="contentTypeName">Optional content type</param>
   /// <returns>Detailed permission hierarchy</returns>
-  Task<PermissionHierarchy> GetPermissionHierarchyAsync<TResource>(
-      Guid userId,
-      Guid? tenantId,
-      PermissionType permission,
-      Guid? resourceId = null,
-      string? contentTypeName = null) where TResource : EntityBase;
+  Task<PermissionHierarchy> GetPermissionHierarchyAsync<TResource>(Guid userId, Guid? tenantId, PermissionType permission, Guid? resourceId = null, string? contentTypeName = null) where TResource : EntityBase;
 
   /// <summary>
   /// Bulk resolve permissions for multiple resources
@@ -82,11 +60,7 @@ public interface IDacPermissionResolver {
   /// <param name="resourceIds">Resource IDs to check</param>
   /// <param name="permissions">Permissions to check</param>
   /// <returns>Dictionary mapping resource IDs to permission results</returns>
-  Task<Dictionary<Guid, Dictionary<PermissionType, PermissionResult>>> BulkResolvePermissionsAsync<TResource>(
-      Guid userId,
-      Guid? tenantId,
-      Guid[] resourceIds,
-      PermissionType[] permissions) where TResource : EntityBase;
+  Task<Dictionary<Guid, Dictionary<PermissionType, PermissionResult>>> BulkResolvePermissionsAsync<TResource>(Guid userId, Guid? tenantId, Guid[ ] resourceIds, PermissionType[ ] permissions) where TResource : EntityBase;
 }
 
 /// <summary>
@@ -94,13 +68,21 @@ public interface IDacPermissionResolver {
 /// </summary>
 public class PermissionResult {
   public bool IsGranted { get; set; }
+
   public bool IsExplicitlyDenied { get; set; }
+
   public PermissionSource Source { get; set; }
+
   public string? GrantedBy { get; set; }
+
   public DateTime? GrantedAt { get; set; }
+
   public DateTime? ExpiresAt { get; set; }
+
   public string? Reason { get; set; }
+
   public int Priority { get; set; }
+
   public bool IsInherited { get; set; }
 }
 
@@ -109,14 +91,23 @@ public class PermissionResult {
 /// </summary>
 public class EffectivePermission {
   public PermissionType Permission { get; set; }
+
   public bool IsGranted { get; set; }
+
   public PermissionSource Source { get; set; }
+
   public string SourceDescription { get; set; } = string.Empty;
+
   public string? GrantedBy { get; set; }
+
   public DateTime? GrantedAt { get; set; }
+
   public DateTime? ExpiresAt { get; set; }
+
   public bool IsInherited { get; set; }
+
   public bool IsExplicit { get; set; }
+
   public int Priority { get; set; }
 }
 
@@ -125,11 +116,17 @@ public class EffectivePermission {
 /// </summary>
 public class PermissionHierarchy {
   public PermissionType Permission { get; set; }
+
   public Guid UserId { get; set; }
+
   public Guid? TenantId { get; set; }
+
   public Guid? ResourceId { get; set; }
+
   public string? ContentTypeName { get; set; }
+
   public List<PermissionLayer> Layers { get; set; } = new();
+
   public PermissionResult FinalResult { get; set; } = new();
 }
 
@@ -138,12 +135,19 @@ public class PermissionHierarchy {
 /// </summary>
 public class PermissionLayer {
   public PermissionSource Source { get; set; }
+
   public bool? IsGranted { get; set; }
+
   public bool IsDefault { get; set; }
+
   public string? GrantedBy { get; set; }
+
   public DateTime? GrantedAt { get; set; }
+
   public DateTime? ExpiresAt { get; set; }
+
   public int Priority { get; set; }
+
   public string Description { get; set; } = string.Empty;
 }
 
@@ -152,12 +156,20 @@ public class PermissionLayer {
 /// </summary>
 public enum PermissionSource {
   None = 0,
+
   GlobalDefault = 1,
+
   TenantDefault = 2,
+
   ContentTypeDefault = 3,
+
   TenantUser = 4,
+
   ContentTypeUser = 5,
+
   ResourceDefault = 6,
+
   ResourceUser = 7,
+
   SystemOverride = 8,
 }

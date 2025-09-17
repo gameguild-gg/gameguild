@@ -80,8 +80,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<ModuleRole> ModuleRoles { get; set; }
 
   // Resource Permission DbSets
-  public DbSet<GameGuild.Modules.Projects.ProjectPermission> ProjectPermissions { get; set; }
-  public DbSet<GameGuild.Modules.Comments.CommentPermission> CommentPermissions { get; set; }
+  public DbSet<ProjectPermission> ProjectPermissions { get; set; }
+  public DbSet<Modules.Comments.CommentPermission> CommentPermissions { get; set; }
 
   // Reputation Management DbSets
   public DbSet<UserReputation> UserReputations { get; set; }
