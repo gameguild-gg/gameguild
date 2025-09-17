@@ -13,10 +13,10 @@ namespace GameGuild.Modules.Subscriptions.Controllers;
 [Route("api/[controller]")]
 public class SubscriptionsController : ControllerBase
 {
-    private readonly GameGuild.CQRS.IMediator _mediator;
+    private readonly CQRS.IMediator _mediator;
     private readonly ISubscriptionRepository _subscriptionRepository;
 
-    public SubscriptionsController(GameGuild.CQRS.IMediator mediator, ISubscriptionRepository subscriptionRepository)
+    public SubscriptionsController(CQRS.IMediator mediator, ISubscriptionRepository subscriptionRepository)
     {
         _mediator = mediator;
         _subscriptionRepository = subscriptionRepository;
