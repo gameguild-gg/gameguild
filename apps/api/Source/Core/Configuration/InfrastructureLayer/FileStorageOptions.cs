@@ -12,7 +12,7 @@ public class FileStorageOptions {
   public long MaxFileSizeBytes { get; set; } = 10 * 1024 * 1024; // 10MB
 
   /// <summary> Allowed file extensions. </summary>
-  public string[ ] AllowedExtensions { get; set; } = { ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".doc", ".docx", ".txt" };
+  public string[ ] AllowedExtensions { get; set; } = [".jpg", ".jpeg", ".png", ".gif", ".pdf", ".doc", ".docx", ".txt"];
 
   /// <summary> Connection string for cloud storage providers. </summary>
   public string? ConnectionString { get; set; }
@@ -26,10 +26,10 @@ public class FileStorageOptions {
 
     if (MaxFileSizeBytes <= 0) throw new InvalidOperationException("Max file size must be greater than zero.");
 
-    if (Provider != FileStorageProvider.Local) {
-      if (string.IsNullOrWhiteSpace(ConnectionString)) throw new InvalidOperationException("Connection string is required for cloud storage providers.");
+    if (Provider == FileStorageProvider.Local) return;
 
-      if (string.IsNullOrWhiteSpace(ContainerName)) throw new InvalidOperationException("Container name is required for cloud storage providers.");
-    }
+    if (string.IsNullOrWhiteSpace(ConnectionString)) throw new InvalidOperationException("Connection string is required for cloud storage providers.");
+
+    if (string.IsNullOrWhiteSpace(ContainerName)) throw new InvalidOperationException("Container name is required for cloud storage providers.");
   }
 }
