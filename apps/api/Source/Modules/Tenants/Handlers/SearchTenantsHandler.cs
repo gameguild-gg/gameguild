@@ -57,7 +57,7 @@ public class SearchTenantsHandler(
       logger.LogError(ex, "Error searching tenants with term '{SearchTerm}'", request.SearchTerm);
 
       return Result.Failure<IEnumerable<Tenant>>(
-        Common.Error.Failure("Tenant.SearchFailed", "Failed to search tenants")
+        Error.Failure("Tenant.SearchFailed", "Failed to search tenants")
       );
     }
   }

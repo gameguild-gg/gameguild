@@ -14,7 +14,7 @@ public class ActivateTenantHandler(ApplicationDbContext context, ILogger<Activat
 
       if (tenant == null)
         return Result.Failure<bool>(
-          Common.Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")
+          Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")
         );
 
       if (tenant.IsActive) return Result.Success(true); // Already active
@@ -37,7 +37,7 @@ public class ActivateTenantHandler(ApplicationDbContext context, ILogger<Activat
       logger.LogError(ex, "Error activating tenant {TenantId}", request.Id);
 
       return Result.Failure<bool>(
-        Common.Error.Failure("Tenant.ActivationFailed", "Failed to activate tenant")
+        Error.Failure("Tenant.ActivationFailed", "Failed to activate tenant")
       );
     }
   }
