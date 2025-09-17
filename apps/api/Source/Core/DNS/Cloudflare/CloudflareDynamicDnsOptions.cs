@@ -15,7 +15,7 @@ public class CloudflareDynamicDnsOptions {
   public int IntervalMinutes { get; set; } = 5;
 
   /// <summary> List of DNS records to update with the external IP. </summary>
-  public List<DnsRecordConfiguration> DnsRecords { get; set; } = new List<DnsRecordConfiguration>();
+  public List<DnsRecordConfiguration> DnsRecords { get; set; } = [];
 
   /// <summary> List of external IP detection services with failover support. </summary>
   public List<ExternalIpServiceConfiguration> ExternalIpServices { get; set; } = [
