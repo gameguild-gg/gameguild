@@ -75,4 +75,8 @@
     <Using Include="System.ComponentModel.DataAnnotations" />
     <Using Include="System.ComponentModel.DataAnnotations.Schema" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Source\Compatibility\" />
+  </ItemGroup>
 </Project>
