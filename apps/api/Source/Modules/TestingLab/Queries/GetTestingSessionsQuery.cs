@@ -9,4 +9,4 @@ public record GetTestingSessionsQuery(
   SessionStatus? Status = null,
   DateTime? FromDate = null,
   DateTime? ToDate = null
-) : GameGuild.CQRS.IRequest<IEnumerable<TestingSession>>;
+) : IRequest<IEnumerable<TestingSession>>;
