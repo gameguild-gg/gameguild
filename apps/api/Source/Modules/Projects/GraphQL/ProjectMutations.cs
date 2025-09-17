@@ -14,7 +14,7 @@ public class ProjectMutations {
   /// </summary>
   public async Task<CreateProjectResult> CreateProject(
     CreateProjectInput input,
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     CancellationToken cancellationToken
   ) {
@@ -42,7 +42,7 @@ public class ProjectMutations {
   /// </summary>
   public async Task<UpdateProjectResult> UpdateProject(
     UpdateProjectInput input,
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     CancellationToken cancellationToken
   ) {
@@ -71,7 +71,7 @@ public class ProjectMutations {
   /// </summary>
   public async Task<DeleteProjectResult> DeleteProject(
     Guid projectId,
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     bool softDelete = true,
     string? reason = null,
@@ -87,7 +87,7 @@ public class ProjectMutations {
   /// </summary>
   public async Task<PublishProjectResult> PublishProject(
     Guid projectId,
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     CancellationToken cancellationToken
   ) {
@@ -101,7 +101,7 @@ public class ProjectMutations {
   /// </summary>
   public async Task<UnpublishProjectResult> UnpublishProject(
     Guid projectId,
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     CancellationToken cancellationToken
   ) {
@@ -115,7 +115,7 @@ public class ProjectMutations {
   /// </summary>
   public async Task<ArchiveProjectResult> ArchiveProject(
     Guid projectId,
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] CQRS.IMediator mediator,
     [Service] IUserContext userContext,
     CancellationToken cancellationToken
   ) {

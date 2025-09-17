@@ -104,7 +104,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Project>> GetProjectsByTypeAsync(Common.ProjectType type) {
+  public async Task<IEnumerable<Project>> GetProjectsByTypeAsync(ProjectType type) {
     return await context.Projects.Include(p => p.CreatedBy)
                         .Include(p => p.Category)
                         .Where(p => p.Type == type && p.DeletedAt == null)

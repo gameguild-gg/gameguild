@@ -62,7 +62,7 @@ public interface IProjectService {
   /// <summary>
   /// Get projects by type
   /// </summary>
-  Task<IEnumerable<Project>> GetProjectsByTypeAsync(Common.ProjectType type);
+  Task<IEnumerable<Project>> GetProjectsByTypeAsync(ProjectType type);
 
   /// <summary>
   /// Get projects by development status

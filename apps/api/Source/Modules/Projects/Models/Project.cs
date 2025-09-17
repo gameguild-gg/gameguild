@@ -35,7 +35,7 @@ public sealed class Project : Content {
   /// <summary>
   /// Project type (Game, Tool, Art, etc.)
   /// </summary>
-  public Common.ProjectType Type { get; set; } = Common.ProjectType.Game;
+  public ProjectType Type { get; set; } = ProjectType.Game;
 
   /// <summary>
   /// Development status
