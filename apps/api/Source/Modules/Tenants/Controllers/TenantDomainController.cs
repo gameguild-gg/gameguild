@@ -1,4 +1,5 @@
 using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Authorization;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants.Extensions;
 using Microsoft.AspNetCore.Mvc;
