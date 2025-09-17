@@ -21,7 +21,7 @@ public class AuthQueries {
   public async Task<User?> GetUserByEmail(
     [GraphQLDescription("The email address to search for")]
     string email,
-    [Service] GameGuild.CQRS.IMediator mediator
+    [Service] CQRS.IMediator mediator
   ) {
     var query = new GetUserByEmailQuery { Email = email, IncludeDeleted = false };
 
@@ -37,7 +37,7 @@ public class AuthQueries {
   [GraphQLDescription("Retrieves the current authenticated user's profile")]
   [Authorize] // Requires authentication
   public async Task<User?> GetCurrentUser(
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] CQRS.IMediator mediator,
     [Service] IHttpContextAccessor contextAccessor
   ) {
     var userId = contextAccessor.HttpContext?.User?.FindFirst("sub")?.Value;
@@ -59,7 +59,7 @@ public class AuthQueries {
   [Authorize] // Requires authentication
   [Error<UnauthorizedAccessException>]
   public async Task<UserProfileDto> GetCurrentUserProfile(
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] CQRS.IMediator mediator,
     [Service] IHttpContextAccessor contextAccessor
   ) {
     var userId = contextAccessor.HttpContext?.User?.FindFirst("sub")?.Value ?? contextAccessor.HttpContext?.User?.FindFirst("nameid")?.Value;
@@ -81,7 +81,7 @@ public class AuthQueries {
   public async Task<bool> IsEmailAvailable(
     [GraphQLDescription("The email address to check")]
     string email,
-    [Service] GameGuild.CQRS.IMediator mediator
+    [Service] CQRS.IMediator mediator
   ) {
     var query = new GetUserByEmailQuery { Email = email };
     var user = await mediator.Send(query);
