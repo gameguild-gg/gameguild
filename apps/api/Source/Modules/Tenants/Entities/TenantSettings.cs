@@ -18,7 +18,7 @@ public class TenantSettings : Resource
     /// <summary>
     /// Navigation property to the tenant
     /// </summary>
-    public virtual Tenant? Tenant { get; set; }
+    public new virtual Tenant? Tenant { get; set; }
 
     // === LOCALIZATION SETTINGS ===
 
