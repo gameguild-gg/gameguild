@@ -8,7 +8,7 @@ namespace GameGuild.Modules.UserProfiles;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class UserProfilesController(GameGuild.CQRS.IMediator mediator) : ControllerBase {
+public class UserProfilesController(CQRS.IMediator mediator) : ControllerBase {
   /// <summary>
   /// Get all user profiles with optional filtering and pagination
   /// </summary>

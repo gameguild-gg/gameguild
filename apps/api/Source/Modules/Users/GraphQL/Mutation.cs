@@ -9,7 +9,7 @@ public class UserMutations {
   /// <summary>
   /// Creates a new user using CQRS pattern
   /// </summary>
-  public async Task<User> CreateUser(CreateUserInput input, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<User> CreateUser(CreateUserInput input, [Service] CQRS.IMediator mediator) {
     var command = new CreateUserCommand { Name = input.Name, Email = input.Email, IsActive = input.IsActive, InitialBalance = input.InitialBalance };
 
     return await mediator.Send(command);
@@ -18,7 +18,7 @@ public class UserMutations {
   /// <summary>
   /// Updates an existing user using CQRS pattern
   /// </summary>
-  public async Task<User> UpdateUser(UpdateUserInput input, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<User> UpdateUser(UpdateUserInput input, [Service] CQRS.IMediator mediator) {
     var command = new UpdateUserCommand { UserId = input.Id, Name = input.Name, Email = input.Email, IsActive = input.IsActive };
 
     return await mediator.Send(command);
@@ -27,7 +27,7 @@ public class UserMutations {
   /// <summary>
   /// Updates user balance using CQRS pattern
   /// </summary>
-  public async Task<User> UpdateUserBalance(UpdateUserBalanceInput input, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<User> UpdateUserBalance(UpdateUserBalanceInput input, [Service] CQRS.IMediator mediator) {
     var command = new UpdateUserBalanceCommand {
       UserId = input.UserId,
       Balance = input.Balance,
@@ -42,7 +42,7 @@ public class UserMutations {
   /// <summary>
   /// Deletes a user using CQRS pattern
   /// </summary>
-  public async Task<bool> DeleteUser(Guid id, [Service] GameGuild.CQRS.IMediator mediator, bool softDelete = true, string? reason = null) {
+  public async Task<bool> DeleteUser(Guid id, [Service] CQRS.IMediator mediator, bool softDelete = true, string? reason = null) {
     var command = new DeleteUserCommand { UserId = id, SoftDelete = softDelete, Reason = reason };
 
     return await mediator.Send(command);
@@ -51,7 +51,7 @@ public class UserMutations {
   /// <summary>
   /// Restores a soft-deleted user using CQRS pattern
   /// </summary>
-  public async Task<bool> RestoreUser(Guid id, [Service] GameGuild.CQRS.IMediator mediator, string? reason = null) {
+  public async Task<bool> RestoreUser(Guid id, [Service] CQRS.IMediator mediator, string? reason = null) {
     var command = new RestoreUserCommand { UserId = id, Reason = reason };
 
     return await mediator.Send(command);
@@ -60,7 +60,7 @@ public class UserMutations {
   /// <summary>
   /// Activates a user using CQRS pattern
   /// </summary>
-  public async Task<bool> ActivateUser(Guid id, [Service] GameGuild.CQRS.IMediator mediator, string? reason = null) {
+  public async Task<bool> ActivateUser(Guid id, [Service] CQRS.IMediator mediator, string? reason = null) {
     var command = new ActivateUserCommand { UserId = id, Reason = reason };
 
     return await mediator.Send(command);
@@ -69,7 +69,7 @@ public class UserMutations {
   /// <summary>
   /// Deactivates a user using CQRS pattern
   /// </summary>
-  public async Task<bool> DeactivateUser(Guid id, [Service] GameGuild.CQRS.IMediator mediator, string? reason = null) {
+  public async Task<bool> DeactivateUser(Guid id, [Service] CQRS.IMediator mediator, string? reason = null) {
     var command = new DeactivateUserCommand { UserId = id, Reason = reason };
 
     return await mediator.Send(command);
@@ -78,7 +78,7 @@ public class UserMutations {
   /// <summary>
   /// Bulk delete users using CQRS pattern
   /// </summary>
-  public async Task<BulkOperationResult> BulkDeleteUsers(BulkDeleteUsersInput input, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<BulkOperationResult> BulkDeleteUsers(BulkDeleteUsersInput input, [Service] CQRS.IMediator mediator) {
     var command = new BulkDeleteUsersCommand { UserIds = input.UserIds, SoftDelete = input.SoftDelete, Reason = input.Reason };
     var result = await mediator.Send(command);
     return result.IsSuccess ? result.Value! : throw new GraphQLException(result.Error?.Message ?? "Unknown error");
@@ -87,7 +87,7 @@ public class UserMutations {
   /// <summary>
   /// Bulk restore users using CQRS pattern
   /// </summary>
-  public async Task<BulkOperationResult> BulkRestoreUsers(BulkRestoreUsersInput input, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<BulkOperationResult> BulkRestoreUsers(BulkRestoreUsersInput input, [Service] CQRS.IMediator mediator) {
     var command = new BulkRestoreUsersCommand { UserIds = input.UserIds, Reason = input.Reason };
     var result = await mediator.Send(command);
     return result.IsSuccess ? result.Value! : throw new GraphQLException(result.Error?.Message ?? "Unknown error");
@@ -96,7 +96,7 @@ public class UserMutations {
   /// <summary>
   /// Bulk create users using CQRS pattern
   /// </summary>
-  public async Task<BulkOperationResult> BulkCreateUsers(BulkCreateUsersInput input, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<BulkOperationResult> BulkCreateUsers(BulkCreateUsersInput input, [Service] CQRS.IMediator mediator) {
     var command = new BulkCreateUsersCommand { Users = input.Users.Select(u => new CreateUserDto { Name = u.Name, Email = u.Email, IsActive = u.IsActive, InitialBalance = u.InitialBalance }).ToList(), Reason = input.Reason };
     var result = await mediator.Send(command);
     return result.IsSuccess ? result.Value! : throw new GraphQLException(result.Error?.Message ?? "Unknown error");
@@ -105,7 +105,7 @@ public class UserMutations {
   /// <summary>
   /// Bulk activate users using CQRS pattern
   /// </summary>
-  public async Task<BulkOperationResult> BulkActivateUsers(BulkActivateUsersInput input, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<BulkOperationResult> BulkActivateUsers(BulkActivateUsersInput input, [Service] CQRS.IMediator mediator) {
     var command = new BulkActivateUsersCommand { UserIds = input.UserIds, Reason = input.Reason };
     var result = await mediator.Send(command);
     return result.IsSuccess ? result.Value! : throw new GraphQLException(result.Error?.Message ?? "Unknown error");
@@ -114,7 +114,7 @@ public class UserMutations {
   /// <summary>
   /// Bulk deactivate users using CQRS pattern
   /// </summary>
-  public async Task<BulkOperationResult> BulkDeactivateUsers(BulkDeactivateUsersInput input, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<BulkOperationResult> BulkDeactivateUsers(BulkDeactivateUsersInput input, [Service] CQRS.IMediator mediator) {
     var command = new BulkDeactivateUsersCommand { UserIds = input.UserIds, Reason = input.Reason };
     var result = await mediator.Send(command);
     return result.IsSuccess ? result.Value! : throw new GraphQLException(result.Error?.Message ?? "Unknown error");

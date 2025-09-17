@@ -27,7 +27,7 @@ public record CreateProgramCommand(
   int? MaxEnrollments = null,
   DateTime? EnrollmentDeadline = null,
   string? CreatorId = null
-) : GameGuild.CQRS.IRequest<Program>;
+) : CQRS.IRequest<Program>;
 
 /// <summary>
 /// Command to update an existing program
@@ -45,34 +45,34 @@ public record UpdateProgramCommand(
   ProgramAvailabilityStatus? EnrollmentStatus = null,
   int? MaxEnrollments = null,
   DateTime? EnrollmentDeadline = null
-) : GameGuild.CQRS.IRequest<Program>;
+) : CQRS.IRequest<Program>;
 
 /// <summary>
 /// Command to delete a program (soft delete)
 /// </summary>
-public record DeleteProgramCommand(Guid Id) : GameGuild.CQRS.IRequest<bool>;
+public record DeleteProgramCommand(Guid Id) : CQRS.IRequest<bool>;
 
 // ===== STATUS COMMANDS =====
 
 /// <summary>
 /// Command to publish a program
 /// </summary>
-public record PublishProgramCommand(Guid Id) : GameGuild.CQRS.IRequest<Program>;
+public record PublishProgramCommand(Guid Id) : CQRS.IRequest<Program>;
 
 /// <summary>
 /// Command to unpublish a program
 /// </summary>
-public record UnpublishProgramCommand(Guid Id) : GameGuild.CQRS.IRequest<Program>;
+public record UnpublishProgramCommand(Guid Id) : CQRS.IRequest<Program>;
 
 /// <summary>
 /// Command to archive a program
 /// </summary>
-public record ArchiveProgramCommand(Guid Id) : GameGuild.CQRS.IRequest<Program>;
+public record ArchiveProgramCommand(Guid Id) : CQRS.IRequest<Program>;
 
 /// <summary>
 /// Command to restore an archived program
 /// </summary>
-public record RestoreProgramCommand(Guid Id) : GameGuild.CQRS.IRequest<Program>;
+public record RestoreProgramCommand(Guid Id) : CQRS.IRequest<Program>;
 
 // ===== ENROLLMENT COMMANDS =====
 
@@ -83,7 +83,7 @@ public record EnrollUserCommand(
   Guid ProgramId,
   string UserId,
   DateTime? EnrollmentDate = null
-) : GameGuild.CQRS.IRequest<ProgramUser>;
+) : CQRS.IRequest<ProgramUser>;
 
 /// <summary>
 /// Command to unenroll a user from a program
@@ -91,7 +91,7 @@ public record EnrollUserCommand(
 public record UnenrollUserCommand(
   Guid ProgramId,
   string UserId
-) : GameGuild.CQRS.IRequest<bool>;
+) : CQRS.IRequest<bool>;
 
 /// <summary>
 /// Command to update enrollment status
@@ -101,7 +101,7 @@ public record UpdateEnrollmentStatusCommand(
   ProgramAvailabilityStatus Status,
   int? MaxEnrollments = null,
   DateTime? EnrollmentDeadline = null
-) : GameGuild.CQRS.IRequest<Program>;
+) : CQRS.IRequest<Program>;
 
 // ===== CONTENT MANAGEMENT COMMANDS =====
 
@@ -114,7 +114,7 @@ public record AddProgramContentCommand(
   int Order,
   bool IsRequired = true,
   int? PointsReward = null
-) : GameGuild.CQRS.IRequest<ProgramContent>;
+) : CQRS.IRequest<ProgramContent>;
 
 /// <summary>
 /// Command to remove content from a program
@@ -122,7 +122,7 @@ public record AddProgramContentCommand(
 public record RemoveProgramContentCommand(
   Guid ProgramId,
   Guid ContentId
-) : GameGuild.CQRS.IRequest<bool>;
+) : CQRS.IRequest<bool>;
 
 /// <summary>
 /// Command to reorder program content
@@ -130,7 +130,7 @@ public record RemoveProgramContentCommand(
 public record ReorderProgramContentCommand(
   Guid ProgramId,
   Dictionary<Guid, int> ContentOrders
-) : GameGuild.CQRS.IRequest<IEnumerable<ProgramContent>>;
+) : CQRS.IRequest<IEnumerable<ProgramContent>>;
 
 // ===== RATING COMMANDS =====
 
@@ -142,7 +142,7 @@ public record RateProgramCommand(
   string UserId,
   decimal Rating,
   string? Review = null
-) : GameGuild.CQRS.IRequest<ProgramRating>;
+) : CQRS.IRequest<ProgramRating>;
 
 /// <summary>
 /// Command to update a program rating
@@ -152,7 +152,7 @@ public record UpdateProgramRatingCommand(
   string UserId,
   decimal Rating,
   string? Review = null
-) : GameGuild.CQRS.IRequest<ProgramRating>;
+) : CQRS.IRequest<ProgramRating>;
 
 /// <summary>
 /// Command to delete a program rating
@@ -160,7 +160,7 @@ public record UpdateProgramRatingCommand(
 public record DeleteProgramRatingCommand(
   Guid ProgramId,
   string UserId
-) : GameGuild.CQRS.IRequest<bool>;
+) : CQRS.IRequest<bool>;
 
 // ===== WISHLIST COMMANDS =====
 
@@ -170,7 +170,7 @@ public record DeleteProgramRatingCommand(
 public record AddToWishlistCommand(
   Guid ProgramId,
   string UserId
-) : GameGuild.CQRS.IRequest<ProgramWishlist>;
+) : CQRS.IRequest<ProgramWishlist>;
 
 /// <summary>
 /// Command to remove program from wishlist
@@ -178,7 +178,7 @@ public record AddToWishlistCommand(
 public record RemoveFromWishlistCommand(
   Guid ProgramId,
   string UserId
-) : GameGuild.CQRS.IRequest<bool>;
+) : CQRS.IRequest<bool>;
 
 // ===== BULK OPERATIONS =====
 
@@ -188,11 +188,11 @@ public record RemoveFromWishlistCommand(
 public record BulkUpdateProgramVisibilityCommand(
   IEnumerable<Guid> ProgramIds,
   AccessLevel Visibility
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Command to bulk archive programs
 /// </summary>
 public record BulkArchiveProgramsCommand(
   IEnumerable<Guid> ProgramIds
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
