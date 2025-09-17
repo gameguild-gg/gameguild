@@ -160,9 +160,9 @@ public class Result<TValue> : Result, IResult<TValue>
     public Result<TNew> Map<TNew>(Func<TValue, TNew> mapper)
     {
         if (IsFailure)
-            return Result.Failure<TNew>(Error!);
+            return Failure<TNew>(Error!);
 
-        return Result.Success(mapper(Value!));
+        return Success(mapper(Value!));
     }
 
     /// <summary>
@@ -174,7 +174,7 @@ public class Result<TValue> : Result, IResult<TValue>
     public async Task<Result<TNew>> BindAsync<TNew>(Func<TValue, Task<Result<TNew>>> binder)
     {
         if (IsFailure)
-            return Result.Failure<TNew>(Error!);
+            return Failure<TNew>(Error!);
 
         return await binder(Value!);
     }
@@ -188,7 +188,7 @@ public class Result<TValue> : Result, IResult<TValue>
     public Result<TNew> Bind<TNew>(Func<TValue, Result<TNew>> binder)
     {
         if (IsFailure)
-            return Result.Failure<TNew>(Error!);
+            return Failure<TNew>(Error!);
 
         return binder(Value!);
     }
