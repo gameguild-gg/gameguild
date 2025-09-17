@@ -24,7 +24,7 @@ public interface IProgramContentService {
 
   Task<IEnumerable<ProgramContent>> GetContentByTypeAsync(
     Guid programId,
-    Common.ProgramContentType type
+    ProgramContentType type
   );
 
   Task<IEnumerable<ProgramContent>> GetContentByVisibilityAsync(
