@@ -84,7 +84,7 @@ public class SearchUserProfilesHandler(ApplicationDbContext context, ILogger<Sea
       logger.LogError(ex, "Error searching user profiles");
 
       return Result.Failure<IEnumerable<UserProfile>>(
-        Common.Error.Failure("UserProfile.SearchFailed", "Failed to search user profiles")
+        Error.Failure("UserProfile.SearchFailed", "Failed to search user profiles")
       );
     }
   }
