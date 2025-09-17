@@ -15,7 +15,7 @@ public class HardDeleteTenantHandler(ApplicationDbContext context, ILogger<HardD
 
       if (tenant == null)
         return Result.Failure<bool>(
-          Common.Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")
+          Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")
         );
 
       context.Resources.Remove(tenant);
@@ -29,7 +29,7 @@ public class HardDeleteTenantHandler(ApplicationDbContext context, ILogger<HardD
       logger.LogError(ex, "Error permanently deleting tenant {TenantId}", request.Id);
 
       return Result.Failure<bool>(
-        Common.Error.Failure("Tenant.HardDeleteFailed", "Failed to permanently delete tenant")
+        Error.Failure("Tenant.HardDeleteFailed", "Failed to permanently delete tenant")
       );
     }
   }
