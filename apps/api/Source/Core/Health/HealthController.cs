@@ -22,26 +22,9 @@ public class HealthController(ApplicationDbContext context, ICloudflareExternalI
       // Get Cloudflare Dynamic DNS status
       var dynamicDnsStatus = GetDynamicDnsStatus();
 
-      return Ok(new {
-        status = "healthy",
-        timestamp = DateTime.UtcNow,
-        environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
-        database = "connected",
-        dynamicDns = dynamicDnsStatus
-      });
+      return Ok(new { status = "healthy", timestamp = DateTime.UtcNow, environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), database = "connected", dynamicDns = dynamicDnsStatus });
     }
-    catch (Exception ex) {
-      return StatusCode(
-        503,
-        new {
-          status = "unhealthy",
-          timestamp = DateTime.UtcNow,
-          environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
-          database = "disconnected",
-          error = ex.Message,
-        }
-      );
-    }
+    catch (Exception ex) { return StatusCode(503, new { status = "unhealthy", timestamp = DateTime.UtcNow, environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), database = "disconnected", error = ex.Message, }); }
   }
 
   /// <summary>
@@ -55,12 +38,7 @@ public class HealthController(ApplicationDbContext context, ICloudflareExternalI
 
       return Ok(new { status = "healthy", connected = canConnect, userCount, timestamp = DateTime.UtcNow });
     }
-    catch (Exception ex) {
-      return StatusCode(
-        503,
-        new { status = "unhealthy", connected = false, error = ex.Message, timestamp = DateTime.UtcNow }
-      );
-    }
+    catch (Exception ex) { return StatusCode(503, new { status = "unhealthy", connected = false, error = ex.Message, timestamp = DateTime.UtcNow }); }
   }
 
   /// <summary>
@@ -75,15 +53,7 @@ public class HealthController(ApplicationDbContext context, ICloudflareExternalI
         status = cloudflareService.IsRunning ? "running" : "stopped"
       };
     }
-    catch (Exception ex) {
-      return new {
-        enabled = false,
-        lastKnownIp = "unknown",
-        lastUpdate = "never",
-        status = "error",
-        error = ex.Message
-      };
-    }
+    catch (Exception ex) { return new { enabled = false, lastKnownIp = "unknown", lastUpdate = "never", status = "error", error = ex.Message }; }
   }
 
   /// <summary>
@@ -96,25 +66,8 @@ public class HealthController(ApplicationDbContext context, ICloudflareExternalI
       var status = GetDynamicDnsStatus();
       var currentIp = await cloudflareService.GetExternalIpAsync();
 
-      return Ok(new {
-        timestamp = DateTime.UtcNow,
-        currentIp = currentIp ?? "unknown",
-        service = status
-      });
+      return Ok(new { timestamp = DateTime.UtcNow, currentIp = currentIp ?? "unknown", service = status });
     }
-    catch (Exception ex) {
-      return StatusCode(
-        503,
-        new {
-          timestamp = DateTime.UtcNow,
-          currentIp = "unknown",
-          service = new {
-            enabled = false,
-            status = "error",
-            error = ex.Message
-          }
-        }
-      );
-    }
+    catch (Exception ex) { return StatusCode(503, new { timestamp = DateTime.UtcNow, currentIp = "unknown", service = new { enabled = false, status = "error", error = ex.Message } }); }
   }
 }
