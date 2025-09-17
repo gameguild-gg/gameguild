@@ -61,7 +61,7 @@ public class ProgramCommandHandlers(
       EstimatedHours = request.EstimatedHours,
       Category = request.Category,
       Difficulty = request.Difficulty,
-      EnrollmentStatus = (Modules.Programs.EnrollmentStatus)request.EnrollmentStatus,
+      EnrollmentStatus = (EnrollmentStatus)request.EnrollmentStatus,
       MaxEnrollments = request.MaxEnrollments,
       EnrollmentDeadline = request.EnrollmentDeadline,
       Status = ContentStatus.Draft,
@@ -101,7 +101,7 @@ public class ProgramCommandHandlers(
     if (request.EstimatedHours.HasValue) program.EstimatedHours = request.EstimatedHours;
     if (request.Category.HasValue) program.Category = request.Category.Value;
     if (request.Difficulty.HasValue) program.Difficulty = request.Difficulty.Value;
-    if (request.EnrollmentStatus.HasValue) program.EnrollmentStatus = (Modules.Programs.EnrollmentStatus)request.EnrollmentStatus.Value;
+    if (request.EnrollmentStatus.HasValue) program.EnrollmentStatus = (EnrollmentStatus)request.EnrollmentStatus.Value;
     if (request.MaxEnrollments.HasValue) program.MaxEnrollments = request.MaxEnrollments;
     if (request.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = request.EnrollmentDeadline;
 

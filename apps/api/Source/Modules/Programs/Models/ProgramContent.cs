@@ -27,7 +27,7 @@ public class ProgramContent : EntityBase {
 
   public string Description { get; set; } = string.Empty;
 
-  public Common.ProgramContentType Type { get; set; }
+  public ProgramContentType Type { get; set; }
 
   /// <summary>
   /// Main content body stored as JSON to support rich content
