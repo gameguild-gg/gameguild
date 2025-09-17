@@ -25,19 +25,19 @@ public class CloudflareDynamicDnsOptions {
   /// <summary>
   /// List of DNS records to update with the external IP.
   /// </summary>
-  public List<DnsRecordConfiguration> DnsRecords { get; set; } = new();
+  public List<DnsRecordConfiguration> DnsRecords { get; set; } = new List<DnsRecordConfiguration>();
 
   /// <summary>
   /// List of external IP detection services with failover support.
   /// </summary>
-  public List<ExternalIpServiceConfiguration> ExternalIpServices { get; set; } = new() {
-    new() { Url = "https://api.ipify.org", Name = "ipify", ResponseFormat = ExternalIpResponseFormat.PlainText },
-    new() { Url = "https://checkip.amazonaws.com", Name = "AWS", ResponseFormat = ExternalIpResponseFormat.PlainText },
-    new() { Url = "https://icanhazip.com", Name = "icanhazip", ResponseFormat = ExternalIpResponseFormat.PlainText },
-    new() { Url = "https://ipecho.net/plain", Name = "ipecho", ResponseFormat = ExternalIpResponseFormat.PlainText },
-    new() { Url = "https://httpbin.org/ip", Name = "httpbin", ResponseFormat = ExternalIpResponseFormat.Json, JsonPath = "origin" },
-    new() { Url = "https://jsonip.com", Name = "jsonip", ResponseFormat = ExternalIpResponseFormat.Json, JsonPath = "ip" }
-  };
+  public List<ExternalIpServiceConfiguration> ExternalIpServices { get; set; } = [
+    new ExternalIpServiceConfiguration { Url = "https://api.ipify.org", Name = "ipify", ResponseFormat = ExternalIpResponseFormat.PlainText },
+    new ExternalIpServiceConfiguration { Url = "https://checkip.amazonaws.com", Name = "AWS", ResponseFormat = ExternalIpResponseFormat.PlainText },
+    new ExternalIpServiceConfiguration { Url = "https://icanhazip.com", Name = "icanhazip", ResponseFormat = ExternalIpResponseFormat.PlainText },
+    new ExternalIpServiceConfiguration { Url = "https://ipecho.net/plain", Name = "ipecho", ResponseFormat = ExternalIpResponseFormat.PlainText },
+    new ExternalIpServiceConfiguration { Url = "https://httpbin.org/ip", Name = "httpbin", ResponseFormat = ExternalIpResponseFormat.Json, JsonPath = "origin" },
+    new ExternalIpServiceConfiguration { Url = "https://jsonip.com", Name = "jsonip", ResponseFormat = ExternalIpResponseFormat.Json, JsonPath = "ip" },
+  ];
 
   /// <summary>
   /// Maximum number of retry attempts across all services (default: 3).
@@ -59,12 +59,7 @@ public class CloudflareDynamicDnsOptions {
   /// <summary>
   /// Validates the configuration.
   /// </summary>
-  public bool IsValid() {
-    return !string.IsNullOrWhiteSpace(ApiToken) &&
-           !string.IsNullOrWhiteSpace(ZoneId) &&
-           DnsRecords.Any() &&
-           DnsRecords.All(r => r.IsValid());
-  }
+  public bool IsValid() { return !string.IsNullOrWhiteSpace(ApiToken) && !string.IsNullOrWhiteSpace(ZoneId) && DnsRecords.Any() && DnsRecords.All(r => r.IsValid()); }
 
   /// <summary>
   /// Gets validation error messages.
@@ -72,19 +67,14 @@ public class CloudflareDynamicDnsOptions {
   public IEnumerable<string> GetValidationErrors() {
     var errors = new List<string>();
 
-    if (string.IsNullOrWhiteSpace(ApiToken))
-      errors.Add("CloudflareApiToken is required");
+    if (string.IsNullOrWhiteSpace(ApiToken)) errors.Add("CloudflareApiToken is required");
 
-    if (string.IsNullOrWhiteSpace(ZoneId))
-      errors.Add("CloudflareZoneId is required");
+    if (string.IsNullOrWhiteSpace(ZoneId)) errors.Add("CloudflareZoneId is required");
 
-    if (!DnsRecords.Any())
-      errors.Add("At least one DNS record must be configured in CloudflareDnsRecords");
+    if (!DnsRecords.Any()) errors.Add("At least one DNS record must be configured in CloudflareDnsRecords");
 
     foreach (var (record, index) in DnsRecords.Select((r, i) => (r, i))) {
-      if (!record.IsValid()) {
-        errors.Add($"DNS record at index {index} is invalid: {string.Join(", ", record.GetValidationErrors())}");
-      }
+      if (!record.IsValid()) { errors.Add($"DNS record at index {index} is invalid: {string.Join(", ", record.GetValidationErrors())}"); }
     }
 
     return errors;
@@ -121,11 +111,7 @@ public class DnsRecordConfiguration {
   /// <summary>
   /// Validates the DNS record configuration.
   /// </summary>
-  public bool IsValid() {
-    return !string.IsNullOrWhiteSpace(Type) &&
-           !string.IsNullOrWhiteSpace(Name) &&
-           Ttl is >= 60 and <= 86400;
-  }
+  public bool IsValid() { return !string.IsNullOrWhiteSpace(Type) && !string.IsNullOrWhiteSpace(Name) && Ttl is >= 60 and <= 86400; }
 
   /// <summary>
   /// Gets validation error messages.
@@ -133,14 +119,11 @@ public class DnsRecordConfiguration {
   public IEnumerable<string> GetValidationErrors() {
     var errors = new List<string>();
 
-    if (string.IsNullOrWhiteSpace(Type))
-      errors.Add("Type is required");
+    if (string.IsNullOrWhiteSpace(Type)) errors.Add("Type is required");
 
-    if (string.IsNullOrWhiteSpace(Name))
-      errors.Add("Name is required");
+    if (string.IsNullOrWhiteSpace(Name)) errors.Add("Name is required");
 
-    if (Ttl is < 60 or > 86400)
-      errors.Add("TTL must be between 60 and 86400 seconds");
+    if (Ttl is < 60 or > 86400) errors.Add("TTL must be between 60 and 86400 seconds");
 
     return errors;
   }
@@ -200,11 +183,9 @@ public class ExternalIpServiceConfiguration {
   /// Validates the service configuration.
   /// </summary>
   public bool IsValid() {
-    if (string.IsNullOrWhiteSpace(Name) || string.IsNullOrWhiteSpace(Url))
-      return false;
+    if (string.IsNullOrWhiteSpace(Name) || string.IsNullOrWhiteSpace(Url)) return false;
 
-    if (ResponseFormat == ExternalIpResponseFormat.Json && string.IsNullOrWhiteSpace(JsonPath))
-      return false;
+    if (ResponseFormat == ExternalIpResponseFormat.Json && string.IsNullOrWhiteSpace(JsonPath)) return false;
 
     return Uri.TryCreate(Url, UriKind.Absolute, out _);
   }
@@ -215,19 +196,15 @@ public class ExternalIpServiceConfiguration {
   public IEnumerable<string> GetValidationErrors() {
     var errors = new List<string>();
 
-    if (string.IsNullOrWhiteSpace(Name))
-      errors.Add("Name is required");
+    if (string.IsNullOrWhiteSpace(Name)) errors.Add("Name is required");
 
     if (string.IsNullOrWhiteSpace(Url))
       errors.Add("Url is required");
-    else if (!Uri.TryCreate(Url, UriKind.Absolute, out _))
-      errors.Add("Url must be a valid absolute URI");
+    else if (!Uri.TryCreate(Url, UriKind.Absolute, out _)) errors.Add("Url must be a valid absolute URI");
 
-    if (ResponseFormat == ExternalIpResponseFormat.Json && string.IsNullOrWhiteSpace(JsonPath))
-      errors.Add("JsonPath is required for Json response format");
+    if (ResponseFormat == ExternalIpResponseFormat.Json && string.IsNullOrWhiteSpace(JsonPath)) errors.Add("JsonPath is required for Json response format");
 
-    if (TimeoutSeconds is < 1 or > 120)
-      errors.Add("TimeoutSeconds must be between 1 and 120");
+    if (TimeoutSeconds is < 1 or > 120) errors.Add("TimeoutSeconds must be between 1 and 120");
 
     return errors;
   }
