@@ -13,11 +13,11 @@ namespace GameGuild.Modules.Billing.Controllers;
 public sealed class BillingWebhooksController : ControllerBase
 {
     private readonly ILogger<BillingWebhooksController> _logger;
-    private readonly GameGuild.CQRS.IMediator _mediator;
+    private readonly CQRS.IMediator _mediator;
     private readonly IBillingWebhookService _webhookService;
 
     public BillingWebhooksController(
-        GameGuild.CQRS.IMediator mediator,
+        CQRS.IMediator mediator,
         IBillingWebhookService webhookService,
         ILogger<BillingWebhooksController> logger)
     {
