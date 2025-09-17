@@ -14,5 +14,5 @@ public interface IQueryHandler<in TQuery, TResponse> : IRequestHandler<TQuery, T
 /// </summary>
 /// <typeparam name="TQuery">The type of query being handled</typeparam>
 /// <typeparam name="TValue">The type of value wrapped in Result</typeparam>
-public interface IResultQueryHandler<in TQuery, TValue> : IRequestHandler<TQuery, GameGuild.CQRS.Result<TValue>>
+public interface IResultQueryHandler<in TQuery, TValue> : IRequestHandler<TQuery, Result<TValue>>
     where TQuery : IResultQuery<TValue> { }
