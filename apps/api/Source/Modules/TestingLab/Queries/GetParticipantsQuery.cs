@@ -8,4 +8,4 @@ public record GetParticipantsQuery(
   AttendanceStatus? AttendanceStatus = null,
   int Skip = 0,
   int Take = 50
-) : GameGuild.CQRS.IRequest<IEnumerable<TestingParticipant>>;
+) : IRequest<IEnumerable<TestingParticipant>>;

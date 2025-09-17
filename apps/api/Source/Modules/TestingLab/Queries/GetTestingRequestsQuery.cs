@@ -8,4 +8,4 @@ public record GetTestingRequestsQuery(
   Guid? ProjectVersionId = null,
   TestingRequestStatus? Status = null,
   bool? IsActive = null
-) : GameGuild.CQRS.IRequest<IEnumerable<TestingRequest>>;
+) : IRequest<IEnumerable<TestingRequest>>;

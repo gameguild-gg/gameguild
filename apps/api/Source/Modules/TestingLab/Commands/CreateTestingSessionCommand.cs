@@ -13,4 +13,4 @@ public record CreateTestingSessionCommand(
   int MaxParticipants,
   RegistrationType RegistrationType,
   bool IsActive = true
-) : GameGuild.CQRS.IRequest<TestingSession>;
+) : IRequest<TestingSession>;
