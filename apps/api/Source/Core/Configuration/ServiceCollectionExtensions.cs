@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using GameGuild.Core.WebApplication;
 using GameGuild.Modules.Features.Infrastructure;
 using GameGuild.Modules.Features.Services;
 using Microsoft.AspNetCore.HttpLogging;
@@ -14,8 +13,7 @@ namespace GameGuild;
 /// <summary>
 /// Extension methods for service collection to add layer services.
 /// </summary>
-public static class ServiceCollectionExtensions
-{
+public static class ServiceCollectionExtensions {
   /// <summary>
   /// Adds the presentation layer services to the service collection.
   /// </summary>
@@ -33,106 +31,99 @@ public static class ServiceCollectionExtensions
   /// <returns>The service collection for chaining</returns>
   public static IServiceCollection AddPresentationLayer(this IServiceCollection services, IConfiguration configuration, PresentationLayerOptions options) { return DependencyInjection.AddPresentationLayer(services, configuration, options); }
 
-  public static IServiceCollection SetupHttpLogging(this IServiceCollection services, IConfiguration configuration, HttpLoggingOptions? options)
-  {
+  public static IServiceCollection SetupHttpLogging(this IServiceCollection services, IConfiguration configuration, HttpLoggingOptions? options) {
     options ??= HttpLoggingOptionsBuilder.Create(configuration);
     options.Validate();
 
-    services.AddHttpLogging(loggingOptions =>
-    {
-      loggingOptions.LoggingFields = HttpLoggingFields.All;
+    services.AddHttpLogging(loggingOptions => {
+        loggingOptions.LoggingFields = HttpLoggingFields.All;
 
-      if (options.LogRequestHeaders) loggingOptions.LoggingFields |= HttpLoggingFields.RequestHeaders;
-      if (options.LogResponseHeaders) loggingOptions.LoggingFields |= HttpLoggingFields.ResponseHeaders;
-      if (options.LogRequestBody) loggingOptions.LoggingFields |= HttpLoggingFields.RequestBody;
-      if (options.LogResponseBody) loggingOptions.LoggingFields |= HttpLoggingFields.ResponseBody;
-    }
+        if (options.LogRequestHeaders) loggingOptions.LoggingFields |= HttpLoggingFields.RequestHeaders;
+        if (options.LogResponseHeaders) loggingOptions.LoggingFields |= HttpLoggingFields.ResponseHeaders;
+        if (options.LogRequestBody) loggingOptions.LoggingFields |= HttpLoggingFields.RequestBody;
+        if (options.LogResponseBody) loggingOptions.LoggingFields |= HttpLoggingFields.ResponseBody;
+      }
     );
 
     return services;
   }
 
-  public static IServiceCollection SetupProblemDetails(this IServiceCollection services, IConfiguration configuration, ProblemDetailsOptions? options)
-  {
+  public static IServiceCollection SetupProblemDetails(this IServiceCollection services, IConfiguration configuration, ProblemDetailsOptions? options) {
     options ??= ProblemDetailsOptionsBuilder.Create(configuration);
     options.Validate();
 
-    services.AddProblemDetails(problemDetailsOptions =>
-    {
-      problemDetailsOptions.CustomizeProblemDetails = context =>
-      {
-        context.ProblemDetails.Instance = context.HttpContext.Request.Path;
-        context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+    services.AddProblemDetails(problemDetailsOptions => {
+        problemDetailsOptions.CustomizeProblemDetails = context => {
+          context.ProblemDetails.Instance = context.HttpContext.Request.Path;
+          context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
 
-        if (options.IncludeExceptionDetails && context.Exception != null) { context.ProblemDetails.Extensions["exception"] = context.Exception.ToString(); }
-      };
-    }
+          if (options.IncludeExceptionDetails && context.Exception != null) context.ProblemDetails.Extensions["exception"] = context.Exception.ToString();
+        };
+      }
     );
 
     return services;
   }
 
-  public static IServiceCollection SetupLocalization(this IServiceCollection services, IConfiguration configuration, LocalizationOptions? options)
-  {
+  public static IServiceCollection SetupLocalization(this IServiceCollection services, IConfiguration configuration, LocalizationOptions? options) {
     options ??= LocalizationOptionsBuilder.Create(configuration);
     options.Validate();
 
     services.AddLocalization(localizationOptions => { localizationOptions.ResourcesPath = "Resources"; });
 
-    services.Configure<RequestLocalizationOptions>(requestLocalizationOptions =>
-    {
-      var supportedCultures = options.SupportedCultures;
-      requestLocalizationOptions.DefaultRequestCulture = new RequestCulture(options.DefaultCulture);
-      requestLocalizationOptions.SupportedCultures = supportedCultures.Select(c => new CultureInfo(c)).ToList();
-      requestLocalizationOptions.SupportedUICultures = supportedCultures.Select(c => new CultureInfo(c)).ToList();
-    }
+    services.Configure<RequestLocalizationOptions>(requestLocalizationOptions => {
+        var supportedCultures = options.SupportedCultures;
+        requestLocalizationOptions.DefaultRequestCulture = new RequestCulture(options.DefaultCulture);
+        requestLocalizationOptions.SupportedCultures = supportedCultures.Select(c => new CultureInfo(c)).ToList();
+        requestLocalizationOptions.SupportedUICultures = supportedCultures.Select(c => new CultureInfo(c)).ToList();
+      }
     );
 
     return services;
   }
 
-  public static IServiceCollection SetupResponseCompression(this IServiceCollection services, IConfiguration configuration, ResponseCompressionOptions? options)
-  {
+  public static IServiceCollection SetupResponseCompression(this IServiceCollection services, IConfiguration configuration, ResponseCompressionOptions? options) {
     options ??= ResponseCompressionOptionsBuilder.Create(configuration);
     options.Validate();
 
-    services.AddResponseCompression(compressionOptions =>
-    {
-      compressionOptions.MimeTypes = options.MimeTypes;
-      compressionOptions.EnableForHttps = true;
-    }
+    services.AddResponseCompression(compressionOptions => {
+        compressionOptions.MimeTypes = options.MimeTypes;
+        compressionOptions.EnableForHttps = true;
+      }
     );
 
     return services;
   }
 
-  public static IServiceCollection SetupCors(this IServiceCollection services, IConfiguration configuration, CorsOptions? options)
-  {
+  public static IServiceCollection SetupCors(this IServiceCollection services, IConfiguration configuration, CorsOptions? options) {
     options ??= CorsOptionsBuilder.Create(configuration);
     options.Validate();
 
-    services.AddCors(corsOptions =>
-    {
-      corsOptions.AddDefaultPolicy(policyBuilder =>
-      {
-        if (options.AllowedOrigins.Length > 0) { policyBuilder.WithOrigins(options.AllowedOrigins); }
-        else { policyBuilder.AllowAnyOrigin(); }
+    services.AddCors(corsOptions => {
+        corsOptions.AddDefaultPolicy(policyBuilder => {
+            if (options.AllowedOrigins.Length > 0)
+              policyBuilder.WithOrigins(options.AllowedOrigins);
+            else
+              policyBuilder.AllowAnyOrigin();
 
-        if (options.AllowedMethods.Length > 0) { policyBuilder.WithMethods(options.AllowedMethods); }
-        else { policyBuilder.AllowAnyMethod(); }
+            if (options.AllowedMethods.Length > 0)
+              policyBuilder.WithMethods(options.AllowedMethods);
+            else
+              policyBuilder.AllowAnyMethod();
 
-        if (options.AllowedHeaders.Length > 0) { policyBuilder.WithHeaders(options.AllowedHeaders); }
-        else { policyBuilder.AllowAnyHeader(); }
+            if (options.AllowedHeaders.Length > 0)
+              policyBuilder.WithHeaders(options.AllowedHeaders);
+            else
+              policyBuilder.AllowAnyHeader();
+          }
+        );
       }
-      );
-    }
     );
 
     return services;
   }
 
-  public static IServiceCollection SetupAuthentication(this IServiceCollection services, IConfiguration configuration, AuthenticationOptions? options)
-  {
+  public static IServiceCollection SetupAuthentication(this IServiceCollection services, IConfiguration configuration, AuthenticationOptions? options) {
     options ??= AuthenticationOptionsBuilder.Create(configuration);
     options.Validate();
 
@@ -147,8 +138,7 @@ public static class ServiceCollectionExtensions
     return services;
   }
 
-  public static IServiceCollection SetupRequestContext(this IServiceCollection services, IConfiguration configuration, RequestContextOptions? options)
-  {
+  public static IServiceCollection SetupRequestContext(this IServiceCollection services, IConfiguration configuration, RequestContextOptions? options) {
     options ??= RequestContextOptionsBuilder.Create(configuration);
     options.Validate();
 
@@ -157,14 +147,14 @@ public static class ServiceCollectionExtensions
     return services;
   }
 
-  public static IServiceCollection SetupFeatureFlags(this IServiceCollection services, IConfiguration configuration, FeatureFlagsOptions? options)
-  {
+  public static IServiceCollection SetupFeatureFlags(this IServiceCollection services, IConfiguration configuration, FeatureFlagsOptions? options) {
     options ??= FeatureFlagsOptionsBuilder.Create(configuration);
     options.Validate();
 
     // Register OpenFeature API singleton and services
-    services.AddSingleton(OpenFeature.Api.Instance);
-    services.AddSingleton<FeatureClient>(provider => provider.GetRequiredService<OpenFeature.Api>().GetFeatureClient());
+    services.AddSingleton(Api.Instance);
+    // TODO: 
+    // services.AddSingleton<FeatureClient>(provider => provider.GetRequiredService<Api>().GetFeatureClient());
 
     // Register the main feature flag service
     services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
@@ -178,8 +168,7 @@ public static class ServiceCollectionExtensions
     return services;
   }
 
-  public static IServiceCollection SetupAuthorization(this IServiceCollection services, IConfiguration configuration, AuthorizationOptions? options)
-  {
+  public static IServiceCollection SetupAuthorization(this IServiceCollection services, IConfiguration configuration, AuthorizationOptions? options) {
     options ??= AuthorizationOptionsBuilder.Create(configuration);
     options.Validate();
 
@@ -188,27 +177,24 @@ public static class ServiceCollectionExtensions
     return services;
   }
 
-  public static IServiceCollection SetupRateLimiting(this IServiceCollection services, IConfiguration configuration, RateLimitingOptions? options)
-  {
+  public static IServiceCollection SetupRateLimiting(this IServiceCollection services, IConfiguration configuration, RateLimitingOptions? options) {
     options ??= RateLimitingOptionsBuilder.Create(configuration);
     options.Validate();
 
-    services.AddRateLimiter(rateLimiterOptions =>
-    {
-      // TODO: Fix rate limiter configuration for .NET 9
-      // These methods may not be available in .NET 9
-      // Fixed window for internal API calls and the Console application.
-      // rateLimiterOptions.AddFixedWindowLimiter("InternalPolicy", policyOptions => { ... });
-      // Sliding window for public API calls with rate limiting.
-      // rateLimiterOptions.AddSlidingWindowLimiter("PublicPolicy", policyOptions => { ... });
-    }
+    services.AddRateLimiter(rateLimiterOptions => {
+        // TODO: Fix rate limiter configuration for .NET 9
+        // These methods may not be available in .NET 9
+        // Fixed window for internal API calls and the Console application.
+        // rateLimiterOptions.AddFixedWindowLimiter("InternalPolicy", policyOptions => { ... });
+        // Sliding window for public API calls with rate limiting.
+        // rateLimiterOptions.AddSlidingWindowLimiter("PublicPolicy", policyOptions => { ... });
+      }
     );
 
     return services;
   }
 
-  public static IServiceCollection SetupModelValidation(this IServiceCollection services, IConfiguration configuration, ModelValidationOptions? options)
-  {
+  public static IServiceCollection SetupModelValidation(this IServiceCollection services, IConfiguration configuration, ModelValidationOptions? options) {
     options ??= ModelValidationOptionsBuilder.Create(configuration);
     options.Validate();
 
@@ -217,8 +203,7 @@ public static class ServiceCollectionExtensions
     return services;
   }
 
-  public static IServiceCollection SetupHealthChecks(this IServiceCollection services, IConfiguration configuration, HealthChecksOptions? options)
-  {
+  public static IServiceCollection SetupHealthChecks(this IServiceCollection services, IConfiguration configuration, HealthChecksOptions? options) {
     options ??= HealthChecksOptionsBuilder.Create(configuration);
     options.Validate();
 
@@ -227,30 +212,26 @@ public static class ServiceCollectionExtensions
     return services;
   }
 
-  public static IServiceCollection SetupApiVersioning(this IServiceCollection services, IConfiguration configuration, ApiVersioningOptions? options)
-  {
+  public static IServiceCollection SetupApiVersioning(this IServiceCollection services, IConfiguration configuration, ApiVersioningOptions? options) {
     options ??= ApiVersioningOptionsBuilder.Create(configuration);
     options.Validate();
 
-    services.AddApiVersioning(setup =>
-    {
-      setup.AssumeDefaultVersionWhenUnspecified = options.AssumeDefaultVersionWhenUnspecified;
-      setup.DefaultApiVersion = options.DefaultApiVersion;
-      setup.ApiVersionReader = ApiVersioningOptionsBuilder.CreateReader(options.ReadingStrategy, options);
-    }
+    services.AddApiVersioning(setup => {
+                setup.AssumeDefaultVersionWhenUnspecified = options.AssumeDefaultVersionWhenUnspecified;
+                setup.DefaultApiVersion = options.DefaultApiVersion;
+                setup.ApiVersionReader = ApiVersioningOptionsBuilder.CreateReader(options.ReadingStrategy, options);
+              }
             )
-            .AddApiExplorer(setup =>
-            {
-              setup.GroupNameFormat = options.GroupNameFormat;
-              setup.SubstituteApiVersionInUrl = options.SubstituteApiVersionInUrl;
-            }
+            .AddApiExplorer(setup => {
+                setup.GroupNameFormat = options.GroupNameFormat;
+                setup.SubstituteApiVersionInUrl = options.SubstituteApiVersionInUrl;
+              }
             );
 
     return services;
   }
 
-  public static IServiceCollection SetupApiExplorer(this IServiceCollection services, IConfiguration configuration, ApiVersioningOptions? options)
-  {
+  public static IServiceCollection SetupApiExplorer(this IServiceCollection services, IConfiguration configuration, ApiVersioningOptions? options) {
     options ??= ApiVersioningOptionsBuilder.Create(configuration);
     options.Validate();
 
@@ -260,8 +241,7 @@ public static class ServiceCollectionExtensions
     return services;
   }
 
-  public static IServiceCollection SetupOpenApi(this IServiceCollection services, IConfiguration configuration, OpenApiOptions? options)
-  {
+  public static IServiceCollection SetupOpenApi(this IServiceCollection services, IConfiguration configuration, OpenApiOptions? options) {
     options ??= OpenApiOptionsBuilder.Create(configuration);
     options.Validate();
 
@@ -269,38 +249,36 @@ public static class ServiceCollectionExtensions
     services.AddOpenApi();
 
     // Add Swashbuckle for Swagger UI
-    services.AddSwaggerGen(c =>
-    {
-      c.SwaggerDoc(
-        options.Version,
-        new OpenApiInfo
-        {
-          Title = options.Title,
-          Version = options.Version,
-          Description = options.Description,
-          Contact = new OpenApiContact { Name = options.ContactName, Email = options.ContactEmail, Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null },
-          License = BuildLicense(options),
-          TermsOfService = !string.IsNullOrEmpty(options.TermsOfServiceUrl) ? new Uri(options.TermsOfServiceUrl) : null
-        }
-      );
+    services.AddSwaggerGen(genOptions => {
+        genOptions.SwaggerDoc(
+          options.Version,
+          new OpenApiInfo {
+            Title = options.Title,
+            Version = options.Version,
+            Description = options.Description,
+            Contact = new OpenApiContact { Name = options.ContactName, Email = options.ContactEmail, Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null },
+            License = BuildLicense(options),
+            TermsOfService = !string.IsNullOrEmpty(options.TermsOfServiceUrl) ? new Uri(options.TermsOfServiceUrl) : null
+          }
+        );
 
-      // Use fully-qualified type names (without root namespace) to avoid collisions for nested record types
-      // e.g. TenantsController+ArchiveRequest vs ResourcesController+ArchiveRequest
-      c.CustomSchemaIds(t =>
-      {
-        var fullName = t.FullName ?? t.Name;
-        // Strip common root namespace to keep schema ids concise
-        fullName = fullName.Replace("GameGuild.", string.Empty, StringComparison.Ordinal);
+        // Use fully-qualified type names (without root namespace) to avoid collisions for nested record types
+        // e.g. TenantsController+ArchiveRequest vs ResourcesController+ArchiveRequest
+        genOptions.CustomSchemaIds(t => {
+            var fullName = t.FullName ?? t.Name;
+            // Strip common root namespace to keep schema ids concise
+            fullName = fullName.Replace("GameGuild.", string.Empty, StringComparison.Ordinal);
 
-        // Replace '+' (nested type separator) with '.' for readability
-        return fullName.Replace('+', '.');
+            // Replace '+' (nested type separator) with '.' for readability
+            return fullName.Replace('+', '.');
+          }
+        );
       }
-      );
-    }
     );
 
-    static OpenApiLicense? BuildLicense(OpenApiOptions options)
-    {
+    return services;
+
+    static OpenApiLicense? BuildLicense(OpenApiOptions options) {
       if (string.IsNullOrWhiteSpace(options.LicenseName)) return null;
 
       var license = new OpenApiLicense { Name = options.LicenseName };
@@ -308,60 +286,51 @@ public static class ServiceCollectionExtensions
 
       return license;
     }
-
-    return services;
   }
 
-  public static IServiceCollection SetupMemoryCaching(this IServiceCollection services, IConfiguration configuration, MemoryCachingOptions? options)
-  {
+  public static IServiceCollection SetupMemoryCaching(this IServiceCollection services, IConfiguration configuration, MemoryCachingOptions? options) {
     options ??= MemoryCachingOptionsBuilder.Create(configuration);
     options.Validate();
 
-    services.AddMemoryCache(cacheOptions =>
-    {
-      cacheOptions.SizeLimit = options.SizeLimit;
-      cacheOptions.CompactionPercentage = options.CompactionPercentage;
-      cacheOptions.ExpirationScanFrequency = options.ExpirationScanFrequency;
-    }
+    services.AddMemoryCache(cacheOptions => {
+        cacheOptions.SizeLimit = options.SizeLimit;
+        cacheOptions.CompactionPercentage = options.CompactionPercentage;
+        cacheOptions.ExpirationScanFrequency = options.ExpirationScanFrequency;
+      }
     );
 
     return services;
   }
 
-  public static IServiceCollection SetupResponseCaching(this IServiceCollection services, IConfiguration configuration, ResponseCachingOptions? options)
-  {
+  public static IServiceCollection SetupResponseCaching(this IServiceCollection services, IConfiguration configuration, ResponseCachingOptions? options) {
     options ??= ResponseCachingOptionsBuilder.Create(configuration);
     options.Validate();
 
-    services.AddResponseCaching(cachingOptions =>
-    {
-      cachingOptions.MaximumBodySize = options.MaximumBodySize;
-      cachingOptions.UseCaseSensitivePaths = options.UseCaseSensitivePaths;
-    }
+    services.AddResponseCaching(cachingOptions => {
+        cachingOptions.MaximumBodySize = options.MaximumBodySize;
+        cachingOptions.UseCaseSensitivePaths = options.UseCaseSensitivePaths;
+      }
     );
 
     return services;
   }
 
-  public static IServiceCollection SetupSignalR(this IServiceCollection services, IConfiguration configuration, SignalROptions? options)
-  {
+  public static IServiceCollection SetupSignalR(this IServiceCollection services, IConfiguration configuration, SignalROptions? options) {
     options ??= SignalROptionsBuilder.Create(configuration);
     options.Validate();
 
-    services.AddSignalR(signalROptions =>
-    {
-      signalROptions.EnableDetailedErrors = options.EnableDetailedErrors;
-      signalROptions.KeepAliveInterval = options.KeepAliveInterval;
-      signalROptions.ClientTimeoutInterval = options.ClientTimeoutInterval;
-      signalROptions.MaximumReceiveMessageSize = options.MaximumReceiveMessageSize;
-    }
+    services.AddSignalR(signalROptions => {
+        signalROptions.EnableDetailedErrors = options.EnableDetailedErrors;
+        signalROptions.KeepAliveInterval = options.KeepAliveInterval;
+        signalROptions.ClientTimeoutInterval = options.ClientTimeoutInterval;
+        signalROptions.MaximumReceiveMessageSize = options.MaximumReceiveMessageSize;
+      }
     );
 
     return services;
   }
 
-  public static IServiceCollection SetupGraphQl(this IServiceCollection services, IConfiguration configuration, GraphQlOptions? options)
-  {
+  public static IServiceCollection SetupGraphQl(this IServiceCollection services, IConfiguration configuration, GraphQlOptions? options) {
     options ??= GraphQlOptionsBuilder.Create(configuration);
     options.Validate();
 
