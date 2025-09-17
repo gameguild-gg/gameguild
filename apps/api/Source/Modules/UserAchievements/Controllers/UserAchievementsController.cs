@@ -12,10 +12,10 @@ namespace GameGuild.Modules.UserAchievements;
 [Authorize]
 public class UserAchievementsController : ControllerBase
 {
-  private readonly GameGuild.CQRS.IMediator _mediator;
+  private readonly CQRS.IMediator _mediator;
   private readonly ILogger<UserAchievementsController> _logger;
 
-  public UserAchievementsController(GameGuild.CQRS.IMediator mediator, ILogger<UserAchievementsController> logger)
+  public UserAchievementsController(CQRS.IMediator mediator, ILogger<UserAchievementsController> logger)
   {
     _mediator = mediator;
     _logger = logger;
@@ -252,10 +252,10 @@ public class UserAchievementsController : ControllerBase
 [Authorize]
 public class AchievementLeaderboardController : ControllerBase
 {
-  private readonly GameGuild.CQRS.IMediator _mediator;
+  private readonly CQRS.IMediator _mediator;
   private readonly ILogger<AchievementLeaderboardController> _logger;
 
-  public AchievementLeaderboardController(GameGuild.CQRS.IMediator mediator, ILogger<AchievementLeaderboardController> logger)
+  public AchievementLeaderboardController(CQRS.IMediator mediator, ILogger<AchievementLeaderboardController> logger)
   {
     _mediator = mediator;
     _logger = logger;

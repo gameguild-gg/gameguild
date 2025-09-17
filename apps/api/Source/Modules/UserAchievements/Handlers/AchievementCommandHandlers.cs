@@ -11,12 +11,12 @@ public class CreateAchievementCommandHandler : ICommandHandler<CreateAchievement
 {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<CreateAchievementCommandHandler> _logger;
-  private readonly GameGuild.CQRS.IPublisher _publisher;
+  private readonly IPublisher _publisher;
 
   public CreateAchievementCommandHandler(
     ApplicationDbContext context,
     ILogger<CreateAchievementCommandHandler> logger,
-    GameGuild.CQRS.IPublisher publisher)
+    IPublisher publisher)
   {
     _context = context;
     _logger = logger;
@@ -124,12 +124,12 @@ public class UpdateAchievementCommandHandler : ICommandHandler<UpdateAchievement
 {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<UpdateAchievementCommandHandler> _logger;
-  private readonly GameGuild.CQRS.IPublisher _publisher;
+  private readonly IPublisher _publisher;
 
   public UpdateAchievementCommandHandler(
     ApplicationDbContext context,
     ILogger<UpdateAchievementCommandHandler> logger,
-    GameGuild.CQRS.IPublisher publisher)
+    IPublisher publisher)
   {
     _context = context;
     _logger = logger;
@@ -195,12 +195,12 @@ public class DeleteAchievementCommandHandler : ICommandHandler<DeleteAchievement
 {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<DeleteAchievementCommandHandler> _logger;
-  private readonly GameGuild.CQRS.IPublisher _publisher;
+  private readonly IPublisher _publisher;
 
   public DeleteAchievementCommandHandler(
     ApplicationDbContext context,
     ILogger<DeleteAchievementCommandHandler> logger,
-    GameGuild.CQRS.IPublisher publisher)
+    IPublisher publisher)
   {
     _context = context;
     _logger = logger;
