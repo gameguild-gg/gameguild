@@ -46,7 +46,7 @@ public class TenantContext : Domain.Identity.ITenantContext {
         return queryTid;
       }
 
-      _logger.LogInformation("No tenant ID found in claims, headers, or query. Available claims: {Claims}", string.Join(", ", _user?.Claims?.Select(c => $"{c.Type}={c.Value}") ?? Array.Empty<string>()));
+      _logger.LogInformation("No tenant ID found in claims, headers, or query. Available claims: {Claims}", string.Join(", ", _user?.Claims?.Select(c => $"{c.Type}={c.Value}") ?? []));
 
       return null;
     }

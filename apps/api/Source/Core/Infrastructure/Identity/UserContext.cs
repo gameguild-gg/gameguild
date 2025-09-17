@@ -28,7 +28,7 @@ public class UserContext : Domain.Identity.IUserContext {
         return id;
       }
 
-      _logger.LogWarning("Could not extract user ID from token claims. Available claims: {Claims}", string.Join(", ", _user?.Claims?.Select(c => $"{c.Type}={c.Value}") ?? Array.Empty<string>()));
+      _logger.LogWarning("Could not extract user ID from token claims. Available claims: {Claims}", string.Join(", ", _user?.Claims?.Select(c => $"{c.Type}={c.Value}") ?? []));
 
       return null;
     }
@@ -50,5 +50,5 @@ public class UserContext : Domain.Identity.IUserContext {
 
   public bool IsInRole(string role) { return _user?.IsInRole(role) ?? false; }
 
-  public IEnumerable<string> Roles { get => _user?.FindAll(ClaimTypes.Role)?.Select(c => c.Value) ?? Enumerable.Empty<string>(); }
+  public IEnumerable<string> Roles { get => _user?.FindAll(ClaimTypes.Role)?.Select(c => c.Value) ?? []; }
 }

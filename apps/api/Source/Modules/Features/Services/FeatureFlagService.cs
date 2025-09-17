@@ -128,7 +128,7 @@ public class FeatureFlagService : IFeatureFlagService {
   }
 
   public async Task<FeatureFlag?> UpdateFeatureFlagAsync(Guid id, FeatureFlag featureFlag, CancellationToken cancellationToken = default) {
-    var existing = await _context.FeatureFlags.FindAsync(new object[ ] { id }, cancellationToken);
+    var existing = await _context.FeatureFlags.FindAsync([id], cancellationToken);
 
     if (existing == null) return null;
 
@@ -152,7 +152,7 @@ public class FeatureFlagService : IFeatureFlagService {
   }
 
   public async Task<bool> DeleteFeatureFlagAsync(Guid id, CancellationToken cancellationToken = default) {
-    var featureFlag = await _context.FeatureFlags.FindAsync(new object[ ] { id }, cancellationToken);
+    var featureFlag = await _context.FeatureFlags.FindAsync([id], cancellationToken);
 
     if (featureFlag == null) return false;
 

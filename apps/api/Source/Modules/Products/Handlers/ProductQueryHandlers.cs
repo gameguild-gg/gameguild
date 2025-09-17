@@ -94,7 +94,7 @@ public class ProductQueryHandlers
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting products");
 
-      return Enumerable.Empty<Product>();
+      return [];
     }
   }
 
@@ -238,7 +238,7 @@ public class ProductQueryHandlers
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting user products for user: {UserId}", request.UserId);
 
-      return Enumerable.Empty<UserProduct>();
+      return [];
     }
   }
 

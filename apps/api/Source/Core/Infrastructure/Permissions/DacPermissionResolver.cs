@@ -59,7 +59,7 @@ public class DacPermissionResolver : IDacPermissionResolver {
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting effective permissions for user {UserId} in tenant {TenantId}", userId, tenantId);
 
-      return Enumerable.Empty<EffectivePermission>();
+      return [];
     }
   }
 
