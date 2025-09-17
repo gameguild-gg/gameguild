@@ -125,7 +125,7 @@ public class ProgramContentService(ApplicationDbContext context) : IProgramConte
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<ProgramContent>> GetContentByTypeAsync(Guid programId, Common.ProgramContentType type) {
+  public async Task<IEnumerable<ProgramContent>> GetContentByTypeAsync(Guid programId, ProgramContentType type) {
     return await context.ProgramContents.Where(pc => pc.ProgramId == programId && pc.Type == type && !pc.IsDeleted)
                         .OrderBy(pc => pc.SortOrder)
                         .ToListAsync();

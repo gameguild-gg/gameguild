@@ -10,7 +10,7 @@ public class UpdateProgramContentDto {
 
   public string? Description { get; set; }
 
-  public Common.ProgramContentType? Type { get; set; }
+  public ProgramContentType? Type { get; set; }
 
   public string? Body { get; set; }
 

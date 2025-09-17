@@ -12,7 +12,7 @@ public class CreateProgramContentDto {
 
   public string Description { get; set; } = string.Empty;
 
-  [Required] public Common.ProgramContentType Type { get; set; }
+  [Required] public ProgramContentType Type { get; set; }
 
   public string Body { get; set; } = "{}";
 

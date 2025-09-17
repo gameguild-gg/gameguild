@@ -3,7 +3,7 @@
 public record CreateContentDto(
   string Title,
   string Description,
-  Common.ProgramContentType Type,
+  ProgramContentType Type,
   string Body,
   int? SortOrder = null,
   bool IsRequired = true,
@@ -13,7 +13,7 @@ public record CreateContentDto(
 
   public string Description { get; init; } = Description;
 
-  public Common.ProgramContentType Type { get; init; } = Type;
+  public ProgramContentType Type { get; init; } = Type;
 
   public string Body { get; init; } = Body;
 

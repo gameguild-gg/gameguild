@@ -12,7 +12,7 @@ public class ContentStatsDto {
 
   public int OptionalContent { get; set; }
 
-  public Dictionary<Common.ProgramContentType, int> ContentByType { get; set; } = new();
+  public Dictionary<ProgramContentType, int> ContentByType { get; set; } = new();
 
   public Dictionary<Visibility, int> ContentByVisibility { get; set; } = new();
 

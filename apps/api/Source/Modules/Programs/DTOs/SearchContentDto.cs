@@ -8,7 +8,7 @@ public class SearchContentDto {
 
   [Required][StringLength(255)] public string SearchTerm { get; set; } = string.Empty;
 
-  public Common.ProgramContentType? Type { get; set; }
+  public ProgramContentType? Type { get; set; }
 
   public Visibility? Visibility { get; set; }
 
