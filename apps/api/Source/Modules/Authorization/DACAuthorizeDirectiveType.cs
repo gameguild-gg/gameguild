@@ -1,8 +1,6 @@
 namespace GameGuild.Authorization;
 
-/// <summary>
-/// GraphQL directive for 3-layer DAC authorization
-/// </summary>
+/// <summary> GraphQL directive for 3-layer DAC authorization </summary>
 public class DACAuthorizeDirectiveType : DirectiveType {
   protected override void Configure(IDirectiveTypeDescriptor descriptor) {
     descriptor.Name("dacAuthorize");

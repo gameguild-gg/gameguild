@@ -1,8 +1,6 @@
 namespace GameGuild.CQRS;
 
-/// <summary>
-/// Background service for processing domain events
-/// </summary>
+/// <summary> Background service for processing domain events </summary>
 public class DomainEventProcessorService(ILogger<DomainEventProcessorService> logger, IServiceProvider serviceProvider) : BackgroundService {
   protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
     logger.LogInformation("Domain Event Processor Service started");

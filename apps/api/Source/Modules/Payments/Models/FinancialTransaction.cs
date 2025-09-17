@@ -14,14 +14,10 @@ namespace GameGuild.Modules.Payments;
 [Index(nameof(ProcessedAt))]
 [Index(nameof(Amount))]
 public class FinancialTransaction : EntityBase {
-  /// <summary>
-  /// User who initiated the transaction (payer)
-  /// </summary>
+  /// <summary> User who initiated the transaction (payer) </summary>
   public Guid? FromUserId { get; set; }
 
-  /// <summary>
-  /// User who receives the transaction (payee)
-  /// </summary>
+  /// <summary> User who receives the transaction (payee) </summary>
   public Guid? ToUserId { get; set; }
 
   public TransactionType Type { get; set; }
@@ -32,71 +28,47 @@ public class FinancialTransaction : EntityBase {
 
   public TransactionStatus Status { get; set; } = TransactionStatus.Pending;
 
-  /// <summary>
-  /// External transaction ID from payment provider
-  /// </summary>
+  /// <summary> External transaction ID from payment provider </summary>
   [MaxLength(255)]
   public string? ExternalTransactionId { get; set; }
 
-  /// <summary>
-  /// Payment method used for this transaction
-  /// </summary>
+  /// <summary> Payment method used for this transaction </summary>
   public Guid? PaymentMethodId { get; set; }
 
-  /// <summary>
-  /// Promo code applied to this transaction
-  /// </summary>
+  /// <summary> Promo code applied to this transaction </summary>
   public Guid? PromoCodeId { get; set; }
 
-  /// <summary>
-  /// Platform fee charged for this transaction
-  /// </summary>
+  /// <summary> Platform fee charged for this transaction </summary>
   [Column(TypeName = "decimal(10,2)")]
   public decimal? PlatformFee { get; set; }
 
-  /// <summary>
-  /// Payment processor fee for this transaction
-  /// </summary>
+  /// <summary> Payment processor fee for this transaction </summary>
   [Column(TypeName = "decimal(10,2)")]
   public decimal? ProcessorFee { get; set; }
 
-  /// <summary>
-  /// Net amount after fees
-  /// </summary>
+  /// <summary> Net amount after fees </summary>
   [Column(TypeName = "decimal(10,2)")]
   public decimal? NetAmount { get; set; }
 
-  /// <summary>
-  /// Description or memo for the transaction
-  /// </summary>
+  /// <summary> Description or memo for the transaction </summary>
   [MaxLength(500)]
   public string? Description { get; set; }
 
-  /// <summary>
-  /// Additional metadata about the transaction
-  /// </summary>
+  /// <summary> Additional metadata about the transaction </summary>
   [MaxLength(1000)]
   public string? Metadata { get; set; }
 
-  /// <summary>
-  /// Date when the transaction was processed
-  /// </summary>
+  /// <summary> Date when the transaction was processed </summary>
   public DateTime? ProcessedAt { get; set; }
 
-  /// <summary>
-  /// Date when the transaction failed (if applicable)
-  /// </summary>
+  /// <summary> Date when the transaction failed (if applicable) </summary>
   public DateTime? FailedAt { get; set; }
 
-  /// <summary>
-  /// Error message if transaction failed
-  /// </summary>
+  /// <summary> Error message if transaction failed </summary>
   [MaxLength(500)]
   public string? Error { get; set; }
 
-  /// <summary>
-  /// Reason for failure if transaction failed
-  /// </summary>
+  /// <summary> Reason for failure if transaction failed </summary>
   [MaxLength(500)]
   public string? FailureReason { get; set; }
 

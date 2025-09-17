@@ -10,27 +10,19 @@ public class ReputationService(ApplicationDbContext context) : IReputationServic
   public async Task<IReputation?> GetUserReputationAsync(Guid userId, Guid? tenantId = null) {
     if (tenantId.HasValue) {
       // Get tenant-specific reputation
-      var tenantPermission =
-        await context.TenantPermissions.FirstOrDefaultAsync(tp =>
-                                                              tp.UserId == userId && tp.TenantId == tenantId.Value && !tp.IsDeleted
-        );
+      var tenantPermission = await context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId.Value && !tp.IsDeleted);
 
       if (tenantPermission == null) return null;
 
-      return await context.UserTenantReputations.Include(utr => utr.CurrentLevel)
-                          .FirstOrDefaultAsync(utr => utr.TenantPermissionId == tenantPermission.Id && !utr.IsDeleted);
+      return await context.UserTenantReputations.Include(utr => utr.CurrentLevel).FirstOrDefaultAsync(utr => utr.TenantPermissionId == tenantPermission.Id && !utr.IsDeleted);
     }
     else {
       // Get global reputation
-      return await context.UserReputations.Include(ur => ur.CurrentLevel)
-                          .FirstOrDefaultAsync(ur => ur.UserId == userId && !ur.IsDeleted);
+      return await context.UserReputations.Include(ur => ur.CurrentLevel).FirstOrDefaultAsync(ur => ur.UserId == userId && !ur.IsDeleted);
     }
   }
 
-  public async Task<IReputation> UpdateReputationAsync(
-    Guid userId, int scoreChange, Guid? tenantId = null,
-    string? reason = null
-  ) {
+  public async Task<IReputation> UpdateReputationAsync(Guid userId, int scoreChange, Guid? tenantId = null, string? reason = null) {
     var reputation = await GetUserReputationAsync(userId, tenantId);
 
     if (reputation == null) {
@@ -41,8 +33,7 @@ public class ReputationService(ApplicationDbContext context) : IReputationServic
 
       if (tenantId.HasValue) {
         // Create tenant-specific reputation
-        var tenantPermission = await context.TenantPermissions.Include(tp => tp.Tenant)
-                                            .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId.Value && !tp.IsDeleted);
+        var tenantPermission = await context.TenantPermissions.Include(tp => tp.Tenant).FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId.Value && !tp.IsDeleted);
 
         if (tenantPermission == null) throw new ArgumentException("User is not a member of the specified tenant", nameof(tenantId));
 
@@ -88,12 +79,7 @@ public class ReputationService(ApplicationDbContext context) : IReputationServic
   }
 
   private async Task RecalculateReputationTierAsync(IReputation reputation, Guid? tenantId) {
-    var newLevel = await context.ReputationTiers.Where(rl =>
-                                                         rl.IsActive &&
-                                                         !rl.IsDeleted &&
-                                                         rl.MinimumScore <= reputation.Score &&
-                                                         (rl.MaximumScore == null || rl.MaximumScore >= reputation.Score)
-                                )
+    var newLevel = await context.ReputationTiers.Where(rl => rl.IsActive && !rl.IsDeleted && rl.MinimumScore <= reputation.Score && (rl.MaximumScore == null || rl.MaximumScore >= reputation.Score))
                                 .OrderByDescending(rl => rl.MinimumScore)
                                 .FirstOrDefaultAsync();
 
@@ -106,12 +92,7 @@ public class ReputationService(ApplicationDbContext context) : IReputationServic
 
   private void CreateHistoryEntry(IReputation reputation, int scoreChange, string reason, Guid? tenantId) {
     var historyEntry = new UserReputationHistory {
-      PointsChange = scoreChange,
-      PreviousScore = reputation.Score - scoreChange,
-      NewScore = reputation.Score,
-      Reason = reason,
-      OccurredAt = DateTime.UtcNow,
-      Title = $"Reputation change: {scoreChange:+#;-#;0}",
+      PointsChange = scoreChange, PreviousScore = reputation.Score - scoreChange, NewScore = reputation.Score, Reason = reason, OccurredAt = DateTime.UtcNow, Title = $"Reputation change: {scoreChange:+#;-#;0}",
     };
 
     // Set the appropriate foreign key based on reputation type
@@ -122,10 +103,7 @@ public class ReputationService(ApplicationDbContext context) : IReputationServic
     context.UserReputationHistory.Add(historyEntry);
   }
 
-  public async Task<IEnumerable<IReputation>> GetUsersByReputationTierAsync(
-    ReputationTier minimumLevel,
-    Guid? tenantId = null
-  ) {
+  public async Task<IEnumerable<IReputation>> GetUsersByReputationTierAsync(ReputationTier minimumLevel, Guid? tenantId = null) {
     var results = new List<IReputation>();
 
     if (tenantId.HasValue) {
@@ -133,10 +111,7 @@ public class ReputationService(ApplicationDbContext context) : IReputationServic
       var tenantReputations = await context.UserTenantReputations.Include(utr => utr.CurrentLevel)
                                            .Include(utr => utr.TenantPermission)
                                            .ThenInclude(tp => tp.User)
-                                           .Where(utr => utr.Score >= minimumLevel.MinimumScore &&
-                                                         utr.TenantPermission.TenantId == tenantId.Value &&
-                                                         !utr.IsDeleted
-                                           )
+                                           .Where(utr => utr.Score >= minimumLevel.MinimumScore && utr.TenantPermission.TenantId == tenantId.Value && !utr.IsDeleted)
                                            .OrderByDescending(utr => utr.Score)
                                            .ToListAsync();
 
@@ -144,11 +119,7 @@ public class ReputationService(ApplicationDbContext context) : IReputationServic
     }
     else {
       // Get global reputations
-      var globalReputations = await context.UserReputations.Include(ur => ur.CurrentLevel)
-                                           .Include(ur => ur.User)
-                                           .Where(ur => ur.Score >= minimumLevel.MinimumScore && !ur.IsDeleted)
-                                           .OrderByDescending(ur => ur.Score)
-                                           .ToListAsync();
+      var globalReputations = await context.UserReputations.Include(ur => ur.CurrentLevel).Include(ur => ur.User).Where(ur => ur.Score >= minimumLevel.MinimumScore && !ur.IsDeleted).OrderByDescending(ur => ur.Score).ToListAsync();
 
       results.AddRange(globalReputations);
     }
@@ -157,23 +128,11 @@ public class ReputationService(ApplicationDbContext context) : IReputationServic
   }
 
   // Additional helper methods for backward compatibility and extended functionality
-  public async Task<IEnumerable<UserReputationHistory>> GetUserReputationHistoryAsync(
-    Guid userId,
-    Guid? tenantId = null, int limit = 50
-  ) {
-    var query = context.UserReputationHistory.Include(h => h.ReputationAction)
-                       .Include(h => h.RelatedResource)
-                       .Include(h => h.TriggeredByUser)
-                       .Include(h => h.PreviousLevel)
-                       .Include(h => h.NewLevel)
-                       .Where(h => !h.IsDeleted);
+  public async Task<IEnumerable<UserReputationHistory>> GetUserReputationHistoryAsync(Guid userId, Guid? tenantId = null, int limit = 50) {
+    var query = context.UserReputationHistory.Include(h => h.ReputationAction).Include(h => h.RelatedResource).Include(h => h.TriggeredByUser).Include(h => h.PreviousLevel).Include(h => h.NewLevel).Where(h => !h.IsDeleted);
 
     if (tenantId.HasValue)
-      query = query.Where(h =>
-                            h.TenantPermissionId != null &&
-                            h.TenantPermission!.UserId == userId &&
-                            h.TenantPermission.TenantId == tenantId.Value
-      );
+      query = query.Where(h => h.TenantPermissionId != null && h.TenantPermission!.UserId == userId && h.TenantPermission.TenantId == tenantId.Value);
     else
       query = query.Where(h => h.UserId == userId);
 
@@ -195,12 +154,7 @@ public class ReputationService(ApplicationDbContext context) : IReputationServic
       results.AddRange(tenantReputations);
     }
     else {
-      var globalReputations = await context.UserReputations.Include(ur => ur.CurrentLevel)
-                                           .Include(ur => ur.User)
-                                           .Where(ur => !ur.IsDeleted)
-                                           .OrderByDescending(ur => ur.Score)
-                                           .Take(limit)
-                                           .ToListAsync();
+      var globalReputations = await context.UserReputations.Include(ur => ur.CurrentLevel).Include(ur => ur.User).Where(ur => !ur.IsDeleted).OrderByDescending(ur => ur.Score).Take(limit).ToListAsync();
 
       results.AddRange(globalReputations);
     }

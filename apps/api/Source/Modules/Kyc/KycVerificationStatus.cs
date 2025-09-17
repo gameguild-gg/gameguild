@@ -4,21 +4,15 @@
 namespace GameGuild;
 
 public enum KycVerificationStatus {
-  [Description("Verification request has been submitted but not completed")]
-  Pending,
+  [Description("Verification request has been submitted but not completed")] Pending,
 
-  [Description("Provider is processing the verification")]
-  InProgress,
+  [Description("Provider is processing the verification")] InProgress,
 
-  [Description("KYC verification passed")]
-  Approved,
+  [Description("KYC verification passed")] Approved,
 
-  [Description("KYC verification failed")]
-  Rejected,
+  [Description("KYC verification failed")] Rejected,
 
-  [Description("Verification was approved but later suspended")]
-  Suspended,
+  [Description("Verification was approved but later suspended")] Suspended,
 
-  [Description("Verification has expired and needs renewal")]
-  Expired,
+  [Description("Verification has expired and needs renewal")] Expired,
 }

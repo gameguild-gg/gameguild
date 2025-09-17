@@ -8,35 +8,29 @@ namespace GameGuild.Modules.Products;
 /// <summary>
 /// Command handlers for product operations
 /// </summary>
-public class ProductCommandHandlers :
-  IRequestHandler<CreateProductCommand, CreateProductResult>,
-  IRequestHandler<UpdateProductCommand, UpdateProductResult>,
-  IRequestHandler<DeleteProductCommand, DeleteProductResult>,
-  IRequestHandler<PublishProductCommand, PublishProductResult>,
-  IRequestHandler<UnpublishProductCommand, UnpublishProductResult>
-{
+public class ProductCommandHandlers
+  : IRequestHandler<CreateProductCommand, CreateProductResult>,
+    IRequestHandler<UpdateProductCommand, UpdateProductResult>,
+    IRequestHandler<DeleteProductCommand, DeleteProductResult>,
+    IRequestHandler<PublishProductCommand, PublishProductResult>,
+    IRequestHandler<UnpublishProductCommand, UnpublishProductResult> {
   private readonly ApplicationDbContext _context;
+
   private readonly IUserContext _userContext;
+
   private readonly ITenantContext _tenantContext;
+
   private readonly ILogger<ProductCommandHandlers> _logger;
 
-  public ProductCommandHandlers(
-    ApplicationDbContext context,
-    IUserContext userContext,
-    ITenantContext tenantContext,
-    ILogger<ProductCommandHandlers> logger
-  )
-  {
+  public ProductCommandHandlers(ApplicationDbContext context, IUserContext userContext, ITenantContext tenantContext, ILogger<ProductCommandHandlers> logger) {
     _context = context;
     _userContext = userContext;
     _tenantContext = tenantContext;
     _logger = logger;
   }
 
-  public async Task<CreateProductResult> Handle(CreateProductCommand request, CancellationToken cancellationToken)
-  {
-    try
-    {
+  public async Task<CreateProductResult> Handle(CreateProductCommand request, CancellationToken cancellationToken) {
+    try {
       _logger.LogInformation("Creating product: {Name} by user {UserId}", request.Name, _userContext.UserId);
 
       // Validate user permissions
@@ -49,8 +43,7 @@ public class ProductCommandHandlers :
       if (string.IsNullOrWhiteSpace(request.Name)) { return new CreateProductResult { Success = false, Error = "Name is required" }; }
 
       // Create the product
-      var product = new Product
-      {
+      var product = new Product {
         Id = Guid.NewGuid(),
         Title = request.Name, // Using Title from Resource base class
         Name = request.Name,
@@ -79,23 +72,19 @@ public class ProductCommandHandlers :
 
       return new CreateProductResult { Success = true, Product = product };
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Error creating product: {Name}", request.Name);
 
       return new CreateProductResult { Success = false, Error = $"Failed to create product: {ex.Message}" };
     }
   }
 
-  public async Task<UpdateProductResult> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
-  {
-    try
-    {
+  public async Task<UpdateProductResult> Handle(UpdateProductCommand request, CancellationToken cancellationToken) {
+    try {
       _logger.LogInformation("Updating product: {ProductId} by user {UserId}", request.ProductId, _userContext.UserId);
 
       // Find the product
-      var product = await _context.Products
-                                  .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
+      var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
 
       if (product == null) { return new UpdateProductResult { Success = false, Error = "Product not found" }; }
 
@@ -103,8 +92,7 @@ public class ProductCommandHandlers :
       if (product.CreatorId != _userContext.UserId) { return new UpdateProductResult { Success = false, Error = "User does not have permission to update this product" }; }
 
       // Update properties
-      if (!string.IsNullOrEmpty(request.Name))
-      {
+      if (!string.IsNullOrEmpty(request.Name)) {
         product.Name = request.Name;
         product.Title = request.Name; // Update Resource.Title as well
       }
@@ -139,22 +127,18 @@ public class ProductCommandHandlers :
 
       return new UpdateProductResult { Success = true, Product = product };
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Error updating product: {ProductId}", request.ProductId);
 
       return new UpdateProductResult { Success = false, Error = $"Failed to update product: {ex.Message}" };
     }
   }
 
-  public async Task<DeleteProductResult> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
-  {
-    try
-    {
+  public async Task<DeleteProductResult> Handle(DeleteProductCommand request, CancellationToken cancellationToken) {
+    try {
       _logger.LogInformation("Deleting product: {ProductId} by user {UserId}", request.ProductId, _userContext.UserId);
 
-      var product = await _context.Products
-                                  .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
+      var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
 
       if (product == null) { return new DeleteProductResult { Success = false, Error = "Product not found" }; }
 
@@ -170,22 +154,18 @@ public class ProductCommandHandlers :
 
       return new DeleteProductResult { Success = true };
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Error deleting product: {ProductId}", request.ProductId);
 
       return new DeleteProductResult { Success = false, Error = $"Failed to delete product: {ex.Message}" };
     }
   }
 
-  public async Task<PublishProductResult> Handle(PublishProductCommand request, CancellationToken cancellationToken)
-  {
-    try
-    {
+  public async Task<PublishProductResult> Handle(PublishProductCommand request, CancellationToken cancellationToken) {
+    try {
       _logger.LogInformation("Publishing product: {ProductId} by user {UserId}", request.ProductId, _userContext.UserId);
 
-      var product = await _context.Products
-                                  .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
+      var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
 
       if (product == null) { return new PublishProductResult { Success = false, Error = "Product not found" }; }
 
@@ -202,22 +182,18 @@ public class ProductCommandHandlers :
 
       return new PublishProductResult { Success = true, Product = product };
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Error publishing product: {ProductId}", request.ProductId);
 
       return new PublishProductResult { Success = false, Error = $"Failed to publish product: {ex.Message}" };
     }
   }
 
-  public async Task<UnpublishProductResult> Handle(UnpublishProductCommand request, CancellationToken cancellationToken)
-  {
-    try
-    {
+  public async Task<UnpublishProductResult> Handle(UnpublishProductCommand request, CancellationToken cancellationToken) {
+    try {
       _logger.LogInformation("Unpublishing product: {ProductId} by user {UserId}", request.ProductId, _userContext.UserId);
 
-      var product = await _context.Products
-                                  .FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
+      var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
 
       if (product == null) { return new UnpublishProductResult { Success = false, Error = "Product not found" }; }
 
@@ -234,8 +210,7 @@ public class ProductCommandHandlers :
 
       return new UnpublishProductResult { Success = true, Product = product };
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Error unpublishing product: {ProductId}", request.ProductId);
 
       return new UnpublishProductResult { Success = false, Error = $"Failed to unpublish product: {ex.Message}" };

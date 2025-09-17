@@ -1,11 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-public record CompletionRatesDto(
-  Guid ProgramId,
-  decimal OverallCompletionRate,
-  Dictionary<Guid, decimal> ContentCompletionRates,
-  List<CompletionTrendDto> CompletionTrends
-) {
+public record CompletionRatesDto(Guid ProgramId, decimal OverallCompletionRate, Dictionary<Guid, decimal> ContentCompletionRates, List<CompletionTrendDto> CompletionTrends) {
   public Guid ProgramId { get; init; } = ProgramId;
 
   public decimal OverallCompletionRate { get; init; } = OverallCompletionRate;

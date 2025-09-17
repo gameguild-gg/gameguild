@@ -8,11 +8,7 @@ public static class ActivityGradeGraphQLExtensions {
   /// Registers ActivityGrade GraphQL types, queries, and mutations
   /// </summary>
   public static IServiceCollection AddActivityGradeGraphQL(this IServiceCollection services) {
-    services
-      .AddGraphQLServer()
-      .AddType<ActivityGradeType>()
-      .AddTypeExtension<ActivityGradeQueries>()
-      .AddTypeExtension<ActivityGradeMutations>();
+    services.AddGraphQLServer().AddType<ActivityGradeType>().AddTypeExtension<ActivityGradeQueries>().AddTypeExtension<ActivityGradeMutations>();
 
     return services;
   }

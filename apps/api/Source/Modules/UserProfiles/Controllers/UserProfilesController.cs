@@ -1,17 +1,14 @@
+using GameGuild.CQRS;
 using Microsoft.AspNetCore.Mvc;
 
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// REST API controller for managing user profiles using CQRS pattern
-/// </summary>
+/// <summary> REST API controller for managing user profiles using CQRS pattern </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class UserProfilesController(CQRS.IMediator mediator) : ControllerBase {
-  /// <summary>
-  /// Get all user profiles with optional filtering and pagination
-  /// </summary>
+public class UserProfilesController(IMediator mediator) : ControllerBase {
+  /// <summary> Get all user profiles with optional filtering and pagination </summary>
   [HttpGet]
   public async Task<ActionResult<IEnumerable<UserProfileResponseDto>>> GetUserProfiles(
     [FromQuery] bool includeDeleted = false,
@@ -20,42 +17,34 @@ public class UserProfilesController(CQRS.IMediator mediator) : ControllerBase {
     [FromQuery] string? searchTerm = null,
     [FromQuery] Guid? tenantId = null
   ) {
-    var query = new GetAllUserProfilesQuery {
-      IncludeDeleted = includeDeleted,
-      Skip = skip,
-      Take = take,
-      SearchTerm = searchTerm,
-      TenantId = tenantId,
-    };
+    var query = new GetAllUserProfilesQuery { IncludeDeleted = includeDeleted, Skip = skip, Take = take, SearchTerm = searchTerm, TenantId = tenantId };
 
     var userProfiles = await mediator.Send(query);
 
     if (!userProfiles.IsSuccess) return BadRequest(userProfiles.Error);
 
     var userProfileDtos = userProfiles.Value.Select(up => new UserProfileResponseDto {
-      Id = up.Id,
-      Version = up.Version,
-      GivenName = up.GivenName,
-      FamilyName = up.FamilyName,
-      DisplayName = up.DisplayName,
-      Title = up.Title,
-      Description = up.Description,
-      CreatedAt = up.CreatedAt,
-      UpdatedAt = up.UpdatedAt,
-      DeletedAt = up.DeletedAt,
-      IsDeleted = up.IsDeleted,
-    }
+        Id = up.Id,
+        Version = up.Version,
+        GivenName = up.GivenName,
+        FamilyName = up.FamilyName,
+        DisplayName = up.DisplayName,
+        Title = up.Title,
+        Description = up.Description,
+        CreatedAt = up.CreatedAt,
+        UpdatedAt = up.UpdatedAt,
+        DeletedAt = up.DeletedAt,
+        IsDeleted = up.IsDeleted,
+      }
     );
 
     return Ok(userProfileDtos);
   }
 
-  /// <summary>
-  /// Get user profile by ID
-  /// </summary>
+  /// <summary> Get user profile by ID </summary>
   [HttpGet("{id}")]
   public async Task<ActionResult<UserProfileResponseDto>> GetUserProfile(Guid id, [FromQuery] bool includeDeleted = false) {
-    var query = new GetUserProfileByIdQuery { UserProfileId = id, IncludeDeleted = includeDeleted, };
+    var query = new GetUserProfileByIdQuery { UserProfileId = id, IncludeDeleted = includeDeleted };
 
     var userProfile = await mediator.Send(query);
 
@@ -80,12 +69,10 @@ public class UserProfilesController(CQRS.IMediator mediator) : ControllerBase {
     return Ok(userProfileDto);
   }
 
-  /// <summary>
-  /// Get user profile by user ID
-  /// </summary>
+  /// <summary> Get user profile by user ID </summary>
   [HttpGet("user/{userId}")]
   public async Task<ActionResult<UserProfileResponseDto>> GetUserProfileByUserId(Guid userId, [FromQuery] bool includeDeleted = false) {
-    var query = new GetUserProfileByUserIdQuery { UserId = userId, IncludeDeleted = includeDeleted, };
+    var query = new GetUserProfileByUserIdQuery { UserId = userId, IncludeDeleted = includeDeleted };
 
     var userProfile = await mediator.Send(query);
 
@@ -110,9 +97,7 @@ public class UserProfilesController(CQRS.IMediator mediator) : ControllerBase {
     return Ok(userProfileDto);
   }
 
-  /// <summary>
-  /// Create a new user profile
-  /// </summary>
+  /// <summary> Create a new user profile </summary>
   [HttpPost]
   public async Task<ActionResult<UserProfileResponseDto>> CreateUserProfile([FromBody] CreateUserProfileDto createDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -148,25 +133,13 @@ public class UserProfilesController(CQRS.IMediator mediator) : ControllerBase {
     return CreatedAtAction(nameof(GetUserProfile), new { id = userProfile.Value.Id }, userProfileDto);
   }
 
-  /// <summary>
-  /// Update a user profile
-  /// </summary>
+  /// <summary> Update a user profile </summary>
   [HttpPut("{id}")]
-  public async Task<ActionResult<UserProfileResponseDto>> UpdateUserProfile(
-    Guid id,
-    [FromBody] UpdateUserProfileDto updateDto,
-    [FromHeader(Name = "If-Match")] int? ifMatch = null
-  ) {
+  public async Task<ActionResult<UserProfileResponseDto>> UpdateUserProfile(Guid id, [FromBody] UpdateUserProfileDto updateDto, [FromHeader(Name = "If-Match")] int? ifMatch = null) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
     var command = new UpdateUserProfileCommand {
-      UserProfileId = id,
-      GivenName = updateDto.GivenName,
-      FamilyName = updateDto.FamilyName,
-      DisplayName = updateDto.DisplayName,
-      Title = updateDto.Title,
-      Description = updateDto.Description,
-      ExpectedVersion = ifMatch,
+      UserProfileId = id, GivenName = updateDto.GivenName, FamilyName = updateDto.FamilyName, DisplayName = updateDto.DisplayName, Title = updateDto.Title, Description = updateDto.Description, ExpectedVersion = ifMatch,
     };
 
     try {
@@ -194,12 +167,10 @@ public class UserProfilesController(CQRS.IMediator mediator) : ControllerBase {
     catch (InvalidOperationException ex) when (ex.Message.Contains("not found")) { return NotFound(new { message = ex.Message }); }
   }
 
-  /// <summary>
-  /// Delete a user profile (soft delete by default)
-  /// </summary>
+  /// <summary> Delete a user profile (soft delete by default) </summary>
   [HttpDelete("{id}")]
   public async Task<IActionResult> DeleteUserProfile(Guid id, [FromQuery] bool permanent = false) {
-    var command = new DeleteUserProfileCommand { UserProfileId = id, SoftDelete = !permanent, };
+    var command = new DeleteUserProfileCommand { UserProfileId = id, SoftDelete = !permanent };
 
     var result = await mediator.Send(command);
 
@@ -210,12 +181,10 @@ public class UserProfilesController(CQRS.IMediator mediator) : ControllerBase {
     return NoContent();
   }
 
-  /// <summary>
-  /// Restore a soft-deleted user profile
-  /// </summary>
+  /// <summary> Restore a soft-deleted user profile </summary>
   [HttpPost("{id}/restore")]
   public async Task<IActionResult> RestoreUserProfile(Guid id) {
-    var command = new RestoreUserProfileCommand { UserProfileId = id, };
+    var command = new RestoreUserProfileCommand { UserProfileId = id };
 
     var result = await mediator.Send(command);
 

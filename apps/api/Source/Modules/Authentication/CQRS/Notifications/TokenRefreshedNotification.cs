@@ -1,9 +1,9 @@
 using GameGuild.CQRS;
+
+
 namespace GameGuild.Modules.Authentication;
 
-/// <summary>
-/// Domain notification published when a user token is refreshed
-/// </summary>
+/// <summary> Domain notification published when a user token is refreshed </summary>
 public class TokenRefreshedNotification : INotification {
   public Guid UserId { get; set; }
 

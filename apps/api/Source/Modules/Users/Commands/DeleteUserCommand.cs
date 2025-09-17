@@ -1,5 +1,7 @@
 using GameGuild.CQRS;
-﻿namespace GameGuild.Modules.Users;
+
+
+ namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// Command to delete a user

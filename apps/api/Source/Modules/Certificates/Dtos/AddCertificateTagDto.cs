@@ -1,9 +1,7 @@
 namespace GameGuild.Source.Modules.Certificates.Dtos;
 
 public class AddCertificateTagDto {
-  [Required]
-  public Guid TagId { get; set; }
+  [Required] public Guid TagId { get; set; }
 
-  [Required]
-  public CertificateTagRelationshipType RelationshipType { get; set; } = CertificateTagRelationshipType.Demonstrates;
+  [Required] public CertificateTagRelationshipType RelationshipType { get; set; } = CertificateTagRelationshipType.Demonstrates;
 }

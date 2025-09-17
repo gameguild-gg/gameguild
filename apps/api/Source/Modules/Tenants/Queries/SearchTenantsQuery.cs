@@ -3,10 +3,18 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Tenants;
 
-/// <summary>
-/// Query to search tenants with advanced filtering
-/// </summary>
+/// <summary> Query to search tenants with advanced filtering </summary>
 public class SearchTenantsQuery : IQuery<Result<IEnumerable<Tenant>>> {
+  public SearchTenantsQuery(string? searchTerm = null, bool? isActive = null, bool includeDeleted = false, TenantSortField sortBy = TenantSortField.Name, bool sortDescending = false, int? limit = null, int? offset = null) {
+    SearchTerm = searchTerm;
+    IsActive = isActive;
+    IncludeDeleted = includeDeleted;
+    SortBy = sortBy;
+    SortDescending = sortDescending;
+    Limit = limit;
+    Offset = offset;
+  }
+
   public string? SearchTerm { get; init; }
 
   public bool? IsActive { get; init; }
@@ -20,22 +28,4 @@ public class SearchTenantsQuery : IQuery<Result<IEnumerable<Tenant>>> {
   public int? Limit { get; init; }
 
   public int? Offset { get; init; }
-
-  public SearchTenantsQuery(
-    string? searchTerm = null,
-    bool? isActive = null,
-    bool includeDeleted = false,
-    TenantSortField sortBy = TenantSortField.Name,
-    bool sortDescending = false,
-    int? limit = null,
-    int? offset = null
-  ) {
-    SearchTerm = searchTerm;
-    IsActive = isActive;
-    IncludeDeleted = includeDeleted;
-    SortBy = sortBy;
-    SortDescending = sortDescending;
-    Limit = limit;
-    Offset = offset;
-  }
 }

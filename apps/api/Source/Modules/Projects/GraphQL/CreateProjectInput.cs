@@ -3,9 +3,7 @@
 
 namespace GameGuild.Modules.Projects;
 
-/// <summary>
-/// Input type for creating a new project
-/// </summary>
+/// <summary> Input type for creating a new project </summary>
 public record CreateProjectInput(
   string Title,
   string? Description,
@@ -14,7 +12,7 @@ public record CreateProjectInput(
   string? RepositoryUrl,
   string? WebsiteUrl,
   string? DownloadUrl,
-  GameGuild.ProjectType Type,
+  ProjectType Type,
   Guid? CategoryId,
   ContentStatus? Status,
   AccessLevel? Visibility,
@@ -34,7 +32,7 @@ public record CreateProjectInput(
 
   public string? DownloadUrl { get; init; } = DownloadUrl;
 
-  public GameGuild.ProjectType Type { get; init; } = Type;
+  public ProjectType Type { get; init; } = Type;
 
   public Guid? CategoryId { get; init; } = CategoryId;
 

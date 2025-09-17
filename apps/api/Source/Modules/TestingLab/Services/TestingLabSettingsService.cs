@@ -11,13 +11,7 @@ public class TestingLabSettingsService : ITestingLabSettingsService {
 
   /// <inheritdoc />
   public async Task<TestingLabSettings> GetTestingLabSettingsAsync(Guid? tenantId = null) {
-    var settings = await _dbContext.TestingLabSettings
-                                   .Include(s => s.Tenant)
-                                   .FirstOrDefaultAsync(s => tenantId == null
-                                                               ? s.Tenant == null
-                                                               : s.Tenant != null && s.Tenant.Id == tenantId
-                                   )
-                                   .ConfigureAwait(false);
+    var settings = await _dbContext.TestingLabSettings.Include(s => s.Tenant).FirstOrDefaultAsync(s => tenantId == null ? s.Tenant == null : s.Tenant != null && s.Tenant.Id == tenantId).ConfigureAwait(false);
 
     if (settings == null) {
       // Create default settings
@@ -51,19 +45,11 @@ public class TestingLabSettingsService : ITestingLabSettingsService {
   public async Task<TestingLabSettings> CreateOrUpdateTestingLabSettingsAsync(Guid? tenantId, CreateTestingLabSettingsDto dto) {
     ArgumentNullException.ThrowIfNull(dto);
 
-    var settings = await _dbContext.TestingLabSettings
-                                   .Include(s => s.Tenant)
-                                   .FirstOrDefaultAsync(s => tenantId == null
-                                                               ? s.Tenant == null
-                                                               : s.Tenant != null && s.Tenant.Id == tenantId
-                                   )
-                                   .ConfigureAwait(false);
+    var settings = await _dbContext.TestingLabSettings.Include(s => s.Tenant).FirstOrDefaultAsync(s => tenantId == null ? s.Tenant == null : s.Tenant != null && s.Tenant.Id == tenantId).ConfigureAwait(false);
 
     if (settings == null) {
       // Create new settings
-      settings = new TestingLabSettings {
-        Tenant = tenantId.HasValue ? await _dbContext.Tenants.FindAsync(tenantId.Value).ConfigureAwait(false) : null,
-      };
+      settings = new TestingLabSettings { Tenant = tenantId.HasValue ? await _dbContext.Tenants.FindAsync(tenantId.Value).ConfigureAwait(false) : null };
       _dbContext.TestingLabSettings.Add(settings);
     }
 
@@ -112,13 +98,7 @@ public class TestingLabSettingsService : ITestingLabSettingsService {
 
   /// <inheritdoc />
   public async Task<TestingLabSettings> ResetTestingLabSettingsAsync(Guid? tenantId = null) {
-    var settings = await _dbContext.TestingLabSettings
-                                   .Include(s => s.Tenant)
-                                   .FirstOrDefaultAsync(s => tenantId == null
-                                                               ? s.Tenant == null
-                                                               : s.Tenant != null && s.Tenant.Id == tenantId
-                                   )
-                                   .ConfigureAwait(false);
+    var settings = await _dbContext.TestingLabSettings.Include(s => s.Tenant).FirstOrDefaultAsync(s => tenantId == null ? s.Tenant == null : s.Tenant != null && s.Tenant.Id == tenantId).ConfigureAwait(false);
 
     if (settings != null) {
       // Reset to defaults
@@ -142,13 +122,7 @@ public class TestingLabSettingsService : ITestingLabSettingsService {
 
   /// <inheritdoc />
   public async Task<bool> TestingLabSettingsExistAsync(Guid? tenantId = null) {
-    return await _dbContext.TestingLabSettings
-                           .Include(s => s.Tenant)
-                           .AnyAsync(s => tenantId == null
-                                            ? s.Tenant == null
-                                            : s.Tenant != null && s.Tenant.Id == tenantId
-                           )
-                           .ConfigureAwait(false);
+    return await _dbContext.TestingLabSettings.Include(s => s.Tenant).AnyAsync(s => tenantId == null ? s.Tenant == null : s.Tenant != null && s.Tenant.Id == tenantId).ConfigureAwait(false);
   }
 
   // Helper method to map entity to DTO

@@ -1,5 +1,4 @@
-using GameGuild.Modules.Permissions;
-using GameGuild.Modules.Resources;
+
 
 // Compatibility shim: some code (or generated code) expects generic RequireResourcePermissionAttribute
 // in the root GameGuild namespace. The canonical generic implementation now lives in
@@ -7,9 +6,6 @@ using GameGuild.Modules.Resources;
 // the non-generic name collision we renamed (RequireDacResourcePermissionAttribute).
 namespace GameGuild;
 
-public class RequireResourcePermissionAttribute<TPermission, TEntity> : Authorization.RequireResourcePermissionAttribute<TPermission, TEntity>
-  where TPermission : ResourcePermission<TEntity>
-  where TEntity : EntityBase {
-    public RequireResourcePermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id")
-      : base(requiredPermission, resourceIdParameterName) { }
+public class RequireResourcePermissionAttribute<TPermission, TEntity> : Authorization.RequireResourcePermissionAttribute<TPermission, TEntity> where TPermission : ResourcePermission<TEntity> where TEntity : EntityBase {
+  public RequireResourcePermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id") : base(requiredPermission, resourceIdParameterName) { }
 }

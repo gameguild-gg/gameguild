@@ -1,37 +1,32 @@
+using GameGuild.CQRS;
 using GameGuild.Modules.Contents;
-using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 using Microsoft.AspNetCore.Mvc;
+using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
 
 namespace GameGuild.Modules.Projects;
 
-/// <summary>
-/// REST API controller for managing projects using CQRS pattern
-/// </summary>
+/// <summary> REST API controller for managing projects using CQRS pattern </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
 public class ProjectsController : ControllerBase {
-  private readonly CQRS.IMediator _mediator;
-  private readonly IUserContext _userContext;
-  private readonly ITenantContext _tenantContext;
   private readonly ILogger<ProjectsController> _logger;
 
-  public ProjectsController(
-    CQRS.IMediator mediator,
-    IUserContext userContext,
-    ITenantContext tenantContext,
-    ILogger<ProjectsController> logger
-  ) {
+  private readonly IMediator _mediator;
+
+  private readonly ITenantContext _tenantContext;
+
+  private readonly IUserContext _userContext;
+
+  public ProjectsController(IMediator mediator, IUserContext userContext, ITenantContext tenantContext, ILogger<ProjectsController> logger) {
     _mediator = mediator;
     _userContext = userContext;
     _tenantContext = tenantContext;
     _logger = logger;
   }
 
-  /// <summary>
-  /// Get all projects with filtering and pagination
-  /// </summary>
+  /// <summary> Get all projects with filtering and pagination </summary>
   [HttpGet]
   [AllowAnonymous]
   public async Task<ActionResult<IEnumerable<Project>>> GetProjects(
@@ -64,25 +59,11 @@ public class ProjectsController : ControllerBase {
     return Ok(projects);
   }
 
-  /// <summary>
-  /// Get project by ID
-  /// </summary>
+  /// <summary> Get project by ID </summary>
   [HttpGet("{id:guid}")]
   [AllowAnonymous]
-  public async Task<ActionResult<Project>> GetProject(
-    Guid id,
-    [FromQuery] bool includeTeam = true,
-    [FromQuery] bool includeReleases = true,
-    [FromQuery] bool includeCollaborators = true,
-    [FromQuery] bool includeStatistics = false
-  ) {
-    var query = new GetProjectByIdQuery {
-      ProjectId = id,
-      IncludeTeam = includeTeam,
-      IncludeReleases = includeReleases,
-      IncludeCollaborators = includeCollaborators,
-      IncludeStatistics = includeStatistics,
-    };
+  public async Task<ActionResult<Project>> GetProject(Guid id, [FromQuery] bool includeTeam = true, [FromQuery] bool includeReleases = true, [FromQuery] bool includeCollaborators = true, [FromQuery] bool includeStatistics = false) {
+    var query = new GetProjectByIdQuery { ProjectId = id, IncludeTeam = includeTeam, IncludeReleases = includeReleases, IncludeCollaborators = includeCollaborators, IncludeStatistics = includeStatistics };
 
     var project = await _mediator.Send(query);
 
@@ -91,17 +72,10 @@ public class ProjectsController : ControllerBase {
     return Ok(project);
   }
 
-  /// <summary>
-  /// Get project by slug
-  /// </summary>
+  /// <summary> Get project by slug </summary>
   [HttpGet("slug/{slug}")]
   [AllowAnonymous]
-  public async Task<ActionResult<Project>> GetProjectBySlug(
-    string slug,
-    [FromQuery] bool includeTeam = true,
-    [FromQuery] bool includeReleases = true,
-    [FromQuery] bool includeCollaborators = true
-  ) {
+  public async Task<ActionResult<Project>> GetProjectBySlug(string slug, [FromQuery] bool includeTeam = true, [FromQuery] bool includeReleases = true, [FromQuery] bool includeCollaborators = true) {
     var query = new GetProjectBySlugQuery { Slug = slug, IncludeTeam = includeTeam, IncludeReleases = includeReleases, IncludeCollaborators = includeCollaborators };
 
     var project = await _mediator.Send(query);
@@ -111,14 +85,10 @@ public class ProjectsController : ControllerBase {
     return Ok(project);
   }
 
-  /// <summary>
-  /// Create a new project
-  /// </summary>
+  /// <summary> Create a new project </summary>
   [HttpPost]
   public async Task<ActionResult<CreateProjectResult>> CreateProject([FromBody] CreateProjectRequest request) {
-    if (!ModelState.IsValid) {
-      return BadRequest(ModelState);
-    }
+    if (!ModelState.IsValid) { return BadRequest(ModelState); }
 
     var command = new CreateProjectCommand {
       Title = request.Title,
@@ -144,9 +114,7 @@ public class ProjectsController : ControllerBase {
     return CreatedAtAction(nameof(GetProject), new { id = result.Project!.Id }, result);
   }
 
-  /// <summary>
-  /// Update an existing project
-  /// </summary>
+  /// <summary> Update an existing project </summary>
   [HttpPut("{id:guid}")]
   public async Task<ActionResult<UpdateProjectResult>> UpdateProject(Guid id, [FromBody] UpdateProjectRequest request) {
     var command = new UpdateProjectCommand {
@@ -173,15 +141,9 @@ public class ProjectsController : ControllerBase {
     return Ok(result);
   }
 
-  /// <summary>
-  /// Delete a project
-  /// </summary>
+  /// <summary> Delete a project </summary>
   [HttpDelete("{id:guid}")]
-  public async Task<ActionResult<DeleteProjectResult>> DeleteProject(
-    Guid id,
-    [FromQuery] bool softDelete = true,
-    [FromQuery] string? reason = null
-  ) {
+  public async Task<ActionResult<DeleteProjectResult>> DeleteProject(Guid id, [FromQuery] bool softDelete = true, [FromQuery] string? reason = null) {
     var command = new DeleteProjectCommand { ProjectId = id, DeletedBy = _userContext.UserId ?? Guid.Empty, SoftDelete = softDelete, Reason = reason };
 
     var result = await _mediator.Send(command);
@@ -191,9 +153,7 @@ public class ProjectsController : ControllerBase {
     return Ok(result);
   }
 
-  /// <summary>
-  /// Publish a project
-  /// </summary>
+  /// <summary> Publish a project </summary>
   [HttpPost("{id:guid}/publish")]
   public async Task<ActionResult<PublishProjectResult>> PublishProject(Guid id) {
     var command = new PublishProjectCommand { ProjectId = id, PublishedBy = _userContext.UserId ?? Guid.Empty };
@@ -205,9 +165,7 @@ public class ProjectsController : ControllerBase {
     return Ok(result);
   }
 
-  /// <summary>
-  /// Unpublish a project
-  /// </summary>
+  /// <summary> Unpublish a project </summary>
   [HttpPost("{id:guid}/unpublish")]
   public async Task<ActionResult<UnpublishProjectResult>> UnpublishProject(Guid id) {
     var command = new UnpublishProjectCommand { ProjectId = id, UnpublishedBy = _userContext.UserId ?? Guid.Empty };
@@ -219,9 +177,7 @@ public class ProjectsController : ControllerBase {
     return Ok(result);
   }
 
-  /// <summary>
-  /// Archive a project
-  /// </summary>
+  /// <summary> Archive a project </summary>
   [HttpPost("{id:guid}/archive")]
   public async Task<ActionResult<ArchiveProjectResult>> ArchiveProject(Guid id) {
     var command = new ArchiveProjectCommand { ProjectId = id, ArchivedBy = _userContext.UserId ?? Guid.Empty };
@@ -233,9 +189,7 @@ public class ProjectsController : ControllerBase {
     return Ok(result);
   }
 
-  /// <summary>
-  /// Search projects
-  /// </summary>
+  /// <summary> Search projects </summary>
   [HttpGet("search")]
   [AllowAnonymous]
   public async Task<ActionResult<IEnumerable<Project>>> SearchProjects(
@@ -249,32 +203,17 @@ public class ProjectsController : ControllerBase {
     [FromQuery] string? sortBy = "Relevance",
     [FromQuery] string? sortDirection = "DESC"
   ) {
-    var query = new SearchProjectsQuery {
-      SearchTerm = searchTerm,
-      Type = type,
-      CategoryId = categoryId,
-      Status = status,
-      Visibility = visibility,
-      Skip = skip,
-      Take = Math.Min(take, 100),
-      SortBy = sortBy,
-      SortDirection = sortDirection,
-    };
+    var query = new SearchProjectsQuery { SearchTerm = searchTerm, Type = type, CategoryId = categoryId, Status = status, Visibility = visibility, Skip = skip, Take = Math.Min(take, 100), SortBy = sortBy, SortDirection = sortDirection };
 
     var projects = await _mediator.Send(query);
 
     return Ok(projects);
   }
 
-  /// <summary>
-  /// Get popular projects
-  /// </summary>
+  /// <summary> Get popular projects </summary>
   [HttpGet("popular")]
   [AllowAnonymous]
-  public async Task<ActionResult<IEnumerable<Project>>> GetPopularProjects(
-    [FromQuery] ProjectType? type = null,
-    [FromQuery] int take = 10
-  ) {
+  public async Task<ActionResult<IEnumerable<Project>>> GetPopularProjects([FromQuery] ProjectType? type = null, [FromQuery] int take = 10) {
     var query = new GetPopularProjectsQuery { Type = type, Take = Math.Min(take, 50) };
 
     var projects = await _mediator.Send(query);
@@ -282,15 +221,10 @@ public class ProjectsController : ControllerBase {
     return Ok(projects);
   }
 
-  /// <summary>
-  /// Get recent projects
-  /// </summary>
+  /// <summary> Get recent projects </summary>
   [HttpGet("recent")]
   [AllowAnonymous]
-  public async Task<ActionResult<IEnumerable<Project>>> GetRecentProjects(
-    [FromQuery] ProjectType? type = null,
-    [FromQuery] int take = 10
-  ) {
+  public async Task<ActionResult<IEnumerable<Project>>> GetRecentProjects([FromQuery] ProjectType? type = null, [FromQuery] int take = 10) {
     var query = new GetRecentProjectsQuery { Type = type, Take = Math.Min(take, 50) };
 
     var projects = await _mediator.Send(query);
@@ -298,15 +232,10 @@ public class ProjectsController : ControllerBase {
     return Ok(projects);
   }
 
-  /// <summary>
-  /// Get featured projects
-  /// </summary>
+  /// <summary> Get featured projects </summary>
   [HttpGet("featured")]
   [AllowAnonymous]
-  public async Task<ActionResult<IEnumerable<Project>>> GetFeaturedProjects(
-    [FromQuery] ProjectType? type = null,
-    [FromQuery] int take = 10
-  ) {
+  public async Task<ActionResult<IEnumerable<Project>>> GetFeaturedProjects([FromQuery] ProjectType? type = null, [FromQuery] int take = 10) {
     var query = new GetFeaturedProjectsQuery { Type = type, Take = Math.Min(take, 50) };
 
     var projects = await _mediator.Send(query);
@@ -314,16 +243,10 @@ public class ProjectsController : ControllerBase {
     return Ok(projects);
   }
 
-  /// <summary>
-  /// Get project statistics
-  /// </summary>
+  /// <summary> Get project statistics </summary>
   [HttpGet("{id:guid}/statistics")]
   [AllowAnonymous]
-  public async Task<ActionResult<ProjectStatistics>> GetProjectStatistics(
-    Guid id,
-    [FromQuery] DateTime? fromDate = null,
-    [FromQuery] DateTime? toDate = null
-  ) {
+  public async Task<ActionResult<ProjectStatistics>> GetProjectStatistics(Guid id, [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null) {
     var query = new GetProjectStatisticsQuery { ProjectId = id, FromDate = fromDate, ToDate = toDate };
 
     var statistics = await _mediator.Send(query);
@@ -331,17 +254,10 @@ public class ProjectsController : ControllerBase {
     return Ok(statistics);
   }
 
-  /// <summary>
-  /// Get projects by category
-  /// </summary>
+  /// <summary> Get projects by category </summary>
   [HttpGet("category/{categoryId:guid}")]
   [AllowAnonymous]
-  public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCategory(
-    Guid categoryId,
-    [FromQuery] ContentStatus? status = null,
-    [FromQuery] int skip = 0,
-    [FromQuery] int take = 50
-  ) {
+  public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCategory(Guid categoryId, [FromQuery] ContentStatus? status = null, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var query = new GetProjectsByCategoryQuery { CategoryId = categoryId, Status = status, Skip = skip, Take = Math.Min(take, 100) };
 
     var projects = await _mediator.Send(query);
@@ -349,17 +265,10 @@ public class ProjectsController : ControllerBase {
     return Ok(projects);
   }
 
-  /// <summary>
-  /// Get projects by creator
-  /// </summary>
+  /// <summary> Get projects by creator </summary>
   [HttpGet("creator/{creatorId:guid}")]
   [AllowAnonymous]
-  public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCreator(
-    Guid creatorId,
-    [FromQuery] ContentStatus? status = null,
-    [FromQuery] int skip = 0,
-    [FromQuery] int take = 50
-  ) {
+  public async Task<ActionResult<IEnumerable<Project>>> GetProjectsByCreator(Guid creatorId, [FromQuery] ContentStatus? status = null, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var query = new GetProjectsByCreatorQuery { CreatorId = creatorId, Status = status, Skip = skip, Take = Math.Min(take, 100) };
 
     var projects = await _mediator.Send(query);
@@ -368,33 +277,25 @@ public class ProjectsController : ControllerBase {
   }
 }
 
-/// <summary>
-/// Request DTOs for REST API
-/// </summary>
+/// <summary> Request DTOs for REST API </summary>
 public record CreateProjectRequest {
   [Required(ErrorMessage = "Title is required")]
   [StringLength(255, MinimumLength = 1, ErrorMessage = "Title must be between 1 and 255 characters")]
   public string Title { get; init; } = string.Empty;
 
-  [StringLength(2000, ErrorMessage = "Description cannot exceed 2000 characters")]
-  public string? Description { get; init; }
+  [StringLength(2000, ErrorMessage = "Description cannot exceed 2000 characters")] public string? Description { get; init; }
 
-  [StringLength(500, ErrorMessage = "Short description cannot exceed 500 characters")]
-  public string? ShortDescription { get; init; }
+  [StringLength(500, ErrorMessage = "Short description cannot exceed 500 characters")] public string? ShortDescription { get; init; }
 
-  [Url(ErrorMessage = "Image URL must be a valid URL")]
-  public string? ImageUrl { get; init; }
+  [Url(ErrorMessage = "Image URL must be a valid URL")] public string? ImageUrl { get; init; }
 
-  [Url(ErrorMessage = "Repository URL must be a valid URL")]
-  public string? RepositoryUrl { get; init; }
+  [Url(ErrorMessage = "Repository URL must be a valid URL")] public string? RepositoryUrl { get; init; }
 
-  [Url(ErrorMessage = "Website URL must be a valid URL")]
-  public string? WebsiteUrl { get; init; }
+  [Url(ErrorMessage = "Website URL must be a valid URL")] public string? WebsiteUrl { get; init; }
 
-  [Url(ErrorMessage = "Download URL must be a valid URL")]
-  public string? DownloadUrl { get; init; }
+  [Url(ErrorMessage = "Download URL must be a valid URL")] public string? DownloadUrl { get; init; }
 
-  public GameGuild.ProjectType Type { get; init; } = GameGuild.ProjectType.Game;
+  public ProjectType Type { get; init; } = ProjectType.Game;
 
   public Guid? CategoryId { get; init; }
 
@@ -420,7 +321,7 @@ public record UpdateProjectRequest {
 
   public string? DownloadUrl { get; init; }
 
-  public GameGuild.ProjectType? Type { get; init; }
+  public ProjectType? Type { get; init; }
 
   public Guid? CategoryId { get; init; }
 

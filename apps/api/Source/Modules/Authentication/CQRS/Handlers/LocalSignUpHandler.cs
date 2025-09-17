@@ -1,9 +1,9 @@
 using GameGuild.CQRS;
+
+
 namespace GameGuild.Modules.Authentication;
 
-/// <summary>
-/// Handler for local sign-up command
-/// </summary>
+/// <summary> Handler for local sign-up command </summary>
 public class LocalSignUpHandler(IAuthService authService, IMediator mediator) : IRequestHandler<LocalSignUpCommand, SignInResponseDto> {
   public async Task<SignInResponseDto> Handle(LocalSignUpCommand request, CancellationToken cancellationToken) {
     var signUpRequest = new LocalSignUpRequestDto { Email = request.Email, Password = request.Password, Username = request.Username, TenantId = request.TenantId };
@@ -12,10 +12,7 @@ public class LocalSignUpHandler(IAuthService authService, IMediator mediator) : 
 
     // Publish notification for side effects (email, analytics, etc.)
     var notification = new UserSignedUpNotification {
-      UserId = result.User.Id,
-      Email = result.User.Email,
-      Username = request.Username,
-      TenantId = result.TenantId, // Include the tenant ID from the response
+      UserId = result.User.Id, Email = result.User.Email, Username = request.Username, TenantId = result.TenantId, // Include the tenant ID from the response
     };
 
     await mediator.Publish(notification, cancellationToken);

@@ -1,29 +1,21 @@
+using GameGuild.CQRS;
+
+
 namespace GameGuild.Modules.Payments;
 
-/// <summary>
-/// GraphQL queries for payment data
-/// </summary>
+/// <summary> GraphQL queries for payment data </summary>
 [ExtendObjectType("Query")]
 public class PaymentQueries {
-  /// <summary>
-  /// Get payment by ID
-  /// </summary>
-  public async Task<Payment?> GetPaymentAsync(
-    Guid id,
-    [Service] CQRS.IMediator mediator,
-    [Service] IUserContext userContext,
-    CancellationToken cancellationToken
-  ) {
+  /// <summary> Get payment by ID </summary>
+  public async Task<Payment?> GetPaymentAsync(Guid id, [Service] IMediator mediator, [Service] IUserContext userContext, CancellationToken cancellationToken) {
     var query = new GetPaymentByIdQuery { PaymentId = id, UserId = userContext.UserId };
 
     return await mediator.Send(query, cancellationToken);
   }
 
-  /// <summary>
-  /// Get payments for current user or specified user (admin only)
-  /// </summary>
+  /// <summary> Get payments for current user or specified user (admin only) </summary>
   public async Task<IEnumerable<Payment>> GetUserPaymentsAsync(
-    [Service] CQRS.IMediator mediator,
+    [Service] IMediator mediator,
     [Service] IUserContext userContext,
     Guid? userId = null,
     PaymentStatus? status = null,
@@ -34,22 +26,15 @@ public class PaymentQueries {
     CancellationToken cancellationToken = default
   ) {
     var query = new GetUserPaymentsQuery {
-      UserId = userId ?? userContext.UserId ?? Guid.Empty,
-      Status = status,
-      FromDate = fromDate,
-      ToDate = toDate,
-      Skip = skip,
-      Take = Math.Min(take, 100), // Limit to prevent abuse
+      UserId = userId ?? userContext.UserId ?? Guid.Empty, Status = status, FromDate = fromDate, ToDate = toDate, Skip = skip, Take = Math.Min(take, 100), // Limit to prevent abuse
     };
 
     return await mediator.Send(query, cancellationToken);
   }
 
-  /// <summary>
-  /// Get payments for a specific product (admin only)
-  /// </summary>
+  /// <summary> Get payments for a specific product (admin only) </summary>
   public async Task<IEnumerable<Payment>> GetProductPaymentsAsync(
-    [Service] CQRS.IMediator mediator,
+    [Service] IMediator mediator,
     [Service] IUserContext userContext,
     Guid productId,
     PaymentStatus? status = null,
@@ -61,23 +46,14 @@ public class PaymentQueries {
   ) {
     if (!userContext.IsInRole("Admin")) { return Enumerable.Empty<Payment>(); }
 
-    var query = new GetProductPaymentsQuery {
-      ProductId = productId,
-      Status = status,
-      FromDate = fromDate,
-      ToDate = toDate,
-      Skip = skip,
-      Take = Math.Min(take, 100),
-    };
+    var query = new GetProductPaymentsQuery { ProductId = productId, Status = status, FromDate = fromDate, ToDate = toDate, Skip = skip, Take = Math.Min(take, 100) };
 
     return await mediator.Send(query, cancellationToken);
   }
 
-  /// <summary>
-  /// Get payment statistics
-  /// </summary>
+  /// <summary> Get payment statistics </summary>
   public async Task<PaymentStats> GetPaymentStatsAsync(
-    [Service] CQRS.IMediator mediator,
+    [Service] IMediator mediator,
     [Service] IUserContext userContext,
     [Service] ITenantContext tenantContext,
     Guid? userId = null,
@@ -86,22 +62,14 @@ public class PaymentQueries {
     DateTime? toDate = null,
     CancellationToken cancellationToken = default
   ) {
-    var query = new GetPaymentStatsQuery {
-      UserId = userId,
-      ProductId = productId,
-      FromDate = fromDate,
-      ToDate = toDate,
-      TenantId = tenantContext.TenantId,
-    };
+    var query = new GetPaymentStatsQuery { UserId = userId, ProductId = productId, FromDate = fromDate, ToDate = toDate, TenantId = tenantContext.TenantId };
 
     return await mediator.Send(query, cancellationToken);
   }
 
-  /// <summary>
-  /// Get revenue report (admin only)
-  /// </summary>
+  /// <summary> Get revenue report (admin only) </summary>
   public async Task<RevenueReport?> GetRevenueReportAsync(
-    [Service] CQRS.IMediator mediator,
+    [Service] IMediator mediator,
     [Service] IUserContext userContext,
     [Service] ITenantContext tenantContext,
     DateTime fromDate,
@@ -112,21 +80,13 @@ public class PaymentQueries {
   ) {
     if (!userContext.IsInRole("Admin")) { return null; }
 
-    var query = new GetRevenueReportQuery {
-      FromDate = fromDate,
-      ToDate = toDate,
-      GroupBy = groupBy,
-      ProductId = productId,
-      TenantId = tenantContext.TenantId,
-    };
+    var query = new GetRevenueReportQuery { FromDate = fromDate, ToDate = toDate, GroupBy = groupBy, ProductId = productId, TenantId = tenantContext.TenantId };
 
     return await mediator.Send(query, cancellationToken);
   }
 }
 
-/// <summary>
-/// GraphQL type definitions for payment models
-/// </summary>
+/// <summary> GraphQL type definitions for payment models </summary>
 public class PaymentType : ObjectType<Payment> {
   protected override void Configure(IObjectTypeDescriptor<Payment> descriptor) {
     descriptor.Field(p => p.Id).Type<NonNullType<UuidType>>();
@@ -141,8 +101,7 @@ public class PaymentType : ObjectType<Payment> {
     descriptor.Field(p => p.UpdatedAt).Type<NonNullType<DateTimeType>>();
 
     // Virtual navigation properties
-    descriptor.Field(p => p.Refunds)
-              .Type<ListType<PaymentRefundType>>();
+    descriptor.Field(p => p.Refunds).Type<ListType<PaymentRefundType>>();
   }
 }
 

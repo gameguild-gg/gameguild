@@ -9,16 +9,9 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Handler for bulk restoring users
 /// </summary>
-public class BulkRestoreUsersHandler(
-  ApplicationDbContext context,
-  ILogger<BulkRestoreUsersHandler> logger,
-  IMediator mediator
-) : IResultCommandHandler<BulkRestoreUsersCommand, BulkOperationResult> {
+public class BulkRestoreUsersHandler(ApplicationDbContext context, ILogger<BulkRestoreUsersHandler> logger, IMediator mediator) : IResultCommandHandler<BulkRestoreUsersCommand, BulkOperationResult> {
   public async Task<GameGuild.CQRS.Result<BulkOperationResult>> Handle(BulkRestoreUsersCommand request, CancellationToken cancellationToken) {
-    var users = await context.Users
-                             .IgnoreQueryFilters()
-                             .Where(u => request.UserIds.Contains(u.Id) && u.DeletedAt != null)
-                             .ToListAsync(cancellationToken);
+    var users = await context.Users.IgnoreQueryFilters().Where(u => request.UserIds.Contains(u.Id) && u.DeletedAt != null).ToListAsync(cancellationToken);
 
     var successCount = 0;
     var errors = new List<string>();
@@ -52,12 +45,7 @@ public class BulkRestoreUsersHandler(
     // Add all errors to the result
     foreach (var error in errors) result.AddError(error);
 
-    logger.LogInformation(
-      "Bulk restore completed: {SuccessCount}/{TotalCount} users restored. Reason: {Reason}",
-      successCount,
-      request.UserIds.Count,
-      request.Reason ?? "Not specified"
-    );
+    logger.LogInformation("Bulk restore completed: {SuccessCount}/{TotalCount} users restored. Reason: {Reason}", successCount, request.UserIds.Count, request.Reason ?? "Not specified");
 
     return GameGuild.CQRS.Result.Success(result);
   }

@@ -1,11 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-public record UpdateActivityGradeInput(
-  Guid GradeId,
-  decimal? Grade = null,
-  string? Feedback = null,
-  string? GradingDetails = null
-) {
+public record UpdateActivityGradeInput(Guid GradeId, decimal? Grade = null, string? Feedback = null, string? GradingDetails = null) {
   public Guid GradeId { get; init; } = GradeId;
 
   public decimal? Grade { get; init; } = Grade;

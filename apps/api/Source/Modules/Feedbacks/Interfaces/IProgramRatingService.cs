@@ -3,9 +3,7 @@
 
 namespace GameGuild.Modules.Feedbacks;
 
-/// <summary>
-/// Interface for program rating services
-/// </summary>
+/// <summary> Interface for program rating services </summary>
 public interface IProgramRatingService {
   Task<ProgramRating> SubmitRatingAsync(ProgramRating rating);
 

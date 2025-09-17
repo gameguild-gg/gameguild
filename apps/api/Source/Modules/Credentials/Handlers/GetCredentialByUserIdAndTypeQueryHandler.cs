@@ -4,9 +4,7 @@ using GameGuild.Modules.Credentials.Queries;
 
 namespace GameGuild.Modules.Credentials.Handlers;
 
-/// <summary>
-/// Handler for GetCredentialByUserIdAndTypeQuery using CQRS pattern
-/// </summary>
+/// <summary> Handler for GetCredentialByUserIdAndTypeQuery using CQRS pattern </summary>
 public class GetCredentialByUserIdAndTypeQueryHandler : IRequestHandler<GetCredentialByUserIdAndTypeQuery, Credential?> {
   private readonly ICredentialService _credentialService;
 

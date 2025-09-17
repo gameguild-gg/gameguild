@@ -24,17 +24,17 @@ public static class JwtAuthenticationExtensions {
     jwtOptions.Validate();
 
     services.AddAuthentication(options => {
-      options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-      options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-      options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-    }
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+              }
             )
             .AddJwtBearer(options => {
-              options.SaveToken = true;
-              options.RequireHttpsMetadata = true; // Enforce HTTPS in production
-              options.TokenValidationParameters = CreateTokenValidationParameters(jwtOptions);
-              options.Events = CreateJwtBearerEvents();
-            }
+                options.SaveToken = true;
+                options.RequireHttpsMetadata = true; // Enforce HTTPS in production
+                options.TokenValidationParameters = CreateTokenValidationParameters(jwtOptions);
+                options.Events = CreateJwtBearerEvents();
+              }
             );
 
     return services;
@@ -66,7 +66,7 @@ public static class JwtAuthenticationExtensions {
       RequireExpirationTime = true,
 
       // Algorithm validation
-      ValidAlgorithms = new[] { SecurityAlgorithms.HmacSha256 },
+      ValidAlgorithms = new[ ] { SecurityAlgorithms.HmacSha256 },
     };
   }
 
@@ -85,8 +85,7 @@ public static class JwtAuthenticationExtensions {
     var accessToken = context.Request.Query["access_token"];
     var path = context.HttpContext.Request.Path;
 
-    if (!string.IsNullOrEmpty(accessToken) &&
-        (path.StartsWithSegments("/hubs") || path.StartsWithSegments("/graphql"))) { context.Token = accessToken; }
+    if (!string.IsNullOrEmpty(accessToken) && (path.StartsWithSegments("/hubs") || path.StartsWithSegments("/graphql"))) { context.Token = accessToken; }
 
     return Task.CompletedTask;
   }
@@ -95,19 +94,12 @@ public static class JwtAuthenticationExtensions {
   /// Handles authentication failures with proper logging.
   /// </summary>
   private static Task OnAuthenticationFailed(AuthenticationFailedContext context) {
-    var logger = context.HttpContext.RequestServices
-                        .GetRequiredService<ILogger<AuthenticationFailedContext>>();
+    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<AuthenticationFailedContext>>();
 
-    logger.LogWarning(
-      "JWT authentication failed: {Exception} for path {Path}",
-      context.Exception.Message,
-      context.HttpContext.Request.Path
-    );
+    logger.LogWarning("JWT authentication failed: {Exception} for path {Path}", context.Exception.Message, context.HttpContext.Request.Path);
 
     // Don't expose detailed error information in production
-    if (context.HttpContext.RequestServices
-               .GetRequiredService<IWebHostEnvironment>()
-               .IsDevelopment()) { context.Response.Headers.Append("Auth-Error", context.Exception.Message); }
+    if (context.HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment()) { context.Response.Headers.Append("Auth-Error", context.Exception.Message); }
 
     return Task.CompletedTask;
   }
@@ -116,8 +108,7 @@ public static class JwtAuthenticationExtensions {
   /// Handles successful token validation.
   /// </summary>
   private static Task OnTokenValidated(TokenValidatedContext context) {
-    var logger = context.HttpContext.RequestServices
-                        .GetRequiredService<ILogger<TokenValidatedContext>>();
+    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<TokenValidatedContext>>();
 
     var userId = context.Principal?.FindFirst("sub")?.Value ?? "Unknown";
     logger.LogDebug("JWT token validated successfully for user {UserId}", userId);
@@ -138,38 +129,21 @@ public static class JwtAuthenticationExtensions {
   /// </summary>
   public static IServiceCollection AddAuthorizationPolicies(this IServiceCollection services) {
     services.AddAuthorization(options => {
-      // Default policy requires authentication
-      options.DefaultPolicy = new AuthorizationPolicyBuilder()
-                              .RequireAuthenticatedUser()
-                              .Build();
+        // Default policy requires authentication
+        options.DefaultPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
 
-      // Policy for public endpoints
-      options.AddPolicy("Public", policy => policy.RequireAssertion(_ => true));
+        // Policy for public endpoints
+        options.AddPolicy("Public", policy => policy.RequireAssertion(_ => true));
 
-      // Policy for tenant-specific access
-      options.AddPolicy(
-        "TenantAccess",
-        policy =>
-          policy.RequireAuthenticatedUser()
-                .RequireClaim("tenant_id")
-      );
+        // Policy for tenant-specific access
+        options.AddPolicy("TenantAccess", policy => policy.RequireAuthenticatedUser().RequireClaim("tenant_id"));
 
-      // Policy for administrative access
-      options.AddPolicy(
-        "AdminAccess",
-        policy =>
-          policy.RequireAuthenticatedUser()
-                .RequireClaim("role", "Admin")
-      );
+        // Policy for administrative access
+        options.AddPolicy("AdminAccess", policy => policy.RequireAuthenticatedUser().RequireClaim("role", "Admin"));
 
-      // Policy for Web3 authenticated users
-      options.AddPolicy(
-        "Web3Access",
-        policy =>
-          policy.RequireAuthenticatedUser()
-                .RequireClaim("auth_method", "web3")
-      );
-    }
+        // Policy for Web3 authenticated users
+        options.AddPolicy("Web3Access", policy => policy.RequireAuthenticatedUser().RequireClaim("auth_method", "web3"));
+      }
     );
 
     return services;

@@ -6,8 +6,7 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Service implementation for managing tenants
 /// </summary>
-public class TenantService(ApplicationDbContext context, IPermissionService permissionService) : ITenantService
-{
+public class TenantService(ApplicationDbContext context, IPermissionService permissionService) : ITenantService {
   /// <summary>
   /// Get all tenants
   /// </summary>
@@ -19,12 +18,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="id">Tenant ID</param>
   /// <returns>Tenant or null if not found</returns>
-  public async Task<Tenant?> GetTenantByIdAsync(Guid id)
-  {
-    return await context.Tenants.Include(t => t.TenantPermissions)
-                        .ThenInclude(tp => tp.User)
-                        .FirstOrDefaultAsync(t => t.Id == id);
-  }
+  public async Task<Tenant?> GetTenantByIdAsync(Guid id) { return await context.Tenants.Include(t => t.TenantPermissions).ThenInclude(tp => tp.User).FirstOrDefaultAsync(t => t.Id == id); }
 
   /// <summary>
   /// Get a tenant by name
@@ -38,8 +32,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="tenant">Tenant to create</param>
   /// <returns>Created tenant</returns>
-  public async Task<Tenant> CreateTenantAsync(Tenant tenant)
-  {
+  public async Task<Tenant> CreateTenantAsync(Tenant tenant) {
     context.Tenants.Add(tenant);
     await context.SaveChangesAsync();
 
@@ -51,8 +44,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="tenant">Tenant to update</param>
   /// <returns>Updated tenant</returns>
-  public async Task<Tenant> UpdateTenantAsync(Tenant tenant)
-  {
+  public async Task<Tenant> UpdateTenantAsync(Tenant tenant) {
     var existingTenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenant.Id);
 
     if (existingTenant == null) throw new InvalidOperationException($"Tenant with ID {tenant.Id} not found");
@@ -73,8 +65,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="id">Tenant ID to delete</param>
   /// <returns>True if deleted successfully</returns>
-  public async Task<bool> SoftDeleteTenantAsync(Guid id)
-  {
+  public async Task<bool> SoftDeleteTenantAsync(Guid id) {
     var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
 
     if (tenant == null) return false;
@@ -90,10 +81,8 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="id">Tenant ID to restore</param>
   /// <returns>True if restored successfully</returns>
-  public async Task<bool> RestoreTenantAsync(Guid id)
-  {
-    var tenant = await context.Tenants.IgnoreQueryFilters()
-                              .FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt != null);
+  public async Task<bool> RestoreTenantAsync(Guid id) {
+    var tenant = await context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt != null);
 
     if (tenant == null) return false;
 
@@ -108,8 +97,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="id">Tenant ID to delete</param>
   /// <returns>True if deleted successfully</returns>
-  public async Task<bool> HardDeleteTenantAsync(Guid id)
-  {
+  public async Task<bool> HardDeleteTenantAsync(Guid id) {
     var tenant = await context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
 
     if (tenant == null) return false;
@@ -125,8 +113,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="id">Tenant ID</param>
   /// <returns>True if activated successfully</returns>
-  public async Task<bool> ActivateTenantAsync(Guid id)
-  {
+  public async Task<bool> ActivateTenantAsync(Guid id) {
     var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
 
     if (tenant == null) return false;
@@ -142,8 +129,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="id">Tenant ID</param>
   /// <returns>True if deactivated successfully</returns>
-  public async Task<bool> DeactivateTenantAsync(Guid id)
-  {
+  public async Task<bool> DeactivateTenantAsync(Guid id) {
     var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
 
     if (tenant == null) return false;
@@ -158,13 +144,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// Get soft-deleted tenants
   /// </summary>
   /// <returns>List of soft-deleted tenants</returns>
-  public async Task<IEnumerable<Tenant>> GetDeletedTenantsAsync()
-  {
-    return await context.Tenants.IgnoreQueryFilters()
-                        .Where(t => t.DeletedAt != null)
-                        .Include(t => t.TenantPermissions)
-                        .ToListAsync();
-  }
+  public async Task<IEnumerable<Tenant>> GetDeletedTenantsAsync() { return await context.Tenants.IgnoreQueryFilters().Where(t => t.DeletedAt != null).Include(t => t.TenantPermissions).ToListAsync(); }
 
   /// <summary>
   /// Add a user to a tenant
@@ -172,8 +152,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// <param name="userId">User ID</param>
   /// <param name="tenantId">Tenant ID</param>
   /// <returns>Created TenantPermission relationship</returns>
-  public async Task<TenantPermission> AddUserToTenantAsync(Guid userId, Guid tenantId)
-  {
+  public async Task<TenantPermission> AddUserToTenantAsync(Guid userId, Guid tenantId) {
     // Use the permission service to handle tenant membership
     return await permissionService.JoinTenantAsync(userId, tenantId);
   }
@@ -184,8 +163,7 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// <param name="userId">User ID</param>
   /// <param name="tenantId">Tenant ID</param>
   /// <returns>True if removed successfully</returns>
-  public async Task<bool> RemoveUserFromTenantAsync(Guid userId, Guid tenantId)
-  {
+  public async Task<bool> RemoveUserFromTenantAsync(Guid userId, Guid tenantId) {
     await permissionService.LeaveTenantAsync(userId, tenantId);
 
     return true;
@@ -196,12 +174,8 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="tenantId">Tenant ID</param>
   /// <returns>List of TenantPermission relationships</returns>
-  public async Task<IEnumerable<TenantPermission>> GetUsersInTenantAsync(Guid tenantId)
-  {
-    return await context.TenantPermissions.Where(tp => tp.TenantId == tenantId && tp.UserId != null)
-                        .Include(tp => tp.User)
-                        .Include(tp => tp.Tenant)
-                        .ToListAsync();
+  public async Task<IEnumerable<TenantPermission>> GetUsersInTenantAsync(Guid tenantId) {
+    return await context.TenantPermissions.Where(tp => tp.TenantId == tenantId && tp.UserId != null).Include(tp => tp.User).Include(tp => tp.Tenant).ToListAsync();
   }
 
   /// <summary>
@@ -217,26 +191,13 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// Get the default tenant (creates one if none exists)
   /// </summary>
   /// <returns>Default tenant</returns>
-  public async Task<Tenant> GetOrCreateDefaultTenantAsync()
-  {
-    var defaultTenant = await context.Tenants
-        .FirstOrDefaultAsync(t => t.IsDefault && t.DeletedAt == null);
+  public async Task<Tenant> GetOrCreateDefaultTenantAsync() {
+    var defaultTenant = await context.Tenants.FirstOrDefaultAsync(t => t.IsDefault && t.DeletedAt == null);
 
-    if (defaultTenant != null)
-    {
-      return defaultTenant;
-    }
+    if (defaultTenant != null) { return defaultTenant; }
 
     // No default tenant exists, create one
-    defaultTenant = new Tenant
-    {
-      Name = "Default Organization",
-      Description = "Default tenant for users without specific tenant assignment",
-      Slug = "default",
-      AdminEmail = "admin@default.local",
-      IsActive = true,
-      IsDefault = true
-    };
+    defaultTenant = new Tenant { Name = "Default Organization", Description = "Default tenant for users without specific tenant assignment", Slug = "default", AdminEmail = "admin@default.local", IsActive = true, IsDefault = true };
 
     context.Tenants.Add(defaultTenant);
     await context.SaveChangesAsync();
@@ -248,37 +209,26 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// Get the current default tenant
   /// </summary>
   /// <returns>Default tenant or null if none exists</returns>
-  public async Task<Tenant?> GetDefaultTenantAsync()
-  {
-    return await context.Tenants
-        .FirstOrDefaultAsync(t => t.IsDefault && t.DeletedAt == null);
-  }
+  public async Task<Tenant?> GetDefaultTenantAsync() { return await context.Tenants.FirstOrDefaultAsync(t => t.IsDefault && t.DeletedAt == null); }
 
   /// <summary>
   /// Set a tenant as the default tenant
   /// </summary>
   /// <param name="tenantId">Tenant ID to set as default</param>
   /// <returns>Updated tenant</returns>
-  public async Task<Tenant> SetDefaultTenantAsync(Guid tenantId)
-  {
+  public async Task<Tenant> SetDefaultTenantAsync(Guid tenantId) {
     // First, unset any existing default tenant
-    var currentDefault = await context.Tenants
-        .FirstOrDefaultAsync(t => t.IsDefault && t.DeletedAt == null);
+    var currentDefault = await context.Tenants.FirstOrDefaultAsync(t => t.IsDefault && t.DeletedAt == null);
 
-    if (currentDefault != null)
-    {
+    if (currentDefault != null) {
       currentDefault.IsDefault = false;
       currentDefault.Touch();
     }
 
     // Set the new default tenant
-    var newDefault = await context.Tenants
-        .FirstOrDefaultAsync(t => t.Id == tenantId && t.DeletedAt == null);
+    var newDefault = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId && t.DeletedAt == null);
 
-    if (newDefault == null)
-    {
-      throw new InvalidOperationException($"Tenant with ID {tenantId} not found");
-    }
+    if (newDefault == null) { throw new InvalidOperationException($"Tenant with ID {tenantId} not found"); }
 
     newDefault.IsDefault = true;
     newDefault.Touch();
@@ -293,26 +243,18 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="tenantId">Tenant ID to check</param>
   /// <returns>True if this is the default tenant</returns>
-  public async Task<bool> IsDefaultTenantAsync(Guid tenantId)
-  {
-    return await context.Tenants
-        .AnyAsync(t => t.Id == tenantId && t.IsDefault && t.DeletedAt == null);
-  }
+  public async Task<bool> IsDefaultTenantAsync(Guid tenantId) { return await context.Tenants.AnyAsync(t => t.Id == tenantId && t.IsDefault && t.DeletedAt == null); }
 
   /// <summary>
   /// Get effective tenant (returns specified tenant or default if null)
   /// </summary>
   /// <param name="tenantId">Tenant ID (null to get default)</param>
   /// <returns>Effective tenant</returns>
-  public async Task<Tenant> GetEffectiveTenantAsync(Guid? tenantId)
-  {
-    if (tenantId.HasValue)
-    {
+  public async Task<Tenant> GetEffectiveTenantAsync(Guid? tenantId) {
+    if (tenantId.HasValue) {
       var tenant = await GetTenantByIdAsync(tenantId.Value);
-      if (tenant != null)
-      {
-        return tenant;
-      }
+
+      if (tenant != null) { return tenant; }
     }
 
     // Fall back to default tenant

@@ -1,34 +1,23 @@
 namespace GameGuild.Modules.Resources;
 
-/// <summary>
-/// EntityBase for storing additional metadata about resources
-/// Provides extensible metadata storage for resources
-/// </summary>
+/// <summary> EntityBase for storing additional metadata about resources Provides extensible metadata storage for resources </summary>
 [Table("ResourceMetadata")]
 [Index(nameof(ResourceType))]
 public class ResourceMetadata : EntityBase {
-  /// <summary>
-  /// The type of resource this metadata belongs to
-  /// </summary>
+  /// <summary> The type of resource this metadata belongs to </summary>
   [Required]
   [MaxLength(100)]
   public string ResourceType { get; init; } = string.Empty;
 
-  /// <summary>
-  /// Additional metadata stored as JSON
-  /// </summary>
+  /// <summary> Additional metadata stored as JSON </summary>
   [Column(TypeName = "jsonb")]
   public string? AdditionalData { get; set; }
 
-  /// <summary>
-  /// Tags associated with this resource
-  /// </summary>
+  /// <summary> Tags associated with this resource </summary>
   [MaxLength(500)]
   public string? Tags { get; init; }
 
-  /// <summary>
-  /// SEO metadata like meta description, keywords, etc.
-  /// </summary>
+  /// <summary> SEO metadata like meta description, keywords, etc. </summary>
   [Column(TypeName = "jsonb")]
   public string? SeoMetadata { get; init; }
 }

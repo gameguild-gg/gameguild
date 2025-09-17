@@ -1,21 +1,13 @@
 ﻿namespace GameGuild;
 
-/// <summary>
-/// Interface for requests that support caching
-/// </summary>
+/// <summary> Interface for requests that support caching </summary>
 public interface ICachedRequest {
-  /// <summary>
-  /// Unique cache key for this request
-  /// </summary>
+  /// <summary> Unique cache key for this request </summary>
   string CacheKey { get; }
 
-  /// <summary>
-  /// Absolute cache expiration time
-  /// </summary>
+  /// <summary> Absolute cache expiration time </summary>
   TimeSpan CacheExpiration { get; }
 
-  /// <summary>
-  /// Sliding expiration (optional)
-  /// </summary>
+  /// <summary> Sliding expiration (optional) </summary>
   TimeSpan? SlidingExpiration { get; }
 }

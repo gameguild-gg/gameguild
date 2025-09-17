@@ -150,11 +150,17 @@ public class Payment {
 /// </summary>
 public enum PaymentStatus {
   Pending = 0,
+
   Processing = 1,
+
   Completed = 2,
+
   Failed = 3,
+
   Cancelled = 4,
+
   Refunded = 5,
+
   PartiallyRefunded = 6,
 }
 
@@ -163,12 +169,19 @@ public enum PaymentStatus {
 /// </summary>
 public enum PaymentMethod {
   CreditCard = 0,
+
   DebitCard = 1,
+
   PayPal = 2,
+
   BankTransfer = 3,
+
   Cryptocurrency = 4,
+
   DigitalWallet = 5,
+
   GiftCard = 6,
+
   Credits = 7,
 }
 
@@ -297,9 +310,5 @@ public class PaymentRefund {
 /// Status of a refund
 /// </summary>
 public enum RefundStatus {
-  Pending = 0,
-  Processing = 1,
-  Succeeded = 2,
-  Failed = 3,
-  Cancelled = 4,
+  Pending = 0, Processing = 1, Succeeded = 2, Failed = 3, Cancelled = 4,
 }

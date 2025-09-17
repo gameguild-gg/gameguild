@@ -1,6 +1,4 @@
 namespace GameGuild.CQRS;
 
-/// <summary>
-/// Service factory delegate
-/// </summary>
+/// <summary> Service factory delegate </summary>
 public delegate object? ServiceFactory(Type serviceType);

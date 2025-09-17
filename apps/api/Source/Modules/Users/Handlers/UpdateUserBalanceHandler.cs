@@ -1,16 +1,11 @@
-﻿using GameGuild.Database;
+﻿using GameGuild.CQRS;
+using GameGuild.Database;
 
 
 namespace GameGuild.Modules.Users;
 
-/// <summary>
-/// Handler for updating user balance
-/// </summary>
-public class UpdateUserBalanceHandler(
-  ApplicationDbContext context,
-  ILogger<UpdateUserBalanceHandler> logger,
-  CQRS.IMediator mediator
-) : CQRS.IRequestHandler<UpdateUserBalanceCommand, User> {
+/// <summary> Handler for updating user balance </summary>
+public class UpdateUserBalanceHandler(ApplicationDbContext context, ILogger<UpdateUserBalanceHandler> logger, IMediator mediator) : IRequestHandler<UpdateUserBalanceCommand, User> {
   public async Task<User> Handle(UpdateUserBalanceCommand request, CancellationToken cancellationToken) {
     var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
 
@@ -39,17 +34,7 @@ public class UpdateUserBalanceHandler(
     );
 
     // Publish domain event
-    await mediator.Publish(
-      new UserBalanceUpdatedEvent(
-        user.Id,
-        oldBalance,
-        request.Balance,
-        oldAvailableBalance,
-        request.AvailableBalance,
-        request.Reason
-      ),
-      cancellationToken
-    );
+    await mediator.Publish(new UserBalanceUpdatedEvent(user.Id, oldBalance, request.Balance, oldAvailableBalance, request.AvailableBalance, request.Reason), cancellationToken);
 
     return user;
   }

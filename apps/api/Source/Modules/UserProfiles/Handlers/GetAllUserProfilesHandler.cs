@@ -4,9 +4,7 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// Handler for getting all user profiles with filtering and pagination
-/// </summary>
+/// <summary> Handler for getting all user profiles with filtering and pagination </summary>
 public class GetAllUserProfilesHandler(ApplicationDbContext context, ILogger<GetAllUserProfilesHandler> logger) : IQueryHandler<GetAllUserProfilesQuery, Result<IEnumerable<UserProfile>>> {
   public async Task<Result<IEnumerable<UserProfile>>> Handle(GetAllUserProfilesQuery request, CancellationToken cancellationToken) {
     try {
@@ -19,37 +17,25 @@ public class GetAllUserProfilesHandler(ApplicationDbContext context, ILogger<Get
 
       if (!string.IsNullOrWhiteSpace(request.SearchTerm)) {
         var searchLower = request.SearchTerm.ToLower();
-        query = query.Where(up =>
-                              (up.GivenName != null && up.GivenName.ToLower().Contains(searchLower)) ||
-                              (up.FamilyName != null && up.FamilyName.ToLower().Contains(searchLower)) ||
-                              (up.DisplayName != null && up.DisplayName.ToLower().Contains(searchLower)) ||
-                              (up.Title != null && up.Title.ToLower().Contains(searchLower))
+
+        query = query.Where(up => up.GivenName != null && up.GivenName.ToLower().Contains(searchLower) ||
+                                  up.FamilyName != null && up.FamilyName.ToLower().Contains(searchLower) ||
+                                  up.DisplayName != null && up.DisplayName.ToLower().Contains(searchLower) ||
+                                  up.Title != null && up.Title.ToLower().Contains(searchLower)
         );
       }
 
       // Apply pagination
-      var userProfiles = await query
-                               .OrderBy(up => up.DisplayName)
-                               .Skip(request.Skip)
-                               .Take(request.Take)
-                               .ToListAsync(cancellationToken);
+      var userProfiles = await query.OrderBy(up => up.DisplayName).Skip(request.Skip).Take(request.Take).ToListAsync(cancellationToken);
 
-      logger.LogDebug(
-        "Retrieved {Count} user profiles with filters: IncludeDeleted={IncludeDeleted}, TenantId={TenantId}, SearchTerm={SearchTerm}",
-        userProfiles.Count,
-        request.IncludeDeleted,
-        request.TenantId,
-        request.SearchTerm
-      );
+      logger.LogDebug("Retrieved {Count} user profiles with filters: IncludeDeleted={IncludeDeleted}, TenantId={TenantId}, SearchTerm={SearchTerm}", userProfiles.Count, request.IncludeDeleted, request.TenantId, request.SearchTerm);
 
       return Result.Success<IEnumerable<UserProfile>>(userProfiles);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error retrieving user profiles");
 
-      return Result.Failure<IEnumerable<UserProfile>>(
-        Error.Failure("UserProfile.QueryFailed", "Failed to retrieve user profiles")
-      );
+      return Result.Failure<IEnumerable<UserProfile>>(Error.Failure("UserProfile.QueryFailed", "Failed to retrieve user profiles"));
     }
   }
 }

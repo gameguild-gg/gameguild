@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// Extension methods to convert from entity/service models to DTOs
-/// </summary>
+/// <summary> Extension methods to convert from entity/service models to DTOs </summary>
 public static class ActivityGradeExtensions {
   public static ActivityGradeDto ToDto(this ActivityGrade grade) {
     return new ActivityGradeDto {
@@ -40,10 +38,7 @@ public static class ActivityGradeExtensions {
           : null,
       Grader = grade.GraderProgramUser?.User != null
                  ? new GraderSummaryDto {
-                   Id = grade.GraderProgramUser.User.Id,
-                   UserDisplayName = grade.GraderProgramUser.User.Name,
-                   UserEmail = grade.GraderProgramUser.User.Email,
-                   Role = "Grader", // Default role since ProgramUser doesn't have a Role property
+                   Id = grade.GraderProgramUser.User.Id, UserDisplayName = grade.GraderProgramUser.User.Name, UserEmail = grade.GraderProgramUser.User.Email, Role = "Grader", // Default role since ProgramUser doesn't have a Role property
                  }
                  : null,
     };
@@ -52,12 +47,6 @@ public static class ActivityGradeExtensions {
   public static IEnumerable<ActivityGradeDto> ToDto(this IEnumerable<ActivityGrade> grades) { return grades.Select(g => g.ToDto()); }
 
   public static GradeStatisticsDto ToDto(this GradeStatistics statistics) {
-    return new GradeStatisticsDto {
-      TotalGrades = statistics.TotalGrades,
-      AverageGrade = statistics.AverageGrade,
-      MinGrade = statistics.MinGrade,
-      MaxGrade = statistics.MaxGrade,
-      PassingRate = statistics.PassingRate,
-    };
+    return new GradeStatisticsDto { TotalGrades = statistics.TotalGrades, AverageGrade = statistics.AverageGrade, MinGrade = statistics.MinGrade, MaxGrade = statistics.MaxGrade, PassingRate = statistics.PassingRate };
   }
 }

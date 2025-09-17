@@ -4,9 +4,9 @@
 namespace GameGuild.CQRS;
 
 internal sealed class DomainEventsDispatcher(IServiceProvider serviceProvider) : IDomainEventsDispatcher {
-  private static readonly ConcurrentDictionary<Type, Type> HandlerTypeDictionary = new();
+  private static readonly ConcurrentDictionary<Type, Type> HandlerTypeDictionary = new ConcurrentDictionary<Type, Type>();
 
-  private static readonly ConcurrentDictionary<Type, Type> WrapperTypeDictionary = new();
+  private static readonly ConcurrentDictionary<Type, Type> WrapperTypeDictionary = new ConcurrentDictionary<Type, Type>();
 
   public async Task DispatchAsync(IEnumerable<IDomainEvent> domainEvents, CancellationToken cancellationToken = default) {
     foreach (var domainEvent in domainEvents) {

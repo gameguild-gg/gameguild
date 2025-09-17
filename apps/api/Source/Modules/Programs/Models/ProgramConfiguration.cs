@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// EntityBase Framework configuration for Program entity
-/// </summary>
+/// <summary> EntityBase Framework configuration for Program entity </summary>
 public class ProgramConfiguration : IEntityTypeConfiguration<Program> {
   public void Configure(EntityTypeBuilder<Program> builder) {
     // Ignore computed properties that shouldn't be mapped by EF Core

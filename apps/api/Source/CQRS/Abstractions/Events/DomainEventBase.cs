@@ -1,12 +1,8 @@
 namespace GameGuild.CQRS;
 
-/// <summary>
-/// Base class for domain events
-/// </summary>
+/// <summary> Base class for domain events </summary>
 public abstract class DomainEventBase : IDomainEvent {
-  /// <summary>
-  /// Initializes a new instance of the DomainEventBase class
-  /// </summary>
+  /// <summary> Initializes a new instance of the DomainEventBase class </summary>
   protected DomainEventBase(Guid aggregateId, string aggregateType) {
     EventId = Guid.NewGuid();
     OccurredAt = DateTime.UtcNow;
@@ -15,19 +11,13 @@ public abstract class DomainEventBase : IDomainEvent {
     AggregateType = aggregateType;
   }
 
-  /// <summary>
-  /// Unique identifier for the event
-  /// </summary>
+  /// <summary> Unique identifier for the event </summary>
   public Guid EventId { get; }
 
-  /// <summary>
-  /// When the event occurred
-  /// </summary>
+  /// <summary> When the event occurred </summary>
   public DateTime OccurredAt { get; }
 
-  /// <summary>
-  /// Version of the event for compatibility
-  /// </summary>
+  /// <summary> Version of the event for compatibility </summary>
   public int Version { get; }
 
   /// <inheritdoc />

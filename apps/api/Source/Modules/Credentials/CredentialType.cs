@@ -1,9 +1,6 @@
-using GameGuild.CQRS;
 namespace GameGuild.Modules.Credentials;
 
-/// <summary>
-/// GraphQL type definition for Credential entity
-/// </summary>
+/// <summary> GraphQL type definition for Credential entity </summary>
 public class CredentialType : ObjectType<Credential> {
   protected override void Configure(IObjectTypeDescriptor<Credential> descriptor) {
     descriptor.Description("Represents a user credential (password, API key, OAuth token, etc.)");

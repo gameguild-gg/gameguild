@@ -1,8 +1,7 @@
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Service interface for Testing operations Comprehensive testing session and request management capabilities </summary>
-public interface ITestService
-{
+public interface ITestService {
   #region Testing Request Operations
 
   /// <summary> Get all testing requests (non-deleted only) </summary>
@@ -112,10 +111,7 @@ public interface ITestService
   #region Session Registration Management
 
   /// <summary> Register user for a testing session </summary>
-  Task<SessionRegistration> RegisterForSessionAsync(
-    Guid sessionId, Guid userId, RegistrationType registrationType,
-    string? notes = null
-  );
+  Task<SessionRegistration> RegisterForSessionAsync(Guid sessionId, Guid userId, RegistrationType registrationType, string? notes = null);
 
   /// <summary> Unregister user from a testing session </summary>
   Task<bool> UnregisterFromSessionAsync(Guid sessionId, Guid userId);
@@ -124,10 +120,7 @@ public interface ITestService
   Task<IEnumerable<SessionRegistration>> GetSessionRegistrationsAsync(Guid sessionId);
 
   /// <summary> Add user to session waitlist </summary>
-  Task<SessionWaitlist> AddToWaitlistAsync(
-    Guid sessionId, Guid userId, RegistrationType registrationType,
-    string? notes = null
-  );
+  Task<SessionWaitlist> AddToWaitlistAsync(Guid sessionId, Guid userId, RegistrationType registrationType, string? notes = null);
 
   /// <summary> Remove user from session waitlist </summary>
   Task<bool> RemoveFromWaitlistAsync(Guid sessionId, Guid userId);
@@ -140,10 +133,7 @@ public interface ITestService
   #region Feedback Management
 
   /// <summary> Add feedback for a testing request </summary>
-  Task<TestingFeedback> AddFeedbackAsync(
-    Guid testingRequestId, Guid userId, Guid feedbackFormId, string feedbackData,
-    TestingContext context, Guid? sessionId = null, string? additionalNotes = null
-  );
+  Task<TestingFeedback> AddFeedbackAsync(Guid testingRequestId, Guid userId, Guid feedbackFormId, string feedbackData, TestingContext context, Guid? sessionId = null, string? additionalNotes = null);
 
   /// <summary> Get feedback for a testing request </summary>
   Task<IEnumerable<TestingFeedback>> GetTestingRequestFeedbackAsync(Guid testingRequestId);

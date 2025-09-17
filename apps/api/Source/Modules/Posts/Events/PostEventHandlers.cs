@@ -4,32 +4,19 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.Posts;
 
-/// <summary>
-/// Handles PostCreatedEvent - manages notifications and side effects
-/// </summary>
-public class PostCreatedEventHandler : IDomainEventHandler<PostCreatedEvent>
-{
-  private readonly ILogger<PostCreatedEventHandler> _logger;
+/// <summary> Handles PostCreatedEvent - manages notifications and side effects </summary>
+public class PostCreatedEventHandler : IDomainEventHandler<PostCreatedEvent> {
   private readonly ApplicationDbContext _context;
 
-  public PostCreatedEventHandler(
-    ILogger<PostCreatedEventHandler> logger,
-    ApplicationDbContext context
-  )
-  {
+  private readonly ILogger<PostCreatedEventHandler> _logger;
+
+  public PostCreatedEventHandler(ILogger<PostCreatedEventHandler> logger, ApplicationDbContext context) {
     _logger = logger;
     _context = context;
   }
 
-  public async Task Handle(PostCreatedEvent domainEvent, CancellationToken cancellationToken)
-  {
-    _logger.LogInformation(
-      "Post created: {PostId} by user {UserId} of type '{PostType}' (System: {IsSystemGenerated})",
-      domainEvent.PostId,
-      domainEvent.UserId,
-      domainEvent.PostType,
-      domainEvent.IsSystemGenerated
-    );
+  public async Task Handle(PostCreatedEvent domainEvent, CancellationToken cancellationToken) {
+    _logger.LogInformation("Post created: {PostId} by user {UserId} of type '{PostType}' (System: {IsSystemGenerated})", domainEvent.PostId, domainEvent.UserId, domainEvent.PostType, domainEvent.IsSystemGenerated);
 
     // Handle different post types with specific logic
     await HandlePostTypeSpecificLogic(domainEvent, cancellationToken);
@@ -38,50 +25,39 @@ public class PostCreatedEventHandler : IDomainEventHandler<PostCreatedEvent>
     await HandleCommonSideEffects(domainEvent, cancellationToken);
   }
 
-  private async Task HandlePostTypeSpecificLogic(PostCreatedEvent domainEvent, CancellationToken cancellationToken)
-  {
-    switch (domainEvent.PostType.ToLowerInvariant())
-    {
-      case "user_signup":
-      case "user_registration":
+  private async Task HandlePostTypeSpecificLogic(PostCreatedEvent domainEvent, CancellationToken cancellationToken) {
+    switch (domainEvent.PostType.ToLowerInvariant()) {
+      case "user_signup" :
+      case "user_registration" :
         _logger.LogInformation("New member post created for user {UserId}", domainEvent.UserId);
         await UpdateUserRegistrationStats(domainEvent.UserId, cancellationToken);
 
         break;
 
-      case "profile_update":
+      case "profile_update" :
         _logger.LogInformation("Profile update post created for user {UserId}", domainEvent.UserId);
         await UpdateUserActivityStats(domainEvent.UserId, cancellationToken);
 
         break;
 
-      case "user_activation":
+      case "user_activation" :
         _logger.LogInformation("User activation post created for user {UserId}", domainEvent.UserId);
         await UpdateUserEngagementStats(domainEvent.UserId, cancellationToken);
 
         break;
 
-      case "user_deactivation":
+      case "user_deactivation" :
         _logger.LogInformation("User deactivation post created for user {UserId}", domainEvent.UserId);
 
         // Could trigger cleanup or archival processes
         break;
 
-      default:
-        _logger.LogDebug(
-          "Standard post created of type {PostType} for user {UserId}",
-          domainEvent.PostType,
-          domainEvent.UserId
-        );
-
-        break;
+      default : _logger.LogDebug("Standard post created of type {PostType} for user {UserId}", domainEvent.PostType, domainEvent.UserId); break;
     }
   }
 
-  private async Task HandleCommonSideEffects(PostCreatedEvent domainEvent, CancellationToken cancellationToken)
-  {
-    try
-    {
+  private async Task HandleCommonSideEffects(PostCreatedEvent domainEvent, CancellationToken cancellationToken) {
+    try {
       // Update post statistics (could be moved to a separate analytics service)
       await UpdatePostStatistics(domainEvent, cancellationToken);
 
@@ -91,54 +67,47 @@ public class PostCreatedEventHandler : IDomainEventHandler<PostCreatedEvent>
       // Real-time notifications (placeholder for SignalR integration)
       await SendRealTimeNotifications(domainEvent, cancellationToken);
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Error handling side effects for post {PostId}", domainEvent.PostId);
       // Don't rethrow - side effects shouldn't fail the main operation
     }
   }
 
-  private async Task UpdateUserRegistrationStats(Guid userId, CancellationToken cancellationToken)
-  {
+  private async Task UpdateUserRegistrationStats(Guid userId, CancellationToken cancellationToken) {
     // Update user statistics related to registration
     _logger.LogDebug("Updating registration stats for user {UserId}", userId);
     // Implementation would update analytics tables or external systems
     await Task.CompletedTask;
   }
 
-  private async Task UpdateUserActivityStats(Guid userId, CancellationToken cancellationToken)
-  {
+  private async Task UpdateUserActivityStats(Guid userId, CancellationToken cancellationToken) {
     // Update user activity metrics
     _logger.LogDebug("Updating activity stats for user {UserId}", userId);
     // Implementation would track user engagement metrics
     await Task.CompletedTask;
   }
 
-  private async Task UpdateUserEngagementStats(Guid userId, CancellationToken cancellationToken)
-  {
+  private async Task UpdateUserEngagementStats(Guid userId, CancellationToken cancellationToken) {
     // Update engagement metrics
     _logger.LogDebug("Updating engagement stats for user {UserId}", userId);
     await Task.CompletedTask;
   }
 
-  private async Task UpdatePostStatistics(PostCreatedEvent domainEvent, CancellationToken cancellationToken)
-  {
+  private async Task UpdatePostStatistics(PostCreatedEvent domainEvent, CancellationToken cancellationToken) {
     // Update global post statistics
     _logger.LogDebug("Updating post statistics for tenant {TenantId}", domainEvent.TenantId);
     // Implementation would update dashboard statistics
     await Task.CompletedTask;
   }
 
-  private async Task IndexPostForSearch(PostCreatedEvent domainEvent, CancellationToken cancellationToken)
-  {
+  private async Task IndexPostForSearch(PostCreatedEvent domainEvent, CancellationToken cancellationToken) {
     // Add post to search index
     _logger.LogDebug("Indexing post {PostId} for search", domainEvent.PostId);
     // Implementation would integrate with Elasticsearch, Azure Search, etc.
     await Task.CompletedTask;
   }
 
-  private async Task SendRealTimeNotifications(PostCreatedEvent domainEvent, CancellationToken cancellationToken)
-  {
+  private async Task SendRealTimeNotifications(PostCreatedEvent domainEvent, CancellationToken cancellationToken) {
     // Send real-time notifications via SignalR
     _logger.LogDebug("Sending real-time notifications for post {PostId}", domainEvent.PostId);
     // Implementation would use SignalR to notify connected clients
@@ -146,34 +115,21 @@ public class PostCreatedEventHandler : IDomainEventHandler<PostCreatedEvent>
   }
 }
 
-/// <summary>
-/// Handles PostLikedEvent - manages notifications and analytics
-/// </summary>
-public class PostLikedEventHandler : IDomainEventHandler<PostLikedEvent>
-{
-  private readonly ILogger<PostLikedEventHandler> _logger;
+/// <summary> Handles PostLikedEvent - manages notifications and analytics </summary>
+public class PostLikedEventHandler : IDomainEventHandler<PostLikedEvent> {
   private readonly ApplicationDbContext _context;
 
-  public PostLikedEventHandler(
-    ILogger<PostLikedEventHandler> logger,
-    ApplicationDbContext context
-  )
-  {
+  private readonly ILogger<PostLikedEventHandler> _logger;
+
+  public PostLikedEventHandler(ILogger<PostLikedEventHandler> logger, ApplicationDbContext context) {
     _logger = logger;
     _context = context;
   }
 
-  public async Task Handle(PostLikedEvent domainEvent, CancellationToken cancellationToken)
-  {
-    _logger.LogInformation(
-      "Post {PostId} liked by user {LikedByUserId} (Total likes: {NewLikesCount})",
-      domainEvent.PostId,
-      domainEvent.LikedByUserId,
-      domainEvent.NewLikesCount
-    );
+  public async Task Handle(PostLikedEvent domainEvent, CancellationToken cancellationToken) {
+    _logger.LogInformation("Post {PostId} liked by user {LikedByUserId} (Total likes: {NewLikesCount})", domainEvent.PostId, domainEvent.LikedByUserId, domainEvent.NewLikesCount);
 
-    try
-    {
+    try {
       // Don't notify if user liked their own post
       if (domainEvent.UserId != domainEvent.LikedByUserId) { await NotifyPostOwner(domainEvent, cancellationToken); }
 
@@ -189,43 +145,29 @@ public class PostLikedEventHandler : IDomainEventHandler<PostLikedEvent>
       // Check for achievements/milestones
       await CheckLikeMilestones(domainEvent, cancellationToken);
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Error handling post like event for post {PostId}", domainEvent.PostId);
       // Don't rethrow - side effects shouldn't fail the main operation
     }
   }
 
-  private async Task NotifyPostOwner(PostLikedEvent domainEvent, CancellationToken cancellationToken)
-  {
-    _logger.LogDebug(
-      "Notifying post owner {UserId} of like from {LikedByUserId}",
-      domainEvent.UserId,
-      domainEvent.LikedByUserId
-    );
+  private async Task NotifyPostOwner(PostLikedEvent domainEvent, CancellationToken cancellationToken) {
+    _logger.LogDebug("Notifying post owner {UserId} of like from {LikedByUserId}", domainEvent.UserId, domainEvent.LikedByUserId);
 
     // Get the users' information for personalized notification
-    var postOwner = await _context.Users
-                                  .FirstOrDefaultAsync(u => u.Id == domainEvent.UserId, cancellationToken);
+    var postOwner = await _context.Users.FirstOrDefaultAsync(u => u.Id == domainEvent.UserId, cancellationToken);
 
-    var liker = await _context.Users
-                              .FirstOrDefaultAsync(u => u.Id == domainEvent.LikedByUserId, cancellationToken);
+    var liker = await _context.Users.FirstOrDefaultAsync(u => u.Id == domainEvent.LikedByUserId, cancellationToken);
 
-    if (postOwner != null && liker != null)
-    {
+    if (postOwner != null && liker != null) {
       var likerName = liker.Name ?? "Someone";
-      _logger.LogInformation(
-        "Post owner {PostOwner} will be notified that {Liker} liked their post",
-        postOwner.Name,
-        likerName
-      );
+      _logger.LogInformation("Post owner {PostOwner} will be notified that {Liker} liked their post", postOwner.Name, likerName);
 
       // Implementation would send email, push notification, or in-app notification
     }
   }
 
-  private async Task UpdateUserReputation(PostLikedEvent domainEvent, CancellationToken cancellationToken)
-  {
+  private async Task UpdateUserReputation(PostLikedEvent domainEvent, CancellationToken cancellationToken) {
     _logger.LogDebug("Updating reputation for post owner {UserId}", domainEvent.UserId);
 
     // Implementation would update user reputation/karma system
@@ -233,8 +175,7 @@ public class PostLikedEventHandler : IDomainEventHandler<PostLikedEvent>
     await Task.CompletedTask;
   }
 
-  private async Task TrackLikeAnalytics(PostLikedEvent domainEvent, CancellationToken cancellationToken)
-  {
+  private async Task TrackLikeAnalytics(PostLikedEvent domainEvent, CancellationToken cancellationToken) {
     _logger.LogDebug("Tracking like analytics for post {PostId}", domainEvent.PostId);
 
     // Implementation would record analytics data
@@ -244,8 +185,7 @@ public class PostLikedEventHandler : IDomainEventHandler<PostLikedEvent>
     await Task.CompletedTask;
   }
 
-  private async Task UpdateTrendingScores(PostLikedEvent domainEvent, CancellationToken cancellationToken)
-  {
+  private async Task UpdateTrendingScores(PostLikedEvent domainEvent, CancellationToken cancellationToken) {
     _logger.LogDebug("Updating trending scores for post {PostId}", domainEvent.PostId);
 
     // Implementation would update trending/hot post calculations
@@ -256,24 +196,14 @@ public class PostLikedEventHandler : IDomainEventHandler<PostLikedEvent>
     await Task.CompletedTask;
   }
 
-  private async Task CheckLikeMilestones(PostLikedEvent domainEvent, CancellationToken cancellationToken)
-  {
-    _logger.LogDebug(
-      "Checking like milestones for post {PostId} with {LikesCount} likes",
-      domainEvent.PostId,
-      domainEvent.NewLikesCount
-    );
+  private async Task CheckLikeMilestones(PostLikedEvent domainEvent, CancellationToken cancellationToken) {
+    _logger.LogDebug("Checking like milestones for post {PostId} with {LikesCount} likes", domainEvent.PostId, domainEvent.NewLikesCount);
 
     // Check for milestone achievements (10, 50, 100, 500, 1000 likes)
-    var milestones = new[] { 10, 50, 100, 500, 1000 };
+    var milestones = new[ ] { 10, 50, 100, 500, 1000 };
 
-    if (milestones.Contains(domainEvent.NewLikesCount))
-    {
-      _logger.LogInformation(
-        "Post {PostId} reached {LikesCount} likes milestone!",
-        domainEvent.PostId,
-        domainEvent.NewLikesCount
-      );
+    if (milestones.Contains(domainEvent.NewLikesCount)) {
+      _logger.LogInformation("Post {PostId} reached {LikesCount} likes milestone!", domainEvent.PostId, domainEvent.NewLikesCount);
 
       // Implementation would:
       // - Award badges/achievements to post owner
@@ -285,35 +215,21 @@ public class PostLikedEventHandler : IDomainEventHandler<PostLikedEvent>
   }
 }
 
-/// <summary>
-/// Handles PostDeletedEvent - manages cleanup and notifications
-/// </summary>
-public class PostDeletedEventHandler : IDomainEventHandler<PostDeletedEvent>
-{
-  private readonly ILogger<PostDeletedEventHandler> _logger;
+/// <summary> Handles PostDeletedEvent - manages cleanup and notifications </summary>
+public class PostDeletedEventHandler : IDomainEventHandler<PostDeletedEvent> {
   private readonly ApplicationDbContext _context;
 
-  public PostDeletedEventHandler(
-    ILogger<PostDeletedEventHandler> logger,
-    ApplicationDbContext context
-  )
-  {
+  private readonly ILogger<PostDeletedEventHandler> _logger;
+
+  public PostDeletedEventHandler(ILogger<PostDeletedEventHandler> logger, ApplicationDbContext context) {
     _logger = logger;
     _context = context;
   }
 
-  public async Task Handle(PostDeletedEvent domainEvent, CancellationToken cancellationToken)
-  {
-    _logger.LogInformation(
-      "Post deleted: {PostId} by user {UserId} of type '{PostType}' (Soft delete: {IsSoftDelete})",
-      domainEvent.PostId,
-      domainEvent.UserId,
-      domainEvent.PostType,
-      domainEvent.IsSoftDelete
-    );
+  public async Task Handle(PostDeletedEvent domainEvent, CancellationToken cancellationToken) {
+    _logger.LogInformation("Post deleted: {PostId} by user {UserId} of type '{PostType}' (Soft delete: {IsSoftDelete})", domainEvent.PostId, domainEvent.UserId, domainEvent.PostType, domainEvent.IsSoftDelete);
 
-    try
-    {
+    try {
       // Remove from search index
       await RemoveFromSearchIndex(domainEvent, cancellationToken);
 
@@ -332,15 +248,13 @@ public class PostDeletedEventHandler : IDomainEventHandler<PostDeletedEvent>
       // Update user statistics
       await UpdateUserStatistics(domainEvent, cancellationToken);
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Error handling post deletion event for post {PostId}", domainEvent.PostId);
       // Don't rethrow - side effects shouldn't fail the main operation
     }
   }
 
-  private async Task RemoveFromSearchIndex(PostDeletedEvent domainEvent, CancellationToken cancellationToken)
-  {
+  private async Task RemoveFromSearchIndex(PostDeletedEvent domainEvent, CancellationToken cancellationToken) {
     _logger.LogDebug("Removing post {PostId} from search index", domainEvent.PostId);
 
     // Implementation would remove the post from search systems
@@ -350,8 +264,7 @@ public class PostDeletedEventHandler : IDomainEventHandler<PostDeletedEvent>
     await Task.CompletedTask;
   }
 
-  private async Task CleanupRelatedData(PostDeletedEvent domainEvent, CancellationToken cancellationToken)
-  {
+  private async Task CleanupRelatedData(PostDeletedEvent domainEvent, CancellationToken cancellationToken) {
     _logger.LogDebug("Cleaning up related data for hard-deleted post {PostId}", domainEvent.PostId);
 
     // For hard deletes, clean up:
@@ -364,8 +277,7 @@ public class PostDeletedEventHandler : IDomainEventHandler<PostDeletedEvent>
     await Task.CompletedTask;
   }
 
-  private async Task UpdateDeletionAnalytics(PostDeletedEvent domainEvent, CancellationToken cancellationToken)
-  {
+  private async Task UpdateDeletionAnalytics(PostDeletedEvent domainEvent, CancellationToken cancellationToken) {
     _logger.LogDebug("Updating deletion analytics for post {PostId}", domainEvent.PostId);
 
     // Track deletion patterns for insights:
@@ -377,8 +289,7 @@ public class PostDeletedEventHandler : IDomainEventHandler<PostDeletedEvent>
     await Task.CompletedTask;
   }
 
-  private async Task ArchiveContentIfRequired(PostDeletedEvent domainEvent, CancellationToken cancellationToken)
-  {
+  private async Task ArchiveContentIfRequired(PostDeletedEvent domainEvent, CancellationToken cancellationToken) {
     _logger.LogDebug("Archiving content for post {PostId} if required", domainEvent.PostId);
 
     // Some organizations require content archival for:
@@ -389,8 +300,7 @@ public class PostDeletedEventHandler : IDomainEventHandler<PostDeletedEvent>
     await Task.CompletedTask;
   }
 
-  private async Task NotifyModerators(PostDeletedEvent domainEvent, CancellationToken cancellationToken)
-  {
+  private async Task NotifyModerators(PostDeletedEvent domainEvent, CancellationToken cancellationToken) {
     _logger.LogInformation("Notifying moderators of system deletion for post {PostId}", domainEvent.PostId);
 
     // Implementation would notify moderators when:
@@ -401,8 +311,7 @@ public class PostDeletedEventHandler : IDomainEventHandler<PostDeletedEvent>
     await Task.CompletedTask;
   }
 
-  private async Task UpdateUserStatistics(PostDeletedEvent domainEvent, CancellationToken cancellationToken)
-  {
+  private async Task UpdateUserStatistics(PostDeletedEvent domainEvent, CancellationToken cancellationToken) {
     _logger.LogDebug("Updating user statistics after post deletion for user {UserId}", domainEvent.UserId);
 
     // Update user metrics:
@@ -413,13 +322,10 @@ public class PostDeletedEventHandler : IDomainEventHandler<PostDeletedEvent>
     await Task.CompletedTask;
   }
 
-  private static bool IsSystemDeletion(PostDeletedEvent domainEvent)
-  {
+  private static bool IsSystemDeletion(PostDeletedEvent domainEvent) {
     // Determine if this was a system-initiated deletion
     // This would typically be determined by additional context
     // For now, we'll use a simple heuristic
-    return domainEvent.PostType.Contains("spam") ||
-           domainEvent.PostType.Contains("violation") ||
-           domainEvent.PostType.Contains("auto");
+    return domainEvent.PostType.Contains("spam") || domainEvent.PostType.Contains("violation") || domainEvent.PostType.Contains("auto");
   }
 }

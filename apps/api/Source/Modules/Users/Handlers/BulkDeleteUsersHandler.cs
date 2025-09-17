@@ -1,23 +1,13 @@
-using GameGuild;
-using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
 
 namespace GameGuild.Modules.Users;
 
-/// <summary>
-/// Handler for bulk deleting users
-/// </summary>
-public class BulkDeleteUsersHandler(
-  ApplicationDbContext context,
-  ILogger<BulkDeleteUsersHandler> logger,
-  IMediator mediator
-) : IResultCommandHandler<BulkDeleteUsersCommand, BulkOperationResult> {
-  public async Task<GameGuild.CQRS.Result<BulkOperationResult>> Handle(BulkDeleteUsersCommand request, CancellationToken cancellationToken) {
-    var users = await context.Users
-                             .Where(u => request.UserIds.Contains(u.Id))
-                             .ToListAsync(cancellationToken);
+/// <summary> Handler for bulk deleting users </summary>
+public class BulkDeleteUsersHandler(ApplicationDbContext context, ILogger<BulkDeleteUsersHandler> logger, IMediator mediator) : IResultCommandHandler<BulkDeleteUsersCommand, BulkOperationResult> {
+  public async Task<CQRS.Result<BulkOperationResult>> Handle(BulkDeleteUsersCommand request, CancellationToken cancellationToken) {
+    var users = await context.Users.Where(u => request.UserIds.Contains(u.Id)).ToListAsync(cancellationToken);
 
     var successCount = 0;
     var errors = new List<string>();
@@ -62,6 +52,6 @@ public class BulkDeleteUsersHandler(
       request.Reason ?? "Not specified"
     );
 
-    return GameGuild.CQRS.Result.Success(result);
+    return CQRS.Result.Success(result);
   }
 }

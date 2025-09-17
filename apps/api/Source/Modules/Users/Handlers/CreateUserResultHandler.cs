@@ -1,50 +1,29 @@
-using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
 using CqrsError = GameGuild.CQRS.Error;
-using Result = GameGuild.CQRS.Result;
 
 
 namespace GameGuild.Modules.Users;
 
-/// <summary>
-/// Enhanced handler for creating a new user using Result<T> pattern for better error handling
-/// </summary>
-public class CreateUserResultHandler(
-    ApplicationDbContext context,
-    ILogger<CreateUserResultHandler> logger,
-    IMediator mediator
-) : IResultCommandHandler<CreateUserResultCommand, User> {
-  public async Task<GameGuild.CQRS.Result<User>> Handle(CreateUserResultCommand request, CancellationToken cancellationToken) {
+/// <summary> Enhanced handler for creating a new user using Result<T> pattern for better error handling </summary>
+public class CreateUserResultHandler(ApplicationDbContext context, ILogger<CreateUserResultHandler> logger, IMediator mediator) : IResultCommandHandler<CreateUserResultCommand, User> {
+  public async Task<CQRS.Result<User>> Handle(CreateUserResultCommand request, CancellationToken cancellationToken) {
     try {
       // Check if email already exists
-      var existingUser = await context.Users
-                                  .FirstOrDefaultAsync(user => user.Email == request.Email, cancellationToken);
+      var existingUser = await context.Users.FirstOrDefaultAsync(user => user.Email == request.Email, cancellationToken);
 
-      if (existingUser != null) {
-        return GameGuild.CQRS.Result.Failure<User>(CqrsError.Conflict("Users.EmailExists", $"User with email {request.Email} already exists"));
-      }
+      if (existingUser != null) { return CQRS.Result.Failure<User>(CqrsError.Conflict("Users.EmailExists", $"User with email {request.Email} already exists")); }
 
       // Generate unique username from name using slugify
       var baseUsername = request.Name.ToSlugCase();
-      var existingUsernames = await context.Users
-                                          .Where(u => u.Username.StartsWith(baseUsername))
-                                          .Select(u => u.Username)
-                                          .ToListAsync(cancellationToken);
+      var existingUsernames = await context.Users.Where(u => u.Username.StartsWith(baseUsername)).Select(u => u.Username).ToListAsync(cancellationToken);
 
       var uniqueUsername = SlugCase.GenerateUnique(request.Name, existingUsernames, 50);
 
       // Normalize negative balance to zero - business rule
       var normalizedBalance = Math.Max(0, request.InitialBalance);
 
-      var user = new User {
-        Name = request.Name,
-        Username = uniqueUsername,
-        Email = request.Email,
-        IsActive = request.IsActive,
-        Balance = normalizedBalance,
-        AvailableBalance = normalizedBalance,
-      };
+      var user = new User { Name = request.Name, Username = uniqueUsername, Email = request.Email, IsActive = request.IsActive, Balance = normalizedBalance, AvailableBalance = normalizedBalance };
 
       context.Users.Add(user);
       await context.SaveChangesAsync(cancellationToken);
@@ -54,15 +33,17 @@ public class CreateUserResultHandler(
       // Publish domain event
       await mediator.Publish(new UserCreatedEvent(user.Id, user.Email, user.Name, user.CreatedAt), cancellationToken);
 
-      return GameGuild.CQRS.Result.Success(user);
+      return CQRS.Result.Success(user);
     }
     catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate key") == true) {
       logger.LogWarning(ex, "Attempted to create user with duplicate data");
-      return GameGuild.CQRS.Result.Failure<User>(CqrsError.Conflict("Users.DuplicateData", "A user with this information already exists"));
+
+      return CQRS.Result.Failure<User>(CqrsError.Conflict("Users.DuplicateData", "A user with this information already exists"));
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error creating user with email {Email}", request.Email);
-      return GameGuild.CQRS.Result.Failure<User>(CqrsError.Create("Users.CreateFailed", "An error occurred while creating the user"));
+
+      return CQRS.Result.Failure<User>(CqrsError.Create("Users.CreateFailed", "An error occurred while creating the user"));
     }
   }
 }

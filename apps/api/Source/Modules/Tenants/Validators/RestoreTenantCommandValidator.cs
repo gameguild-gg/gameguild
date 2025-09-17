@@ -3,13 +3,7 @@
 
 namespace GameGuild.Modules.Tenants;
 
-/// <summary>
-/// Validator for RestoreTenantCommand
-/// </summary>
+/// <summary> Validator for RestoreTenantCommand </summary>
 public class RestoreTenantCommandValidator : AbstractValidator<RestoreTenantCommand> {
-  public RestoreTenantCommandValidator() {
-    RuleFor(x => x.Id)
-      .NotEmpty()
-      .WithMessage("Tenant ID is required");
-  }
+  public RestoreTenantCommandValidator() { RuleFor(x => x.Id).NotEmpty().WithMessage("Tenant ID is required"); }
 }

@@ -1,36 +1,36 @@
-namespace GameGuild.Modules.Authentication {
-  public interface IAuthService {
-    Task<SignInResponseDto> LocalSignInAsync(LocalSignInRequestDto request);
+namespace GameGuild.Modules.Authentication;
 
-    Task<SignInResponseDto> LocalSignUpAsync(LocalSignUpRequestDto request);
+public interface IAuthService {
+  Task<SignInResponseDto> LocalSignInAsync(LocalSignInRequestDto request);
 
-    // Return a full SignInResponseDto on refresh for consistency with sign-in endpoints
-    Task<SignInResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request);
+  Task<SignInResponseDto> LocalSignUpAsync(LocalSignUpRequestDto request);
 
-    Task RevokeRefreshTokenAsync(string token, string ipAddress);
+  // Return a full SignInResponseDto on refresh for consistency with sign-in endpoints
+  Task<SignInResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request);
 
-    Task<SignInResponseDto> GitHubSignInAsync(OAuthSignInRequestDto request);
+  Task RevokeRefreshTokenAsync(string token, string ipAddress);
 
-    Task<SignInResponseDto> GoogleSignInAsync(OAuthSignInRequestDto request);
+  Task<SignInResponseDto> GitHubSignInAsync(OAuthSignInRequestDto request);
 
-    Task<SignInResponseDto> GoogleIdTokenSignInAsync(GoogleIdTokenRequestDto request);
+  Task<SignInResponseDto> GoogleSignInAsync(OAuthSignInRequestDto request);
 
-    Task<string> GetGitHubAuthUrlAsync(string redirectUri);
+  Task<SignInResponseDto> GoogleIdTokenSignInAsync(GoogleIdTokenRequestDto request);
 
-    Task<string> GetGoogleAuthUrlAsync(string redirectUri);
+  Task<string> GetGitHubAuthUrlAsync(string redirectUri);
 
-    Task<Web3ChallengeResponseDto> GenerateWeb3ChallengeAsync(Web3ChallengeRequestDto request);
+  Task<string> GetGoogleAuthUrlAsync(string redirectUri);
 
-    Task<SignInResponseDto> VerifyWeb3SignatureAsync(Web3VerifyRequestDto request);
+  Task<Web3ChallengeResponseDto> GenerateWeb3ChallengeAsync(Web3ChallengeRequestDto request);
 
-    Task<EmailOperationResponseDto> SendEmailVerificationAsync(SendEmailVerificationRequestDto request);
+  Task<SignInResponseDto> VerifyWeb3SignatureAsync(Web3VerifyRequestDto request);
 
-    Task<EmailOperationResponseDto> VerifyEmailAsync(VerifyEmailRequestDto request);
+  Task<EmailOperationResponseDto> SendEmailVerificationAsync(SendEmailVerificationRequestDto request);
 
-    Task<EmailOperationResponseDto> ForgotPasswordAsync(ForgotPasswordRequestDto request);
+  Task<EmailOperationResponseDto> VerifyEmailAsync(VerifyEmailRequestDto request);
 
-    Task<EmailOperationResponseDto> ResetPasswordAsync(ResetPasswordRequestDto request);
+  Task<EmailOperationResponseDto> ForgotPasswordAsync(ForgotPasswordRequestDto request);
 
-    Task<EmailOperationResponseDto> ChangePasswordAsync(ChangePasswordRequestDto request, Guid userId);
-  }
+  Task<EmailOperationResponseDto> ResetPasswordAsync(ResetPasswordRequestDto request);
+
+  Task<EmailOperationResponseDto> ChangePasswordAsync(ChangePasswordRequestDto request, Guid userId);
 }
