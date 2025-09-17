@@ -24,7 +24,7 @@ public class Tenant : Resource
   /// Description of the tenant
   /// </summary>
   [MaxLength(500)]
-  public string? Description { get; set; }
+  public new string? Description { get; set; }
 
   /// <summary>
   /// Whether this tenant is currently active
