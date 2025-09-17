@@ -6,9 +6,9 @@ namespace GameGuild.Modules.Projects;
 /// <summary>
 /// Query to get all projects
 /// </summary>
-public record GetAllProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
+public record GetAllProjectsQuery : CQRS.IRequest<IEnumerable<Project>>
 {
-  public Common.ProjectType? Type { get; init; }
+  public ProjectType? Type { get; init; }
 
   public ContentStatus? Status { get; init; }
 
@@ -36,7 +36,7 @@ public record GetAllProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>
 /// <summary>
 /// Query to get project by ID
 /// </summary>
-public record GetProjectByIdQuery : GameGuild.CQRS.IRequest<Project?>
+public record GetProjectByIdQuery : CQRS.IRequest<Project?>
 {
   public Guid ProjectId { get; init; }
 
@@ -52,7 +52,7 @@ public record GetProjectByIdQuery : GameGuild.CQRS.IRequest<Project?>
 /// <summary>
 /// Query to get project by slug
 /// </summary>
-public record GetProjectBySlugQuery : GameGuild.CQRS.IRequest<Project?>
+public record GetProjectBySlugQuery : CQRS.IRequest<Project?>
 {
   public string Slug { get; init; } = string.Empty;
 
@@ -66,7 +66,7 @@ public record GetProjectBySlugQuery : GameGuild.CQRS.IRequest<Project?>
 /// <summary>
 /// Query to get projects by category
 /// </summary>
-public record GetProjectsByCategoryQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
+public record GetProjectsByCategoryQuery : CQRS.IRequest<IEnumerable<Project>>
 {
   public Guid CategoryId { get; init; }
 
@@ -80,7 +80,7 @@ public record GetProjectsByCategoryQuery : GameGuild.CQRS.IRequest<IEnumerable<P
 /// <summary>
 /// Query to get projects by creator
 /// </summary>
-public record GetProjectsByCreatorQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
+public record GetProjectsByCreatorQuery : CQRS.IRequest<IEnumerable<Project>>
 {
   public Guid CreatorId { get; init; }
 
@@ -94,11 +94,11 @@ public record GetProjectsByCreatorQuery : GameGuild.CQRS.IRequest<IEnumerable<Pr
 /// <summary>
 /// Query to get projects by status
 /// </summary>
-public record GetProjectsByStatusQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
+public record GetProjectsByStatusQuery : CQRS.IRequest<IEnumerable<Project>>
 {
   public ContentStatus Status { get; init; }
 
-  public Common.ProjectType? Type { get; init; }
+  public ProjectType? Type { get; init; }
 
   public int Skip { get; init; } = 0;
 
@@ -108,7 +108,7 @@ public record GetProjectsByStatusQuery : GameGuild.CQRS.IRequest<IEnumerable<Pro
 /// <summary>
 /// Query to get deleted projects (admin only)
 /// </summary>
-public record GetDeletedProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
+public record GetDeletedProjectsQuery : CQRS.IRequest<IEnumerable<Project>>
 {
   public int Skip { get; init; } = 0;
 
@@ -118,11 +118,11 @@ public record GetDeletedProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Proj
 /// <summary>
 /// Query to search projects
 /// </summary>
-public record SearchProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
+public record SearchProjectsQuery : CQRS.IRequest<IEnumerable<Project>>
 {
   public string SearchTerm { get; init; } = string.Empty;
 
-  public Common.ProjectType? Type { get; init; }
+  public ProjectType? Type { get; init; }
 
   public Guid? CategoryId { get; init; }
 
@@ -144,7 +144,7 @@ public record SearchProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>
 /// <summary>
 /// Query to get project statistics
 /// </summary>
-public record GetProjectStatisticsQuery : GameGuild.CQRS.IRequest<ProjectStatistics>
+public record GetProjectStatisticsQuery : CQRS.IRequest<ProjectStatistics>
 {
   public Guid ProjectId { get; init; }
 
@@ -156,9 +156,9 @@ public record GetProjectStatisticsQuery : GameGuild.CQRS.IRequest<ProjectStatist
 /// <summary>
 /// Query to get popular projects
 /// </summary>
-public record GetPopularProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
+public record GetPopularProjectsQuery : CQRS.IRequest<IEnumerable<Project>>
 {
-  public Common.ProjectType? Type { get; init; }
+  public ProjectType? Type { get; init; }
 
   public TimeSpan? TimeWindow { get; init; } = TimeSpan.FromDays(30);
 
@@ -168,9 +168,9 @@ public record GetPopularProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Proj
 /// <summary>
 /// Query to get recent projects
 /// </summary>
-public record GetRecentProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
+public record GetRecentProjectsQuery : CQRS.IRequest<IEnumerable<Project>>
 {
-  public Common.ProjectType? Type { get; init; }
+  public ProjectType? Type { get; init; }
 
   public int Take { get; init; } = 10;
 }
@@ -178,9 +178,9 @@ public record GetRecentProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Proje
 /// <summary>
 /// Query to get featured projects
 /// </summary>
-public record GetFeaturedProjectsQuery : GameGuild.CQRS.IRequest<IEnumerable<Project>>
+public record GetFeaturedProjectsQuery : CQRS.IRequest<IEnumerable<Project>>
 {
-  public Common.ProjectType? Type { get; init; }
+  public ProjectType? Type { get; init; }
 
   public int Take { get; init; } = 10;
 }
