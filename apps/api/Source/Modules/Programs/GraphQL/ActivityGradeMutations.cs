@@ -1,3 +1,4 @@
+using GameGuild.Authorization;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Permissions;
 
@@ -14,7 +15,7 @@ public class ActivityGradeMutations {
   /// Grade a content interaction (create or update existing grade)
   /// Requires Edit permission on the parent Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ActivityGradeResult> GradeActivity(
     Guid programId,
     CreateActivityGradeInput input,
@@ -46,7 +47,7 @@ public class ActivityGradeMutations {
   /// Update an existing grade
   /// Requires Edit permission on the parent Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ActivityGradeResult> UpdateActivityGrade(
     Guid programId,
     UpdateActivityGradeInput input,
@@ -76,7 +77,7 @@ public class ActivityGradeMutations {
   /// Delete a grade
   /// Requires Delete permission on the parent Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Delete, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Delete, "programId")]
   public async Task<ActivityGradeResult> DeleteActivityGrade(
     Guid programId,
     Guid gradeId,

@@ -1,5 +1,6 @@
 using GameGuild.GraphQL;
 using GameGuild.Modules.Permissions;
+using GameGuild.Authorization;
 
 
 namespace GameGuild.Modules.Programs;
@@ -14,7 +15,7 @@ public class ActivityGradeQueries {
   /// Get grade for a specific content interaction using CQRS pattern
   /// Requires Read permission on the parent Program
   /// </summary>
-  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GameGuild.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActivityGrade?> GetActivityGrade(
     Guid programId,
     Guid contentInteractionId,
@@ -34,7 +35,7 @@ public class ActivityGradeQueries {
   /// Get grade by its ID
   /// Requires Read permission on the parent Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Program>(PermissionType.Read, "programId")]
   public async Task<ActivityGrade?> GetActivityGradeById(
     Guid programId,
     Guid gradeId,
@@ -52,7 +53,7 @@ public class ActivityGradeQueries {
   /// Get all grades given by a specific grader
   /// Requires Read permission on the parent Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Program>(PermissionType.Read, "programId")]
   public async Task<IEnumerable<ActivityGrade>> GetGradesByGrader(
     Guid programId,
     Guid graderProgramUserId,
@@ -68,7 +69,7 @@ public class ActivityGradeQueries {
   /// Get all grades received by a specific student
   /// Requires Read permission on the parent Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Program>(PermissionType.Read, "programId")]
   public async Task<IEnumerable<ActivityGrade>> GetGradesByStudent(
     Guid programId,
     Guid programUserId,
@@ -84,7 +85,7 @@ public class ActivityGradeQueries {
   /// Get all grades for a specific content item
   /// Requires Read permission on the parent Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Program>(PermissionType.Read, "programId")]
   public async Task<IEnumerable<ActivityGrade>> GetGradesByContent(
     Guid programId,
     Guid contentId,
@@ -103,7 +104,7 @@ public class ActivityGradeQueries {
   /// Get content interactions that need grading (submitted but not yet graded)
   /// Requires Read permission on the parent Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Program>(PermissionType.Read, "programId")]
   public async Task<IEnumerable<ContentInteraction>> GetPendingGrades(
     Guid programId,
     [Service] IActivityGradeService activityGradeService
@@ -115,7 +116,7 @@ public class ActivityGradeQueries {
   /// Get grade statistics for a program
   /// Requires Read permission on the parent Program
   /// </summary>
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Program>(PermissionType.Read, "programId")]
   public async Task<ActivityGradeStatistics> GetGradeStatistics(
     Guid programId,
     [Service] IActivityGradeService activityGradeService
