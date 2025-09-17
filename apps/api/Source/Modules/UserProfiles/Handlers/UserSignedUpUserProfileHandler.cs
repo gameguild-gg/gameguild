@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using IMediator = GameGuild.CQRS.IMediator;
 
 namespace GameGuild.Modules.UserProfiles;
 
