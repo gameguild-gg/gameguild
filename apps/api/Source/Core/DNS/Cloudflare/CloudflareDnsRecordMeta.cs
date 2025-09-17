@@ -1,7 +1,7 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 
-namespace GameGuild.DNS.Cloudfare;
+namespace GameGuild.DNS.Cloudflare;
 
 /// <summary>
 /// Cloudflare DNS record metadata.

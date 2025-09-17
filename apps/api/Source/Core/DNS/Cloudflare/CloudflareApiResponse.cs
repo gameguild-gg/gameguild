@@ -1,7 +1,18 @@
 using System.Text.Json.Serialization;
 
 
-namespace GameGuild.DNS.Cloudfare;
+namespace GameGuild.DNS.Cloudflare;
+
+/// <summary>
+/// Cloudflare API response model
+/// </summary>
+public class CloudflareApiResponse {
+  public bool Success { get; set; }
+
+  public List<string>? Errors { get; set; }
+
+  public List<string>? Messages { get; set; }
+}
 
 /// <summary>
 /// Cloudflare API response wrapper.

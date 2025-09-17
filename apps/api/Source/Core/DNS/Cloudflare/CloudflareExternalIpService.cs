@@ -2,12 +2,10 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using GameGuild.Configuration;
-using GameGuild.Models.Cloudflare;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
 
 
-namespace GameGuild.Services;
+namespace GameGuild.DNS.Cloudflare;
 
 /// <summary>
 /// Service that periodically checks external IP and updates Cloudflare DNS records.
@@ -22,7 +20,7 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
 
   private readonly Timer? _timer;
 
-  private readonly SemaphoreSlim _semaphore = new(1, 1);
+  private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
   private bool _isRunning;
 
@@ -34,7 +32,7 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
 
   private int _currentServiceIndex;
 
-  private readonly Random _random = new();
+  private readonly Random _random = new Random();
 
   public CloudflareExternalIpService(ILogger<CloudflareExternalIpService> logger, IOptions<CloudflareDynamicDnsOptions> options, HttpClient httpClient) {
     _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -64,317 +62,244 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
 
   public async Task StartAsync(CancellationToken cancellationToken = default) {
     if (!_isEnabled) {
-      _logger.LogWarning("Cloudflare Dynamic DNS service is disabled due to configuration issues");
+      _logger.LogWarning("Cloudflare Dynamic DNS service is disabled in configuration");
 
       return;
     }
 
-    _isRunning = true;
-    _logger.LogInformation("Cloudflare Dynamic DNS service started");
+    if (_isRunning) {
+      _logger.LogWarning("Cloudflare Dynamic DNS service is already running");
 
-    // Perform initial update
-    await UpdateExternalIpAsync(cancellationToken);
+      return;
+    }
+
+    try {
+      await _semaphore.WaitAsync(cancellationToken);
+      _isRunning = true;
+      _logger.LogInformation("Cloudflare Dynamic DNS service started");
+    }
+    finally { _semaphore.Release(); }
   }
 
-  public Task StopAsync(CancellationToken cancellationToken = default) {
-    _isRunning = false;
-    _timer?.Dispose();
-    _logger.LogInformation("Cloudflare Dynamic DNS service stopped");
+  public async Task StopAsync(CancellationToken cancellationToken = default) {
+    if (!_isRunning) { return; }
 
-    return Task.CompletedTask;
+    try {
+      await _semaphore.WaitAsync(cancellationToken);
+      _isRunning = false;
+      _timer?.Change(Timeout.Infinite, Timeout.Infinite);
+      _logger.LogInformation("Cloudflare Dynamic DNS service stopped");
+    }
+    finally { _semaphore.Release(); }
   }
 
   public async Task UpdateExternalIpAsync(CancellationToken cancellationToken = default) {
-    if (!_isEnabled || !_isRunning) return;
-
-    await _semaphore.WaitAsync(cancellationToken);
+    if (!_isEnabled || !_isRunning) { return; }
 
     try {
-      _logger.LogDebug("Checking external IP address");
+      await _semaphore.WaitAsync(cancellationToken);
 
       var currentIp = await GetExternalIpAsync(cancellationToken);
 
-      if (string.IsNullOrEmpty(currentIp)) {
+      if (string.IsNullOrWhiteSpace(currentIp)) {
         _logger.LogWarning("Failed to retrieve external IP address");
 
         return;
       }
 
       if (currentIp == _lastKnownIp) {
-        _logger.LogDebug("External IP unchanged: {CurrentIp}", currentIp);
+        _logger.LogDebug("External IP address unchanged: {IpAddress}", currentIp);
 
         return;
       }
 
       _logger.LogInformation("External IP address changed from {OldIp} to {NewIp}. Updating DNS records...", _lastKnownIp ?? "unknown", currentIp);
 
-      // Update all configured DNS records
-      var updateTasks = _options.DnsRecords.Select(record => UpdateDnsRecordAsync(record, currentIp, cancellationToken));
+      var success = await UpdateCloudflareRecordsAsync(currentIp, cancellationToken);
 
-      var results = await Task.WhenAll(updateTasks);
-
-      if (results.All(success => success)) {
+      if (success) {
         _lastKnownIp = currentIp;
         _lastUpdate = DateTime.UtcNow;
-        _logger.LogInformation("Successfully updated all DNS records with IP {CurrentIp}", currentIp);
+        _logger.LogInformation("Successfully updated Cloudflare DNS records with IP: {IpAddress}", currentIp);
       }
-      else { _logger.LogWarning("Some DNS record updates failed"); }
+      else { _logger.LogError("Failed to update Cloudflare DNS records"); }
     }
-    catch (Exception ex) { _logger.LogError(ex, "Error updating external IP"); }
+    catch (Exception ex) { _logger.LogError(ex, "Error during external IP update process"); }
     finally { _semaphore.Release(); }
   }
 
   public async Task<string?> GetExternalIpAsync(CancellationToken cancellationToken = default) {
-    var enabledServices = _options.ExternalIpServices.Where(s => s.Enabled).ToList();
+    var services = GetShuffledIpServices();
 
-    if (!enabledServices.Any()) {
-      _logger.LogError("No enabled external IP services configured");
+    foreach (var service in services) {
+      try {
+        var response = await _httpClient.GetStringAsync(service, cancellationToken);
+        var cleanIp = CleanIpAddress(response);
 
-      return null;
-    }
+        if (IsValidIpAddress(cleanIp)) {
+          _logger.LogDebug("Retrieved external IP {IpAddress} from service {Service}", cleanIp, service);
 
-    // Start from current service index and try all services
-    for (var attempt = 0; attempt < enabledServices.Count; attempt++) {
-      var service = enabledServices[_currentServiceIndex];
-      var ip = await TryGetExternalIpFromServiceAsync(service, cancellationToken);
-
-      if (!string.IsNullOrEmpty(ip)) {
-        // Move to next service for next time (rotation)
-        _currentServiceIndex = (_currentServiceIndex + 1) % enabledServices.Count;
-
-        return ip;
+          return cleanIp;
+        }
       }
-
-      // Move to next service and try again
-      _currentServiceIndex = (_currentServiceIndex + 1) % enabledServices.Count;
-      _logger.LogWarning("Failed to get IP from {ServiceName}, trying next service", service.Name);
+      catch (Exception ex) { _logger.LogWarning(ex, "Failed to get IP from service {Service}", service); }
     }
 
-    _logger.LogError("All external IP services failed");
+    _logger.LogError("Failed to retrieve external IP from all services");
 
     return null;
   }
 
-  private async Task<string?> TryGetExternalIpFromServiceAsync(ExternalIpServiceConfiguration service, CancellationToken cancellationToken) {
+  #region Private Methods
+
+  private void ValidateConfiguration() {
+    _isEnabled = !string.IsNullOrWhiteSpace(_options.ApiToken) && !string.IsNullOrWhiteSpace(_options.ZoneId) && _options.Records != null && _options.Records.Count != 0;
+
+    if (!_isEnabled) {
+      _logger.LogWarning("Cloudflare Dynamic DNS service is disabled due to missing configuration");
+
+      return;
+    }
+
+    if (_options.IntervalMinutes < 1) {
+      _logger.LogWarning("Invalid interval configured, using default of 5 minutes");
+      _options.IntervalMinutes = 5;
+    }
+
+    if (_options.TimeoutSeconds < 5) {
+      _logger.LogWarning("Invalid timeout configured, using default of 10 seconds");
+      _options.TimeoutSeconds = 10;
+    }
+
+    _logger.LogInformation("Cloudflare Dynamic DNS service configured for zone {ZoneId} with {RecordCount} records", _options.ZoneId, _options.Records.Count);
+  }
+
+  private List<string> GetShuffledIpServices() {
+    var services = new List<string> { "https://api.ipify.org", "https://icanhazip.com", "https://ipecho.net/plain", "https://myexternalip.com/raw", "https://ifconfig.me/ip", "https://ident.me" };
+
+    // Shuffle the list for load balancing
+    return services.OrderBy(_ => _random.Next()).ToList();
+  }
+
+  private static string CleanIpAddress(string response) { return response.Trim().Split('\n')[0].Trim(); }
+
+  private static bool IsValidIpAddress(string? ipAddress) { return !string.IsNullOrWhiteSpace(ipAddress) && IPAddress.TryParse(ipAddress, out _); }
+
+  private async Task<bool> UpdateCloudflareRecordsAsync(string ipAddress, CancellationToken cancellationToken) {
+    var allSuccess = true;
+
+    foreach (var record in _options.Records) {
+      try {
+        var success = await UpdateSingleRecordAsync(record, ipAddress, cancellationToken);
+
+        if (success) continue;
+
+        allSuccess = false;
+        _logger.LogError("Failed to update DNS record {RecordName}", record.Name);
+      }
+      catch (Exception ex) {
+        allSuccess = false;
+        _logger.LogError(ex, "Error updating DNS record {RecordName}", record.Name);
+      }
+    }
+
+    return allSuccess;
+  }
+
+  private async Task<bool> UpdateSingleRecordAsync(CloudflareDnsRecord record, string ipAddress, CancellationToken cancellationToken) {
     try {
-      _logger.LogDebug("Fetching external IP from {ServiceName} ({ServiceUrl})", service.Name, service.Url);
+      // First, get the current record to obtain its ID
+      var recordId = await GetRecordIdAsync(record.Name, cancellationToken);
 
-      using var httpClient = new HttpClient();
-      httpClient.Timeout = TimeSpan.FromSeconds(service.TimeoutSeconds);
-      httpClient.DefaultRequestHeaders.Add("User-Agent", "GameGuild-DynamicDNS/1.0");
+      if (string.IsNullOrWhiteSpace(recordId)) {
+        _logger.LogError("Could not find DNS record ID for {RecordName}", record.Name);
 
-      var response = await httpClient.GetStringAsync(service.Url, cancellationToken);
-
-      string? ip = null;
-
-      if (service.ResponseFormat == ExternalIpResponseFormat.PlainText) { ip = response.Trim(); }
-      else if (service.ResponseFormat == ExternalIpResponseFormat.Json && !string.IsNullOrEmpty(service.JsonPath)) {
-        try {
-          var json = JObject.Parse(response);
-          var token = json.SelectToken(service.JsonPath);
-          ip = token?.ToString();
-        }
-        catch (Exception ex) {
-          _logger.LogWarning(ex, "Failed to parse JSON response from {ServiceName} using path {JsonPath}", service.Name, service.JsonPath);
-
-          return null;
-        }
+        return false;
       }
 
-      if (string.IsNullOrWhiteSpace(ip)) {
-        _logger.LogWarning("Empty or null IP received from {ServiceName}", service.Name);
+      // Update the record
+      var updateUrl = $"https://api.cloudflare.com/client/v4/zones/{_options.ZoneId}/dns_records/{recordId}";
+      var updatePayload = new { type = "A", name = record.Name, content = ipAddress, ttl = record.Ttl };
+
+      var json = JsonSerializer.Serialize(updatePayload);
+      var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+      var request = new HttpRequestMessage(HttpMethod.Put, updateUrl) { Content = content };
+      request.Headers.Add("Authorization", $"Bearer {_options.ApiToken}");
+
+      var response = await _httpClient.SendAsync(request, cancellationToken);
+      var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+      if (!response.IsSuccessStatusCode) {
+        _logger.LogError("Cloudflare API returned error {StatusCode} for record {RecordName}: {Response}", response.StatusCode, record.Name, responseBody);
+
+        return false;
+      }
+
+      var result = JsonSerializer.Deserialize<CloudflareApiResponse>(responseBody);
+
+      if (result?.Success == true) {
+        _logger.LogInformation("Successfully updated DNS record {RecordName} to {IpAddress}", record.Name, ipAddress);
+
+        return true;
+      }
+
+      _logger.LogError("Cloudflare API returned success=false for record {RecordName}: {Response}", record.Name, responseBody);
+
+      return false;
+    }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Exception while updating DNS record {RecordName}", record.Name);
+
+      return false;
+    }
+  }
+
+  private async Task<string?> GetRecordIdAsync(string recordName, CancellationToken cancellationToken) {
+    try {
+      var url = $"https://api.cloudflare.com/client/v4/zones/{_options.ZoneId}/dns_records?name={recordName}&type=A";
+      var request = new HttpRequestMessage(HttpMethod.Get, url);
+      request.Headers.Add("Authorization", $"Bearer {_options.ApiToken}");
+
+      var response = await _httpClient.SendAsync(request, cancellationToken);
+      var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+      if (!response.IsSuccessStatusCode) {
+        _logger.LogError("Failed to get record ID for {RecordName}. Status: {StatusCode}, Response: {Response}", recordName, response.StatusCode, responseBody);
 
         return null;
       }
 
-      if (IPAddress.TryParse(ip, out _)) {
-        _logger.LogDebug("Retrieved external IP from {ServiceName}: {ExternalIp}", service.Name, ip);
+      var result = JsonSerializer.Deserialize<CloudflareListResponse>(responseBody);
 
-        return ip;
-      }
+      if (result is { Success: true, Result.Count: > 0 }) { return result.Result[0].Id; }
 
-      _logger.LogWarning("Invalid IP address received from {ServiceName}: {Response}", service.Name, ip);
+      _logger.LogWarning("No DNS record found with name {RecordName}", recordName);
 
       return null;
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Failed to retrieve external IP from {ServiceName} ({ServiceUrl})", service.Name, service.Url);
+      _logger.LogError(ex, "Exception while getting record ID for {RecordName}", recordName);
 
       return null;
     }
   }
 
-  private async Task<bool> UpdateDnsRecordAsync(DnsRecordConfiguration config, string ipAddress, CancellationToken cancellationToken) {
-    try {
-      _logger.LogDebug("Updating DNS record {RecordName} ({RecordType}) with IP {IpAddress}", config.Name, config.Type, ipAddress);
+  #endregion
 
-      // First, get existing records to find the record ID
-      var existingRecord = await GetDnsRecordAsync(config, cancellationToken);
-
-      if (existingRecord != null) {
-        // Check if the IP address is different before updating
-        if (existingRecord.Content == ipAddress) {
-          _logger.LogDebug("DNS record {RecordName} ({RecordType}) already has IP {IpAddress}, skipping update", config.Name, config.Type, ipAddress);
-
-          return true; // No update needed, but consider it successful
-        }
-
-        // Update existing record with new IP
-        return await UpdateExistingDnsRecordAsync(existingRecord.Id, config, ipAddress, cancellationToken);
-      }
-      else {
-        // Create new record
-        return await CreateDnsRecordAsync(config, ipAddress, cancellationToken);
-      }
-    }
-    catch (Exception ex) {
-      _logger.LogError(ex, "Failed to update DNS record {RecordName} ({RecordType})", config.Name, config.Type);
-
-      return false;
-    }
-  }
-
-  private async Task<CloudflareDnsRecord?> GetDnsRecordAsync(DnsRecordConfiguration config, CancellationToken cancellationToken) {
-    var url = $"https://api.cloudflare.com/client/v4/zones/{_options.ZoneId}/dns_records?name={config.Name}&type={config.Type}";
-
-    using var request = new HttpRequestMessage(HttpMethod.Get, url);
-    request.Headers.Add("Authorization", $"Bearer {_options.ApiToken}");
-
-    var response = await _httpClient.SendAsync(request, cancellationToken);
-    var content = await response.Content.ReadAsStringAsync(cancellationToken);
-
-    if (!response.IsSuccessStatusCode) {
-      _logger.LogError("Failed to get DNS records. Status: {StatusCode}, Response: {Response}", response.StatusCode, content);
-
-      return null;
-    }
-
-    var apiResponse = JsonSerializer.Deserialize<CloudflareApiResponse<List<CloudflareDnsRecord>>>(content);
-
-    if (apiResponse?.Success != true) {
-      _logger.LogError("Cloudflare API returned errors: {Errors}", string.Join(", ", apiResponse?.Errors?.Select(e => e.Message) ?? new[ ] { "Unknown error" }));
-
-      return null;
-    }
-
-    return apiResponse.Result?.FirstOrDefault();
-  }
-
-  private async Task<bool> UpdateExistingDnsRecordAsync(string recordId, DnsRecordConfiguration config, string ipAddress, CancellationToken cancellationToken) {
-    var url = $"https://api.cloudflare.com/client/v4/zones/{_options.ZoneId}/dns_records/{recordId}";
-
-    var requestData = new CloudflareDnsRecordRequest { Type = config.Type, Name = config.Name, Content = ipAddress, Ttl = config.Ttl, Proxied = config.Proxied, Comment = "Updated by GameGuild Dynamic DNS Service" };
-
-    var json = JsonSerializer.Serialize(requestData);
-    using var request = new HttpRequestMessage(HttpMethod.Put, url) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
-    request.Headers.Add("Authorization", $"Bearer {_options.ApiToken}");
-
-    var response = await _httpClient.SendAsync(request, cancellationToken);
-    var content = await response.Content.ReadAsStringAsync(cancellationToken);
-
-    if (!response.IsSuccessStatusCode) {
-      _logger.LogError("Failed to update DNS record {RecordId}. Status: {StatusCode}, Response: {Response}", recordId, response.StatusCode, content);
-
-      return false;
-    }
-
-    var apiResponse = JsonSerializer.Deserialize<CloudflareApiResponse<CloudflareDnsRecord>>(content);
-
-    if (apiResponse?.Success != true) {
-      _logger.LogError("Cloudflare API returned errors while updating record {RecordId}: {Errors}", recordId, string.Join(", ", apiResponse?.Errors?.Select(e => e.Message) ?? new[ ] { "Unknown error" }));
-
-      return false;
-    }
-
-    _logger.LogInformation("Successfully updated DNS record {RecordName} ({RecordType}) with IP {IpAddress}", config.Name, config.Type, ipAddress);
-
-    return true;
-  }
-
-  private async Task<bool> CreateDnsRecordAsync(DnsRecordConfiguration config, string ipAddress, CancellationToken cancellationToken) {
-    var url = $"https://api.cloudflare.com/client/v4/zones/{_options.ZoneId}/dns_records";
-
-    var requestData = new CloudflareDnsRecordRequest { Type = config.Type, Name = config.Name, Content = ipAddress, Ttl = config.Ttl, Proxied = config.Proxied, Comment = "Created by GameGuild Dynamic DNS Service" };
-
-    var json = JsonSerializer.Serialize(requestData);
-    using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
-    request.Headers.Add("Authorization", $"Bearer {_options.ApiToken}");
-
-    var response = await _httpClient.SendAsync(request, cancellationToken);
-    var content = await response.Content.ReadAsStringAsync(cancellationToken);
-
-    if (!response.IsSuccessStatusCode) {
-      _logger.LogError("Failed to create DNS record {RecordName}. Status: {StatusCode}, Response: {Response}", config.Name, response.StatusCode, content);
-
-      return false;
-    }
-
-    var apiResponse = JsonSerializer.Deserialize<CloudflareApiResponse<CloudflareDnsRecord>>(content);
-
-    if (apiResponse?.Success != true) {
-      _logger.LogError("Cloudflare API returned errors while creating record {RecordName}: {Errors}", config.Name, string.Join(", ", apiResponse?.Errors?.Select(e => e.Message) ?? new[ ] { "Unknown error" }));
-
-      return false;
-    }
-
-    _logger.LogInformation("Successfully created DNS record {RecordName} ({RecordType}) with IP {IpAddress}", config.Name, config.Type, ipAddress);
-
-    return true;
-  }
-
-  private void ValidateConfiguration() {
-    // Debug logging to see what's actually being bound
-    _logger.LogInformation("Cloudflare Dynamic DNS configuration debug:");
-    _logger.LogInformation("  Enabled: {Enabled}", _options.Enabled);
-    _logger.LogInformation("  ApiToken: {ApiToken}", string.IsNullOrEmpty(_options.ApiToken) ? "NULL" : "SET");
-    _logger.LogInformation("  ZoneId: {ZoneId}", string.IsNullOrEmpty(_options.ZoneId) ? "NULL" : "SET");
-    _logger.LogInformation("  DnsRecords count: {Count}", _options.DnsRecords?.Count ?? 0);
-
-    if (_options.DnsRecords?.Any() == true) {
-      foreach (var (record, index) in _options.DnsRecords.Select((r, i) => (r, i))) {
-        _logger.LogInformation("  DNS Record {Index}: Type={Type}, Name={Name}, TTL={Ttl}, Proxied={Proxied}", index, record.Type, record.Name, record.Ttl, record.Proxied);
-      }
-    }
-    else { _logger.LogWarning("  No DNS records found! This indicates a configuration binding issue."); }
-
-    if (!_options.Enabled) {
-      _logger.LogInformation("Cloudflare Dynamic DNS service is disabled");
-      _isEnabled = false;
-
-      return;
-    }
-
-    if (!_options.IsValid()) {
-      var errors = _options.GetValidationErrors();
-      _logger.LogWarning("Cloudflare Dynamic DNS service disabled due to configuration errors: {Errors}", string.Join("; ", errors));
-      _isEnabled = false;
-
-      return;
-    }
-
-    var enabledServices = _options.ExternalIpServices.Where(s => s.Enabled).ToList();
-
-    if (!enabledServices.Any()) {
-      _logger.LogWarning("Cloudflare Dynamic DNS service disabled: no enabled external IP services configured");
-      _isEnabled = false;
-
-      return;
-    }
-
-    _isEnabled = true;
-
-    _logger.LogInformation(
-      "Cloudflare Dynamic DNS service configuration validated successfully. " + "Will update {RecordCount} DNS records every {IntervalMinutes} minutes using {ServiceCount} IP services: {ServiceNames}",
-      _options.DnsRecords.Count,
-      _options.IntervalMinutes,
-      enabledServices.Count,
-      string.Join(", ", enabledServices.Select(s => s.Name))
-    );
-  }
+  #region IDisposable
 
   public void Dispose() {
-    _timer?.Dispose();
-    _semaphore?.Dispose();
+    Dispose(true);
     GC.SuppressFinalize(this);
   }
+
+  protected virtual void Dispose(bool disposing) {
+    if (disposing) {
+      _timer?.Dispose();
+      _semaphore?.Dispose();
+    }
+  }
+
+  #endregion
 }
