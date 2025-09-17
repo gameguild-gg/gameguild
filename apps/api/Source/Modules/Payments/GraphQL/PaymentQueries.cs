@@ -44,7 +44,7 @@ public class PaymentQueries {
     int take = 50,
     CancellationToken cancellationToken = default
   ) {
-    if (!userContext.IsInRole("Admin")) { return Enumerable.Empty<Payment>(); }
+    if (!userContext.IsInRole("Admin")) { return []; }
 
     var query = new GetProductPaymentsQuery { ProductId = productId, Status = status, FromDate = fromDate, ToDate = toDate, Skip = skip, Take = Math.Min(take, 100) };
 

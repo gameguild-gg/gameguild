@@ -17,7 +17,7 @@ public class OpenApiServerVariableOptions {
   /// <summary>
   /// Possible values for the variable.
   /// </summary>
-  public string[ ] Enum { get; set; } = Array.Empty<string>();
+  public string[ ] Enum { get; set; } = [];
 
   /// <summary>
   /// Validates the server variable options.

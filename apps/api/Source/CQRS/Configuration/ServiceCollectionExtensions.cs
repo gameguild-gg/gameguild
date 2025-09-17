@@ -7,7 +7,7 @@ namespace GameGuild.CQRS;
 /// <summary> Extension methods for adding CQRS to the service collection </summary>
 public static class ServiceCollectionExtensions {
   /// <summary> Cached handler interface type definitions for faster lookup - O(1) performance </summary>
-  private static readonly HashSet<Type> HandlerInterfaceTypes = new HashSet<Type> {
+  private static readonly HashSet<Type> HandlerInterfaceTypes = [
     typeof(IRequestHandler<,>),
     typeof(IRequestHandler<>),
     typeof(IStreamRequestHandler<,>),
@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions {
     typeof(IResultCommandHandler<,>),
     typeof(IResultCommandHandler<>),
     typeof(IResultQueryHandler<,>),
-  };
+  ];
 
   /// <summary> Adds CQRS services to the service collection </summary>
   /// <param name="services"> Service collection </param>

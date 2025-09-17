@@ -62,7 +62,7 @@ public class OpenApiOptions {
   /// <summary>
   /// Custom servers to include in the OpenAPI document.
   /// </summary>
-  public OpenApiServerOptions[ ] Servers { get; set; } = Array.Empty<OpenApiServerOptions>();
+  public OpenApiServerOptions[ ] Servers { get; set; } = [];
 
   /// <summary>
   /// Validates the OpenAPI options.

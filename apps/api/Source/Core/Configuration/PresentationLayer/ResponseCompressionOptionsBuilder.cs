@@ -4,7 +4,7 @@
 public static class ResponseCompressionOptionsBuilder {
   /// <summary> Creates response compression options with default values. </summary>
   /// <returns> Default response compression options </returns>
-  public static ResponseCompressionOptions Create() { return new ResponseCompressionOptions { MimeTypes = new[ ] { "application/json", "text/plain" }, CompressionLevel = "Optimal" }; }
+  public static ResponseCompressionOptions Create() { return new ResponseCompressionOptions { MimeTypes = ["application/json", "text/plain"], CompressionLevel = "Optimal" }; }
 
   /// <summary> Creates response compression options from a specific configuration section. </summary>
   /// <param name="configuration"> The configuration to bind from </param>

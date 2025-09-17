@@ -9,7 +9,7 @@ namespace GameGuild.Modules.UserAchievements;
 [ExtendObjectType<Mutation>]
 public class AchievementMutations {
   /// <summary> Create a new achievement </summary>
-  [Authorize(Roles = new[ ] { "Admin", "Moderator" })]
+  [Authorize(Roles = ["Admin", "Moderator"])]
   public async Task<Achievement> CreateAchievement([Service] IMediator mediator, CreateAchievementInput input) {
     var command = new CreateAchievementCommand {
       Name = input.Name,
@@ -36,7 +36,7 @@ public class AchievementMutations {
   }
 
   /// <summary> Update an existing achievement </summary>
-  [Authorize(Roles = new[ ] { "Admin", "Moderator" })]
+  [Authorize(Roles = ["Admin", "Moderator"])]
   public async Task<Achievement> UpdateAchievement([Service] IMediator mediator, [Service] IUserContext userContext, UpdateAchievementInput input) {
     var command = new UpdateAchievementCommand {
       AchievementId = input.AchievementId,
@@ -61,7 +61,7 @@ public class AchievementMutations {
   }
 
   /// <summary> Delete an achievement </summary>
-  [Authorize(Roles = new[ ] { "Admin" })]
+  [Authorize(Roles = ["Admin"])]
   public async Task<bool> DeleteAchievement([Service] IMediator mediator, [Service] IUserContext userContext, Guid achievementId) {
     var command = new DeleteAchievementCommand { AchievementId = achievementId, UserId = userContext.UserId ?? Guid.Empty };
 
@@ -71,7 +71,7 @@ public class AchievementMutations {
   }
 
   /// <summary> Award an achievement to a user </summary>
-  [Authorize(Roles = new[ ] { "Admin", "Moderator" })]
+  [Authorize(Roles = ["Admin", "Moderator"])]
   public async Task<UserAchievement> AwardAchievement([Service] IMediator mediator, [Service] IUserContext userContext, [Service] ITenantContext tenantContext, AwardAchievementInput input) {
     var command = new AwardAchievementCommand {
       UserId = input.UserId,
@@ -106,7 +106,7 @@ public class AchievementMutations {
   }
 
   /// <summary> Revoke an achievement from a user </summary>
-  [Authorize(Roles = new[ ] { "Admin", "Moderator" })]
+  [Authorize(Roles = ["Admin", "Moderator"])]
   public async Task<bool> RevokeAchievement([Service] IMediator mediator, [Service] IUserContext userContext, RevokeAchievementInput input) {
     var command = new RevokeAchievementCommand { UserAchievementId = input.UserAchievementId, Reason = input.Reason, RevokedByUserId = userContext.UserId ?? Guid.Empty };
 
@@ -116,7 +116,7 @@ public class AchievementMutations {
   }
 
   /// <summary> Bulk award an achievement to multiple users </summary>
-  [Authorize(Roles = new[ ] { "Admin" })]
+  [Authorize(Roles = ["Admin"])]
   public async Task<List<UserAchievement>> BulkAwardAchievement([Service] IMediator mediator, [Service] IUserContext userContext, [Service] ITenantContext tenantContext, BulkAwardAchievementInput input) {
     var command = new BulkAwardAchievementCommand {
       AchievementId = input.AchievementId,

@@ -4,7 +4,7 @@
 public static class RateLimitingOptionsBuilder {
   /// <summary> Creates rate limiting options with default values. </summary>
   /// <returns> Default rate limiting options </returns>
-  public static RateLimitingOptions Create() { return new RateLimitingOptions { RequestsPerMinute = 60, BurstSize = 10, ExemptPaths = Array.Empty<string>() }; }
+  public static RateLimitingOptions Create() { return new RateLimitingOptions { RequestsPerMinute = 60, BurstSize = 10, ExemptPaths = [] }; }
 
   /// <summary> Creates rate limiting options from a specific configuration section. </summary>
   /// <param name="configuration"> The configuration to bind from </param>

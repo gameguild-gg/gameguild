@@ -65,11 +65,11 @@ public interface IResourcePermissionService {
 
 /// <summary> Request to share a resource with users </summary>
 public class ShareResourceRequest {
-  public string[ ] UserEmails { get; set; } = Array.Empty<string>();
+  public string[ ] UserEmails { get; set; } = [];
 
-  public Guid[ ] UserIds { get; set; } = Array.Empty<Guid>();
+  public Guid[ ] UserIds { get; set; } = [];
 
-  public PermissionType[ ] Permissions { get; set; } = Array.Empty<PermissionType>();
+  public PermissionType[ ] Permissions { get; set; } = [];
 
   public DateTime? ExpiresAt { get; set; }
 
@@ -84,7 +84,7 @@ public class ShareResourceRequest {
 public class InviteUserRequest {
   public string Email { get; set; } = string.Empty;
 
-  public PermissionType[ ] Permissions { get; set; } = Array.Empty<PermissionType>();
+  public PermissionType[ ] Permissions { get; set; } = [];
 
   public DateTime? ExpiresAt { get; set; }
 
@@ -99,7 +99,7 @@ public class ShareResult {
 
   public string? ErrorMessage { get; set; }
 
-  public List<UserShareResult> UserResults { get; set; } = new List<UserShareResult>();
+  public List<UserShareResult> UserResults { get; set; } = [];
 
   public Guid? ShareId { get; set; }
 }
@@ -129,7 +129,7 @@ public class ResourceUserPermission {
 
   public string? ProfilePictureUrl { get; set; }
 
-  public PermissionType[ ] Permissions { get; set; } = Array.Empty<PermissionType>();
+  public PermissionType[ ] Permissions { get; set; } = [];
 
   public DateTime GrantedAt { get; set; }
 
@@ -150,9 +150,9 @@ public class PermissionUpdateResult {
 
   public string? ErrorMessage { get; set; }
 
-  public PermissionType[ ] GrantedPermissions { get; set; } = Array.Empty<PermissionType>();
+  public PermissionType[ ] GrantedPermissions { get; set; } = [];
 
-  public PermissionType[ ] RevokedPermissions { get; set; } = Array.Empty<PermissionType>();
+  public PermissionType[ ] RevokedPermissions { get; set; } = [];
 }
 
 /// <summary> Result of an invitation operation </summary>
@@ -174,7 +174,7 @@ public class ResourceInvitation {
 
   public string Email { get; set; } = string.Empty;
 
-  public PermissionType[ ] Permissions { get; set; } = Array.Empty<PermissionType>();
+  public PermissionType[ ] Permissions { get; set; } = [];
 
   public DateTime InvitedAt { get; set; }
 
@@ -200,7 +200,7 @@ public class InvitationAcceptResult {
 
   public string? ErrorMessage { get; set; }
 
-  public PermissionType[ ] GrantedPermissions { get; set; } = Array.Empty<PermissionType>();
+  public PermissionType[ ] GrantedPermissions { get; set; } = [];
 }
 
 /// <summary> Result of declining an invitation </summary>

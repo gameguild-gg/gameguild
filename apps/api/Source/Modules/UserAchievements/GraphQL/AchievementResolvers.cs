@@ -17,7 +17,7 @@ public class AchievementResolvers {
   public async Task<IEnumerable<UserAchievement>> GetUserAchievementsAsync([Parent] Achievement achievement, [Service] IUserAchievementDataLoader userAchievementLoader, int first = 10, CancellationToken cancellationToken = default) {
     var userAchievements = await userAchievementLoader.LoadAsync(achievement.Id, cancellationToken);
 
-    return userAchievements?.Take(first) ?? Enumerable.Empty<UserAchievement>();
+    return userAchievements?.Take(first) ?? [];
   }
 
   public async Task<AchievementStatisticsDto> GetStatisticsAsync([Parent] Achievement achievement, [Service] IAchievementStatisticsDataLoader statisticsLoader, CancellationToken cancellationToken) {

@@ -101,7 +101,7 @@ public record RevenueReport {
 
   public int TotalTransactions { get; init; }
 
-  public IEnumerable<RevenueDataPoint> DataPoints { get; init; } = Enumerable.Empty<RevenueDataPoint>();
+  public IEnumerable<RevenueDataPoint> DataPoints { get; init; } = [];
 }
 
 /// <summary> Individual data point in revenue report </summary>

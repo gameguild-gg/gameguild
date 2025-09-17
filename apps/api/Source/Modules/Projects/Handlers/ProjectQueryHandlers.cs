@@ -75,7 +75,7 @@ public class ProjectQueryHandlers
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting all projects");
 
-      return Enumerable.Empty<Project>();
+      return [];
     }
   }
 
@@ -157,7 +157,7 @@ public class ProjectQueryHandlers
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting projects by category: {CategoryId}", request.CategoryId);
 
-      return Enumerable.Empty<Project>();
+      return [];
     }
   }
 
@@ -175,7 +175,7 @@ public class ProjectQueryHandlers
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting projects by creator: {CreatorId}", request.CreatorId);
 
-      return Enumerable.Empty<Project>();
+      return [];
     }
   }
 
@@ -193,7 +193,7 @@ public class ProjectQueryHandlers
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting projects by status: {Status}", request.Status);
 
-      return Enumerable.Empty<Project>();
+      return [];
     }
   }
 
@@ -237,7 +237,7 @@ public class ProjectQueryHandlers
     catch (Exception ex) {
       _logger.LogError(ex, "Error searching projects");
 
-      return Enumerable.Empty<Project>();
+      return [];
     }
   }
 
@@ -269,7 +269,7 @@ public class ProjectQueryHandlers
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting popular projects");
 
-      return Enumerable.Empty<Project>();
+      return [];
     }
   }
 
@@ -287,7 +287,7 @@ public class ProjectQueryHandlers
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting recent projects");
 
-      return Enumerable.Empty<Project>();
+      return [];
     }
   }
 
@@ -310,7 +310,7 @@ public class ProjectQueryHandlers
     catch (Exception ex) {
       _logger.LogError(ex, "Error getting featured projects");
 
-      return Enumerable.Empty<Project>();
+      return [];
     }
   }
 

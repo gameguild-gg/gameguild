@@ -107,7 +107,7 @@ public class RecordViewInput {
 
 /// <summary> Input for bulk operations on posts </summary>
 public class BulkPostOperationInput {
-  public Guid[ ] PostIds { get; set; } = Array.Empty<Guid>();
+  public Guid[ ] PostIds { get; set; } = [];
 
   public string Operation { get; set; } = string.Empty; // "delete", "restore", "pin", "unpin"
 
