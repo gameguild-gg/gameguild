@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Billing.Handlers;
 /// <summary>
 /// Handler for processing billing webhooks
 /// </summary>
-public class ProcessBillingWebhookHandler : GameGuild.CQRS.IRequestHandler<ProcessBillingWebhookCommand, WebhookProcessingResult>
+public class ProcessBillingWebhookHandler : CQRS.IRequestHandler<ProcessBillingWebhookCommand, WebhookProcessingResult>
 {
     private readonly ILogger<ProcessBillingWebhookHandler> _logger;
     private readonly IBillingWebhookService _webhookService;
@@ -55,7 +55,7 @@ public class ProcessBillingWebhookHandler : GameGuild.CQRS.IRequestHandler<Proce
 /// <summary>
 /// Handler for processing Stripe webhooks
 /// </summary>
-public class ProcessStripeWebhookHandler : GameGuild.CQRS.IRequestHandler<ProcessStripeWebhookCommand, WebhookProcessingResult>
+public class ProcessStripeWebhookHandler : CQRS.IRequestHandler<ProcessStripeWebhookCommand, WebhookProcessingResult>
 {
     private readonly ILogger<ProcessStripeWebhookHandler> _logger;
     private readonly IBillingWebhookService _webhookService;
@@ -92,7 +92,7 @@ public class ProcessStripeWebhookHandler : GameGuild.CQRS.IRequestHandler<Proces
 /// <summary>
 /// Handler for processing PayPal webhooks
 /// </summary>
-public class ProcessPayPalWebhookHandler : GameGuild.CQRS.IRequestHandler<ProcessPayPalWebhookCommand, WebhookProcessingResult>
+public class ProcessPayPalWebhookHandler : CQRS.IRequestHandler<ProcessPayPalWebhookCommand, WebhookProcessingResult>
 {
     private readonly ILogger<ProcessPayPalWebhookHandler> _logger;
     private readonly IBillingWebhookService _webhookService;
