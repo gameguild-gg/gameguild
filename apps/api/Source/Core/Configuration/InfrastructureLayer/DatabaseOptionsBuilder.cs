@@ -146,8 +146,8 @@ public static class DatabaseOptionsBuilder
         {
             _options.ConnectionString = GetDatabaseConnectionString(_configuration);
             _options.UseInMemoryDatabase = ShouldUseInMemoryDatabase();
-            _options.EnableSensitiveDataLogging = DatabaseOptionsBuilder.IsEnvironment("Development");
-            _options.EnableDetailedErrors = DatabaseOptionsBuilder.IsEnvironment("Development");
+            _options.EnableSensitiveDataLogging = IsEnvironment("Development");
+            _options.EnableDetailedErrors = IsEnvironment("Development");
 
             return this;
         }
