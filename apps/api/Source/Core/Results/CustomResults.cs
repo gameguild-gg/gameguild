@@ -8,7 +8,7 @@ public static class CustomResults {
     if (result.IsSuccess) throw new InvalidOperationException();
     if (result.Error == null) throw new InvalidOperationException("Error cannot be null for failed result");
 
-    return Microsoft.AspNetCore.Http.Results.Problem(
+    return Results.Problem(
       title: GetTitle(result.Error),
       detail: GetDetail(result.Error),
       type: GetType(),
