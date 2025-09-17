@@ -1,88 +1,78 @@
+using FluentValidation;
 using GameGuild.CQRS;
-using ValidationContext = System.ComponentModel.DataAnnotations.ValidationContext;
-
 
 namespace GameGuild;
 
-/// <summary> Unified validation behavior that supports both DataAnnotations and FluentValidation </summary>
-public class UnifiedValidationBehavior<TRequest, TResponse>(IEnumerable<FluentValidation.IValidator<TRequest>> fluentValidators, ILogger<UnifiedValidationBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse>
-  where TRequest : IRequest<TResponse> {
+/// <summary>
+/// Simplified validation behavior that converts FluentValidation failures to Result<T> with Error.
+/// No more exceptions for business logic - only Result<Error> patterns.
+/// </summary>
+public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : IRequest<TResponse> {
+
+  private readonly IEnumerable<FluentValidation.IValidator<TRequest>> _validators;
+  private readonly ILogger<ValidationBehavior<TRequest, TResponse>> _logger;
+
+  public ValidationBehavior(
+      IEnumerable<FluentValidation.IValidator<TRequest>> validators,
+      ILogger<ValidationBehavior<TRequest, TResponse>> logger) {
+    _validators = validators;
+    _logger = logger;
+  }
+
   public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken) {
+    ArgumentNullException.ThrowIfNull(next);
+
     var requestName = typeof(TRequest).Name;
-    logger.LogDebug("Validating {RequestName}", requestName);
+    _logger.LogDebug("Validating request {RequestName}", requestName);
 
-    // Collect all validation errors
-    var validationErrors = new List<string>();
-
-    // 1. DataAnnotations validation (for backward compatibility)
-    var dataAnnotationErrors = ValidateWithDataAnnotations(request);
-    validationErrors.AddRange(dataAnnotationErrors);
-
-    // 2. FluentValidation (preferred approach)
-    var fluentValidationErrors = await ValidateWithFluentValidation(request, cancellationToken);
-    validationErrors.AddRange(fluentValidationErrors);
-
-    // If there are validation errors, handle them appropriately
-    if (validationErrors.Count != 0) {
-      var errorMessage = string.Join("; ", validationErrors);
-      logger.LogWarning("Validation failed for {RequestName}: {ValidationErrors}", requestName, errorMessage);
-
-      // Handle Result pattern responses
-      if (typeof(TResponse).IsGenericType && typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>)) {
-        var resultType = typeof(TResponse).GetGenericArguments()[0];
-        var error = Error.Failure("Validation.Failed", errorMessage);
-
-        // Use the generic Failure method by getting all methods and finding the generic one
-        var methods = typeof(Result).GetMethods();
-        var genericFailureMethod = methods.FirstOrDefault(m => m.Name == "Failure" && m.IsGenericMethod && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(Error));
-
-        if (genericFailureMethod != null) {
-          var typedFailureMethod = genericFailureMethod.MakeGenericMethod(resultType);
-
-          return (TResponse) typedFailureMethod.Invoke(null, [error])!;
-        }
-      }
-
-      if (typeof(TResponse) == typeof(Result)) {
-        var error = Error.Failure("Validation.Failed", errorMessage);
-
-        return (TResponse) (object) Result.Failure(error);
-      }
-
-      // Fallback to exception for non-Result responses
-      throw new ValidationException(errorMessage);
+    if (!_validators.Any()) {
+      _logger.LogDebug("No validators found for {RequestName}", requestName);
+      return await next().ConfigureAwait(false);
     }
 
-    logger.LogDebug("Validation passed for {RequestName}", requestName);
-
-    return await next();
-  }
-
-  private static List<string> ValidateWithDataAnnotations(TRequest request) {
-    var validationContext = new ValidationContext(request);
-    var validationResults = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
-    var errors = new List<string>();
-
-    var isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
-
-    if (!isValid) { errors.AddRange(validationResults.Where(r => !string.IsNullOrEmpty(r.ErrorMessage)).Select(r => r.ErrorMessage!)); }
-
-    return errors;
-  }
-
-  private async Task<List<string>> ValidateWithFluentValidation(TRequest request, CancellationToken cancellationToken) {
-    var errors = new List<string>();
-
-    if (!fluentValidators.Any()) { return errors; }
-
     var context = new FluentValidation.ValidationContext<TRequest>(request);
+    var validationResults = await Task.WhenAll(
+        _validators.Select(v => v.ValidateAsync(context, cancellationToken))
+    ).ConfigureAwait(false);
 
-    var validationResults = await Task.WhenAll(fluentValidators.Select(validator => validator.ValidateAsync(context, cancellationToken)));
+    var failures = validationResults
+        .Where(r => !r.IsValid)
+        .SelectMany(r => r.Errors)
+        .ToArray();
 
-    var validationFailures = validationResults.Where(result => !result.IsValid).SelectMany(result => result.Errors).ToArray();
+    if (failures.Length == 0) {
+      _logger.LogDebug("Validation passed for {RequestName}", requestName);
+      return await next().ConfigureAwait(false);
+    }
 
-    errors.AddRange(validationFailures.Select(failure => $"{failure.PropertyName}: {failure.ErrorMessage}"));
+    _logger.LogWarning("Validation failed for {RequestName} with {ErrorCount} errors",
+        requestName, failures.Length);
 
-    return errors;
+    // Convert FluentValidation failures to our unified Error format
+    var errors = failures.Select(f =>
+        Error.ValidationFailure(f.PropertyName, f.ErrorMessage, f.AttemptedValue)
+    ).ToArray();
+
+    // Handle Result<T> responses - preferred approach
+    if (typeof(TResponse).IsGenericType && typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>)) {
+      var valueType = typeof(TResponse).GetGenericArguments()[0];
+      var failureMethod = typeof(Result).GetMethod(nameof(Result.Failure), 1, [typeof(Error)])!.MakeGenericMethod(valueType);
+
+      // Use the first error for the Result, but log all errors
+      var primaryError = errors.First();
+      return (TResponse)failureMethod.Invoke(null, [primaryError])!;
+    }
+
+    // Handle non-generic Result responses  
+    if (typeof(TResponse) == typeof(Result)) {
+      return (TResponse)(object)Result.Failure(errors.First());
+    }
+
+    // For non-Result types, we cannot return validation errors properly
+    // Log this as an error since all new code should use Result<T>
+    _logger.LogError("Cannot handle validation errors for non-Result response type: {ResponseType}. Please update to use Result<T>", typeof(TResponse).Name);
+    var errorMessage = string.Join("; ", errors.Select(e => $"{e.GetProperty()}: {e.Message}"));
+    throw new InvalidOperationException($"Validation failed but cannot return Result: {errorMessage}");
   }
 }
