@@ -8,8 +8,7 @@ namespace GameGuild.Modules.Tenants;
 /// </summary>
 [Table("TenantSettings")]
 [Index(nameof(TenantId), IsUnique = true)]
-public class TenantSettings : Resource
-{
+public class TenantSettings : Resource {
     /// <summary>
     /// Reference to the tenant (null for global default settings)
     /// </summary>
@@ -208,18 +207,15 @@ public class TenantSettings : Resource
     /// <summary>
     /// Get feature flag value as boolean
     /// </summary>
-    public bool GetFeatureFlag(string key, bool defaultValue = false)
-    {
+    public bool GetFeatureFlag(string key, bool defaultValue = false) {
         if (string.IsNullOrEmpty(FeatureFlags)) return defaultValue;
 
-        try
-        {
+        try {
             var flags = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(FeatureFlags);
             return flags?.TryGetValue(key, out var value) == true &&
                    value is bool boolValue ? boolValue : defaultValue;
         }
-        catch
-        {
+        catch {
             return defaultValue;
         }
     }
@@ -227,8 +223,7 @@ public class TenantSettings : Resource
     /// <summary>
     /// Set feature flag value
     /// </summary>
-    public void SetFeatureFlag(string key, bool value)
-    {
+    public void SetFeatureFlag(string key, bool value) {
         var flags = string.IsNullOrEmpty(FeatureFlags) ?
             new Dictionary<string, object>() :
             System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(FeatureFlags) ??
@@ -242,19 +237,16 @@ public class TenantSettings : Resource
     /// <summary>
     /// Get module setting value
     /// </summary>
-    public T? GetModuleSetting<T>(string module, string key, T? defaultValue = default)
-    {
+    public T? GetModuleSetting<T>(string module, string key, T? defaultValue = default) {
         if (string.IsNullOrEmpty(ModuleSettings)) return defaultValue;
 
-        try
-        {
+        try {
             var settings = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(ModuleSettings);
             return settings?.TryGetValue(module, out var moduleDict) == true &&
                    moduleDict.TryGetValue(key, out var value) &&
                    value is T typedValue ? typedValue : defaultValue;
         }
-        catch
-        {
+        catch {
             return defaultValue;
         }
     }
@@ -262,15 +254,13 @@ public class TenantSettings : Resource
     /// <summary>
     /// Set module setting value
     /// </summary>
-    public void SetModuleSetting<T>(string module, string key, T value)
-    {
+    public void SetModuleSetting<T>(string module, string key, T value) {
         var settings = string.IsNullOrEmpty(ModuleSettings) ?
             new Dictionary<string, Dictionary<string, object>>() :
             System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, object>>>(ModuleSettings) ??
             new Dictionary<string, Dictionary<string, object>>();
 
-        if (!settings.ContainsKey(module))
-        {
+        if (!settings.ContainsKey(module)) {
             settings[module] = new Dictionary<string, object>();
         }
 
@@ -282,10 +272,8 @@ public class TenantSettings : Resource
     /// <summary>
     /// Create default settings for a tenant
     /// </summary>
-    public static TenantSettings CreateDefault(Guid? tenantId = null)
-    {
-        return new TenantSettings
-        {
+    public static TenantSettings CreateDefault(Guid? tenantId = null) {
+        return new TenantSettings {
             TenantId = tenantId,
             DefaultLanguage = "en-US",
             DefaultTimezone = "UTC",

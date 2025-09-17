@@ -11,8 +11,7 @@ namespace GameGuild.Modules.Tenants;
 [Table("Tenants")]
 [Index(nameof(Name), IsUnique = true)]
 [Index(nameof(Slug), IsUnique = true)]
-public class Tenant : Resource
-{
+public class Tenant : Resource {
   /// <summary>
   /// Name of the tenant
   /// </summary>
@@ -68,8 +67,7 @@ public class Tenant : Resource
   /// <summary>
   /// Activate the tenant
   /// </summary>
-  public void Activate()
-  {
+  public void Activate() {
     IsActive = true;
     Touch();
   }
@@ -77,8 +75,7 @@ public class Tenant : Resource
   /// <summary>
   /// Deactivate the tenant
   /// </summary>
-  public void Deactivate()
-  {
+  public void Deactivate() {
     IsActive = false;
     Touch();
   }
@@ -86,8 +83,7 @@ public class Tenant : Resource
   /// <summary>
   /// Update tenant information
   /// </summary>
-  public void Update(string name, string? description = null)
-  {
+  public void Update(string name, string? description = null) {
     Name = name;
     Description = description;
     Touch();
