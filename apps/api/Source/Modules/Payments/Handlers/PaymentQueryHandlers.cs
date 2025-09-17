@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Payments;
 /// <summary>
 /// Handler for getting payment by ID
 /// </summary>
-public class GetPaymentByIdQueryHandler : GameGuild.CQRS.IRequestHandler<GetPaymentByIdQuery, Payment?> {
+public class GetPaymentByIdQueryHandler : CQRS.IRequestHandler<GetPaymentByIdQuery, Payment?> {
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
 
@@ -31,7 +31,7 @@ public class GetPaymentByIdQueryHandler : GameGuild.CQRS.IRequestHandler<GetPaym
 /// <summary>
 /// Handler for getting user payments
 /// </summary>
-public class GetUserPaymentsQueryHandler : GameGuild.CQRS.IRequestHandler<GetUserPaymentsQuery, IEnumerable<Payment>> {
+public class GetUserPaymentsQueryHandler : CQRS.IRequestHandler<GetUserPaymentsQuery, IEnumerable<Payment>> {
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
 
@@ -66,7 +66,7 @@ public class GetUserPaymentsQueryHandler : GameGuild.CQRS.IRequestHandler<GetUse
 /// <summary>
 /// Handler for getting product payments
 /// </summary>
-public class GetProductPaymentsQueryHandler : GameGuild.CQRS.IRequestHandler<GetProductPaymentsQuery, IEnumerable<Payment>> {
+public class GetProductPaymentsQueryHandler : CQRS.IRequestHandler<GetProductPaymentsQuery, IEnumerable<Payment>> {
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
 
@@ -101,7 +101,7 @@ public class GetProductPaymentsQueryHandler : GameGuild.CQRS.IRequestHandler<Get
 /// <summary>
 /// Handler for getting payment statistics
 /// </summary>
-public class GetPaymentStatsQueryHandler : GameGuild.CQRS.IRequestHandler<GetPaymentStatsQuery, PaymentStats> {
+public class GetPaymentStatsQueryHandler : CQRS.IRequestHandler<GetPaymentStatsQuery, PaymentStats> {
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;
@@ -163,7 +163,7 @@ public class GetPaymentStatsQueryHandler : GameGuild.CQRS.IRequestHandler<GetPay
 /// <summary>
 /// Handler for getting revenue reports
 /// </summary>
-public class GetRevenueReportQueryHandler : GameGuild.CQRS.IRequestHandler<GetRevenueReportQuery, RevenueReport> {
+public class GetRevenueReportQueryHandler : CQRS.IRequestHandler<GetRevenueReportQuery, RevenueReport> {
   private readonly ApplicationDbContext _context;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;

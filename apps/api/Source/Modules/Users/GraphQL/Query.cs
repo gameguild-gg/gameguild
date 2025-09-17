@@ -14,7 +14,7 @@ public class UserQueries {
   /// Gets all users with optional filtering using CQRS pattern
   /// </summary>
   public async Task<IEnumerable<User>> Users(
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] IMediator mediator,
     bool includeDeleted = false,
     bool? isActive = null,
     int skip = 0,
@@ -29,7 +29,7 @@ public class UserQueries {
   /// Gets a user by their unique identifier using CQRS pattern
   /// </summary>
   public async Task<User?> GetUserById(
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] IMediator mediator,
     Guid id,
     bool includeDeleted = false
   ) {
@@ -42,7 +42,7 @@ public class UserQueries {
   /// Gets a user by their unique identifier (alias for GetUserById)
   /// </summary>
   public async Task<User?> User(
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] IMediator mediator,
     Guid id,
     bool includeDeleted = false
   ) {
@@ -55,7 +55,7 @@ public class UserQueries {
   /// Gets a user by their email address using CQRS pattern
   /// </summary>
   public async Task<User?> GetUserByEmail(
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] IMediator mediator,
     string email,
     bool includeDeleted = false
   ) {
@@ -68,7 +68,7 @@ public class UserQueries {
   /// Search users with advanced filtering and pagination using CQRS pattern
   /// </summary>
   public async Task<PagedResult<User>> SearchUsers(
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] IMediator mediator,
     SearchUsersInput input
   ) {
     var query = new SearchUsersQuery {
@@ -94,7 +94,7 @@ public class UserQueries {
   /// Gets user statistics using CQRS pattern
   /// </summary>
   public async Task<UserStatistics> GetUserStatistics(
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] IMediator mediator,
     UserStatisticsInput input
   ) {
     var query = new GetUserStatisticsQuery { FromDate = input.FromDate, ToDate = input.ToDate, IncludeDeleted = input.IncludeDeleted };
@@ -106,7 +106,7 @@ public class UserQueries {
   /// Gets users with low balance using CQRS pattern
   /// </summary>
   public async Task<PagedResult<User>> GetUsersWithLowBalance(
-    [Service] GameGuild.CQRS.IMediator mediator,
+    [Service] IMediator mediator,
     decimal threshold = 10m,
     bool includeDeleted = false,
     int skip = 0,
@@ -120,7 +120,7 @@ public class UserQueries {
   /// <summary>
   /// Gets active users only using CQRS pattern
   /// </summary>
-  public async Task<IEnumerable<User>> GetActiveUsers([Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<IEnumerable<User>> GetActiveUsers([Service] IMediator mediator) {
     var query = new GetAllUsersQuery { IsActive = true };
 
     return await mediator.Send(query);
@@ -129,7 +129,7 @@ public class UserQueries {
   /// <summary>
   /// Gets soft-deleted users using CQRS pattern
   /// </summary>
-  public async Task<IEnumerable<User>> GetDeletedUsers([Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<IEnumerable<User>> GetDeletedUsers([Service] IMediator mediator) {
     var query = new GetAllUsersQuery { IncludeDeleted = true };
     var users = await mediator.Send(query);
 
