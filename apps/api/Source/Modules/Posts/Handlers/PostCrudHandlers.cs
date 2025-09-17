@@ -34,7 +34,7 @@ public class GetPostByIdHandler(
         );
 
         return Result.Failure<Post>(
-          new Common.Error(
+          new Error(
             "Post.NotFound",
             $"Post with ID {request.PostId} not found",
             ErrorType.NotFound
@@ -50,7 +50,7 @@ public class GetPostByIdHandler(
       logger.LogError(ex, "Error getting post {PostId}", request.PostId);
 
       return Result.Failure<Post>(
-        new Common.Error(
+        new Error(
           "GetPost.Failed",
           $"Failed to get post: {ex.Message}",
           ErrorType.Failure
@@ -82,7 +82,7 @@ public class UpdatePostHandler(
 
       if (post == null) {
         return Result.Failure<Post>(
-          new Common.Error(
+          new Error(
             "Post.NotFound",
             $"Post with ID {request.PostId} not found",
             ErrorType.NotFound
@@ -93,7 +93,7 @@ public class UpdatePostHandler(
       // Authorization: Only post author can update (or admin in future)
       if (post.AuthorId != request.UserId) {
         return Result.Failure<Post>(
-          new Common.Error(
+          new Error(
             "Post.Unauthorized",
             "You can only update your own posts",
             ErrorType.Validation
@@ -167,7 +167,7 @@ public class UpdatePostHandler(
       logger.LogError(ex, "Error updating post {PostId}", request.PostId);
 
       return Result.Failure<Post>(
-        new Common.Error(
+        new Error(
           "UpdatePost.Failed",
           $"Failed to update post: {ex.Message}",
           ErrorType.Failure
@@ -199,7 +199,7 @@ public class DeletePostHandler(
 
       if (post == null) {
         return Result.Failure<bool>(
-          new Common.Error(
+          new Error(
             "Post.NotFound",
             $"Post with ID {request.PostId} not found",
             ErrorType.NotFound
@@ -210,7 +210,7 @@ public class DeletePostHandler(
       // Authorization: Only post author can delete (or admin in future)
       if (post.AuthorId != request.UserId) {
         return Result.Failure<bool>(
-          new Common.Error(
+          new Error(
             "Post.Unauthorized",
             "You can only delete your own posts",
             ErrorType.Validation
@@ -243,7 +243,7 @@ public class DeletePostHandler(
       logger.LogError(ex, "Error deleting post {PostId}", request.PostId);
 
       return Result.Failure<bool>(
-        new Common.Error(
+        new Error(
           "DeletePost.Failed",
           $"Failed to delete post: {ex.Message}",
           ErrorType.Failure
@@ -275,7 +275,7 @@ public class TogglePostLikeHandler(
 
       if (post == null) {
         return Result.Failure<bool>(
-          new Common.Error(
+          new Error(
             "Post.NotFound",
             $"Post with ID {request.PostId} not found",
             ErrorType.NotFound
@@ -329,7 +329,7 @@ public class TogglePostLikeHandler(
       logger.LogError(ex, "Error toggling like for post {PostId}", request.PostId);
 
       return Result.Failure<bool>(
-        new Common.Error(
+        new Error(
           "TogglePostLike.Failed",
           $"Failed to toggle post like: {ex.Message}",
           ErrorType.Failure

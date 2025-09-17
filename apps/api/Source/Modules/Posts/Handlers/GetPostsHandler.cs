@@ -98,7 +98,7 @@ public class GetPostsHandler(
       logger.LogError(ex, "Error getting posts for tenant {TenantId}", request.TenantId);
 
       return Result.Failure<PostsPageDto>(
-        new Common.Error(
+        new Error(
           "GetPosts.Failed",
           $"Failed to get posts: {ex.Message}",
           ErrorType.Failure

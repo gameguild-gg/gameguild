@@ -86,7 +86,7 @@ public class CreatePostHandler(
       logger.LogError(ex, "Error creating post for user {AuthorId}", request.AuthorId);
 
       return Result.Failure<Post>(
-        new Common.Error(
+        new Error(
           "CreatePost.Failed",
           $"Failed to create post: {ex.Message}",
           ErrorType.Failure
