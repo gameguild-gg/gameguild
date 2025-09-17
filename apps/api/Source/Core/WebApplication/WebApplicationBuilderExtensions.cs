@@ -18,10 +18,10 @@ public static class WebApplicationBuilderExtensions {
     builder.Services.AddPresentationLayer(builder.Configuration);
 
     // Add application layer services (CQRS handlers, domain services)
-    builder.AddApplicationLayer(builder.Configuration);
+    builder.Services.AddApplicationLayer(builder.Configuration);
 
     // Add infrastructure layer services (repositories, external services)
-    builder.AddInfrastructureLayer(builder.Configuration);
+    builder.Services.AddInfrastructureLayer(builder.Configuration);
 
     return builder;
   }
