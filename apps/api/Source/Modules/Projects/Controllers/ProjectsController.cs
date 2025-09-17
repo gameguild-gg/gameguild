@@ -12,13 +12,13 @@ namespace GameGuild.Modules.Projects;
 [Route("api/[controller]")]
 [Authorize]
 public class ProjectsController : ControllerBase {
-  private readonly GameGuild.CQRS.IMediator _mediator;
+  private readonly CQRS.IMediator _mediator;
   private readonly IUserContext _userContext;
   private readonly ITenantContext _tenantContext;
   private readonly ILogger<ProjectsController> _logger;
 
   public ProjectsController(
-    GameGuild.CQRS.IMediator mediator,
+    CQRS.IMediator mediator,
     IUserContext userContext,
     ITenantContext tenantContext,
     ILogger<ProjectsController> logger
@@ -35,7 +35,7 @@ public class ProjectsController : ControllerBase {
   [HttpGet]
   [AllowAnonymous]
   public async Task<ActionResult<IEnumerable<Project>>> GetProjects(
-    [FromQuery] Common.ProjectType? type = null,
+    [FromQuery] ProjectType? type = null,
     [FromQuery] ContentStatus? status = null,
     [FromQuery] AccessLevel? visibility = null,
     [FromQuery] Guid? creatorId = null,
@@ -240,7 +240,7 @@ public class ProjectsController : ControllerBase {
   [AllowAnonymous]
   public async Task<ActionResult<IEnumerable<Project>>> SearchProjects(
     [FromQuery] string searchTerm,
-    [FromQuery] Common.ProjectType? type = null,
+    [FromQuery] ProjectType? type = null,
     [FromQuery] Guid? categoryId = null,
     [FromQuery] ContentStatus? status = null,
     [FromQuery] AccessLevel? visibility = null,
@@ -272,7 +272,7 @@ public class ProjectsController : ControllerBase {
   [HttpGet("popular")]
   [AllowAnonymous]
   public async Task<ActionResult<IEnumerable<Project>>> GetPopularProjects(
-    [FromQuery] Common.ProjectType? type = null,
+    [FromQuery] ProjectType? type = null,
     [FromQuery] int take = 10
   ) {
     var query = new GetPopularProjectsQuery { Type = type, Take = Math.Min(take, 50) };
@@ -288,7 +288,7 @@ public class ProjectsController : ControllerBase {
   [HttpGet("recent")]
   [AllowAnonymous]
   public async Task<ActionResult<IEnumerable<Project>>> GetRecentProjects(
-    [FromQuery] Common.ProjectType? type = null,
+    [FromQuery] ProjectType? type = null,
     [FromQuery] int take = 10
   ) {
     var query = new GetRecentProjectsQuery { Type = type, Take = Math.Min(take, 50) };
@@ -304,7 +304,7 @@ public class ProjectsController : ControllerBase {
   [HttpGet("featured")]
   [AllowAnonymous]
   public async Task<ActionResult<IEnumerable<Project>>> GetFeaturedProjects(
-    [FromQuery] Common.ProjectType? type = null,
+    [FromQuery] ProjectType? type = null,
     [FromQuery] int take = 10
   ) {
     var query = new GetFeaturedProjectsQuery { Type = type, Take = Math.Min(take, 50) };
