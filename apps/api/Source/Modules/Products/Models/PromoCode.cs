@@ -37,7 +37,7 @@ public class PromoCode : EntityBase {
   /// <summary>
   /// Type of discount this promo code provides
   /// </summary>
-  public Common.PromoCodeType Type { get; set; }
+  public PromoCodeType Type { get; set; }
 
   /// <summary>
   /// Discount percentage (for PercentageOff type)
@@ -151,6 +151,6 @@ public class PromoCode : EntityBase {
 
     if (MinimumOrderAmount.HasValue && orderAmount < MinimumOrderAmount.Value) return 0;
 
-    return Type switch { Common.PromoCodeType.PercentageOff => orderAmount * (DiscountPercentage ?? 0) / 100, Common.PromoCodeType.FixedAmountOff => Math.Min(DiscountAmount ?? 0, orderAmount), _ => 0 };
+    return Type switch { PromoCodeType.PercentageOff => orderAmount * (DiscountPercentage ?? 0) / 100, PromoCodeType.FixedAmountOff => Math.Min(DiscountAmount ?? 0, orderAmount), _ => 0 };
   }
 }
