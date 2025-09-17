@@ -44,7 +44,7 @@ public class BulkDeleteTenantsHandler(
       logger.LogError(ex, "Error bulk deleting tenants");
 
       return Result.Failure<int>(
-        Common.Error.Failure("Tenant.BulkDeleteFailed", "Failed to bulk delete tenants")
+        Error.Failure("Tenant.BulkDeleteFailed", "Failed to bulk delete tenants")
       );
     }
   }

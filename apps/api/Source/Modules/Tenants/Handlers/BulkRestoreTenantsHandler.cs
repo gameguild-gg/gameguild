@@ -44,7 +44,7 @@ public class BulkRestoreTenantsHandler(
       logger.LogError(ex, "Error bulk restoring tenants");
 
       return Result.Failure<int>(
-        Common.Error.Failure("Tenant.BulkRestoreFailed", "Failed to bulk restore tenants")
+        Error.Failure("Tenant.BulkRestoreFailed", "Failed to bulk restore tenants")
       );
     }
   }

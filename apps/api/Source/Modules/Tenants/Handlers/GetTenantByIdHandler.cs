@@ -28,7 +28,7 @@ public class GetTenantByIdHandler(
       logger.LogError(ex, "Error retrieving tenant {TenantId}", request.Id);
 
       return Result.Failure<Tenant?>(
-        Common.Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant")
+        Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant")
       );
     }
   }

@@ -27,7 +27,7 @@ public class GetAllTenantsHandler(
       logger.LogError(ex, "Error retrieving tenants");
 
       return Result.Failure<IEnumerable<Tenant>>(
-        Common.Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenants")
+        Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenants")
       );
     }
   }

@@ -25,7 +25,7 @@ public class GetDeletedTenantsHandler(
       logger.LogError(ex, "Error retrieving deleted tenants");
 
       return Result.Failure<IEnumerable<Tenant>>(
-        Common.Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve deleted tenants")
+        Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve deleted tenants")
       );
     }
   }

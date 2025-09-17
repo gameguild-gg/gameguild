@@ -39,7 +39,7 @@ public class GetTenantStatisticsHandler(
       logger.LogError(ex, "Error generating tenant statistics");
 
       return Result.Failure<TenantStatistics>(
-        Common.Error.Failure("Tenant.StatisticsFailed", "Failed to generate tenant statistics")
+        Error.Failure("Tenant.StatisticsFailed", "Failed to generate tenant statistics")
       );
     }
   }

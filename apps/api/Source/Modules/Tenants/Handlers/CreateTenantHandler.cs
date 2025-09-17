@@ -16,7 +16,7 @@ public class CreateTenantHandler(ApplicationDbContext context, ILogger<CreateTen
 
       if (existingTenant != null)
         return Result.Failure<Tenant>(
-          Common.Error.Conflict("Tenant.NameExists", $"Tenant with name '{request.Name}' already exists")
+          Error.Conflict("Tenant.NameExists", $"Tenant with name '{request.Name}' already exists")
         );
 
       // Check if tenant with same slug already exists
@@ -25,7 +25,7 @@ public class CreateTenantHandler(ApplicationDbContext context, ILogger<CreateTen
 
       if (existingSlug != null)
         return Result.Failure<Tenant>(
-          Common.Error.Conflict("Tenant.SlugExists", $"Tenant with slug '{request.Slug}' already exists")
+          Error.Conflict("Tenant.SlugExists", $"Tenant with slug '{request.Slug}' already exists")
         );
 
       var tenant = new Tenant {
@@ -52,7 +52,7 @@ public class CreateTenantHandler(ApplicationDbContext context, ILogger<CreateTen
       logger.LogError(ex, "Error creating tenant with name '{TenantName}'", request.Name);
 
       return Result.Failure<Tenant>(
-        Common.Error.Failure("Tenant.CreateFailed", "Failed to create tenant")
+        Error.Failure("Tenant.CreateFailed", "Failed to create tenant")
       );
     }
   }
