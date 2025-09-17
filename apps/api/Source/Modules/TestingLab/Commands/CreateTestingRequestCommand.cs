@@ -16,4 +16,4 @@ public record CreateTestingRequestCommand(
   DateTime StartDate,
   DateTime EndDate,
   bool IsActive = true
-) : GameGuild.CQRS.IRequest<TestingRequest>;
+) : IRequest<TestingRequest>;
