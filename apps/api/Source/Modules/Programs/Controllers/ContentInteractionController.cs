@@ -20,7 +20,7 @@ public class ContentInteractionController(
   /// Requires Read permission on the parent Program
   /// </summary>
   [HttpPost("start")]
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> StartContent(
     [FromQuery] Guid programId,
     [FromBody] StartContentRequest request
@@ -46,7 +46,7 @@ public class ContentInteractionController(
   /// Requires Edit permission on the parent Program
   /// </summary>
   [HttpPut("{interactionId}/progress")]
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> UpdateProgress(
     [FromRoute] Guid interactionId,
     [FromQuery] Guid programId,
@@ -74,7 +74,7 @@ public class ContentInteractionController(
   /// Requires Edit permission on the parent Program
   /// </summary>
   [HttpPost("{interactionId}/submit")]
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> SubmitContent(
     [FromRoute] Guid interactionId,
     [FromQuery] Guid programId,
@@ -102,7 +102,7 @@ public class ContentInteractionController(
   /// Requires Edit permission on the parent Program
   /// </summary>
   [HttpPost("{interactionId}/complete")]
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> CompleteContent(
     [FromRoute] Guid interactionId,
     [FromQuery] Guid programId,
@@ -127,7 +127,7 @@ public class ContentInteractionController(
   /// Requires Read permission on the parent Program
   /// </summary>
   [HttpGet("user/{programUserId}/content/{contentId}")]
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> GetInteraction(
     [FromRoute] Guid programUserId,
     [FromRoute] Guid contentId,
@@ -153,7 +153,7 @@ public class ContentInteractionController(
   /// Requires Read permission on the parent Program
   /// </summary>
   [HttpGet("user/{programUserId}")]
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ContentInteractionDto>>> GetUserInteractions(
     [FromRoute] Guid programUserId,
     [FromQuery] Guid programId
@@ -174,7 +174,7 @@ public class ContentInteractionController(
   /// Requires Edit permission on the parent Program
   /// </summary>
   [HttpPut("{interactionId}/time-spent")]
-  [RequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> UpdateTimeSpent(
     [FromRoute] Guid interactionId,
     [FromQuery] Guid programId,
