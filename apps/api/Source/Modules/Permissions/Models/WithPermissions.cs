@@ -22,94 +22,61 @@ public abstract class WithPermissions : EntityBase {
   [Column(TypeName = "bigint")]
   public ulong PermissionFlags2 { get; set; }
 
-  /// <summary>
-  /// User relationship - NULL means default permissions
-  /// </summary>
+  /// <summary> User relationship - NULL means default permissions </summary>
   [GraphQLType(typeof(UuidType))]
   [GraphQLDescription("The user ID this permission applies to (null for default permissions)")]
   public Guid? UserId { get; set; }
 
-  /// <summary>
-  /// Navigation property to the User entity
-  /// </summary>
+  /// <summary> Navigation property to the User entity </summary>
   [GraphQLIgnore]
   public virtual User? User { get; set; }
 
-  /// <summary>
-  /// Tenant relationship - NULL means global defaults
-  /// </summary>
+  /// <summary> Tenant relationship - NULL means global defaults </summary>
   [GraphQLType(typeof(UuidType))]
   [GraphQLDescription("The tenant ID this permission applies to (null for global defaults)")]
   public Guid? TenantId { get; set; }
 
-  /// <summary>
-  /// Navigation property to the Tenant entity
-  /// </summary>
+  /// <summary> Navigation property to the Tenant entity </summary>
   [GraphQLIgnore]
   public new virtual Tenant? Tenant { get; set; }
 
-  /// <summary>
-  /// Optional expiration date for this permission
-  /// If null, permission never expires
-  /// If date has passed, permission is expired
-  /// </summary>
+  /// <summary> Optional expiration date for this permission If null, permission never expires If date has passed, permission is expired </summary>
   [GraphQLType(typeof(DateTimeType))]
   [GraphQLDescription("When this permission expires (null if it never expires)")]
   public DateTime? ExpiresAt { get; set; }
 
   // Computed properties
 
-  /// <summary>
-  /// Check if the permission is expired based on ExpiresAt date
-  /// </summary>
+  /// <summary> Check if the permission is expired based on ExpiresAt date </summary>
   [GraphQLType(typeof(NonNullType<BooleanType>))]
   [GraphQLDescription("Whether this permission has expired")]
-  public bool IsExpired {
-    get => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.UtcNow;
-  }
+  public bool IsExpired { get => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.UtcNow; }
 
-  /// <summary>
-  /// Check if the permission is valid (not deleted and not expired)
-  /// </summary>
+  /// <summary> Check if the permission is valid (not deleted and not expired) </summary>
   [GraphQLType(typeof(NonNullType<BooleanType>))]
   [GraphQLDescription("Whether this permission is valid (not deleted and not expired)")]
-  public bool IsValid {
-    get => !IsDeleted && !IsExpired;
-  }
+  public bool IsValid { get => !IsDeleted && !IsExpired; }
 
-  /// <summary>
-  /// Check if this is a default permission for a specific tenant
-  /// </summary>
+  /// <summary> Check if this is a default permission for a specific tenant </summary>
   [GraphQLType(typeof(NonNullType<BooleanType>))]
   [GraphQLDescription("Whether this is a default permission for a specific tenant")]
-  public bool IsDefaultPermission {
-    get => UserId == null && TenantId != null;
-  }
+  public bool IsDefaultPermission { get => UserId == null && TenantId != null; }
 
-  /// <summary>
-  /// Check if this is a global default permission
-  /// </summary>
+  /// <summary> Check if this is a global default permission </summary>
   [GraphQLType(typeof(NonNullType<BooleanType>))]
   [GraphQLDescription("Whether this is a global default permission")]
-  public bool IsGlobalDefaultPermission {
-    get => UserId == null && TenantId == null;
-  }
+  public bool IsGlobalDefaultPermission { get => UserId == null && TenantId == null; }
 
-  /// <summary>
-  /// Check if this is a user-specific permission
-  /// </summary>
+  /// <summary> Check if this is a user-specific permission </summary>
   [GraphQLType(typeof(NonNullType<BooleanType>))]
   [GraphQLDescription("Whether this is a user-specific permission")]
-  public bool IsUserPermission {
-    get => UserId != null;
-  }
+  public bool IsUserPermission { get => UserId != null; }
 
   public bool HasPermission(PermissionType permission) {
-    var bitPos = (int)permission;
+    var bitPos = (int) permission;
 
-    if (bitPos < 64)
-      return (PermissionFlags1 & (1UL << bitPos)) != 0;
-    else if (bitPos < 128) return (PermissionFlags2 & (1UL << (bitPos - 64))) != 0;
+    if (bitPos < 64) return (PermissionFlags1 & 1UL << bitPos) != 0;
+    if (bitPos < 128) return (PermissionFlags2 & 1UL << bitPos - 64) != 0;
 
     return false;
   }
@@ -127,15 +94,15 @@ public abstract class WithPermissions : EntityBase {
   }
 
   private void SetPermission(PermissionType permission, bool value) {
-    var bitPos = (int)permission;
+    var bitPos = (int) permission;
 
     if (bitPos < 64) {
       var mask = 1UL << bitPos;
-      PermissionFlags1 = value ? (PermissionFlags1 | mask) : (PermissionFlags1 & ~mask);
+      PermissionFlags1 = value ? PermissionFlags1 | mask : PermissionFlags1 & ~mask;
     }
     else if (bitPos < 128) {
-      var mask = 1UL << (bitPos - 64);
-      PermissionFlags2 = value ? (PermissionFlags2 | mask) : (PermissionFlags2 & ~mask);
+      var mask = 1UL << bitPos - 64;
+      PermissionFlags2 = value ? PermissionFlags2 | mask : PermissionFlags2 & ~mask;
     }
   }
 }

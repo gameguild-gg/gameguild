@@ -3,16 +3,11 @@ using OpenFeature;
 
 namespace GameGuild;
 
-/// <summary>
-/// Hosted service to initialize OpenFeature providers during application startup.
-/// This ensures feature flag providers are properly configured before the application serves requests.
-/// </summary>
+/// <summary> Hosted service to initialize OpenFeature providers during application startup. This ensures feature flag providers are properly configured before the application serves requests. </summary>
 internal sealed class OpenFeatureHostedInitializer(IServiceProvider serviceProvider) : IHostedService {
-  /// <summary>
-  /// Starts the OpenFeature initialization process.
-  /// </summary>
-  /// <param name="cancellationToken">Cancellation token</param>
-  /// <returns>Task representing the asynchronous operation</returns>
+  /// <summary> Starts the OpenFeature initialization process. </summary>
+  /// <param name="cancellationToken"> Cancellation token </param>
+  /// <returns> Task representing the asynchronous operation </returns>
   public async Task StartAsync(CancellationToken cancellationToken) {
     var logger = serviceProvider.GetService<ILogger<OpenFeatureHostedInitializer>>();
 
@@ -40,10 +35,8 @@ internal sealed class OpenFeatureHostedInitializer(IServiceProvider serviceProvi
     }
   }
 
-  /// <summary>
-  /// Stops the OpenFeature service.
-  /// </summary>
-  /// <param name="cancellationToken">Cancellation token</param>
-  /// <returns>Task representing the asynchronous operation</returns>
+  /// <summary> Stops the OpenFeature service. </summary>
+  /// <param name="cancellationToken"> Cancellation token </param>
+  /// <returns> Task representing the asynchronous operation </returns>
   public Task StopAsync(CancellationToken cancellationToken) { return Task.CompletedTask; }
 }

@@ -4,17 +4,16 @@ using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
+
 namespace GameGuild.Swagger;
 
 /// <summary>
-/// Swagger schema filter that enhances enum documentation by adding descriptions and value mappings.
-/// This filter extracts information from XML documentation comments and Description attributes
-/// to provide meaningful documentation for enum values when exported as numbers.
+///   Swagger schema filter that enhances enum documentation by adding descriptions and value mappings. This filter extracts information from XML documentation comments and Description attributes to provide meaningful documentation for
+///   enum values when exported as numbers.
 /// </summary>
 public class EnumSchemaFilter : ISchemaFilter {
   public void Apply(OpenApiSchema schema, SchemaFilterContext context) {
-    if (!context.Type.IsEnum)
-      return;
+    if (!context.Type.IsEnum) return;
 
     // Clear the default enum values to replace with enhanced documentation
     schema.Enum?.Clear();
@@ -27,11 +26,7 @@ public class EnumSchemaFilter : ISchemaFilter {
     var enumValuesArray = Enum.GetValues(context.Type);
 
     // Build comprehensive enum documentation
-    var enumDocumentation = new List<string>
-    {
-            $"**{context.Type.Name} Enum Values:**",
-            ""
-        };
+    var enumDocumentation = new List<string> { $"**{context.Type.Name} Enum Values:**", "" };
 
     for (var i = 0; i < enumNames.Length; i++) {
       var enumName = enumNames[i];
@@ -46,9 +41,8 @@ public class EnumSchemaFilter : ISchemaFilter {
 
       // Format: "0: Planning - Project is in planning phase"
       var formattedDescription = $"{numericValue}: {enumName}";
-      if (!string.IsNullOrEmpty(description)) {
-        formattedDescription += $" - {description}";
-      }
+
+      if (!string.IsNullOrEmpty(description)) { formattedDescription += $" - {description}"; }
 
       enumDescriptions.Add(formattedDescription);
       enumDocumentation.Add($"- **{numericValue}**: `{enumName}` - {description ?? "No description available"}");
@@ -77,41 +71,31 @@ public class EnumSchemaFilter : ISchemaFilter {
     schema.Extensions.Add("x-enum-descriptions", descriptionsArray);
 
     // Add example value (first enum value)
-    if (enumValues.Count > 0) {
-      schema.Example = enumValues[0];
-    }
+    if (enumValues.Count > 0) { schema.Example = enumValues[0]; }
   }
 
-  /// <summary>
-  /// Gets the description for an enum value from multiple sources:
-  /// 1. Description attribute
-  /// 2. XML documentation comments
-  /// </summary>
+  /// <summary> Gets the description for an enum value from multiple sources: 1. Description attribute 2. XML documentation comments </summary>
   private static string? GetEnumDescription(Type enumType, string enumName) {
     var field = enumType.GetField(enumName);
-    if (field == null)
-      return null;
+
+    if (field == null) return null;
 
     // Try Description attribute first
     var descriptionAttribute = field.GetCustomAttribute<DescriptionAttribute>();
-    if (descriptionAttribute != null) {
-      return descriptionAttribute.Description;
-    }
+
+    if (descriptionAttribute != null) { return descriptionAttribute.Description; }
 
     // Try to get XML documentation (this would require additional setup to read XML docs)
     // For now, we'll return null if no Description attribute is found
     return null;
   }
 
-  /// <summary>
-  /// Gets the description for the enum type itself from XML documentation or attributes
-  /// </summary>
+  /// <summary> Gets the description for the enum type itself from XML documentation or attributes </summary>
   private static string? GetTypeDescription(Type enumType) {
     // Try Description attribute on the type
     var descriptionAttribute = enumType.GetCustomAttribute<DescriptionAttribute>();
-    if (descriptionAttribute != null) {
-      return descriptionAttribute.Description;
-    }
+
+    if (descriptionAttribute != null) { return descriptionAttribute.Description; }
 
     // Could be extended to read XML documentation for the type
     return null;

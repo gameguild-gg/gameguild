@@ -41,10 +41,7 @@ public class UpdateTestingLocationInput {
 [ExtendObjectType<Mutation>]
 public class TestingLabMutations {
   /// <summary> Create a new testing request </summary>
-  public async Task<TestingRequest> CreateTestingRequest(
-    [Service] ITestService testService,
-    ClaimsPrincipal claimsPrincipal, CreateTestingRequestDto input
-  ) {
+  public async Task<TestingRequest> CreateTestingRequest([Service] ITestService testService, ClaimsPrincipal claimsPrincipal, CreateTestingRequestDto input) {
     // Get the current authenticated user's ID
     var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -56,10 +53,7 @@ public class TestingLabMutations {
   }
 
   /// <summary> Update an existing testing request </summary>
-  public async Task<TestingRequest> UpdateTestingRequest(
-    [Service] ITestService testService, Guid id,
-    UpdateTestingRequestDto input
-  ) {
+  public async Task<TestingRequest> UpdateTestingRequest([Service] ITestService testService, Guid id, UpdateTestingRequestDto input) {
     var existingRequest = await testService.GetTestingRequestByIdAsync(id);
 
     if (existingRequest == null) throw new ArgumentException($"Testing request with ID {id} not found");
@@ -74,10 +68,7 @@ public class TestingLabMutations {
   public async Task<bool> DeleteTestingRequest([Service] ITestService testService, Guid id) { return await testService.DeleteTestingRequestAsync(id); }
 
   /// <summary> Create a new testing session </summary>
-  public async Task<TestingSession> CreateTestingSession(
-    [Service] ITestService testService,
-    ClaimsPrincipal claimsPrincipal, CreateTestingSessionDto input
-  ) {
+  public async Task<TestingSession> CreateTestingSession([Service] ITestService testService, ClaimsPrincipal claimsPrincipal, CreateTestingSessionDto input) {
     // Get the current authenticated user's ID
     var userIdClaim = claimsPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -89,10 +80,7 @@ public class TestingLabMutations {
   }
 
   /// <summary> Update an existing testing session </summary>
-  public async Task<TestingSession> UpdateTestingSession(
-    [Service] ITestService testService, Guid id,
-    CreateTestingSessionDto input
-  ) {
+  public async Task<TestingSession> UpdateTestingSession([Service] ITestService testService, Guid id, CreateTestingSessionDto input) {
     var existingSession = await testService.GetTestingSessionByIdAsync(id);
 
     if (existingSession == null) throw new ArgumentException($"Testing session with ID {id} not found");
@@ -115,10 +103,7 @@ public class TestingLabMutations {
   public async Task<bool> DeleteTestingSession([Service] ITestService testService, Guid id) { return await testService.DeleteTestingSessionAsync(id); }
 
   /// <summary> Create a new testing location </summary>
-  public async Task<TestingLocation> CreateTestingLocation(
-    [Service] ITestService testService,
-    CreateTestingLocationInput input
-  ) {
+  public async Task<TestingLocation> CreateTestingLocation([Service] ITestService testService, CreateTestingLocationInput input) {
     var location = new TestingLocation {
       Name = input.Name,
       Description = input.Description,
@@ -133,10 +118,7 @@ public class TestingLabMutations {
   }
 
   /// <summary> Update an existing testing location </summary>
-  public async Task<TestingLocation> UpdateTestingLocation(
-    [Service] ITestService testService, Guid id,
-    UpdateTestingLocationInput input
-  ) {
+  public async Task<TestingLocation> UpdateTestingLocation([Service] ITestService testService, Guid id, UpdateTestingLocationInput input) {
     var existingLocation = await testService.GetTestingLocationByIdAsync(id);
 
     if (existingLocation == null) throw new ArgumentException($"Testing location with ID {id} not found");

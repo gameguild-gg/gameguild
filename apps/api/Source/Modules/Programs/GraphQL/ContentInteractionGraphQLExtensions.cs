@@ -11,8 +11,6 @@ public static class ContentInteractionGraphQLExtensions {
   /// Configure GraphQL server with DAC authorization for ContentInteraction entity
   /// </summary>
   public static IRequestExecutorBuilder AddContentInteractionGraphQL(this IRequestExecutorBuilder builder) {
-    return builder.AddType<ContentInteractionType>()
-                  .AddTypeExtension<ContentInteractionQueries>()
-                  .AddTypeExtension<ContentInteractionMutations>();
+    return builder.AddType<ContentInteractionType>().AddTypeExtension<ContentInteractionQueries>().AddTypeExtension<ContentInteractionMutations>();
   }
 }

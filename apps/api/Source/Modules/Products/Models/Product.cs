@@ -12,7 +12,7 @@ namespace GameGuild.Modules.Products;
 [Index(nameof(Visibility))]
 [Index(nameof(CreatorId))]
 public class Product : Content {
-  [Required][MaxLength(200)] public string Name { get; set; } = string.Empty;
+  [Required] [MaxLength(200)] public string Name { get; set; } = string.Empty;
 
   [MaxLength(500)] public string? ShortDescription { get; set; }
 
@@ -27,9 +27,7 @@ public class Product : Content {
 
   public virtual User? Creator { get; set; }
 
-  /// <summary>
-  /// JSON array of product IDs included in the bundle
-  /// </summary>
+  /// <summary> JSON array of product IDs included in the bundle </summary>
   [Column(TypeName = "jsonb")]
   public string? BundleItems { get; set; }
 
@@ -69,10 +67,7 @@ public class Product : Content {
   public void SetBundleMetadata<T>(string key, T value) {
     if (Metadata == null) Metadata = new ResourceMetadata { ResourceType = nameof(Product), AdditionalData = "{}" };
 
-    var metadataDict = string.IsNullOrEmpty(Metadata.AdditionalData)
-                         ? new Dictionary<string, object>()
-                         : JsonSerializer.Deserialize<Dictionary<string, object>>(Metadata.AdditionalData) ??
-                           new Dictionary<string, object>();
+    var metadataDict = string.IsNullOrEmpty(Metadata.AdditionalData) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(Metadata.AdditionalData) ?? new Dictionary<string, object>();
 
     metadataDict[key] = value!;
     Metadata.AdditionalData = JsonSerializer.Serialize(metadataDict);

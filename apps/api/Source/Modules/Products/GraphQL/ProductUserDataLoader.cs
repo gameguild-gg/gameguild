@@ -4,37 +4,21 @@ using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Products;
 
-/// <summary>
-/// DataLoader interface for efficiently loading User entities for Products
-/// </summary>
+/// <summary> DataLoader interface for efficiently loading User entities for Products </summary>
 public interface IProductUserDataLoader : IDataLoader<Guid, User?> { }
 
-/// <summary>
-/// DataLoader implementation for efficiently loading User entities for Products
-/// </summary>
+/// <summary> DataLoader implementation for efficiently loading User entities for Products </summary>
 public class ProductUserDataLoader : BatchDataLoader<Guid, User?>, IProductUserDataLoader {
   private readonly IServiceProvider _serviceProvider;
 
-  public ProductUserDataLoader(
-    IBatchScheduler batchScheduler,
-    IServiceProvider serviceProvider,
-    DataLoaderOptions? options = null
-  )
-    : base(batchScheduler, options ?? new DataLoaderOptions()) {
-    _serviceProvider = serviceProvider;
-  }
+  public ProductUserDataLoader(IBatchScheduler batchScheduler, IServiceProvider serviceProvider, DataLoaderOptions? options = null) : base(batchScheduler, options ?? new DataLoaderOptions()) { _serviceProvider = serviceProvider; }
 
-  protected override async Task<IReadOnlyDictionary<Guid, User?>> LoadBatchAsync(
-    IReadOnlyList<Guid> keys,
-    CancellationToken cancellationToken
-  ) {
+  protected override async Task<IReadOnlyDictionary<Guid, User?>> LoadBatchAsync(IReadOnlyList<Guid> keys, CancellationToken cancellationToken) {
     using var scope = _serviceProvider.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-    var users = await context.Users
-                             .Where(u => keys.Contains(u.Id))
-                             .ToListAsync(cancellationToken);
+    var users = await context.Users.Where(u => keys.Contains(u.Id)).ToListAsync(cancellationToken);
 
-    return users.ToDictionary(u => u.Id, u => (User?)u);
+    return users.ToDictionary(u => u.Id, u => (User?) u);
   }
 }

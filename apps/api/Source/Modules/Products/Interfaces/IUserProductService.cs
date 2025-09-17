@@ -1,13 +1,8 @@
 ﻿namespace GameGuild.Modules.Products;
 
-/// <summary>
-/// Interface for user product access services
-/// </summary>
+/// <summary> Interface for user product access services </summary>
 public interface IUserProductService {
-  Task<UserProduct> GrantProductAccessAsync(
-    int userId, int productId, ProductAcquisitionType acquisitionType,
-    decimal pricePaid = 0
-  );
+  Task<UserProduct> GrantProductAccessAsync(int userId, int productId, ProductAcquisitionType acquisitionType, decimal pricePaid = 0);
 
   Task<UserProduct?> GetUserProductAsync(int userId, int productId);
 

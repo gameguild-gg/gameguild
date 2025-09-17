@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Products;
 
-/// <summary>
-/// EntityBase Framework configuration for Product entity
-/// </summary>
+/// <summary> EntityBase Framework configuration for Product entity </summary>
 internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product> {
   public void Configure(EntityTypeBuilder<Product> builder) {
     ArgumentNullException.ThrowIfNull(builder);

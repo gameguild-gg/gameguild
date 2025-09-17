@@ -1,4 +1,6 @@
 using GameGuild.CQRS;
+
+
 namespace GameGuild.Modules.Credentials.Commands;
 
 /// <summary>

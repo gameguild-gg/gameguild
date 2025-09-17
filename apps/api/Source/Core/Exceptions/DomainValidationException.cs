@@ -1,8 +1,6 @@
 namespace GameGuild;
 
-/// <summary>
-///     Exception thrown when domain validation fails
-/// </summary>
+/// <summary> Exception thrown when domain validation fails </summary>
 public class DomainValidationException : DomainException {
   public DomainValidationException(ValidationResult validationResult) : base(validationResult.GetErrorsAsString()) { ValidationResult = validationResult; }
 

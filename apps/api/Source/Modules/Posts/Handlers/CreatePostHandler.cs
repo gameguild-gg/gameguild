@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
@@ -5,21 +6,11 @@ using GameGuild.Modules.Contents;
 
 namespace GameGuild.Modules.Posts;
 
-/// <summary>
-/// Handler for creating posts following the Content/Resource architecture
-/// </summary>
-public class CreatePostHandler(
-  ApplicationDbContext context,
-  ILogger<CreatePostHandler> logger,
-  IDomainEventPublisher eventPublisher
-) : ICommandHandler<CreatePostCommand, Result<Post>> {
+/// <summary> Handler for creating posts following the Content/Resource architecture </summary>
+public class CreatePostHandler(ApplicationDbContext context, ILogger<CreatePostHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<CreatePostCommand, Result<Post>> {
   public async Task<Result<Post>> Handle(CreatePostCommand request, CancellationToken cancellationToken) {
     try {
-      logger.LogInformation(
-        "Creating post for user {AuthorId} in tenant {TenantId}",
-        request.AuthorId,
-        request.TenantId
-      );
+      logger.LogInformation("Creating post for user {AuthorId} in tenant {TenantId}", request.AuthorId, request.TenantId);
 
       // Generate slug from title
       var slug = GenerateSlug(request.Title);
@@ -59,59 +50,32 @@ public class CreatePostHandler(
 
       await context.SaveChangesAsync(cancellationToken);
 
-      logger.LogInformation(
-        "Successfully created post {PostId} with slug '{Slug}' for user {AuthorId}",
-        post.Id,
-        post.Slug,
-        request.AuthorId
-      );
+      logger.LogInformation("Successfully created post {PostId} with slug '{Slug}' for user {AuthorId}", post.Id, post.Slug, request.AuthorId);
 
       // Publish domain event
-      await eventPublisher.PublishAsync(
-        new PostCreatedEvent(
-          post.Id,
-          post.AuthorId ?? Guid.Empty,
-          post.Title,
-          post.PostType,
-          post.IsSystemGenerated,
-          post.CreatedAt,
-          post.Tenant?.Id ?? Guid.Empty
-        ),
-        cancellationToken
-      );
+      await eventPublisher.PublishAsync(new PostCreatedEvent(post.Id, post.AuthorId ?? Guid.Empty, post.Title, post.PostType, post.IsSystemGenerated, post.CreatedAt, post.Tenant?.Id ?? Guid.Empty), cancellationToken);
 
       return Result.Success(post);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error creating post for user {AuthorId}", request.AuthorId);
 
-      return Result.Failure<Post>(
-        new Error(
-          "CreatePost.Failed",
-          $"Failed to create post: {ex.Message}",
-          ErrorType.Failure
-        )
-      );
+      return Result.Failure<Post>(new Error("CreatePost.Failed", $"Failed to create post: {ex.Message}", ErrorType.Failure));
     }
   }
 
-  /// <summary>
-  /// Generates a URL-friendly slug from the title
-  /// </summary>
+  /// <summary> Generates a URL-friendly slug from the title </summary>
   private static string GenerateSlug(string title) {
     if (string.IsNullOrWhiteSpace(title)) return Guid.NewGuid().ToString("N")[..8];
 
     // Basic slug generation - in production you might want a more sophisticated approach
-    var slug = title.ToLowerInvariant()
-                    .Replace(" ", "-")
-                    .Replace("'", "")
-                    .Replace("\"", "");
+    var slug = title.ToLowerInvariant().Replace(" ", "-").Replace("'", "").Replace("\"", "");
 
     // Remove special characters
-    slug = System.Text.RegularExpressions.Regex.Replace(slug, @"[^a-z0-9\-]", "");
+    slug = Regex.Replace(slug, @"[^a-z0-9\-]", "");
 
     // Remove multiple consecutive dashes
-    slug = System.Text.RegularExpressions.Regex.Replace(slug, @"-+", "-");
+    slug = Regex.Replace(slug, @"-+", "-");
 
     // Trim dashes from start and end
     slug = slug.Trim('-');
@@ -122,9 +86,7 @@ public class CreatePostHandler(
     return slug;
   }
 
-  /// <summary>
-  /// Ensures the slug is unique within the tenant
-  /// </summary>
+  /// <summary> Ensures the slug is unique within the tenant </summary>
   private async Task<string> EnsureUniqueSlug(string baseSlug, Guid? tenantId, CancellationToken cancellationToken) {
     var slug = baseSlug;
     var counter = 1;

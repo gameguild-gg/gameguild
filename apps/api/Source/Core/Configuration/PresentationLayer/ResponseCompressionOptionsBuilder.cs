@@ -1,58 +1,34 @@
 ﻿namespace GameGuild;
 
-/// <summary>
-/// Builder for response compression options.
-/// </summary>
-public static class ResponseCompressionOptionsBuilder
-{
-    /// <summary>
-    /// Creates response compression options with default values.
-    /// </summary>
-    /// <returns>Default response compression options</returns>
-    public static ResponseCompressionOptions Create()
-    {
-        return new ResponseCompressionOptions
-        {
-            MimeTypes = new[]
-            {
-                "application/json", "text/plain"
-            },
-            CompressionLevel = "Optimal"
-        };
-    }
+/// <summary> Builder for response compression options. </summary>
+public static class ResponseCompressionOptionsBuilder {
+  /// <summary> Creates response compression options with default values. </summary>
+  /// <returns> Default response compression options </returns>
+  public static ResponseCompressionOptions Create() { return new ResponseCompressionOptions { MimeTypes = new[ ] { "application/json", "text/plain" }, CompressionLevel = "Optimal" }; }
 
-    /// <summary>
-    ///  Creates response compression options from a specific configuration section.
-    /// </summary>
-    /// <param name="configuration">The configuration to bind from</param>
-    /// <param name="sectionName">The configuration section name</param>
-    /// <returns>Configured response compression options</returns>
-    public static ResponseCompressionOptions Create(IConfiguration configuration, string sectionName = "ResponseCompression")
-    {
-        ArgumentNullException.ThrowIfNull(configuration);
+  /// <summary> Creates response compression options from a specific configuration section. </summary>
+  /// <param name="configuration"> The configuration to bind from </param>
+  /// <param name="sectionName"> The configuration section name </param>
+  /// <returns> Configured response compression options </returns>
+  public static ResponseCompressionOptions Create(IConfiguration configuration, string sectionName = "ResponseCompression") {
+    ArgumentNullException.ThrowIfNull(configuration);
 
-        var options = Create();
-        var section = configuration.GetSection(sectionName);
+    var options = Create();
+    var section = configuration.GetSection(sectionName);
 
-        if (section.Exists())
-        {
-            section.Bind(options);
-        }
+    if (section.Exists()) { section.Bind(options); }
 
-        return options;
-    }
+    return options;
+  }
 
-    /// <summary>
-    ///  Builds and validates response compression options.
-    /// </summary>
-    /// <param name="options">The options to validate and return</param>
-    /// <returns>Validated response compression options</returns>
-    public static ResponseCompressionOptions Build(this ResponseCompressionOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(options);
+  /// <summary> Builds and validates response compression options. </summary>
+  /// <param name="options"> The options to validate and return </param>
+  /// <returns> Validated response compression options </returns>
+  public static ResponseCompressionOptions Build(this ResponseCompressionOptions options) {
+    ArgumentNullException.ThrowIfNull(options);
 
-        options.Validate();
+    options.Validate();
 
-        return options;
-    }
+    return options;
+  }
 }

@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Payments;
 
-/// <summary>
-/// DTO for creating a transaction
-/// </summary>
+/// <summary> DTO for creating a transaction </summary>
 public class CreateTransactionDto {
   public Guid? ToUserId { get; set; }
 

@@ -11,40 +11,40 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Asp.Versioning.Mvc" />
-    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
+    <PackageReference Include="Asp.Versioning.Mvc"/>
+    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer"/>
 
-    <PackageReference Include="BCrypt.Net-Next" />
+    <PackageReference Include="BCrypt.Net-Next"/>
 
-    <PackageReference Include="DotNetEnv" />
+    <PackageReference Include="DotNetEnv"/>
 
-    <PackageReference Include="FluentValidation" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="FluentValidation"/>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
 
-    <PackageReference Include="HotChocolate.AspNetCore" />
-    <PackageReference Include="HotChocolate.Data.EntityFramework" />
-    <PackageReference Include="HotChocolate.Types.Analyzers" />
+    <PackageReference Include="HotChocolate.AspNetCore"/>
+    <PackageReference Include="HotChocolate.Data.EntityFramework"/>
+    <PackageReference Include="HotChocolate.Types.Analyzers"/>
 
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
 
-    <PackageReference Include="Microsoft.EntityFrameworkCore" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools"/>
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory"/>
 
-    <PackageReference Include="Newtonsoft.Json" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Newtonsoft.Json"/>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"/>
 
-    <PackageReference Include="OpenFeature" />
+    <PackageReference Include="OpenFeature"/>
 
-    <PackageReference Include="Serilog" />
-    <PackageReference Include="Slugify.Core" />
+    <PackageReference Include="Serilog"/>
+    <PackageReference Include="Slugify.Core"/>
 
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt"/>
 
-    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="Swashbuckle.AspNetCore"/>
 
   </ItemGroup>
 
@@ -58,25 +58,31 @@
     <Content Update="appSettings.Production.json">
       <CopyToPublishDirectory>Never</CopyToPublishDirectory>
     </Content>
+    <Content Remove="Source\Compatibility\**"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="tests/**/*" />
+    <Compile Remove="tests/**/*"/>
+    <Compile Remove="Source\Compatibility\**"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="HotChocolate.Types" />
-    <Using Include="HotChocolate.Types.Descriptors" />
-    <Using Include="HotChocolate.Data" />
+    <Using Include="HotChocolate.Types"/>
+    <Using Include="HotChocolate.Types.Descriptors"/>
+    <Using Include="HotChocolate.Data"/>
 
-    <Using Include="Microsoft.AspNetCore.Authorization" />
-    <Using Include="Microsoft.EntityFrameworkCore" />
-    <Using Include="Microsoft.EntityFrameworkCore.Metadata.Builders" />
-    <Using Include="System.ComponentModel.DataAnnotations" />
-    <Using Include="System.ComponentModel.DataAnnotations.Schema" />
+    <Using Include="Microsoft.AspNetCore.Authorization"/>
+    <Using Include="Microsoft.EntityFrameworkCore"/>
+    <Using Include="Microsoft.EntityFrameworkCore.Metadata.Builders"/>
+    <Using Include="System.ComponentModel.DataAnnotations"/>
+    <Using Include="System.ComponentModel.DataAnnotations.Schema"/>
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Source\Compatibility\" />
+    <EmbeddedResource Remove="Source\Compatibility\**"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Source\Compatibility\**"/>
   </ItemGroup>
 </Project>

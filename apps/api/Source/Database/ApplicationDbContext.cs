@@ -1,8 +1,8 @@
 using System.Reflection;
-using GameGuild;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Billing.Models;
 using GameGuild.Modules.Certificates;
+using GameGuild.Modules.Comments;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Features.Models;
@@ -11,6 +11,7 @@ using GameGuild.Modules.Kyc.Models;
 using GameGuild.Modules.Localization;
 using GameGuild.Modules.Payments;
 using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Posts;
 using GameGuild.Modules.Posts.Models;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs;
@@ -81,7 +82,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   // Resource Permission DbSets
   public DbSet<ProjectPermission> ProjectPermissions { get; set; }
-  public DbSet<Modules.Comments.CommentPermission> CommentPermissions { get; set; }
+
+  public DbSet<CommentPermission> CommentPermissions { get; set; }
 
   // Reputation Management DbSets
   public DbSet<UserReputation> UserReputations { get; set; }
@@ -110,13 +112,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<PromoCodeUse> PromoCodeUses { get; set; }
 
   // Posts Management DbSets
-  public DbSet<Modules.Posts.Post> Posts { get; set; }
+  public DbSet<Post> Posts { get; set; }
 
-  public DbSet<Modules.Posts.PostComment> PostComments { get; set; }
+  public DbSet<PostComment> PostComments { get; set; }
 
-  public DbSet<Modules.Posts.PostLike> PostLikes { get; set; }
+  public DbSet<PostLike> PostLikes { get; set; }
 
-  public DbSet<Modules.Posts.PostContentReference> PostContentReferences { get; set; }
+  public DbSet<PostContentReference> PostContentReferences { get; set; }
 
   public DbSet<PostStatistics> PostStatistics { get; set; }
 
@@ -163,7 +165,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<SessionWaitlist> SessionWaitlists { get; set; } // Program Management DbSets
 
-  public DbSet<GameGuild.Modules.Programs.Program> Programs { get; set; }
+  public DbSet<Modules.Programs.Program> Programs { get; set; }
 
   public DbSet<ProgramContent> ProgramContents { get; set; }
 
@@ -219,11 +221,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   // Feature Flags Management DbSets
   public DbSet<FeatureFlag> FeatureFlags { get; set; }
+
   public DbSet<FeatureFlagTarget> FeatureFlagTargets { get; set; }
+
   public DbSet<FeatureFlagUsage> FeatureFlagUsage { get; set; }
 
   // Resource Management DbSets
   public DbSet<ResourceQuota> ResourceQuotas { get; set; }
+
   public DbSet<ResourceUsageRecord> ResourceUsageRecords { get; set; }
 
   // User Achievements Management DbSets
@@ -256,14 +261,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     // NOTE: do not add fluent api configurations here, they should be in the same file of the entity. On the entity, use notations for simple configurations, and fluent API for complex ones.
 
     // Configure ITenantable entities (this logic needs to stay in OnModelCreating)
-    foreach (var entityType in modelBuilder.Model.GetEntityTypes()
-                                           .Where(t => typeof(ITenantable).IsAssignableFrom(t.ClrType))) {
-      modelBuilder.Entity(entityType.ClrType)
-                  .HasOne(typeof(Tenant).Name)
-                  .WithMany()
-                  .HasForeignKey("TenantId")
-                  .IsRequired(false)
-                  .OnDelete(DeleteBehavior.SetNull);
+    foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(t => typeof(ITenantable).IsAssignableFrom(t.ClrType))) {
+      modelBuilder.Entity(entityType.ClrType).HasOne(typeof(Tenant).Name).WithMany().HasForeignKey("TenantId").IsRequired(false).OnDelete(DeleteBehavior.SetNull);
     }
 
     // Configure base entity properties for all entities
@@ -276,34 +275,26 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     ConfigureInheritanceStrategies(modelBuilder);
   }
 
-  /// <summary>
-  /// Automatically update timestamps when saving changes
-  /// </summary>
+  /// <summary> Automatically update timestamps when saving changes </summary>
   public override int SaveChanges() {
     UpdateTimestamps();
 
     return base.SaveChanges();
   }
 
-  /// <summary>
-  /// Automatically update timestamps when saving changes asynchronously
-  /// </summary>
+  /// <summary> Automatically update timestamps when saving changes asynchronously </summary>
   public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) {
     UpdateTimestamps();
 
     return await base.SaveChangesAsync(cancellationToken);
   }
 
-  /// <summary>
-  /// Updates CreatedAt and UpdatedAt timestamps for entities that inherit from BaseEntity
-  /// Also handles Version incrementing for optimistic concurrency control
-  /// </summary>
+  /// <summary> Updates CreatedAt and UpdatedAt timestamps for entities that inherit from BaseEntity Also handles Version incrementing for optimistic concurrency control </summary>
   private void UpdateTimestamps() {
-    var entries = ChangeTracker.Entries()
-                               .Where(e => e is { Entity: IEntity, State: EntityState.Added or EntityState.Modified });
+    var entries = ChangeTracker.Entries().Where(e => e is { Entity: IEntity, State: EntityState.Added or EntityState.Modified });
 
     foreach (var entry in entries) {
-      var entity = (IEntity)entry.Entity;
+      var entity = (IEntity) entry.Entity;
 
       if (entry.State == EntityState.Added) {
         entity.CreatedAt = DateTime.UtcNow;
@@ -319,19 +310,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     }
   }
 
-  /// <summary>
-  /// Include soft-deleted entities in queries
-  /// </summary>
-  /// <returns>DbContext with soft-deleted entities included</returns>
+  /// <summary> Include soft-deleted entities in queries </summary>
+  /// <returns> DbContext with soft-deleted entities included </returns>
   public ApplicationDbContext IncludeDeleted() {
     ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
 
     return this;
   }
 
-  /// <summary>
-  /// Configure inheritance strategies for the content and resource hierarchies
-  /// </summary>
+  /// <summary> Configure inheritance strategies for the content and resource hierarchies </summary>
   private static void ConfigureInheritanceStrategies(ModelBuilder modelBuilder) {
     // Configure Table-Per-Concrete-Type (TPC) for ResourceBase inheritance
     // Each concrete entity that inherits from ResourceBase gets its own complete table

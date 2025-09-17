@@ -3,13 +3,7 @@
 /// <summary>
 /// Input types for ActivityGrade GraphQL operations
 /// </summary>
-public record CreateActivityGradeInput(
-  Guid ContentInteractionId,
-  Guid GraderProgramUserId,
-  decimal Grade,
-  string? Feedback = null,
-  string? GradingDetails = null
-) {
+public record CreateActivityGradeInput(Guid ContentInteractionId, Guid GraderProgramUserId, decimal Grade, string? Feedback = null, string? GradingDetails = null) {
   public Guid ContentInteractionId { get; init; } = ContentInteractionId;
 
   public Guid GraderProgramUserId { get; init; } = GraderProgramUserId;

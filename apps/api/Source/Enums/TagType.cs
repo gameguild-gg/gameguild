@@ -4,24 +4,17 @@ using System.ComponentModel;
 namespace GameGuild;
 
 public enum TagType {
-  [Description("Tag represents a learnable or teachable skill")]
-  Skill,
+  [Description("Tag represents a learnable or teachable skill")] Skill,
 
-  [Description("General subject matter or area of knowledge")]
-  Topic,
+  [Description("General subject matter or area of knowledge")] Topic,
 
-  [Description("Specific technology, software, framework, or tool")]
-  Technology,
+  [Description("Specific technology, software, framework, or tool")] Technology,
 
-  [Description("Indicates content difficulty level")]
-  Difficulty,
+  [Description("Indicates content difficulty level")] Difficulty,
 
-  [Description("High-level grouping of content")]
-  Category,
+  [Description("High-level grouping of content")] Category,
 
-  [Description("Specific industry or sector")]
-  Industry,
+  [Description("Specific industry or sector")] Industry,
 
-  [Description("Professional or industry certification")]
-  Certification,
+  [Description("Professional or industry certification")] Certification,
 }

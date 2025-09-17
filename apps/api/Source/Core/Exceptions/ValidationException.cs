@@ -1,8 +1,6 @@
 ﻿namespace GameGuild;
 
-/// <summary>
-/// Custom validation exception for better error handling
-/// </summary>
+/// <summary> Custom validation exception for better error handling </summary>
 public class ValidationException : Exception {
   public ValidationException(string message) : base(message) { }
 

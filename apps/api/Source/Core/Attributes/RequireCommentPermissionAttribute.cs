@@ -1,18 +1,14 @@
 using System.Security.Claims;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Comments;
-using GameGuild.Modules.Permissions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 
 namespace GameGuild;
 
-/// <summary>
-/// Specific attribute for Comment resource-level permission checks. This demonstrates 
-/// how to implement resource-specific permission checking for concrete entity types.
-/// </summary>
-[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false)]
+/// <summary> Specific attribute for Comment resource-level permission checks. This demonstrates how to implement resource-specific permission checking for concrete entity types. </summary>
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
 public class RequireCommentPermissionAttribute(PermissionType requiredPermission, string resourceIdParameterName = "id") : Attribute, IAsyncAuthorizationFilter {
   public async Task OnAuthorizationAsync(AuthorizationFilterContext context) {
     var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
@@ -45,13 +41,7 @@ public class RequireCommentPermissionAttribute(PermissionType requiredPermission
 
     // Check resource-level permission with hierarchical fallback
     // This uses the specific CommentPermission and Comment types
-    var hasPermission =
-      await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(
-        userId,
-        tenantId,
-        resourceId,
-        requiredPermission
-      );
+    var hasPermission = await permissionService.HasResourcePermissionAsync<CommentPermission, Comment>(userId, tenantId, resourceId, requiredPermission);
 
     if (!hasPermission) context.Result = new PermissionDeniedResult(requiredPermission.ToString());
   }

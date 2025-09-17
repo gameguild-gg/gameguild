@@ -1,45 +1,27 @@
-using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
 
 namespace GameGuild.Modules.Users;
 
-/// <summary>
-/// Handler for creating a new user with validation and business logic
-/// </summary>
-public class CreateUserHandler(
-  ApplicationDbContext context,
-  ILogger<CreateUserHandler> logger,
-  IMediator mediator
-) : IRequestHandler<CreateUserCommand, User> {
+/// <summary> Handler for creating a new user with validation and business logic </summary>
+public class CreateUserHandler(ApplicationDbContext context, ILogger<CreateUserHandler> logger, IMediator mediator) : IRequestHandler<CreateUserCommand, User> {
   public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken) {
     // Check if email already exists
-    var existingUser = await context.Users
-                                    .FirstOrDefaultAsync(user => user.Email == request.Email, cancellationToken);
+    var existingUser = await context.Users.FirstOrDefaultAsync(user => user.Email == request.Email, cancellationToken);
 
     if (existingUser != null) throw new InvalidOperationException($"User with email {request.Email} already exists");
 
     // Generate unique username from name using slugify
     var baseUsername = request.Name.ToSlugCase();
-    var existingUsernames = await context.Users
-                                         .Where(u => u.Username.StartsWith(baseUsername))
-                                         .Select(u => u.Username)
-                                         .ToListAsync(cancellationToken);
+    var existingUsernames = await context.Users.Where(u => u.Username.StartsWith(baseUsername)).Select(u => u.Username).ToListAsync(cancellationToken);
 
     var uniqueUsername = SlugCase.GenerateUnique(request.Name, existingUsernames, 50);
 
     // Normalize negative balance to zero - business rule
     var normalizedBalance = Math.Max(0, request.InitialBalance);
 
-    var user = new User {
-      Name = request.Name,
-      Username = uniqueUsername,
-      Email = request.Email,
-      IsActive = request.IsActive,
-      Balance = normalizedBalance,
-      AvailableBalance = normalizedBalance,
-    };
+    var user = new User { Name = request.Name, Username = uniqueUsername, Email = request.Email, IsActive = request.IsActive, Balance = normalizedBalance, AvailableBalance = normalizedBalance };
 
     context.Users.Add(user);
     await context.SaveChangesAsync(cancellationToken);

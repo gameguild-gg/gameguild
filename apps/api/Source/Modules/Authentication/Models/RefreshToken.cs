@@ -1,30 +1,24 @@
-namespace GameGuild.Modules.Authentication {
-  /// <summary>
-  /// Refresh token entity for managing user sessions
-  /// </summary>
-  public class RefreshToken : EntityBase {
-    public Guid UserId { get; set; }
+namespace GameGuild.Modules.Authentication;
 
-    public string Token { get; set; } = string.Empty;
+/// <summary> Refresh token entity for managing user sessions </summary>
+public class RefreshToken : EntityBase {
+  public Guid UserId { get; set; }
 
-    public DateTime ExpiresAt { get; set; }
+  public string Token { get; set; } = string.Empty;
 
-    public bool IsRevoked { get; set; }
+  public DateTime ExpiresAt { get; set; }
 
-    public string? RevokedByIp { get; set; }
+  public bool IsRevoked { get; set; }
 
-    public DateTime? RevokedAt { get; set; }
+  public string? RevokedByIp { get; set; }
 
-    public string? ReplacedByToken { get; set; }
+  public DateTime? RevokedAt { get; set; }
 
-    public string CreatedByIp { get; set; } = string.Empty;
+  public string? ReplacedByToken { get; set; }
 
-    public bool IsExpired {
-      get => DateTime.UtcNow >= ExpiresAt;
-    }
+  public string CreatedByIp { get; set; } = string.Empty;
 
-    public bool IsActive {
-      get => !IsRevoked && !IsExpired;
-    }
-  }
+  public bool IsExpired { get => DateTime.UtcNow >= ExpiresAt; }
+
+  public bool IsActive { get => !IsRevoked && !IsExpired; }
 }

@@ -16,6 +16,7 @@ public class PaymentController(CQRS.IMediator mediator) : ControllerBase {
   public async Task<ActionResult<IEnumerable<UserFinancialMethod>>> GetMyPaymentMethods() {
     var query = new GetUserPaymentMethodsQuery();
     var methods = await mediator.Send(query);
+
     return Ok(methods);
   }
 
@@ -25,7 +26,9 @@ public class PaymentController(CQRS.IMediator mediator) : ControllerBase {
   [HttpPost("intent")]
   public async Task<ActionResult<Payment>> CreatePaymentIntent([FromBody] CreatePaymentCommand command) {
     var result = await mediator.Send(command);
+
     if (!result.Success) return BadRequest(result.Error);
+
     return Ok(result.Payment);
   }
 
@@ -34,13 +37,11 @@ public class PaymentController(CQRS.IMediator mediator) : ControllerBase {
   /// </summary>
   [HttpPost("{id}/process")]
   public async Task<ActionResult<Payment>> ProcessPayment(Guid id, [FromBody] ProcessPaymentRequest request) {
-    var command = new ProcessPaymentCommand {
-      PaymentId = id,
-      ProviderTransactionId = request.ProviderTransactionId,
-      ProviderMetadata = request.ProviderMetadata,
-    };
+    var command = new ProcessPaymentCommand { PaymentId = id, ProviderTransactionId = request.ProviderTransactionId, ProviderMetadata = request.ProviderMetadata, };
     var result = await mediator.Send(command);
+
     if (!result.Success) return BadRequest(result.Error);
+
     return Ok(result.Payment);
   }
 
@@ -52,14 +53,11 @@ public class PaymentController(CQRS.IMediator mediator) : ControllerBase {
     // TODO: Get the current user ID from authentication context
     var currentUserId = Guid.Empty; // Placeholder - should get from auth context
 
-    var command = new RefundPaymentCommand {
-      PaymentId = id,
-      RefundAmount = request.RefundAmount,
-      Reason = request.Reason ?? "Refund requested",
-      RefundedBy = currentUserId,
-    };
+    var command = new RefundPaymentCommand { PaymentId = id, RefundAmount = request.RefundAmount, Reason = request.Reason ?? "Refund requested", RefundedBy = currentUserId, };
     var result = await mediator.Send(command);
+
     if (!result.Success) return BadRequest(result.Error);
+
     return Ok(result.Refund); // Fixed: use Refund property instead of Payment
   }
 
@@ -70,7 +68,9 @@ public class PaymentController(CQRS.IMediator mediator) : ControllerBase {
   public async Task<ActionResult<Payment>> GetPayment(Guid id) {
     var query = new GetPaymentByIdQuery { PaymentId = id };
     var payment = await mediator.Send(query);
+
     if (payment == null) return NotFound();
+
     return Ok(payment);
   }
 
@@ -81,6 +81,7 @@ public class PaymentController(CQRS.IMediator mediator) : ControllerBase {
   public async Task<ActionResult<IEnumerable<Payment>>> GetUserPayments(Guid userId) {
     var query = new GetUserPaymentsQuery { UserId = userId };
     var payments = await mediator.Send(query);
+
     return Ok(payments);
   }
 
@@ -91,6 +92,7 @@ public class PaymentController(CQRS.IMediator mediator) : ControllerBase {
   public async Task<ActionResult<PaymentStats>> GetPaymentStats() {
     var query = new GetPaymentStatsQuery();
     var stats = await mediator.Send(query);
+
     return Ok(stats);
   }
 }

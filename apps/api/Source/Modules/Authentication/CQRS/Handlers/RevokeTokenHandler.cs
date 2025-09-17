@@ -1,29 +1,26 @@
 using GameGuild.CQRS;
 
+
 namespace GameGuild.Modules.Authentication;
 
-/// <summary>
-/// Handler for revoke token command using CQRS pattern
-/// </summary>
-public class RevokeTokenHandler : IRequestHandler<RevokeTokenCommand, Unit>
-{
+/// <summary> Handler for revoke token command using CQRS pattern </summary>
+public class RevokeTokenHandler : IRequestHandler<RevokeTokenCommand, Unit> {
   private readonly IAuthService _authService;
-  private readonly IMediator _mediator;
+
   private readonly ILogger<RevokeTokenHandler> _logger;
 
-  public RevokeTokenHandler(IAuthService authService, IMediator mediator, ILogger<RevokeTokenHandler> logger)
-  {
+  private readonly IMediator _mediator;
+
+  public RevokeTokenHandler(IAuthService authService, IMediator mediator, ILogger<RevokeTokenHandler> logger) {
     _authService = authService ?? throw new ArgumentNullException(nameof(authService));
     _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     _logger = logger ?? throw new ArgumentNullException(nameof(logger));
   }
 
-  public async Task<Unit> Handle(RevokeTokenCommand request, CancellationToken cancellationToken)
-  {
+  public async Task<Unit> Handle(RevokeTokenCommand request, CancellationToken cancellationToken) {
     _logger.LogInformation("Processing revoke token request");
 
-    try
-    {
+    try {
       await _authService.RevokeRefreshTokenAsync(request.RefreshToken, request.IpAddress ?? "Unknown");
 
       // Publish notification for audit/logging purposes
@@ -35,8 +32,7 @@ public class RevokeTokenHandler : IRequestHandler<RevokeTokenCommand, Unit>
 
       return Unit.Value;
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       _logger.LogError(ex, "Failed to revoke token");
 
       throw;

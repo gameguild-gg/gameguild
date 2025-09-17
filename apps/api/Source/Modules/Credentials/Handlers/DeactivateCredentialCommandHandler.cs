@@ -4,9 +4,7 @@ using GameGuild.Modules.Credentials.Commands;
 
 namespace GameGuild.Modules.Credentials.Handlers;
 
-/// <summary>
-/// Handler for DeactivateCredentialCommand using CQRS pattern
-/// </summary>
+/// <summary> Handler for DeactivateCredentialCommand using CQRS pattern </summary>
 public class DeactivateCredentialCommandHandler : IRequestHandler<DeactivateCredentialCommand, bool> {
   private readonly ICredentialService _credentialService;
 

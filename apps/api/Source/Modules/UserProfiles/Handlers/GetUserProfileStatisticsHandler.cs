@@ -4,9 +4,7 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// Handler for getting user profile statistics
-/// </summary>
+/// <summary> Handler for getting user profile statistics </summary>
 public class GetUserProfileStatisticsHandler(ApplicationDbContext context, ILogger<GetUserProfileStatisticsHandler> logger) : IQueryHandler<GetUserProfileStatisticsQuery, Result<UserProfileStatistics>> {
   public async Task<Result<UserProfileStatistics>> Handle(GetUserProfileStatisticsQuery request, CancellationToken cancellationToken) {
     try {
@@ -45,47 +43,29 @@ public class GetUserProfileStatisticsHandler(ApplicationDbContext context, ILogg
       // Display name patterns (common prefixes/titles)
       var displayNames = await query.Where(up => up.DisplayName != null).Select(up => up.DisplayName).ToListAsync(cancellationToken);
 
-      var patterns = displayNames
-                     .Where(name => !string.IsNullOrEmpty(name))
-                     .SelectMany(name => name!.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                     .Where(word => word.Length > 2)
-                     .GroupBy(word => word.ToLower())
-                     .ToDictionary(g => g.Key, g => g.Count());
+      var patterns = displayNames.Where(name => !string.IsNullOrEmpty(name))
+                                 .SelectMany(name => name!.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                                 .Where(word => word.Length > 2)
+                                 .GroupBy(word => word.ToLower())
+                                 .ToDictionary(g => g.Key, g => g.Count());
 
-      statistics.DisplayNamePatterns = patterns
-                                       .OrderByDescending(p => p.Value)
-                                       .Take(10)
-                                       .ToDictionary(p => p.Key, p => p.Value);
+      statistics.DisplayNamePatterns = patterns.OrderByDescending(p => p.Value).Take(10).ToDictionary(p => p.Key, p => p.Value);
 
       // Tenant distribution (if multi-tenant)
       if (request.TenantId == null) {
-        var tenantCounts = await query
-                                 .GroupBy(up => EF.Property<Guid?>(up, "TenantId"))
-                                 .Select(g => new { TenantId = g.Key, Count = g.Count() })
-                                 .ToListAsync(cancellationToken);
+        var tenantCounts = await query.GroupBy(up => EF.Property<Guid?>(up, "TenantId")).Select(g => new { TenantId = g.Key, Count = g.Count() }).ToListAsync(cancellationToken);
 
-        statistics.TenantDistribution = tenantCounts
-          .ToDictionary(
-            tc => tc.TenantId?.ToString() ?? "No Tenant",
-            tc => tc.Count
-          );
+        statistics.TenantDistribution = tenantCounts.ToDictionary(tc => tc.TenantId?.ToString() ?? "No Tenant", tc => tc.Count);
       }
 
-      logger.LogDebug(
-        "Generated user profile statistics: Total={Total}, Active={Active}, New={New}",
-        statistics.TotalUserProfiles,
-        statistics.ActiveUserProfiles,
-        statistics.NewUserProfiles
-      );
+      logger.LogDebug("Generated user profile statistics: Total={Total}, Active={Active}, New={New}", statistics.TotalUserProfiles, statistics.ActiveUserProfiles, statistics.NewUserProfiles);
 
       return Result.Success(statistics);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error generating user profile statistics");
 
-      return Result.Failure<UserProfileStatistics>(
-        Error.Failure("UserProfile.StatisticsFailed", "Failed to generate user profile statistics")
-      );
+      return Result.Failure<UserProfileStatistics>(Error.Failure("UserProfile.StatisticsFailed", "Failed to generate user profile statistics"));
     }
   }
 }

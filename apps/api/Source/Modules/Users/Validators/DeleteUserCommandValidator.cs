@@ -13,15 +13,8 @@ public class DeleteUserCommandValidator : AbstractValidator<DeleteUserCommand> {
   public DeleteUserCommandValidator(ApplicationDbContext context) {
     _context = context;
 
-    RuleFor(x => x.UserId)
-      .NotEmpty()
-      .WithMessage("User ID is required")
-      .MustAsync(UserExists)
-      .WithMessage("User not found");
+    RuleFor(x => x.UserId).NotEmpty().WithMessage("User ID is required").MustAsync(UserExists).WithMessage("User not found");
   }
 
-  private async Task<bool> UserExists(Guid userId, CancellationToken cancellationToken) {
-    return await _context.Users
-                         .AnyAsync(x => x.Id == userId && x.DeletedAt == null, cancellationToken);
-  }
+  private async Task<bool> UserExists(Guid userId, CancellationToken cancellationToken) { return await _context.Users.AnyAsync(x => x.Id == userId && x.DeletedAt == null, cancellationToken); }
 }

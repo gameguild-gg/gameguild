@@ -5,24 +5,27 @@ using GameGuild.Modules.Posts.Models;
 
 namespace GameGuild.Modules.Posts.Services;
 
-/// <summary>
-/// Service implementation for Post business logic
-/// Provides comprehensive post management capabilities matching ProjectService features
-/// </summary>
+/// <summary> Service implementation for Post business logic Provides comprehensive post management capabilities matching ProjectService features </summary>
 public class PostService(ApplicationDbContext context, ILogger<PostService> logger) : IPostService {
-  #region Basic CRUD Operations
+  #region Private Helper Methods
 
-  public async Task<Post?> GetPostByIdAsync(Guid id) {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.DeletedAt == null)
-                        .FirstOrDefaultAsync(p => p.Id == id);
+  private async Task UpdatePostLikesCount(Guid postId, int change) {
+    var post = await context.Posts.FindAsync(postId);
+
+    if (post != null) {
+      post.LikesCount = Math.Max(0, post.LikesCount + change);
+      post.UpdatedAt = DateTime.UtcNow;
+    }
   }
 
+  #endregion
+
+  #region Basic CRUD Operations
+
+  public async Task<Post?> GetPostByIdAsync(Guid id) { return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id); }
+
   public async Task<Post?> GetPostByIdWithDetailsAsync(Guid id) {
-    return await context.Posts
-                        .Include(p => p.Author)
+    return await context.Posts.Include(p => p.Author)
                         .Include(p => p.Tenant)
                         .Include(p => p.Statistics)
                         .Include(p => p.Comments.Where(c => c.DeletedAt == null))
@@ -38,33 +41,13 @@ public class PostService(ApplicationDbContext context, ILogger<PostService> logg
                         .FirstOrDefaultAsync(p => p.Id == id);
   }
 
-  public async Task<Post?> GetPostBySlugAsync(string slug) {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.DeletedAt == null)
-                        .FirstOrDefaultAsync(p => p.Slug == slug);
-  }
+  public async Task<Post?> GetPostBySlugAsync(string slug) { return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Slug == slug); }
 
   public async Task<IEnumerable<Post>> GetPostsAsync(int skip = 0, int take = 50) {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .Skip(skip)
-                        .Take(take)
-                        .ToListAsync();
+    return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync();
   }
 
-  public async Task<IEnumerable<Post>> GetAllPostsAsync() {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
-  }
+  public async Task<IEnumerable<Post>> GetAllPostsAsync() { return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync(); }
 
   public async Task<Post> CreatePostAsync(Post post) {
     logger.LogInformation("Creating post: {Title} by {AuthorId}", post.Title, post.AuthorId);
@@ -150,97 +133,41 @@ public class PostService(ApplicationDbContext context, ILogger<PostService> logg
   #region Filtered Queries
 
   public async Task<IEnumerable<Post>> GetPostsByAuthorAsync(Guid authorId) {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.AuthorId == authorId && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => p.AuthorId == authorId && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<Post>> GetPostsByTypeAsync(string postType) {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.PostType == postType && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => p.PostType == postType && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<Post>> GetPostsByStatusAsync(ContentStatus status) {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.Status == status && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => p.Status == status && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<Post>> GetPostsByVisibilityAsync(AccessLevel visibility) {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.Visibility == visibility && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => p.Visibility == visibility && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<Post>> GetSystemPostsAsync() {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.IsSystemGenerated && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => p.IsSystemGenerated && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<Post>> GetUserPostsAsync() {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => !p.IsSystemGenerated && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => !p.IsSystemGenerated && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
-  public async Task<IEnumerable<Post>> GetPinnedPostsAsync() {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.IsPinned && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
-  }
+  public async Task<IEnumerable<Post>> GetPinnedPostsAsync() { return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => p.IsPinned && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync(); }
 
   public async Task<IEnumerable<Post>> GetPostsByTenantAsync(Guid tenantId) {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.Tenant != null && p.Tenant.Id == tenantId && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => p.Tenant != null && p.Tenant.Id == tenantId && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<Post>> GetPublicPostsAsync() {
-    return await context.Posts
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.Visibility == AccessLevel.Public &&
-                                    p.Status == ContentStatus.Published &&
-                                    p.DeletedAt == null
-                        )
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Posts.Include(p => p.Author).Include(p => p.Statistics).Where(p => p.Visibility == AccessLevel.Public && p.Status == ContentStatus.Published && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<Post>> GetDeletedPostsAsync() {
-    return await context.Posts
-                        .IgnoreQueryFilters()
-                        .Include(p => p.Author)
-                        .Include(p => p.Statistics)
-                        .Where(p => p.DeletedAt != null)
-                        .OrderByDescending(p => p.DeletedAt)
-                        .ToListAsync();
+    return await context.Posts.IgnoreQueryFilters().Include(p => p.Author).Include(p => p.Statistics).Where(p => p.DeletedAt != null).OrderByDescending(p => p.DeletedAt).ToListAsync();
   }
 
   #endregion
@@ -250,35 +177,27 @@ public class PostService(ApplicationDbContext context, ILogger<PostService> logg
   public async Task<IEnumerable<Post>> SearchPostsAsync(string searchTerm, int skip = 0, int take = 50) {
     var normalizedTerm = searchTerm.ToLower();
 
-    return await context.Posts
-                        .Include(p => p.Author)
+    return await context.Posts.Include(p => p.Author)
                         .Include(p => p.Statistics)
-                        .Where(p => p.DeletedAt == null &&
-                                    (p.Title.ToLower().Contains(normalizedTerm) ||
-                                     (p.Description != null && p.Description.ToLower().Contains(normalizedTerm)))
-                        )
+                        .Where(p => p.DeletedAt == null && (p.Title.ToLower().Contains(normalizedTerm) || p.Description != null && p.Description.ToLower().Contains(normalizedTerm)))
                         .OrderByDescending(p => p.CreatedAt)
                         .Skip(skip)
                         .Take(take)
                         .ToListAsync();
   }
 
-  public async Task<IEnumerable<Post>> GetPostsByTagsAsync(string[] tags) {
-    return await context.Posts
-                        .Include(p => p.Author)
+  public async Task<IEnumerable<Post>> GetPostsByTagsAsync(string[ ] tags) {
+    return await context.Posts.Include(p => p.Author)
                         .Include(p => p.Statistics)
                         .Include(p => p.Tags)
                         .ThenInclude(t => t.Tag)
-                        .Where(p => p.DeletedAt == null &&
-                                    p.Tags.Any(pt => tags.Contains(pt.Tag.Name))
-                        )
+                        .Where(p => p.DeletedAt == null && p.Tags.Any(pt => tags.Contains(pt.Tag.Name)))
                         .OrderByDescending(p => p.CreatedAt)
                         .ToListAsync();
   }
 
   public async Task<IEnumerable<Post>> GetTrendingPostsAsync(int skip = 0, int take = 50) {
-    return await context.Posts
-                        .Include(p => p.Author)
+    return await context.Posts.Include(p => p.Author)
                         .Include(p => p.Statistics)
                         .Where(p => p.DeletedAt == null && p.Visibility == AccessLevel.Public)
                         .OrderByDescending(p => p.Statistics != null ? p.Statistics.TrendingScore : 0)
@@ -292,13 +211,9 @@ public class PostService(ApplicationDbContext context, ILogger<PostService> logg
   public async Task<IEnumerable<Post>> GetFeedPostsAsync(Guid userId, int skip = 0, int take = 50) {
     // Get posts from users the current user follows (this would need a user following system)
     // For now, return recent public posts
-    return await context.Posts
-                        .Include(p => p.Author)
+    return await context.Posts.Include(p => p.Author)
                         .Include(p => p.Statistics)
-                        .Where(p => p.DeletedAt == null &&
-                                    p.Visibility == AccessLevel.Public &&
-                                    p.Status == ContentStatus.Published
-                        )
+                        .Where(p => p.DeletedAt == null && p.Visibility == AccessLevel.Public && p.Status == ContentStatus.Published)
                         .OrderByDescending(p => p.CreatedAt)
                         .Skip(skip)
                         .Take(take)
@@ -310,8 +225,7 @@ public class PostService(ApplicationDbContext context, ILogger<PostService> logg
   #region Post Interactions
 
   public async Task<bool> TogglePostLikeAsync(Guid postId, Guid userId, string reactionType = "like") {
-    var existingLike = await context.PostLikes
-                                    .FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId && l.ReactionType == reactionType);
+    var existingLike = await context.PostLikes.FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId && l.ReactionType == reactionType);
 
     if (existingLike != null) {
       // Remove like
@@ -358,10 +272,7 @@ public class PostService(ApplicationDbContext context, ILogger<PostService> logg
     return true;
   }
 
-  public async Task<PostStatistics?> GetPostStatisticsAsync(Guid postId) {
-    return await context.PostStatistics
-                        .FirstOrDefaultAsync(s => s.PostId == postId);
-  }
+  public async Task<PostStatistics?> GetPostStatisticsAsync(Guid postId) { return await context.PostStatistics.FirstOrDefaultAsync(s => s.PostId == postId); }
 
   #endregion
 
@@ -386,27 +297,12 @@ public class PostService(ApplicationDbContext context, ILogger<PostService> logg
     var slug = baseSlug;
     var counter = 1;
 
-    while (await context.Posts.AnyAsync(p => p.Slug == slug &&
-                                             (tenantId == null || p.Tenant!.Id == tenantId)
-           )) {
+    while (await context.Posts.AnyAsync(p => p.Slug == slug && (tenantId == null || p.Tenant!.Id == tenantId))) {
       slug = $"{baseSlug}-{counter}";
       counter++;
     }
 
     return slug;
-  }
-
-  #endregion
-
-  #region Private Helper Methods
-
-  private async Task UpdatePostLikesCount(Guid postId, int change) {
-    var post = await context.Posts.FindAsync(postId);
-
-    if (post != null) {
-      post.LikesCount = Math.Max(0, post.LikesCount + change);
-      post.UpdatedAt = DateTime.UtcNow;
-    }
   }
 
   #endregion

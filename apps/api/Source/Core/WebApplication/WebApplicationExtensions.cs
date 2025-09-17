@@ -1,14 +1,10 @@
 namespace GameGuild;
 
-/// <summary>
-/// Extension methods for WebApplication to configure the request pipeline and application concerns.
-/// </summary>
+/// <summary> Extension methods for WebApplication to configure the request pipeline and application concerns. </summary>
 internal static class WebApplicationExtensions {
-  /// <summary>
-  /// Configures the development pipeline with debugging tools and middleware.
-  /// </summary>
-  /// <param name="app">The web application</param>
-  /// <returns>The web application for chaining</returns>
+  /// <summary> Configures the development pipeline with debugging tools and middleware. </summary>
+  /// <param name="app"> The web application </param>
+  /// <returns> The web application for chaining </returns>
   public static WebApplication ConfigureDevelopmentPipeline(this WebApplication app) {
     ArgumentNullException.ThrowIfNull(app);
 
@@ -17,11 +13,9 @@ internal static class WebApplicationExtensions {
     return app;
   }
 
-  /// <summary>
-  /// Configures the production pipeline with security and performance optimizations.
-  /// </summary>
-  /// <param name="app">The web application</param>
-  /// <returns>The web application for chaining</returns>
+  /// <summary> Configures the production pipeline with security and performance optimizations. </summary>
+  /// <param name="app"> The web application </param>
+  /// <returns> The web application for chaining </returns>
   public static WebApplication ConfigureProductionPipeline(this WebApplication app) {
     ArgumentNullException.ThrowIfNull(app);
 
@@ -33,11 +27,9 @@ internal static class WebApplicationExtensions {
     return app;
   }
 
-  /// <summary>
-  /// Configures the common middleware pipeline for all environments.
-  /// </summary>
-  /// <param name="app">The web application</param>
-  /// <returns>The web application for chaining</returns>
+  /// <summary> Configures the common middleware pipeline for all environments. </summary>
+  /// <param name="app"> The web application </param>
+  /// <returns> The web application for chaining </returns>
   public static WebApplication ConfigureCommonPipeline(this WebApplication app) {
     ArgumentNullException.ThrowIfNull(app);
 
@@ -51,11 +43,9 @@ internal static class WebApplicationExtensions {
     return app;
   }
 
-  /// <summary>
-  /// Configures the complete GameGuild application pipeline.
-  /// </summary>
-  /// <param name="app">The web application</param>
-  /// <returns>The web application for chaining</returns>
+  /// <summary> Configures the complete GameGuild application pipeline. </summary>
+  /// <param name="app"> The web application </param>
+  /// <returns> The web application for chaining </returns>
   public static WebApplication ConfigurePipeline(this WebApplication app) {
     ArgumentNullException.ThrowIfNull(app);
 
@@ -69,12 +59,10 @@ internal static class WebApplicationExtensions {
     return app;
   }
 
-  /// <summary>
-  /// Configures OpenAPI UI in the request pipeline with both native support and Swagger UI.
-  /// </summary>
-  /// <param name="app">The web application</param>
-  /// <param name="documentName">The document name (default: "v1")</param>
-  /// <returns>The web application for chaining</returns>
+  /// <summary> Configures OpenAPI UI in the request pipeline with both native support and Swagger UI. </summary>
+  /// <param name="app"> The web application </param>
+  /// <param name="documentName"> The document name (default: "v1") </param>
+  /// <returns> The web application for chaining </returns>
   public static WebApplication UseOpenApi(this WebApplication app, string documentName = "v1") {
     ArgumentNullException.ThrowIfNull(app);
 

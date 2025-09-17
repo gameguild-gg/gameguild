@@ -12,10 +12,7 @@ public class UpdateUserProfileHandler(ApplicationDbContext context, ILogger<Upda
     try {
       var userProfile = await context.Resources.OfType<UserProfile>().FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
-      if (userProfile == null)
-        return Result.Failure<UserProfile>(
-          Error.NotFound("UserProfile.NotFound", $"User profile with ID {request.UserProfileId} not found")
-        );
+      if (userProfile == null) return Result.Failure<UserProfile>(Error.NotFound("UserProfile.NotFound", $"User profile with ID {request.UserProfileId} not found"));
 
       // Track changes for notification
       var changes = new Dictionary<string, object>();
@@ -52,11 +49,7 @@ public class UpdateUserProfileHandler(ApplicationDbContext context, ILogger<Upda
         userProfile.Touch();
         await context.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation(
-          "User profile {UserProfileId} updated successfully with {ChangeCount} changes",
-          request.UserProfileId,
-          changes.Count
-        );
+        logger.LogInformation("User profile {UserProfileId} updated successfully with {ChangeCount} changes", request.UserProfileId, changes.Count);
 
         // Publish domain event with changes
         await eventPublisher.PublishAsync(
@@ -75,9 +68,7 @@ public class UpdateUserProfileHandler(ApplicationDbContext context, ILogger<Upda
     catch (Exception ex) {
       logger.LogError(ex, "Error updating user profile {UserProfileId}", request.UserProfileId);
 
-      return Result.Failure<UserProfile>(
-        Error.Failure("UserProfile.UpdateFailed", "Failed to update user profile")
-      );
+      return Result.Failure<UserProfile>(Error.Failure("UserProfile.UpdateFailed", "Failed to update user profile"));
     }
   }
 }

@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Tags.Models;
 [Index(nameof(ProficiencyLevel))]
 [Index(nameof(IsActive))]
 public class TagProficiency : EntityBase {
-  [Required][MaxLength(100)] public string Name { get; set; } = string.Empty;
+  [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
 
   [MaxLength(500)] public string? Description { get; set; }
 
@@ -17,21 +17,15 @@ public class TagProficiency : EntityBase {
 
   public SkillProficiencyLevel ProficiencyLevel { get; set; }
 
-  /// <summary>
-  /// Hexadecimal color code for UI display
-  /// </summary>
+  /// <summary> Hexadecimal color code for UI display </summary>
   [MaxLength(7)]
   public string? Color { get; set; }
 
-  /// <summary>
-  /// Icon identifier for UI display
-  /// </summary>
+  /// <summary> Icon identifier for UI display </summary>
   [MaxLength(100)]
   public string? Icon { get; set; }
 
-  /// <summary>
-  /// Whether this tag proficiency is available for use
-  /// </summary>
+  /// <summary> Whether this tag proficiency is available for use </summary>
   public bool IsActive { get; set; } = true;
 
   // Navigation properties

@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,12 +19,7 @@ public class TestingLabSettingsController(
   public async Task<ActionResult<TestingLabSettingsDto>> GetSettings() {
     try {
       // Enhanced debugging: Log all claims
-      var claims = User.Claims.Select(c => new {
-        c.Type,
-        c.Value,
-      }
-                       )
-                       .ToList();
+      var claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
       var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
       var rolesClaim = User.FindFirst("roles")?.Value;
       var roleClaims = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value).ToList();
@@ -35,14 +29,7 @@ public class TestingLabSettingsController(
       Console.WriteLine($"Roles claim: {rolesClaim}");
       Console.WriteLine($"Individual role claims: {string.Join(", ", roleClaims)}");
 
-      if (string.IsNullOrEmpty(userId)) {
-        return Unauthorized(
-          new {
-            message = "User ID claim not found in token",
-            allClaims = claims,
-          }
-        );
-      }
+      if (string.IsNullOrEmpty(userId)) { return Unauthorized(new { message = "User ID claim not found in token", allClaims = claims }); }
 
       // Use middleware-provided tenant context (nullable for global)
       var tenantId = tenantContext.TenantId;
@@ -59,12 +46,7 @@ public class TestingLabSettingsController(
           message = "An error occurred while retrieving settings",
           error = ex.Message,
           stackTrace = ex.StackTrace,
-          claims = User.Claims.Select(c => new {
-            c.Type,
-            c.Value,
-          }
-                       )
-                       .ToList(),
+          claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList(),
           tenantInfo = new {
             hasTenantClaim = User.HasClaim(c => c.Type == "tenant_id" || c.Type == "http://schemas.microsoft.com/identity/claims/tenantid"),
             tenantIdClaim = User.FindFirst("tenant_id")?.Value ?? User.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid")?.Value,
@@ -86,22 +68,8 @@ public class TestingLabSettingsController(
 
       return Ok(settingsDto);
     }
-    catch (ArgumentException ex) {
-      return BadRequest(
-        new {
-          message = ex.Message,
-        }
-      );
-    }
-    catch (Exception ex) {
-      return StatusCode(
-        500,
-        new {
-          message = "An error occurred while saving settings",
-          error = ex.Message,
-        }
-      );
-    }
+    catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+    catch (Exception ex) { return StatusCode(500, new { message = "An error occurred while saving settings", error = ex.Message }); }
   }
 
   /// <summary> Update testing lab settings for the current tenant (partial update) </summary>
@@ -115,22 +83,8 @@ public class TestingLabSettingsController(
 
       return Ok(settingsDto);
     }
-    catch (ArgumentException ex) {
-      return BadRequest(
-        new {
-          message = ex.Message,
-        }
-      );
-    }
-    catch (Exception ex) {
-      return StatusCode(
-        500,
-        new {
-          message = "An error occurred while updating settings",
-          error = ex.Message,
-        }
-      );
-    }
+    catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+    catch (Exception ex) { return StatusCode(500, new { message = "An error occurred while updating settings", error = ex.Message }); }
   }
 
   /// <summary> Reset testing lab settings to default values for the current tenant </summary>
@@ -144,22 +98,8 @@ public class TestingLabSettingsController(
 
       return Ok(settingsDto);
     }
-    catch (ArgumentException ex) {
-      return BadRequest(
-        new {
-          message = ex.Message,
-        }
-      );
-    }
-    catch (Exception ex) {
-      return StatusCode(
-        500,
-        new {
-          message = "An error occurred while resetting settings",
-          error = ex.Message,
-        }
-      );
-    }
+    catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+    catch (Exception ex) { return StatusCode(500, new { message = "An error occurred while resetting settings", error = ex.Message }); }
   }
 
   /// <summary> Check if testing lab settings exist for the current tenant </summary>
@@ -172,15 +112,7 @@ public class TestingLabSettingsController(
 
       return Ok(exists);
     }
-    catch (Exception ex) {
-      return StatusCode(
-        500,
-        new {
-          message = "An error occurred while checking settings",
-          error = ex.Message,
-        }
-      );
-    }
+    catch (Exception ex) { return StatusCode(500, new { message = "An error occurred while checking settings", error = ex.Message }); }
   }
 
   #region Private Helper Methods

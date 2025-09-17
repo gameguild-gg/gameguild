@@ -1,6 +1,4 @@
-using GameGuild.Authorization;
 using GameGuild.GraphQL;
-using GameGuild.Modules.Permissions;
 using GradingMethodEnum = GameGuild.GradingMethod;
 using ProgramContentTypeEnum = GameGuild.ProgramContentType;
 using VisibilityEnum = GameGuild.Visibility;
@@ -10,10 +8,7 @@ namespace GameGuild.Modules.Programs;
 
 [ExtendObjectType<Mutation>]
 public class ProgramContentMutations {
-  /// <summary>
-  /// Create new program content (Resource Level: Create permission required for the parent Program)
-  /// Layer 3: Resource Level - User needs Create permission on the specific Program
-  /// </summary>
+  /// <summary> Create new program content (Resource Level: Create permission required for the parent Program) Layer 3: Resource Level - User needs Create permission on the specific Program </summary>
   [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Create, "programId")]
   public async Task<ProgramContent> CreateContentAsync(
     [Service] IProgramContentService contentService,
@@ -48,10 +43,7 @@ public class ProgramContentMutations {
     return await contentService.CreateContentAsync(content);
   }
 
-  /// <summary>
-  /// Update specific program content (Resource Level: Edit permission required for the parent Program)
-  /// Layer 3: Resource Level - User needs Edit permission on the parent Program
-  /// </summary>
+  /// <summary> Update specific program content (Resource Level: Edit permission required for the parent Program) Layer 3: Resource Level - User needs Edit permission on the parent Program </summary>
   [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
   public async Task<ProgramContent> UpdateContentAsync(
     [Service] IProgramContentService contentService,
@@ -90,16 +82,9 @@ public class ProgramContentMutations {
     return await contentService.UpdateContentAsync(existingContent);
   }
 
-  /// <summary>
-  /// Delete specific program content (Resource Level: Delete permission required for the parent Program)
-  /// Layer 3: Resource Level - User needs Delete permission on the parent Program
-  /// </summary>
+  /// <summary> Delete specific program content (Resource Level: Delete permission required for the parent Program) Layer 3: Resource Level - User needs Delete permission on the parent Program </summary>
   [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Delete, "programId")]
-  public async Task<bool> DeleteContentAsync(
-    [Service] IProgramContentService contentService,
-    Guid programId,
-    Guid contentId
-  ) {
+  public async Task<bool> DeleteContentAsync([Service] IProgramContentService contentService, Guid programId, Guid contentId) {
     var existingContent = await contentService.GetContentByIdAsync(contentId);
 
     if (existingContent == null) return false;
@@ -110,18 +95,9 @@ public class ProgramContentMutations {
     return await contentService.DeleteContentAsync(contentId);
   }
 
-  /// <summary>
-  /// Move specific program content (Resource Level: Edit permission required for the parent Program)
-  /// Layer 3: Resource Level - User needs Edit permission on the parent Program
-  /// </summary>
+  /// <summary> Move specific program content (Resource Level: Edit permission required for the parent Program) Layer 3: Resource Level - User needs Edit permission on the parent Program </summary>
   [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
-  public async Task<bool> MoveContentAsync(
-    [Service] IProgramContentService contentService,
-    Guid programId,
-    Guid contentId,
-    Guid? newParentId,
-    int newSortOrder = 0
-  ) {
+  public async Task<bool> MoveContentAsync([Service] IProgramContentService contentService, Guid programId, Guid contentId, Guid? newParentId, int newSortOrder = 0) {
     var existingContent = await contentService.GetContentByIdAsync(contentId);
 
     if (existingContent == null) return false;
@@ -132,15 +108,9 @@ public class ProgramContentMutations {
     return await contentService.MoveContentAsync(contentId, newParentId, newSortOrder);
   }
 
-  /// <summary>
-  /// Reorder program content (Resource Level: Edit permission required for the parent Program)
-  /// Layer 3: Resource Level - User needs Edit permission on the specific Program
-  /// </summary>
+  /// <summary> Reorder program content (Resource Level: Edit permission required for the parent Program) Layer 3: Resource Level - User needs Edit permission on the specific Program </summary>
   [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
-  public async Task<bool> ReorderContentAsync(
-    [Service] IProgramContentService contentService, Guid programId,
-    List<Guid> contentIds, List<int> sortOrders
-  ) {
+  public async Task<bool> ReorderContentAsync([Service] IProgramContentService contentService, Guid programId, List<Guid> contentIds, List<int> sortOrders) {
     if (contentIds.Count != sortOrders.Count) throw new ArgumentException("ContentIds and SortOrders must have the same length");
 
     var reorderList = contentIds.Zip(sortOrders, (id, order) => (id, order)).ToList();

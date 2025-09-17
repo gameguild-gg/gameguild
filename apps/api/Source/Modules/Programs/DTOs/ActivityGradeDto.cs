@@ -1,8 +1,6 @@
 namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// DTO for ActivityGrade responses - avoids circular references for Swagger/OpenAPI
-/// </summary>
+/// <summary> DTO for ActivityGrade responses - avoids circular references for Swagger/OpenAPI </summary>
 public class ActivityGradeDto {
   public Guid Id { get; set; }
 
@@ -32,15 +30,9 @@ public class ActivityGradeDto {
     get => Grade >= 70; // Assuming 70% is passing
   }
 
-  public string GradePercentage {
-    get => $"{Grade:F1}%";
-  }
+  public string GradePercentage { get => $"{Grade:F1}%"; }
 
-  public bool HasFeedback {
-    get => !string.IsNullOrEmpty(Feedback);
-  }
+  public bool HasFeedback { get => !string.IsNullOrEmpty(Feedback); }
 
-  public bool HasGradingDetails {
-    get => !string.IsNullOrEmpty(GradingDetails);
-  }
+  public bool HasGradingDetails { get => !string.IsNullOrEmpty(GradingDetails); }
 }

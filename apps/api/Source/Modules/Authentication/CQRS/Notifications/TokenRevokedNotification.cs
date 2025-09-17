@@ -1,9 +1,9 @@
 using GameGuild.CQRS;
+
+
 namespace GameGuild.Modules.Authentication;
 
-/// <summary>
-/// Domain notification published when a user token is revoked
-/// </summary>
+/// <summary> Domain notification published when a user token is revoked </summary>
 public class TokenRevokedNotification : INotification {
   public string RefreshToken { get; set; } = string.Empty;
 

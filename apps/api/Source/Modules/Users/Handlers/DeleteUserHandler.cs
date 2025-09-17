@@ -6,14 +6,9 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Handler for deleting user
 /// </summary>
-public class DeleteUserHandler(
-  ApplicationDbContext context,
-  ILogger<DeleteUserHandler> logger,
-  CQRS.IMediator mediator
-) : CQRS.IRequestHandler<DeleteUserCommand, bool> {
+public class DeleteUserHandler(ApplicationDbContext context, ILogger<DeleteUserHandler> logger, CQRS.IMediator mediator) : CQRS.IRequestHandler<DeleteUserCommand, bool> {
   public async Task<bool> Handle(DeleteUserCommand request, CancellationToken cancellationToken) {
-    var user = await context.Users
-                            .FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
+    var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
 
     if (user == null) throw new InvalidOperationException($"User with ID {request.UserId} not found");
 

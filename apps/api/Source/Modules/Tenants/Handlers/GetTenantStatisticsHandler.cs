@@ -4,13 +4,8 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.Tenants;
 
-/// <summary>
-/// Handler for getting tenant statistics
-/// </summary>
-public class GetTenantStatisticsHandler(
-  ApplicationDbContext context,
-  ILogger<GetTenantStatisticsHandler> logger
-) : IQueryHandler<GetTenantStatisticsQuery, Result<TenantStatistics>> {
+/// <summary> Handler for getting tenant statistics </summary>
+public class GetTenantStatisticsHandler(ApplicationDbContext context, ILogger<GetTenantStatisticsHandler> logger) : IQueryHandler<GetTenantStatisticsQuery, Result<TenantStatistics>> {
   public async Task<Result<TenantStatistics>> Handle(GetTenantStatisticsQuery request, CancellationToken cancellationToken) {
     try {
       var allTenants = context.Resources.OfType<Tenant>();
@@ -21,26 +16,18 @@ public class GetTenantStatisticsHandler(
         ActiveTenants = await activeTenants.CountAsync(t => t.IsActive, cancellationToken),
         InactiveTenants = await activeTenants.CountAsync(t => !t.IsActive, cancellationToken),
         DeletedTenants = await allTenants.CountAsync(t => t.DeletedAt != null, cancellationToken),
-        OldestTenantCreatedAt = await activeTenants.MinAsync(t => (DateTime?)t.CreatedAt, cancellationToken),
-        NewestTenantCreatedAt = await activeTenants.MaxAsync(t => (DateTime?)t.CreatedAt, cancellationToken),
+        OldestTenantCreatedAt = await activeTenants.MinAsync(t => (DateTime?) t.CreatedAt, cancellationToken),
+        NewestTenantCreatedAt = await activeTenants.MaxAsync(t => (DateTime?) t.CreatedAt, cancellationToken),
       };
 
-      logger.LogInformation(
-        "Generated tenant statistics: {Total} total, {Active} active, {Inactive} inactive, {Deleted} deleted",
-        statistics.TotalTenants,
-        statistics.ActiveTenants,
-        statistics.InactiveTenants,
-        statistics.DeletedTenants
-      );
+      logger.LogInformation("Generated tenant statistics: {Total} total, {Active} active, {Inactive} inactive, {Deleted} deleted", statistics.TotalTenants, statistics.ActiveTenants, statistics.InactiveTenants, statistics.DeletedTenants);
 
       return Result.Success(statistics);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error generating tenant statistics");
 
-      return Result.Failure<TenantStatistics>(
-        Error.Failure("Tenant.StatisticsFailed", "Failed to generate tenant statistics")
-      );
+      return Result.Failure<TenantStatistics>(Error.Failure("Tenant.StatisticsFailed", "Failed to generate tenant statistics"));
     }
   }
 }

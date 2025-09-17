@@ -1,137 +1,110 @@
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 
 
-namespace GameGuild.Modules.Authentication {
-  public class OAuthService(HttpClient httpClient, IConfiguration configuration) : IOAuthService {
-    public async Task<string> ExchangeGitHubCodeAsync(string code, string redirectUri) {
-      var clientId = configuration["OAuth:GitHub:ClientId"];
-      var clientSecret = configuration["OAuth:GitHub:ClientSecret"];
+namespace GameGuild.Modules.Authentication;
 
-      var tokenRequest = new { client_id = clientId, client_secret = clientSecret, code, redirect_uri = redirectUri };
+public class OAuthService(HttpClient httpClient, IConfiguration configuration) : IOAuthService {
+  public async Task<string> ExchangeGitHubCodeAsync(string code, string redirectUri) {
+    var clientId = configuration["OAuth:GitHub:ClientId"];
+    var clientSecret = configuration["OAuth:GitHub:ClientSecret"];
 
-      var content = new StringContent(
-        JsonSerializer.Serialize(tokenRequest),
-        System.Text.Encoding.UTF8,
-        "application/json"
-      );
+    var tokenRequest = new { client_id = clientId, client_secret = clientSecret, code, redirect_uri = redirectUri };
 
-      httpClient.DefaultRequestHeaders.Accept.Clear();
-      httpClient.DefaultRequestHeaders.Accept.Add(
-        new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json")
-      );
+    var content = new StringContent(JsonSerializer.Serialize(tokenRequest), Encoding.UTF8, "application/json");
 
-      var response =
-        await httpClient.PostAsync("https://github.com/login/oauth/access_token", content);
-      var responseContent = await response.Content.ReadAsStringAsync();
+    httpClient.DefaultRequestHeaders.Accept.Clear();
+    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-      var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+    var response = await httpClient.PostAsync("https://github.com/login/oauth/access_token", content);
+    var responseContent = await response.Content.ReadAsStringAsync();
 
-      return tokenResponse.GetProperty("access_token").GetString() ??
-             throw new InvalidOperationException("Failed to get access token");
+    var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+
+    return tokenResponse.GetProperty("access_token").GetString() ?? throw new InvalidOperationException("Failed to get access token");
+  }
+
+  public async Task<GitHubUserDto> GetGitHubUserAsync(string accessToken) {
+    httpClient.DefaultRequestHeaders.Clear();
+    httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+    httpClient.DefaultRequestHeaders.Add("User-Agent", "GameGuild-CMS");
+
+    var response = await httpClient.GetAsync("https://api.github.com/user");
+    var content = await response.Content.ReadAsStringAsync();
+
+    var user = JsonSerializer.Deserialize<GitHubUserDto>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }) ?? throw new InvalidOperationException("Failed to parse GitHub user");
+
+    // Get email if not public
+    if (string.IsNullOrEmpty(user.Email)) {
+      var emailResponse = await httpClient.GetAsync("https://api.github.com/user/emails");
+      var emailContent = await emailResponse.Content.ReadAsStringAsync();
+      var emails = JsonSerializer.Deserialize<JsonElement[ ]>(emailContent);
+
+      if (emails != null)
+        foreach (var email in emails) {
+          if (email.GetProperty("primary").GetBoolean()) {
+            user.Email = email.GetProperty("email").GetString() ?? "";
+
+            break;
+          }
+        }
     }
 
-    public async Task<GitHubUserDto> GetGitHubUserAsync(string accessToken) {
-      httpClient.DefaultRequestHeaders.Clear();
-      httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-      httpClient.DefaultRequestHeaders.Add("User-Agent", "GameGuild-CMS");
+    return user;
+  }
 
-      var response = await httpClient.GetAsync("https://api.github.com/user");
+  public async Task<string> ExchangeGoogleCodeAsync(string code, string redirectUri) {
+    var clientId = configuration["OAuth:Google:ClientId"];
+    var clientSecret = configuration["OAuth:Google:ClientSecret"];
+
+    var tokenRequest = new Dictionary<string, string> { { "client_id", clientId! }, { "client_secret", clientSecret! }, { "code", code }, { "grant_type", "authorization_code" }, { "redirect_uri", redirectUri } };
+
+    var content = new FormUrlEncodedContent(tokenRequest);
+    var response = await httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
+    var responseContent = await response.Content.ReadAsStringAsync();
+
+    var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+
+    return tokenResponse.GetProperty("access_token").GetString() ?? throw new InvalidOperationException("Failed to get access token");
+  }
+
+  public async Task<GoogleUserDto> GetGoogleUserAsync(string accessToken) {
+    httpClient.DefaultRequestHeaders.Clear();
+    httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+
+    var response = await httpClient.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
+    var content = await response.Content.ReadAsStringAsync();
+
+    return JsonSerializer.Deserialize<GoogleUserDto>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) ?? throw new InvalidOperationException("Failed to parse Google user");
+  }
+
+  public async Task<GoogleUserDto> ValidateGoogleIdTokenAsync(string idToken) {
+    try {
+      // Call Google's tokeninfo API to validate the ID token
+      var response = await httpClient.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}");
+
+      if (!response.IsSuccessStatusCode) throw new UnauthorizedAccessException($"Google tokeninfo API returned {response.StatusCode}");
+
       var content = await response.Content.ReadAsStringAsync();
 
-      var user =
-        JsonSerializer.Deserialize<GitHubUserDto>(
-          content,
-          new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }
-        ) ??
-        throw new InvalidOperationException("Failed to parse GitHub user");
+      // Parse the JSON response manually since Google's tokeninfo API uses different field names
+      var tokenInfo = JsonSerializer.Deserialize<JsonElement>(content);
 
-      // Get email if not public
-      if (string.IsNullOrEmpty(user.Email)) {
-        var emailResponse = await httpClient.GetAsync("https://api.github.com/user/emails");
-        var emailContent = await emailResponse.Content.ReadAsStringAsync();
-        var emails = JsonSerializer.Deserialize<JsonElement[]>(emailContent);
+      // Validate that the token is valid
+      if (!tokenInfo.TryGetProperty("aud", out _)) throw new UnauthorizedAccessException("Invalid Google ID token: missing audience");
 
-        if (emails != null)
-          foreach (var email in emails) {
-            if (email.GetProperty("primary").GetBoolean()) {
-              user.Email = email.GetProperty("email").GetString() ?? "";
-
-              break;
-            }
-          }
-      }
-
-      return user;
-    }
-
-    public async Task<string> ExchangeGoogleCodeAsync(string code, string redirectUri) {
-      var clientId = configuration["OAuth:Google:ClientId"];
-      var clientSecret = configuration["OAuth:Google:ClientSecret"];
-
-      var tokenRequest = new Dictionary<string, string> {
-        { "client_id", clientId! },
-        { "client_secret", clientSecret! },
-        { "code", code },
-        { "grant_type", "authorization_code" },
-        { "redirect_uri", redirectUri },
+      // Extract user information and map to GoogleUserDto
+      var googleUser = new GoogleUserDto {
+        Id = tokenInfo.GetProperty("sub").GetString() ?? throw new InvalidOperationException("Missing sub claim"),
+        Email = tokenInfo.GetProperty("email").GetString() ?? throw new InvalidOperationException("Missing email claim"),
+        Name = tokenInfo.TryGetProperty("name", out var nameElement) ? nameElement.GetString() ?? "" : "",
+        Picture = tokenInfo.TryGetProperty("picture", out var pictureElement) ? pictureElement.GetString() ?? "" : "",
+        EmailVerified = tokenInfo.TryGetProperty("email_verified", out var verifiedElement) && (verifiedElement.GetString() == "true" || verifiedElement.ValueKind == JsonValueKind.True),
       };
 
-      var content = new FormUrlEncodedContent(tokenRequest);
-      var response = await httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
-      var responseContent = await response.Content.ReadAsStringAsync();
-
-      var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
-
-      return tokenResponse.GetProperty("access_token").GetString() ??
-             throw new InvalidOperationException("Failed to get access token");
+      return googleUser;
     }
-
-    public async Task<GoogleUserDto> GetGoogleUserAsync(string accessToken) {
-      httpClient.DefaultRequestHeaders.Clear();
-      httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-
-      var response = await httpClient.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
-      var content = await response.Content.ReadAsStringAsync();
-
-      return JsonSerializer.Deserialize<GoogleUserDto>(
-               content,
-               new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
-             ) ??
-             throw new InvalidOperationException("Failed to parse Google user");
-    }
-
-    public async Task<GoogleUserDto> ValidateGoogleIdTokenAsync(string idToken) {
-      try {
-        // Call Google's tokeninfo API to validate the ID token
-        var response =
-          await httpClient.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}");
-
-        if (!response.IsSuccessStatusCode) throw new UnauthorizedAccessException($"Google tokeninfo API returned {response.StatusCode}");
-
-        var content = await response.Content.ReadAsStringAsync();
-
-        // Parse the JSON response manually since Google's tokeninfo API uses different field names
-        var tokenInfo = JsonSerializer.Deserialize<JsonElement>(content);
-
-        // Validate that the token is valid
-        if (!tokenInfo.TryGetProperty("aud", out _)) throw new UnauthorizedAccessException("Invalid Google ID token: missing audience");
-
-        // Extract user information and map to GoogleUserDto
-        var googleUser = new GoogleUserDto {
-          Id = tokenInfo.GetProperty("sub").GetString() ?? throw new InvalidOperationException("Missing sub claim"),
-          Email = tokenInfo.GetProperty("email").GetString() ??
-                  throw new InvalidOperationException("Missing email claim"),
-          Name = tokenInfo.TryGetProperty("name", out var nameElement) ? nameElement.GetString() ?? "" : "",
-          Picture = tokenInfo.TryGetProperty("picture", out var pictureElement)
-                      ? pictureElement.GetString() ?? ""
-                      : "",
-          EmailVerified = tokenInfo.TryGetProperty("email_verified", out var verifiedElement) &&
-                          (verifiedElement.GetString() == "true" || verifiedElement.ValueKind == JsonValueKind.True),
-        };
-
-        return googleUser;
-      }
-      catch (Exception ex) when (!(ex is UnauthorizedAccessException)) { throw new UnauthorizedAccessException($"Failed to validate Google ID token: {ex.Message}", ex); }
-    }
+    catch (Exception ex) when (!(ex is UnauthorizedAccessException)) { throw new UnauthorizedAccessException($"Failed to validate Google ID token: {ex.Message}", ex); }
   }
 }

@@ -10,17 +10,11 @@ public class TestingLocationType : ObjectType<TestingLocation> {
 
     descriptor.Field(p => p.Name).Type<NonNullType<StringType>>().Description("Name of the testing location.");
 
-    descriptor.Field(p => p.MaxTestersCapacity)
-              .Type<IntType>()
-              .Description("Maximum number of testers this location can accommodate.");
+    descriptor.Field(p => p.MaxTestersCapacity).Type<IntType>().Description("Maximum number of testers this location can accommodate.");
 
-    descriptor.Field(p => p.MaxProjectsCapacity)
-              .Type<IntType>()
-              .Description("Maximum number of projects that can be tested simultaneously.");
+    descriptor.Field(p => p.MaxProjectsCapacity).Type<IntType>().Description("Maximum number of projects that can be tested simultaneously.");
 
-    descriptor.Field(p => p.Status)
-              .Type<NonNullType<EnumType<LocationStatus>>>()
-              .Description("Current status of the location.");
+    descriptor.Field(p => p.Status).Type<NonNullType<EnumType<LocationStatus>>>().Description("Current status of the location.");
 
     descriptor.Field(p => p.CreatedAt).Type<NonNullType<DateTimeType>>().Description("When the location was created.");
 
