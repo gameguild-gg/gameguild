@@ -1,10 +1,11 @@
 using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Programs;
 using GameGuild.Source.Modules.Certificates.Dtos;
 using Microsoft.AspNetCore.Mvc;
+using AddCertificateTagDto = GameGuild.Source.Modules.Certificates.Dtos.AddCertificateTagDto;
 using CertificateEntity = GameGuild.Modules.Certificates.Certificate;
 using CreateCertificateDto = GameGuild.Source.Modules.Certificates.Dtos.CreateCertificateDto;
 using UpdateCertificateDto = GameGuild.Source.Modules.Certificates.Dtos.UpdateCertificateDto;
-using AddCertificateTagDto = GameGuild.Source.Modules.Certificates.Dtos.AddCertificateTagDto;
 
 
 namespace GameGuild.Modules.Certificates.Controllers;
@@ -21,7 +22,7 @@ public class ProgramCertificatesController(Database.ApplicationDbContext db) : C
   /// List all certificates associated with a program
   /// </summary>
   [HttpGet]
-  [RequireResourcePermission<Programs.ProgramPermission, Programs.Program>(PermissionType.Read, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<CertificateEntity>>> GetProgramCertificates(Guid programId) {
     var items = await db.Certificates.Where(c => c.ProgramId == programId).ToListAsync();
     return Ok(items);
@@ -31,7 +32,7 @@ public class ProgramCertificatesController(Database.ApplicationDbContext db) : C
   /// Create a new certificate under a program
   /// </summary>
   [HttpPost]
-  [RequireResourcePermission<Programs.ProgramPermission, Programs.Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<CertificateEntity>> CreateCertificate(Guid programId, [FromBody] CreateCertificateDto dto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -45,7 +46,7 @@ public class ProgramCertificatesController(Database.ApplicationDbContext db) : C
   /// Update an existing certificate under a program
   /// </summary>
   [HttpPut("{certificateId}")]
-  [RequireResourcePermission<Programs.ProgramPermission, Programs.Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<CertificateEntity>> UpdateCertificate(
     Guid programId, Guid certificateId, [FromBody] UpdateCertificateDto dto
   ) {
@@ -65,7 +66,7 @@ public class ProgramCertificatesController(Database.ApplicationDbContext db) : C
   /// Delete a certificate under a program
   /// </summary>
   [HttpDelete("{certificateId}")]
-  [RequireResourcePermission<Programs.ProgramPermission, Programs.Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult> DeleteCertificate(Guid programId, Guid certificateId) {
     var existing = await db.Certificates.FirstOrDefaultAsync(c => c.Id == certificateId);
     if (existing == null || existing.ProgramId != programId) return NotFound();
@@ -79,7 +80,7 @@ public class ProgramCertificatesController(Database.ApplicationDbContext db) : C
   /// Add a skill tag to a certificate
   /// </summary>
   [HttpPost("{certificateId}/tags")]
-  [RequireResourcePermission<Programs.ProgramPermission, Programs.Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<CertificateTag>> AddCertificateTag(
     Guid programId, Guid certificateId, [FromBody] AddCertificateTagDto dto
   ) {
@@ -114,7 +115,7 @@ public class ProgramCertificatesController(Database.ApplicationDbContext db) : C
   /// Remove a skill tag from a certificate
   /// </summary>
   [HttpDelete("{certificateId}/tags/{tagId}")]
-  [RequireResourcePermission<Programs.ProgramPermission, Programs.Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult> RemoveCertificateTag(Guid programId, Guid certificateId, Guid tagId) {
     var cert = await db.Certificates.FirstOrDefaultAsync(c => c.Id == certificateId);
     if (cert == null || cert.ProgramId != programId) return NotFound();
