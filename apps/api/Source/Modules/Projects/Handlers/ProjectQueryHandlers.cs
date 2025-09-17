@@ -1,4 +1,3 @@
-using GameGuild.Core.Domain.Identity;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 
