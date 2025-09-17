@@ -8,7 +8,7 @@ public static class LocalizationOptionsBuilder {
   /// Creates localization options with default values.
   /// </summary>
   /// <returns>Default localization options</returns>
-  public static LocalizationOptions Create() { return new LocalizationOptions { DefaultCulture = "en-US", SupportedCultures = new[ ] { "en-US" } }; }
+  public static LocalizationOptions Create() { return new LocalizationOptions { DefaultCulture = "en-US", SupportedCultures = ["en-US"] }; }
 
   /// <summary>
   /// Creates localization options from a specific configuration section.

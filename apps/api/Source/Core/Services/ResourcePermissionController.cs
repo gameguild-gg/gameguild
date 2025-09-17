@@ -227,7 +227,7 @@ public class ResourcePermissionController : ControllerBase {
 
 /// <summary> Request to update user permissions </summary>
 public class UpdatePermissionsRequest {
-  public PermissionType[ ] Permissions { get; set; } = Array.Empty<PermissionType>();
+  public PermissionType[ ] Permissions { get; set; } = [];
 
   public DateTime? ExpiresAt { get; set; }
 }

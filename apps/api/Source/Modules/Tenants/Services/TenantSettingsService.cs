@@ -28,7 +28,7 @@ public class TenantSettingsService : ITenantSettingsService {
 
       // If this is for a specific tenant, verify tenant exists
       if (tenantId.HasValue) {
-        var tenant = await _context.Tenants.FindAsync(new object[ ] { tenantId.Value }, cancellationToken);
+        var tenant = await _context.Tenants.FindAsync([tenantId.Value], cancellationToken);
 
         if (tenant == null) { throw new ArgumentException($"Tenant with ID {tenantId} not found", nameof(tenantId)); }
 
@@ -54,7 +54,7 @@ public class TenantSettingsService : ITenantSettingsService {
       settings.TenantId = tenantId;
 
       if (tenantId.HasValue) {
-        var tenant = await _context.Tenants.FindAsync(new object[ ] { tenantId.Value }, cancellationToken);
+        var tenant = await _context.Tenants.FindAsync([tenantId.Value], cancellationToken);
 
         if (tenant == null) { throw new ArgumentException($"Tenant with ID {tenantId} not found", nameof(tenantId)); }
 
@@ -111,7 +111,7 @@ public class TenantSettingsService : ITenantSettingsService {
     if (existing == null) {
       // Create new default settings
       if (tenantId.HasValue) {
-        var tenant = await _context.Tenants.FindAsync(new object[ ] { tenantId.Value }, cancellationToken);
+        var tenant = await _context.Tenants.FindAsync([tenantId.Value], cancellationToken);
 
         if (tenant == null) { throw new ArgumentException($"Tenant with ID {tenantId} not found", nameof(tenantId)); }
 
@@ -240,7 +240,7 @@ public class TenantSettingsService : ITenantSettingsService {
     effectiveSettings.TenantId = tenantId;
 
     // Load tenant reference
-    var tenant = await _context.Tenants.FindAsync(new object[ ] { tenantId }, cancellationToken);
+    var tenant = await _context.Tenants.FindAsync([tenantId], cancellationToken);
     effectiveSettings.Tenant = tenant;
 
     return effectiveSettings;
@@ -258,7 +258,7 @@ public class TenantSettingsService : ITenantSettingsService {
     clonedSettings.Version = 1;
 
     // Load target tenant
-    var targetTenant = await _context.Tenants.FindAsync(new object[ ] { targetTenantId }, cancellationToken);
+    var targetTenant = await _context.Tenants.FindAsync([targetTenantId], cancellationToken);
 
     if (targetTenant == null) { throw new ArgumentException($"Target tenant with ID {targetTenantId} not found", nameof(targetTenantId)); }
 

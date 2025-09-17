@@ -41,7 +41,7 @@ public static class ResultExtensions {
         };
 
         var propertyName = error.GetProperty() ?? "General";
-        problemDetails.Errors[propertyName] = new[] { error.Message };
+        problemDetails.Errors[propertyName] = [error.Message];
 
         return new BadRequestObjectResult(problemDetails);
 
