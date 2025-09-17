@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Users;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController(GameGuild.CQRS.IMediator mediator) : ControllerBase {
+public class UsersController(IMediator mediator) : ControllerBase {
   /// <summary>
   /// Get all users with optional filtering and pagination
   /// </summary>

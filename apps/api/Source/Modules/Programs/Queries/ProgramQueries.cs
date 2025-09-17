@@ -27,7 +27,7 @@ public record GetAllProgramsQuery(
   bool IncludeArchived = false,
   string? SortBy = "CreatedAt",
   bool SortDescending = true
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get a program by ID
@@ -37,7 +37,7 @@ public record GetProgramByIdQuery(
   bool IncludeContent = false,
   bool IncludeEnrollments = false,
   bool IncludeRatings = false
-) : GameGuild.CQRS.IRequest<Program?>;
+) : CQRS.IRequest<Program?>;
 
 /// <summary>
 /// Query to get a program by slug
@@ -47,7 +47,7 @@ public record GetProgramBySlugQuery(
   bool IncludeContent = false,
   bool IncludeEnrollments = false,
   bool IncludeRatings = false
-) : GameGuild.CQRS.IRequest<Program?>;
+) : CQRS.IRequest<Program?>;
 
 /// <summary>
 /// Query to get published program by slug (public access)
@@ -55,7 +55,7 @@ public record GetProgramBySlugQuery(
 public record GetPublishedProgramBySlugQuery(
   string Slug,
   bool IncludeContent = false
-) : GameGuild.CQRS.IRequest<Program?>;
+) : CQRS.IRequest<Program?>;
 
 // ===== SEARCH AND FILTER QUERIES =====
 
@@ -72,7 +72,7 @@ public record SearchProgramsQuery(
   bool AvailableForEnrollment = false,
   int Skip = 0,
   int Take = 50
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get programs by category
@@ -82,7 +82,7 @@ public record GetProgramsByCategoryQuery(
   int Skip = 0,
   int Take = 50,
   bool OnlyPublished = true
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get programs by difficulty
@@ -92,7 +92,7 @@ public record GetProgramsByDifficultyQuery(
   int Skip = 0,
   int Take = 50,
   bool OnlyPublished = true
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get programs by creator
@@ -102,7 +102,7 @@ public record GetProgramsByCreatorQuery(
   int Skip = 0,
   int Take = 50,
   bool OnlyPublished = false
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
 
 // ===== ENROLLMENT QUERIES =====
 
@@ -114,7 +114,7 @@ public record GetUserEnrolledProgramsQuery(
   int Skip = 0,
   int Take = 50,
   bool OnlyActive = true
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get program enrollments
@@ -124,7 +124,7 @@ public record GetProgramEnrollmentsQuery(
   int Skip = 0,
   int Take = 50,
   bool OnlyActive = true
-) : GameGuild.CQRS.IRequest<IEnumerable<ProgramUser>>;
+) : CQRS.IRequest<IEnumerable<ProgramUser>>;
 
 /// <summary>
 /// Query to check if user is enrolled in program
@@ -132,7 +132,7 @@ public record GetProgramEnrollmentsQuery(
 public record CheckUserEnrollmentQuery(
   Guid ProgramId,
   string UserId
-) : GameGuild.CQRS.IRequest<ProgramUser?>;
+) : CQRS.IRequest<ProgramUser?>;
 
 // ===== CONTENT QUERIES =====
 
@@ -143,7 +143,7 @@ public record GetProgramContentQuery(
   Guid ProgramId,
   bool OnlyVisible = true,
   string? UserId = null
-) : GameGuild.CQRS.IRequest<IEnumerable<ProgramContent>>;
+) : CQRS.IRequest<IEnumerable<ProgramContent>>;
 
 /// <summary>
 /// Query to get user's progress in a program
@@ -151,7 +151,7 @@ public record GetProgramContentQuery(
 public record GetUserProgramProgressQuery(
   Guid ProgramId,
   string UserId
-) : GameGuild.CQRS.IRequest<ProgramUserProgress?>;
+) : CQRS.IRequest<ProgramUserProgress?>;
 
 // ===== STATISTICS QUERIES =====
 
@@ -160,7 +160,7 @@ public record GetUserProgramProgressQuery(
 /// </summary>
 public record GetProgramStatisticsQuery(
   Guid ProgramId
-) : GameGuild.CQRS.IRequest<ProgramStatistics>;
+) : CQRS.IRequest<ProgramStatistics>;
 
 /// <summary>
 /// Query to get global program statistics
@@ -168,7 +168,7 @@ public record GetProgramStatisticsQuery(
 public record GetGlobalProgramStatisticsQuery(
   DateTime? FromDate = null,
   DateTime? ToDate = null
-) : GameGuild.CQRS.IRequest<GlobalProgramStatistics>;
+) : CQRS.IRequest<GlobalProgramStatistics>;
 
 /// <summary>
 /// Query to get creator's program statistics
@@ -177,7 +177,7 @@ public record GetCreatorProgramStatisticsQuery(
   string CreatorId,
   DateTime? FromDate = null,
   DateTime? ToDate = null
-) : GameGuild.CQRS.IRequest<CreatorProgramStatistics>;
+) : CQRS.IRequest<CreatorProgramStatistics>;
 
 // ===== TRENDING AND RECOMMENDATIONS =====
 
@@ -188,7 +188,7 @@ public record GetPopularProgramsQuery(
   int Skip = 0,
   int Take = 10,
   int DaysBack = 30
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get recent programs
@@ -197,7 +197,7 @@ public record GetRecentProgramsQuery(
   int Skip = 0,
   int Take = 10,
   int DaysBack = 7
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get featured programs
@@ -205,7 +205,7 @@ public record GetRecentProgramsQuery(
 public record GetFeaturedProgramsQuery(
   int Skip = 0,
   int Take = 10
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to get recommended programs for user
@@ -213,7 +213,7 @@ public record GetFeaturedProgramsQuery(
 public record GetRecommendedProgramsQuery(
   string UserId,
   int Take = 10
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
 
 // ===== RATING QUERIES =====
 
@@ -224,7 +224,7 @@ public record GetProgramRatingsQuery(
   Guid ProgramId,
   int Skip = 0,
   int Take = 50
-) : GameGuild.CQRS.IRequest<IEnumerable<ProgramRating>>;
+) : CQRS.IRequest<IEnumerable<ProgramRating>>;
 
 /// <summary>
 /// Query to get user's rating for a program
@@ -232,7 +232,7 @@ public record GetProgramRatingsQuery(
 public record GetUserProgramRatingQuery(
   Guid ProgramId,
   string UserId
-) : GameGuild.CQRS.IRequest<ProgramRating?>;
+) : CQRS.IRequest<ProgramRating?>;
 
 // ===== WISHLIST QUERIES =====
 
@@ -243,7 +243,7 @@ public record GetUserWishlistQuery(
   string UserId,
   int Skip = 0,
   int Take = 50
-) : GameGuild.CQRS.IRequest<IEnumerable<Program>>;
+) : CQRS.IRequest<IEnumerable<Program>>;
 
 /// <summary>
 /// Query to check if program is in user's wishlist
@@ -251,7 +251,7 @@ public record GetUserWishlistQuery(
 public record CheckProgramInWishlistQuery(
   Guid ProgramId,
   string UserId
-) : GameGuild.CQRS.IRequest<bool>;
+) : CQRS.IRequest<bool>;
 
 // ===== DTO CLASSES FOR STATISTICS =====
 

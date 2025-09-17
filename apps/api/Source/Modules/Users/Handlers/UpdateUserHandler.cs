@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Handler for updating user information
 /// </summary>
-public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserHandler> logger, GameGuild.CQRS.IMediator mediator) : GameGuild.CQRS.IRequestHandler<UpdateUserCommand, User> {
+public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserHandler> logger, CQRS.IMediator mediator) : CQRS.IRequestHandler<UpdateUserCommand, User> {
   public async Task<User> Handle(UpdateUserCommand request, CancellationToken cancellationToken) {
     var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
 

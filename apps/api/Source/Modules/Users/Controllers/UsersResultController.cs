@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Users;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class UsersResultController(GameGuild.CQRS.IMediator mediator, ILogger<UsersResultController> logger) : ControllerBase
+public class UsersResultController(IMediator mediator, ILogger<UsersResultController> logger) : ControllerBase
 {
     /// <summary>
     /// Creates a new user using Result<T> pattern

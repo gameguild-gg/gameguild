@@ -9,8 +9,8 @@ namespace GameGuild.Modules.Users;
 public class UpdateUserBalanceHandler(
   ApplicationDbContext context,
   ILogger<UpdateUserBalanceHandler> logger,
-  GameGuild.CQRS.IMediator mediator
-) : GameGuild.CQRS.IRequestHandler<UpdateUserBalanceCommand, User> {
+  CQRS.IMediator mediator
+) : CQRS.IRequestHandler<UpdateUserBalanceCommand, User> {
   public async Task<User> Handle(UpdateUserBalanceCommand request, CancellationToken cancellationToken) {
     var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
 

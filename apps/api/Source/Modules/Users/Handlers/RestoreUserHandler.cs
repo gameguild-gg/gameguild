@@ -9,8 +9,8 @@ namespace GameGuild.Modules.Users;
 public class RestoreUserHandler(
   ApplicationDbContext context,
   ILogger<RestoreUserHandler> logger,
-  GameGuild.CQRS.IMediator mediator
-) : GameGuild.CQRS.IRequestHandler<RestoreUserCommand, bool> {
+  CQRS.IMediator mediator
+) : CQRS.IRequestHandler<RestoreUserCommand, bool> {
   public async Task<bool> Handle(RestoreUserCommand request, CancellationToken cancellationToken) {
     var user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 

@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Handler for getting all users with filtering and pagination
 /// </summary>
-public class GetAllUsersHandler(ApplicationDbContext context) : GameGuild.CQRS.IRequestHandler<GetAllUsersQuery, IEnumerable<User>>
+public class GetAllUsersHandler(ApplicationDbContext context) : IRequestHandler<GetAllUsersQuery, IEnumerable<User>>
 {
   public async Task<IEnumerable<User>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
   {
