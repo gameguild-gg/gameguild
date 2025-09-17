@@ -1,3 +1,4 @@
+using GameGuild.Authorization;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Permissions;
 using ProgramContentEntity = GameGuild.Modules.Programs.ProgramContent;
@@ -14,7 +15,7 @@ public class ProgramContentQueries {
   /// Gets a program content by its unique identifier (Resource Level: Read permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Read permission on the parent Program that contains this content
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -35,7 +36,7 @@ public class ProgramContentQueries {
   /// Gets all content for a specific program (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -50,7 +51,7 @@ public class ProgramContentQueries {
   /// Gets content by parent content ID (Resource Level: Read permission required for the parent Program)
   /// Layer 3: Resource Level - User needs Read permission on the parent Program that contains this content
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -69,7 +70,7 @@ public class ProgramContentQueries {
   /// Gets root-level content for a program (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -84,13 +85,13 @@ public class ProgramContentQueries {
   /// Gets content filtered by type (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(
     PermissionType.Read,
     "programId"
   )]
   public async Task<IEnumerable<ProgramContentEntity>> GetContentByType(
     Guid programId,
-    Common.ProgramContentType contentType, [Service] IProgramContentService programContentService
+    ProgramContentType contentType, [Service] IProgramContentService programContentService
   ) {
     return await programContentService.GetContentByTypeAsync(programId, contentType);
   }
@@ -99,7 +100,7 @@ public class ProgramContentQueries {
   /// Gets content filtered by visibility (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -114,7 +115,7 @@ public class ProgramContentQueries {
   /// Gets required content for a program (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -129,7 +130,7 @@ public class ProgramContentQueries {
   /// Searches program content (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -144,7 +145,7 @@ public class ProgramContentQueries {
   /// Gets content count for a program (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(
     PermissionType.Read,
     "programId"
   )]
@@ -154,7 +155,7 @@ public class ProgramContentQueries {
   /// Gets required content count for a program (Resource Level: Read permission required for the Program)
   /// Layer 3: Resource Level - User needs Read permission on the specific Program
   /// </summary>
-  [Common.Authorization.RequireResourcePermission<ProgramPermission, Program>(
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(
     PermissionType.Read,
     "programId"
   )]
