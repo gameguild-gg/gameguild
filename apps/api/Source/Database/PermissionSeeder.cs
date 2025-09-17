@@ -38,7 +38,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
       await _permissionService.CreateRoleTemplateAsync(
           "TestingLabAdmin",
           "Full administrative control over all Testing Lab resources",
-          new List<GameGuild.Modules.Permissions.PermissionTemplate>
+          new List<Modules.Permissions.PermissionTemplate>
           {
                     // TestingLabSettings - full control
                     new() { Action = "create", ResourceType = "TestingLabSettings" },
@@ -81,7 +81,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
       await _permissionService.CreateRoleTemplateAsync(
           "TestingLabManager",
           "Can manage testing resources but cannot delete sessions or locations",
-          new List<GameGuild.Modules.Permissions.PermissionTemplate>
+          new List<Modules.Permissions.PermissionTemplate>
           {
                     // TestingLabSettings - can read and edit
                     new() { Action = "read", ResourceType = "TestingLabSettings" },
@@ -116,7 +116,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
       await _permissionService.CreateRoleTemplateAsync(
           "TestingLabCoordinator",
           "Can coordinate testing sessions and handle requests",
-          new List<GameGuild.Modules.Permissions.PermissionTemplate>
+          new List<Modules.Permissions.PermissionTemplate>
           {
                     // TestingLabSettings - read only
                     new() { Action = "read", ResourceType = "TestingLabSettings" },
@@ -124,7 +124,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                     // Sessions - read and edit own
                     new() { Action = "read", ResourceType = "TestingSession" },
                     new() { Action = "edit", ResourceType = "TestingSession",
-                           Constraints = new List<GameGuild.Modules.Permissions.PermissionConstraint> { new GameGuild.Modules.Permissions.PermissionConstraint() { Type = "owner", Value = "true" } } },
+                           Constraints = new List<Modules.Permissions.PermissionConstraint> { new Modules.Permissions.PermissionConstraint() { Type = "owner", Value = "true" } } },
                     
                     // Locations - read only
                     new() { Action = "read", ResourceType = "TestingLocation" },
@@ -145,7 +145,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
       await _permissionService.CreateRoleTemplateAsync(
           "TestingLabTester",
           "Can participate in testing sessions and provide feedback",
-          new List<GameGuild.Modules.Permissions.PermissionTemplate>
+          new List<Modules.Permissions.PermissionTemplate>
           {
                     // TestingLabSettings - read only
                     new() { Action = "read", ResourceType = "TestingLabSettings" },
@@ -160,19 +160,19 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                     new() { Action = "create", ResourceType = "TestingFeedback" },
                     new() { Action = "read", ResourceType = "TestingFeedback" },
                     new() { Action = "edit", ResourceType = "TestingFeedback",
-                           Constraints = new List<GameGuild.Modules.Permissions.PermissionConstraint> { new GameGuild.Modules.Permissions.PermissionConstraint() { Type = "owner", Value = "true" } } },
+                           Constraints = new List<Modules.Permissions.PermissionConstraint> { new Modules.Permissions.PermissionConstraint() { Type = "owner", Value = "true" } } },
                     
                     // Requests - create only
                     new() { Action = "create", ResourceType = "TestingRequest" },
                     new() { Action = "read", ResourceType = "TestingRequest",
-                           Constraints = new List<GameGuild.Modules.Permissions.PermissionConstraint> { new GameGuild.Modules.Permissions.PermissionConstraint() { Type = "owner", Value = "true" } } },
+                           Constraints = new List<Modules.Permissions.PermissionConstraint> { new Modules.Permissions.PermissionConstraint() { Type = "owner", Value = "true" } } },
           }).ConfigureAwait(false);
 
       // TestingLab LocationManager - Specialized for locations
       await _permissionService.CreateRoleTemplateAsync(
           "TestingLabLocationManager",
           "Can manage testing locations and view sessions",
-          new List<GameGuild.Modules.Permissions.PermissionTemplate>
+          new List<Modules.Permissions.PermissionTemplate>
           {
                     // TestingLabSettings - read only
                     new() { Action = "read", ResourceType = "TestingLabSettings" },
@@ -194,7 +194,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
       await _permissionService.CreateRoleTemplateAsync(
           "TestingLabReadOnly",
           "Can view all testing lab resources but cannot make changes",
-          new List<GameGuild.Modules.Permissions.PermissionTemplate>
+          new List<Modules.Permissions.PermissionTemplate>
           {
                     new() { Action = "read", ResourceType = "TestingLabSettings" },
                     new() { Action = "read", ResourceType = "TestingSession" },
