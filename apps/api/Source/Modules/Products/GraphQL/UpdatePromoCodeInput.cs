@@ -9,7 +9,7 @@ public class UpdatePromoCodeInput {
 
   public DateTime? ExpiryDate { get; set; }
 
-  public Common.PromoCodeType? DiscountType { get; set; }
+  public PromoCodeType? DiscountType { get; set; }
 
   public DateTime? ValidFrom { get; set; }
 
