@@ -139,7 +139,7 @@ public static class JwtAuthenticationExtensions {
   public static IServiceCollection AddAuthorizationPolicies(this IServiceCollection services) {
     services.AddAuthorization(options => {
       // Default policy requires authentication
-      options.DefaultPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+      options.DefaultPolicy = new AuthorizationPolicyBuilder()
                               .RequireAuthenticatedUser()
                               .Build();
 
