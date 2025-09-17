@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// Simplified program user information to avoid circular references
-/// </summary>
+/// <summary> Simplified program user information to avoid circular references </summary>
 public class ProgramUserSummaryDto {
   public Guid Id { get; set; }
 

@@ -7,12 +7,10 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Handler for getting user profile by user ID
 /// </summary>
-public class GetUserProfileByUserIdHandler(ApplicationDbContext context, ILogger<GetUserProfileByUserIdHandler> logger)
-  : IQueryHandler<GetUserProfileByUserIdQuery, Result<UserProfile?>> {
+public class GetUserProfileByUserIdHandler(ApplicationDbContext context, ILogger<GetUserProfileByUserIdHandler> logger) : IQueryHandler<GetUserProfileByUserIdQuery, Result<UserProfile?>> {
   public async Task<Result<UserProfile?>> Handle(GetUserProfileByUserIdQuery request, CancellationToken cancellationToken) {
     try {
-      IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>()
-                                             .Include(up => up.Metadata);
+      IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>().Include(up => up.Metadata);
 
       if (!request.IncludeDeleted)
         query = query.Where(up => up.DeletedAt == null);
@@ -20,8 +18,7 @@ public class GetUserProfileByUserIdHandler(ApplicationDbContext context, ILogger
         query = query.IgnoreQueryFilters();
 
       // UserProfile ID matches User ID for 1:1 relationship
-      var userProfile = await query
-                          .FirstOrDefaultAsync(up => up.Id == request.UserId, cancellationToken);
+      var userProfile = await query.FirstOrDefaultAsync(up => up.Id == request.UserId, cancellationToken);
 
       if (userProfile == null) {
         logger.LogDebug("User profile not found for user: {UserId}", request.UserId);
@@ -36,9 +33,7 @@ public class GetUserProfileByUserIdHandler(ApplicationDbContext context, ILogger
     catch (Exception ex) {
       logger.LogError(ex, "Error retrieving user profile for user {UserId}", request.UserId);
 
-      return Result.Failure<UserProfile?>(
-        Error.Failure("UserProfile.QueryFailed", "Failed to retrieve user profile")
-      );
+      return Result.Failure<UserProfile?>(Error.Failure("UserProfile.QueryFailed", "Failed to retrieve user profile"));
     }
   }
 }

@@ -12,10 +12,7 @@ public class ActivateTenantHandler(ApplicationDbContext context, ILogger<Activat
     try {
       var tenant = await context.Resources.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
 
-      if (tenant == null)
-        return Result.Failure<bool>(
-          Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")
-        );
+      if (tenant == null) return Result.Failure<bool>(Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found"));
 
       if (tenant.IsActive) return Result.Success(true); // Already active
 
@@ -26,19 +23,14 @@ public class ActivateTenantHandler(ApplicationDbContext context, ILogger<Activat
       logger.LogInformation("Tenant {TenantId} activated successfully", tenant.Id);
 
       // Publish domain event
-      await eventPublisher.PublishAsync(
-        new TenantActivatedEvent(tenant.Id, tenant.Name),
-        cancellationToken
-      );
+      await eventPublisher.PublishAsync(new TenantActivatedEvent(tenant.Id, tenant.Name), cancellationToken);
 
       return Result.Success(true);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error activating tenant {TenantId}", request.Id);
 
-      return Result.Failure<bool>(
-        Error.Failure("Tenant.ActivationFailed", "Failed to activate tenant")
-      );
+      return Result.Failure<bool>(Error.Failure("Tenant.ActivationFailed", "Failed to activate tenant"));
     }
   }
 }

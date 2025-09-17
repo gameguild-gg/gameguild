@@ -1,76 +1,37 @@
 using GameGuild.CQRS;
 using GameGuild.Database;
+using GameGuild.Modules.Contents;
 
 
 namespace GameGuild.Modules.Posts.Services;
 
-/// <summary>
-/// Service for creating system-generated announcement posts
-/// </summary>
+/// <summary> Service for creating system-generated announcement posts </summary>
 public interface IPostAnnouncementService {
-  /// <summary>
-  /// Creates a system announcement post
-  /// </summary>
-  Task<Result<Post>> CreateSystemAnnouncementAsync(
-    Guid tenantId,
-    Guid authorId,
-    string title,
-    string message,
-    string priority,
-    CancellationToken cancellationToken = default
-  );
+  /// <summary> Creates a system announcement post </summary>
+  Task<Result<Post>> CreateSystemAnnouncementAsync(Guid tenantId, Guid authorId, string title, string message, string priority, CancellationToken cancellationToken = default);
 
-  /// <summary>
-  /// Creates a milestone celebration post
-  /// </summary>
-  Task<Result<Post>> CreateMilestoneCelebrationAsync(
-    Guid tenantId,
-    Guid authorId,
-    string milestoneName,
-    string description,
-    DateTime achievementDate,
-    CancellationToken cancellationToken = default
-  );
+  /// <summary> Creates a milestone celebration post </summary>
+  Task<Result<Post>> CreateMilestoneCelebrationAsync(Guid tenantId, Guid authorId, string milestoneName, string description, DateTime achievementDate, CancellationToken cancellationToken = default);
 
-  /// <summary>
-  /// Creates a community update post
-  /// </summary>
-  Task<Result<Post>> CreateCommunityUpdateAsync(
-    Guid tenantId,
-    Guid authorId,
-    string title,
-    string content,
-    string targetAudience,
-    CancellationToken cancellationToken = default
-  );
+  /// <summary> Creates a community update post </summary>
+  Task<Result<Post>> CreateCommunityUpdateAsync(Guid tenantId, Guid authorId, string title, string content, string targetAudience, CancellationToken cancellationToken = default);
 }
 
-/// <summary>
-/// Implementation of post announcement service
-/// </summary>
+/// <summary> Implementation of post announcement service </summary>
 public class PostAnnouncementService : IPostAnnouncementService {
   private readonly ApplicationDbContext _context;
+
   private readonly IDomainEventPublisher _eventPublisher;
+
   private readonly ILogger<PostAnnouncementService> _logger;
 
-  public PostAnnouncementService(
-    ApplicationDbContext context,
-    IDomainEventPublisher eventPublisher,
-    ILogger<PostAnnouncementService> logger
-  ) {
+  public PostAnnouncementService(ApplicationDbContext context, IDomainEventPublisher eventPublisher, ILogger<PostAnnouncementService> logger) {
     _context = context;
     _eventPublisher = eventPublisher;
     _logger = logger;
   }
 
-  public async Task<Result<Post>> CreateSystemAnnouncementAsync(
-    Guid tenantId,
-    Guid authorId,
-    string title,
-    string message,
-    string priority,
-    CancellationToken cancellationToken = default
-  ) {
+  public async Task<Result<Post>> CreateSystemAnnouncementAsync(Guid tenantId, Guid authorId, string title, string message, string priority, CancellationToken cancellationToken = default) {
     try {
       _logger.LogInformation("Creating system announcement: {Title}", title);
 
@@ -82,8 +43,8 @@ public class PostAnnouncementService : IPostAnnouncementService {
         PostType = "system_announcement",
         AuthorId = authorId,
         IsSystemGenerated = true,
-        Visibility = Contents.AccessLevel.Public,
-        Status = Contents.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
         LikesCount = 0,
@@ -121,24 +82,11 @@ public class PostAnnouncementService : IPostAnnouncementService {
     catch (Exception ex) {
       _logger.LogError(ex, "Failed to create system announcement: {Title}", title);
 
-      return Result.Failure<Post>(
-        new Error(
-          "PostAnnouncement.CreationFailed",
-          $"Failed to create system announcement: {ex.Message}",
-          ErrorType.Failure
-        )
-      );
+      return Result.Failure<Post>(new Error("PostAnnouncement.CreationFailed", $"Failed to create system announcement: {ex.Message}", ErrorType.Failure));
     }
   }
 
-  public async Task<Result<Post>> CreateMilestoneCelebrationAsync(
-    Guid tenantId,
-    Guid authorId,
-    string milestoneName,
-    string description,
-    DateTime achievementDate,
-    CancellationToken cancellationToken = default
-  ) {
+  public async Task<Result<Post>> CreateMilestoneCelebrationAsync(Guid tenantId, Guid authorId, string milestoneName, string description, DateTime achievementDate, CancellationToken cancellationToken = default) {
     try {
       _logger.LogInformation("Creating milestone celebration for user {UserId}: {Milestone}", authorId, milestoneName);
 
@@ -150,8 +98,8 @@ public class PostAnnouncementService : IPostAnnouncementService {
         PostType = "milestone_celebration",
         AuthorId = authorId,
         IsSystemGenerated = true,
-        Visibility = Contents.AccessLevel.Public,
-        Status = Contents.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
         LikesCount = 0,
@@ -168,11 +116,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
       _context.Posts.Add(celebrationPost);
       await _context.SaveChangesAsync(cancellationToken);
 
-      _logger.LogInformation(
-        "Successfully created milestone celebration {PostId} for user {UserId}",
-        celebrationPost.Id,
-        authorId
-      );
+      _logger.LogInformation("Successfully created milestone celebration {PostId} for user {UserId}", celebrationPost.Id, authorId);
 
       // Publish domain event
       await _eventPublisher.PublishAsync(
@@ -191,31 +135,13 @@ public class PostAnnouncementService : IPostAnnouncementService {
       return Result.Success(celebrationPost);
     }
     catch (Exception ex) {
-      _logger.LogError(
-        ex,
-        "Failed to create milestone celebration for user {UserId}: {Milestone}",
-        authorId,
-        milestoneName
-      );
+      _logger.LogError(ex, "Failed to create milestone celebration for user {UserId}: {Milestone}", authorId, milestoneName);
 
-      return Result.Failure<Post>(
-        new Error(
-          "PostAnnouncement.MilestoneCreationFailed",
-          $"Failed to create milestone celebration: {ex.Message}",
-          ErrorType.Failure
-        )
-      );
+      return Result.Failure<Post>(new Error("PostAnnouncement.MilestoneCreationFailed", $"Failed to create milestone celebration: {ex.Message}", ErrorType.Failure));
     }
   }
 
-  public async Task<Result<Post>> CreateCommunityUpdateAsync(
-    Guid tenantId,
-    Guid authorId,
-    string title,
-    string content,
-    string targetAudience,
-    CancellationToken cancellationToken = default
-  ) {
+  public async Task<Result<Post>> CreateCommunityUpdateAsync(Guid tenantId, Guid authorId, string title, string content, string targetAudience, CancellationToken cancellationToken = default) {
     try {
       _logger.LogInformation("Creating community update: {UpdateTitle}", title);
 
@@ -227,8 +153,8 @@ public class PostAnnouncementService : IPostAnnouncementService {
         PostType = "community_update",
         AuthorId = authorId,
         IsSystemGenerated = true,
-        Visibility = Contents.AccessLevel.Public,
-        Status = Contents.ContentStatus.Published,
+        Visibility = AccessLevel.Public,
+        Status = ContentStatus.Published,
         CreatedAt = DateTime.UtcNow,
         UpdatedAt = DateTime.UtcNow,
         LikesCount = 0,
@@ -249,15 +175,7 @@ public class PostAnnouncementService : IPostAnnouncementService {
 
       // Publish domain event
       await _eventPublisher.PublishAsync(
-        new PostCreatedEvent(
-          updatePost.Id,
-          updatePost.AuthorId ?? Guid.Empty,
-          updatePost.Description ?? "",
-          updatePost.PostType,
-          updatePost.IsSystemGenerated,
-          updatePost.CreatedAt,
-          updatePost.Tenant?.Id ?? Guid.Empty
-        ),
+        new PostCreatedEvent(updatePost.Id, updatePost.AuthorId ?? Guid.Empty, updatePost.Description ?? "", updatePost.PostType, updatePost.IsSystemGenerated, updatePost.CreatedAt, updatePost.Tenant?.Id ?? Guid.Empty),
         cancellationToken
       );
 
@@ -266,42 +184,35 @@ public class PostAnnouncementService : IPostAnnouncementService {
     catch (Exception ex) {
       _logger.LogError(ex, "Failed to create community update: {UpdateTitle}", title);
 
-      return Result.Failure<Post>(
-        new Error(
-          "PostAnnouncement.CommunityUpdateFailed",
-          $"Failed to create community update: {ex.Message}",
-          ErrorType.Failure
-        )
-      );
+      return Result.Failure<Post>(new Error("PostAnnouncement.CommunityUpdateFailed", $"Failed to create community update: {ex.Message}", ErrorType.Failure));
     }
   }
 
   private static string GenerateSlug(string title) {
-    return title
-           .ToLowerInvariant()
-           .Replace(" ", "-")
-           .Replace(".", "")
-           .Replace(",", "")
-           .Replace("'", "")
-           .Replace("\"", "")
-           .Replace("!", "")
-           .Replace("?", "")
-           .Replace("&", "and")
-           .Replace("@", "at")
-           .Replace(":", "")
-           .Replace(";", "")
-           .Replace("(", "")
-           .Replace(")", "")
-           .Replace("[", "")
-           .Replace("]", "")
-           .Replace("{", "")
-           .Replace("}", "")
-           .Replace("#", "")
-           .Replace("%", "")
-           .Replace("*", "")
-           .Replace("+", "")
-           .Replace("=", "")
-           .Replace("/", "-")
-           .Replace("\\", "-");
+    return title.ToLowerInvariant()
+                .Replace(" ", "-")
+                .Replace(".", "")
+                .Replace(",", "")
+                .Replace("'", "")
+                .Replace("\"", "")
+                .Replace("!", "")
+                .Replace("?", "")
+                .Replace("&", "and")
+                .Replace("@", "at")
+                .Replace(":", "")
+                .Replace(";", "")
+                .Replace("(", "")
+                .Replace(")", "")
+                .Replace("[", "")
+                .Replace("]", "")
+                .Replace("{", "")
+                .Replace("}", "")
+                .Replace("#", "")
+                .Replace("%", "")
+                .Replace("*", "")
+                .Replace("+", "")
+                .Replace("=", "")
+                .Replace("/", "-")
+                .Replace("\\", "-");
   }
 }

@@ -27,10 +27,7 @@ public interface ITestingLabMappingService {
   TestingLabSettingsDto MapToDto(TestingLabSettings entity);
 
   // Collection Mappings
-  IEnumerable<TTarget> MapCollection<TSource, TTarget>(
-    IEnumerable<TSource> source,
-    Func<TSource, TTarget> mapper
-  );
+  IEnumerable<TTarget> MapCollection<TSource, TTarget>(IEnumerable<TSource> source, Func<TSource, TTarget> mapper);
 
   // Validation
   bool ValidateMapping<TSource, TTarget>(TSource source, TTarget target);

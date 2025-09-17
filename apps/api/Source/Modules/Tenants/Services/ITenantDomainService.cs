@@ -3,9 +3,7 @@ using UserModel = GameGuild.Modules.Users.User;
 
 namespace GameGuild.Modules.Tenants;
 
-/// <summary>
-/// Service for managing tenant domain-based user group assignments
-/// </summary>
+/// <summary> Service for managing tenant domain-based user group assignments </summary>
 public interface ITenantDomainService {
   // Domain Management
   Task<TenantDomain> CreateDomainAsync(TenantDomain domain);

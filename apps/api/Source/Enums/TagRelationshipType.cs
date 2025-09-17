@@ -4,18 +4,13 @@
 namespace GameGuild;
 
 public enum TagRelationshipType {
-  [Description("Tags that are related or complementary")]
-  Related,
+  [Description("Tags that are related or complementary")] Related,
 
-  [Description("Parent tag in a hierarchical structure")]
-  Parent,
+  [Description("Parent tag in a hierarchical structure")] Parent,
 
-  [Description("Child tag in a hierarchical structure")]
-  Child,
+  [Description("Child tag in a hierarchical structure")] Child,
 
-  [Description("Required prerequisite tag")]
-  Requires,
+  [Description("Required prerequisite tag")] Requires,
 
-  [Description("Suggested prerequisite or related tag")]
-  Suggested,
+  [Description("Suggested prerequisite or related tag")] Suggested,
 }

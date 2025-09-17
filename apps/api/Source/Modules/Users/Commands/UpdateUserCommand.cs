@@ -1,9 +1,9 @@
 using GameGuild.CQRS;
+
+
 namespace GameGuild.Modules.Users;
 
-/// <summary>
-/// Command to update user information with validation and business logic
-/// </summary>
+/// <summary> Command to update user information with validation and business logic </summary>
 public sealed class UpdateUserCommand : ICommand<User> {
   [Required] public Guid UserId { get; set; }
 
@@ -11,12 +11,10 @@ public sealed class UpdateUserCommand : ICommand<User> {
 
   [StringLength(50, MinimumLength = 1)] public string? Username { get; set; }
 
-  [EmailAddress][StringLength(255)] public string? Email { get; set; }
+  [EmailAddress] [StringLength(255)] public string? Email { get; set; }
 
   public bool? IsActive { get; set; }
 
-  /// <summary>
-  /// Expected version for optimistic concurrency control
-  /// </summary>
+  /// <summary> Expected version for optimistic concurrency control </summary>
   public int? ExpectedVersion { get; set; }
 }

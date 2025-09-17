@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Products;
 
-/// <summary>
-/// Interface for promotional code services
-/// </summary>
+/// <summary> Interface for promotional code services </summary>
 public interface IPromoCodeService {
   Task<PromoCode> CreatePromoCodeAsync(PromoCode promoCode);
 

@@ -1,20 +1,12 @@
-using GameGuild;
-using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
 
 namespace GameGuild.Modules.Users;
 
-/// <summary>
-/// Handler for bulk deactivating users
-/// </summary>
-public class BulkDeactivateUsersHandler(
-  ApplicationDbContext context,
-  ILogger<BulkDeactivateUsersHandler> logger,
-  IMediator mediator
-) : IResultCommandHandler<BulkDeactivateUsersCommand, BulkOperationResult> {
-  public async Task<GameGuild.CQRS.Result<BulkOperationResult>> Handle(BulkDeactivateUsersCommand request, CancellationToken cancellationToken) {
+/// <summary> Handler for bulk deactivating users </summary>
+public class BulkDeactivateUsersHandler(ApplicationDbContext context, ILogger<BulkDeactivateUsersHandler> logger, IMediator mediator) : IResultCommandHandler<BulkDeactivateUsersCommand, BulkOperationResult> {
+  public async Task<CQRS.Result<BulkOperationResult>> Handle(BulkDeactivateUsersCommand request, CancellationToken cancellationToken) {
     var deactivatedUsers = new List<User>();
     var errors = new List<string>();
     var successfulCount = 0;
@@ -57,13 +49,8 @@ public class BulkDeactivateUsersHandler(
 
     foreach (var error in errors) result.AddError(error);
 
-    logger.LogInformation(
-      "Bulk deactivate completed: {Successful}/{Total} users deactivated. Reason: {Reason}",
-      successfulCount,
-      request.UserIds.Count,
-      request.Reason ?? "Not specified"
-    );
+    logger.LogInformation("Bulk deactivate completed: {Successful}/{Total} users deactivated. Reason: {Reason}", successfulCount, request.UserIds.Count, request.Reason ?? "Not specified");
 
-    return GameGuild.CQRS.Result.Success(result);
+    return CQRS.Result.Success(result);
   }
 }

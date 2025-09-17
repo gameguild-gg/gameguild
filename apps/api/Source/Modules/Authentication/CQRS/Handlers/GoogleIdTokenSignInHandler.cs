@@ -1,14 +1,10 @@
 using GameGuild.CQRS;
+
+
 namespace GameGuild.Modules.Authentication;
 
-/// <summary>
-/// Handler for Google ID token sign-in command
-/// </summary>
-public class GoogleIdTokenSignInHandler(
-  IAuthService authService,
-  IMediator mediator,
-  ILogger<GoogleIdTokenSignInHandler> logger
-) : IRequestHandler<GoogleIdTokenSignInCommand, SignInResponseDto> {
+/// <summary> Handler for Google ID token sign-in command </summary>
+public class GoogleIdTokenSignInHandler(IAuthService authService, IMediator mediator, ILogger<GoogleIdTokenSignInHandler> logger) : IRequestHandler<GoogleIdTokenSignInCommand, SignInResponseDto> {
   public async Task<SignInResponseDto> Handle(GoogleIdTokenSignInCommand request, CancellationToken cancellationToken) {
     var signInRequest = new GoogleIdTokenRequestDto { IdToken = request.IdToken, TenantId = request.TenantId };
 
@@ -19,13 +15,7 @@ public class GoogleIdTokenSignInHandler(
     if (result?.User != null) {
       try {
         // Always publish the notification - the UserProfile handler will check if profile already exists
-        var notification = new UserSignedUpNotification {
-          UserId = result.User.Id,
-          Email = result.User.Email,
-          Username = result.User.Username ?? result.User.Email,
-          TenantId = request.TenantId,
-          SignUpTime = DateTime.UtcNow,
-        };
+        var notification = new UserSignedUpNotification { UserId = result.User.Id, Email = result.User.Email, Username = result.User.Username ?? result.User.Email, TenantId = request.TenantId, SignUpTime = DateTime.UtcNow };
 
         await mediator.Publish(notification, cancellationToken);
 

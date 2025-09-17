@@ -3,9 +3,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// Command to update user profile with validation and business logic
-/// </summary>
+/// <summary> Command to update user profile with validation and business logic </summary>
 public class UpdateUserProfileCommand : ICommand<Result<UserProfile>> {
   [Required] public Guid UserProfileId { get; set; }
 

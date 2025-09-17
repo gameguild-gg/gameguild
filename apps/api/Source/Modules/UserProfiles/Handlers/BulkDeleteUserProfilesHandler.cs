@@ -4,9 +4,7 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// Handler for bulk deleting user profiles
-/// </summary>
+/// <summary> Handler for bulk deleting user profiles </summary>
 public class BulkDeleteUserProfilesHandler(ApplicationDbContext context, ILogger<BulkDeleteUserProfilesHandler> logger) : ICommandHandler<BulkDeleteUserProfilesCommand, Result<int>> {
   public async Task<Result<int>> Handle(BulkDeleteUserProfilesCommand request, CancellationToken cancellationToken) {
     try {
@@ -17,10 +15,7 @@ public class BulkDeleteUserProfilesHandler(ApplicationDbContext context, ILogger
       var userProfiles = await context.Resources.OfType<UserProfile>().Where(up => userProfileIds.Contains(up.Id) && up.DeletedAt == null).ToListAsync(cancellationToken);
 
       if (userProfiles.Count == 0) {
-        logger.LogWarning(
-          "No active user profiles found for bulk deletion with IDs: {UserProfileIds}",
-          string.Join(", ", userProfileIds)
-        );
+        logger.LogWarning("No active user profiles found for bulk deletion with IDs: {UserProfileIds}", string.Join(", ", userProfileIds));
 
         return Result.Success(0);
       }
@@ -40,21 +35,14 @@ public class BulkDeleteUserProfilesHandler(ApplicationDbContext context, ILogger
 
       await context.SaveChangesAsync(cancellationToken);
 
-      logger.LogInformation(
-        "Bulk {DeleteType} deleted {Count} user profiles. Reason: {Reason}",
-        request.SoftDelete ? "soft" : "hard",
-        deletedCount,
-        request.Reason ?? "Not specified"
-      );
+      logger.LogInformation("Bulk {DeleteType} deleted {Count} user profiles. Reason: {Reason}", request.SoftDelete ? "soft" : "hard", deletedCount, request.Reason ?? "Not specified");
 
       return Result.Success(deletedCount);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error during bulk delete of user profiles");
 
-      return Result.Failure<int>(
-        Error.Failure("UserProfile.BulkDeleteFailed", "Failed to bulk delete user profiles")
-      );
+      return Result.Failure<int>(Error.Failure("UserProfile.BulkDeleteFailed", "Failed to bulk delete user profiles"));
     }
   }
 }

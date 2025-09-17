@@ -60,6 +60,4 @@ public class TestingFeedback : EntityBase {
   public DateTime? ReportedAt { get; set; }
 }
 
-public enum FeedbackQuality {
-  Positive = 1, Negative = 2, Neutral = 3,
-}
+public enum FeedbackQuality { Positive = 1, Negative = 2, Neutral = 3 }

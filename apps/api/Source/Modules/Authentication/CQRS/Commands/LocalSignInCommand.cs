@@ -1,9 +1,9 @@
 using GameGuild.CQRS;
+
+
 namespace GameGuild.Modules.Authentication;
 
-/// <summary>
-/// Command to handle local user sign-in
-/// </summary>
+/// <summary> Command to handle local user sign-in </summary>
 public class LocalSignInCommand : IRequest<SignInResponseDto> {
   public string Email { get; init; } = string.Empty;
 

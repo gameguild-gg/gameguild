@@ -1,70 +1,51 @@
 namespace GameGuild;
 
-/// <summary>
-///     Represents a money value with currency
-/// </summary>
-public record Money
-{
-    public Money(decimal amount, string currency = "USD")
-    {
-        if (amount < 0)
-            throw new ArgumentException("Amount cannot be negative.", nameof(amount));
+/// <summary> Represents a money value with currency </summary>
+public record Money {
+  public Money(decimal amount, string currency = "USD") {
+    if (amount < 0) throw new ArgumentException("Amount cannot be negative.", nameof(amount));
 
-        if (string.IsNullOrWhiteSpace(currency))
-            throw new ArgumentException("Currency cannot be null or empty.", nameof(currency));
+    if (string.IsNullOrWhiteSpace(currency)) throw new ArgumentException("Currency cannot be null or empty.", nameof(currency));
 
-        Amount = Math.Round(amount, 2, MidpointRounding.AwayFromZero);
-        Currency = currency.ToUpperInvariant();
-    }
+    Amount = Math.Round(amount, 2, MidpointRounding.AwayFromZero);
+    Currency = currency.ToUpperInvariant();
+  }
 
-    public decimal Amount { get; }
+  public decimal Amount { get; }
 
-    public string Currency { get; }
+  public string Currency { get; }
 
-    public static Money Zero(string currency = "USD") { return new Money(0, currency); }
+  public static Money Zero(string currency = "USD") { return new Money(0, currency); }
 
-    public static Money operator +(Money left, Money right)
-    {
-        if (left.Currency != right.Currency)
-            throw new InvalidOperationException("Cannot add money with different currencies.");
+  public static Money operator +(Money left, Money right) {
+    return left.Currency != right.Currency ? throw new InvalidOperationException("Cannot add money with different currencies.") : new Money(left.Amount + right.Amount, left.Currency);
+  }
 
-        return new Money(left.Amount + right.Amount, left.Currency);
-    }
+  public static Money operator -(Money left, Money right) {
+    return left.Currency != right.Currency ? throw new InvalidOperationException("Cannot subtract money with different currencies.") : new Money(left.Amount - right.Amount, left.Currency);
+  }
 
-    public static Money operator -(Money left, Money right)
-    {
-        if (left.Currency != right.Currency)
-            throw new InvalidOperationException("Cannot subtract money with different currencies.");
+  public static Money operator *(Money money, decimal multiplier) { return new Money(money.Amount * multiplier, money.Currency); }
 
-        return new Money(left.Amount - right.Amount, left.Currency);
-    }
+  public static Money operator /(Money money, decimal divisor) {
+    return divisor == 0 ? throw new DivideByZeroException("Cannot divide money by zero.") : new Money(money.Amount / divisor, money.Currency);
+  }
 
-    public static Money operator *(Money money, decimal multiplier) { return new Money(money.Amount * multiplier, money.Currency); }
+  public static bool operator >(Money left, Money right) {
+    if (left.Currency != right.Currency) throw new InvalidOperationException("Cannot compare money with different currencies.");
 
-    public static Money operator /(Money money, decimal divisor)
-    {
-        if (divisor == 0) throw new DivideByZeroException("Cannot divide money by zero.");
+    return left.Amount > right.Amount;
+  }
 
-        return new Money(money.Amount / divisor, money.Currency);
-    }
+  public static bool operator <(Money left, Money right) {
+    if (left.Currency != right.Currency) throw new InvalidOperationException("Cannot compare money with different currencies.");
 
-    public static bool operator >(Money left, Money right)
-    {
-        if (left.Currency != right.Currency) throw new InvalidOperationException("Cannot compare money with different currencies.");
+    return left.Amount < right.Amount;
+  }
 
-        return left.Amount > right.Amount;
-    }
+  public static bool operator >=(Money left, Money right) { return !(left < right); }
 
-    public static bool operator <(Money left, Money right)
-    {
-        if (left.Currency != right.Currency) throw new InvalidOperationException("Cannot compare money with different currencies.");
+  public static bool operator <=(Money left, Money right) { return !(left > right); }
 
-        return left.Amount < right.Amount;
-    }
-
-    public static bool operator >=(Money left, Money right) { return !(left < right); }
-
-    public static bool operator <=(Money left, Money right) { return !(left > right); }
-
-    public override string ToString() { return $"{Amount:C} {Currency}"; }
+  public override string ToString() { return $"{Amount:C} {Currency}"; }
 }

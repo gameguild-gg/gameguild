@@ -3,9 +3,6 @@
 public class CertificateBlockchainAnchorConfiguration : IEntityTypeConfiguration<CertificateBlockchainAnchor> {
   public void Configure(EntityTypeBuilder<CertificateBlockchainAnchor> builder) {
     // Configure relationship with Certificate (can't be done with annotations)
-    builder.HasOne(cba => cba.Certificate)
-           .WithMany(uc => uc.BlockchainAnchors)
-           .HasForeignKey(cba => cba.CertificateId)
-           .OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(cba => cba.Certificate).WithMany(uc => uc.BlockchainAnchors).HasForeignKey(cba => cba.CertificateId).OnDelete(DeleteBehavior.Cascade);
   }
 }

@@ -4,23 +4,15 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.Tenants;
 
-/// <summary>
-/// Handler for bulk restoring tenants
-/// </summary>
-public class BulkRestoreTenantsHandler(
-  ApplicationDbContext context,
-  ILogger<BulkRestoreTenantsHandler> logger,
-  IDomainEventPublisher eventPublisher
-) : ICommandHandler<BulkRestoreTenantsCommand, Result<int>> {
+/// <summary> Handler for bulk restoring tenants </summary>
+public class BulkRestoreTenantsHandler(ApplicationDbContext context, ILogger<BulkRestoreTenantsHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<BulkRestoreTenantsCommand, Result<int>> {
   public async Task<Result<int>> Handle(BulkRestoreTenantsCommand request, CancellationToken cancellationToken) {
     try {
       var tenantIds = request.TenantIds.ToList();
 
       if (tenantIds.Count == 0) return Result.Success(0);
 
-      var tenants = await context.Resources.OfType<Tenant>()
-                                 .Where(t => tenantIds.Contains(t.Id) && t.DeletedAt != null)
-                                 .ToListAsync(cancellationToken);
+      var tenants = await context.Resources.OfType<Tenant>().Where(t => tenantIds.Contains(t.Id) && t.DeletedAt != null).ToListAsync(cancellationToken);
 
       if (tenants.Count == 0) return Result.Success(0);
 
@@ -28,10 +20,7 @@ public class BulkRestoreTenantsHandler(
         tenant.Restore();
 
         // Publish domain event for each restored tenant
-        await eventPublisher.PublishAsync(
-          new TenantRestoredEvent(tenant.Id, tenant.Name),
-          cancellationToken
-        );
+        await eventPublisher.PublishAsync(new TenantRestoredEvent(tenant.Id, tenant.Name), cancellationToken);
       }
 
       await context.SaveChangesAsync(cancellationToken);
@@ -43,9 +32,7 @@ public class BulkRestoreTenantsHandler(
     catch (Exception ex) {
       logger.LogError(ex, "Error bulk restoring tenants");
 
-      return Result.Failure<int>(
-        Error.Failure("Tenant.BulkRestoreFailed", "Failed to bulk restore tenants")
-      );
+      return Result.Failure<int>(Error.Failure("Tenant.BulkRestoreFailed", "Failed to bulk restore tenants"));
     }
   }
 }

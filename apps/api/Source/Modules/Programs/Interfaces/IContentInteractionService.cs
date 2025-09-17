@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// Interface for content interaction tracking services
-/// </summary>
+/// <summary> Interface for content interaction tracking services </summary>
 public interface IContentInteractionService {
   Task<ContentInteraction> StartContentAsync(Guid programUserId, Guid contentId);
 

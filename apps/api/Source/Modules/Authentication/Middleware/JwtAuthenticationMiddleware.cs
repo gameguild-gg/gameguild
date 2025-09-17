@@ -4,54 +4,51 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
 
-namespace GameGuild.Modules.Authentication {
-  /// <summary>
-  /// JWT Authentication middleware
-  /// </summary>
-  public class JwtAuthenticationMiddleware(RequestDelegate next, IConfiguration configuration) {
-    public async Task InvokeAsync(HttpContext context) {
-      var token = ExtractTokenFromHeader(context.Request);
+namespace GameGuild.Modules.Authentication;
 
-      if (!string.IsNullOrEmpty(token)) {
-        try {
-          var principal = ValidateToken(token);
-          context.User = principal;
-        }
-        catch (Exception) {
-          // Token validation failed, continue without setting user
-        }
+/// <summary> JWT Authentication middleware </summary>
+public class JwtAuthenticationMiddleware(RequestDelegate next, IConfiguration configuration) {
+  public async Task InvokeAsync(HttpContext context) {
+    var token = ExtractTokenFromHeader(context.Request);
+
+    if (!string.IsNullOrEmpty(token)) {
+      try {
+        var principal = ValidateToken(token);
+        context.User = principal;
       }
-
-      await next(context);
+      catch (Exception) {
+        // Token validation failed, continue without setting user
+      }
     }
 
-    private static string? ExtractTokenFromHeader(HttpRequest request) {
-      var authHeader = request.Headers.Authorization.FirstOrDefault();
+    await next(context);
+  }
 
-      if (authHeader != null && authHeader.StartsWith("Bearer ")) { return authHeader["Bearer ".Length..].Trim(); }
+  private static string? ExtractTokenFromHeader(HttpRequest request) {
+    var authHeader = request.Headers.Authorization.FirstOrDefault();
 
-      return null;
-    }
+    if (authHeader != null && authHeader.StartsWith("Bearer ")) { return authHeader["Bearer ".Length..].Trim(); }
 
-    private ClaimsPrincipal ValidateToken(string token) {
-      var tokenHandler = new JwtSecurityTokenHandler();
-      var key = Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"] ?? "dev-key");
+    return null;
+  }
 
-      var validationParameters = new TokenValidationParameters {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = true,
-        ValidIssuer = configuration["Jwt:Issuer"],
-        ValidateAudience = true,
-        ValidAudience = configuration["Jwt:Audience"],
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
-      };
+  private ClaimsPrincipal ValidateToken(string token) {
+    var tokenHandler = new JwtSecurityTokenHandler();
+    var key = Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"] ?? "dev-key");
 
-      var principal =
-        tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+    var validationParameters = new TokenValidationParameters {
+      ValidateIssuerSigningKey = true,
+      IssuerSigningKey = new SymmetricSecurityKey(key),
+      ValidateIssuer = true,
+      ValidIssuer = configuration["Jwt:Issuer"],
+      ValidateAudience = true,
+      ValidAudience = configuration["Jwt:Audience"],
+      ValidateLifetime = true,
+      ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
+    };
 
-      return principal;
-    }
+    var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+
+    return principal;
   }
 }

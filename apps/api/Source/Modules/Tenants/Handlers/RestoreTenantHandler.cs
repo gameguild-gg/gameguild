@@ -7,20 +7,12 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Handler for restoring a soft-deleted tenant
 /// </summary>
-public class RestoreTenantHandler(
-  ApplicationDbContext context,
-  ILogger<RestoreTenantHandler> logger,
-  IDomainEventPublisher eventPublisher
-) : ICommandHandler<RestoreTenantCommand, Result<bool>> {
+public class RestoreTenantHandler(ApplicationDbContext context, ILogger<RestoreTenantHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<RestoreTenantCommand, Result<bool>> {
   public async Task<Result<bool>> Handle(RestoreTenantCommand request, CancellationToken cancellationToken) {
     try {
-      var tenant = await context.Resources.OfType<Tenant>()
-                                .FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt != null, cancellationToken);
+      var tenant = await context.Resources.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt != null, cancellationToken);
 
-      if (tenant == null)
-        return Result.Failure<bool>(
-          Error.NotFound("Tenant.NotFound", $"Deleted tenant with ID {request.Id} not found")
-        );
+      if (tenant == null) return Result.Failure<bool>(Error.NotFound("Tenant.NotFound", $"Deleted tenant with ID {request.Id} not found"));
 
       tenant.Restore();
       await context.SaveChangesAsync(cancellationToken);
@@ -28,19 +20,14 @@ public class RestoreTenantHandler(
       logger.LogInformation("Tenant {TenantId} restored successfully", tenant.Id);
 
       // Publish domain event
-      await eventPublisher.PublishAsync(
-        new TenantRestoredEvent(tenant.Id, tenant.Name),
-        cancellationToken
-      );
+      await eventPublisher.PublishAsync(new TenantRestoredEvent(tenant.Id, tenant.Name), cancellationToken);
 
       return Result.Success(true);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error restoring tenant {TenantId}", request.Id);
 
-      return Result.Failure<bool>(
-        Error.Failure("Tenant.RestoreFailed", "Failed to restore tenant")
-      );
+      return Result.Failure<bool>(Error.Failure("Tenant.RestoreFailed", "Failed to restore tenant"));
     }
   }
 }

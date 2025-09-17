@@ -31,25 +31,19 @@ public abstract class ResourcePermission<T> : WithPermissions where T : EntityBa
   /// </summary>
   [GraphQLType(typeof(NonNullType<BooleanType>))]
   [GraphQLDescription("Whether this is a default permission for this resource in a specific tenant")]
-  public bool IsDefaultResourcePermission {
-    get => UserId == null && TenantId != null;
-  }
+  public bool IsDefaultResourcePermission { get => UserId == null && TenantId != null; }
 
   /// <summary>
   /// Check if this is a global default permission for this resource
   /// </summary>
   [GraphQLType(typeof(NonNullType<BooleanType>))]
   [GraphQLDescription("Whether this is a global default permission for this resource")]
-  public bool IsGlobalResourceDefault {
-    get => UserId == null && TenantId == null;
-  }
+  public bool IsGlobalResourceDefault { get => UserId == null && TenantId == null; }
 
   /// <summary>
   /// Check if this is a user-specific permission for this resource
   /// </summary>
   [GraphQLType(typeof(NonNullType<BooleanType>))]
   [GraphQLDescription("Whether this is a user-specific permission for this resource")]
-  public bool IsUserResourcePermission {
-    get => UserId != null;
-  }
+  public bool IsUserResourcePermission { get => UserId != null; }
 }

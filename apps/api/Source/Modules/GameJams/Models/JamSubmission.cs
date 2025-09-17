@@ -1,11 +1,11 @@
-namespace GameGuild.Modules.GameJams.Models {
-  public class JamSubmission : EntityBase {
-    [Required] public Guid JamId { get; set; }
+namespace GameGuild.Modules.GameJams.Models;
 
-    [Required] public Guid ProjectVersionId { get; set; }
+public class JamSubmission : EntityBase {
+  [Required] public Guid JamId { get; set; }
 
-    [Required] public Guid UserId { get; set; }
+  [Required] public Guid ProjectVersionId { get; set; }
 
-    public string? SubmissionNotes { get; set; }
-  }
+  [Required] public Guid UserId { get; set; }
+
+  public string? SubmissionNotes { get; set; }
 }

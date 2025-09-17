@@ -5,11 +5,10 @@ using GameGuild.Modules.Credentials.Queries;
 
 namespace GameGuild.Modules.Credentials.Handlers;
 
-/// <summary>
-/// Handler for getting credential by ID query using CQRS pattern
-/// </summary>
+/// <summary> Handler for getting credential by ID query using CQRS pattern </summary>
 public class GetCredentialByIdQueryHandler : IRequestHandler<GetCredentialByIdQuery, Credential?> {
   private readonly ApplicationDbContext _context;
+
   private readonly ILogger<GetCredentialByIdQueryHandler> _logger;
 
   public GetCredentialByIdQueryHandler(ApplicationDbContext context, ILogger<GetCredentialByIdQueryHandler> logger) {
@@ -21,9 +20,7 @@ public class GetCredentialByIdQueryHandler : IRequestHandler<GetCredentialByIdQu
     _logger.LogInformation("Retrieving credential {CredentialId}", request.Id);
 
     try {
-      var credential = await _context.Credentials
-                                     .Include(c => c.User)
-                                     .FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
+      var credential = await _context.Credentials.Include(c => c.User).FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
 
       if (credential != null) { _logger.LogInformation("Found credential {CredentialId}", request.Id); }
       else { _logger.LogWarning("Credential {CredentialId} not found", request.Id); }

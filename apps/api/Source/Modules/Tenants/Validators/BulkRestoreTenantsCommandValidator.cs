@@ -3,9 +3,7 @@
 
 namespace GameGuild.Modules.Tenants;
 
-/// <summary>
-/// Validator for BulkRestoreTenantsCommand
-/// </summary>
+/// <summary> Validator for BulkRestoreTenantsCommand </summary>
 public class BulkRestoreTenantsCommandValidator : AbstractValidator<BulkRestoreTenantsCommand> {
   public BulkRestoreTenantsCommandValidator() {
     RuleFor(x => x.TenantIds)

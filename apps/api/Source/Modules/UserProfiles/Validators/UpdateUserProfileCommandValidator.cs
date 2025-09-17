@@ -13,11 +13,7 @@ public class UpdateUserProfileCommandValidator : AbstractValidator<UpdateUserPro
   public UpdateUserProfileCommandValidator(ApplicationDbContext context) {
     _context = context;
 
-    RuleFor(x => x.UserProfileId)
-      .NotEmpty()
-      .WithMessage("User profile ID is required")
-      .MustAsync(UserProfileExists)
-      .WithMessage("User profile not found");
+    RuleFor(x => x.UserProfileId).NotEmpty().WithMessage("User profile ID is required").MustAsync(UserProfileExists).WithMessage("User profile not found");
 
     RuleFor(x => x.GivenName)
       .Length(1, 100)
@@ -40,24 +36,14 @@ public class UpdateUserProfileCommandValidator : AbstractValidator<UpdateUserPro
       .WithMessage("Display name must be unique")
       .When(x => !string.IsNullOrEmpty(x.DisplayName));
 
-    RuleFor(x => x.Title)
-      .MaximumLength(200)
-      .WithMessage("Title cannot exceed 200 characters")
-      .When(x => !string.IsNullOrEmpty(x.Title));
+    RuleFor(x => x.Title).MaximumLength(200).WithMessage("Title cannot exceed 200 characters").When(x => !string.IsNullOrEmpty(x.Title));
 
-    RuleFor(x => x.Description)
-      .MaximumLength(1000)
-      .WithMessage("Description cannot exceed 1000 characters")
-      .When(x => !string.IsNullOrEmpty(x.Description));
+    RuleFor(x => x.Description).MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters").When(x => !string.IsNullOrEmpty(x.Description));
   }
 
-  private async Task<bool> UserProfileExists(Guid userProfileId, CancellationToken cancellationToken) {
-    return await _context.Resources.OfType<UserProfile>()
-                         .AnyAsync(x => x.Id == userProfileId && x.DeletedAt == null, cancellationToken);
-  }
+  private async Task<bool> UserProfileExists(Guid userProfileId, CancellationToken cancellationToken) { return await _context.Resources.OfType<UserProfile>().AnyAsync(x => x.Id == userProfileId && x.DeletedAt == null, cancellationToken); }
 
   private async Task<bool> BeUniqueDisplayNameForUpdate(UpdateUserProfileCommand command, string displayName, CancellationToken cancellationToken) {
-    return !await _context.Resources.OfType<UserProfile>()
-                          .AnyAsync(x => x.DisplayName == displayName && x.Id != command.UserProfileId && x.DeletedAt == null, cancellationToken);
+    return !await _context.Resources.OfType<UserProfile>().AnyAsync(x => x.DisplayName == displayName && x.Id != command.UserProfileId && x.DeletedAt == null, cancellationToken);
   }
 }

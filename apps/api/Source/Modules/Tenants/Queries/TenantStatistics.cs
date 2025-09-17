@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Tenants;
 
-/// <summary>
-/// Statistics for tenant data
-/// </summary>
+/// <summary> Statistics for tenant data </summary>
 public class TenantStatistics {
   public int TotalTenants { get; init; }
 

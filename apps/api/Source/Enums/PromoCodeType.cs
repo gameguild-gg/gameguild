@@ -4,15 +4,11 @@
 namespace GameGuild;
 
 public enum PromoCodeType {
-  [Description("Applies a percentage discount to the total price")]
-  PercentageOff,
+  [Description("Applies a percentage discount to the total price")] PercentageOff,
 
-  [Description("Deducts a specific amount from the total price")]
-  FixedAmountOff,
+  [Description("Deducts a specific amount from the total price")] FixedAmountOff,
 
-  [Description("Purchase one product and receive another free")]
-  BuyOneGetOne,
+  [Description("Purchase one product and receive another free")] BuyOneGetOne,
 
-  [Description("No charge for the first month of a subscription")]
-  FirstMonthFree,
+  [Description("No charge for the first month of a subscription")] FirstMonthFree,
 }

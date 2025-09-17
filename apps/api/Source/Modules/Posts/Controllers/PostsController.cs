@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -6,10 +7,11 @@ namespace GameGuild.Modules.Posts;
 [ApiController]
 [Route("api/[controller]")]
 public class PostsController : ControllerBase {
-  private readonly CQRS.IMediator _mediator;
   private readonly ILogger<PostsController> _logger;
 
-  public PostsController(CQRS.IMediator mediator, ILogger<PostsController> logger) {
+  private readonly IMediator _mediator;
+
+  public PostsController(IMediator mediator, ILogger<PostsController> logger) {
     _mediator = mediator;
     _logger = logger;
   }
@@ -27,15 +29,7 @@ public class PostsController : ControllerBase {
     [FromQuery] Guid? tenantId = null
   ) {
     var query = new GetPostsQuery {
-      PageNumber = pageNumber,
-      PageSize = pageSize,
-      PostType = postType,
-      UserId = userId,
-      IsPinned = isPinned,
-      SearchTerm = searchTerm,
-      OrderBy = orderBy,
-      Descending = descending,
-      TenantId = tenantId ?? GetCurrentTenantId(),
+      PageNumber = pageNumber, PageSize = pageSize, PostType = postType, UserId = userId, IsPinned = isPinned, SearchTerm = searchTerm, OrderBy = orderBy, Descending = descending, TenantId = tenantId ?? GetCurrentTenantId(),
     };
 
     var result = await _mediator.Send(query);
@@ -52,6 +46,7 @@ public class PostsController : ControllerBase {
     if (!result.IsSuccess) { return result.Error?.Code == "Post.NotFound" ? NotFound(result.Error) : BadRequest(result.Error); }
 
     var post = result.Value!;
+
     var postDto = new PostDto {
       Id = post.Id,
       Title = post.Title,
@@ -94,6 +89,7 @@ public class PostsController : ControllerBase {
     if (!result.IsSuccess) return BadRequest(result.Error);
 
     var post = result.Value!;
+
     var postDto = new PostDto {
       Id = post.Id,
       Title = post.Title,
@@ -117,7 +113,7 @@ public class PostsController : ControllerBase {
     return CreatedAtAction(nameof(GetPost), new { postId = post.Id }, postDto);
   }
 
-  private Guid GetCurrentUserId() => Guid.Parse("00000000-0000-0000-0000-000000000001");
+  private Guid GetCurrentUserId() { return Guid.Parse("00000000-0000-0000-0000-000000000001"); }
 
-  private Guid? GetCurrentTenantId() => null;
+  private Guid? GetCurrentTenantId() { return null; }
 }

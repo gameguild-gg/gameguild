@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Authentication;
 
-/// <summary>
-/// Response DTO for Web3 authentication challenge
-/// </summary>
+/// <summary> Response DTO for Web3 authentication challenge </summary>
 public class Web3ChallengeResponseDto {
   public string Challenge { get; set; } = string.Empty;
 

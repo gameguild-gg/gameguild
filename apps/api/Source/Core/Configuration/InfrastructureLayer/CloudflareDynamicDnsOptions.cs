@@ -1,35 +1,23 @@
 namespace GameGuild.Configuration;
 
-/// <summary>
-/// Configuration options for Cloudflare Dynamic DNS service.
-/// </summary>
+/// <summary> Configuration options for Cloudflare Dynamic DNS service. </summary>
 public class CloudflareDynamicDnsOptions {
   public const string SectionName = "CloudflareDynamicDns";
 
-  /// <summary>
-  /// Cloudflare API token with Zone:Edit permissions.
-  /// </summary>
+  /// <summary> Cloudflare API token with Zone:Edit permissions. </summary>
   public string? ApiToken { get; set; }
 
-  /// <summary>
-  /// Zone ID for the domain in Cloudflare.
-  /// </summary>
+  /// <summary> Zone ID for the domain in Cloudflare. </summary>
   public string? ZoneId { get; set; }
 
-  /// <summary>
-  /// Interval in minutes to check and update IP address (default: 5 minutes).
-  /// </summary>
+  /// <summary> Interval in minutes to check and update IP address (default: 5 minutes). </summary>
   [Range(1, 1440)] // Between 1 minute and 24 hours
   public int IntervalMinutes { get; set; } = 5;
 
-  /// <summary>
-  /// List of DNS records to update with the external IP.
-  /// </summary>
+  /// <summary> List of DNS records to update with the external IP. </summary>
   public List<DnsRecordConfiguration> DnsRecords { get; set; } = new List<DnsRecordConfiguration>();
 
-  /// <summary>
-  /// List of external IP detection services with failover support.
-  /// </summary>
+  /// <summary> List of external IP detection services with failover support. </summary>
   public List<ExternalIpServiceConfiguration> ExternalIpServices { get; set; } = [
     new ExternalIpServiceConfiguration { Url = "https://api.ipify.org", Name = "ipify", ResponseFormat = ExternalIpResponseFormat.PlainText },
     new ExternalIpServiceConfiguration { Url = "https://checkip.amazonaws.com", Name = "AWS", ResponseFormat = ExternalIpResponseFormat.PlainText },
@@ -39,31 +27,21 @@ public class CloudflareDynamicDnsOptions {
     new ExternalIpServiceConfiguration { Url = "https://jsonip.com", Name = "jsonip", ResponseFormat = ExternalIpResponseFormat.Json, JsonPath = "ip" },
   ];
 
-  /// <summary>
-  /// Maximum number of retry attempts across all services (default: 3).
-  /// </summary>
+  /// <summary> Maximum number of retry attempts across all services (default: 3). </summary>
   [Range(1, 10)]
   public int MaxRetryAttempts { get; set; } = 3;
 
-  /// <summary>
-  /// Timeout in seconds for HTTP requests.
-  /// </summary>
+  /// <summary> Timeout in seconds for HTTP requests. </summary>
   [Range(5, 300)]
   public int TimeoutSeconds { get; set; } = 30;
 
-  /// <summary>
-  /// Whether the service is enabled.
-  /// </summary>
+  /// <summary> Whether the service is enabled. </summary>
   public bool Enabled { get; set; } = true;
 
-  /// <summary>
-  /// Validates the configuration.
-  /// </summary>
+  /// <summary> Validates the configuration. </summary>
   public bool IsValid() { return !string.IsNullOrWhiteSpace(ApiToken) && !string.IsNullOrWhiteSpace(ZoneId) && DnsRecords.Any() && DnsRecords.All(r => r.IsValid()); }
 
-  /// <summary>
-  /// Gets validation error messages.
-  /// </summary>
+  /// <summary> Gets validation error messages. </summary>
   public IEnumerable<string> GetValidationErrors() {
     var errors = new List<string>();
 
@@ -81,41 +59,27 @@ public class CloudflareDynamicDnsOptions {
   }
 }
 
-/// <summary>
-/// Configuration for a single DNS record to update.
-/// </summary>
+/// <summary> Configuration for a single DNS record to update. </summary>
 public class DnsRecordConfiguration {
-  /// <summary>
-  /// DNS record type (A, AAAA, etc.).
-  /// </summary>
+  /// <summary> DNS record type (A, AAAA, etc.). </summary>
   [Required]
   public string Type { get; set; } = "A";
 
-  /// <summary>
-  /// DNS record name (e.g., "api", "@", "subdomain").
-  /// </summary>
+  /// <summary> DNS record name (e.g., "api", "@", "subdomain"). </summary>
   [Required]
   public string Name { get; set; } = string.Empty;
 
-  /// <summary>
-  /// TTL for the DNS record (default: 300 seconds).
-  /// </summary>
+  /// <summary> TTL for the DNS record (default: 300 seconds). </summary>
   [Range(60, 86400)] // Between 1 minute and 24 hours
   public int Ttl { get; set; } = 300;
 
-  /// <summary>
-  /// Whether this record is proxied through Cloudflare (default: true).
-  /// </summary>
+  /// <summary> Whether this record is proxied through Cloudflare (default: true). </summary>
   public bool Proxied { get; set; } = true;
 
-  /// <summary>
-  /// Validates the DNS record configuration.
-  /// </summary>
+  /// <summary> Validates the DNS record configuration. </summary>
   public bool IsValid() { return !string.IsNullOrWhiteSpace(Type) && !string.IsNullOrWhiteSpace(Name) && Ttl is >= 60 and <= 86400; }
 
-  /// <summary>
-  /// Gets validation error messages.
-  /// </summary>
+  /// <summary> Gets validation error messages. </summary>
   public IEnumerable<string> GetValidationErrors() {
     var errors = new List<string>();
 
@@ -129,59 +93,37 @@ public class DnsRecordConfiguration {
   }
 }
 
-/// <summary>
-/// External IP service response format.
-/// </summary>
+/// <summary> External IP service response format. </summary>
 public enum ExternalIpResponseFormat {
-  /// <summary>
-  /// Plain text response containing only the IP address.
-  /// </summary>
+  /// <summary> Plain text response containing only the IP address. </summary>
   PlainText,
 
-  /// <summary>
-  /// JSON response containing the IP address in a specific field.
-  /// </summary>
-  Json
+  /// <summary> JSON response containing the IP address in a specific field. </summary>
+  Json,
 }
 
-/// <summary>
-/// Configuration for an external IP detection service.
-/// </summary>
+/// <summary> Configuration for an external IP detection service. </summary>
 public class ExternalIpServiceConfiguration {
-  /// <summary>
-  /// Service name for logging purposes.
-  /// </summary>
+  /// <summary> Service name for logging purposes. </summary>
   public string Name { get; set; } = string.Empty;
 
-  /// <summary>
-  /// Service URL.
-  /// </summary>
+  /// <summary> Service URL. </summary>
   public string Url { get; set; } = string.Empty;
 
-  /// <summary>
-  /// Response format (PlainText or Json).
-  /// </summary>
+  /// <summary> Response format (PlainText or Json). </summary>
   public ExternalIpResponseFormat ResponseFormat { get; set; } = ExternalIpResponseFormat.PlainText;
 
-  /// <summary>
-  /// JSON path to extract IP address (only used for Json format).
-  /// </summary>
+  /// <summary> JSON path to extract IP address (only used for Json format). </summary>
   public string? JsonPath { get; set; }
 
-  /// <summary>
-  /// Timeout in seconds for this specific service (default: 10 seconds).
-  /// </summary>
+  /// <summary> Timeout in seconds for this specific service (default: 10 seconds). </summary>
   [Range(1, 120)]
   public int TimeoutSeconds { get; set; } = 10;
 
-  /// <summary>
-  /// Whether this service is enabled.
-  /// </summary>
+  /// <summary> Whether this service is enabled. </summary>
   public bool Enabled { get; set; } = true;
 
-  /// <summary>
-  /// Validates the service configuration.
-  /// </summary>
+  /// <summary> Validates the service configuration. </summary>
   public bool IsValid() {
     if (string.IsNullOrWhiteSpace(Name) || string.IsNullOrWhiteSpace(Url)) return false;
 
@@ -190,9 +132,7 @@ public class ExternalIpServiceConfiguration {
     return Uri.TryCreate(Url, UriKind.Absolute, out _);
   }
 
-  /// <summary>
-  /// Gets validation error messages.
-  /// </summary>
+  /// <summary> Gets validation error messages. </summary>
   public IEnumerable<string> GetValidationErrors() {
     var errors = new List<string>();
 

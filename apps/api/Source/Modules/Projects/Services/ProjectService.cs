@@ -4,19 +4,17 @@ using GameGuild.Modules.Contents;
 
 namespace GameGuild.Modules.Projects;
 
-/// <summary>
-/// Service implementation for Project business logic
-/// Provides operations for managing projects, collaborators, releases, and access control
-/// </summary>
+/// <summary> Service implementation for Project business logic Provides operations for managing projects, collaborators, releases, and access control </summary>
 public class ProjectService(ApplicationDbContext context) : IProjectService {
+  #region Deleted Projects
+
+  public async Task<IEnumerable<Project>> GetDeletedProjectsAsync() { return await context.Projects.Include(p => p.CreatedBy).Include(p => p.Category).Where(p => p.DeletedAt != null).OrderByDescending(p => p.DeletedAt).ToListAsync(); }
+
+  #endregion
+
   #region Basic CRUD Operations
 
-  public async Task<Project?> GetProjectByIdAsync(Guid id) {
-    return await context.Projects.Include(p => p.CreatedBy)
-                        .Include(p => p.Category)
-                        .Where(p => p.DeletedAt == null)
-                        .FirstOrDefaultAsync(p => p.Id == id);
-  }
+  public async Task<Project?> GetProjectByIdAsync(Guid id) { return await context.Projects.Include(p => p.CreatedBy).Include(p => p.Category).Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id); }
 
   public async Task<Project?> GetProjectByIdWithDetailsAsync(Guid id) {
     return await context.Projects.Include(p => p.CreatedBy)
@@ -40,84 +38,39 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .FirstOrDefaultAsync(p => p.Id == id);
   }
 
-  public async Task<Project?> GetProjectBySlugAsync(string slug) {
-    return await context.Projects.Include(p => p.CreatedBy)
-                        .Include(p => p.Category)
-                        .Where(p => p.DeletedAt == null)
-                        .FirstOrDefaultAsync(p => p.Slug == slug);
-  }
+  public async Task<Project?> GetProjectBySlugAsync(string slug) { return await context.Projects.Include(p => p.CreatedBy).Include(p => p.Category).Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Slug == slug); }
 
   public async Task<IEnumerable<Project>> GetProjectsAsync(int skip = 0, int take = 50) {
-    return await context.Projects.Include(p => p.CreatedBy)
-                        .Include(p => p.Category)
-                        .Where(p => p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .Skip(skip)
-                        .Take(take)
-                        .ToListAsync();
+    return await context.Projects.Include(p => p.CreatedBy).Include(p => p.Category).Where(p => p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync();
   }
 
-  /// <summary>
-  /// Gets projects with pagination without loading related entities for performance-critical scenarios
-  /// </summary>
-  public async Task<IEnumerable<Project>> GetProjectsOptimizedAsync(int skip = 0, int take = 50) {
-    return await context.Projects.Where(p => p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .Skip(skip)
-                        .Take(take)
-                        .ToListAsync();
-  }
+  /// <summary> Gets projects with pagination without loading related entities for performance-critical scenarios </summary>
+  public async Task<IEnumerable<Project>> GetProjectsOptimizedAsync(int skip = 0, int take = 50) { return await context.Projects.Where(p => p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync(); }
 
-  public async Task<IEnumerable<Project>> GetAllProjectsAsync() {
-    return await context.Projects.Include(p => p.CreatedBy)
-                        .Include(p => p.Category)
-                        .Where(p => p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
-  }
+  public async Task<IEnumerable<Project>> GetAllProjectsAsync() { return await context.Projects.Include(p => p.CreatedBy).Include(p => p.Category).Where(p => p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync(); }
 
   #endregion
 
   #region Filtered Queries
 
   public async Task<IEnumerable<Project>> GetProjectsByCategoryAsync(Guid categoryId) {
-    return await context.Projects.Include(p => p.CreatedBy)
-                        .Include(p => p.Category)
-                        .Where(p => p.CategoryId == categoryId && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Projects.Include(p => p.CreatedBy).Include(p => p.Category).Where(p => p.CategoryId == categoryId && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<Project>> GetProjectsByCreatorAsync(Guid creatorId) {
-    return await context.Projects.Include(p => p.CreatedBy)
-                        .Include(p => p.Category)
-                        .Where(p => p.CreatedById == creatorId && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Projects.Include(p => p.CreatedBy).Include(p => p.Category).Where(p => p.CreatedById == creatorId && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<Project>> GetProjectsByStatusAsync(ContentStatus status) {
-    return await context.Projects.Include(p => p.CreatedBy)
-                        .Include(p => p.Category)
-                        .Where(p => p.Status == status && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Projects.Include(p => p.CreatedBy).Include(p => p.Category).Where(p => p.Status == status && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<Project>> GetProjectsByTypeAsync(ProjectType type) {
-    return await context.Projects.Include(p => p.CreatedBy)
-                        .Include(p => p.Category)
-                        .Where(p => p.Type == type && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Projects.Include(p => p.CreatedBy).Include(p => p.Category).Where(p => p.Type == type && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<Project>> GetProjectsByDevelopmentStatusAsync(DevelopmentStatus status) {
-    return await context.Projects.Include(p => p.CreatedBy)
-                        .Include(p => p.Category)
-                        .Where(p => p.DevelopmentStatus == status && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .ToListAsync();
+    return await context.Projects.Include(p => p.CreatedBy).Include(p => p.Category).Where(p => p.DevelopmentStatus == status && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
   public async Task<IEnumerable<Project>> GetPublicProjectsAsync(int skip = 0, int take = 50) {
@@ -140,8 +93,8 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
                         .Include(p => p.Category)
                         .Where(p => p.DeletedAt == null &&
                                     (p.Title.ToLower().Contains(lowerSearchTerm) ||
-                                     (p.Description != null && p.Description.ToLower().Contains(lowerSearchTerm)) ||
-                                     (p.ShortDescription != null && p.ShortDescription.ToLower().Contains(lowerSearchTerm)))
+                                     p.Description != null && p.Description.ToLower().Contains(lowerSearchTerm) ||
+                                     p.ShortDescription != null && p.ShortDescription.ToLower().Contains(lowerSearchTerm))
                         )
                         .OrderByDescending(p => p.CreatedAt)
                         .Skip(skip)
@@ -162,9 +115,9 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     if (string.IsNullOrEmpty(project.Slug)) project.Slug = Project.GenerateSlug(project.Title);
 
     // Set default values
-    if (project.Status == default) project.Status = ContentStatus.Draft;
+    if (project.Status == default(ContentStatus)) project.Status = ContentStatus.Draft;
 
-    if (project.Visibility == default) project.Visibility = AccessLevel.Private;
+    if (project.Visibility == default(AccessLevel)) project.Visibility = AccessLevel.Private;
 
     context.Projects.Add(project);
     await context.SaveChangesAsync();
@@ -234,18 +187,6 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
 
   #endregion
 
-  #region Deleted Projects
-
-  public async Task<IEnumerable<Project>> GetDeletedProjectsAsync() {
-    return await context.Projects.Include(p => p.CreatedBy)
-                        .Include(p => p.Category)
-                        .Where(p => p.DeletedAt != null)
-                        .OrderByDescending(p => p.DeletedAt)
-                        .ToListAsync();
-  }
-
-  #endregion
-
   #region Helper Methods
 
   /*
@@ -310,18 +251,8 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
 
   #region Team Integration
 
-  public async Task<ProjectTeam> AddTeamToProjectAsync(
-    Guid projectId, Guid teamId, string role,
-    string? permissions = null
-  ) {
-    var projectTeam = new ProjectTeam {
-      ProjectId = projectId,
-      TeamId = teamId,
-      Role = role,
-      Permissions = permissions,
-      AssignedAt = DateTime.UtcNow,
-      IsActive = true,
-    };
+  public async Task<ProjectTeam> AddTeamToProjectAsync(Guid projectId, Guid teamId, string role, string? permissions = null) {
+    var projectTeam = new ProjectTeam { ProjectId = projectId, TeamId = teamId, Role = role, Permissions = permissions, AssignedAt = DateTime.UtcNow, IsActive = true };
 
     context.ProjectTeams.Add(projectTeam);
     await context.SaveChangesAsync();
@@ -330,8 +261,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<bool> RemoveTeamFromProjectAsync(Guid projectId, Guid teamId) {
-    var projectTeam =
-      await context.ProjectTeams.FirstOrDefaultAsync(pt => pt.ProjectId == projectId && pt.TeamId == teamId);
+    var projectTeam = await context.ProjectTeams.FirstOrDefaultAsync(pt => pt.ProjectId == projectId && pt.TeamId == teamId);
 
     if (projectTeam == null) return false;
 
@@ -342,12 +272,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     return true;
   }
 
-  public async Task<IEnumerable<ProjectTeam>> GetProjectTeamsAsync(Guid projectId) {
-    return await context.ProjectTeams.Include(pt => pt.Team)
-                        .ThenInclude(t => t.Members)
-                        .Where(pt => pt.ProjectId == projectId && pt.IsActive)
-                        .ToListAsync();
-  }
+  public async Task<IEnumerable<ProjectTeam>> GetProjectTeamsAsync(Guid projectId) { return await context.ProjectTeams.Include(pt => pt.Team).ThenInclude(t => t.Members).Where(pt => pt.ProjectId == projectId && pt.IsActive).ToListAsync(); }
 
   public async Task<IEnumerable<Project>> GetProjectsByTeamAsync(Guid teamId) {
     return await context.ProjectTeams.Include(pt => pt.Project)
@@ -363,23 +288,13 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
 
   #region Follower Integration
 
-  public async Task<ProjectFollower> FollowProjectAsync(
-    Guid projectId, Guid userId, bool emailNotifications = true,
-    bool pushNotifications = true
-  ) {
+  public async Task<ProjectFollower> FollowProjectAsync(Guid projectId, Guid userId, bool emailNotifications = true, bool pushNotifications = true) {
     // Check if already following
-    var existing =
-      await context.ProjectFollowers.FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
+    var existing = await context.ProjectFollowers.FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
 
     if (existing != null) return existing;
 
-    var follower = new ProjectFollower {
-      ProjectId = projectId,
-      UserId = userId,
-      FollowedAt = DateTime.UtcNow,
-      EmailNotifications = emailNotifications,
-      PushNotifications = pushNotifications,
-    };
+    var follower = new ProjectFollower { ProjectId = projectId, UserId = userId, FollowedAt = DateTime.UtcNow, EmailNotifications = emailNotifications, PushNotifications = pushNotifications };
 
     context.ProjectFollowers.Add(follower);
     await context.SaveChangesAsync();
@@ -388,8 +303,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<bool> UnfollowProjectAsync(Guid projectId, Guid userId) {
-    var follower =
-      await context.ProjectFollowers.FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
+    var follower = await context.ProjectFollowers.FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
 
     if (follower == null) return false;
 
@@ -401,12 +315,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
 
   public async Task<bool> IsUserFollowingProjectAsync(Guid projectId, Guid userId) { return await context.ProjectFollowers.AnyAsync(pf => pf.ProjectId == projectId && pf.UserId == userId); }
 
-  public async Task<IEnumerable<ProjectFollower>> GetProjectFollowersAsync(Guid projectId) {
-    return await context.ProjectFollowers.Include(pf => pf.User)
-                        .Where(pf => pf.ProjectId == projectId)
-                        .OrderBy(pf => pf.FollowedAt)
-                        .ToListAsync();
-  }
+  public async Task<IEnumerable<ProjectFollower>> GetProjectFollowersAsync(Guid projectId) { return await context.ProjectFollowers.Include(pf => pf.User).Where(pf => pf.ProjectId == projectId).OrderBy(pf => pf.FollowedAt).ToListAsync(); }
 
   public async Task<IEnumerable<Project>> GetProjectsFollowedByUserAsync(Guid userId) {
     return await context.ProjectFollowers.Include(pf => pf.Project)
@@ -422,13 +331,9 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
 
   #region Feedback Integration
 
-  public async Task<ProjectFeedback> AddProjectFeedbackAsync(
-    Guid projectId, Guid userId, int rating, string title,
-    string? content = null
-  ) {
+  public async Task<ProjectFeedback> AddProjectFeedbackAsync(Guid projectId, Guid userId, int rating, string title, string? content = null) {
     // Check if the user already has feedback for this project
-    var existing =
-      await context.ProjectFeedbacks.FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
+    var existing = await context.ProjectFeedbacks.FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
 
     if (existing != null) {
       // Update existing feedback
@@ -441,14 +346,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
       return existing;
     }
 
-    var feedback = new ProjectFeedback {
-      ProjectId = projectId,
-      UserId = userId,
-      Rating = rating,
-      Title = title,
-      Content = content,
-      Status = ContentStatus.Published,
-    };
+    var feedback = new ProjectFeedback { ProjectId = projectId, UserId = userId, Rating = rating, Title = title, Content = content, Status = ContentStatus.Published };
 
     context.ProjectFeedbacks.Add(feedback);
     await context.SaveChangesAsync();
@@ -456,10 +354,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     return feedback;
   }
 
-  public async Task<ProjectFeedback> UpdateProjectFeedbackAsync(
-    Guid feedbackId, int rating, string title,
-    string? content = null
-  ) {
+  public async Task<ProjectFeedback> UpdateProjectFeedbackAsync(Guid feedbackId, int rating, string title, string? content = null) {
     var feedback = await context.ProjectFeedbacks.FindAsync(feedbackId);
 
     if (feedback == null) throw new ArgumentException("Feedback not found", nameof(feedbackId));
@@ -486,40 +381,22 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<IEnumerable<ProjectFeedback>> GetProjectFeedbackAsync(Guid projectId, int skip = 0, int take = 50) {
-    return await context.ProjectFeedbacks.Include(pf => pf.User)
-                        .Where(pf => pf.ProjectId == projectId && pf.Status == ContentStatus.Published)
-                        .OrderByDescending(pf => pf.CreatedAt)
-                        .Skip(skip)
-                        .Take(take)
-                        .ToListAsync();
+    return await context.ProjectFeedbacks.Include(pf => pf.User).Where(pf => pf.ProjectId == projectId && pf.Status == ContentStatus.Published).OrderByDescending(pf => pf.CreatedAt).Skip(skip).Take(take).ToListAsync();
   }
 
-  public async Task<ProjectFeedback?> GetUserFeedbackForProjectAsync(Guid projectId, Guid userId) {
-    return await context.ProjectFeedbacks.Include(pf => pf.User)
-                        .FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId);
-  }
+  public async Task<ProjectFeedback?> GetUserFeedbackForProjectAsync(Guid projectId, Guid userId) { return await context.ProjectFeedbacks.Include(pf => pf.User).FirstOrDefaultAsync(pf => pf.ProjectId == projectId && pf.UserId == userId); }
 
   #endregion
 
   #region Jam Integration
 
-  public async Task<ProjectJamSubmission> SubmitProjectToJamAsync(
-    Guid projectId, Guid jamId,
-    string? submissionNotes = null
-  ) {
+  public async Task<ProjectJamSubmission> SubmitProjectToJamAsync(Guid projectId, Guid jamId, string? submissionNotes = null) {
     // Check if already submitted
-    var existing =
-      await context.ProjectJamSubmissions.FirstOrDefaultAsync(pjs => pjs.ProjectId == projectId && pjs.JamId == jamId);
+    var existing = await context.ProjectJamSubmissions.FirstOrDefaultAsync(pjs => pjs.ProjectId == projectId && pjs.JamId == jamId);
 
     if (existing != null) return existing;
 
-    var submission = new ProjectJamSubmission {
-      ProjectId = projectId,
-      JamId = jamId,
-      SubmittedAt = DateTime.UtcNow,
-      SubmissionNotes = submissionNotes,
-      IsEligible = true,
-    };
+    var submission = new ProjectJamSubmission { ProjectId = projectId, JamId = jamId, SubmittedAt = DateTime.UtcNow, SubmissionNotes = submissionNotes, IsEligible = true };
 
     context.ProjectJamSubmissions.Add(submission);
     await context.SaveChangesAsync();
@@ -528,8 +405,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<bool> RemoveProjectFromJamAsync(Guid projectId, Guid jamId) {
-    var submission =
-      await context.ProjectJamSubmissions.FirstOrDefaultAsync(pjs => pjs.ProjectId == projectId && pjs.JamId == jamId);
+    var submission = await context.ProjectJamSubmissions.FirstOrDefaultAsync(pjs => pjs.ProjectId == projectId && pjs.JamId == jamId);
 
     if (submission == null) return false;
 
@@ -540,10 +416,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   }
 
   public async Task<IEnumerable<ProjectJamSubmission>> GetProjectJamSubmissionsAsync(Guid projectId) {
-    return await context.ProjectJamSubmissions.Include(pjs => pjs.Jam)
-                        .Include(pjs => pjs.Scores)
-                        .Where(pjs => pjs.ProjectId == projectId)
-                        .ToListAsync();
+    return await context.ProjectJamSubmissions.Include(pjs => pjs.Jam).Include(pjs => pjs.Scores).Where(pjs => pjs.ProjectId == projectId).ToListAsync();
   }
 
   public async Task<IEnumerable<Project>> GetProjectsByJamAsync(Guid jamId) {
@@ -561,13 +434,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
   #region Tenant Integration
 
   public async Task<IEnumerable<Project>> GetProjectsByTenantAsync(Guid tenantId, int skip = 0, int take = 50) {
-    return await context.Projects.Include(p => p.CreatedBy)
-                        .Include(p => p.Category)
-                        .Where(p => p.TenantId == tenantId && p.DeletedAt == null)
-                        .OrderByDescending(p => p.CreatedAt)
-                        .Skip(skip)
-                        .Take(take)
-                        .ToListAsync();
+    return await context.Projects.Include(p => p.CreatedBy).Include(p => p.Category).Where(p => p.TenantId == tenantId && p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync();
   }
 
   public async Task<bool> MoveProjectToTenantAsync(Guid projectId, Guid? tenantId) {
@@ -603,9 +470,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
       ProjectId = projectId,
       FollowerCount = project.Followers.Count,
       FeedbackCount = project.Feedbacks.Count(f => f.Status == ContentStatus.Published),
-      AverageRating = project.Feedbacks.Any(f => f.Status == ContentStatus.Published)
-                        ? (decimal?)project.Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating)
-                        : null,
+      AverageRating = project.Feedbacks.Any(f => f.Status == ContentStatus.Published) ? (decimal?) project.Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating) : null,
       TotalDownloads = project.Releases.Sum(r => r.DownloadCount),
       ActiveTeamCount = project.Teams.Count(t => t.IsActive),
       CollaboratorCount = project.Collaborators.Count,
@@ -647,15 +512,10 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     var recentFollowers = project.Followers.Count(f => f.FollowedAt >= cutoffDate);
     var recentFeedback = project.Feedbacks.Count(f => f.CreatedAt >= cutoffDate);
     var totalDownloads = project.Releases.Sum(r => r.DownloadCount);
-    var averageRating = project.Feedbacks.Count != 0
-                          ? project.Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating)
-                          : 0;
+    var averageRating = project.Feedbacks.Count != 0 ? project.Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating) : 0;
 
     // Weighted trending score
-    return (decimal)((recentFollowers * 2.0) +
-                     (recentFeedback * 1.5) +
-                     (totalDownloads * 0.001) +
-                     (averageRating * 0.5));
+    return (decimal) (recentFollowers * 2.0 + recentFeedback * 1.5 + totalDownloads * 0.001 + averageRating * 0.5);
   }
 
   #endregion

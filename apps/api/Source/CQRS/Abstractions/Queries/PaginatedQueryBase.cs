@@ -1,26 +1,16 @@
 ﻿namespace GameGuild.CQRS;
 
-/// <summary>
-/// Base class for paginated queries
-/// </summary>
+/// <summary> Base class for paginated queries </summary>
 public abstract class PaginatedQueryBase<TResponse> : IQuery<PagedResult<TResponse>> {
-  /// <summary>
-  /// Number of items to skip (for pagination)
-  /// </summary>
+  /// <summary> Number of items to skip (for pagination) </summary>
   public int Skip { get; set; }
 
-  /// <summary>
-  /// Number of items to take (page size)
-  /// </summary>
+  /// <summary> Number of items to take (page size) </summary>
   public int Take { get; set; } = 50;
 
-  /// <summary>
-  /// Search term for filtering
-  /// </summary>
+  /// <summary> Search term for filtering </summary>
   public string? SearchTerm { get; set; }
 
-  /// <summary>
-  /// Include soft-deleted entities
-  /// </summary>
+  /// <summary> Include soft-deleted entities </summary>
   public bool IncludeDeleted { get; set; }
 }

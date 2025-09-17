@@ -4,13 +4,8 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.Tenants;
 
-/// <summary>
-/// Handler for searching tenants with advanced filtering
-/// </summary>
-public class SearchTenantsHandler(
-  ApplicationDbContext context,
-  ILogger<SearchTenantsHandler> logger
-) : IQueryHandler<SearchTenantsQuery, Result<IEnumerable<Tenant>>> {
+/// <summary> Handler for searching tenants with advanced filtering </summary>
+public class SearchTenantsHandler(ApplicationDbContext context, ILogger<SearchTenantsHandler> logger) : IQueryHandler<SearchTenantsQuery, Result<IEnumerable<Tenant>>> {
   public async Task<Result<IEnumerable<Tenant>>> Handle(SearchTenantsQuery request, CancellationToken cancellationToken) {
     try {
       var query = context.Resources.OfType<Tenant>().AsQueryable();
@@ -24,11 +19,7 @@ public class SearchTenantsHandler(
       // Search term filtering
       if (!string.IsNullOrWhiteSpace(request.SearchTerm)) {
         var searchTerm = request.SearchTerm.ToLowerInvariant();
-        query = query.Where(t =>
-                              t.Name.ToLower().Contains(searchTerm) ||
-                              (t.Description != null && t.Description.ToLower().Contains(searchTerm)) ||
-                              t.Slug.ToLower().Contains(searchTerm)
-        );
+        query = query.Where(t => t.Name.ToLower().Contains(searchTerm) || t.Description != null && t.Description.ToLower().Contains(searchTerm) || t.Slug.ToLower().Contains(searchTerm));
       }
 
       // Apply sorting
@@ -56,9 +47,7 @@ public class SearchTenantsHandler(
     catch (Exception ex) {
       logger.LogError(ex, "Error searching tenants with term '{SearchTerm}'", request.SearchTerm);
 
-      return Result.Failure<IEnumerable<Tenant>>(
-        Error.Failure("Tenant.SearchFailed", "Failed to search tenants")
-      );
+      return Result.Failure<IEnumerable<Tenant>>(Error.Failure("Tenant.SearchFailed", "Failed to search tenants"));
     }
   }
 }

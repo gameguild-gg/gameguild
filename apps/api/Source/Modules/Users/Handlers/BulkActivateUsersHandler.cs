@@ -3,16 +3,13 @@ using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
+
 namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// Handler for bulk activating users
 /// </summary>
-public class BulkActivateUsersHandler(
-  ApplicationDbContext context,
-  ILogger<BulkActivateUsersHandler> logger,
-  IMediator mediator
-) : IResultCommandHandler<BulkActivateUsersCommand, BulkOperationResult> {
+public class BulkActivateUsersHandler(ApplicationDbContext context, ILogger<BulkActivateUsersHandler> logger, IMediator mediator) : IResultCommandHandler<BulkActivateUsersCommand, BulkOperationResult> {
   public async Task<GameGuild.CQRS.Result<BulkOperationResult>> Handle(BulkActivateUsersCommand request, CancellationToken cancellationToken) {
     var activatedUsers = new List<User>();
     var errors = new List<string>();
@@ -56,12 +53,7 @@ public class BulkActivateUsersHandler(
 
     foreach (var error in errors) result.AddError(error);
 
-    logger.LogInformation(
-      "Bulk activate completed: {Successful}/{Total} users activated. Reason: {Reason}",
-      successfulCount,
-      request.UserIds.Count,
-      request.Reason ?? "Not specified"
-    );
+    logger.LogInformation("Bulk activate completed: {Successful}/{Total} users activated. Reason: {Reason}", successfulCount, request.UserIds.Count, request.Reason ?? "Not specified");
 
     return GameGuild.CQRS.Result.Success(result);
   }

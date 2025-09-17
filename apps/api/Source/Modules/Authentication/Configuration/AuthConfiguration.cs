@@ -3,46 +3,41 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 
-namespace GameGuild.Modules.Authentication {
-  /// <summary>
-  /// Extension methods for configuring authentication services.
-  /// DEPRECATED: Use AuthModuleDependencyInjection instead for better CQRS and modular design.
-  /// </summary>
-  [Obsolete("Use AuthModuleDependencyInjection.AddAuthModule instead. This will be removed in future versions.")]
-  public static class AuthConfiguration {
-    /// <summary>
-    /// Add authentication services to the service collection.
-    /// DEPRECATED: Use AuthModuleDependencyInjection.AddAuthModule instead.
-    /// </summary>
-    [Obsolete("Use AuthModuleDependencyInjection.AddAuthModule instead.")]
-    public static IServiceCollection AddAuthModule(this IServiceCollection services, IConfiguration configuration) {
-      // Register auth services
-      services.AddScoped<IAuthService, AuthService>();
-      services.AddScoped<IJwtTokenService, JwtTokenService>();
-      services.AddScoped<IOAuthService, OAuthService>();
-      services.AddScoped<IWeb3Service, Web3Service>();
-      services.AddScoped<IEmailVerificationService, EmailVerificationService>();
-      services.AddScoped<ITenantAuthService, TenantAuthService>();
+namespace GameGuild.Modules.Authentication;
 
-      // Register HTTP client for OAuth services
-      services.AddHttpClient<OAuthService>();
+/// <summary> Extension methods for configuring authentication services. DEPRECATED: Use AuthModuleDependencyInjection instead for better CQRS and modular design. </summary>
+[Obsolete("Use AuthModuleDependencyInjection.AddAuthModule instead. This will be removed in future versions.")]
+public static class AuthConfiguration {
+  /// <summary> Add authentication services to the service collection. DEPRECATED: Use AuthModuleDependencyInjection.AddAuthModule instead. </summary>
+  [Obsolete("Use AuthModuleDependencyInjection.AddAuthModule instead.")]
+  public static IServiceCollection AddAuthModule(this IServiceCollection services, IConfiguration configuration) {
+    // Register auth services
+    services.AddScoped<IAuthService, AuthService>();
+    services.AddScoped<IJwtTokenService, JwtTokenService>();
+    services.AddScoped<IOAuthService, OAuthService>();
+    services.AddScoped<IWeb3Service, Web3Service>();
+    services.AddScoped<IEmailVerificationService, EmailVerificationService>();
+    services.AddScoped<ITenantAuthService, TenantAuthService>();
 
-      // Register authentication filters
-      services.AddScoped<JwtAuthenticationFilter>();
-      // RoleAuthorizationFilter removed - using a new three-layer DAC system
+    // Register HTTP client for OAuth services
+    services.AddHttpClient<OAuthService>();
 
-      // Configure JWT authentication
-      var jwtSettings = configuration.GetSection("Jwt");
-      var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is required");
-      var issuer = jwtSettings["Issuer"] ?? throw new InvalidOperationException("JWT Issuer is required");
-      var audience = jwtSettings["Audience"] ?? throw new InvalidOperationException("JWT Audience is required");
+    // Register authentication filters
+    services.AddScoped<JwtAuthenticationFilter>();
+    // RoleAuthorizationFilter removed - using a new three-layer DAC system
 
-      services.AddAuthentication(options => {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-      }
-              )
-              .AddJwtBearer(options => {
+    // Configure JWT authentication
+    var jwtSettings = configuration.GetSection("Jwt");
+    var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is required");
+    var issuer = jwtSettings["Issuer"] ?? throw new InvalidOperationException("JWT Issuer is required");
+    var audience = jwtSettings["Audience"] ?? throw new InvalidOperationException("JWT Audience is required");
+
+    services.AddAuthentication(options => {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+              }
+            )
+            .AddJwtBearer(options => {
                 options.TokenValidationParameters = new TokenValidationParameters {
                   ValidateIssuer = true,
                   ValidateAudience = true,
@@ -77,39 +72,34 @@ namespace GameGuild.Modules.Authentication {
                   },
                 };
               }
-              );
+            );
 
-      // Add authorization
-      services.AddAuthorization();
+    // Add authorization
+    services.AddAuthorization();
 
-      return services;
-    }
+    return services;
+  }
 
-    /// <summary>
-    /// Configure the authentication middleware pipeline
-    /// </summary>
-    public static IApplicationBuilder UseAuthModule(this IApplicationBuilder app) {
-      // Add authentication middleware
-      app.UseAuthentication();
-      app.UseAuthorization();
+  /// <summary> Configure the authentication middleware pipeline </summary>
+  public static IApplicationBuilder UseAuthModule(this IApplicationBuilder app) {
+    // Add authentication middleware
+    app.UseAuthentication();
+    app.UseAuthorization();
 
-      // Add custom JWT middleware
-      app.UseMiddleware<JwtAuthenticationMiddleware>();
+    // Add custom JWT middleware
+    app.UseMiddleware<JwtAuthenticationMiddleware>();
 
-      return app;
-    }
+    return app;
+  }
 
-    /// <summary>
-    /// Add authentication filters to MVC configuration
-    /// </summary>
-    public static IMvcBuilder AddAuthFilters(this IMvcBuilder builder) {
-      builder.AddMvcOptions(options => {
+  /// <summary> Add authentication filters to MVC configuration </summary>
+  public static IMvcBuilder AddAuthFilters(this IMvcBuilder builder) {
+    builder.AddMvcOptions(options => {
         options.Filters.Add<JwtAuthenticationFilter>();
         // RoleAuthorizationFilter removed - using new three-layer DAC system
       }
-      );
+    );
 
-      return builder;
-    }
+    return builder;
   }
 }

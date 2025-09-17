@@ -3,9 +3,7 @@ using FluentValidation;
 
 namespace GameGuild.Modules.Tenants;
 
-/// <summary>
-/// Validator for CreateTenantCommand
-/// </summary>
+/// <summary> Validator for CreateTenantCommand </summary>
 public class CreateTenantCommandValidator : AbstractValidator<CreateTenantCommand> {
   public CreateTenantCommandValidator() {
     RuleFor(x => x.Name)
@@ -16,10 +14,7 @@ public class CreateTenantCommandValidator : AbstractValidator<CreateTenantComman
       .Matches(@"^[a-zA-Z0-9\s\-_\.]+$")
       .WithMessage("Tenant name can only contain letters, numbers, spaces, hyphens, underscores, and periods");
 
-    RuleFor(x => x.Description)
-      .MaximumLength(500)
-      .WithMessage("Description cannot exceed 500 characters")
-      .When(x => !string.IsNullOrEmpty(x.Description));
+    RuleFor(x => x.Description).MaximumLength(500).WithMessage("Description cannot exceed 500 characters").When(x => !string.IsNullOrEmpty(x.Description));
 
     RuleFor(x => x.Slug)
       .NotEmpty()

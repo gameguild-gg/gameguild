@@ -4,18 +4,11 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.Tenants;
 
-/// <summary>
-/// Handler for getting active tenants
-/// </summary>
-public class GetActiveTenantsHandler(
-  ApplicationDbContext context,
-  ILogger<GetActiveTenantsHandler> logger
-) : IQueryHandler<GetActiveTenantsQuery, Result<IEnumerable<Tenant>>> {
+/// <summary> Handler for getting active tenants </summary>
+public class GetActiveTenantsHandler(ApplicationDbContext context, ILogger<GetActiveTenantsHandler> logger) : IQueryHandler<GetActiveTenantsQuery, Result<IEnumerable<Tenant>>> {
   public async Task<Result<IEnumerable<Tenant>>> Handle(GetActiveTenantsQuery request, CancellationToken cancellationToken) {
     try {
-      var tenants = await context.Resources.OfType<Tenant>()
-                                 .Where(t => t.IsActive && t.DeletedAt == null)
-                                 .ToListAsync(cancellationToken);
+      var tenants = await context.Resources.OfType<Tenant>().Where(t => t.IsActive && t.DeletedAt == null).ToListAsync(cancellationToken);
 
       logger.LogInformation("Retrieved {Count} active tenants", tenants.Count);
 
@@ -24,9 +17,7 @@ public class GetActiveTenantsHandler(
     catch (Exception ex) {
       logger.LogError(ex, "Error retrieving active tenants");
 
-      return Result.Failure<IEnumerable<Tenant>>(
-        Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve active tenants")
-      );
+      return Result.Failure<IEnumerable<Tenant>>(Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve active tenants"));
     }
   }
 }

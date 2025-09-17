@@ -1,8 +1,6 @@
 namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// DTO for ContentInteraction responses - avoids circular references for Swagger/OpenAPI
-/// </summary>
+/// <summary> DTO for ContentInteraction responses - avoids circular references for Swagger/OpenAPI </summary>
 public class ContentInteractionDto {
   public Guid Id { get; set; }
 
@@ -36,19 +34,11 @@ public class ContentInteractionDto {
   public ProgramUserSummaryDto? ProgramUser { get; set; }
 
   // Computed properties for convenience
-  public bool IsSubmitted {
-    get => SubmittedAt.HasValue;
-  }
+  public bool IsSubmitted { get => SubmittedAt.HasValue; }
 
-  public bool IsCompleted {
-    get => Status == ProgressStatus.Completed;
-  }
+  public bool IsCompleted { get => Status == ProgressStatus.Completed; }
 
-  public bool CanModify {
-    get => !IsSubmitted;
-  }
+  public bool CanModify { get => !IsSubmitted; }
 
-  public int DurationInMinutes {
-    get => TimeSpentMinutes ?? 0;
-  }
+  public int DurationInMinutes { get => TimeSpentMinutes ?? 0; }
 }

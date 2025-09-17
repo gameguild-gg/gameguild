@@ -3,9 +3,7 @@
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// Query to get user profile by ID
-/// </summary>
+/// <summary> Query to get user profile by ID </summary>
 public class GetUserProfileByIdQuery : IQuery<Result<UserProfile?>> {
   [Required] public Guid UserProfileId { get; set; }
 

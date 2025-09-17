@@ -3,21 +3,13 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// Command to create a new user profile with validation and business logic
-/// </summary>
+/// <summary> Command to create a new user profile with validation and business logic </summary>
 public class CreateUserProfileCommand : ICommand<Result<UserProfile>> {
-  [Required]
-  [StringLength(100, MinimumLength = 1)]
-  public string GivenName { get; set; } = string.Empty;
+  [Required] [StringLength(100, MinimumLength = 1)] public string GivenName { get; set; } = string.Empty;
 
-  [Required]
-  [StringLength(100, MinimumLength = 1)]
-  public string FamilyName { get; set; } = string.Empty;
+  [Required] [StringLength(100, MinimumLength = 1)] public string FamilyName { get; set; } = string.Empty;
 
-  [Required]
-  [StringLength(100, MinimumLength = 2)]
-  public string DisplayName { get; set; } = string.Empty;
+  [Required] [StringLength(100, MinimumLength = 2)] public string DisplayName { get; set; } = string.Empty;
 
   [StringLength(200)] public string? Title { get; set; }
 

@@ -1,14 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+
 namespace GameGuild.Modules.Billing.Models;
 
 /// <summary>
 /// Represents a webhook event received from a billing provider
 /// </summary>
 [Table("BillingWebhookEvents")]
-public class BillingWebhookEvent : EntityBase
-{
+public class BillingWebhookEvent : EntityBase {
   /// <summary>
   /// Payment provider that sent the webhook (stripe, paypal, etc.)
   /// </summary>
@@ -84,8 +84,7 @@ public class BillingWebhookEvent : EntityBase
   /// <summary>
   /// Mark webhook as processed
   /// </summary>
-  public void MarkAsProcessed()
-  {
+  public void MarkAsProcessed() {
     IsProcessed = true;
     ProcessedAt = DateTime.UtcNow;
     IsFailed = false;
@@ -95,8 +94,7 @@ public class BillingWebhookEvent : EntityBase
   /// <summary>
   /// Mark webhook as failed
   /// </summary>
-  public void MarkAsFailed(string errorMessage)
-  {
+  public void MarkAsFailed(string errorMessage) {
     IsFailed = true;
     ErrorMessage = errorMessage;
     ProcessingAttempts++;
@@ -106,8 +104,7 @@ public class BillingWebhookEvent : EntityBase
   /// <summary>
   /// Increment processing attempts
   /// </summary>
-  public void IncrementAttempts()
-  {
+  public void IncrementAttempts() {
     ProcessingAttempts++;
     UpdatedAt = DateTime.UtcNow;
   }

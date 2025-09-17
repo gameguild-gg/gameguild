@@ -4,20 +4,13 @@ using GameGuild.CQRS;
 
 namespace GameGuild;
 
-/// <summary>
-/// Performance monitoring behavior for tracking slow requests and memory usage
-/// </summary>
-public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavior<TRequest, TResponse>> logger, IDateTimeProvider dateTimeProvider) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>
-{
+/// <summary> Performance monitoring behavior for tracking slow requests and memory usage </summary>
+public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavior<TRequest, TResponse>> logger, IDateTimeProvider dateTimeProvider) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse> {
   private const int SlowRequestThresholdMs = 1000; // 1 second
+
   private const int CriticalRequestThresholdMs = 5000; // 5 seconds
 
-  public async Task<TResponse> Handle(
-    TRequest request,
-    RequestHandlerDelegateBase<TResponse> next,
-    CancellationToken cancellationToken
-  )
-  {
+  public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken) {
     var requestName = typeof(TRequest).Name;
     var stopwatch = Stopwatch.StartNew();
     var startTime = dateTimeProvider.UtcNow;
@@ -25,8 +18,7 @@ public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavio
     // Memory usage before processing
     var memoryBefore = GC.GetTotalMemory(false);
 
-    try
-    {
+    try {
       var response = await next();
       stopwatch.Stop();
 
@@ -38,8 +30,7 @@ public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavio
 
       return response;
     }
-    catch (Exception)
-    {
+    catch (Exception) {
       stopwatch.Stop();
       var memoryAfter = GC.GetTotalMemory(false);
       var memoryUsed = memoryAfter - memoryBefore;
@@ -50,8 +41,7 @@ public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavio
     }
   }
 
-  private void LogPerformanceMetrics(string requestName, long elapsedMilliseconds, long memoryUsed, DateTime startTime, bool hasError = false)
-  {
+  private void LogPerformanceMetrics(string requestName, long elapsedMilliseconds, long memoryUsed, DateTime startTime, bool hasError = false) {
     var logLevel = GetLogLevel(elapsedMilliseconds, hasError);
     var memoryUsedKb = memoryUsed / 1024.0;
 
@@ -67,22 +57,12 @@ public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavio
 
     // Additional warnings for resource-intensive operations
     if (memoryUsedKb > 1024) // More than 1MB
-      logger.LogWarning(
-        "High memory usage detected: {RequestName} used {MemoryKB:F2}KB",
-        requestName,
-        memoryUsedKb
-      );
+      logger.LogWarning("High memory usage detected: {RequestName} used {MemoryKB:F2}KB", requestName, memoryUsedKb);
 
-    if (elapsedMilliseconds > CriticalRequestThresholdMs)
-      logger.LogCritical(
-        "Critical performance issue: {RequestName} took {ElapsedMs}ms",
-        requestName,
-        elapsedMilliseconds
-      );
+    if (elapsedMilliseconds > CriticalRequestThresholdMs) logger.LogCritical("Critical performance issue: {RequestName} took {ElapsedMs}ms", requestName, elapsedMilliseconds);
   }
 
-  private static LogLevel GetLogLevel(long elapsedMilliseconds, bool hasError)
-  {
+  private static LogLevel GetLogLevel(long elapsedMilliseconds, bool hasError) {
     if (hasError) return LogLevel.Error;
 
     return elapsedMilliseconds switch { > CriticalRequestThresholdMs => LogLevel.Critical, > SlowRequestThresholdMs => LogLevel.Warning, _ => LogLevel.Information };

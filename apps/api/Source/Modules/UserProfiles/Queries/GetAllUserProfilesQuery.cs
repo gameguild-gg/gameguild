@@ -3,9 +3,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// Query to get all user profiles with optional filtering
-/// </summary>
+/// <summary> Query to get all user profiles with optional filtering </summary>
 public class GetAllUserProfilesQuery : IQuery<Result<IEnumerable<UserProfile>>> {
   public bool IncludeDeleted { get; set; } = false;
 

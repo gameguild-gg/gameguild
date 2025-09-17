@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// DTO for grade statistics responses
-/// </summary>
+/// <summary> DTO for grade statistics responses </summary>
 public class GradeStatisticsDto {
   public int TotalGrades { get; set; }
 
@@ -15,15 +13,9 @@ public class GradeStatisticsDto {
   public decimal PassingRate { get; set; }
 
   // Additional computed properties for better UX
-  public string AverageGradeFormatted {
-    get => $"{AverageGrade:F1}%";
-  }
+  public string AverageGradeFormatted { get => $"{AverageGrade:F1}%"; }
 
-  public string PassingRateFormatted {
-    get => $"{PassingRate:F1}%";
-  }
+  public string PassingRateFormatted { get => $"{PassingRate:F1}%"; }
 
-  public bool HasGrades {
-    get => TotalGrades > 0;
-  }
+  public bool HasGrades { get => TotalGrades > 0; }
 }

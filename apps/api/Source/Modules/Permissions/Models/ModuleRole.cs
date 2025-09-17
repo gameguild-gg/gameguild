@@ -1,47 +1,31 @@
 using System.Text.Json;
 
 
-using GameGuild;
-
 namespace GameGuild.Modules.Permissions;
 
-/// <summary>
-/// Module-specific role definition that contains a set of permissions for a specific module
-/// </summary>
+/// <summary> Module-specific role definition that contains a set of permissions for a specific module </summary>
 [Table("ModuleRoles")]
-public class ModuleRole : EntityBase
-{
-  [Required]
-  [MaxLength(100)]
-  public string Name { get; set; } = string.Empty;
+public class ModuleRole : EntityBase {
+  [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
 
-  [Required]
-  public ModuleType Module { get; set; }
+  [Required] public ModuleType Module { get; set; }
 
-  [Required]
-  [MaxLength(500)]
-  public string Description { get; set; } = string.Empty;
+  [Required] [MaxLength(500)] public string Description { get; set; } = string.Empty;
 
-  /// <summary>
-  /// JSON-serialized list of ModulePermissionDefinition objects
-  /// </summary>
+  /// <summary> JSON-serialized list of ModulePermissionDefinition objects </summary>
   [Column(TypeName = "jsonb")]
   public string PermissionsJson { get; set; } = "[]";
 
-  /// <summary>
-  /// Permissions defined in this module role
-  /// </summary>
+  /// <summary> Permissions defined in this module role </summary>
   [NotMapped]
-  public List<ModulePermissionDefinition> Permissions
-  {
-    get => string.IsNullOrEmpty(PermissionsJson)
-        ? new List<ModulePermissionDefinition>()
-        : JsonSerializer.Deserialize<List<ModulePermissionDefinition>>(PermissionsJson) ?? new List<ModulePermissionDefinition>();
+  public List<ModulePermissionDefinition> Permissions {
+    get => string.IsNullOrEmpty(PermissionsJson) ? new List<ModulePermissionDefinition>() : JsonSerializer.Deserialize<List<ModulePermissionDefinition>>(PermissionsJson) ?? new List<ModulePermissionDefinition>();
     set => PermissionsJson = JsonSerializer.Serialize(value);
   }
 
-  public int Priority { get; set; } = 0;
-  public bool IsSystemRole { get; set; } = false;
+  public int Priority { get; set; }
+
+  public bool IsSystemRole { get; set; }
 
   // Tenant support (TenantId is in BaseEntity as part of ITenantable)
   public Guid? TenantId { get; set; }
@@ -50,20 +34,13 @@ public class ModuleRole : EntityBase
   public virtual ICollection<UserRoleAssignment> UserRoleAssignments { get; } = new List<UserRoleAssignment>();
 }
 
-/// <summary>
-/// Configuration for ModuleRole entity
-/// </summary>
-public class ModuleRoleConfiguration : IEntityTypeConfiguration<ModuleRole>
-{
-  public void Configure(EntityTypeBuilder<ModuleRole> builder)
-  {
+/// <summary> Configuration for ModuleRole entity </summary>
+public class ModuleRoleConfiguration : IEntityTypeConfiguration<ModuleRole> {
+  public void Configure(EntityTypeBuilder<ModuleRole> builder) {
     ArgumentNullException.ThrowIfNull(builder);
 
     builder.HasIndex(x => new { x.Name, x.Module, x.TenantId }).IsUnique();
 
-    builder.HasMany(x => x.UserRoleAssignments)
-           .WithOne(x => x.Role)
-           .HasForeignKey(x => x.RoleId)
-           .OnDelete(DeleteBehavior.SetNull);
+    builder.HasMany(x => x.UserRoleAssignments).WithOne(x => x.Role).HasForeignKey(x => x.RoleId).OnDelete(DeleteBehavior.SetNull);
   }
 }

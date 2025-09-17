@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Payments;
 
-/// <summary>
-/// DTO for processing a payment
-/// </summary>
+/// <summary> DTO for processing a payment </summary>
 public class ProcessPaymentDto {
   public Guid PaymentMethodId { get; set; }
 

@@ -12,10 +12,7 @@ public class TenantQueries {
   /// <summary>
   /// Get all tenants (non-deleted only)
   /// </summary>
-  public async Task<IEnumerable<Tenant>> GetTenants(
-    [Service] CQRS.IMediator mediator,
-    [Service] IHttpContextAccessor httpContextAccessor
-  ) {
+  public async Task<IEnumerable<Tenant>> GetTenants([Service] CQRS.IMediator mediator, [Service] IHttpContextAccessor httpContextAccessor) {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
@@ -32,11 +29,7 @@ public class TenantQueries {
   /// <summary>
   /// Get a tenant by ID
   /// </summary>
-  public async Task<Tenant?> GetTenantById(
-    [Service] CQRS.IMediator mediator,
-    [Service] IHttpContextAccessor httpContextAccessor,
-    Guid id
-  ) {
+  public async Task<Tenant?> GetTenantById([Service] CQRS.IMediator mediator, [Service] IHttpContextAccessor httpContextAccessor, Guid id) {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
@@ -53,11 +46,7 @@ public class TenantQueries {
   /// <summary>
   /// Get a tenant by name
   /// </summary>
-  public async Task<Tenant?> GetTenantByName(
-    [Service] CQRS.IMediator mediator,
-    [Service] IHttpContextAccessor httpContextAccessor,
-    string name
-  ) {
+  public async Task<Tenant?> GetTenantByName([Service] CQRS.IMediator mediator, [Service] IHttpContextAccessor httpContextAccessor, string name) {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
@@ -74,11 +63,7 @@ public class TenantQueries {
   /// <summary>
   /// Get a tenant by slug
   /// </summary>
-  public async Task<Tenant?> GetTenantBySlug(
-    [Service] CQRS.IMediator mediator,
-    [Service] IHttpContextAccessor httpContextAccessor,
-    string slug
-  ) {
+  public async Task<Tenant?> GetTenantBySlug([Service] CQRS.IMediator mediator, [Service] IHttpContextAccessor httpContextAccessor, string slug) {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
@@ -95,10 +80,7 @@ public class TenantQueries {
   /// <summary>
   /// Get soft-deleted tenants
   /// </summary>
-  public async Task<IEnumerable<Tenant>> GetDeletedTenants(
-    [Service] CQRS.IMediator mediator,
-    [Service] IHttpContextAccessor httpContextAccessor
-  ) {
+  public async Task<IEnumerable<Tenant>> GetDeletedTenants([Service] CQRS.IMediator mediator, [Service] IHttpContextAccessor httpContextAccessor) {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
@@ -115,10 +97,7 @@ public class TenantQueries {
   /// <summary>
   /// Get active tenants
   /// </summary>
-  public async Task<IEnumerable<Tenant>> GetActiveTenants(
-    [Service] CQRS.IMediator mediator,
-    [Service] IHttpContextAccessor httpContextAccessor
-  ) {
+  public async Task<IEnumerable<Tenant>> GetActiveTenants([Service] CQRS.IMediator mediator, [Service] IHttpContextAccessor httpContextAccessor) {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
@@ -135,25 +114,13 @@ public class TenantQueries {
   /// <summary>
   /// Search tenants with advanced filtering
   /// </summary>
-  public async Task<IEnumerable<Tenant>> SearchTenants(
-    [Service] CQRS.IMediator mediator,
-    [Service] IHttpContextAccessor httpContextAccessor,
-    SearchTenantsInput input
-  ) {
+  public async Task<IEnumerable<Tenant>> SearchTenants([Service] CQRS.IMediator mediator, [Service] IHttpContextAccessor httpContextAccessor, SearchTenantsInput input) {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 
     if (httpContext == null || !httpContext.User.Identity?.IsAuthenticated == true) throw new UnauthorizedAccessException("Authentication required");
 
-    var query = new SearchTenantsQuery(
-      input.SearchTerm,
-      input.IsActive,
-      input.IncludeDeleted,
-      input.SortBy,
-      input.SortDescending,
-      input.Limit,
-      input.Offset
-    );
+    var query = new SearchTenantsQuery(input.SearchTerm, input.IsActive, input.IncludeDeleted, input.SortBy, input.SortDescending, input.Limit, input.Offset);
     var result = await mediator.Send(query);
 
     if (result.IsFailure) throw new GraphQLException(result.Error.Description);
@@ -164,10 +131,7 @@ public class TenantQueries {
   /// <summary>
   /// Get tenant statistics
   /// </summary>
-  public async Task<TenantStatistics> GetTenantStatistics(
-    [Service] CQRS.IMediator mediator,
-    [Service] IHttpContextAccessor httpContextAccessor
-  ) {
+  public async Task<TenantStatistics> GetTenantStatistics([Service] CQRS.IMediator mediator, [Service] IHttpContextAccessor httpContextAccessor) {
     // Require authentication for tenant queries
     var httpContext = httpContextAccessor.HttpContext;
 

@@ -4,9 +4,7 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// Handler for searching user profiles with advanced filtering
-/// </summary>
+/// <summary> Handler for searching user profiles with advanced filtering </summary>
 public class SearchUserProfilesHandler(ApplicationDbContext context, ILogger<SearchUserProfilesHandler> logger) : IQueryHandler<SearchUserProfilesQuery, Result<IEnumerable<UserProfile>>> {
   public async Task<Result<IEnumerable<UserProfile>>> Handle(SearchUserProfilesQuery request, CancellationToken cancellationToken) {
     try {
@@ -21,11 +19,11 @@ public class SearchUserProfilesHandler(ApplicationDbContext context, ILogger<Sea
       // Apply search term filter
       if (!string.IsNullOrWhiteSpace(request.SearchTerm)) {
         var searchLower = request.SearchTerm.ToLower();
-        query = query.Where(up =>
-                              (up.GivenName != null && up.GivenName.ToLower().Contains(searchLower)) ||
-                              (up.FamilyName != null && up.FamilyName.ToLower().Contains(searchLower)) ||
-                              (up.DisplayName != null && up.DisplayName.ToLower().Contains(searchLower)) ||
-                              (up.Title != null && up.Title.ToLower().Contains(searchLower))
+
+        query = query.Where(up => up.GivenName != null && up.GivenName.ToLower().Contains(searchLower) ||
+                                  up.FamilyName != null && up.FamilyName.ToLower().Contains(searchLower) ||
+                                  up.DisplayName != null && up.DisplayName.ToLower().Contains(searchLower) ||
+                                  up.Title != null && up.Title.ToLower().Contains(searchLower)
         );
       }
 
@@ -49,32 +47,17 @@ public class SearchUserProfilesHandler(ApplicationDbContext context, ILogger<Sea
 
       // Apply sorting
       query = request.SortBy switch {
-        UserProfileSortField.CreatedAt => request.SortDirection == SortDirection.Ascending
-                                            ? query.OrderBy(up => up.CreatedAt)
-                                            : query.OrderByDescending(up => up.CreatedAt),
-        UserProfileSortField.UpdatedAt => request.SortDirection == SortDirection.Ascending
-                                            ? query.OrderBy(up => up.UpdatedAt)
-                                            : query.OrderByDescending(up => up.UpdatedAt),
-        UserProfileSortField.DisplayName => request.SortDirection == SortDirection.Ascending
-                                              ? query.OrderBy(up => up.DisplayName)
-                                              : query.OrderByDescending(up => up.DisplayName),
-        UserProfileSortField.GivenName => request.SortDirection == SortDirection.Ascending
-                                            ? query.OrderBy(up => up.GivenName)
-                                            : query.OrderByDescending(up => up.GivenName),
-        UserProfileSortField.FamilyName => request.SortDirection == SortDirection.Ascending
-                                             ? query.OrderBy(up => up.FamilyName)
-                                             : query.OrderByDescending(up => up.FamilyName),
-        UserProfileSortField.Title => request.SortDirection == SortDirection.Ascending
-                                        ? query.OrderBy(up => up.Title)
-                                        : query.OrderByDescending(up => up.Title),
+        UserProfileSortField.CreatedAt => request.SortDirection == SortDirection.Ascending ? query.OrderBy(up => up.CreatedAt) : query.OrderByDescending(up => up.CreatedAt),
+        UserProfileSortField.UpdatedAt => request.SortDirection == SortDirection.Ascending ? query.OrderBy(up => up.UpdatedAt) : query.OrderByDescending(up => up.UpdatedAt),
+        UserProfileSortField.DisplayName => request.SortDirection == SortDirection.Ascending ? query.OrderBy(up => up.DisplayName) : query.OrderByDescending(up => up.DisplayName),
+        UserProfileSortField.GivenName => request.SortDirection == SortDirection.Ascending ? query.OrderBy(up => up.GivenName) : query.OrderByDescending(up => up.GivenName),
+        UserProfileSortField.FamilyName => request.SortDirection == SortDirection.Ascending ? query.OrderBy(up => up.FamilyName) : query.OrderByDescending(up => up.FamilyName),
+        UserProfileSortField.Title => request.SortDirection == SortDirection.Ascending ? query.OrderBy(up => up.Title) : query.OrderByDescending(up => up.Title),
         _ => query.OrderByDescending(up => up.UpdatedAt),
       };
 
       // Apply pagination
-      var userProfiles = await query
-                               .Skip(request.Skip)
-                               .Take(request.Take)
-                               .ToListAsync(cancellationToken);
+      var userProfiles = await query.Skip(request.Skip).Take(request.Take).ToListAsync(cancellationToken);
 
       logger.LogDebug("Search returned {Count} user profiles with advanced filters", userProfiles.Count);
 
@@ -83,9 +66,7 @@ public class SearchUserProfilesHandler(ApplicationDbContext context, ILogger<Sea
     catch (Exception ex) {
       logger.LogError(ex, "Error searching user profiles");
 
-      return Result.Failure<IEnumerable<UserProfile>>(
-        Error.Failure("UserProfile.SearchFailed", "Failed to search user profiles")
-      );
+      return Result.Failure<IEnumerable<UserProfile>>(Error.Failure("UserProfile.SearchFailed", "Failed to search user profiles"));
     }
   }
 }

@@ -9,7 +9,7 @@ public static class MiddlewareExtensions {
 
   // public static IApplicationBuilder UseExceptionHandler(this IApplicationBuilder app) {
   //   app.UseMiddleware<ExceptionHandlingMiddleware>();
-  //
+  // 
   //   return app;
   // }
 }

@@ -16,9 +16,6 @@ internal sealed class UserAchievementConfiguration : IEntityTypeConfiguration<Us
 
     // Configure the relationship with Achievement
     // This explicitly maps to the UserAchievements collection on Achievement
-    builder.HasOne(ua => ua.Achievement)
-           .WithMany(a => a.UserAchievements)
-           .HasForeignKey(ua => ua.AchievementId)
-           .OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(ua => ua.Achievement).WithMany(a => a.UserAchievements).HasForeignKey(ua => ua.AchievementId).OnDelete(DeleteBehavior.Cascade);
   }
 }

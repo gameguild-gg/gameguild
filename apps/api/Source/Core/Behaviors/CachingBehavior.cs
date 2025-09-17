@@ -4,19 +4,14 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace GameGuild;
 
-/// <summary>
-/// Caching behavior for read operations (queries) to improve performance
-/// </summary>
-public class CachingBehavior<TRequest, TResponse>(IMemoryCache cache, ILogger<CachingBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>, ICachedRequest
-{
-  public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken)
-  {
+/// <summary> Caching behavior for read operations (queries) to improve performance </summary>
+public class CachingBehavior<TRequest, TResponse>(IMemoryCache cache, ILogger<CachingBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>, ICachedRequest {
+  public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken) {
     var cacheKey = request.CacheKey;
     var requestName = typeof(TRequest).Name;
 
     // Try to get from cache first
-    if (cache.TryGetValue(cacheKey, out TResponse? cachedResponse))
-    {
+    if (cache.TryGetValue(cacheKey, out TResponse? cachedResponse)) {
       logger.LogDebug("Cache hit for {RequestName} with key {CacheKey}", requestName, cacheKey);
 
       return cachedResponse!;
@@ -36,18 +31,12 @@ public class CachingBehavior<TRequest, TResponse>(IMemoryCache cache, ILogger<Ca
 
     cache.Set(cacheKey, response, cacheOptions);
 
-    logger.LogDebug(
-      "Cached response for {RequestName} with key {CacheKey}, expires in {Expiration}",
-      requestName,
-      cacheKey,
-      request.CacheExpiration
-    );
+    logger.LogDebug("Cached response for {RequestName} with key {CacheKey}, expires in {Expiration}", requestName, cacheKey, request.CacheExpiration);
 
     return response;
   }
 
-  private static bool ShouldCacheResponse(TResponse response)
-  {
+  private static bool ShouldCacheResponse(TResponse response) {
     // Don't cache null responses
     if (response == null) return false;
 
@@ -59,7 +48,7 @@ public class CachingBehavior<TRequest, TResponse>(IMemoryCache cache, ILogger<Ca
 
     var isSuccessProperty = response.GetType().GetProperty("IsSuccess");
 
-    if (isSuccessProperty != null) return (bool)isSuccessProperty.GetValue(response)!;
+    if (isSuccessProperty != null) return (bool) isSuccessProperty.GetValue(response)!;
 
     // Cache all other responses
     return true;

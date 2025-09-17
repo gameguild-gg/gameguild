@@ -5,21 +5,10 @@ using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Authentication;
 
-/// <summary>
-/// Implementation of tenant auth service
-/// </summary>
-public class TenantAuthService(
-  ITenantService tenantService,
-  ITenantContextService tenantContextService,
-  IJwtTokenService jwtTokenService
-) : ITenantAuthService {
-  /// <summary>
-  /// Enhance authentication result with tenant data
-  /// </summary>
-  public async Task<SignInResponseDto> EnhanceWithTenantDataAsync(
-    SignInResponseDto authResult,
-    User user, Guid? tenantId = null
-  ) {
+/// <summary> Implementation of tenant auth service </summary>
+public class TenantAuthService(ITenantService tenantService, ITenantContextService tenantContextService, IJwtTokenService jwtTokenService) : ITenantAuthService {
+  /// <summary> Enhance authentication result with tenant data </summary>
+  public async Task<SignInResponseDto> EnhanceWithTenantDataAsync(SignInResponseDto authResult, User user, Guid? tenantId = null) {
     // Get available tenants for the user
     var tenantPermissions = await tenantService.GetTenantsForUserAsync(user.Id);
     var availableTenants = tenantPermissions.Where(tp => tp.IsValid).ToList();
@@ -39,8 +28,7 @@ public class TenantAuthService(
       return authResult;
 
     // Validate tenant access
-    var tenantPermission =
-      availableTenants.FirstOrDefault(tp => tp.TenantId.HasValue && tp.TenantId.Value == selectedTenantId);
+    var tenantPermission = availableTenants.FirstOrDefault(tp => tp.TenantId.HasValue && tp.TenantId.Value == selectedTenantId);
 
     if (tenantPermission == null) {
       // If specified tenant is not accessible, use the first available
@@ -58,24 +46,20 @@ public class TenantAuthService(
 
     // Generate new token with tenant claims
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-    var roles = new[] { "User" }; // TODO: fetch actual tenant-specific roles
+    var roles = new[ ] { "User" }; // TODO: fetch actual tenant-specific roles
     var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
 
     // Update response with new token and tenant info
     authResult.AccessToken = accessToken;
     authResult.TenantId = selectedTenantId;
-    authResult.AvailableTenants = availableTenants.Where(tp => tp.TenantId.HasValue)
-                                                  .Select(tp => new TenantInfoDto { Id = tp.TenantId!.Value, Name = tp.Tenant?.Name ?? "Unknown Tenant", IsActive = tp.Tenant?.IsActive ?? false })
-                                                  .ToList();
+    authResult.AvailableTenants = availableTenants.Where(tp => tp.TenantId.HasValue).Select(tp => new TenantInfoDto { Id = tp.TenantId!.Value, Name = tp.Tenant?.Name ?? "Unknown Tenant", IsActive = tp.Tenant?.IsActive ?? false }).ToList();
 
     return authResult;
   }
 
-  /// <summary>
-  /// Get tenant-specific claims for a user
-  /// </summary>
+  /// <summary> Get tenant-specific claims for a user </summary>
   public async Task<IEnumerable<Claim>> GetTenantClaimsAsync(User user, Guid tenantId) {
-    var claims = new List<Claim> { new Claim(JwtClaimTypes.TenantId, tenantId.ToString()), };
+    var claims = new List<Claim> { new Claim(JwtClaimTypes.TenantId, tenantId.ToString()) };
 
     // Get tenant permission for additional claims
     var tenantPermission = await tenantContextService.GetTenantPermissionAsync(user.Id, tenantId);
@@ -89,8 +73,6 @@ public class TenantAuthService(
     return claims;
   }
 
-  /// <summary>
-  /// Get all available tenants for a user
-  /// </summary>
+  /// <summary> Get all available tenants for a user </summary>
   public async Task<IEnumerable<TenantPermission>> GetUserTenantsAsync(User user) { return await tenantService.GetTenantsForUserAsync(user.Id); }
 }

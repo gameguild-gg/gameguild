@@ -5,16 +5,10 @@ using HotChocolate.Execution.Configuration;
 
 namespace GameGuild.Modules.Posts;
 
-/// <summary>
-/// Extension methods for registering Posts module services
-/// </summary>
-public static class PostsModule
-{
-  /// <summary>
-  /// Registers all Posts module services and event handlers
-  /// </summary>
-  public static IServiceCollection AddPostsModule(this IServiceCollection services)
-  {
+/// <summary> Extension methods for registering Posts module services </summary>
+public static class PostsModule {
+  /// <summary> Registers all Posts module services and event handlers </summary>
+  public static IServiceCollection AddPostsModule(this IServiceCollection services) {
     // Register Posts module services
     services.AddScoped<IPostAnnouncementService, PostAnnouncementService>();
 
@@ -30,14 +24,6 @@ public static class PostsModule
     return services;
   }
 
-  /// <summary>
-  /// Registers Posts GraphQL schema components
-  /// </summary>
-  public static IRequestExecutorBuilder AddPostsGraphQL(this IRequestExecutorBuilder builder)
-  {
-    return builder
-           .AddType<PostType>()
-           .AddTypeExtension<PostQueries>()
-           .AddTypeExtension<PostMutations>();
-  }
+  /// <summary> Registers Posts GraphQL schema components </summary>
+  public static IRequestExecutorBuilder AddPostsGraphQL(this IRequestExecutorBuilder builder) { return builder.AddType<PostType>().AddTypeExtension<PostQueries>().AddTypeExtension<PostMutations>(); }
 }

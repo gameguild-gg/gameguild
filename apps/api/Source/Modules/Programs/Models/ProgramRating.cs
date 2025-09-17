@@ -1,55 +1,37 @@
 namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// Represents a user's rating and review for a program
-/// </summary>
+/// <summary> Represents a user's rating and review for a program </summary>
 [Table("program_ratings")]
 [Index(nameof(ProgramId))]
 [Index(nameof(UserId))]
 [Index(nameof(Rating))]
 [Index(nameof(CreatedAt))]
 public class ProgramRating : EntityBase {
-  /// <summary>
-  /// The ID of the program being rated
-  /// </summary>
+  /// <summary> The ID of the program being rated </summary>
   public Guid ProgramId { get; set; }
 
-  /// <summary>
-  /// The ID of the user providing the rating
-  /// </summary>
+  /// <summary> The ID of the user providing the rating </summary>
   [MaxLength(450)]
   public string UserId { get; set; } = string.Empty;
 
-  /// <summary>
-  /// The numerical rating (1-5 scale)
-  /// </summary>
+  /// <summary> The numerical rating (1-5 scale) </summary>
   [Range(1, 5)]
   public decimal Rating { get; set; }
 
-  /// <summary>
-  /// Optional written review
-  /// </summary>
+  /// <summary> Optional written review </summary>
   [MaxLength(2000)]
   public string? Review { get; set; }
 
-  /// <summary>
-  /// Whether this rating is verified (user completed the program)
-  /// </summary>
+  /// <summary> Whether this rating is verified (user completed the program) </summary>
   public bool IsVerified { get; set; } = false;
 
-  /// <summary>
-  /// Whether this rating is featured/highlighted
-  /// </summary>
+  /// <summary> Whether this rating is featured/highlighted </summary>
   public bool IsFeatured { get; set; } = false;
 
-  /// <summary>
-  /// Number of helpful votes this review received
-  /// </summary>
+  /// <summary> Number of helpful votes this review received </summary>
   public int HelpfulVotes { get; set; } = 0;
 
-  /// <summary>
-  /// Number of unhelpful votes this review received
-  /// </summary>
+  /// <summary> Number of unhelpful votes this review received </summary>
   public int UnhelpfulVotes { get; set; } = 0;
 
   // Navigation properties

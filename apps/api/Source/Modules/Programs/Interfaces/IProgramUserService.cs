@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// Interface for program user enrollment and progress services
-/// </summary>
+/// <summary> Interface for program user enrollment and progress services </summary>
 public interface IProgramUserService {
   Task<ProgramUser> EnrollUserAsync(int userProductId, int programId);
 

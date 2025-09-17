@@ -4,26 +4,13 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.Posts;
 
-/// <summary>
-/// Handler for getting posts with pagination and filtering
-/// </summary>
-public class GetPostsHandler(
-  ApplicationDbContext context,
-  ILogger<GetPostsHandler> logger
-) : IQueryHandler<GetPostsQuery, Result<PostsPageDto>> {
+/// <summary> Handler for getting posts with pagination and filtering </summary>
+public class GetPostsHandler(ApplicationDbContext context, ILogger<GetPostsHandler> logger) : IQueryHandler<GetPostsQuery, Result<PostsPageDto>> {
   public async Task<Result<PostsPageDto>> Handle(GetPostsQuery request, CancellationToken cancellationToken) {
     try {
-      logger.LogInformation(
-        "Getting posts for tenant {TenantId}, page {PageNumber}",
-        request.TenantId,
-        request.PageNumber
-      );
+      logger.LogInformation("Getting posts for tenant {TenantId}, page {PageNumber}", request.TenantId, request.PageNumber);
 
-      var query = context.Posts
-                         .Include(p => p.Author)
-                         .Where(p => (request.TenantId == null || p.Tenant == null || p.Tenant.Id == request.TenantId) &&
-                                     p.DeletedAt == null
-                         );
+      var query = context.Posts.Include(p => p.Author).Where(p => (request.TenantId == null || p.Tenant == null || p.Tenant.Id == request.TenantId) && p.DeletedAt == null);
 
       // Apply filters
       if (request.PostType != null) query = query.Where(p => p.PostType == request.PostType);
@@ -33,10 +20,7 @@ public class GetPostsHandler(
       if (request.IsPinned.HasValue) query = query.Where(p => p.IsPinned == request.IsPinned.Value);
 
       if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-        query = query.Where(p => p.Title.Contains(request.SearchTerm) ||
-                                 (p.Description != null && p.Description.Contains(request.SearchTerm)) ||
-                                 (p.Author != null && p.Author.Name.Contains(request.SearchTerm))
-        );
+        query = query.Where(p => p.Title.Contains(request.SearchTerm) || p.Description != null && p.Description.Contains(request.SearchTerm) || p.Author != null && p.Author.Name.Contains(request.SearchTerm));
 
       // Apply ordering
       query = request.OrderBy.ToLower() switch {
@@ -51,59 +35,42 @@ public class GetPostsHandler(
 
       var totalCount = await query.CountAsync(cancellationToken);
 
-      var posts = await query
-                        .Skip((request.PageNumber - 1) * request.PageSize)
-                        .Take(request.PageSize)
-                        .Select(p => new PostDto {
-                          Id = p.Id,
-                          Title = p.Title,
-                          Description = p.Description,
-                          Slug = p.Slug,
-                          PostType = p.PostType,
-                          AuthorId = p.AuthorId,
-                          AuthorName = p.Author != null ? p.Author.Name : "",
-                          IsSystemGenerated = p.IsSystemGenerated,
-                          Visibility = p.Visibility,
-                          Status = p.Status,
-                          IsPinned = p.IsPinned,
-                          LikesCount = p.LikesCount,
-                          CommentsCount = p.CommentsCount,
-                          SharesCount = p.SharesCount,
-                          RichContent = p.RichContent,
-                          CreatedAt = p.CreatedAt,
-                          UpdatedAt = p.UpdatedAt,
-                        }
-                        )
-                        .ToListAsync(cancellationToken);
+      var posts = await query.Skip((request.PageNumber - 1) * request.PageSize)
+                             .Take(request.PageSize)
+                             .Select(p => new PostDto {
+                                 Id = p.Id,
+                                 Title = p.Title,
+                                 Description = p.Description,
+                                 Slug = p.Slug,
+                                 PostType = p.PostType,
+                                 AuthorId = p.AuthorId,
+                                 AuthorName = p.Author != null ? p.Author.Name : "",
+                                 IsSystemGenerated = p.IsSystemGenerated,
+                                 Visibility = p.Visibility,
+                                 Status = p.Status,
+                                 IsPinned = p.IsPinned,
+                                 LikesCount = p.LikesCount,
+                                 CommentsCount = p.CommentsCount,
+                                 SharesCount = p.SharesCount,
+                                 RichContent = p.RichContent,
+                                 CreatedAt = p.CreatedAt,
+                                 UpdatedAt = p.UpdatedAt,
+                               }
+                             )
+                             .ToListAsync(cancellationToken);
 
       var result = new PostsPageDto {
-        Posts = posts,
-        TotalCount = totalCount,
-        PageNumber = request.PageNumber,
-        PageSize = request.PageSize,
-        HasNextPage = request.PageNumber * request.PageSize < totalCount,
-        HasPreviousPage = request.PageNumber > 1,
+        Posts = posts, TotalCount = totalCount, PageNumber = request.PageNumber, PageSize = request.PageSize, HasNextPage = request.PageNumber * request.PageSize < totalCount, HasPreviousPage = request.PageNumber > 1,
       };
 
-      logger.LogInformation(
-        "Retrieved {PostCount} posts out of {TotalCount} for tenant {TenantId}",
-        posts.Count,
-        totalCount,
-        request.TenantId
-      );
+      logger.LogInformation("Retrieved {PostCount} posts out of {TotalCount} for tenant {TenantId}", posts.Count, totalCount, request.TenantId);
 
       return Result.Success(result);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error getting posts for tenant {TenantId}", request.TenantId);
 
-      return Result.Failure<PostsPageDto>(
-        new Error(
-          "GetPosts.Failed",
-          $"Failed to get posts: {ex.Message}",
-          ErrorType.Failure
-        )
-      );
+      return Result.Failure<PostsPageDto>(new Error("GetPosts.Failed", $"Failed to get posts: {ex.Message}", ErrorType.Failure));
     }
   }
 }

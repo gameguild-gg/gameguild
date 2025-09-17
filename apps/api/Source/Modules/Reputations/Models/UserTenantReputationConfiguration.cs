@@ -12,10 +12,6 @@ internal sealed class UserTenantReputationConfiguration : IEntityTypeConfigurati
            .OnDelete(DeleteBehavior.SetNull);
 
     // Configure a relationship with CurrentLevel (can't be done with annotations)
-    builder.HasOne(utr => utr.CurrentLevel)
-           .WithMany()
-           .HasForeignKey(utr => utr.CurrentLevelId)
-           .IsRequired(false)
-           .OnDelete(DeleteBehavior.SetNull);
+    builder.HasOne(utr => utr.CurrentLevel).WithMany().HasForeignKey(utr => utr.CurrentLevelId).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
   }
 }

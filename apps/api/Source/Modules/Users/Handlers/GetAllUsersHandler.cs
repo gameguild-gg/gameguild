@@ -1,16 +1,12 @@
-using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
+
 namespace GameGuild.Modules.Users;
 
-/// <summary>
-/// Handler for getting all users with filtering and pagination
-/// </summary>
-public class GetAllUsersHandler(ApplicationDbContext context) : IRequestHandler<GetAllUsersQuery, IEnumerable<User>>
-{
-  public async Task<IEnumerable<User>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
-  {
+/// <summary> Handler for getting all users with filtering and pagination </summary>
+public class GetAllUsersHandler(ApplicationDbContext context) : IRequestHandler<GetAllUsersQuery, IEnumerable<User>> {
+  public async Task<IEnumerable<User>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken) {
     IQueryable<User> query = context.Users.Include(u => u.Credentials);
 
     // Apply filters

@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Products;
 
-/// <summary>
-/// Interface for product pricing services
-/// </summary>
+/// <summary> Interface for product pricing services </summary>
 public interface IProductPricingService {
   Task<ProductPricing> CreatePricingAsync(ProductPricing pricing);
 

@@ -5,9 +5,7 @@ using CqrsResult = GameGuild.CQRS.Result;
 
 namespace GameGuild;
 
-/// <summary>
-/// Authorization behavior for securing commands and queries
-/// </summary>
+/// <summary> Authorization behavior for securing commands and queries </summary>
 public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor httpContextAccessor, ILogger<AuthorizationBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse> {
   public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken) {
     var requestName = typeof(TRequest).Name;
@@ -31,12 +29,7 @@ public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor htt
       var hasRequiredRole = authorizedRequest.RequiredRoles.Any(role => userRoles.Contains(role));
 
       if (!hasRequiredRole) {
-        logger.LogWarning(
-          "Insufficient permissions for {RequestName}. User roles: {UserRoles}, Required: {RequiredRoles}",
-          requestName,
-          string.Join(", ", userRoles),
-          string.Join(", ", authorizedRequest.RequiredRoles)
-        );
+        logger.LogWarning("Insufficient permissions for {RequestName}. User roles: {UserRoles}, Required: {RequiredRoles}", requestName, string.Join(", ", userRoles), string.Join(", ", authorizedRequest.RequiredRoles));
 
         return CreateForbiddenResponse<TResponse>();
       }
@@ -45,16 +38,10 @@ public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor htt
     // Check required permissions
     if (authorizedRequest.RequiredPermissions?.Any() == true) {
       var userPermissions = user.FindAll("permission").Select(c => c.Value).ToList();
-      var hasRequiredPermission = authorizedRequest.RequiredPermissions.Any(permission =>
-                                                                              userPermissions.Contains(permission)
-      );
+      var hasRequiredPermission = authorizedRequest.RequiredPermissions.Any(permission => userPermissions.Contains(permission));
 
       if (!hasRequiredPermission) {
-        logger.LogWarning(
-          "Insufficient permissions for {RequestName}. Required: {RequiredPermissions}",
-          requestName,
-          string.Join(", ", authorizedRequest.RequiredPermissions)
-        );
+        logger.LogWarning("Insufficient permissions for {RequestName}. Required: {RequiredPermissions}", requestName, string.Join(", ", authorizedRequest.RequiredPermissions));
 
         return CreateForbiddenResponse<TResponse>();
       }
@@ -86,17 +73,16 @@ public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor htt
 
   private static TResponse CreateErrorResponse<T>(Error error) {
     // Convert Error to CQRS.Error
-    var cqrsError = GameGuild.CQRS.Error.Create(error.Code, error.Description);
+    var cqrsError = CQRS.Error.Create(error.Code, error.Description);
 
     // Handle Result pattern
-    if (typeof(T) == typeof(CqrsResult)) return (TResponse)(object)CqrsResult.Failure(cqrsError);
+    if (typeof(T) == typeof(CqrsResult)) return (TResponse) (object) CqrsResult.Failure(cqrsError);
 
     if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Result<>)) {
       var resultType = typeof(T).GetGenericArguments()[0];
-      var failureMethod = typeof(CqrsResult).GetMethod("Failure", [typeof(GameGuild.CQRS.Error)])!
-                                        .MakeGenericMethod(resultType);
+      var failureMethod = typeof(CqrsResult).GetMethod("Failure", [typeof(CQRS.Error)])!.MakeGenericMethod(resultType);
 
-      return (TResponse)failureMethod.Invoke(null, [cqrsError])!;
+      return (TResponse) failureMethod.Invoke(null, [cqrsError])!;
     }
 
     // Fallback - throw exception for non-Result responses

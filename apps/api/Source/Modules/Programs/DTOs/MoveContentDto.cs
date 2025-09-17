@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// DTO for moving content to a new parent/position
-/// </summary>
+/// <summary> DTO for moving content to a new parent/position </summary>
 public class MoveContentDto {
   [Required] public Guid ContentId { get; set; }
 

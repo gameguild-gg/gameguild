@@ -5,9 +5,14 @@
 /// </summary>
 public enum UserSortField {
   Name,
+
   Email,
+
   CreatedAt,
+
   UpdatedAt,
+
   Balance,
+
   AvailableBalance,
 }

@@ -3,9 +3,7 @@
 
 namespace GameGuild.Modules.Tenants;
 
-/// <summary>
-/// Domain event fired when a tenant is deactivated
-/// </summary>
+/// <summary> Domain event fired when a tenant is deactivated </summary>
 public class TenantDeactivatedEvent(Guid tenantId, string name) : DomainEventBase(tenantId, nameof(Tenant)) {
   public Guid TenantId { get; init; } = tenantId;
 

@@ -8,12 +8,7 @@ public class PaymentMutations {
   /// <summary>
   /// Create a new payment intent
   /// </summary>
-  public async Task<CreatePaymentPayload> CreatePaymentAsync(
-    CreatePaymentInput input,
-    [Service] CQRS.IMediator mediator,
-    [Service] IUserContext userContext,
-    CancellationToken cancellationToken
-  ) {
+  public async Task<CreatePaymentPayload> CreatePaymentAsync(CreatePaymentInput input, [Service] CQRS.IMediator mediator, [Service] IUserContext userContext, CancellationToken cancellationToken) {
     try {
       var command = new CreatePaymentCommand {
         UserId = input.UserId ?? userContext.UserId ?? Guid.Empty,
@@ -36,11 +31,7 @@ public class PaymentMutations {
   /// <summary>
   /// Process a payment (mark as succeeded)
   /// </summary>
-  public async Task<ProcessPaymentPayload> ProcessPaymentAsync(
-    ProcessPaymentInput input,
-    [Service] CQRS.IMediator mediator,
-    CancellationToken cancellationToken
-  ) {
+  public async Task<ProcessPaymentPayload> ProcessPaymentAsync(ProcessPaymentInput input, [Service] CQRS.IMediator mediator, CancellationToken cancellationToken) {
     try {
       var command = new ProcessPaymentCommand { PaymentId = input.PaymentId, ProviderTransactionId = input.ProviderTransactionId, ProviderMetadata = input.ProviderMetadata };
 
@@ -54,12 +45,7 @@ public class PaymentMutations {
   /// <summary>
   /// Refund a payment
   /// </summary>
-  public async Task<RefundPaymentPayload> RefundPaymentAsync(
-    RefundPaymentInput input,
-    [Service] CQRS.IMediator mediator,
-    [Service] IUserContext userContext,
-    CancellationToken cancellationToken
-  ) {
+  public async Task<RefundPaymentPayload> RefundPaymentAsync(RefundPaymentInput input, [Service] CQRS.IMediator mediator, [Service] IUserContext userContext, CancellationToken cancellationToken) {
     try {
       var command = new RefundPaymentCommand { PaymentId = input.PaymentId, RefundAmount = input.RefundAmount, Reason = input.Reason ?? "Customer requested refund", RefundedBy = userContext.UserId ?? Guid.Empty };
 
@@ -73,12 +59,7 @@ public class PaymentMutations {
   /// <summary>
   /// Cancel a payment
   /// </summary>
-  public async Task<CancelPaymentPayload> CancelPaymentAsync(
-    CancelPaymentInput input,
-    [Service] CQRS.IMediator mediator,
-    [Service] IUserContext userContext,
-    CancellationToken cancellationToken
-  ) {
+  public async Task<CancelPaymentPayload> CancelPaymentAsync(CancelPaymentInput input, [Service] CQRS.IMediator mediator, [Service] IUserContext userContext, CancellationToken cancellationToken) {
     try {
       var command = new CancelPaymentCommand { PaymentId = input.PaymentId, Reason = input.Reason ?? "Payment cancelled by user", CancelledBy = userContext.UserId ?? Guid.Empty };
 

@@ -8,9 +8,7 @@ namespace GameGuild.Modules.Tenants;
 /// </summary>
 public class UpdateTenantCommandValidator : AbstractValidator<UpdateTenantCommand> {
   public UpdateTenantCommandValidator() {
-    RuleFor(x => x.Id)
-      .NotEmpty()
-      .WithMessage("Tenant ID is required");
+    RuleFor(x => x.Id).NotEmpty().WithMessage("Tenant ID is required");
 
     RuleFor(x => x.Name)
       .NotEmpty()
@@ -20,10 +18,7 @@ public class UpdateTenantCommandValidator : AbstractValidator<UpdateTenantComman
       .Matches(@"^[a-zA-Z0-9\s\-_\.]+$")
       .WithMessage("Tenant name can only contain letters, numbers, spaces, hyphens, underscores, and periods");
 
-    RuleFor(x => x.Description)
-      .MaximumLength(500)
-      .WithMessage("Description cannot exceed 500 characters")
-      .When(x => !string.IsNullOrEmpty(x.Description));
+    RuleFor(x => x.Description).MaximumLength(500).WithMessage("Description cannot exceed 500 characters").When(x => !string.IsNullOrEmpty(x.Description));
 
     RuleFor(x => x.Slug)
       .NotEmpty()

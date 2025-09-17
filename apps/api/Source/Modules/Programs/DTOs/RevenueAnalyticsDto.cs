@@ -1,15 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-public record RevenueAnalyticsDto(
-  Guid ProgramId,
-  decimal TotalRevenue,
-  decimal MonthlyRevenue,
-  int TotalPurchases,
-  int MonthlyPurchases,
-  decimal AverageRevenuePerUser,
-  decimal ConversionRate,
-  List<RevenueChartDto> RevenueChart
-) {
+public record RevenueAnalyticsDto(Guid ProgramId, decimal TotalRevenue, decimal MonthlyRevenue, int TotalPurchases, int MonthlyPurchases, decimal AverageRevenuePerUser, decimal ConversionRate, List<RevenueChartDto> RevenueChart) {
   public Guid ProgramId { get; init; } = ProgramId;
 
   public decimal TotalRevenue { get; init; } = TotalRevenue;

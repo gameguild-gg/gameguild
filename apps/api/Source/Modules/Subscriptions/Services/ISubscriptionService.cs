@@ -3,9 +3,7 @@ using GameGuild.Modules.Subscriptions.Models;
 
 namespace GameGuild.Modules.Subscriptions.Services;
 
-/// <summary>
-/// Service interface for managing user subscriptions
-/// </summary>
+/// <summary> Service interface for managing user subscriptions </summary>
 public interface ISubscriptionService {
   // User subscription management
   Task<IEnumerable<UserSubscription>> GetUserSubscriptionsAsync(Guid userId);

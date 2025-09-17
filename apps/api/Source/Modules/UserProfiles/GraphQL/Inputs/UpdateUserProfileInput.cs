@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.UserProfiles.Inputs;
 
-/// <summary>
-/// Input for updating a user profile
-/// </summary>
+/// <summary> Input for updating a user profile </summary>
 public class UpdateUserProfileInput {
   public Guid Id { get; set; }
 

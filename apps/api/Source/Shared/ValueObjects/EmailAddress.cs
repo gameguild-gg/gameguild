@@ -3,9 +3,7 @@ using System.Net.Mail;
 
 namespace GameGuild;
 
-/// <summary>
-///     Represents an email address value object with validation
-/// </summary>
+/// <summary> Represents an email address value object with validation </summary>
 public record EmailAddress {
   public EmailAddress(string email) {
     if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email address cannot be null or empty.", nameof(email));

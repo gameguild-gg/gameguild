@@ -1,19 +1,12 @@
-using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
 
 namespace GameGuild.Modules.Users;
 
-/// <summary>
-/// Handler for bulk creating users
-/// </summary>
-public class BulkCreateUsersHandler(
-  ApplicationDbContext context,
-  ILogger<BulkCreateUsersHandler> logger,
-  IMediator mediator
-) : IResultCommandHandler<BulkCreateUsersCommand, BulkOperationResult> {
-  public async Task<GameGuild.CQRS.Result<BulkOperationResult>> Handle(BulkCreateUsersCommand request, CancellationToken cancellationToken) {
+/// <summary> Handler for bulk creating users </summary>
+public class BulkCreateUsersHandler(ApplicationDbContext context, ILogger<BulkCreateUsersHandler> logger, IMediator mediator) : IResultCommandHandler<BulkCreateUsersCommand, BulkOperationResult> {
+  public async Task<CQRS.Result<BulkOperationResult>> Handle(BulkCreateUsersCommand request, CancellationToken cancellationToken) {
     var createdUsers = new List<User>();
     var errors = new List<string>();
     var successfulCount = 0;
@@ -31,21 +24,11 @@ public class BulkCreateUsersHandler(
 
         // Generate unique username from name using slugify
         var baseUsername = userDto.Name.ToSlugCase();
-        var existingUsernames = await context.Users
-                                             .Where(u => u.Username.StartsWith(baseUsername))
-                                             .Select(u => u.Username)
-                                             .ToListAsync(cancellationToken);
+        var existingUsernames = await context.Users.Where(u => u.Username.StartsWith(baseUsername)).Select(u => u.Username).ToListAsync(cancellationToken);
 
         var uniqueUsername = SlugCase.GenerateUnique(userDto.Name, existingUsernames, 50);
 
-        var user = new User {
-          Name = userDto.Name,
-          Username = uniqueUsername,
-          Email = userDto.Email,
-          IsActive = userDto.IsActive,
-          Balance = userDto.InitialBalance,
-          AvailableBalance = userDto.InitialBalance,
-        };
+        var user = new User { Name = userDto.Name, Username = uniqueUsername, Email = userDto.Email, IsActive = userDto.IsActive, Balance = userDto.InitialBalance, AvailableBalance = userDto.InitialBalance };
 
         context.Users.Add(user);
         createdUsers.Add(user);
@@ -68,13 +51,8 @@ public class BulkCreateUsersHandler(
 
     foreach (var error in errors) result.AddError(error);
 
-    logger.LogInformation(
-      "Bulk create completed: {Successful}/{Total} users created. Reason: {Reason}",
-      successfulCount,
-      request.Users.Count,
-      request.Reason ?? "Not specified"
-    );
+    logger.LogInformation("Bulk create completed: {Successful}/{Total} users created. Reason: {Reason}", successfulCount, request.Users.Count, request.Reason ?? "Not specified");
 
-    return GameGuild.CQRS.Result.Success(result);
+    return CQRS.Result.Success(result);
   }
 }

@@ -1,15 +1,10 @@
-using System.ComponentModel.DataAnnotations;
-using FluentValidation;
 using GameGuild.CQRS;
 using ValidationContext = System.ComponentModel.DataAnnotations.ValidationContext;
-using ValidationResult = System.ComponentModel.DataAnnotations.ValidationResult;
 
 
 namespace GameGuild;
 
-/// <summary>
-/// Unified validation behavior that supports both DataAnnotations and FluentValidation
-/// </summary>
+/// <summary> Unified validation behavior that supports both DataAnnotations and FluentValidation </summary>
 public class UnifiedValidationBehavior<TRequest, TResponse>(IEnumerable<FluentValidation.IValidator<TRequest>> fluentValidators, ILogger<UnifiedValidationBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse>
   where TRequest : IRequest<TResponse> {
   public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken) {
@@ -44,14 +39,14 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(IEnumerable<FluentVa
         if (genericFailureMethod != null) {
           var typedFailureMethod = genericFailureMethod.MakeGenericMethod(resultType);
 
-          return (TResponse)typedFailureMethod.Invoke(null, [error])!;
+          return (TResponse) typedFailureMethod.Invoke(null, [error])!;
         }
       }
 
       if (typeof(TResponse) == typeof(Result)) {
         var error = Error.Failure("Validation.Failed", errorMessage);
 
-        return (TResponse)(object)Result.Failure(error);
+        return (TResponse) (object) Result.Failure(error);
       }
 
       // Fallback to exception for non-Result responses
@@ -70,11 +65,7 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(IEnumerable<FluentVa
 
     var isValid = Validator.TryValidateObject(request, validationContext, validationResults, true);
 
-    if (!isValid) {
-      errors.AddRange(validationResults
-        .Where(r => !string.IsNullOrEmpty(r.ErrorMessage))
-        .Select(r => r.ErrorMessage!));
-    }
+    if (!isValid) { errors.AddRange(validationResults.Where(r => !string.IsNullOrEmpty(r.ErrorMessage)).Select(r => r.ErrorMessage!)); }
 
     return errors;
   }
@@ -82,9 +73,7 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(IEnumerable<FluentVa
   private async Task<List<string>> ValidateWithFluentValidation(TRequest request, CancellationToken cancellationToken) {
     var errors = new List<string>();
 
-    if (!fluentValidators.Any()) {
-      return errors;
-    }
+    if (!fluentValidators.Any()) { return errors; }
 
     var context = new FluentValidation.ValidationContext<TRequest>(request);
 

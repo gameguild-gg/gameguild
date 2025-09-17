@@ -1,8 +1,6 @@
 namespace GameGuild.Modules.Feedbacks;
 
-/// <summary>
-/// Interface for program feedback services
-/// </summary>
+/// <summary> Interface for program feedback services </summary>
 public interface IProgramFeedbackService {
   Task<ProgramFeedbackSubmission> SubmitFeedbackAsync(ProgramFeedbackSubmission feedback);
 

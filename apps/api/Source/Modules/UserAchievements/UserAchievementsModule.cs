@@ -3,16 +3,10 @@ using HotChocolate.Execution.Configuration;
 
 namespace GameGuild.Modules.UserAchievements;
 
-/// <summary>
-/// Extension methods for registering UserAchievements module services
-/// </summary>
-public static class UserAchievementsModule
-{
-  /// <summary>
-  /// Registers all UserAchievements module services and event handlers
-  /// </summary>
-  public static IServiceCollection AddUserAchievementsModule(this IServiceCollection services)
-  {
+/// <summary> Extension methods for registering UserAchievements module services </summary>
+public static class UserAchievementsModule {
+  /// <summary> Registers all UserAchievements module services and event handlers </summary>
+  public static IServiceCollection AddUserAchievementsModule(this IServiceCollection services) {
     // Register module services
     services.AddScoped<IAchievementService, AchievementService>();
     services.AddScoped<IAchievementNotificationService, AchievementNotificationService>();
@@ -32,18 +26,14 @@ public static class UserAchievementsModule
     return services;
   }
 
-  /// <summary>
-  /// Registers UserAchievements GraphQL schema components
-  /// </summary>
-  public static IRequestExecutorBuilder AddUserAchievementsGraphQL(this IRequestExecutorBuilder builder)
-  {
-    return builder
-           .AddType<AchievementType>()
-           .AddType<UserAchievementType>()
-           .AddType<AchievementLevelType>()
-           .AddType<AchievementProgressType>()
-           .AddType<AchievementStatisticsType>()
-           .AddTypeExtension<AchievementQueries>()
-           .AddTypeExtension<AchievementMutations>();
+  /// <summary> Registers UserAchievements GraphQL schema components </summary>
+  public static IRequestExecutorBuilder AddUserAchievementsGraphQL(this IRequestExecutorBuilder builder) {
+    return builder.AddType<AchievementType>()
+                  .AddType<UserAchievementType>()
+                  .AddType<AchievementLevelType>()
+                  .AddType<AchievementProgressType>()
+                  .AddType<AchievementStatisticsType>()
+                  .AddTypeExtension<AchievementQueries>()
+                  .AddTypeExtension<AchievementMutations>();
   }
 }

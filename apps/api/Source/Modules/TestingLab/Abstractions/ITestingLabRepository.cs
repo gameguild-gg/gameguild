@@ -10,15 +10,11 @@ public interface ITestingLabRepository<TEntity, in TKey> where TEntity : class {
   // Basic CRUD operations
   Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default);
 
-  Task<TEntity?> GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[] includes);
+  Task<TEntity?> GetByIdAsync(TKey id, params Expression<Func<TEntity, object>>[ ] includes);
 
   Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken = default);
 
-  Task<IEnumerable<TEntity>> GetAsync(
-    Expression<Func<TEntity, bool>>? filter = null,
-    Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
-    params Expression<Func<TEntity, object>>[] includes
-  );
+  Task<IEnumerable<TEntity>> GetAsync(Expression<Func<TEntity, bool>>? filter = null, Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null, params Expression<Func<TEntity, object>>[ ] includes);
 
   // Pagination
   Task<IEnumerable<TEntity>> GetWithPaginationAsync(

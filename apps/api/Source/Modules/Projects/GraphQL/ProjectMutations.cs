@@ -12,12 +12,7 @@ public class ProjectMutations {
   /// <summary>
   /// Creates a new project using CQRS pattern
   /// </summary>
-  public async Task<CreateProjectResult> CreateProject(
-    CreateProjectInput input,
-    [Service] CQRS.IMediator mediator,
-    [Service] IUserContext userContext,
-    CancellationToken cancellationToken
-  ) {
+  public async Task<CreateProjectResult> CreateProject(CreateProjectInput input, [Service] CQRS.IMediator mediator, [Service] IUserContext userContext, CancellationToken cancellationToken) {
     var command = new CreateProjectCommand {
       Title = input.Title,
       Description = input.Description,
@@ -40,12 +35,7 @@ public class ProjectMutations {
   /// <summary>
   /// Updates an existing project using CQRS pattern
   /// </summary>
-  public async Task<UpdateProjectResult> UpdateProject(
-    UpdateProjectInput input,
-    [Service] CQRS.IMediator mediator,
-    [Service] IUserContext userContext,
-    CancellationToken cancellationToken
-  ) {
+  public async Task<UpdateProjectResult> UpdateProject(UpdateProjectInput input, [Service] CQRS.IMediator mediator, [Service] IUserContext userContext, CancellationToken cancellationToken) {
     var command = new UpdateProjectCommand {
       ProjectId = input.ProjectId,
       Title = input.Title,
@@ -69,14 +59,7 @@ public class ProjectMutations {
   /// <summary>
   /// Deletes a project using CQRS pattern
   /// </summary>
-  public async Task<DeleteProjectResult> DeleteProject(
-    Guid projectId,
-    [Service] CQRS.IMediator mediator,
-    [Service] IUserContext userContext,
-    bool softDelete = true,
-    string? reason = null,
-    CancellationToken cancellationToken = default
-  ) {
+  public async Task<DeleteProjectResult> DeleteProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IUserContext userContext, bool softDelete = true, string? reason = null, CancellationToken cancellationToken = default) {
     var command = new DeleteProjectCommand { ProjectId = projectId, DeletedBy = userContext.UserId ?? Guid.Empty, SoftDelete = softDelete, Reason = reason };
 
     return await mediator.Send(command, cancellationToken);
@@ -85,12 +68,7 @@ public class ProjectMutations {
   /// <summary>
   /// Publishes a project using CQRS pattern
   /// </summary>
-  public async Task<PublishProjectResult> PublishProject(
-    Guid projectId,
-    [Service] CQRS.IMediator mediator,
-    [Service] IUserContext userContext,
-    CancellationToken cancellationToken
-  ) {
+  public async Task<PublishProjectResult> PublishProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IUserContext userContext, CancellationToken cancellationToken) {
     var command = new PublishProjectCommand { ProjectId = projectId, PublishedBy = userContext.UserId ?? Guid.Empty };
 
     return await mediator.Send(command, cancellationToken);
@@ -99,12 +77,7 @@ public class ProjectMutations {
   /// <summary>
   /// Unpublishes a project using CQRS pattern
   /// </summary>
-  public async Task<UnpublishProjectResult> UnpublishProject(
-    Guid projectId,
-    [Service] CQRS.IMediator mediator,
-    [Service] IUserContext userContext,
-    CancellationToken cancellationToken
-  ) {
+  public async Task<UnpublishProjectResult> UnpublishProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IUserContext userContext, CancellationToken cancellationToken) {
     var command = new UnpublishProjectCommand { ProjectId = projectId, UnpublishedBy = userContext.UserId ?? Guid.Empty };
 
     return await mediator.Send(command, cancellationToken);
@@ -113,12 +86,7 @@ public class ProjectMutations {
   /// <summary>
   /// Archives a project using CQRS pattern
   /// </summary>
-  public async Task<ArchiveProjectResult> ArchiveProject(
-    Guid projectId,
-    [Service] CQRS.IMediator mediator,
-    [Service] IUserContext userContext,
-    CancellationToken cancellationToken
-  ) {
+  public async Task<ArchiveProjectResult> ArchiveProject(Guid projectId, [Service] CQRS.IMediator mediator, [Service] IUserContext userContext, CancellationToken cancellationToken) {
     var command = new ArchiveProjectCommand { ProjectId = projectId, ArchivedBy = userContext.UserId ?? Guid.Empty };
 
     return await mediator.Send(command, cancellationToken);

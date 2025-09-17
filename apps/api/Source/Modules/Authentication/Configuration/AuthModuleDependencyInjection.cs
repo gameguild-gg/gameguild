@@ -4,30 +4,17 @@ using GameGuild.Modules.Authentication.Validators;
 
 namespace GameGuild.Modules.Authentication;
 
-/// <summary>
-/// Authentication module dependency injection configuration following CQRS, GraphQL, and REST best practices.
-/// Implements Clean Architecture with clear separation of concerns.
-/// </summary>
+/// <summary> Authentication module dependency injection configuration following CQRS, GraphQL, and REST best practices. Implements Clean Architecture with clear separation of concerns. </summary>
 public static class AuthModuleDependencyInjection {
-  /// <summary>
-  /// Registers all Authentication module services following Clean Architecture layers.
-  /// </summary>
-  /// <param name="services">The service collection</param>
-  /// <param name="configuration">Application configuration</param>
-  /// <returns>The configured service collection</returns>
+  /// <summary> Registers all Authentication module services following Clean Architecture layers. </summary>
+  /// <param name="services"> The service collection </param>
+  /// <param name="configuration"> Application configuration </param>
+  /// <returns> The configured service collection </returns>
   public static IServiceCollection AddAuthModule(this IServiceCollection services, IConfiguration configuration) {
-    return services
-           .AddAuthServices()
-           .AddAuthHandlers()
-           .AddAuthValidators()
-           .AddAuthAuthentication(configuration)
-           .AddAuthGraphQL()
-           .AddAuthControllers();
+    return services.AddAuthServices().AddAuthHandlers().AddAuthValidators().AddAuthAuthentication(configuration).AddAuthGraphQL().AddAuthControllers();
   }
 
-  /// <summary>
-  /// Registers core authentication services.
-  /// </summary>
+  /// <summary> Registers core authentication services. </summary>
   private static IServiceCollection AddAuthServices(this IServiceCollection services) {
     // Core authentication services
     services.AddScoped<IAuthService, AuthService>();
@@ -43,9 +30,7 @@ public static class AuthModuleDependencyInjection {
     return services;
   }
 
-  /// <summary>
-  /// Registers CQRS command and query handlers.
-  /// </summary>
+  /// <summary> Registers CQRS command and query handlers. </summary>
   private static IServiceCollection AddAuthHandlers(this IServiceCollection services) {
     // Get the authentication module assembly
     var authAssembly = typeof(AuthModuleDependencyInjection).Assembly;
@@ -56,9 +41,7 @@ public static class AuthModuleDependencyInjection {
     return services;
   }
 
-  /// <summary>
-  /// Registers FluentValidation validators for commands and queries.
-  /// </summary>
+  /// <summary> Registers FluentValidation validators for commands and queries. </summary>
   private static IServiceCollection AddAuthValidators(this IServiceCollection services) {
     // Register validators for CQRS commands and queries
     services.AddScoped<IValidator<LocalSignUpCommand>, LocalSignUpCommandValidator>();
@@ -70,9 +53,7 @@ public static class AuthModuleDependencyInjection {
     return services;
   }
 
-  /// <summary>
-  /// Configures JWT authentication and authorization.
-  /// </summary>
+  /// <summary> Configures JWT authentication and authorization. </summary>
   private static IServiceCollection AddAuthAuthentication(this IServiceCollection services, IConfiguration configuration) {
     // Configure JWT authentication
     services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
@@ -86,40 +67,27 @@ public static class AuthModuleDependencyInjection {
     return services;
   }
 
-  /// <summary>
-  /// Registers GraphQL types and extensions.
-  /// </summary>
+  /// <summary> Registers GraphQL types and extensions. </summary>
   private static IServiceCollection AddAuthGraphQL(this IServiceCollection services) {
     // GraphQL types are registered automatically by HotChocolate type discovery
     // This method exists for explicit registration if needed
     return services;
   }
 
-  /// <summary>
-  /// Configures REST API controllers.
-  /// </summary>
+  /// <summary> Configures REST API controllers. </summary>
   private static IServiceCollection AddAuthControllers(this IServiceCollection services) {
     // Controllers are automatically registered by ASP.NET Core
     // This method exists for any controller-specific configuration
     return services;
   }
 
-  /// <summary>
-  /// Configures the authentication middleware pipeline.
-  /// </summary>
-  /// <param name="app">The application builder</param>
-  /// <returns>The configured application builder</returns>
-  public static IApplicationBuilder UseAuthModule(this IApplicationBuilder app) {
-    return app
-           .UseAuthentication()
-           .UseAuthorization()
-           .UseMiddleware<JwtAuthenticationMiddleware>();
-  }
+  /// <summary> Configures the authentication middleware pipeline. </summary>
+  /// <param name="app"> The application builder </param>
+  /// <returns> The configured application builder </returns>
+  public static IApplicationBuilder UseAuthModule(this IApplicationBuilder app) { return app.UseAuthentication().UseAuthorization().UseMiddleware<JwtAuthenticationMiddleware>(); }
 }
 
-/// <summary>
-/// JWT configuration options.
-/// </summary>
+/// <summary> JWT configuration options. </summary>
 public class JwtOptions {
   public const string SectionName = "Jwt";
 
@@ -133,10 +101,8 @@ public class JwtOptions {
 
   public int RefreshTokenExpirationDays { get; set; } = 7;
 
-  /// <summary>
-  /// Applies fallback values with warnings when environment variables are not set.
-  /// </summary>
-  /// <param name="configuration">Application configuration</param>
+  /// <summary> Applies fallback values with warnings when environment variables are not set. </summary>
+  /// <param name="configuration"> Application configuration </param>
   public void ApplyFallbacksWithWarnings(IConfiguration configuration) {
     var logger = GetLogger();
 
@@ -169,6 +135,7 @@ public class JwtOptions {
   private ILogger? GetLogger() {
     try {
       var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+
       return loggerFactory.CreateLogger<JwtOptions>();
     }
     catch {

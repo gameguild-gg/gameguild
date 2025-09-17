@@ -1,16 +1,10 @@
 namespace GameGuild.Authorization;
 
-/// <summary>
-/// Represents user context for 3-layer DAC authorization
-/// </summary>
+/// <summary> Represents user context for 3-layer DAC authorization </summary>
 public class UsersContext {
-  /// <summary>
-  /// Gets or sets the user identifier
-  /// </summary>
+  /// <summary> Gets or sets the user identifier </summary>
   public Guid UserId { get; set; }
 
-  /// <summary>
-  /// Gets or sets the tenant identifier
-  /// </summary>
+  /// <summary> Gets or sets the tenant identifier </summary>
   public Guid TenantId { get; set; }
 }

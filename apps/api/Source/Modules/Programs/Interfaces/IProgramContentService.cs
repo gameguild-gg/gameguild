@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// Interface for program content management services
-/// </summary>
+/// <summary> Interface for program content management services </summary>
 public interface IProgramContentService {
   Task<ProgramContent> CreateContentAsync(ProgramContent content);
 
@@ -22,15 +20,9 @@ public interface IProgramContentService {
 
   Task<IEnumerable<ProgramContent>> GetRequiredContentAsync(Guid programId);
 
-  Task<IEnumerable<ProgramContent>> GetContentByTypeAsync(
-    Guid programId,
-    ProgramContentType type
-  );
+  Task<IEnumerable<ProgramContent>> GetContentByTypeAsync(Guid programId, ProgramContentType type);
 
-  Task<IEnumerable<ProgramContent>> GetContentByVisibilityAsync(
-    Guid programId,
-    Visibility visibility
-  );
+  Task<IEnumerable<ProgramContent>> GetContentByVisibilityAsync(Guid programId, Visibility visibility);
 
   Task<bool> MoveContentAsync(Guid contentId, Guid? newParentId, int newSortOrder);
 

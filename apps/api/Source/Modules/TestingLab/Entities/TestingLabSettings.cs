@@ -42,7 +42,5 @@ public class TestingLabSettings : EntityBase, ITenantable {
   public override Tenant? Tenant { get; set; }
 
   /// <summary> Indicates whether this settings is global (TenantId is null) or tenant-specific </summary>
-  public override bool IsGlobal {
-    get => Tenant == null;
-  }
+  public override bool IsGlobal { get => Tenant == null; }
 }

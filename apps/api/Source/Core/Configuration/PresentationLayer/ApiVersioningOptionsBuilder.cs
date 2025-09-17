@@ -6,103 +6,88 @@ namespace GameGuild;
 /// <summary>
 /// Builder for creating ApiVersioningOptions from configuration.
 /// </summary>
-public static class ApiVersioningOptionsBuilder
-{
-    /// <summary>
-    /// Creates ApiVersioningOptions with default values.
-    /// </summary>
-    /// <returns>ApiVersioningOptions with default configuration</returns>
-    public static ApiVersioningOptions Create() { return new ApiVersioningOptions(); }
+public static class ApiVersioningOptionsBuilder {
+  /// <summary>
+  /// Creates ApiVersioningOptions with default values.
+  /// </summary>
+  /// <returns>ApiVersioningOptions with default configuration</returns>
+  public static ApiVersioningOptions Create() { return new ApiVersioningOptions(); }
 
-    /// <summary>
-    /// Creates ApiVersioningOptions from a specific configuration section.
-    /// </summary>
-    /// <param name="configuration">The configuration to bind from</param>
-    /// <param name="sectionName">The configuration section name</param>
-    /// <returns>Configured ApiVersioningOptions</returns>
-    public static ApiVersioningOptions Create(IConfiguration configuration, string sectionName = "ApiVersioning")
-    {
-        ArgumentNullException.ThrowIfNull(configuration);
+  /// <summary>
+  /// Creates ApiVersioningOptions from a specific configuration section.
+  /// </summary>
+  /// <param name="configuration">The configuration to bind from</param>
+  /// <param name="sectionName">The configuration section name</param>
+  /// <returns>Configured ApiVersioningOptions</returns>
+  public static ApiVersioningOptions Create(IConfiguration configuration, string sectionName = "ApiVersioning") {
+    ArgumentNullException.ThrowIfNull(configuration);
 
-        var options = Create();
+    var options = Create();
 
-        var section = configuration.GetSection(sectionName);
-        if (section.Exists())
-        {
-            section.Bind(options);
-        }
+    var section = configuration.GetSection(sectionName);
 
-        return options;
-    }
+    if (section.Exists()) { section.Bind(options); }
 
-    /// <summary>
-    /// Validates the provided API versioning options.
-    /// </summary>
-    /// <param name="options">The options to validate</param>
-    /// <exception cref="ArgumentNullException">Thrown when options is null</exception>
-    /// <exception cref="InvalidOperationException">Thrown when configuration is invalid</exception>
-    public static void Validate(ApiVersioningOptions options)
-    {
-        ArgumentNullException.ThrowIfNull(options);
+    return options;
+  }
 
-        options.Validate();
-    }
+  /// <summary>
+  /// Validates the provided API versioning options.
+  /// </summary>
+  /// <param name="options">The options to validate</param>
+  /// <exception cref="ArgumentNullException">Thrown when options is null</exception>
+  /// <exception cref="InvalidOperationException">Thrown when configuration is invalid</exception>
+  public static void Validate(ApiVersioningOptions options) {
+    ArgumentNullException.ThrowIfNull(options);
 
-    /// <summary>
-    /// Creates and validates ApiVersioningOptions with default values.
-    /// </summary>
-    /// <returns>Validated ApiVersioningOptions with default configuration</returns>
-    public static ApiVersioningOptions Build()
-    {
-        var options = Create();
-        Validate(options);
+    options.Validate();
+  }
 
-        return options;
-    }
+  /// <summary>
+  /// Creates and validates ApiVersioningOptions with default values.
+  /// </summary>
+  /// <returns>Validated ApiVersioningOptions with default configuration</returns>
+  public static ApiVersioningOptions Build() {
+    var options = Create();
+    Validate(options);
 
-    /// <summary>
-    /// Creates and validates ApiVersioningOptions from configuration.
-    /// </summary>
-    /// <param name="configuration">The configuration to bind from</param>
-    /// <param name="sectionName">The configuration section name</param>
-    /// <returns>Validated ApiVersioningOptions</returns>
-    public static ApiVersioningOptions Build(IConfiguration configuration, string sectionName = "ApiVersioning")
-    {
-        var options = Create(configuration, sectionName);
-        Validate(options);
+    return options;
+  }
 
-        return options;
-    }
+  /// <summary>
+  /// Creates and validates ApiVersioningOptions from configuration.
+  /// </summary>
+  /// <param name="configuration">The configuration to bind from</param>
+  /// <param name="sectionName">The configuration section name</param>
+  /// <returns>Validated ApiVersioningOptions</returns>
+  public static ApiVersioningOptions Build(IConfiguration configuration, string sectionName = "ApiVersioning") {
+    var options = Create(configuration, sectionName);
+    Validate(options);
 
-    /// <summary>
-    /// Converts ApiVersionReadingStrategy to ApiVersionReader.
-    /// </summary>
-    /// <param name="strategy">The reading strategy</param>
-    /// <param name="options">The API versioning options</param>
-    /// <returns>The configured ApiVersionReader</returns>
-    internal static IApiVersionReader CreateReader(ApiVersionReadingStrategy strategy, ApiVersioningOptions options)
-    {
-        return strategy switch
-        {
-            ApiVersionReadingStrategy.UrlSegment => new UrlSegmentApiVersionReader(),
-            ApiVersionReadingStrategy.QueryString => new QueryStringApiVersionReader(options.QueryParameterName),
-            ApiVersionReadingStrategy.Header => new HeaderApiVersionReader(options.HeaderName),
-            ApiVersionReadingStrategy.MediaType => new MediaTypeApiVersionReader(options.MediaTypeParameterName),
-            ApiVersionReadingStrategy.UrlSegmentAndQueryString => ApiVersionReader.Combine(
-                new UrlSegmentApiVersionReader(),
-                new QueryStringApiVersionReader(options.QueryParameterName)
-            ),
-            ApiVersionReadingStrategy.UrlSegmentAndHeader => ApiVersionReader.Combine(
-                new UrlSegmentApiVersionReader(),
-                new HeaderApiVersionReader(options.HeaderName)
-            ),
-            ApiVersionReadingStrategy.All => ApiVersionReader.Combine(
-                new UrlSegmentApiVersionReader(),
-                new QueryStringApiVersionReader(options.QueryParameterName),
-                new HeaderApiVersionReader(options.HeaderName),
-                new MediaTypeApiVersionReader(options.MediaTypeParameterName)
-            ),
-            _ => new UrlSegmentApiVersionReader()
-        };
-    }
+    return options;
+  }
+
+  /// <summary>
+  /// Converts ApiVersionReadingStrategy to ApiVersionReader.
+  /// </summary>
+  /// <param name="strategy">The reading strategy</param>
+  /// <param name="options">The API versioning options</param>
+  /// <returns>The configured ApiVersionReader</returns>
+  internal static IApiVersionReader CreateReader(ApiVersionReadingStrategy strategy, ApiVersioningOptions options) {
+    return strategy switch {
+      ApiVersionReadingStrategy.UrlSegment => new UrlSegmentApiVersionReader(),
+      ApiVersionReadingStrategy.QueryString => new QueryStringApiVersionReader(options.QueryParameterName),
+      ApiVersionReadingStrategy.Header => new HeaderApiVersionReader(options.HeaderName),
+      ApiVersionReadingStrategy.MediaType => new MediaTypeApiVersionReader(options.MediaTypeParameterName),
+      ApiVersionReadingStrategy.UrlSegmentAndQueryString => ApiVersionReader.Combine(new UrlSegmentApiVersionReader(), new QueryStringApiVersionReader(options.QueryParameterName)),
+      ApiVersionReadingStrategy.UrlSegmentAndHeader => ApiVersionReader.Combine(new UrlSegmentApiVersionReader(), new HeaderApiVersionReader(options.HeaderName)),
+      ApiVersionReadingStrategy.All => ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),
+        new QueryStringApiVersionReader(options.QueryParameterName),
+        new HeaderApiVersionReader(options.HeaderName),
+        new MediaTypeApiVersionReader(options.MediaTypeParameterName)
+      ),
+      _ => new UrlSegmentApiVersionReader()
+    };
+  }
 }

@@ -3,8 +3,7 @@ namespace GameGuild.Modules.Programs;
 /// <summary>
 /// Criteria for peer review evaluation
 /// </summary>
-public class ReviewCriteria : EntityBase
-{
+public class ReviewCriteria : EntityBase {
   /// <summary>
   /// Name of the criteria (e.g., "Code Quality", "Documentation", "Performance")
   /// </summary>
@@ -60,13 +59,18 @@ public class ReviewCriteria : EntityBase
 /// <summary>
 /// Status of a review
 /// </summary>
-public enum ReviewStatus
-{
+public enum ReviewStatus {
   Pending = 0,
+
   InProgress = 1,
+
   Submitted = 2,
+
   Approved = 3,
+
   Rejected = 4,
+
   RequiresRevision = 5,
+
   Escalated = 6,
 }

@@ -1,9 +1,6 @@
 namespace GameGuild.Modules.Contents;
 
-/// <summary>
-/// Content type discriminator for polymorphic queries
-/// Uses string-based content type names for flexibility
-/// </summary>
+/// <summary> Content type discriminator for polymorphic queries Uses string-based content type names for flexibility </summary>
 public static class ContentTypes {
   // todo: change the names here. nameof should come from the actual class names not the variables from the left side
   public const string UserProfile = nameof(UserProfile);

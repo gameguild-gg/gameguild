@@ -12,27 +12,17 @@ internal sealed class ProjectCollaboratorConfiguration : IEntityTypeConfiguratio
            .OnDelete(DeleteBehavior.SetNull);
 
     // Configure the relationship with Project
-    builder.HasOne(pc => pc.Project)
-           .WithMany()
-           .HasForeignKey(pc => pc.ProjectId)
-           .OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(pc => pc.Project).WithMany().HasForeignKey(pc => pc.ProjectId).OnDelete(DeleteBehavior.Cascade);
 
     // Configure unique constraint
-    builder.HasIndex(pc => new { pc.ProjectId, pc.UserId })
-           .IsUnique()
-           .HasDatabaseName("IX_ProjectCollaborators_Project_User");
+    builder.HasIndex(pc => new { pc.ProjectId, pc.UserId }).IsUnique().HasDatabaseName("IX_ProjectCollaborators_Project_User");
 
     // Additional indexes
-    builder.HasIndex(pc => pc.UserId)
-           .HasDatabaseName("IX_ProjectCollaborators_User");
+    builder.HasIndex(pc => pc.UserId).HasDatabaseName("IX_ProjectCollaborators_User");
 
     // Configure properties
-    builder.Property(pc => pc.Role)
-           .HasMaxLength(100)
-           .IsRequired();
+    builder.Property(pc => pc.Role).HasMaxLength(100).IsRequired();
 
-    builder.Property(pc => pc.Permissions)
-           .HasMaxLength(500)
-           .IsRequired();
+    builder.Property(pc => pc.Permissions).HasMaxLength(500).IsRequired();
   }
 }

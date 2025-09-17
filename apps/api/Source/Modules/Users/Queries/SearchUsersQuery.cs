@@ -3,24 +3,16 @@
 
 namespace GameGuild.Modules.Users;
 
-/// <summary>
-/// Query to search users with filtering and pagination
-/// </summary>
+/// <summary> Query to search users with filtering and pagination </summary>
 public sealed class SearchUsersQuery : PaginatedQuery<User> {
-  /// <summary>
-  /// Whether to include soft-deleted users in results
-  /// </summary>
+  /// <summary> Whether to include soft-deleted users in results </summary>
   public bool IncludeDeleted { get; set; } = false;
 
-  /// <summary>
-  /// Number of items to skip (for pagination)
-  /// </summary>
-  public int Skip => (PageNumber - 1) * PageSize;
+  /// <summary> Number of items to skip (for pagination) </summary>
+  public int Skip { get => (PageNumber - 1) * PageSize; }
 
-  /// <summary>
-  /// Number of items to take (for pagination)
-  /// </summary>
-  public int Take => PageSize;
+  /// <summary> Number of items to take (for pagination) </summary>
+  public int Take { get => PageSize; }
 
   public bool? IsActive { get; set; }
 
@@ -36,13 +28,9 @@ public sealed class SearchUsersQuery : PaginatedQuery<User> {
 
   public DateTime? UpdatedBefore { get; set; }
 
-  /// <summary>
-  /// Sort field options
-  /// </summary>
+  /// <summary> Sort field options </summary>
   public new UserSortField SortBy { get; set; } = UserSortField.UpdatedAt;
 
-  /// <summary>
-  /// Sort direction
-  /// </summary>
+  /// <summary> Sort direction </summary>
   public new SortDirection SortDirection { get; set; } = SortDirection.Descending;
 }

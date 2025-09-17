@@ -1,15 +1,12 @@
-namespace GameGuild.Modules.Authentication {
-  public class LocalSignInRequestDto {
-    public string? Username { get; set; }
+namespace GameGuild.Modules.Authentication;
 
-    [Required][EmailAddress] public string Email { get; set; } = string.Empty;
+public class LocalSignInRequestDto {
+  public string? Username { get; set; }
 
-    [Required] public string Password { get; set; } = string.Empty;
+  [Required] [EmailAddress] public string Email { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Optional tenant ID to use for the sign-in
-    /// If not provided, will use the first available tenant for the user
-    /// </summary>
-    public Guid? TenantId { get; set; }
-  }
+  [Required] public string Password { get; set; } = string.Empty;
+
+  /// <summary> Optional tenant ID to use for the sign-in If not provided, will use the first available tenant for the user </summary>
+  public Guid? TenantId { get; set; }
 }

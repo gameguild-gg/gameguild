@@ -4,17 +4,13 @@ using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Authentication;
 
-/// <summary>
-/// Handler for get user profile query using CQRS pattern
-/// </summary>
+/// <summary> Handler for get user profile query using CQRS pattern </summary>
 public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, UserProfileDto> {
-  private readonly IUserService _userService;
   private readonly ILogger<GetUserProfileQueryHandler> _logger;
 
-  public GetUserProfileQueryHandler(
-    IUserService userService,
-    ILogger<GetUserProfileQueryHandler> logger
-  ) {
+  private readonly IUserService _userService;
+
+  public GetUserProfileQueryHandler(IUserService userService, ILogger<GetUserProfileQueryHandler> logger) {
     _userService = userService ?? throw new ArgumentNullException(nameof(userService));
     _logger = logger ?? throw new ArgumentNullException(nameof(logger));
   }

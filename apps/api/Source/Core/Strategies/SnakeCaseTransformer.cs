@@ -1,17 +1,14 @@
-﻿using Newtonsoft.Json.Serialization;
+﻿using System.Text.RegularExpressions;
+using Newtonsoft.Json.Serialization;
 
 
 namespace GameGuild;
 
-/// <summary>
-/// Snake case transformer implementation using Newtonsoft.Json.
-/// </summary>
+/// <summary> Snake case transformer implementation using Newtonsoft.Json. </summary>
 public class SnakeCaseTransformer : CachedCaseTransformer {
-  private static readonly SnakeCaseNamingStrategy NamingStrategy = new();
+  private static readonly SnakeCaseNamingStrategy NamingStrategy = new SnakeCaseNamingStrategy();
 
-  protected override string CacheKeyPrefix {
-    get => "snake";
-  }
+  protected override string CacheKeyPrefix { get => "snake"; }
 
   protected override string TransformCore(string input, CaseTransformOptions options) {
     if (string.IsNullOrEmpty(input)) return string.Empty;
@@ -42,6 +39,6 @@ public class SnakeCaseTransformer : CachedCaseTransformer {
 
     // Check if it matches snake_case pattern: lowercase letters, numbers, and underscores
     // No leading/trailing underscores, no consecutive underscores
-    return System.Text.RegularExpressions.Regex.IsMatch(input, @"^[a-z0-9]+(?:_[a-z0-9]+)*$");
+    return Regex.IsMatch(input, @"^[a-z0-9]+(?:_[a-z0-9]+)*$");
   }
 }

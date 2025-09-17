@@ -13,63 +13,44 @@ namespace GameGuild.Modules.Programs;
 [Index(nameof(ParentId), nameof(SortOrder))]
 [Index(nameof(IsRequired))]
 public class ProgramContent : EntityBase {
-  [Required]
-  [ForeignKey(nameof(Program))]
-  public Guid ProgramId { get; set; }
+  [Required] [ForeignKey(nameof(Program))] public Guid ProgramId { get; set; }
 
-  /// <summary>
-  /// For hierarchical content structure (e.g., modules containing lessons)
-  /// </summary>
+  /// <summary> For hierarchical content structure (e.g., modules containing lessons) </summary>
   [ForeignKey(nameof(Parent))]
   public Guid? ParentId { get; set; }
 
-  [Required][MaxLength(255)] public string Title { get; set; } = string.Empty;
+  [Required] [MaxLength(255)] public string Title { get; set; } = string.Empty;
 
   public string Description { get; set; } = string.Empty;
 
   public ProgramContentType Type { get; set; }
 
   /// <summary>
-  /// Main content body stored as JSON to support rich content
-  /// Structure varies by content type:
-  /// - Page: {content: "HTML/Markdown", resources: []}
-  /// - Assignment: {instructions: "", rubric: {}, submissionFormat: ""}
-  /// - Code: {starterCode: "", testCases: [], language: ""}
+  ///   Main content body stored as JSON to support rich content Structure varies by content type: - Page: {content: "HTML/Markdown", resources: []} - Assignment: {instructions: "", rubric: {}, submissionFormat: ""} - Code: {starterCode:
+  ///   "", testCases: [], language: ""}
   /// </summary>
   [Column(TypeName = "jsonb")]
   public string Body { get; set; } = "{}";
 
-  /// <summary>
-  /// Display order within the program or parent content
-  /// </summary>
+  /// <summary> Display order within the program or parent content </summary>
   public int SortOrder { get; set; }
 
-  /// <summary>
-  /// Whether this content is required for program completion
-  /// </summary>
+  /// <summary> Whether this content is required for program completion </summary>
   public bool IsRequired { get; set; } = true;
 
-  /// <summary>
-  /// How this content should be graded (if applicable)
-  /// </summary>
+  /// <summary> How this content should be graded (if applicable) </summary>
   public GradingMethod? GradingMethod { get; set; }
 
-  /// <summary>
-  /// Maximum points/score for this content (if gradeable)
-  /// </summary>
+  /// <summary> Maximum points/score for this content (if gradeable) </summary>
   [Column(TypeName = "decimal(5,2)")]
   public decimal? MaxPoints { get; set; }
 
-  /// <summary>
-  /// Estimated time to complete in minutes
-  /// </summary>
+  /// <summary> Estimated time to complete in minutes </summary>
   public int? EstimatedMinutes { get; set; }
 
   public Visibility Visibility { get; set; } = Visibility.Published;
 
-  /// <summary>
-  /// URL-friendly slug for this content
-  /// </summary>
+  /// <summary> URL-friendly slug for this content </summary>
   [MaxLength(255)]
   public string? Slug { get; set; }
 
@@ -99,9 +80,7 @@ public class ProgramContent : EntityBase {
   }
 
   public void SetBodyContent<T>(string key, T value) {
-    var body = string.IsNullOrEmpty(Body)
-                 ? new Dictionary<string, object>()
-                 : JsonSerializer.Deserialize<Dictionary<string, object>>(Body) ?? new Dictionary<string, object>();
+    var body = string.IsNullOrEmpty(Body) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(Body) ?? new Dictionary<string, object>();
 
     body[key] = value!;
     Body = JsonSerializer.Serialize(body);

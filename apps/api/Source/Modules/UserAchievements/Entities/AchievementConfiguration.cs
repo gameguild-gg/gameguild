@@ -1,21 +1,14 @@
 namespace GameGuild.Modules.UserAchievements;
 
-/// <summary>
-/// EntityBase configuration for Achievement
-/// </summary>
+/// <summary> EntityBase configuration for Achievement </summary>
 public class AchievementConfiguration : IEntityTypeConfiguration<Achievement> {
   public void Configure(EntityTypeBuilder<Achievement> builder) {
     // Configure the Prerequisites relationship
-    builder.HasMany(a => a.Prerequisites)
-           .WithOne(ap => ap.Achievement)
-           .HasForeignKey(ap => ap.AchievementId)
-           .OnDelete(DeleteBehavior.Cascade);
+    builder.HasMany(a => a.Prerequisites).WithOne(ap => ap.Achievement).HasForeignKey(ap => ap.AchievementId).OnDelete(DeleteBehavior.Cascade);
   }
 }
 
-/// <summary>
-/// EntityBase configuration for AchievementPrerequisite
-/// </summary>
+/// <summary> EntityBase configuration for AchievementPrerequisite </summary>
 public class AchievementPrerequisiteConfiguration : IEntityTypeConfiguration<AchievementPrerequisite> {
   public void Configure(EntityTypeBuilder<AchievementPrerequisite> builder) {
     // Configure the PrerequisiteAchievement relationship
@@ -26,15 +19,10 @@ public class AchievementPrerequisiteConfiguration : IEntityTypeConfiguration<Ach
   }
 }
 
-/// <summary>
-/// EntityBase configuration for AchievementLevel
-/// </summary>
+/// <summary> EntityBase configuration for AchievementLevel </summary>
 public class AchievementLevelConfiguration : IEntityTypeConfiguration<AchievementLevel> {
   public void Configure(EntityTypeBuilder<AchievementLevel> builder) {
     // Configure the Achievement relationship
-    builder.HasOne(al => al.Achievement)
-           .WithMany(a => a.Levels)
-           .HasForeignKey(al => al.AchievementId)
-           .OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(al => al.Achievement).WithMany(a => a.Levels).HasForeignKey(al => al.AchievementId).OnDelete(DeleteBehavior.Cascade);
   }
 }

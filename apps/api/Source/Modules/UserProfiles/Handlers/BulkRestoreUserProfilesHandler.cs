@@ -4,9 +4,7 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// Handler for bulk restoring soft-deleted user profiles
-/// </summary>
+/// <summary> Handler for bulk restoring soft-deleted user profiles </summary>
 public class BulkRestoreUserProfilesHandler(ApplicationDbContext context, ILogger<BulkRestoreUserProfilesHandler> logger) : ICommandHandler<BulkRestoreUserProfilesCommand, Result<int>> {
   public async Task<Result<int>> Handle(BulkRestoreUserProfilesCommand request, CancellationToken cancellationToken) {
     try {
@@ -17,10 +15,7 @@ public class BulkRestoreUserProfilesHandler(ApplicationDbContext context, ILogge
       var userProfiles = await context.Resources.OfType<UserProfile>().IgnoreQueryFilters().Where(up => userProfileIds.Contains(up.Id) && up.DeletedAt != null).ToListAsync(cancellationToken);
 
       if (userProfiles.Count == 0) {
-        logger.LogWarning(
-          "No deleted user profiles found for bulk restoration with IDs: {UserProfileIds}",
-          string.Join(", ", userProfileIds)
-        );
+        logger.LogWarning("No deleted user profiles found for bulk restoration with IDs: {UserProfileIds}", string.Join(", ", userProfileIds));
 
         return Result.Success(0);
       }
@@ -36,20 +31,14 @@ public class BulkRestoreUserProfilesHandler(ApplicationDbContext context, ILogge
 
       await context.SaveChangesAsync(cancellationToken);
 
-      logger.LogInformation(
-        "Bulk restored {Count} user profiles. Reason: {Reason}",
-        restoredCount,
-        request.Reason ?? "Not specified"
-      );
+      logger.LogInformation("Bulk restored {Count} user profiles. Reason: {Reason}", restoredCount, request.Reason ?? "Not specified");
 
       return Result.Success(restoredCount);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error during bulk restore of user profiles");
 
-      return Result.Failure<int>(
-        Error.Failure("UserProfile.BulkRestoreFailed", "Failed to bulk restore user profiles")
-      );
+      return Result.Failure<int>(Error.Failure("UserProfile.BulkRestoreFailed", "Failed to bulk restore user profiles"));
     }
   }
 }

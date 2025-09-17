@@ -10,31 +10,21 @@ namespace GameGuild.Modules.Programs;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class ContentInteractionController(
-  IContentInteractionService contentInteractionService,
-  IProgramContentService programContentService
-)
-  : ControllerBase {
+public class ContentInteractionController(IContentInteractionService contentInteractionService, IProgramContentService programContentService) : ControllerBase {
   /// <summary>
   /// Start or resume content interaction
   /// Requires Read permission on the parent Program
   /// </summary>
   [HttpPost("start")]
   [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
-  public async Task<ActionResult<ContentInteractionDto>> StartContent(
-    [FromQuery] Guid programId,
-    [FromBody] StartContentRequest request
-  ) {
+  public async Task<ActionResult<ContentInteractionDto>> StartContent([FromQuery] Guid programId, [FromBody] StartContentRequest request) {
     try {
       // Verify content belongs to the specified program
       var content = await programContentService.GetContentByIdAsync(request.ContentId);
 
       if (content == null || content.ProgramId != programId) return BadRequest("Content does not belong to the specified program.");
 
-      var interaction = await contentInteractionService.StartContentAsync(
-                          request.ProgramUserId,
-                          request.ContentId
-                        );
+      var interaction = await contentInteractionService.StartContentAsync(request.ProgramUserId, request.ContentId);
 
       return Ok(interaction.ToDto());
     }
@@ -47,21 +37,14 @@ public class ContentInteractionController(
   /// </summary>
   [HttpPut("{interactionId}/progress")]
   [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
-  public async Task<ActionResult<ContentInteractionDto>> UpdateProgress(
-    [FromRoute] Guid interactionId,
-    [FromQuery] Guid programId,
-    [FromBody] UpdateProgressRequest request
-  ) {
+  public async Task<ActionResult<ContentInteractionDto>> UpdateProgress([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] UpdateProgressRequest request) {
     try {
       // Get the interaction to verify it belongs to the specified program
       var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId);
 
       if (currentInteraction == null || currentInteraction.Content.ProgramId != programId) return BadRequest("Interaction does not belong to the specified program.");
 
-      var interaction = await contentInteractionService.UpdateProgressAsync(
-                          interactionId,
-                          request.CompletionPercentage
-                        );
+      var interaction = await contentInteractionService.UpdateProgressAsync(interactionId, request.CompletionPercentage);
 
       return Ok(interaction.ToDto());
     }
@@ -75,21 +58,14 @@ public class ContentInteractionController(
   /// </summary>
   [HttpPost("{interactionId}/submit")]
   [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
-  public async Task<ActionResult<ContentInteractionDto>> SubmitContent(
-    [FromRoute] Guid interactionId,
-    [FromQuery] Guid programId,
-    [FromBody] SubmitContentRequest request
-  ) {
+  public async Task<ActionResult<ContentInteractionDto>> SubmitContent([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] SubmitContentRequest request) {
     try {
       // Verify the interaction belongs to the specified program
       var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId);
 
       if (currentInteraction == null || currentInteraction.Content.ProgramId != programId) return BadRequest("Interaction does not belong to the specified program.");
 
-      var interaction = await contentInteractionService.SubmitContentAsync(
-                          interactionId,
-                          request.SubmissionData
-                        );
+      var interaction = await contentInteractionService.SubmitContentAsync(interactionId, request.SubmissionData);
 
       return Ok(interaction.ToDto());
     }
@@ -103,11 +79,7 @@ public class ContentInteractionController(
   /// </summary>
   [HttpPost("{interactionId}/complete")]
   [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
-  public async Task<ActionResult<ContentInteractionDto>> CompleteContent(
-    [FromRoute] Guid interactionId,
-    [FromQuery] Guid programId,
-    [FromBody] CompleteContentRequest request
-  ) {
+  public async Task<ActionResult<ContentInteractionDto>> CompleteContent([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] CompleteContentRequest request) {
     try {
       // Verify the interaction belongs to the specified program
       var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId);
@@ -128,11 +100,7 @@ public class ContentInteractionController(
   /// </summary>
   [HttpGet("user/{programUserId}/content/{contentId}")]
   [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
-  public async Task<ActionResult<ContentInteractionDto>> GetInteraction(
-    [FromRoute] Guid programUserId,
-    [FromRoute] Guid contentId,
-    [FromQuery] Guid programId
-  ) {
+  public async Task<ActionResult<ContentInteractionDto>> GetInteraction([FromRoute] Guid programUserId, [FromRoute] Guid contentId, [FromQuery] Guid programId) {
     try {
       // Verify content belongs to the specified program
       var content = await programContentService.GetContentByIdAsync(contentId);
@@ -154,10 +122,7 @@ public class ContentInteractionController(
   /// </summary>
   [HttpGet("user/{programUserId}")]
   [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
-  public async Task<ActionResult<IEnumerable<ContentInteractionDto>>> GetUserInteractions(
-    [FromRoute] Guid programUserId,
-    [FromQuery] Guid programId
-  ) {
+  public async Task<ActionResult<IEnumerable<ContentInteractionDto>>> GetUserInteractions([FromRoute] Guid programUserId, [FromQuery] Guid programId) {
     try {
       var interactions = await contentInteractionService.GetUserInteractionsAsync(programUserId);
 
@@ -175,21 +140,14 @@ public class ContentInteractionController(
   /// </summary>
   [HttpPut("{interactionId}/time-spent")]
   [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
-  public async Task<ActionResult<ContentInteractionDto>> UpdateTimeSpent(
-    [FromRoute] Guid interactionId,
-    [FromQuery] Guid programId,
-    [FromBody] UpdateTimeSpentRequest request
-  ) {
+  public async Task<ActionResult<ContentInteractionDto>> UpdateTimeSpent([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] UpdateTimeSpentRequest request) {
     try {
       // Verify the interaction belongs to the specified program
       var currentInteraction = await contentInteractionService.GetInteractionAsync(request.ProgramUserId, request.ContentId);
 
       if (currentInteraction == null || currentInteraction.Content.ProgramId != programId) return BadRequest("Interaction does not belong to the specified program.");
 
-      var interaction = await contentInteractionService.UpdateTimeSpentAsync(
-                          interactionId,
-                          request.AdditionalMinutes
-                        );
+      var interaction = await contentInteractionService.UpdateTimeSpentAsync(interactionId, request.AdditionalMinutes);
 
       return Ok(interaction.ToDto());
     }

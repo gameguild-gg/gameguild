@@ -6,9 +6,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace GameGuild;
 
-/// <summary>
-/// Swagger operation filter to automatically add security requirements based on [Public] attribute
-/// </summary>
+/// <summary> Swagger operation filter to automatically add security requirements based on [Public] attribute </summary>
 public class AuthOperationFilter : IOperationFilter {
   public void Apply(OpenApiOperation operation, OperationFilterContext context) {
     // Check if the endpoint has the [Public] attribute

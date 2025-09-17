@@ -3,19 +3,11 @@ using GameGuild.GraphQL;
 
 namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// GraphQL mutations for content progress tracking
-/// </summary>
+/// <summary> GraphQL mutations for content progress tracking </summary>
 [ExtendObjectType<Mutation>]
 public class ContentProgressMutations {
-  /// <summary>
-  /// Track user access to content
-  /// </summary>
-  public async Task<ContentProgressResult> TrackContentAccess(
-    Guid contentId,
-    Guid programEnrollmentId,
-    [Service] IContentProgressService progressService
-  ) {
+  /// <summary> Track user access to content </summary>
+  public async Task<ContentProgressResult> TrackContentAccess(Guid contentId, Guid programEnrollmentId, [Service] IContentProgressService progressService) {
     try {
       // TODO: Implement proper current user service
       var currentUserId = GetCurrentUserId();
@@ -27,15 +19,8 @@ public class ContentProgressMutations {
     catch (Exception ex) { return new ContentProgressResult { Success = false, Error = ex.Message }; }
   }
 
-  /// <summary>
-  /// Update content progress
-  /// </summary>
-  public async Task<ContentProgressResult> UpdateContentProgress(
-    Guid contentId,
-    decimal progressPercentage,
-    int? timeSpentSeconds,
-    [Service] IContentProgressService progressService
-  ) {
+  /// <summary> Update content progress </summary>
+  public async Task<ContentProgressResult> UpdateContentProgress(Guid contentId, decimal progressPercentage, int? timeSpentSeconds, [Service] IContentProgressService progressService) {
     try {
       // TODO: Implement proper current user service
       var currentUserId = GetCurrentUserId();
@@ -48,15 +33,8 @@ public class ContentProgressMutations {
     catch (Exception ex) { return new ContentProgressResult { Success = false, Error = ex.Message }; }
   }
 
-  /// <summary>
-  /// Mark content as completed
-  /// </summary>
-  public async Task<ContentProgressResult> CompleteContent(
-    Guid contentId,
-    decimal? score,
-    decimal? maxScore,
-    [Service] IContentProgressService progressService
-  ) {
+  /// <summary> Mark content as completed </summary>
+  public async Task<ContentProgressResult> CompleteContent(Guid contentId, decimal? score, decimal? maxScore, [Service] IContentProgressService progressService) {
     try {
       // TODO: Implement proper current user service
       var currentUserId = GetCurrentUserId();
@@ -76,9 +54,7 @@ public class ContentProgressMutations {
   }
 }
 
-/// <summary>
-/// Result type for content progress operations
-/// </summary>
+/// <summary> Result type for content progress operations </summary>
 public class ContentProgressResult {
   public bool Success { get; set; }
 

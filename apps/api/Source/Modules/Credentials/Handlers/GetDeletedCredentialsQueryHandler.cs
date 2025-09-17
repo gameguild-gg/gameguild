@@ -4,9 +4,7 @@ using GameGuild.Modules.Credentials.Queries;
 
 namespace GameGuild.Modules.Credentials.Handlers;
 
-/// <summary>
-/// Handler for GetDeletedCredentialsQuery using CQRS pattern
-/// </summary>
+/// <summary> Handler for GetDeletedCredentialsQuery using CQRS pattern </summary>
 public class GetDeletedCredentialsQueryHandler : IRequestHandler<GetDeletedCredentialsQuery, IEnumerable<Credential>> {
   private readonly ICredentialService _credentialService;
 

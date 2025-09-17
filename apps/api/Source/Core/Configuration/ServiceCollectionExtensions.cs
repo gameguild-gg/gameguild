@@ -10,25 +10,19 @@ using OpenFeature;
 
 namespace GameGuild;
 
-/// <summary>
-/// Extension methods for service collection to add layer services.
-/// </summary>
+/// <summary> Extension methods for service collection to add layer services. </summary>
 public static class ServiceCollectionExtensions {
-  /// <summary>
-  /// Adds the presentation layer services to the service collection.
-  /// </summary>
-  /// <param name="services">The service collection</param>
-  /// <param name="configuration">The configuration</param>
-  /// <returns>The service collection for chaining</returns>
+  /// <summary> Adds the presentation layer services to the service collection. </summary>
+  /// <param name="services"> The service collection </param>
+  /// <param name="configuration"> The configuration </param>
+  /// <returns> The service collection for chaining </returns>
   public static IServiceCollection AddPresentationLayer(this IServiceCollection services, IConfiguration configuration) { return DependencyInjection.AddPresentationLayer(services, configuration); }
 
-  /// <summary>
-  /// Adds the presentation layer services to the service collection with custom options.
-  /// </summary>
-  /// <param name="services">The service collection</param>
-  /// <param name="configuration">The configuration</param>
-  /// <param name="options">Custom presentation layer options</param>
-  /// <returns>The service collection for chaining</returns>
+  /// <summary> Adds the presentation layer services to the service collection with custom options. </summary>
+  /// <param name="services"> The service collection </param>
+  /// <param name="configuration"> The configuration </param>
+  /// <param name="options"> Custom presentation layer options </param>
+  /// <returns> The service collection for chaining </returns>
   public static IServiceCollection AddPresentationLayer(this IServiceCollection services, IConfiguration configuration, PresentationLayerOptions options) { return DependencyInjection.AddPresentationLayer(services, configuration, options); }
 
   public static IServiceCollection SetupHttpLogging(this IServiceCollection services, IConfiguration configuration, HttpLoggingOptions? options) {
@@ -258,7 +252,7 @@ public static class ServiceCollectionExtensions {
             Description = options.Description,
             Contact = new OpenApiContact { Name = options.ContactName, Email = options.ContactEmail, Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null },
             License = BuildLicense(options),
-            TermsOfService = !string.IsNullOrEmpty(options.TermsOfServiceUrl) ? new Uri(options.TermsOfServiceUrl) : null
+            TermsOfService = !string.IsNullOrEmpty(options.TermsOfServiceUrl) ? new Uri(options.TermsOfServiceUrl) : null,
           }
         );
 

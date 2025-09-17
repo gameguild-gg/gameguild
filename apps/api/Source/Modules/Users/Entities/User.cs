@@ -6,18 +6,12 @@ namespace GameGuild.Modules.Users;
 [Table("Users")]
 [Index(nameof(Email), IsUnique = true)]
 [Index(nameof(Username), IsUnique = true)]
-public sealed class User : EntityBase, IUser
-{
-  [Required][MaxLength(100)] public string Name { get; set; } = string.Empty;
+public sealed class User : EntityBase, IUser {
+  [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
 
-  [Required]
-  [MaxLength(50)]
-  public string Username { get; set; } = string.Empty;
+  [Required] [MaxLength(50)] public string Username { get; set; } = string.Empty;
 
-  [Required]
-  [EmailAddress]
-  [MaxLength(255)]
-  public string Email { get; set; } = string.Empty;
+  [Required] [EmailAddress] [MaxLength(255)] public string Email { get; set; } = string.Empty;
 
   public bool IsActive { get; set; } = true;
 
@@ -63,8 +57,7 @@ public sealed class User : EntityBase, IUser
   /// <summary>
   /// Activate the user
   /// </summary>
-  public void Activate()
-  {
+  public void Activate() {
     IsActive = true;
     Touch();
   }
@@ -72,8 +65,7 @@ public sealed class User : EntityBase, IUser
   /// <summary>
   /// Deactivate the user
   /// </summary>
-  public void Deactivate()
-  {
+  public void Deactivate() {
     IsActive = false;
     Touch();
   }
@@ -83,8 +75,7 @@ public sealed class User : EntityBase, IUser
   /// </summary>
   /// <param name="name">New name</param>
   /// <param name="phoneNumber">New phone number</param>
-  public void UpdateInfo(string name, string? phoneNumber = null)
-  {
+  public void UpdateInfo(string name, string? phoneNumber = null) {
     ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
     Name = name;
@@ -95,8 +86,7 @@ public sealed class User : EntityBase, IUser
   /// <summary>
   /// Record user activity (last seen)
   /// </summary>
-  public void RecordActivity()
-  {
+  public void RecordActivity() {
     LastSeenAt = DateTime.UtcNow;
     Touch();
   }
@@ -109,28 +99,19 @@ public sealed class User : EntityBase, IUser
   /// <param name="username">User's username</param>
   /// <param name="phoneNumber">Optional phone number</param>
   /// <returns>New User instance</returns>
-  public static User Create(string email, string name, string username, string? phoneNumber = null)
-  {
+  public static User Create(string email, string name, string username, string? phoneNumber = null) {
     ArgumentException.ThrowIfNullOrWhiteSpace(email);
     ArgumentException.ThrowIfNullOrWhiteSpace(name);
     ArgumentException.ThrowIfNullOrWhiteSpace(username);
 
-    return new User
-    {
-      Email = email,
-      Name = name,
-      Username = username,
-      PhoneNumber = phoneNumber,
-      IsActive = true
-    };
+    return new User { Email = email, Name = name, Username = username, PhoneNumber = phoneNumber, IsActive = true };
   }
 
   /// <summary>
   /// Update the user's name
   /// </summary>
   /// <param name="name">New name</param>
-  public void UpdateName(string name)
-  {
+  public void UpdateName(string name) {
     ArgumentException.ThrowIfNullOrWhiteSpace(name);
     Name = name;
     Touch();
@@ -140,8 +121,7 @@ public sealed class User : EntityBase, IUser
   /// Update the user's phone number
   /// </summary>
   /// <param name="phoneNumber">New phone number</param>
-  public void UpdatePhoneNumber(string? phoneNumber)
-  {
+  public void UpdatePhoneNumber(string? phoneNumber) {
     PhoneNumber = phoneNumber;
     Touch();
   }

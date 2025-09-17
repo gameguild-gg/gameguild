@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Users;
 
-/// <summary>
-/// User statistics result
-/// </summary>
+/// <summary> User statistics result </summary>
 public class UserStatistics {
   public int TotalUsers { get; set; }
 

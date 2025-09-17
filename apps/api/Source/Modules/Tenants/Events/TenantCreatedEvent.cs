@@ -6,8 +6,7 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Domain event fired when a tenant is created
 /// </summary>
-public class TenantCreatedEvent(Guid tenantId, string name, string? description, bool isActive, string slug)
-  : DomainEventBase(tenantId, nameof(Tenant)) {
+public class TenantCreatedEvent(Guid tenantId, string name, string? description, bool isActive, string slug) : DomainEventBase(tenantId, nameof(Tenant)) {
   public Guid TenantId { get; init; } = tenantId;
 
   public string Name { get; init; } = name;

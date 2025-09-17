@@ -4,18 +4,14 @@ using GameGuild.Database;
 namespace GameGuild.Modules.Programs;
 
 /// <summary>
-/// Service for managing content interactions following the permission inheritance pattern
-/// ContentInteraction inherits permissions from Program -> ProgramContent -> ContentInteraction
-/// Once submitted, interactions become immutable but users can create new interactions
+///   Service for managing content interactions following the permission inheritance pattern ContentInteraction inherits permissions from Program -> ProgramContent -> ContentInteraction Once submitted, interactions become immutable but
+///   users can create new interactions
 /// </summary>
 public class ContentInteractionService(ApplicationDbContext context) : IContentInteractionService {
-  /// <summary>
-  /// Start a new content interaction (or resume existing one if not submitted)
-  /// </summary>
+  /// <summary> Start a new content interaction (or resume existing one if not submitted) </summary>
   public async Task<ContentInteraction> StartContentAsync(Guid programUserId, Guid contentId) {
     // Check if there's already an interaction for this user/content
-    var existingInteraction = await context.ContentInteractions
-                                           .FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
+    var existingInteraction = await context.ContentInteractions.FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
 
     if (existingInteraction != null) {
       // If already submitted, create a new interaction based on the last one
@@ -32,14 +28,7 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
     }
 
     // Create new interaction
-    var newInteraction = new ContentInteraction {
-      ProgramUserId = programUserId,
-      ContentId = contentId,
-      Status = ProgressStatus.InProgress,
-      FirstAccessedAt = DateTime.UtcNow,
-      LastAccessedAt = DateTime.UtcNow,
-      CompletionPercentage = 0,
-    };
+    var newInteraction = new ContentInteraction { ProgramUserId = programUserId, ContentId = contentId, Status = ProgressStatus.InProgress, FirstAccessedAt = DateTime.UtcNow, LastAccessedAt = DateTime.UtcNow, CompletionPercentage = 0 };
 
     context.ContentInteractions.Add(newInteraction);
     await context.SaveChangesAsync();
@@ -47,9 +36,7 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
     return newInteraction;
   }
 
-  /// <summary>
-  /// Update progress for an interaction (only if not submitted)
-  /// </summary>
+  /// <summary> Update progress for an interaction (only if not submitted) </summary>
   public async Task<ContentInteraction> UpdateProgressAsync(Guid interactionId, decimal completionPercentage) {
     var interaction = await GetInteractionByIdAsync(interactionId);
 
@@ -69,9 +56,7 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
     return interaction;
   }
 
-  /// <summary>
-  /// Submit content interaction (makes it immutable)
-  /// </summary>
+  /// <summary> Submit content interaction (makes it immutable) </summary>
   public async Task<ContentInteraction> SubmitContentAsync(Guid interactionId, string submissionData) {
     var interaction = await GetInteractionByIdAsync(interactionId);
 
@@ -89,9 +74,7 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
     return interaction;
   }
 
-  /// <summary>
-  /// Mark content as completed
-  /// </summary>
+  /// <summary> Mark content as completed </summary>
   public async Task<ContentInteraction> CompleteContentAsync(Guid interactionId) {
     var interaction = await GetInteractionByIdAsync(interactionId);
 
@@ -107,32 +90,17 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
     return interaction;
   }
 
-  /// <summary>
-  /// Get interaction for a specific user and content
-  /// </summary>
+  /// <summary> Get interaction for a specific user and content </summary>
   public async Task<ContentInteraction?> GetInteractionAsync(Guid programUserId, Guid contentId) {
-    return await context.ContentInteractions
-                        .Include(ci => ci.ProgramUser)
-                        .Include(ci => ci.Content)
-                        .Include(ci => ci.ActivityGrades)
-                        .FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
+    return await context.ContentInteractions.Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades).FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
   }
 
-  /// <summary>
-  /// Get all interactions for a user
-  /// </summary>
+  /// <summary> Get all interactions for a user </summary>
   public async Task<IEnumerable<ContentInteraction>> GetUserInteractionsAsync(Guid programUserId) {
-    return await context.ContentInteractions
-                        .Include(ci => ci.Content)
-                        .Include(ci => ci.ActivityGrades)
-                        .Where(ci => ci.ProgramUserId == programUserId)
-                        .OrderByDescending(ci => ci.LastAccessedAt)
-                        .ToListAsync();
+    return await context.ContentInteractions.Include(ci => ci.Content).Include(ci => ci.ActivityGrades).Where(ci => ci.ProgramUserId == programUserId).OrderByDescending(ci => ci.LastAccessedAt).ToListAsync();
   }
 
-  /// <summary>
-  /// Update time spent on content
-  /// </summary>
+  /// <summary> Update time spent on content </summary>
   public async Task<ContentInteraction> UpdateTimeSpentAsync(Guid interactionId, int additionalMinutes) {
     var interaction = await GetInteractionByIdAsync(interactionId);
 
@@ -146,25 +114,16 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
     return interaction;
   }
 
-  /// <summary>
-  /// Get interaction by ID with proper error handling
-  /// </summary>
+  /// <summary> Get interaction by ID with proper error handling </summary>
   private async Task<ContentInteraction> GetInteractionByIdAsync(Guid interactionId) {
-    var interaction = await context.ContentInteractions
-                                   .Include(ci => ci.ProgramUser)
-                                   .Include(ci => ci.Content)
-                                   .Include(ci => ci.ActivityGrades)
-                                   .FirstOrDefaultAsync(ci => ci.Id == interactionId);
+    var interaction = await context.ContentInteractions.Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades).FirstOrDefaultAsync(ci => ci.Id == interactionId);
 
     if (interaction == null) throw new InvalidOperationException($"Content interaction with ID {interactionId} not found.");
 
     return interaction;
   }
 
-  /// <summary>
-  /// Create a new interaction based on previous submission data
-  /// This allows users to continue working after submitting
-  /// </summary>
+  /// <summary> Create a new interaction based on previous submission data This allows users to continue working after submitting </summary>
   private async Task<ContentInteraction> CreateNewInteractionFromPreviousAsync(ContentInteraction previousInteraction) {
     var newInteraction = new ContentInteraction {
       ProgramUserId = previousInteraction.ProgramUserId,

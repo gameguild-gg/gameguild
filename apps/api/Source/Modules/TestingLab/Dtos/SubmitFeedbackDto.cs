@@ -5,7 +5,8 @@ public class SubmitFeedbackDto {
   [Required] public Guid TestingRequestId { get; set; }
 
   /// <summary> JSON string containing feedback responses Key-value pairs where key is the question and value is the response </summary>
-  [Required] public string FeedbackResponses { get; set; } = string.Empty;
+  [Required]
+  public string FeedbackResponses { get; set; } = string.Empty;
 
   /// <summary> Overall rating (1-10) </summary>
   [Range(1, 10)]

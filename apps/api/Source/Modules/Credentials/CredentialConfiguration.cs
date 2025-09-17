@@ -1,4 +1,6 @@
 using GameGuild.CQRS;
+
+
 namespace GameGuild.Modules.Credentials;
 
 /// <summary>
@@ -10,9 +12,6 @@ public class CredentialConfiguration : IEntityTypeConfiguration<Credential> {
     // Configure the relationship with User properly - focus on types, not GUIDs
     // This explicitly tells EF Core that Credential.User navigation property
     // corresponds to User.Credentials collection navigation property
-    builder.HasOne(c => c.User)
-           .WithMany(u => u.Credentials)
-           .HasForeignKey(c => c.UserId)
-           .OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(c => c.User).WithMany(u => u.Credentials).HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Cascade);
   }
 }

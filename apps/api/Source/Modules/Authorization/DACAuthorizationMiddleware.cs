@@ -1,14 +1,10 @@
 using System.Security.Claims;
-using GameGuild.Modules.Permissions;
 using HotChocolate.Resolvers;
 
 
 namespace GameGuild.Authorization;
 
-/// <summary>
-/// HotChocolate middleware for 3-layer DAC permission system
-/// Supports Tenant, Content-Type, and Resource level permissions
-/// </summary>
+/// <summary> HotChocolate middleware for 3-layer DAC permission system Supports Tenant, Content-Type, and Resource level permissions </summary>
 public class DACAuthorizationMiddleware(FieldDelegate next) {
   public async ValueTask InvokeAsync(IMiddlewareContext context) {
     // Skip authorization for introspection queries

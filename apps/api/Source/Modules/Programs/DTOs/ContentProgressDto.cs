@@ -1,14 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-public record ContentProgressDto(
-  Guid ContentId,
-  string Title,
-  ProgressStatus Status,
-  decimal CompletionPercentage,
-  DateTime? FirstAccessedAt,
-  DateTime? LastAccessedAt,
-  DateTime? CompletedAt
-) {
+public record ContentProgressDto(Guid ContentId, string Title, ProgressStatus Status, decimal CompletionPercentage, DateTime? FirstAccessedAt, DateTime? LastAccessedAt, DateTime? CompletedAt) {
   public Guid ContentId { get; init; } = ContentId;
 
   public string Title { get; init; } = Title;

@@ -14,11 +14,7 @@ public class PostMutations {
   /// <summary>
   /// Create a new post
   /// </summary>
-  public async Task<Post> CreatePost(
-    CreatePostInput input,
-    [Service] CQRS.IMediator mediator,
-    CancellationToken cancellationToken = default
-  ) {
+  public async Task<Post> CreatePost(CreatePostInput input, [Service] CQRS.IMediator mediator, CancellationToken cancellationToken = default) {
     var command = new CreatePostCommand {
       Title = input.Title,
       Description = input.Description,
@@ -40,18 +36,8 @@ public class PostMutations {
   /// <summary>
   /// Update an existing post
   /// </summary>
-  public async Task<Post> UpdatePost(
-    UpdatePostInput input,
-    [Service] CQRS.IMediator mediator,
-    CancellationToken cancellationToken = default
-  ) {
-    var command = new UpdatePostCommand {
-      PostId = input.PostId,
-      Title = input.Title,
-      Description = input.Description,
-      Visibility = input.Visibility,
-      RichContent = input.RichContent,
-    };
+  public async Task<Post> UpdatePost(UpdatePostInput input, [Service] CQRS.IMediator mediator, CancellationToken cancellationToken = default) {
+    var command = new UpdatePostCommand { PostId = input.PostId, Title = input.Title, Description = input.Description, Visibility = input.Visibility, RichContent = input.RichContent, };
 
     var result = await mediator.Send(command, cancellationToken);
 
@@ -63,11 +49,7 @@ public class PostMutations {
   /// <summary>
   /// Delete a post
   /// </summary>
-  public async Task<bool> DeletePost(
-    Guid postId,
-    [Service] CQRS.IMediator mediator,
-    CancellationToken cancellationToken = default
-  ) {
+  public async Task<bool> DeletePost(Guid postId, [Service] CQRS.IMediator mediator, CancellationToken cancellationToken = default) {
     var command = new DeletePostCommand { PostId = postId };
 
     var result = await mediator.Send(command, cancellationToken);
@@ -80,13 +62,7 @@ public class PostMutations {
   /// <summary>
   /// Like or unlike a post
   /// </summary>
-  public async Task<bool> TogglePostLike(
-    Guid postId,
-    Guid userId,
-    [Service] CQRS.IMediator mediator,
-    string reactionType = "like",
-    CancellationToken cancellationToken = default
-  ) {
+  public async Task<bool> TogglePostLike(Guid postId, Guid userId, [Service] CQRS.IMediator mediator, string reactionType = "like", CancellationToken cancellationToken = default) {
     var command = new TogglePostLikeCommand { PostId = postId, UserId = userId, ReactionType = reactionType };
 
     var result = await mediator.Send(command, cancellationToken);
@@ -99,12 +75,7 @@ public class PostMutations {
   /// <summary>
   /// Pin or unpin a post
   /// </summary>
-  public async Task<Post> TogglePostPin(
-    Guid postId,
-    Guid userId,
-    [Service] CQRS.IMediator mediator,
-    CancellationToken cancellationToken = default
-  ) {
+  public async Task<Post> TogglePostPin(Guid postId, Guid userId, [Service] CQRS.IMediator mediator, CancellationToken cancellationToken = default) {
     var command = new TogglePostPinCommand { PostId = postId, UserId = userId };
 
     var result = await mediator.Send(command, cancellationToken);
@@ -117,11 +88,7 @@ public class PostMutations {
   /// <summary>
   /// Share a post (increment share count)
   /// </summary>
-  public async Task<bool> SharePost(
-    Guid postId,
-    [Service] ApplicationDbContext context,
-    CancellationToken cancellationToken = default
-  ) {
+  public async Task<bool> SharePost(Guid postId, [Service] ApplicationDbContext context, CancellationToken cancellationToken = default) {
     var post = await context.Posts.FindAsync(postId);
 
     if (post == null) { throw new GraphQLException("Post not found"); }
@@ -137,11 +104,7 @@ public class PostMutations {
   /// <summary>
   /// Add a comment to a post
   /// </summary>
-  public async Task<PostComment> AddComment(
-    AddCommentInput input,
-    [Service] CQRS.IMediator mediator,
-    CancellationToken cancellationToken = default
-  ) {
+  public async Task<PostComment> AddComment(AddCommentInput input, [Service] CQRS.IMediator mediator, CancellationToken cancellationToken = default) {
     var command = new AddCommentCommand { PostId = input.PostId, AuthorId = input.UserId, Content = input.Content, ParentCommentId = input.ParentCommentId };
 
     var result = await mediator.Send(command, cancellationToken);
@@ -154,14 +117,8 @@ public class PostMutations {
   /// <summary>
   /// Follow or unfollow a post for notifications
   /// </summary>
-  public async Task<bool> TogglePostFollow(
-    Guid postId,
-    Guid userId,
-    [Service] ApplicationDbContext context,
-    CancellationToken cancellationToken = default
-  ) {
-    var existingFollow = await context.PostFollowers
-                                      .FirstOrDefaultAsync(f => f.PostId == postId && f.UserId == userId, cancellationToken);
+  public async Task<bool> TogglePostFollow(Guid postId, Guid userId, [Service] ApplicationDbContext context, CancellationToken cancellationToken = default) {
+    var existingFollow = await context.PostFollowers.FirstOrDefaultAsync(f => f.PostId == postId && f.UserId == userId, cancellationToken);
 
     if (existingFollow != null) {
       // Unfollow
@@ -172,14 +129,7 @@ public class PostMutations {
     }
     else {
       // Follow
-      var follow = new PostFollower {
-        PostId = postId,
-        UserId = userId,
-        NotifyOnComments = true,
-        NotifyOnLikes = false,
-        NotifyOnShares = false,
-        NotifyOnUpdates = true,
-      };
+      var follow = new PostFollower { PostId = postId, UserId = userId, NotifyOnComments = true, NotifyOnLikes = false, NotifyOnShares = false, NotifyOnUpdates = true, };
 
       context.PostFollowers.Add(follow);
       await context.SaveChangesAsync(cancellationToken);
@@ -191,25 +141,13 @@ public class PostMutations {
   /// <summary>
   /// Create a tag and assign it to posts
   /// </summary>
-  public async Task<PostTag> CreateTag(
-    CreateTagInput input,
-    [Service] ApplicationDbContext context,
-    CancellationToken cancellationToken = default
-  ) {
+  public async Task<PostTag> CreateTag(CreateTagInput input, [Service] ApplicationDbContext context, CancellationToken cancellationToken = default) {
     // Check if tag already exists
-    var existingTag = await context.PostTags
-                                   .FirstOrDefaultAsync(t => t.Name == input.Name, cancellationToken);
+    var existingTag = await context.PostTags.FirstOrDefaultAsync(t => t.Name == input.Name, cancellationToken);
 
     if (existingTag != null) { throw new GraphQLException($"Tag '{input.Name}' already exists"); }
 
-    var tag = new PostTag {
-      Name = input.Name,
-      DisplayName = input.DisplayName ?? input.Name,
-      Description = input.Description,
-      Category = input.Category ?? "general",
-      Color = input.Color,
-      IsFeatured = input.IsFeatured ?? false,
-    };
+    var tag = new PostTag { Name = input.Name, DisplayName = input.DisplayName ?? input.Name, Description = input.Description, Category = input.Category ?? "general", Color = input.Color, IsFeatured = input.IsFeatured ?? false, };
 
     context.PostTags.Add(tag);
     await context.SaveChangesAsync(cancellationToken);
@@ -220,15 +158,8 @@ public class PostMutations {
   /// <summary>
   /// Assign tags to a post
   /// </summary>
-  public async Task<Post> AssignTagsToPost(
-    Guid postId,
-    string[] tagNames,
-    [Service] ApplicationDbContext context,
-    CancellationToken cancellationToken = default
-  ) {
-    var post = await context.Posts
-                            .Include(p => p.Tags)
-                            .FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+  public async Task<Post> AssignTagsToPost(Guid postId, string[ ] tagNames, [Service] ApplicationDbContext context, CancellationToken cancellationToken = default) {
+    var post = await context.Posts.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
 
     if (post == null) { throw new GraphQLException("Post not found"); }
 
@@ -236,9 +167,7 @@ public class PostMutations {
     context.PostTagAssignments.RemoveRange(post.Tags);
 
     // Add new tag assignments
-    var tags = await context.PostTags
-                            .Where(t => tagNames.Contains(t.Name))
-                            .ToListAsync(cancellationToken);
+    var tags = await context.PostTags.Where(t => tagNames.Contains(t.Name)).ToListAsync(cancellationToken);
 
     var order = 0;
 
@@ -260,29 +189,13 @@ public class PostMutations {
   /// <summary>
   /// Record a post view for analytics
   /// </summary>
-  public async Task<bool> RecordPostView(
-    Guid postId,
-    Guid? userId,
-    string? ipAddress,
-    string? userAgent,
-    string? referrer,
-    [Service] ApplicationDbContext context,
-    CancellationToken cancellationToken = default
-  ) {
-    var view = new PostView {
-      PostId = postId,
-      UserId = userId,
-      ViewedAt = DateTime.UtcNow,
-      IpAddress = ipAddress,
-      UserAgent = userAgent,
-      Referrer = referrer,
-    };
+  public async Task<bool> RecordPostView(Guid postId, Guid? userId, string? ipAddress, string? userAgent, string? referrer, [Service] ApplicationDbContext context, CancellationToken cancellationToken = default) {
+    var view = new PostView { PostId = postId, UserId = userId, ViewedAt = DateTime.UtcNow, IpAddress = ipAddress, UserAgent = userAgent, Referrer = referrer, };
 
     context.PostViews.Add(view);
 
     // Update post statistics
-    var statistics = await context.PostStatistics
-                                  .FirstOrDefaultAsync(s => s.PostId == postId, cancellationToken);
+    var statistics = await context.PostStatistics.FirstOrDefaultAsync(s => s.PostId == postId, cancellationToken);
 
     if (statistics != null) {
       statistics.ViewsCount++;
@@ -298,14 +211,8 @@ public class PostMutations {
   /// <summary>
   /// Restore a deleted post
   /// </summary>
-  public async Task<Post> RestorePost(
-    Guid postId,
-    [Service] ApplicationDbContext context,
-    CancellationToken cancellationToken = default
-  ) {
-    var post = await context.Posts
-                            .IgnoreQueryFilters()
-                            .FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+  public async Task<Post> RestorePost(Guid postId, [Service] ApplicationDbContext context, CancellationToken cancellationToken = default) {
+    var post = await context.Posts.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
 
     if (post == null) { throw new GraphQLException("Post not found"); }
 
@@ -320,14 +227,8 @@ public class PostMutations {
   /// <summary>
   /// Bulk delete posts
   /// </summary>
-  public async Task<bool> BulkDeletePosts(
-    Guid[] postIds,
-    [Service] ApplicationDbContext context,
-    CancellationToken cancellationToken = default
-  ) {
-    var posts = await context.Posts
-                             .Where(p => postIds.Contains(p.Id))
-                             .ToListAsync(cancellationToken);
+  public async Task<bool> BulkDeletePosts(Guid[ ] postIds, [Service] ApplicationDbContext context, CancellationToken cancellationToken = default) {
+    var posts = await context.Posts.Where(p => postIds.Contains(p.Id)).ToListAsync(cancellationToken);
 
     foreach (var post in posts) { post.DeletedAt = DateTime.UtcNow; }
 
@@ -339,13 +240,8 @@ public class PostMutations {
   /// <summary>
   /// Update post statistics (admin operation)
   /// </summary>
-  public async Task<PostStatistics> UpdatePostStatistics(
-    Guid postId,
-    [Service] ApplicationDbContext context,
-    CancellationToken cancellationToken = default
-  ) {
-    var statistics = await context.PostStatistics
-                                  .FirstOrDefaultAsync(s => s.PostId == postId, cancellationToken);
+  public async Task<PostStatistics> UpdatePostStatistics(Guid postId, [Service] ApplicationDbContext context, CancellationToken cancellationToken = default) {
+    var statistics = await context.PostStatistics.FirstOrDefaultAsync(s => s.PostId == postId, cancellationToken);
 
     if (statistics == null) {
       statistics = new PostStatistics { PostId = postId };
@@ -353,11 +249,7 @@ public class PostMutations {
     }
 
     // Calculate engagement metrics
-    var post = await context.Posts
-                            .Include(p => p.Views)
-                            .Include(p => p.Likes)
-                            .Include(p => p.Comments)
-                            .FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
+    var post = await context.Posts.Include(p => p.Views).Include(p => p.Likes).Include(p => p.Comments).FirstOrDefaultAsync(p => p.Id == postId, cancellationToken);
 
     if (post != null) {
       statistics.ViewsCount = post.Views.Count;
@@ -383,9 +275,7 @@ public class PostMutations {
 /// <summary>
 /// Input type for creating a new post
 /// </summary>
-public record CreatePostInput(
-  string Title
-) {
+public record CreatePostInput(string Title) {
   public string? Description { get; init; }
 
   public string? PostType { get; init; }
@@ -404,9 +294,7 @@ public record CreatePostInput(
 /// <summary>
 /// Input type for updating an existing post
 /// </summary>
-public record UpdatePostInput(
-  Guid PostId
-) {
+public record UpdatePostInput(Guid PostId) {
   public string? Title { get; init; }
 
   public string? Description { get; init; }

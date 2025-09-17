@@ -7,10 +7,8 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Handler for getting user statistics
 /// </summary>
-public class GetUserStatisticsHandler(ApplicationDbContext context) : IQueryHandler<GetUserStatisticsQuery, UserStatistics>
-{
-  public async Task<UserStatistics> Handle(GetUserStatisticsQuery request, CancellationToken cancellationToken)
-  {
+public class GetUserStatisticsHandler(ApplicationDbContext context) : IQueryHandler<GetUserStatisticsQuery, UserStatistics> {
+  public async Task<UserStatistics> Handle(GetUserStatisticsQuery request, CancellationToken cancellationToken) {
     var query = context.Users.AsQueryable();
 
     // Apply date filters if provided
@@ -23,17 +21,14 @@ public class GetUserStatisticsHandler(ApplicationDbContext context) : IQueryHand
 
     var now = DateTime.UtcNow;
     var today = now.Date;
-    var weekStart = today.AddDays(-(int)today.DayOfWeek);
+    var weekStart = today.AddDays(-(int) today.DayOfWeek);
     var monthStart = new DateTime(today.Year, today.Month, 1);
 
-    var statistics = new UserStatistics
-    {
+    var statistics = new UserStatistics {
       TotalUsers = await query.CountAsync(cancellationToken),
       ActiveUsers = await query.CountAsync(u => u.IsActive && u.DeletedAt == null, cancellationToken),
       InactiveUsers = await query.CountAsync(u => !u.IsActive && u.DeletedAt == null, cancellationToken),
-      DeletedUsers = request.IncludeDeleted
-                       ? await context.Users.IgnoreQueryFilters().CountAsync(u => u.DeletedAt != null, cancellationToken)
-                       : 0,
+      DeletedUsers = request.IncludeDeleted ? await context.Users.IgnoreQueryFilters().CountAsync(u => u.DeletedAt != null, cancellationToken) : 0,
       TotalBalance = await query.Where(u => u.DeletedAt == null).SumAsync(u => u.Balance, cancellationToken),
       AverageBalance = await query.Where(u => u.DeletedAt == null).AverageAsync(u => u.Balance, cancellationToken),
       UsersCreatedToday = await context.Users.CountAsync(u => u.CreatedAt >= today, cancellationToken),

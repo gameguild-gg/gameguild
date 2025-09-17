@@ -1,17 +1,16 @@
+using GameGuild.CQRS;
+
+
 namespace GameGuild.Modules.TestingLab;
 
 public class CreateTestingRequestCommandHandler : ITestingLabCommandHandler<CreateTestingRequestCommand, TestingRequest> {
-  private readonly CQRS.IMediator _mediator;
+  private readonly IMediator _mediator;
 
   private readonly ITestingRequestRepository _repository;
 
   private readonly ITestingRequestService _service;
 
-  public CreateTestingRequestCommandHandler(
-    ITestingRequestRepository repository,
-    ITestingRequestService service,
-    CQRS.IMediator mediator
-  ) {
+  public CreateTestingRequestCommandHandler(ITestingRequestRepository repository, ITestingRequestService service, IMediator mediator) {
     _repository = repository;
     _service = service;
     _mediator = mediator;
@@ -39,13 +38,7 @@ public class CreateTestingRequestCommandHandler : ITestingLabCommandHandler<Crea
     var createdRequest = await _service.CreateAsync(testingRequest);
 
     // Publish domain event
-    var domainEvent = new TestingRequestCreatedEvent(
-      createdRequest.Id,
-      createdRequest.ProjectVersionId,
-      createdRequest.Title,
-      createdRequest.CreatedById,
-      createdRequest.CreatedAt
-    );
+    var domainEvent = new TestingRequestCreatedEvent(createdRequest.Id, createdRequest.ProjectVersionId, createdRequest.Title, createdRequest.CreatedById, createdRequest.CreatedAt);
 
     await _mediator.Publish(domainEvent, cancellationToken);
 

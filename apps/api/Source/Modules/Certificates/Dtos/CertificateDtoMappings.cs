@@ -4,21 +4,23 @@ using GameGuild.Modules.Certificates;
 namespace GameGuild.Source.Modules.Certificates.Dtos;
 
 public static class CertificateDtoMappings {
-  public static Certificate ToEntity(this CreateCertificateDto dto, Guid programId) => new() {
-    ProgramId = programId,
-    Name = dto.Name,
-    Description = dto.Description,
-    Type = dto.Type,
-    CompletionPercentage = dto.CompletionPercentage,
-    MinimumGrade = dto.MinimumGrade,
-    RequiresFeedback = dto.RequiresFeedback,
-    RequiresRating = dto.RequiresRating,
-    MinimumRating = dto.MinimumRating,
-    ValidityDays = dto.ValidityDays,
-    VerificationMethod = dto.VerificationMethod,
-    CertificateTemplate = dto.CertificateTemplate,
-    IsActive = dto.IsActive
-  };
+  public static Certificate ToEntity(this CreateCertificateDto dto, Guid programId) {
+    return new Certificate {
+      ProgramId = programId,
+      Name = dto.Name,
+      Description = dto.Description,
+      Type = dto.Type,
+      CompletionPercentage = dto.CompletionPercentage,
+      MinimumGrade = dto.MinimumGrade,
+      RequiresFeedback = dto.RequiresFeedback,
+      RequiresRating = dto.RequiresRating,
+      MinimumRating = dto.MinimumRating,
+      ValidityDays = dto.ValidityDays,
+      VerificationMethod = dto.VerificationMethod,
+      CertificateTemplate = dto.CertificateTemplate,
+      IsActive = dto.IsActive,
+    };
+  }
 
   public static void ApplyUpdates(this Certificate entity, UpdateCertificateDto dto) {
     entity.Name = dto.Name;

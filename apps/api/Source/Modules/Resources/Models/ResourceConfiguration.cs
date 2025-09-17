@@ -6,11 +6,7 @@ namespace GameGuild.Modules.Resources;
 public class ResourceConfiguration : IEntityTypeConfiguration<Resource> {
   public void Configure(EntityTypeBuilder<Resource> builder) {
     // Configure the relationship between Resource and ResourceMetadata
-    builder.HasOne(r => r.Metadata)
-           .WithMany()
-           .HasForeignKey("MetadataId")
-           .IsRequired(false)
-           .OnDelete(DeleteBehavior.SetNull);
+    builder.HasOne(r => r.Metadata).WithMany().HasForeignKey("MetadataId").IsRequired(false).OnDelete(DeleteBehavior.SetNull);
 
     // Configure other base properties
     builder.Property(r => r.Title).IsRequired().HasMaxLength(255);

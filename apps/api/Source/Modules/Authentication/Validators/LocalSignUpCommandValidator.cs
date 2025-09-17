@@ -3,9 +3,7 @@ using FluentValidation;
 
 namespace GameGuild.Modules.Authentication.Validators;
 
-/// <summary>
-/// Validator for LocalSignUpCommand following CQRS and DRY principles
-/// </summary>
+/// <summary> Validator for LocalSignUpCommand following CQRS and DRY principles </summary>
 public class LocalSignUpCommandValidator : AbstractValidator<LocalSignUpCommand> {
   public LocalSignUpCommandValidator() {
     RuleFor(x => x.Email)
@@ -42,8 +40,6 @@ public class LocalSignUpCommandValidator : AbstractValidator<LocalSignUpCommand>
       .Matches(@"^[a-zA-Z0-9._-]+$")
       .WithMessage("Username can only contain letters, numbers, dots, hyphens, and underscores");
 
-    RuleFor(x => x.TenantId)
-      .Must(tenantId => !tenantId.HasValue || tenantId.Value != Guid.Empty)
-      .WithMessage("Tenant ID must be a valid GUID when provided");
+    RuleFor(x => x.TenantId).Must(tenantId => !tenantId.HasValue || tenantId.Value != Guid.Empty).WithMessage("Tenant ID must be a valid GUID when provided");
   }
 }

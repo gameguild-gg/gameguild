@@ -6,8 +6,6 @@ internal class ContentTypePermissionConfiguration : IEntityTypeConfiguration<Con
     // configured in the WithPermissions base class with proper foreign key attributes
 
     // Configure additional properties or constraints specific to ContentTypePermission if needed
-    builder.Property(ctp => ctp.ContentType)
-           .IsRequired()
-           .HasMaxLength(100);
+    builder.Property(ctp => ctp.ContentType).IsRequired().HasMaxLength(100);
   }
 }

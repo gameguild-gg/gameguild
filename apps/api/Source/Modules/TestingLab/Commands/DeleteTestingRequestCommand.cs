@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
 
-using GameGuild.CQRS;
 
 namespace GameGuild.Modules.TestingLab;
 

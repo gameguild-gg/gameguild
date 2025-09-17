@@ -1,14 +1,12 @@
 using GameGuild.CQRS;
+
+
 namespace GameGuild.Modules.Credentials.Commands;
 
-/// <summary>
-/// Command to restore a soft-deleted credential using CQRS pattern
-/// </summary>
+/// <summary> Command to restore a soft-deleted credential using CQRS pattern </summary>
 public class RestoreCredentialCommand : IRequest<bool> {
-  /// <summary>
-  /// Credential ID to restore
-  /// </summary>
-  public Guid Id { get; set; }
-
   public RestoreCredentialCommand(Guid id) { Id = id; }
+
+  /// <summary> Credential ID to restore </summary>
+  public Guid Id { get; set; }
 }

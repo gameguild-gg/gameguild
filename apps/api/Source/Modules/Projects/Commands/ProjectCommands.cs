@@ -6,8 +6,7 @@ namespace GameGuild.Modules.Projects;
 /// <summary>
 /// Command to create a new project
 /// </summary>
-public record CreateProjectCommand : CQRS.IRequest<CreateProjectResult>
-{
+public record CreateProjectCommand : CQRS.IRequest<CreateProjectResult> {
   public string Title { get; init; } = string.Empty;
 
   public string? Description { get; init; }
@@ -40,8 +39,7 @@ public record CreateProjectCommand : CQRS.IRequest<CreateProjectResult>
 /// <summary>
 /// Command to update an existing project
 /// </summary>
-public record UpdateProjectCommand : CQRS.IRequest<UpdateProjectResult>
-{
+public record UpdateProjectCommand : CQRS.IRequest<UpdateProjectResult> {
   public Guid ProjectId { get; init; }
 
   public string? Title { get; init; }
@@ -74,8 +72,7 @@ public record UpdateProjectCommand : CQRS.IRequest<UpdateProjectResult>
 /// <summary>
 /// Command to delete a project
 /// </summary>
-public record DeleteProjectCommand : CQRS.IRequest<DeleteProjectResult>
-{
+public record DeleteProjectCommand : CQRS.IRequest<DeleteProjectResult> {
   public Guid ProjectId { get; init; }
 
   public Guid DeletedBy { get; init; }
@@ -88,8 +85,7 @@ public record DeleteProjectCommand : CQRS.IRequest<DeleteProjectResult>
 /// <summary>
 /// Command to publish a project
 /// </summary>
-public record PublishProjectCommand : CQRS.IRequest<PublishProjectResult>
-{
+public record PublishProjectCommand : CQRS.IRequest<PublishProjectResult> {
   public Guid ProjectId { get; init; }
 
   public Guid PublishedBy { get; init; }
@@ -98,8 +94,7 @@ public record PublishProjectCommand : CQRS.IRequest<PublishProjectResult>
 /// <summary>
 /// Command to unpublish a project
 /// </summary>
-public record UnpublishProjectCommand : CQRS.IRequest<UnpublishProjectResult>
-{
+public record UnpublishProjectCommand : CQRS.IRequest<UnpublishProjectResult> {
   public Guid ProjectId { get; init; }
 
   public Guid UnpublishedBy { get; init; }
@@ -108,16 +103,14 @@ public record UnpublishProjectCommand : CQRS.IRequest<UnpublishProjectResult>
 /// <summary>
 /// Command to archive a project
 /// </summary>
-public record ArchiveProjectCommand : CQRS.IRequest<ArchiveProjectResult>
-{
+public record ArchiveProjectCommand : CQRS.IRequest<ArchiveProjectResult> {
   public Guid ProjectId { get; init; }
 
   public Guid ArchivedBy { get; init; }
 }
 
 // Result types
-public record CreateProjectResult
-{
+public record CreateProjectResult {
   public bool Success { get; init; }
 
   public Project? Project { get; init; }
@@ -125,8 +118,7 @@ public record CreateProjectResult
   public string? Error { get; init; }
 }
 
-public record UpdateProjectResult
-{
+public record UpdateProjectResult {
   public bool Success { get; init; }
 
   public Project? Project { get; init; }
@@ -134,24 +126,13 @@ public record UpdateProjectResult
   public string? Error { get; init; }
 }
 
-public record DeleteProjectResult
-{
+public record DeleteProjectResult {
   public bool Success { get; init; }
 
   public string? Error { get; init; }
 }
 
-public record PublishProjectResult
-{
-  public bool Success { get; init; }
-
-  public Project? Project { get; init; }
-
-  public string? Error { get; init; }
-}
-
-public record UnpublishProjectResult
-{
+public record PublishProjectResult {
   public bool Success { get; init; }
 
   public Project? Project { get; init; }
@@ -159,8 +140,15 @@ public record UnpublishProjectResult
   public string? Error { get; init; }
 }
 
-public record ArchiveProjectResult
-{
+public record UnpublishProjectResult {
+  public bool Success { get; init; }
+
+  public Project? Project { get; init; }
+
+  public string? Error { get; init; }
+}
+
+public record ArchiveProjectResult {
   public bool Success { get; init; }
 
   public Project? Project { get; init; }

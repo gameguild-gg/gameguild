@@ -17,9 +17,9 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
     var response = context.Response;
     response.ContentType = "application/json";
 
-    var errorResponse = new { message = exception.Message, statusCode = (int)HttpStatusCode.InternalServerError, timestamp = DateTime.UtcNow };
+    var errorResponse = new { message = exception.Message, statusCode = (int) HttpStatusCode.InternalServerError, timestamp = DateTime.UtcNow };
 
-    response.StatusCode = (int)HttpStatusCode.InternalServerError;
+    response.StatusCode = (int) HttpStatusCode.InternalServerError;
 
     var jsonResponse = JsonSerializer.Serialize(errorResponse);
     await response.WriteAsync(jsonResponse);

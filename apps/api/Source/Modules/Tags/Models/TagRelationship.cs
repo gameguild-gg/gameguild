@@ -12,15 +12,11 @@ public class TagRelationship : EntityBase {
 
   public TagRelationshipType Type { get; set; }
 
-  /// <summary>
-  /// Weight or strength of the relationship (optional)
-  /// </summary>
+  /// <summary> Weight or strength of the relationship (optional) </summary>
   [Column(TypeName = "decimal(3,2)")]
   public decimal? Weight { get; set; }
 
-  /// <summary>
-  /// Additional metadata about the relationship
-  /// </summary>
+  /// <summary> Additional metadata about the relationship </summary>
   [MaxLength(500)]
   public string? Metadata { get; set; }
 

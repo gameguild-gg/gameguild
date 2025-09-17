@@ -4,11 +4,10 @@ using GameGuild.Modules.Credentials.Commands;
 
 namespace GameGuild.Modules.Credentials.Handlers;
 
-/// <summary>
-/// Handler for DeleteCredentialCommand using CQRS pattern
-/// </summary>
+/// <summary> Handler for DeleteCredentialCommand using CQRS pattern </summary>
 public class DeleteCredentialCommandHandler : IRequestHandler<DeleteCredentialCommand, bool> {
   private readonly ICredentialService _credentialService;
+
   private readonly ILogger<DeleteCredentialCommandHandler> _logger;
 
   public DeleteCredentialCommandHandler(ICredentialService credentialService, ILogger<DeleteCredentialCommandHandler> logger) {

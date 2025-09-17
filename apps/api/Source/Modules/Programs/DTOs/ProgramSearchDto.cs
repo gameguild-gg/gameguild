@@ -3,14 +3,7 @@
 
 namespace GameGuild.Modules.Programs;
 
-public record ProgramSearchDto(
-  string? SearchTerm = null,
-  ContentStatus? Status = null,
-  AccessLevel? Visibility = null,
-  Guid? CreatorId = null,
-  int Skip = 0,
-  int Take = 50
-) {
+public record ProgramSearchDto(string? SearchTerm = null, ContentStatus? Status = null, AccessLevel? Visibility = null, Guid? CreatorId = null, int Skip = 0, int Take = 50) {
   public string? SearchTerm { get; init; } = SearchTerm;
 
   public ContentStatus? Status { get; init; } = Status;

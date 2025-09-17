@@ -1,31 +1,19 @@
 ﻿namespace GameGuild.Modules.Localization;
 
-/// <summary>
-/// Enumeration of localization statuses
-/// </summary>
+/// <summary> Enumeration of localization statuses </summary>
 public enum LocalizationStatus {
-  /// <summary>
-  /// Localization is in draft status
-  /// </summary>
+  /// <summary> Localization is in draft status </summary>
   Draft = 0,
 
-  /// <summary>
-  /// Localization is published and active
-  /// </summary>
+  /// <summary> Localization is published and active </summary>
   Published = 1,
 
-  /// <summary>
-  /// Localization needs review
-  /// </summary>
+  /// <summary> Localization needs review </summary>
   NeedsReview = 2,
 
-  /// <summary>
-  /// Localization is archived
-  /// </summary>
+  /// <summary> Localization is archived </summary>
   Archived = 3,
 
-  /// <summary>
-  /// Machine-translated content, may need human review
-  /// </summary>
+  /// <summary> Machine-translated content, may need human review </summary>
   MachineTranslated = 4,
 }

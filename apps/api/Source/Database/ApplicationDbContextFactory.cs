@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Design;
 namespace GameGuild.Database;
 
 public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext> {
-  public ApplicationDbContext CreateDbContext(string[] args) {
+  public ApplicationDbContext CreateDbContext(string[ ] args) {
     var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
     // Load environment variables from .env file
@@ -38,6 +38,7 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
     // Final fallback for development
     if (string.IsNullOrEmpty(connectionString)) {
       var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+
       if (environment.Equals("Development", StringComparison.OrdinalIgnoreCase)) {
         connectionString = "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres;";
         Console.WriteLine("⚠️  No database connection string found. Using default development connection string with postgres/postgres/postgres.");

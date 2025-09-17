@@ -1,15 +1,15 @@
-namespace GameGuild.Modules.Teams.Models {
-  public class TeamMember : EntityBase {
-    public Guid TeamId { get; set; }
+namespace GameGuild.Modules.Teams.Models;
 
-    public string UserId { get; set; } = string.Empty; // External user reference
+public class TeamMember : EntityBase {
+  public Guid TeamId { get; set; }
 
-    public TeamRole Role { get; set; }
+  public string UserId { get; set; } = string.Empty; // External user reference
 
-    public string? InvitedBy { get; set; } // user_id who sent the invitation (nullable)
+  public TeamRole Role { get; set; }
 
-    public MemberStatus Status { get; set; } = MemberStatus.Pending;
+  public string? InvitedBy { get; set; } // user_id who sent the invitation (nullable)
 
-    public Team? Team { get; set; }
-  }
+  public MemberStatus Status { get; set; } = MemberStatus.Pending;
+
+  public Team? Team { get; set; }
 }

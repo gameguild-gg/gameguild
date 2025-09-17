@@ -6,15 +6,7 @@ namespace GameGuild.Modules.Posts;
 /// <summary>
 /// Event raised when a post is created
 /// </summary>
-public sealed class PostCreatedEvent(
-  Guid postId,
-  Guid userId,
-  string content,
-  string postType,
-  bool isSystemGenerated,
-  DateTime createdAt,
-  Guid tenantId
-) : DomainEventBase(postId, nameof(Post)) {
+public sealed class PostCreatedEvent(Guid postId, Guid userId, string content, string postType, bool isSystemGenerated, DateTime createdAt, Guid tenantId) : DomainEventBase(postId, nameof(Post)) {
   public Guid PostId { get; } = postId;
 
   public Guid UserId { get; } = userId;
@@ -33,13 +25,7 @@ public sealed class PostCreatedEvent(
 /// <summary>
 /// Event raised when a post is updated
 /// </summary>
-public sealed class PostUpdatedEvent(
-  Guid postId,
-  Guid userId,
-  Dictionary<string, object> changes,
-  DateTime updatedAt,
-  Guid tenantId
-) : DomainEventBase(postId, nameof(Post)) {
+public sealed class PostUpdatedEvent(Guid postId, Guid userId, Dictionary<string, object> changes, DateTime updatedAt, Guid tenantId) : DomainEventBase(postId, nameof(Post)) {
   public Guid PostId { get; } = postId;
 
   public Guid UserId { get; } = userId;
@@ -54,14 +40,7 @@ public sealed class PostUpdatedEvent(
 /// <summary>
 /// Event raised when a post is deleted
 /// </summary>
-public sealed class PostDeletedEvent(
-  Guid postId,
-  Guid userId,
-  string postType,
-  bool isSoftDelete,
-  DateTime deletedAt,
-  Guid tenantId
-) : DomainEventBase(postId, nameof(Post)) {
+public sealed class PostDeletedEvent(Guid postId, Guid userId, string postType, bool isSoftDelete, DateTime deletedAt, Guid tenantId) : DomainEventBase(postId, nameof(Post)) {
   public Guid PostId { get; } = postId;
 
   public Guid UserId { get; } = userId;
@@ -78,14 +57,7 @@ public sealed class PostDeletedEvent(
 /// <summary>
 /// Event raised when a post is liked
 /// </summary>
-public sealed class PostLikedEvent(
-  Guid postId,
-  Guid userId,
-  Guid likedByUserId,
-  int newLikesCount,
-  DateTime likedAt,
-  Guid tenantId
-) : DomainEventBase(postId, nameof(Post)) {
+public sealed class PostLikedEvent(Guid postId, Guid userId, Guid likedByUserId, int newLikesCount, DateTime likedAt, Guid tenantId) : DomainEventBase(postId, nameof(Post)) {
   public Guid PostId { get; } = postId;
 
   public Guid UserId { get; } = userId; // Post owner

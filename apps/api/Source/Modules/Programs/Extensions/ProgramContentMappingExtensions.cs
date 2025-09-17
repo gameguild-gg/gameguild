@@ -3,13 +3,9 @@ using System.Text.Json;
 
 namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// Extension methods for mapping between ProgramContent entities and DTOs
-/// </summary>
+/// <summary> Extension methods for mapping between ProgramContent entities and DTOs </summary>
 public static class ProgramContentMappingExtensions {
-  /// <summary>
-  /// Maps ProgramContent entity to DTO
-  /// </summary>
+  /// <summary> Maps ProgramContent entity to DTO </summary>
   public static ProgramContentDto ToDto(this ProgramContent content) {
     return new ProgramContentDto {
       Id = content.Id,
@@ -30,19 +26,14 @@ public static class ProgramContentMappingExtensions {
       ProgramTitle = content.Program?.Title,
       ParentTitle = content.Parent?.Title,
       ChildrenCount = content.Children?.Count(c => !c.IsDeleted) ?? 0,
-      Children = content.Children?.Where(c => !c.IsDeleted).Select(c => c.ToDto()).ToList() ??
-                 new List<ProgramContentDto>(),
+      Children = content.Children?.Where(c => !c.IsDeleted).Select(c => c.ToDto()).ToList() ?? new List<ProgramContentDto>(),
     };
   }
 
-  /// <summary>
-  /// Maps collection of ProgramContent entities to DTOs
-  /// </summary>
+  /// <summary> Maps collection of ProgramContent entities to DTOs </summary>
   public static IEnumerable<ProgramContentDto> ToDtos(this IEnumerable<ProgramContent> contents) { return contents.Select(c => c.ToDto()); }
 
-  /// <summary>
-  /// Maps CreateProgramContentDto to ProgramContent entity
-  /// </summary>
+  /// <summary> Maps CreateProgramContentDto to ProgramContent entity </summary>
   public static ProgramContent ToEntity(this CreateProgramContentDto dto) {
     return new ProgramContent {
       Id = Guid.NewGuid(),
@@ -61,9 +52,7 @@ public static class ProgramContentMappingExtensions {
     };
   }
 
-  /// <summary>
-  /// Applies updates from UpdateProgramContentDto to ProgramContent entity
-  /// </summary>
+  /// <summary> Applies updates from UpdateProgramContentDto to ProgramContent entity </summary>
   public static void ApplyUpdates(this ProgramContent content, UpdateProgramContentDto dto) {
     if (dto.Title != null) content.Title = dto.Title;
     if (dto.Description != null) content.Description = dto.Description;

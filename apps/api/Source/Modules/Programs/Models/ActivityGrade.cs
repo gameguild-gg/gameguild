@@ -9,27 +9,18 @@ public class ActivityGrade : EntityBase {
 
   public Guid GraderProgramUserId { get; set; }
 
-  /// <summary>
-  /// Grade awarded (0-100 scale or points based on content max_points)
-  /// </summary>
+  /// <summary> Grade awarded (0-100 scale or points based on content max_points) </summary>
   [Column(TypeName = "decimal(5,2)")]
   public decimal Grade { get; set; }
 
-  /// <summary>
-  /// Written feedback from the grader
-  /// </summary>
+  /// <summary> Written feedback from the grader </summary>
   public string? Feedback { get; set; }
 
-  /// <summary>
-  /// Detailed grading breakdown stored as JSON
-  /// Examples: rubric scores, test case results, peer review criteria
-  /// </summary>
+  /// <summary> Detailed grading breakdown stored as JSON Examples: rubric scores, test case results, peer review criteria </summary>
   [Column(TypeName = "jsonb")]
   public string? GradingDetails { get; set; }
 
-  /// <summary>
-  /// Date when the grade was awarded
-  /// </summary>
+  /// <summary> Date when the grade was awarded </summary>
   public DateTime GradedAt { get; set; }
 
   // Navigation properties
@@ -54,9 +45,7 @@ public class ActivityGrade : EntityBase {
   }
 
   public void SetGradingDetail<T>(string key, T value) {
-    var details = string.IsNullOrEmpty(GradingDetails)
-                    ? new Dictionary<string, object>()
-                    : JsonSerializer.Deserialize<Dictionary<string, object>>(GradingDetails) ?? new Dictionary<string, object>();
+    var details = string.IsNullOrEmpty(GradingDetails) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(GradingDetails) ?? new Dictionary<string, object>();
 
     details[key] = value!;
     GradingDetails = JsonSerializer.Serialize(details);

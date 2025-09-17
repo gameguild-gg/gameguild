@@ -4,11 +4,10 @@ using GameGuild.Modules.Credentials.Commands;
 
 namespace GameGuild.Modules.Credentials.Handlers;
 
-/// <summary>
-/// Handler for UpdateCredentialCommand using CQRS pattern
-/// </summary>
+/// <summary> Handler for UpdateCredentialCommand using CQRS pattern </summary>
 public class UpdateCredentialCommandHandler : IRequestHandler<UpdateCredentialCommand, Credential> {
   private readonly ICredentialService _credentialService;
+
   private readonly ILogger<UpdateCredentialCommandHandler> _logger;
 
   public UpdateCredentialCommandHandler(ICredentialService credentialService, ILogger<UpdateCredentialCommandHandler> logger) {

@@ -1,8 +1,6 @@
 namespace GameGuild;
 
-/// <summary>
-///     Validation result containing success status and error messages
-/// </summary>
+/// <summary> Validation result containing success status and error messages </summary>
 public class ValidationResult {
   public bool IsValid { get; private set; }
 
