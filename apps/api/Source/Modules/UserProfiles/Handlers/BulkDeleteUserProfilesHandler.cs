@@ -53,7 +53,7 @@ public class BulkDeleteUserProfilesHandler(ApplicationDbContext context, ILogger
       logger.LogError(ex, "Error during bulk delete of user profiles");
 
       return Result.Failure<int>(
-        Common.Error.Failure("UserProfile.BulkDeleteFailed", "Failed to bulk delete user profiles")
+        Error.Failure("UserProfile.BulkDeleteFailed", "Failed to bulk delete user profiles")
       );
     }
   }

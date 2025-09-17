@@ -20,7 +20,7 @@ public class CreateUserProfileHandler(
 
       if (existingProfile != null)
         return Result.Failure<UserProfile>(
-          Common.Error.Conflict("UserProfile.AlreadyExists", $"User profile already exists for user {request.UserId}")
+          Error.Conflict("UserProfile.AlreadyExists", $"User profile already exists for user {request.UserId}")
         );
 
       // Create new user profile
@@ -57,7 +57,7 @@ public class CreateUserProfileHandler(
       logger.LogError(ex, "Error creating user profile for user {UserId}", request.UserId);
 
       return Result.Failure<UserProfile>(
-        Common.Error.Failure("UserProfile.CreateFailed", "Failed to create user profile")
+        Error.Failure("UserProfile.CreateFailed", "Failed to create user profile")
       );
     }
   }
