@@ -9,8 +9,7 @@ namespace GameGuild.Modules.Features.Models;
 /// </summary>
 [Table("FeatureFlags")]
 [Index(nameof(Key), IsUnique = true)]
-public class FeatureFlag : EntityBase
-{
+public class FeatureFlag : EntityBase {
   /// <summary>
   /// Unique key for the feature flag
   /// </summary>
@@ -56,7 +55,7 @@ public class FeatureFlag : EntityBase
   /// <summary>
   /// Whether this feature flag applies to all tenants (global)
   /// </summary>
-  public bool IsGlobal { get; set; }
+  public new bool IsGlobal { get; set; }
 
   /// <summary>
   /// Percentage rollout (0-100) for gradual feature releases
