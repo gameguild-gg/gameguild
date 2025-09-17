@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Credentials.Handlers;
 /// <summary>
 /// Handler for MarkCredentialAsUsedCommand using CQRS pattern
 /// </summary>
-public class MarkCredentialAsUsedCommandHandler : GameGuild.CQRS.IRequestHandler<MarkCredentialAsUsedCommand, bool> {
+public class MarkCredentialAsUsedCommandHandler : IRequestHandler<MarkCredentialAsUsedCommand, bool> {
   private readonly ICredentialService _credentialService;
 
   public MarkCredentialAsUsedCommandHandler(ICredentialService credentialService) { _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService)); }

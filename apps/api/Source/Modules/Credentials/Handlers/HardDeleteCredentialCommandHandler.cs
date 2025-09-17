@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Credentials.Handlers;
 /// <summary>
 /// Handler for HardDeleteCredentialCommand using CQRS pattern
 /// </summary>
-public class HardDeleteCredentialCommandHandler : GameGuild.CQRS.IRequestHandler<HardDeleteCredentialCommand, bool> {
+public class HardDeleteCredentialCommandHandler : IRequestHandler<HardDeleteCredentialCommand, bool> {
   private readonly ICredentialService _credentialService;
 
   public HardDeleteCredentialCommandHandler(ICredentialService credentialService) { _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService)); }

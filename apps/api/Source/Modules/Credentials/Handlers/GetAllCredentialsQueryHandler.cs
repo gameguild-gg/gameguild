@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Credentials.Handlers;
 /// <summary>
 /// Handler for getting all credentials query using CQRS pattern
 /// </summary>
-public class GetAllCredentialsQueryHandler : GameGuild.CQRS.IRequestHandler<GetAllCredentialsQuery, IEnumerable<Credential>> {
+public class GetAllCredentialsQueryHandler : IRequestHandler<GetAllCredentialsQuery, IEnumerable<Credential>> {
   private readonly ApplicationDbContext _context;
   private readonly ILogger<GetAllCredentialsQueryHandler> _logger;
 
