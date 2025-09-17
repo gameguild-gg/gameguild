@@ -14,7 +14,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/requests
   [HttpGet("requests")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequests(
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50
@@ -27,7 +27,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/requests/{id}
   [HttpGet("requests/{id}")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<TestingRequest>> GetTestingRequest(Guid id)
   {
     var request = await testService.GetTestingRequestByIdAsync(id);
@@ -39,7 +39,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/requests/{id}/details
   [HttpGet("requests/{id}/details")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<TestingRequest>> GetTestingRequestWithDetails(Guid id)
   {
     var request = await testService.GetTestingRequestByIdWithDetailsAsync(id);
@@ -50,7 +50,7 @@ public class TestingController(ITestService testService) : ControllerBase
   } // POST: testing/requests
 
   [HttpPost("requests")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Create)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Create)]
   public async Task<ActionResult<TestingRequest>> CreateTestingRequest(CreateTestingRequestDto requestDto)
   {
     try
@@ -80,7 +80,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // PUT: testing/requests/{id}
   [HttpPut("requests/{id}")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Edit)]
   public async Task<ActionResult<TestingRequest>> UpdateTestingRequest(Guid id, TestingRequest request)
   {
     if (id != request.Id) return BadRequest("ID mismatch");
@@ -97,7 +97,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // DELETE: testing/requests/{id}
   [HttpDelete("requests/{id}")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Delete)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteTestingRequest(Guid id)
   {
     var result = await testService.DeleteTestingRequestAsync(id);
@@ -109,7 +109,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/requests/{id}/restore
   [HttpPost("requests/{id}/restore")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Edit)]
   public async Task<ActionResult> RestoreTestingRequest(Guid id)
   {
     var result = await testService.RestoreTestingRequestAsync(id);
@@ -125,7 +125,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/sessions
   [HttpGet("sessions")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessions(
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50
@@ -138,7 +138,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/sessions/{id}
   [HttpGet("sessions/{id}")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<TestingSession>> GetTestingSession(Guid id)
   {
     var session = await testService.GetTestingSessionByIdAsync(id);
@@ -150,7 +150,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/sessions/{id}/details
   [HttpGet("sessions/{id}/details")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<TestingSession>> GetTestingSessionWithDetails(Guid id)
   {
     var session = await testService.GetTestingSessionByIdWithDetailsAsync(id);
@@ -162,7 +162,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/sessions
   [HttpPost("sessions")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Create)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Create)]
   public async Task<ActionResult<TestingSession>> CreateTestingSession(TestingSession session)
   {
     try
@@ -189,7 +189,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // PUT: testing/sessions/{id}
   [HttpPut("sessions/{id}")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Edit)]
   public async Task<ActionResult<TestingSession>> UpdateTestingSession(Guid id, TestingSession session)
   {
     if (id != session.Id) return BadRequest("ID mismatch");
@@ -206,7 +206,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // DELETE: testing/sessions/{id}
   [HttpDelete("sessions/{id}")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Delete)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteTestingSession(Guid id)
   {
     var result = await testService.DeleteTestingSessionAsync(id);
@@ -218,7 +218,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/sessions/{id}/restore
   [HttpPost("sessions/{id}/restore")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Edit)]
   public async Task<ActionResult> RestoreTestingSession(Guid id)
   {
     var result = await testService.RestoreTestingSessionAsync(id);
@@ -248,7 +248,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/requests/by-project-version/{projectVersionId}
   [HttpGet("requests/by-project-version/{projectVersionId}")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequestsByProjectVersion(Guid projectVersionId)
   {
     var requests = await testService.GetTestingRequestsByProjectVersionAsync(projectVersionId);
@@ -258,7 +258,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/requests/by-creator/{creatorId}
   [HttpGet("requests/by-creator/{creatorId}")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequestsByCreator(Guid creatorId)
   {
     var requests = await testService.GetTestingRequestsByCreatorAsync(creatorId);
@@ -268,7 +268,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/requests/by-status/{status}
   [HttpGet("requests/by-status/{status}")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingRequest>>> GetTestingRequestsByStatus(TestingRequestStatus status)
   {
     var requests = await testService.GetTestingRequestsByStatusAsync(status);
@@ -278,7 +278,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/sessions/by-request/{testingRequestId}
   [HttpGet("sessions/by-request/{testingRequestId}")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByRequest(Guid testingRequestId)
   {
     var sessions = await testService.GetTestingSessionsByRequestAsync(testingRequestId);
@@ -288,7 +288,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/sessions/by-location/{locationId}
   [HttpGet("sessions/by-location/{locationId}")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByLocation(Guid locationId)
   {
     var sessions = await testService.GetTestingSessionsByLocationAsync(locationId);
@@ -298,7 +298,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/sessions/by-status/{status}
   [HttpGet("sessions/by-status/{status}")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByStatus(SessionStatus status)
   {
     var sessions = await testService.GetTestingSessionsByStatusAsync(status);
@@ -308,7 +308,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/sessions/by-manager/{managerId}
   [HttpGet("sessions/by-manager/{managerId}")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingSession>>> GetTestingSessionsByManager(Guid managerId)
   {
     var sessions = await testService.GetTestingSessionsByManagerAsync(managerId);
@@ -318,7 +318,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/requests/search
   [HttpGet("requests/search")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingRequest>>> SearchTestingRequests([FromQuery] string searchTerm)
   {
     if (string.IsNullOrWhiteSpace(searchTerm)) return BadRequest("Search term is required");
@@ -330,7 +330,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/sessions/search
   [HttpGet("sessions/search")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingSession>>> SearchTestingSessions([FromQuery] string searchTerm)
   {
     if (string.IsNullOrWhiteSpace(searchTerm)) return BadRequest("Search term is required");
@@ -346,7 +346,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/requests/{requestId}/participants/{userId}
   [HttpPost("requests/{requestId}/participants/{userId}")]
-  [RequireResourcePermission<TestingParticipant>(PermissionType.Create)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingParticipantPermission, TestingParticipant>(PermissionType.Create)]
   public async Task<ActionResult<TestingParticipant>> AddParticipant(Guid requestId, Guid userId)
   {
     try
@@ -360,7 +360,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // DELETE: testing/requests/{requestId}/participants/{userId}
   [HttpDelete("requests/{requestId}/participants/{userId}")]
-  [RequireResourcePermission<TestingParticipant>(PermissionType.Delete)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingParticipantPermission, TestingParticipant>(PermissionType.Delete)]
   public async Task<ActionResult> RemoveParticipant(Guid requestId, Guid userId)
   {
     var result = await testService.RemoveParticipantAsync(requestId, userId);
@@ -372,7 +372,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/requests/{requestId}/participants
   [HttpGet("requests/{requestId}/participants")]
-  [RequireResourcePermission<TestingParticipant>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingParticipantPermission, TestingParticipant>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingParticipant>>> GetTestingRequestParticipants(Guid requestId)
   {
     var participants = await testService.GetTestingRequestParticipantsAsync(requestId);
@@ -382,7 +382,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/requests/{requestId}/participants/{userId}/check
   [HttpGet("requests/{requestId}/participants/{userId}/check")]
-  [RequireResourcePermission<TestingParticipant>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingParticipantPermission, TestingParticipant>(PermissionType.Read)]
   public async Task<ActionResult<bool>> CheckUserParticipation(Guid requestId, Guid userId)
   {
     var isParticipant = await testService.IsUserParticipantAsync(requestId, userId);
@@ -396,7 +396,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/sessions/{sessionId}/register
   [HttpPost("sessions/{sessionId}/register")]
-  [RequireResourcePermission<SessionRegistration>(PermissionType.Create, "sessionId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<SessionRegistrationPermission, SessionRegistration>(PermissionType.Create, "sessionId")]
   public async Task<ActionResult<SessionRegistration>> RegisterForSession(
     Guid sessionId,
     [FromBody] SessionRegistrationRequest request
@@ -419,7 +419,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // DELETE: testing/sessions/{sessionId}/register
   [HttpDelete("sessions/{sessionId}/register")]
-  [RequireResourcePermission<SessionRegistration>(PermissionType.Delete, "sessionId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<SessionRegistrationPermission, SessionRegistration>(PermissionType.Delete, "sessionId")]
   public async Task<ActionResult> UnregisterFromSession(Guid sessionId)
   {
     // Get the current authenticated user's ID
@@ -436,7 +436,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/sessions/{sessionId}/registrations
   [HttpGet("sessions/{sessionId}/registrations")]
-  [RequireResourcePermission<SessionRegistration>(PermissionType.Read, "sessionId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<SessionRegistrationPermission, SessionRegistration>(PermissionType.Read, "sessionId")]
   public async Task<ActionResult<IEnumerable<SessionRegistration>>> GetSessionRegistrations(Guid sessionId)
   {
     var registrations = await testService.GetSessionRegistrationsAsync(sessionId);
@@ -446,7 +446,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/sessions/{sessionId}/waitlist
   [HttpPost("sessions/{sessionId}/waitlist")]
-  [RequireResourcePermission<SessionWaitlist>(PermissionType.Create, "sessionId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<SessionWaitlistPermission, SessionWaitlist>(PermissionType.Create, "sessionId")]
   public async Task<ActionResult<SessionWaitlist>> AddToWaitlist(
     Guid sessionId,
     [FromBody] SessionRegistrationRequest request
@@ -469,7 +469,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // DELETE: testing/sessions/{sessionId}/waitlist
   [HttpDelete("sessions/{sessionId}/waitlist")]
-  [RequireResourcePermission<SessionWaitlist>(PermissionType.Delete, "sessionId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<SessionWaitlistPermission, SessionWaitlist>(PermissionType.Delete, "sessionId")]
   public async Task<ActionResult> RemoveFromWaitlist(Guid sessionId)
   {
     // Get the current authenticated user's ID
@@ -486,7 +486,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/sessions/{sessionId}/waitlist
   [HttpGet("sessions/{sessionId}/waitlist")]
-  [RequireResourcePermission<SessionWaitlist>(PermissionType.Read, "sessionId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<SessionWaitlistPermission, SessionWaitlist>(PermissionType.Read, "sessionId")]
   public async Task<ActionResult<IEnumerable<SessionWaitlist>>> GetSessionWaitlist(Guid sessionId)
   {
     var waitlist = await testService.GetSessionWaitlistAsync(sessionId);
@@ -500,7 +500,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/requests/{requestId}/feedback
   [HttpPost("requests/{requestId}/feedback")]
-  [RequireResourcePermission<TestingFeedback>(PermissionType.Create)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingFeedbackPermission, TestingFeedback>(PermissionType.Create)]
   public async Task<ActionResult<TestingFeedback>> AddFeedback(Guid requestId, [FromBody] FeedbackRequest request)
   {
     try
@@ -527,7 +527,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/requests/{requestId}/feedback
   [HttpGet("requests/{requestId}/feedback")]
-  [RequireResourcePermission<TestingFeedback>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingFeedbackPermission, TestingFeedback>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingFeedback>>> GetTestingRequestFeedback(Guid requestId)
   {
     var feedback = await testService.GetTestingRequestFeedbackAsync(requestId);
@@ -537,7 +537,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/feedback/by-user/{userId}
   [HttpGet("feedback/by-user/{userId}")]
-  [RequireResourcePermission<TestingFeedback>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingFeedbackPermission, TestingFeedback>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingFeedback>>> GetFeedbackByUser(Guid userId)
   {
     var feedback = await testService.GetFeedbackByUserAsync(userId);
@@ -551,7 +551,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/requests/{requestId}/statistics
   [HttpGet("requests/{requestId}/statistics")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<object>> GetTestingRequestStatistics(Guid requestId)
   {
     var statistics = await testService.GetTestingRequestStatisticsAsync(requestId);
@@ -561,7 +561,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/sessions/{sessionId}/statistics
   [HttpGet("sessions/{sessionId}/statistics")]
-  [RequireResourcePermission<TestingSession>(PermissionType.Read, "sessionId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingSessionPermission, TestingSession>(PermissionType.Read, "sessionId")]
   public async Task<ActionResult<object>> GetTestingSessionStatistics(Guid sessionId)
   {
     var statistics = await testService.GetTestingSessionStatisticsAsync(sessionId);
@@ -571,7 +571,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/users/{userId}/activity
   [HttpGet("users/{userId}/activity")]
-  [RequireResourcePermission<TestingParticipant>(PermissionType.Read, "userId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingParticipantPermission, TestingParticipant>(PermissionType.Read, "userId")]
   public async Task<ActionResult<object>> GetUserTestingActivity(Guid userId)
   {
     var activity = await testService.GetUserTestingActivityAsync(userId);
@@ -585,7 +585,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/submit-simple
   [HttpPost("submit-simple")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Create)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Create)]
   public async Task<ActionResult<TestingRequest>> SubmitSimpleTestingRequest(CreateSimpleTestingRequestDto requestDto)
   {
     try
@@ -614,7 +614,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/feedback
   [HttpPost("feedback")]
-  [RequireResourcePermission<TestingFeedback>(PermissionType.Create)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingFeedbackPermission, TestingFeedback>(PermissionType.Create)]
   public async Task<ActionResult> SubmitFeedback(SubmitFeedbackDto feedbackDto)
   {
     try
@@ -641,7 +641,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/my-requests
   [HttpGet("my-requests")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingRequest>>> GetMyTestingRequests()
   {
     // Get the current authenticated user's ID
@@ -656,7 +656,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/available-for-testing
   [HttpGet("available-for-testing")]
-  [RequireResourcePermission<TestingRequest>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingRequestPermission, TestingRequest>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingRequest>>> GetAvailableTestingRequests()
   {
     var requests = await testService.GetActiveTestingRequestsAsync();
@@ -666,7 +666,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/attendance/students
   [HttpGet("attendance/students")]
-  [RequireResourcePermission<SessionRegistration>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<SessionRegistrationPermission, SessionRegistration>(PermissionType.Read)]
   public async Task<ActionResult<object>> GetStudentAttendanceReport()
   {
     try
@@ -680,7 +680,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/attendance/sessions
   [HttpGet("attendance/sessions")]
-  [RequireResourcePermission<SessionRegistration>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<SessionRegistrationPermission, SessionRegistration>(PermissionType.Read)]
   public async Task<ActionResult<object>> GetSessionAttendanceReport()
   {
     try
@@ -694,7 +694,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/sessions/{id}/attendance
   [HttpPost("sessions/{sessionId}/attendance")]
-  [RequireResourcePermission<SessionRegistration>(PermissionType.Edit, "sessionId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<SessionRegistrationPermission, SessionRegistration>(PermissionType.Edit, "sessionId")]
   public async Task<ActionResult> UpdateAttendance(Guid sessionId, UpdateAttendanceDto attendanceDto)
   {
     try
@@ -718,7 +718,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/feedback/{id}/report
   [HttpPost("feedback/{feedbackId}/report")]
-  [RequireResourcePermission<TestingFeedback>(PermissionType.Report, "feedbackId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingFeedbackPermission, TestingFeedback>(PermissionType.Report, "feedbackId")]
   public async Task<ActionResult> ReportFeedback(Guid feedbackId, ReportFeedbackDto reportDto)
   {
     try
@@ -742,7 +742,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/feedback/{id}/quality
   [HttpPost("feedback/{feedbackId}/quality")]
-  [RequireResourcePermission<TestingFeedback>(PermissionType.Edit, "feedbackId")]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingFeedbackPermission, TestingFeedback>(PermissionType.Edit, "feedbackId")]
   public async Task<ActionResult> RateFeedbackQuality(Guid feedbackId, RateFeedbackQualityDto qualityDto)
   {
     try
@@ -770,7 +770,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/locations
   [HttpGet("locations")]
-  [RequireResourcePermission<TestingLocation>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingLocationPermission, TestingLocation>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<TestingLocation>>> GetTestingLocations(
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50
@@ -783,7 +783,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // GET: testing/locations/{id}
   [HttpGet("locations/{id}")]
-  [RequireResourcePermission<TestingLocation>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingLocationPermission, TestingLocation>(PermissionType.Read)]
   public async Task<ActionResult<TestingLocation>> GetTestingLocation(Guid id)
   {
     var location = await testService.GetTestingLocationByIdAsync(id);
@@ -795,7 +795,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/locations
   [HttpPost("locations")]
-  [RequireResourcePermission<TestingLocation>(PermissionType.Create)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingLocationPermission, TestingLocation>(PermissionType.Create)]
   public async Task<ActionResult<TestingLocation>> CreateTestingLocation(CreateTestingLocationDto locationDto)
   {
     try
@@ -819,7 +819,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // PUT: testing/locations/{id}
   [HttpPut("locations/{id}")]
-  [RequireResourcePermission<TestingLocation>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingLocationPermission, TestingLocation>(PermissionType.Edit)]
   public async Task<ActionResult<TestingLocation>> UpdateTestingLocation(Guid id, UpdateTestingLocationDto locationDto)
   {
     try
@@ -838,7 +838,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // DELETE: testing/locations/{id}
   [HttpDelete("locations/{id}")]
-  [RequireResourcePermission<TestingLocation>(PermissionType.Delete)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingLocationPermission, TestingLocation>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteTestingLocation(Guid id)
   {
     var result = await testService.DeleteTestingLocationAsync(id);
@@ -850,7 +850,7 @@ public class TestingController(ITestService testService) : ControllerBase
 
   // POST: testing/locations/{id}/restore
   [HttpPost("locations/{id}/restore")]
-  [RequireResourcePermission<TestingLocation>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermissionAttribute<TestingLocationPermission, TestingLocation>(PermissionType.Edit)]
   public async Task<ActionResult> RestoreTestingLocation(Guid id)
   {
     var result = await testService.RestoreTestingLocationAsync(id);
