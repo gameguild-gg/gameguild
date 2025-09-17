@@ -11,6 +11,7 @@ namespace GameGuild.Services;
 
 /// <summary>
 /// Service that periodically checks external IP and updates Cloudflare DNS records.
+/// Following Clean Architecture principles for infrastructure concerns
 /// </summary>
 public class CloudflareExternalIpService : ICloudflareExternalIpService, IDisposable {
   private readonly ILogger<CloudflareExternalIpService> _logger;
@@ -31,14 +32,14 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
 
   private DateTime? _lastUpdate;
 
-  private int _currentServiceIndex = 0;
+  private int _currentServiceIndex;
 
   private readonly Random _random = new();
 
   public CloudflareExternalIpService(ILogger<CloudflareExternalIpService> logger, IOptions<CloudflareDynamicDnsOptions> options, HttpClient httpClient) {
-    _logger = logger;
-    _options = options.Value;
-    _httpClient = httpClient;
+    _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+    _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
 
     // Configure HTTP client
     _httpClient.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
@@ -105,7 +106,7 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
         return;
       }
 
-      _logger.LogInformation("External IP changed from {OldIp} to {NewIp}", _lastKnownIp ?? "unknown", currentIp);
+      _logger.LogInformation("External IP address changed from {OldIp} to {NewIp}. Updating DNS records...", _lastKnownIp ?? "unknown", currentIp);
 
       // Update all configured DNS records
       var updateTasks = _options.DnsRecords.Select(record => UpdateDnsRecordAsync(record, currentIp, cancellationToken));

@@ -1,4 +1,4 @@
-namespace GameGuild.Core.Infrastructure.External;
+namespace GameGuild.DNS.Cloudfare;
 
 /// <summary> Hosted service that manages the Cloudflare Dynamic DNS service lifecycle. </summary>
 public class CloudflareExternalIpHostedService : BackgroundService {
