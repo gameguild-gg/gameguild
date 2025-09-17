@@ -237,7 +237,7 @@ public static class WebApplicationBuilderExtensions {
   }
 
   /// <summary>
-  /// Adds custom middleware to the application pipeline.
+  ///     Adds custom middleware to the application pipeline.
   /// </summary>
   /// <param name="app">The WebApplication instance</param>
   /// <param name="configureMiddleware">Action to configure custom middleware</param>
@@ -251,7 +251,7 @@ public static class WebApplicationBuilderExtensions {
   }
 
   /// <summary>
-  /// Configures health checks endpoints and UI.
+  ///     Configures health checks endpoints and UI.
   /// </summary>
   /// <param name="app">The WebApplication instance</param>
   /// <param name="healthCheckPath">Path for health check endpoint (default: /health)</param>
