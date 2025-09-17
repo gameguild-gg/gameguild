@@ -18,7 +18,7 @@ public class Product : Content {
 
   [MaxLength(500)] public string? ImageUrl { get; set; }
 
-  public Common.ProductType Type { get; set; } = Common.ProductType.Program;
+  public ProductType Type { get; set; } = ProductType.Program;
 
   public bool IsBundle { get; set; }
 

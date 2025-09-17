@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Products;
 /// <summary>
 /// Query to get product by ID
 /// </summary>
-public record GetProductByIdQuery : GameGuild.CQRS.IRequest<Product?>
+public record GetProductByIdQuery : CQRS.IRequest<Product?>
 {
   public Guid ProductId { get; init; }
 
@@ -18,9 +18,9 @@ public record GetProductByIdQuery : GameGuild.CQRS.IRequest<Product?>
 /// <summary>
 /// Query to get products list
 /// </summary>
-public record GetProductsQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>>
+public record GetProductsQuery : CQRS.IRequest<IEnumerable<Product>>
 {
-  public Common.ProductType? Type { get; init; }
+  public ProductType? Type { get; init; }
 
   public ContentStatus? Status { get; init; }
 
@@ -44,7 +44,7 @@ public record GetProductsQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>>
 /// <summary>
 /// Query to get user's products (purchased/owned)
 /// </summary>
-public record GetUserProductsQuery : GameGuild.CQRS.IRequest<IEnumerable<UserProduct>>
+public record GetUserProductsQuery : CQRS.IRequest<IEnumerable<UserProduct>>
 {
   public Guid UserId { get; init; }
 
@@ -60,7 +60,7 @@ public record GetUserProductsQuery : GameGuild.CQRS.IRequest<IEnumerable<UserPro
 /// <summary>
 /// Query to get product pricing
 /// </summary>
-public record GetProductPricingQuery : GameGuild.CQRS.IRequest<IEnumerable<ProductPricing>>
+public record GetProductPricingQuery : CQRS.IRequest<IEnumerable<ProductPricing>>
 {
   public Guid ProductId { get; init; }
 
@@ -74,7 +74,7 @@ public record GetProductPricingQuery : GameGuild.CQRS.IRequest<IEnumerable<Produ
 /// <summary>
 /// Query to get bundle contents
 /// </summary>
-public record GetBundleContentsQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>>
+public record GetBundleContentsQuery : CQRS.IRequest<IEnumerable<Product>>
 {
   public Guid BundleProductId { get; init; }
 }
@@ -82,7 +82,7 @@ public record GetBundleContentsQuery : GameGuild.CQRS.IRequest<IEnumerable<Produ
 /// <summary>
 /// Query to get product statistics
 /// </summary>
-public record GetProductStatsQuery : GameGuild.CQRS.IRequest<ProductStats>
+public record GetProductStatsQuery : CQRS.IRequest<ProductStats>
 {
   public Guid? ProductId { get; init; } // If null, gets stats for all products
 
@@ -98,7 +98,7 @@ public record GetProductStatsQuery : GameGuild.CQRS.IRequest<ProductStats>
 /// <summary>
 /// Query to get product revenue analytics
 /// </summary>
-public record GetProductRevenueQuery : GameGuild.CQRS.IRequest<ProductRevenueReport>
+public record GetProductRevenueQuery : CQRS.IRequest<ProductRevenueReport>
 {
   public Guid ProductId { get; init; }
 
@@ -112,7 +112,7 @@ public record GetProductRevenueQuery : GameGuild.CQRS.IRequest<ProductRevenueRep
 /// <summary>
 /// Query to check if user has access to product
 /// </summary>
-public record CheckUserProductAccessQuery : GameGuild.CQRS.IRequest<UserProductAccess>
+public record CheckUserProductAccessQuery : CQRS.IRequest<UserProductAccess>
 {
   public Guid UserId { get; init; }
 
@@ -208,9 +208,9 @@ public record UserProductAccess
 /// <summary>
 /// Query to get products by type
 /// </summary>
-public record GetProductsByTypeQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>>
+public record GetProductsByTypeQuery : CQRS.IRequest<IEnumerable<Product>>
 {
-  public Common.ProductType Type { get; init; }
+  public ProductType Type { get; init; }
 
   public int Skip { get; init; } = 0;
 
@@ -220,7 +220,7 @@ public record GetProductsByTypeQuery : GameGuild.CQRS.IRequest<IEnumerable<Produ
 /// <summary>
 /// Query to get published products
 /// </summary>
-public record GetPublishedProductsQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>>
+public record GetPublishedProductsQuery : CQRS.IRequest<IEnumerable<Product>>
 {
   public int Skip { get; init; } = 0;
 
@@ -230,11 +230,11 @@ public record GetPublishedProductsQuery : GameGuild.CQRS.IRequest<IEnumerable<Pr
 /// <summary>
 /// Query to search products
 /// </summary>
-public record SearchProductsQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>>
+public record SearchProductsQuery : CQRS.IRequest<IEnumerable<Product>>
 {
   public string SearchTerm { get; init; } = string.Empty;
 
-  public Common.ProductType? Type { get; init; }
+  public ProductType? Type { get; init; }
 
   public int Skip { get; init; } = 0;
 
@@ -244,7 +244,7 @@ public record SearchProductsQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>
 /// <summary>
 /// Query to get products by creator
 /// </summary>
-public record GetProductsByCreatorQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>>
+public record GetProductsByCreatorQuery : CQRS.IRequest<IEnumerable<Product>>
 {
   public Guid CreatorId { get; init; }
 
@@ -256,7 +256,7 @@ public record GetProductsByCreatorQuery : GameGuild.CQRS.IRequest<IEnumerable<Pr
 /// <summary>
 /// Query to get products in price range
 /// </summary>
-public record GetProductsInPriceRangeQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>>
+public record GetProductsInPriceRangeQuery : CQRS.IRequest<IEnumerable<Product>>
 {
   public decimal MinPrice { get; init; }
 
@@ -272,7 +272,7 @@ public record GetProductsInPriceRangeQuery : GameGuild.CQRS.IRequest<IEnumerable
 /// <summary>
 /// Query to get popular products
 /// </summary>
-public record GetPopularProductsQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>>
+public record GetPopularProductsQuery : CQRS.IRequest<IEnumerable<Product>>
 {
   public int Skip { get; init; } = 0;
 
@@ -282,7 +282,7 @@ public record GetPopularProductsQuery : GameGuild.CQRS.IRequest<IEnumerable<Prod
 /// <summary>
 /// Query to get recent products
 /// </summary>
-public record GetRecentProductsQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>>
+public record GetRecentProductsQuery : CQRS.IRequest<IEnumerable<Product>>
 {
   public int Skip { get; init; } = 0;
 
@@ -292,7 +292,7 @@ public record GetRecentProductsQuery : GameGuild.CQRS.IRequest<IEnumerable<Produ
 /// <summary>
 /// Query to get bundle items
 /// </summary>
-public record GetBundleItemsQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>>
+public record GetBundleItemsQuery : CQRS.IRequest<IEnumerable<Product>>
 {
   public Guid BundleId { get; init; }
 }
@@ -300,7 +300,7 @@ public record GetBundleItemsQuery : GameGuild.CQRS.IRequest<IEnumerable<Product>
 /// <summary>
 /// Query to get current pricing
 /// </summary>
-public record GetCurrentPricingQuery : GameGuild.CQRS.IRequest<ProductPricing?>
+public record GetCurrentPricingQuery : CQRS.IRequest<ProductPricing?>
 {
   public Guid ProductId { get; init; }
 
@@ -310,7 +310,7 @@ public record GetCurrentPricingQuery : GameGuild.CQRS.IRequest<ProductPricing?>
 /// <summary>
 /// Query to get pricing history
 /// </summary>
-public record GetPricingHistoryQuery : GameGuild.CQRS.IRequest<IEnumerable<ProductPricing>>
+public record GetPricingHistoryQuery : CQRS.IRequest<IEnumerable<ProductPricing>>
 {
   public Guid ProductId { get; init; }
 
@@ -322,7 +322,7 @@ public record GetPricingHistoryQuery : GameGuild.CQRS.IRequest<IEnumerable<Produ
 /// <summary>
 /// Query to get subscription plans
 /// </summary>
-public record GetSubscriptionPlansQuery : GameGuild.CQRS.IRequest<IEnumerable<ProductSubscriptionPlan>>
+public record GetSubscriptionPlansQuery : CQRS.IRequest<IEnumerable<ProductSubscriptionPlan>>
 {
   public Guid? ProductId { get; init; }
 
@@ -332,7 +332,7 @@ public record GetSubscriptionPlansQuery : GameGuild.CQRS.IRequest<IEnumerable<Pr
 /// <summary>
 /// Query to get specific subscription plan
 /// </summary>
-public record GetSubscriptionPlanQuery : GameGuild.CQRS.IRequest<ProductSubscriptionPlan?>
+public record GetSubscriptionPlanQuery : CQRS.IRequest<ProductSubscriptionPlan?>
 {
   public Guid PlanId { get; init; }
 }
@@ -340,7 +340,7 @@ public record GetSubscriptionPlanQuery : GameGuild.CQRS.IRequest<ProductSubscrip
 /// <summary>
 /// Query to check user access
 /// </summary>
-public record HasUserAccessQuery : GameGuild.CQRS.IRequest<bool>
+public record HasUserAccessQuery : CQRS.IRequest<bool>
 {
   public Guid UserId { get; init; }
 
@@ -350,7 +350,7 @@ public record HasUserAccessQuery : GameGuild.CQRS.IRequest<bool>
 /// <summary>
 /// Query to get user product
 /// </summary>
-public record GetUserProductQuery : GameGuild.CQRS.IRequest<UserProduct?>
+public record GetUserProductQuery : CQRS.IRequest<UserProduct?>
 {
   public Guid UserId { get; init; }
 
@@ -360,9 +360,9 @@ public record GetUserProductQuery : GameGuild.CQRS.IRequest<UserProduct?>
 /// <summary>
 /// Query to get product count
 /// </summary>
-public record GetProductCountQuery : GameGuild.CQRS.IRequest<int>
+public record GetProductCountQuery : CQRS.IRequest<int>
 {
-  public Common.ProductType? Type { get; init; }
+  public ProductType? Type { get; init; }
 
   public ContentStatus? Status { get; init; }
 }
@@ -370,7 +370,7 @@ public record GetProductCountQuery : GameGuild.CQRS.IRequest<int>
 /// <summary>
 /// Query to get user count for product
 /// </summary>
-public record GetUserCountForProductQuery : GameGuild.CQRS.IRequest<int>
+public record GetUserCountForProductQuery : CQRS.IRequest<int>
 {
   public Guid ProductId { get; init; }
 }
@@ -378,7 +378,7 @@ public record GetUserCountForProductQuery : GameGuild.CQRS.IRequest<int>
 /// <summary>
 /// Query to get total revenue for product
 /// </summary>
-public record GetTotalRevenueForProductQuery : GameGuild.CQRS.IRequest<decimal>
+public record GetTotalRevenueForProductQuery : CQRS.IRequest<decimal>
 {
   public Guid ProductId { get; init; }
 

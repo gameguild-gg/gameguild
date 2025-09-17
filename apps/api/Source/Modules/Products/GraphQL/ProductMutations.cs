@@ -13,7 +13,7 @@ public class ProductMutations {
   /// <summary>
   /// Creates a new product using CQRS pattern
   /// </summary>
-  public async Task<ProductEntity> CreateProduct(CreateProductInput input, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<ProductEntity> CreateProduct(CreateProductInput input, [Service] CQRS.IMediator mediator) {
     var command = new CreateProductCommand {
       Name = input.Name,
       ShortDescription = input.ShortDescription,
@@ -30,7 +30,7 @@ public class ProductMutations {
   /// <summary>
   /// Updates an existing product
   /// </summary>
-  public async Task<ProductEntity?> UpdateProduct(UpdateProductInput input, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<ProductEntity?> UpdateProduct(UpdateProductInput input, [Service] CQRS.IMediator mediator) {
     var command = new UpdateProductCommand {
       ProductId = input.Id,
       Name = input.Name,
@@ -50,7 +50,7 @@ public class ProductMutations {
   /// <summary>
   /// Deletes a product
   /// </summary>
-  public async Task<bool> DeleteProduct(Guid id, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<bool> DeleteProduct(Guid id, [Service] CQRS.IMediator mediator) {
     var command = new DeleteProductCommand { ProductId = id };
     await mediator.Send(command);
 
@@ -60,7 +60,7 @@ public class ProductMutations {
   /// <summary>
   /// Publishes a product
   /// </summary>
-  public async Task<ProductEntity?> PublishProduct(Guid id, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<ProductEntity?> PublishProduct(Guid id, [Service] CQRS.IMediator mediator) {
     var command = new UpdateProductCommand { ProductId = id, Status = ContentStatus.Published, UpdatedBy = Guid.Empty };
     var result = await mediator.Send(command);
 
@@ -70,7 +70,7 @@ public class ProductMutations {
   /// <summary>
   /// Unpublishes a product
   /// </summary>
-  public async Task<ProductEntity?> UnpublishProduct(Guid id, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<ProductEntity?> UnpublishProduct(Guid id, [Service] CQRS.IMediator mediator) {
     var command = new UpdateProductCommand { ProductId = id, Status = ContentStatus.Draft, UpdatedBy = Guid.Empty };
     var result = await mediator.Send(command);
 
@@ -80,7 +80,7 @@ public class ProductMutations {
   /// <summary>
   /// Archives a product
   /// </summary>
-  public async Task<ProductEntity?> ArchiveProduct(Guid id, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<ProductEntity?> ArchiveProduct(Guid id, [Service] CQRS.IMediator mediator) {
     var command = new UpdateProductCommand { ProductId = id, Status = ContentStatus.Archived, UpdatedBy = Guid.Empty };
     var result = await mediator.Send(command);
 
@@ -92,7 +92,7 @@ public class ProductMutations {
   /// </summary>
   public async Task<ProductEntity?> SetProductVisibility(
     Guid id, AccessLevel visibility,
-    [Service] GameGuild.CQRS.IMediator mediator
+    [Service] CQRS.IMediator mediator
   ) {
     var command = new UpdateProductCommand { ProductId = id, Visibility = visibility, UpdatedBy = Guid.Empty };
     var result = await mediator.Send(command);
@@ -103,7 +103,7 @@ public class ProductMutations {
   /// <summary>
   /// Adds a product to a bundle
   /// </summary>
-  public async Task<ProductEntity?> AddToBundle(BundleManagementInput input, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<ProductEntity?> AddToBundle(BundleManagementInput input, [Service] CQRS.IMediator mediator) {
     // Note: This would need a specific AddToBundleCommand in a real implementation
     var command = new UpdateProductCommand { ProductId = input.BundleId, UpdatedBy = Guid.Empty };
     var result = await mediator.Send(command);
@@ -116,7 +116,7 @@ public class ProductMutations {
   /// </summary>
   public async Task<ProductEntity?> RemoveFromBundle(
     BundleManagementInput input,
-    [Service] GameGuild.CQRS.IMediator mediator
+    [Service] CQRS.IMediator mediator
   ) {
     // Note: This would need a specific RemoveFromBundleCommand in a real implementation
     var command = new UpdateProductCommand { ProductId = input.BundleId, UpdatedBy = Guid.Empty };
@@ -130,7 +130,7 @@ public class ProductMutations {
   /// </summary>
   public async Task<ProductPricing> SetProductPricing(
     SetProductPricingInput input,
-    [Service] GameGuild.CQRS.IMediator mediator
+    [Service] CQRS.IMediator mediator
   ) {
     var command = new AddProductPricingCommand { ProductId = input.ProductId, Price = input.BasePrice, Currency = input.Currency, CreatedBy = Guid.Empty };
     var result = await mediator.Send(command);
@@ -143,7 +143,7 @@ public class ProductMutations {
   /// </summary>
   public async Task<ProductPricing?> UpdateProductPricing(
     UpdateProductPricingInput input,
-    [Service] GameGuild.CQRS.IMediator mediator
+    [Service] CQRS.IMediator mediator
   ) {
     // Note: This would need a specific UpdateProductPricingCommand in a real implementation
     var command = new AddProductPricingCommand {
@@ -161,7 +161,7 @@ public class ProductMutations {
   /// </summary>
   public async Task<UserProduct> GrantUserAccess(
     GrantProductAccessInput input,
-    [Service] GameGuild.CQRS.IMediator mediator
+    [Service] CQRS.IMediator mediator
   ) {
     var command = new GrantUserProductAccessCommand {
       UserId = input.UserId,
@@ -180,7 +180,7 @@ public class ProductMutations {
   /// <summary>
   /// Revokes user access to a product
   /// </summary>
-  public async Task<bool> RevokeUserAccess(Guid userId, Guid productId, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<bool> RevokeUserAccess(Guid userId, Guid productId, [Service] CQRS.IMediator mediator) {
     var command = new RevokeUserProductAccessCommand { UserId = userId, ProductId = productId, RevokedBy = Guid.Empty };
     await mediator.Send(command);
 
@@ -192,7 +192,7 @@ public class ProductMutations {
   /// </summary>
   public async Task<PromoCode> CreatePromoCode(
     CreatePromoCodeInput input,
-    [Service] GameGuild.CQRS.IMediator mediator
+    [Service] CQRS.IMediator mediator
   ) {
     // Note: This would need a specific CreatePromoCodeCommand in a real implementation
     await Task.CompletedTask;
@@ -205,7 +205,7 @@ public class ProductMutations {
   /// </summary>
   public async Task<PromoCode?> UpdatePromoCode(
     UpdatePromoCodeInput input,
-    [Service] GameGuild.CQRS.IMediator mediator
+    [Service] CQRS.IMediator mediator
   ) {
     // Note: This would need a specific UpdatePromoCodeCommand in a real implementation  
     await Task.CompletedTask;
@@ -216,7 +216,7 @@ public class ProductMutations {
   /// <summary>
   /// Deletes a promotional code
   /// </summary>
-  public async Task<bool> DeletePromoCode(Guid id, [Service] GameGuild.CQRS.IMediator mediator) {
+  public async Task<bool> DeletePromoCode(Guid id, [Service] CQRS.IMediator mediator) {
     // Note: This would need a specific DeletePromoCodeCommand in a real implementation
     await Task.CompletedTask;
 
@@ -228,7 +228,7 @@ public class ProductMutations {
   /// </summary>
   public async Task<PromoCodeUse> UsePromoCode(
     Guid userId, string code, decimal discountAmount,
-    [Service] GameGuild.CQRS.IMediator mediator
+    [Service] CQRS.IMediator mediator
   ) {
     // Note: This would need a specific UsePromoCodeCommand in a real implementation
     await Task.CompletedTask;
