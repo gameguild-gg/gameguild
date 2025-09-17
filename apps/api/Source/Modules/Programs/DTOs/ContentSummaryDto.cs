@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// Simplified content information to avoid circular references
-/// </summary>
+/// <summary> Simplified content information to avoid circular references </summary>
 public class ContentSummaryDto {
   public Guid Id { get; set; }
 

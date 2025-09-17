@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Payments;
 
-/// <summary>
-/// Interface for payment method management services
-/// </summary>
+/// <summary> Interface for payment method management services </summary>
 public interface IUserFinancialMethodService {
   Task<UserFinancialMethod> AddPaymentMethodAsync(UserFinancialMethod paymentMethod);
 

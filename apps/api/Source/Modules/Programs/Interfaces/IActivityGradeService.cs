@@ -1,16 +1,8 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// Interface for activity grading services
-/// </summary>
+/// <summary> Interface for activity grading services </summary>
 public interface IActivityGradeService {
-  Task<ActivityGrade> GradeActivityAsync(
-    Guid contentInteractionId,
-    Guid graderProgramUserId,
-    decimal grade,
-    string? feedback = null,
-    string? gradingDetails = null
-  );
+  Task<ActivityGrade> GradeActivityAsync(Guid contentInteractionId, Guid graderProgramUserId, decimal grade, string? feedback = null, string? gradingDetails = null);
 
   Task<ActivityGrade?> GetGradeAsync(Guid contentInteractionId);
 

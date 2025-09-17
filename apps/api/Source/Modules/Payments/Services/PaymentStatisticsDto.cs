@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Payments;
 
-/// <summary>
-/// DTO for payment statistics
-/// </summary>
+/// <summary> DTO for payment statistics </summary>
 public class PaymentStatisticsDto {
   public decimal TotalRevenue { get; set; }
 
@@ -14,9 +12,9 @@ public class PaymentStatisticsDto {
 
   public decimal AverageTransactionAmount { get; set; }
 
-  public Dictionary<string, decimal> RevenueByMethod { get; set; } = new();
+  public Dictionary<string, decimal> RevenueByMethod { get; set; } = new Dictionary<string, decimal>();
 
-  public Dictionary<string, int> TransactionsByStatus { get; set; } = new();
+  public Dictionary<string, int> TransactionsByStatus { get; set; } = new Dictionary<string, int>();
 
   public DateTime? FromDate { get; set; }
 

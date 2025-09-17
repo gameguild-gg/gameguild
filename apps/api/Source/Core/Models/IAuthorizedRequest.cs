@@ -10,12 +10,12 @@ public interface IAuthorizedRequest {
   /// <summary>
   /// Required roles for this request
   /// </summary>
-  string[]? RequiredRoles { get; }
+  string[ ]? RequiredRoles { get; }
 
   /// <summary>
   /// Required permissions for this request
   /// </summary>
-  string[]? RequiredPermissions { get; }
+  string[ ]? RequiredPermissions { get; }
 
   /// <summary>
   /// Custom authorization logic

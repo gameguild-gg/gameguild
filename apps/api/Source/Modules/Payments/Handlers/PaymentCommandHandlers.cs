@@ -1,24 +1,22 @@
+using System.Text.Json;
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Programs;
 
 
 namespace GameGuild.Modules.Payments;
 
-/// <summary>
-/// Handler for creating payment intents
-/// </summary>
-public class CreatePaymentCommandHandler : CQRS.IRequestHandler<CreatePaymentCommand, CreatePaymentResult> {
+/// <summary> Handler for creating payment intents </summary>
+public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand, CreatePaymentResult> {
   private readonly ApplicationDbContext _context;
-  private readonly IUserContext _userContext;
-  private readonly ITenantContext _tenantContext;
+
   private readonly ILogger<CreatePaymentCommandHandler> _logger;
 
-  public CreatePaymentCommandHandler(
-    ApplicationDbContext context,
-    IUserContext userContext,
-    ITenantContext tenantContext,
-    ILogger<CreatePaymentCommandHandler> logger
-  ) {
+  private readonly ITenantContext _tenantContext;
+
+  private readonly IUserContext _userContext;
+
+  public CreatePaymentCommandHandler(ApplicationDbContext context, IUserContext userContext, ITenantContext tenantContext, ILogger<CreatePaymentCommandHandler> logger) {
     _context = context;
     _userContext = userContext;
     _tenantContext = tenantContext;
@@ -32,8 +30,7 @@ public class CreatePaymentCommandHandler : CQRS.IRequestHandler<CreatePaymentCom
 
       // Validate product exists if specified
       if (request.ProductId.HasValue) {
-        var productExists = await _context.Products
-                                          .AnyAsync(p => p.Id == request.ProductId.Value, cancellationToken);
+        var productExists = await _context.Products.AnyAsync(p => p.Id == request.ProductId.Value, cancellationToken);
 
         if (!productExists) { return new CreatePaymentResult { Success = false, Error = "Product not found" }; }
       }
@@ -46,7 +43,7 @@ public class CreatePaymentCommandHandler : CQRS.IRequestHandler<CreatePaymentCom
         Currency = request.Currency,
         Method = request.Method,
         Status = PaymentStatus.Pending,
-        Metadata = System.Text.Json.JsonSerializer.Serialize(request.Metadata ?? new Dictionary<string, object>()),
+        Metadata = JsonSerializer.Serialize(request.Metadata ?? new Dictionary<string, object>()),
       };
 
       _context.Payments.Add(payment);
@@ -55,9 +52,7 @@ public class CreatePaymentCommandHandler : CQRS.IRequestHandler<CreatePaymentCom
       _logger.LogInformation("Payment intent created: {PaymentId} for user {UserId}", payment.Id, request.UserId);
 
       return new CreatePaymentResult {
-        Success = true,
-        Payment = payment,
-        ClientSecret = $"pi_{payment.Id}_secret", // Placeholder for actual payment provider integration
+        Success = true, Payment = payment, ClientSecret = $"pi_{payment.Id}_secret", // Placeholder for actual payment provider integration
       };
     }
     catch (Exception ex) {
@@ -68,19 +63,15 @@ public class CreatePaymentCommandHandler : CQRS.IRequestHandler<CreatePaymentCom
   }
 }
 
-/// <summary>
-/// Handler for processing payments
-/// </summary>
-public class ProcessPaymentCommandHandler : CQRS.IRequestHandler<ProcessPaymentCommand, ProcessPaymentResult> {
+/// <summary> Handler for processing payments </summary>
+public class ProcessPaymentCommandHandler : IRequestHandler<ProcessPaymentCommand, ProcessPaymentResult> {
   private readonly ApplicationDbContext _context;
-  private readonly CQRS.IMediator _mediator;
+
   private readonly ILogger<ProcessPaymentCommandHandler> _logger;
 
-  public ProcessPaymentCommandHandler(
-    ApplicationDbContext context,
-    CQRS.IMediator mediator,
-    ILogger<ProcessPaymentCommandHandler> logger
-  ) {
+  private readonly IMediator _mediator;
+
+  public ProcessPaymentCommandHandler(ApplicationDbContext context, IMediator mediator, ILogger<ProcessPaymentCommandHandler> logger) {
     _context = context;
     _mediator = mediator;
     _logger = logger;
@@ -88,8 +79,7 @@ public class ProcessPaymentCommandHandler : CQRS.IRequestHandler<ProcessPaymentC
 
   public async Task<ProcessPaymentResult> Handle(ProcessPaymentCommand request, CancellationToken cancellationToken) {
     try {
-      var payment = await _context.Payments
-                                  .FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
+      var payment = await _context.Payments.FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
 
       if (payment == null) { return new ProcessPaymentResult { Success = false, Error = "Payment not found" }; }
 
@@ -106,7 +96,7 @@ public class ProcessPaymentCommandHandler : CQRS.IRequestHandler<ProcessPaymentC
         payment.MarkAsSuccessful();
       }
 
-      if (request.ProviderMetadata != null) { payment.Metadata = System.Text.Json.JsonSerializer.Serialize(request.ProviderMetadata); }
+      if (request.ProviderMetadata != null) { payment.Metadata = JsonSerializer.Serialize(request.ProviderMetadata); }
 
       await _context.SaveChangesAsync(cancellationToken);
 
@@ -115,21 +105,18 @@ public class ProcessPaymentCommandHandler : CQRS.IRequestHandler<ProcessPaymentC
 
       if (payment.Status == PaymentStatus.Completed && payment.ProductId.HasValue) {
         // Get programs associated with the product
-        var productPrograms = await _context.ProductPrograms
-                                            .Include(pp => pp.Program)
-                                            .Where(pp => pp.ProductId == payment.ProductId.Value && pp.Program.DeletedAt == null)
-                                            .ToListAsync(cancellationToken);
+        var productPrograms = await _context.ProductPrograms.Include(pp => pp.Program).Where(pp => pp.ProductId == payment.ProductId.Value && pp.Program.DeletedAt == null).ToListAsync(cancellationToken);
 
-        if (productPrograms.Any()) { // Removed payment.UserId.HasValue since UserId is not nullable
+        if (productPrograms.Any()) {
+          // Removed payment.UserId.HasValue since UserId is not nullable
           foreach (var productProgram in productPrograms) {
             // Check if user is not already enrolled
-            var existingEnrollment = await _context.ProgramUsers
-                                                   .AnyAsync(
-                                                     pu => pu.ProgramId == productProgram.ProgramId &&
-                                                           pu.UserId == payment.UserId && // Fixed: UserId is not nullable, no .Value needed
-                                                           pu.IsActive,
-                                                     cancellationToken
-                                                   );
+            var existingEnrollment = await _context.ProgramUsers.AnyAsync(
+                                       pu => pu.ProgramId == productProgram.ProgramId &&
+                                             pu.UserId == payment.UserId && // Fixed: UserId is not nullable, no .Value needed
+                                             pu.IsActive,
+                                       cancellationToken
+                                     );
 
             if (!existingEnrollment && productProgram.Program.IsEnrollmentOpen) {
               var enrollment = new ProgramUser {
@@ -143,12 +130,7 @@ public class ProcessPaymentCommandHandler : CQRS.IRequestHandler<ProcessPaymentC
               _context.ProgramUsers.Add(enrollment);
               autoEnrollTriggered = true;
 
-              _logger.LogInformation(
-                "Auto-enrolled user {UserId} in program {ProgramId} via payment {PaymentId}",
-                payment.UserId,
-                productProgram.ProgramId,
-                payment.Id
-              );
+              _logger.LogInformation("Auto-enrolled user {UserId} in program {ProgramId} via payment {PaymentId}", payment.UserId, productProgram.ProgramId, payment.Id);
             }
           }
 
@@ -169,19 +151,15 @@ public class ProcessPaymentCommandHandler : CQRS.IRequestHandler<ProcessPaymentC
   }
 }
 
-/// <summary>
-/// Handler for refunding payments
-/// </summary>
-public class RefundPaymentCommandHandler : CQRS.IRequestHandler<RefundPaymentCommand, RefundPaymentResult> {
+/// <summary> Handler for refunding payments </summary>
+public class RefundPaymentCommandHandler : IRequestHandler<RefundPaymentCommand, RefundPaymentResult> {
   private readonly ApplicationDbContext _context;
-  private readonly IUserContext _userContext;
+
   private readonly ILogger<RefundPaymentCommandHandler> _logger;
 
-  public RefundPaymentCommandHandler(
-    ApplicationDbContext context,
-    IUserContext userContext,
-    ILogger<RefundPaymentCommandHandler> logger
-  ) {
+  private readonly IUserContext _userContext;
+
+  public RefundPaymentCommandHandler(ApplicationDbContext context, IUserContext userContext, ILogger<RefundPaymentCommandHandler> logger) {
     _context = context;
     _userContext = userContext;
     _logger = logger;
@@ -189,9 +167,7 @@ public class RefundPaymentCommandHandler : CQRS.IRequestHandler<RefundPaymentCom
 
   public async Task<RefundPaymentResult> Handle(RefundPaymentCommand request, CancellationToken cancellationToken) {
     try {
-      var payment = await _context.Payments
-                                  .Include(p => p.Refunds)
-                                  .FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
+      var payment = await _context.Payments.Include(p => p.Refunds).FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
 
       if (payment == null) { return new RefundPaymentResult { Success = false, Error = "Payment not found" }; }
 
@@ -200,19 +176,12 @@ public class RefundPaymentCommandHandler : CQRS.IRequestHandler<RefundPaymentCom
 
       // Calculate refund amount
       var totalRefunded = payment.Refunds.Where(r => r.Status == RefundStatus.Succeeded).Sum(r => r.RefundAmount);
-      var refundAmount = request.RefundAmount ?? (payment.Amount - totalRefunded);
+      var refundAmount = request.RefundAmount ?? payment.Amount - totalRefunded;
 
       if (refundAmount <= 0 || totalRefunded + refundAmount > payment.Amount) { return new RefundPaymentResult { Success = false, Error = "Invalid refund amount" }; }
 
       // Create refund record
-      var refund = new PaymentRefund {
-        PaymentId = payment.Id,
-        ExternalRefundId = $"rfnd_{Guid.NewGuid():N}",
-        RefundAmount = refundAmount,
-        Reason = request.Reason,
-        Status = RefundStatus.Succeeded,
-        ProcessedAt = DateTime.UtcNow,
-      };
+      var refund = new PaymentRefund { PaymentId = payment.Id, ExternalRefundId = $"rfnd_{Guid.NewGuid():N}", RefundAmount = refundAmount, Reason = request.Reason, Status = RefundStatus.Succeeded, ProcessedAt = DateTime.UtcNow };
 
       _context.PaymentRefunds.Add(refund);
 
@@ -234,19 +203,15 @@ public class RefundPaymentCommandHandler : CQRS.IRequestHandler<RefundPaymentCom
   }
 }
 
-/// <summary>
-/// Handler for cancelling payments
-/// </summary>
-public class CancelPaymentCommandHandler : CQRS.IRequestHandler<CancelPaymentCommand, CancelPaymentResult> {
+/// <summary> Handler for cancelling payments </summary>
+public class CancelPaymentCommandHandler : IRequestHandler<CancelPaymentCommand, CancelPaymentResult> {
   private readonly ApplicationDbContext _context;
-  private readonly IUserContext _userContext;
+
   private readonly ILogger<CancelPaymentCommandHandler> _logger;
 
-  public CancelPaymentCommandHandler(
-    ApplicationDbContext context,
-    IUserContext userContext,
-    ILogger<CancelPaymentCommandHandler> logger
-  ) {
+  private readonly IUserContext _userContext;
+
+  public CancelPaymentCommandHandler(ApplicationDbContext context, IUserContext userContext, ILogger<CancelPaymentCommandHandler> logger) {
     _context = context;
     _userContext = userContext;
     _logger = logger;
@@ -254,36 +219,28 @@ public class CancelPaymentCommandHandler : CQRS.IRequestHandler<CancelPaymentCom
 
   public async Task<CancelPaymentResult> Handle(CancelPaymentCommand request, CancellationToken cancellationToken) {
     try {
-      var payment = await _context.Payments
-                                  .FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
+      var payment = await _context.Payments.FirstOrDefaultAsync(p => p.Id == request.PaymentId, cancellationToken);
 
-      if (payment == null) {
-        return new CancelPaymentResult { Success = false, Error = "Payment not found" };
-      }
+      if (payment == null) { return new CancelPaymentResult { Success = false, Error = "Payment not found" }; }
 
       // Check authorization
-      if (!_userContext.IsInRole("Admin") && payment.UserId != _userContext.UserId) {
-        return new CancelPaymentResult { Success = false, Error = "Unauthorized to cancel this payment" };
-      }
+      if (!_userContext.IsInRole("Admin") && payment.UserId != _userContext.UserId) { return new CancelPaymentResult { Success = false, Error = "Unauthorized to cancel this payment" }; }
 
       // Only allow cancellation of pending payments
-      if (payment.Status != PaymentStatus.Pending) {
-        return new CancelPaymentResult { Success = false, Error = "Only pending payments can be cancelled" };
-      }
+      if (payment.Status != PaymentStatus.Pending) { return new CancelPaymentResult { Success = false, Error = "Only pending payments can be cancelled" }; }
 
       // Update payment status to cancelled
       payment.Status = PaymentStatus.Cancelled;
       payment.UpdatedAt = DateTime.UtcNow;
 
       // Add cancellation metadata
-      var metadata = string.IsNullOrEmpty(payment.Metadata) ? new Dictionary<string, object>() :
-                     System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(payment.Metadata) ?? new Dictionary<string, object>();
+      var metadata = string.IsNullOrEmpty(payment.Metadata) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(payment.Metadata) ?? new Dictionary<string, object>();
 
       metadata["cancellation_reason"] = request.Reason;
       metadata["cancelled_by"] = request.CancelledBy.ToString();
       metadata["cancelled_at"] = DateTime.UtcNow.ToString("O");
 
-      payment.Metadata = System.Text.Json.JsonSerializer.Serialize(metadata);
+      payment.Metadata = JsonSerializer.Serialize(metadata);
 
       await _context.SaveChangesAsync(cancellationToken);
 

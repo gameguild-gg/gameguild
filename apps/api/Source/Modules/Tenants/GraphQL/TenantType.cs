@@ -1,8 +1,6 @@
 namespace GameGuild.Modules.Tenants;
 
-/// <summary>
-/// GraphQL type for Tenant entity
-/// </summary>
+/// <summary> GraphQL type for Tenant entity </summary>
 public class TenantType : ObjectType<Tenant> {
   protected override void Configure(IObjectTypeDescriptor<Tenant> descriptor) {
     descriptor.Name("Tenant");
@@ -18,21 +16,13 @@ public class TenantType : ObjectType<Tenant> {
     descriptor.Field(t => t.IsActive).Type<NonNullType<BooleanType>>().Description("Whether the tenant is active");
 
     // BaseEntity fields
-    descriptor.Field(t => t.CreatedAt)
-              .Type<NonNullType<DateTimeType>>()
-              .Description("The date and time when the tenant was created");
+    descriptor.Field(t => t.CreatedAt).Type<NonNullType<DateTimeType>>().Description("The date and time when the tenant was created");
 
-    descriptor.Field(t => t.UpdatedAt)
-              .Type<DateTimeType>()
-              .Description("The date and time when the tenant was last updated");
+    descriptor.Field(t => t.UpdatedAt).Type<DateTimeType>().Description("The date and time when the tenant was last updated");
 
-    descriptor.Field(t => t.Version)
-              .Type<NonNullType<IntType>>()
-              .Description("The version number for optimistic concurrency control");
+    descriptor.Field(t => t.Version).Type<NonNullType<IntType>>().Description("The version number for optimistic concurrency control");
 
     // Navigation properties
-    descriptor.Field(t => t.TenantPermissions)
-              .Type<ListType<TenantPermissionType>>()
-              .Description("The users and their permissions associated with this tenant");
+    descriptor.Field(t => t.TenantPermissions).Type<ListType<TenantPermissionType>>().Description("The users and their permissions associated with this tenant");
   }
 }

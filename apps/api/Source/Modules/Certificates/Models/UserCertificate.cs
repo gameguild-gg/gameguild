@@ -15,66 +15,44 @@ namespace GameGuild.Modules.Certificates;
 [Index(nameof(Status))]
 [Index(nameof(IssuedAt))]
 public class UserCertificate : EntityBase {
-  [Required][ForeignKey(nameof(User))] public Guid UserId { get; set; }
+  [Required] [ForeignKey(nameof(User))] public Guid UserId { get; set; }
 
-  [Required]
-  [ForeignKey(nameof(Certificate))]
-  public Guid CertificateId { get; set; }
+  [Required] [ForeignKey(nameof(Certificate))] public Guid CertificateId { get; set; }
 
-  /// <summary>
-  /// Program associated with this certificate issuance (null for non-program certificates)
-  /// </summary>
+  /// <summary> Program associated with this certificate issuance (null for non-program certificates) </summary>
   public Guid? ProgramId { get; set; }
 
-  /// <summary>
-  /// Product associated with this certificate issuance (null for non-product certificates)
-  /// </summary>
+  /// <summary> Product associated with this certificate issuance (null for non-product certificates) </summary>
   public Guid? ProductId { get; set; }
 
-  /// <summary>
-  /// Program user record for program-based certificates
-  /// </summary>
+  /// <summary> Program user record for program-based certificates </summary>
   public Guid? ProgramUserId { get; set; }
 
-  /// <summary>
-  /// Unique verification code for this certificate
-  /// </summary>
+  /// <summary> Unique verification code for this certificate </summary>
   [Required]
   [MaxLength(100)]
   public string VerificationCode { get; set; } = string.Empty;
 
-  /// <summary>
-  /// Final grade or score achieved for this certificate
-  /// </summary>
+  /// <summary> Final grade or score achieved for this certificate </summary>
   [Column(TypeName = "decimal(5,2)")]
   public decimal? FinalGrade { get; set; }
 
-  /// <summary>
-  /// Additional metadata about the certificate issuance
-  /// </summary>
+  /// <summary> Additional metadata about the certificate issuance </summary>
   [MaxLength(1000)]
   public string? Metadata { get; set; }
 
   public CertificateStatus Status { get; set; } = CertificateStatus.Active;
 
-  /// <summary>
-  /// Date when the certificate was issued
-  /// </summary>
+  /// <summary> Date when the certificate was issued </summary>
   public DateTime IssuedAt { get; set; }
 
-  /// <summary>
-  /// Date when the certificate expires (null if never expires)
-  /// </summary>
+  /// <summary> Date when the certificate expires (null if never expires) </summary>
   public DateTime? ExpiresAt { get; set; }
 
-  /// <summary>
-  /// Date when the certificate was revoked (null if not revoked)
-  /// </summary>
+  /// <summary> Date when the certificate was revoked (null if not revoked) </summary>
   public DateTime? RevokedAt { get; set; }
 
-  /// <summary>
-  /// Reason for revocation (null if not revoked)
-  /// </summary>
+  /// <summary> Reason for revocation (null if not revoked) </summary>
   [MaxLength(500)]
   public string? RevocationReason { get; set; }
 

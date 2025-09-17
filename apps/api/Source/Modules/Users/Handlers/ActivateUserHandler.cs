@@ -1,16 +1,11 @@
+using GameGuild.CQRS;
 using GameGuild.Database;
 
 
 namespace GameGuild.Modules.Users;
 
-/// <summary>
-/// Handler for activating user
-/// </summary>
-public class ActivateUserHandler(
-  ApplicationDbContext context,
-  ILogger<ActivateUserHandler> logger,
-  CQRS.IMediator mediator
-) : CQRS.IRequestHandler<ActivateUserCommand, bool> {
+/// <summary> Handler for activating user </summary>
+public class ActivateUserHandler(ApplicationDbContext context, ILogger<ActivateUserHandler> logger, IMediator mediator) : IRequestHandler<ActivateUserCommand, bool> {
   public async Task<bool> Handle(ActivateUserCommand request, CancellationToken cancellationToken) {
     var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
 

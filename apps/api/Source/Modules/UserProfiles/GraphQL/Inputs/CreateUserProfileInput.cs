@@ -1,8 +1,6 @@
 namespace GameGuild.Modules.UserProfiles.Inputs;
 
-/// <summary>
-/// Input for creating a user profile
-/// </summary>
+/// <summary> Input for creating a user profile </summary>
 public class CreateUserProfileInput {
   public string? GivenName { get; set; }
 

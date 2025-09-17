@@ -26,10 +26,7 @@ public class UserProfileType : ObjectType<UserProfile> {
     descriptor.Field(f => f.Description).Description("A description of the user profile");
 
     // Add bio alias for description to match test expectations
-    descriptor.Field("bio")
-              .Resolve(ctx => ctx.Parent<UserProfile>().Description)
-              .Type<StringType>()
-              .Description("User's biography (alias for description)");
+    descriptor.Field("bio").Resolve(ctx => ctx.Parent<UserProfile>().Description).Type<StringType>().Description("User's biography (alias for description)");
 
     // Add avatarUrl field (placeholder for now since it's not in the entity)
     descriptor.Field("avatarUrl")

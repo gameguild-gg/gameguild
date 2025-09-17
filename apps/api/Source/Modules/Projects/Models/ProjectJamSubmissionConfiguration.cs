@@ -13,31 +13,21 @@ internal sealed class ProjectJamSubmissionConfiguration : IEntityTypeConfigurati
 
     // Configure the relationship with Project
     // This explicitly maps to the JamSubmissions collection on Project
-    builder.HasOne(pjs => pjs.Project)
-           .WithMany(p => p.JamSubmissions)
-           .HasForeignKey(pjs => pjs.ProjectId)
-           .OnDelete(DeleteBehavior.Cascade);
+    builder.HasOne(pjs => pjs.Project).WithMany(p => p.JamSubmissions).HasForeignKey(pjs => pjs.ProjectId).OnDelete(DeleteBehavior.Cascade);
 
     // Configure unique constraint
-    builder.HasIndex(pjs => new { pjs.ProjectId, pjs.JamId })
-           .IsUnique()
-           .HasDatabaseName("IX_ProjectJamSubmissions_Project_Jam");
+    builder.HasIndex(pjs => new { pjs.ProjectId, pjs.JamId }).IsUnique().HasDatabaseName("IX_ProjectJamSubmissions_Project_Jam");
 
     // Additional indexes
-    builder.HasIndex(pjs => pjs.JamId)
-           .HasDatabaseName("IX_ProjectJamSubmissions_Jam");
+    builder.HasIndex(pjs => pjs.JamId).HasDatabaseName("IX_ProjectJamSubmissions_Jam");
 
-    builder.HasIndex(pjs => pjs.SubmittedAt)
-           .HasDatabaseName("IX_ProjectJamSubmissions_Date");
+    builder.HasIndex(pjs => pjs.SubmittedAt).HasDatabaseName("IX_ProjectJamSubmissions_Date");
 
-    builder.HasIndex(pjs => pjs.FinalScore)
-           .HasDatabaseName("IX_ProjectJamSubmissions_Score");
+    builder.HasIndex(pjs => pjs.FinalScore).HasDatabaseName("IX_ProjectJamSubmissions_Score");
 
     // Configure properties
-    builder.Property(pjs => pjs.SubmittedAt)
-           .IsRequired();
+    builder.Property(pjs => pjs.SubmittedAt).IsRequired();
 
-    builder.Property(pjs => pjs.IsEligible)
-           .HasDefaultValue(true);
+    builder.Property(pjs => pjs.IsEligible).HasDefaultValue(true);
   }
 }

@@ -4,9 +4,7 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.Users.Validators;
 
-/// <summary>
-/// FluentValidation validator for CreateUserCommand
-/// </summary>
+/// <summary> FluentValidation validator for CreateUserCommand </summary>
 public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand> {
   private readonly ApplicationDbContext _context;
 
@@ -31,13 +29,8 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand> {
       .MustAsync(BeUniqueEmail)
       .WithMessage("Email address is already in use");
 
-    RuleFor(x => x.InitialBalance)
-      .GreaterThanOrEqualTo(0)
-      .WithMessage("Initial balance cannot be negative");
+    RuleFor(x => x.InitialBalance).GreaterThanOrEqualTo(0).WithMessage("Initial balance cannot be negative");
   }
 
-  private async Task<bool> BeUniqueEmail(string email, CancellationToken cancellationToken) {
-    return !await _context.Users
-                          .AnyAsync(x => x.Email == email && x.DeletedAt == null, cancellationToken);
-  }
+  private async Task<bool> BeUniqueEmail(string email, CancellationToken cancellationToken) { return !await _context.Users.AnyAsync(x => x.Email == email && x.DeletedAt == null, cancellationToken); }
 }

@@ -1,8 +1,6 @@
 namespace GameGuild.Modules.Certificates;
 
-/// <summary>
-/// Interface for certificate management services
-/// </summary>
+/// <summary> Interface for certificate management services </summary>
 public interface ICertificateService {
   Task<Certificate> CreateCertificateAsync(Certificate certificate);
 

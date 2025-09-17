@@ -3,30 +3,21 @@ using Serilog.Context;
 
 namespace GameGuild.Core.Infrastructure.Middleware;
 
-/// <summary>
-/// Middleware for adding request context to logs
-/// Adds correlation ID for request tracing across services
-/// </summary>
+/// <summary> Middleware for adding request context to logs Adds correlation ID for request tracing across services </summary>
 public class RequestContextLoggingMiddleware {
-    private readonly RequestDelegate _next;
-    private const string CorrelationIdHeaderName = "Correlation-Id";
+  private const string CorrelationIdHeaderName = "Correlation-Id";
 
-    public RequestContextLoggingMiddleware(RequestDelegate next) {
-        _next = next;
-    }
+  private readonly RequestDelegate _next;
 
-    public Task Invoke(HttpContext context) {
-        using (LogContext.PushProperty("CorrelationId", GetCorrelationId(context))) {
-            return _next.Invoke(context);
-        }
-    }
+  public RequestContextLoggingMiddleware(RequestDelegate next) { _next = next; }
 
-    private static string GetCorrelationId(HttpContext context) {
-        context.Request.Headers.TryGetValue(
-          CorrelationIdHeaderName,
-          out var correlationId
-        );
+  public Task Invoke(HttpContext context) {
+    using (LogContext.PushProperty("CorrelationId", GetCorrelationId(context))) { return _next.Invoke(context); }
+  }
 
-        return correlationId.FirstOrDefault() ?? context.TraceIdentifier;
-    }
+  private static string GetCorrelationId(HttpContext context) {
+    context.Request.Headers.TryGetValue(CorrelationIdHeaderName, out var correlationId);
+
+    return correlationId.FirstOrDefault() ?? context.TraceIdentifier;
+  }
 }

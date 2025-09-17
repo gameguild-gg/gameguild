@@ -23,38 +23,27 @@ public class ProgramFeedbackSubmission : EntityBase {
 
   public Guid ProgramUserId { get; set; }
 
-  /// <summary>
-  /// Feedback responses stored as JSON
-  /// Structure: {questionId: response, questionId: response, ...}
-  /// </summary>
+  /// <summary> Feedback responses stored as JSON Structure: {questionId: response, questionId: response, ...} </summary>
   [Column(TypeName = "jsonb")]
   public string FeedbackData { get; set; } = "{}";
 
-  /// <summary>
-  /// Overall satisfaction rating (1-5)
-  /// </summary>
+  /// <summary> Overall satisfaction rating (1-5) </summary>
   [Column(TypeName = "decimal(2,1)")]
   public decimal? OverallRating { get; set; }
 
-  /// <summary>
-  /// General comments about the program
-  /// </summary>
+  /// <summary> General comments about the program </summary>
   public string? Comments { get; set; }
 
-  /// <summary>
-  /// Whether the user would recommend this program
-  /// </summary>
+  /// <summary> Whether the user would recommend this program </summary>
   public bool? WouldRecommend { get; set; }
 
-  /// <summary>
-  /// Date when feedback was submitted
-  /// </summary>
+  /// <summary> Date when feedback was submitted </summary>
   public DateTime SubmittedAt { get; set; }
 
   // Navigation properties
   public virtual User User { get; set; } = null!;
 
-  public virtual GameGuild.Modules.Programs.Program Program { get; set; } = null!;
+  public virtual Programs.Program Program { get; set; } = null!;
 
   public virtual Product? Product { get; set; }
 
@@ -77,9 +66,7 @@ public class ProgramFeedbackSubmission : EntityBase {
   }
 
   public void SetFeedbackResponse<T>(string questionId, T value) {
-    var data = string.IsNullOrEmpty(FeedbackData)
-                 ? new Dictionary<string, object>()
-                 : JsonSerializer.Deserialize<Dictionary<string, object>>(FeedbackData) ?? new Dictionary<string, object>();
+    var data = string.IsNullOrEmpty(FeedbackData) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(FeedbackData) ?? new Dictionary<string, object>();
 
     data[questionId] = value!;
     FeedbackData = JsonSerializer.Serialize(data);

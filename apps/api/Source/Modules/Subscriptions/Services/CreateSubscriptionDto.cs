@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Subscriptions.Services;
 
-/// <summary>
-/// DTO for creating a new subscription
-/// </summary>
+/// <summary> DTO for creating a new subscription </summary>
 public class CreateSubscriptionDto {
   public Guid SubscriptionPlanId { get; set; }
 

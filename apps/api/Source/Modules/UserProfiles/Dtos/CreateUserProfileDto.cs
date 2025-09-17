@@ -1,17 +1,11 @@
 namespace GameGuild.Modules.UserProfiles;
 
 public class CreateUserProfileDto {
-  [Required]
-  [StringLength(100, MinimumLength = 1)]
-  public string? GivenName { get; set; }
+  [Required] [StringLength(100, MinimumLength = 1)] public string? GivenName { get; set; }
 
-  [Required]
-  [StringLength(100, MinimumLength = 1)]
-  public string? FamilyName { get; set; }
+  [Required] [StringLength(100, MinimumLength = 1)] public string? FamilyName { get; set; }
 
-  [Required]
-  [StringLength(100, MinimumLength = 2)]
-  public string? DisplayName { get; set; }
+  [Required] [StringLength(100, MinimumLength = 2)] public string? DisplayName { get; set; }
 
   [StringLength(200)] public string? Title { get; set; }
 

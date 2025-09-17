@@ -1,23 +1,20 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Credentials.Commands;
 using GameGuild.Modules.Credentials.Notifications;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Credentials.Handlers;
 
-/// <summary>
-/// Handler for creating credential command using CQRS pattern
-/// </summary>
+/// <summary> Handler for creating credential command using CQRS pattern </summary>
 public class CreateCredentialCommandHandler : IRequestHandler<CreateCredentialCommand, Credential> {
   private readonly ICredentialService _credentialService;
+
   private readonly ILogger<CreateCredentialCommandHandler> _logger;
+
   private readonly IMediator _mediator;
 
-  public CreateCredentialCommandHandler(
-    ICredentialService credentialService,
-    ILogger<CreateCredentialCommandHandler> logger,
-    IMediator mediator
-  ) {
+  public CreateCredentialCommandHandler(ICredentialService credentialService, ILogger<CreateCredentialCommandHandler> logger, IMediator mediator) {
     _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService));
     _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
@@ -28,7 +25,7 @@ public class CreateCredentialCommandHandler : IRequestHandler<CreateCredentialCo
 
     try {
       // Verify that the user exists
-      var getUserQuery = new Users.GetUserByIdQuery { UserId = request.UserId };
+      var getUserQuery = new GetUserByIdQuery { UserId = request.UserId };
       var user = await _mediator.Send(getUserQuery, cancellationToken);
 
       if (user == null) { throw new ArgumentException($"User with ID {request.UserId} not found"); }

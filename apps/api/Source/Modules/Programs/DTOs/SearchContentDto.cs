@@ -1,12 +1,10 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-/// <summary>
-/// DTO for content search operations
-/// </summary>
+/// <summary> DTO for content search operations </summary>
 public class SearchContentDto {
   [Required] public Guid ProgramId { get; set; }
 
-  [Required][StringLength(255)] public string SearchTerm { get; set; } = string.Empty;
+  [Required] [StringLength(255)] public string SearchTerm { get; set; } = string.Empty;
 
   public ProgramContentType? Type { get; set; }
 

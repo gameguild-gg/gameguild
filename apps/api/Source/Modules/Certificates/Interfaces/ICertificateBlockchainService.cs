@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.Certificates;
 
-/// <summary>
-/// Interface for blockchain anchoring services
-/// </summary>
+/// <summary> Interface for blockchain anchoring services </summary>
 public interface ICertificateBlockchainService {
   Task<CertificateBlockchainAnchor> AnchorCertificateAsync(Guid userCertificateId, string blockchainNetwork);
 

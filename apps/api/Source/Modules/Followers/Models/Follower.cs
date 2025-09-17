@@ -4,13 +4,9 @@ using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Followers;
 
-/// <summary>
-/// Represents a follower of a followable entity.
-/// </summary>
+/// <summary> Represents a follower of a followable entity. </summary>
 public class Follower : EntityBase, ITenantable {
-  /// <summary>
-  /// The user who is following
-  /// </summary>
+  /// <summary> The user who is following </summary>
   public virtual User User { get; set; } = null!;
 
   public Guid UserId { get; set; }
@@ -18,7 +14,5 @@ public class Follower : EntityBase, ITenantable {
   // Optional: Tenant property for ITenantable (hide base implementation)
   public new virtual Tenant? Tenant { get; set; }
 
-  public new bool IsGlobal {
-    get => Tenant == null;
-  }
+  public new bool IsGlobal { get => Tenant == null; }
 }

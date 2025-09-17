@@ -30,18 +30,12 @@ public class UserType : ObjectType<User> {
     descriptor.Field(u => u.IsActive).Description("Indicates whether the user is active.");
 
     // Profile relationship
-    descriptor.Field("profile")
-              .Type<UserProfileType>()
-              .Description("The user's profile information.")
-              .ResolveWith<UserResolvers>(r => r.GetProfileAsync(default!, default!));
+    descriptor.Field("profile").Type<UserProfileType>().Description("The user's profile information.").ResolveWith<UserResolvers>(r => r.GetProfileAsync(default!, default!));
   }
 }
 
 public class UserResolvers {
-  public async Task<UserProfile?> GetProfileAsync(
-    [Parent] User user,
-    [Service] CQRS.IMediator mediator
-  ) {
+  public async Task<UserProfile?> GetProfileAsync([Parent] User user, [Service] CQRS.IMediator mediator) {
     var query = new GetUserProfileByUserIdQuery { UserId = user.Id, IncludeDeleted = false };
 
     var result = await mediator.Send(query);

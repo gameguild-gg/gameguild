@@ -4,24 +4,14 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// Handler for creating user profile with business logic and validation
-/// </summary>
-public class CreateUserProfileHandler(
-  ApplicationDbContext context,
-  ILogger<CreateUserProfileHandler> logger,
-  IDomainEventPublisher eventPublisher
-) : ICommandHandler<CreateUserProfileCommand, Result<UserProfile>> {
+/// <summary> Handler for creating user profile with business logic and validation </summary>
+public class CreateUserProfileHandler(ApplicationDbContext context, ILogger<CreateUserProfileHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<CreateUserProfileCommand, Result<UserProfile>> {
   public async Task<Result<UserProfile>> Handle(CreateUserProfileCommand request, CancellationToken cancellationToken) {
     try {
       // Check if user profile already exists for this user
-      var existingProfile = await context.Resources.OfType<UserProfile>()
-                                         .FirstOrDefaultAsync(up => up.Id == request.UserId && up.DeletedAt == null, cancellationToken);
+      var existingProfile = await context.Resources.OfType<UserProfile>().FirstOrDefaultAsync(up => up.Id == request.UserId && up.DeletedAt == null, cancellationToken);
 
-      if (existingProfile != null)
-        return Result.Failure<UserProfile>(
-          Error.Conflict("UserProfile.AlreadyExists", $"User profile already exists for user {request.UserId}")
-        );
+      if (existingProfile != null) return Result.Failure<UserProfile>(Error.Conflict("UserProfile.AlreadyExists", $"User profile already exists for user {request.UserId}"));
 
       // Create new user profile
       var userProfile = new UserProfile {
@@ -40,14 +30,7 @@ public class CreateUserProfileHandler(
 
       // Publish domain event
       await eventPublisher.PublishAsync(
-        new UserProfileCreatedEvent(
-          userProfile.Id,
-          request.UserId,
-          userProfile.DisplayName ?? string.Empty,
-          userProfile.GivenName ?? string.Empty,
-          userProfile.FamilyName ?? string.Empty,
-          userProfile.CreatedAt
-        ),
+        new UserProfileCreatedEvent(userProfile.Id, request.UserId, userProfile.DisplayName ?? string.Empty, userProfile.GivenName ?? string.Empty, userProfile.FamilyName ?? string.Empty, userProfile.CreatedAt),
         cancellationToken
       );
 
@@ -56,9 +39,7 @@ public class CreateUserProfileHandler(
     catch (Exception ex) {
       logger.LogError(ex, "Error creating user profile for user {UserId}", request.UserId);
 
-      return Result.Failure<UserProfile>(
-        Error.Failure("UserProfile.CreateFailed", "Failed to create user profile")
-      );
+      return Result.Failure<UserProfile>(Error.Failure("UserProfile.CreateFailed", "Failed to create user profile"));
     }
   }
 }

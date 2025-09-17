@@ -1,24 +1,15 @@
 using System.Reflection;
-using GameGuild.Core.Domain.Identity;
-using GameGuild.Core.Domain.Infrastructure;
-using GameGuild.Core.Domain.Permissions;
-using GameGuild.Core.Domain.Services;
-using GameGuild.Core.Infrastructure.External;
-using GameGuild.Core.Infrastructure.Identity;
-using GameGuild.Core.Infrastructure.Permissions;
 using GameGuild.CQRS;
 
 
 namespace GameGuild;
 
 public static class DependencyInjection {
-  /// <summary>
-  /// Adds the presentation layer services with custom options.
-  /// </summary>
-  /// <param name="services">The service collection</param>
-  /// <param name="configuration">The application configuration</param>
-  /// <param name="options">Custom presentation layer options</param>
-  /// <returns>The service collection for chaining</returns>
+  /// <summary> Adds the presentation layer services with custom options. </summary>
+  /// <param name="services"> The service collection </param>
+  /// <param name="configuration"> The application configuration </param>
+  /// <param name="options"> Custom presentation layer options </param>
+  /// <returns> The service collection for chaining </returns>
   public static IServiceCollection AddPresentationLayer(this IServiceCollection services, IConfiguration configuration, PresentationLayerOptions? options = null) {
     options ??= PresentationLayerOptionsBuilder.Create(configuration);
 
@@ -46,6 +37,7 @@ public static class DependencyInjection {
     if (options.EnableResponseCompression) services.SetupResponseCompression(configuration, options.ResponseCompression);
 
     // 7. CORS (Cross-Origin Resource Sharing)
+    // TODO: CF-Connecting-IP Cloudflare header support.
     if (options.EnableCors) services.SetupCors(configuration, options.Cors);
 
     // 8. Authentication (identify user, and tenant)
@@ -100,25 +92,15 @@ public static class DependencyInjection {
     // 21. OpenAPI/Swagger
     if (options.EnableOpenApi) services.SetupOpenApi(configuration, options.OpenApi);
 
-    // 19. GraphQL (handled by the application layer)
-
-    // 20. gRPC (handled by the application layer)
-
-    // 21. OpenAPI/Swagger
-    if (options.EnableOpenApi) services.SetupOpenApi(configuration, options.OpenApi);
-
     return services;
   }
 
-  /// <summary>
-  /// Adds the application layer services to the service collection.
-  /// Backward compatibility method for tests that still use AddApplicationLayer()
-  /// </summary>
-  /// <param name="services">The service collection</param>
-  /// <returns>The service collection for chaining</returns>
+  /// <summary> Adds the application layer services to the service collection. Backward compatibility method for tests that still use AddApplicationLayer() </summary>
+  /// <param name="services"> The service collection </param>
+  /// <returns> The service collection for chaining </returns>
   public static IServiceCollection AddApplicationLayer(this IServiceCollection services, IConfiguration configuration, ApplicationLayerOptions? options = null) {
     // Get all GameGuild assemblies automatically to scan for CQRS handlers
-    var assemblies = GetAssembliesByPattern("GameGuild.*");
+    var assemblies = GetAssembliesByPattern();
 
     // Add CQRS services (handlers, behaviors, etc.)
     services.AddCQRS(assemblies);
@@ -126,13 +108,10 @@ public static class DependencyInjection {
     return services;
   }
 
-  /// <summary>
-  ///    Adds the infrastructure layer services to the service collection.
-  ///    Includes repositories, external service integrations, and data access components.
-  /// </summary>
-  /// <param name="services">The service collection</param>
-  /// <param name="configuration">The application configuration</param>
-  /// <returns>The service collection for chaining</returns>
+  /// <summary> Adds the infrastructure layer services to the service collection. Includes repositories, external service integrations, and data access components. </summary>
+  /// <param name="services"> The service collection </param>
+  /// <param name="configuration"> The application configuration </param>
+  /// <returns> The service collection for chaining </returns>
   public static IServiceCollection AddInfrastructureLayer(this IServiceCollection services, IConfiguration configuration, InfrastructureLayerOptions? options = null) {
     ArgumentNullException.ThrowIfNull(services);
     ArgumentNullException.ThrowIfNull(configuration);
@@ -147,9 +126,7 @@ public static class DependencyInjection {
     return services;
   }
 
-  /// <summary>
-  /// Gets all application assemblies to scan for types with explicit entry assembly
-  /// </summary>
+  /// <summary> Gets all application assemblies to scan for types with explicit entry assembly </summary>
   public static Assembly[ ] GetApplicationAssemblies(Assembly entryAssembly, params Assembly[ ] additionalAssemblies) {
     ArgumentNullException.ThrowIfNull(entryAssembly);
     ArgumentNullException.ThrowIfNull(additionalAssemblies);
@@ -162,16 +139,12 @@ public static class DependencyInjection {
     return additionalAssemblies.Length > 0 ? baseAssemblies.Concat(additionalAssemblies).Distinct().ToArray() : baseAssemblies.Distinct().ToArray();
   }
 
-  /// <summary>
-  /// Gets assemblies from the current application domain that match the specified pattern
-  /// </summary>
+  /// <summary> Gets assemblies from the current application domain that match the specified pattern </summary>
   public static Assembly[ ] GetAssembliesByPattern(string pattern = "GameGuild.*") {
     return AppDomain.CurrentDomain.GetAssemblies().Where(assembly => assembly.FullName?.StartsWith(pattern, StringComparison.OrdinalIgnoreCase) == true).ToArray();
   }
 
-  /// <summary>
-  /// Retrieves registration metrics from the last registration operation
-  /// </summary>
+  /// <summary> Retrieves registration metrics from the last registration operation </summary>
   public static RegistrationMetrics GetRegistrationMetrics(IServiceProvider serviceProvider) {
     return serviceProvider.GetService<RegistrationMetrics>() ?? new RegistrationMetrics { TotalHandlersRegistered = 0, TotalValidatorsRegistered = 0, RegistrationDuration = TimeSpan.Zero };
   }
@@ -205,9 +178,7 @@ public static class DependencyInjection {
   //   return services;
   // }
 
-  /// <summary>
-  /// Registers external service implementations
-  /// </summary>
+  /// <summary> Registers external service implementations </summary>
   private static IServiceCollection AddExternalServices(this IServiceCollection services) {
     // External services will be added here as modules are implemented
     // Email service, payment providers, notification services, etc.

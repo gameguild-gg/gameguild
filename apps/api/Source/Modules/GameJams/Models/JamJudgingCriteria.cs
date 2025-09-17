@@ -1,13 +1,13 @@
-namespace GameGuild.Modules.GameJams.Models {
-  public class JamJudgingCriteria : EntityBase {
-    [Required] public Guid JamId { get; set; }
+namespace GameGuild.Modules.GameJams.Models;
 
-    [Required][MaxLength(100)] public string Name { get; set; } = string.Empty;
+public class JamJudgingCriteria : EntityBase {
+  [Required] public Guid JamId { get; set; }
 
-    public string? Description { get; set; }
+  [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
 
-    public decimal Weight { get; set; } = 1.0m;
+  public string? Description { get; set; }
 
-    [Required] public int MaxScore { get; set; } = 5;
-  }
+  public decimal Weight { get; set; } = 1.0m;
+
+  [Required] public int MaxScore { get; set; } = 5;
 }

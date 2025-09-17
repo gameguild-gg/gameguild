@@ -1,20 +1,14 @@
 ﻿using DotNetEnv;
 using GameGuild.CQRS;
-using GameGuild.Database;
 
 
 namespace GameGuild;
 
-/// <summary>
-/// Modern .NET extension methods for WebApplicationBuilder following best practices.
-/// Provides fluent configuration with clean separation of concerns.
-/// </summary>
+/// <summary> Modern .NET extension methods for WebApplicationBuilder following best practices. Provides fluent configuration with clean separation of concerns. </summary>
 public static class WebApplicationBuilderExtensions {
-  /// <summary>
-  /// Configures the WebApplicationBuilder with all GameGuild layers using default options.
-  /// </summary>
-  /// <param name="builder">The WebApplicationBuilder instance</param>
-  /// <returns>The configured WebApplicationBuilder</returns>
+  /// <summary> Configures the WebApplicationBuilder with all GameGuild layers using default options. </summary>
+  /// <param name="builder"> The WebApplicationBuilder instance </param>
+  /// <returns> The configured WebApplicationBuilder </returns>
   public static WebApplicationBuilder ConfigureWebApplication(this WebApplicationBuilder builder) {
     ArgumentNullException.ThrowIfNull(builder);
 
@@ -32,31 +26,23 @@ public static class WebApplicationBuilderExtensions {
     return builder;
   }
 
-  /// <summary>
-  /// Configures environment variables and configuration sources.
-  /// </summary>
-  /// <param name="builder">The WebApplicationBuilder instance</param>
-  /// <returns>The WebApplicationBuilder for method chaining</returns>
+  /// <summary> Configures environment variables and configuration sources. </summary>
+  /// <param name="builder"> The WebApplicationBuilder instance </param>
+  /// <returns> The WebApplicationBuilder for method chaining </returns>
   public static WebApplicationBuilder ConfigureEnvironment(this WebApplicationBuilder builder) {
     // Load .env file for local development
     Env.Load();
 
     // Configure configuration sources with proper precedence
-    builder.Configuration.SetBasePath(AppContext.BaseDirectory)
-           .AddJsonFile("appsettings.json", optional : true, reloadOnChange : true)
-           .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional : true, reloadOnChange : true)
-           .AddEnvironmentVariables(); // Highest precedence
+    builder.Configuration.SetBasePath(AppContext.BaseDirectory).AddJsonFile("appsettings.json", true, true).AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true).AddEnvironmentVariables(); // Highest precedence
 
     return builder;
   }
 
-  /// <summary>
-  ///     Configures environment variables and configuration sources.
-  ///     Adds JSON configuration files with proper precedence and reload-on-change support.
-  /// </summary>
-  /// <param name="builder">The WebApplicationBuilder instance</param>
-  /// <returns>The WebApplicationBuilder for method chaining</returns>
-  /// <exception cref="ArgumentNullException">Thrown when the builder is null</exception>
+  /// <summary> Configures environment variables and configuration sources. Adds JSON configuration files with proper precedence and reload-on-change support. </summary>
+  /// <param name="builder"> The WebApplicationBuilder instance </param>
+  /// <returns> The WebApplicationBuilder for method chaining </returns>
+  /// <exception cref="ArgumentNullException"> Thrown when the builder is null </exception>
   public static WebApplicationBuilder AddAppSettings(this WebApplicationBuilder builder) {
     ArgumentNullException.ThrowIfNull(builder);
 
@@ -70,13 +56,10 @@ public static class WebApplicationBuilderExtensions {
     return builder;
   }
 
-  /// <summary>
-  /// Adds environment variables to the configuration pipeline.
-  /// Supports loading .env files for local development scenarios.
-  /// </summary>
-  /// <param name="builder">The WebApplicationBuilder instance</param>
-  /// <returns>The WebApplicationBuilder for method chaining</returns>
-  /// <exception cref="ArgumentNullException">Thrown when the builder is null</exception>
+  /// <summary> Adds environment variables to the configuration pipeline. Supports loading .env files for local development scenarios. </summary>
+  /// <param name="builder"> The WebApplicationBuilder instance </param>
+  /// <returns> The WebApplicationBuilder for method chaining </returns>
+  /// <exception cref="ArgumentNullException"> Thrown when the builder is null </exception>
   public static WebApplicationBuilder AddEnvironmentVariables(this WebApplicationBuilder builder) {
     ArgumentNullException.ThrowIfNull(builder);
 
@@ -87,13 +70,10 @@ public static class WebApplicationBuilderExtensions {
     return builder;
   }
 
-  /// <summary>
-  /// Registers services and configurations for the presentation layer.
-  /// Includes controllers, API versioning, CORS, and other web-specific services.
-  /// </summary>
-  /// <param name="builder">The WebApplicationBuilder instance</param>
-  /// <returns>The WebApplicationBuilder for method chaining</returns>
-  /// <exception cref="ArgumentNullException">Thrown when the builder is null</exception>
+  /// <summary> Registers services and configurations for the presentation layer. Includes controllers, API versioning, CORS, and other web-specific services. </summary>
+  /// <param name="builder"> The WebApplicationBuilder instance </param>
+  /// <returns> The WebApplicationBuilder for method chaining </returns>
+  /// <exception cref="ArgumentNullException"> Thrown when the builder is null </exception>
   public static WebApplicationBuilder AddPresentationLayer(this WebApplicationBuilder builder) {
     ArgumentNullException.ThrowIfNull(builder);
 
@@ -102,13 +82,11 @@ public static class WebApplicationBuilderExtensions {
     return builder;
   }
 
-  /// <summary>
-  /// Adds the presentation layer services to the WebApplicationBuilder with custom options.
-  /// </summary>
-  /// <param name="builder">The WebApplicationBuilder instance</param>
-  /// <param name="setupPresentationLayerOptions">Action to configure presentation options</param>
-  /// <returns>The WebApplicationBuilder for method chaining</returns>
-  /// <exception cref="ArgumentNullException">Thrown when the builder is null</exception>
+  /// <summary> Adds the presentation layer services to the WebApplicationBuilder with custom options. </summary>
+  /// <param name="builder"> The WebApplicationBuilder instance </param>
+  /// <param name="setupPresentationLayerOptions"> Action to configure presentation options </param>
+  /// <returns> The WebApplicationBuilder for method chaining </returns>
+  /// <exception cref="ArgumentNullException"> Thrown when the builder is null </exception>
   public static WebApplicationBuilder AddPresentationLayer(this WebApplicationBuilder builder, Action<PresentationLayerOptions> setupPresentationLayerOptions) {
     ArgumentNullException.ThrowIfNull(builder);
     ArgumentNullException.ThrowIfNull(setupPresentationLayerOptions);
@@ -125,18 +103,15 @@ public static class WebApplicationBuilderExtensions {
     return builder;
   }
 
-  /// <summary>
-  /// Adds the application layer services to the WebApplicationBuilder.
-  /// Includes CQRS handlers, domain services, repositories, and business logic components.
-  /// </summary>
-  /// <param name="builder">The WebApplicationBuilder instance</param>
-  /// <returns>The WebApplicationBuilder for method chaining</returns>
-  /// <exception cref="ArgumentNullException">Thrown when the builder is null</exception>
+  /// <summary> Adds the application layer services to the WebApplicationBuilder. Includes CQRS handlers, domain services, repositories, and business logic components. </summary>
+  /// <param name="builder"> The WebApplicationBuilder instance </param>
+  /// <returns> The WebApplicationBuilder for method chaining </returns>
+  /// <exception cref="ArgumentNullException"> Thrown when the builder is null </exception>
   public static WebApplicationBuilder AddApplicationLayer(this WebApplicationBuilder builder) {
     ArgumentNullException.ThrowIfNull(builder);
 
     // Get all GameGuild assemblies automatically to scan for CQRS handlers
-    var assemblies = DependencyInjection.GetAssembliesByPattern("GameGuild.*");
+    var assemblies = DependencyInjection.GetAssembliesByPattern();
 
     // Add CQRS services (handlers, behaviors, etc.)
     builder.Services.AddCQRS(assemblies);
@@ -155,7 +130,7 @@ public static class WebApplicationBuilderExtensions {
     setupApplicationLayerOptions(applicationLayerOptions);
 
     // Add services with configured options
-    DependencyInjection.AddApplicationLayer(builder.Services, builder.Configuration, applicationLayerOptions);
+    builder.Services.AddApplicationLayer(builder.Configuration, applicationLayerOptions);
 
     return builder;
   }
@@ -171,33 +146,28 @@ public static class WebApplicationBuilderExtensions {
     setupInfrastructureLayerOptions(infrastructureLayerOptions);
 
     // Add services with configured options
-    DependencyInjection.AddInfrastructureLayer(builder.Services, builder.Configuration, infrastructureLayerOptions);
+    builder.Services.AddInfrastructureLayer(builder.Configuration, infrastructureLayerOptions);
 
     return builder;
   }
 
-  /// <summary>
-  /// Adds the infrastructure layer services to the WebApplicationBuilder.
-  /// Includes repositories, external service integrations, and data access components.
-  /// </summary>
-  /// <param name="builder">The WebApplicationBuilder instance</param>
-  /// <returns>The WebApplicationBuilder for method chaining</returns>
-  /// <exception cref="ArgumentNullException">Thrown when the builder is null</exception>
+  /// <summary> Adds the infrastructure layer services to the WebApplicationBuilder. Includes repositories, external service integrations, and data access components. </summary>
+  /// <param name="builder"> The WebApplicationBuilder instance </param>
+  /// <returns> The WebApplicationBuilder for method chaining </returns>
+  /// <exception cref="ArgumentNullException"> Thrown when the builder is null </exception>
   public static WebApplicationBuilder AddInfrastructureLayer(this WebApplicationBuilder builder) {
     ArgumentNullException.ThrowIfNull(builder);
 
     // Add infrastructure services (repositories, external services, etc.)
-    DependencyInjection.AddInfrastructureLayer(builder.Services, builder.Configuration);
+    builder.Services.AddInfrastructureLayer(builder.Configuration);
 
     return builder;
   }
 
-  /// <summary>
-  /// Configures the WebApplicationBuilder with custom options for specific hosting scenarios.
-  /// </summary>
-  /// <param name="builder">The WebApplicationBuilder instance</param>
-  /// <param name="setupPresentationLayerOptions">Action to configure presentation options</param>
-  /// <returns>The configured WebApplicationBuilder</returns>
+  /// <summary> Configures the WebApplicationBuilder with custom options for specific hosting scenarios. </summary>
+  /// <param name="builder"> The WebApplicationBuilder instance </param>
+  /// <param name="setupPresentationLayerOptions"> Action to configure presentation options </param>
+  /// <returns> The configured WebApplicationBuilder </returns>
   public static WebApplicationBuilder ConfigureWebApplicationWithOptions(this WebApplicationBuilder builder, Action<PresentationLayerOptions>? setupPresentationLayerOptions = null) {
     ArgumentNullException.ThrowIfNull(builder);
 
@@ -221,12 +191,10 @@ public static class WebApplicationBuilderExtensions {
     return builder;
   }
 
-  /// <summary>
-  /// Configures authentication services with custom options.
-  /// </summary>
-  /// <param name="builder">The WebApplicationBuilder instance</param>
-  /// <param name="excludeAuth">Whether to exclude authentication for testing</param>
-  /// <returns>The configured WebApplicationBuilder</returns>
+  /// <summary> Configures authentication services with custom options. </summary>
+  /// <param name="builder"> The WebApplicationBuilder instance </param>
+  /// <param name="excludeAuth"> Whether to exclude authentication for testing </param>
+  /// <returns> The configured WebApplicationBuilder </returns>
   public static WebApplicationBuilder ConfigureAuthentication(this WebApplicationBuilder builder, bool excludeAuth = false) {
     if (!excludeAuth) {
       // Additional authentication configuration can be added here
@@ -236,12 +204,10 @@ public static class WebApplicationBuilderExtensions {
     return builder;
   }
 
-  /// <summary>
-  ///     Adds custom middleware to the application pipeline.
-  /// </summary>
-  /// <param name="app">The WebApplication instance</param>
-  /// <param name="configureMiddleware">Action to configure custom middleware</param>
-  /// <returns>The WebApplication for method chaining</returns>
+  /// <summary> Adds custom middleware to the application pipeline. </summary>
+  /// <param name="app"> The WebApplication instance </param>
+  /// <param name="configureMiddleware"> Action to configure custom middleware </param>
+  /// <returns> The WebApplication for method chaining </returns>
   public static WebApplication UseCustomMiddleware(this WebApplication app, Action<WebApplication> configureMiddleware) {
     ArgumentNullException.ThrowIfNull(configureMiddleware);
 
@@ -250,12 +216,10 @@ public static class WebApplicationBuilderExtensions {
     return app;
   }
 
-  /// <summary>
-  ///     Configures health checks endpoints and UI.
-  /// </summary>
-  /// <param name="app">The WebApplication instance</param>
-  /// <param name="healthCheckPath">Path for health check endpoint (default: /health)</param>
-  /// <returns>The WebApplication for method chaining</returns>
+  /// <summary> Configures health checks endpoints and UI. </summary>
+  /// <param name="app"> The WebApplication instance </param>
+  /// <param name="healthCheckPath"> Path for health check endpoint (default: /health) </param>
+  /// <returns> The WebApplication for method chaining </returns>
   public static WebApplication MapHealthCheckEndpoints(this WebApplication app, string healthCheckPath = "/health") {
     app.MapHealthChecks(healthCheckPath);
 

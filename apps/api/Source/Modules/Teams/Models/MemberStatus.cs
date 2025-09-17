@@ -1,3 +1,3 @@
-namespace GameGuild.Modules.Teams.Models {
-  public enum MemberStatus { Pending, Active, Removed }
-}
+namespace GameGuild.Modules.Teams.Models;
+
+public enum MemberStatus { Pending, Active, Removed }

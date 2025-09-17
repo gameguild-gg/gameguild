@@ -4,25 +4,14 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// Handler for deleting user profile with business logic and validation
-/// </summary>
-public class DeleteUserProfileHandler(
-  ApplicationDbContext context,
-  ILogger<DeleteUserProfileHandler> logger,
-  IDomainEventPublisher eventPublisher
-) : ICommandHandler<DeleteUserProfileCommand, Result<bool>> {
+/// <summary> Handler for deleting user profile with business logic and validation </summary>
+public class DeleteUserProfileHandler(ApplicationDbContext context, ILogger<DeleteUserProfileHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<DeleteUserProfileCommand, Result<bool>> {
   public async Task<Result<bool>> Handle(DeleteUserProfileCommand request, CancellationToken cancellationToken) {
     try {
       // Find the user profile
-      var userProfile = await context.Resources.OfType<UserProfile>()
-                                     .FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
+      var userProfile = await context.Resources.OfType<UserProfile>().FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
 
-      if (userProfile == null) {
-        return Result.Failure<bool>(
-          Error.NotFound("UserProfile.NotFound", $"User profile with ID {request.UserProfileId} not found")
-        );
-      }
+      if (userProfile == null) { return Result.Failure<bool>(Error.NotFound("UserProfile.NotFound", $"User profile with ID {request.UserProfileId} not found")); }
 
       if (request.SoftDelete) {
         // Soft delete
@@ -53,9 +42,7 @@ public class DeleteUserProfileHandler(
     catch (Exception ex) {
       logger.LogError(ex, "Error deleting user profile {UserProfileId}", request.UserProfileId);
 
-      return Result.Failure<bool>(
-        Error.Failure("UserProfile.DeleteFailed", "Failed to delete user profile")
-      );
+      return Result.Failure<bool>(Error.Failure("UserProfile.DeleteFailed", "Failed to delete user profile"));
     }
   }
 }

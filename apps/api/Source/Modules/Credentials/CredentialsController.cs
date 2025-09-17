@@ -1,4 +1,3 @@
-using GameGuild.CQRS;
 using GameGuild.Modules.Credentials.Commands;
 using GameGuild.Modules.Credentials.Queries;
 using GameGuild.Modules.Users;
@@ -8,24 +7,21 @@ using IMediator = GameGuild.CQRS.IMediator;
 
 namespace GameGuild.Modules.Credentials;
 
-/// <summary>
-/// REST API controller for managing user credentials using CQRS pattern
-/// </summary>
+/// <summary> REST API controller for managing user credentials using CQRS pattern </summary>
 [ApiController]
 [Route("[controller]")]
 public class CredentialsController : ControllerBase {
-  private readonly IMediator _mediator;
   private readonly ILogger<CredentialsController> _logger;
+
+  private readonly IMediator _mediator;
 
   public CredentialsController(IMediator mediator, ILogger<CredentialsController> logger) {
     _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     _logger = logger ?? throw new ArgumentNullException(nameof(logger));
   }
 
-  /// <summary>
-  /// Get all credentials using CQRS pattern
-  /// </summary>
-  /// <returns>List of credentials</returns>
+  /// <summary> Get all credentials using CQRS pattern </summary>
+  /// <returns> List of credentials </returns>
   [HttpGet]
   public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentials() {
     try {
@@ -44,11 +40,9 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Get credentials by user ID using CQRS pattern
-  /// </summary>
-  /// <param name="userId">User ID</param>
-  /// <returns>List of user credentials</returns>
+  /// <summary> Get credentials by user ID using CQRS pattern </summary>
+  /// <param name="userId"> User ID </param>
+  /// <returns> List of user credentials </returns>
   [HttpGet("user/{userId:guid}")]
   public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentialsByUserId(Guid userId) {
     try {
@@ -67,11 +61,9 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Get a specific credential by ID using CQRS pattern
-  /// </summary>
-  /// <param name="id">Credential ID</param>
-  /// <returns>Credential details</returns>
+  /// <summary> Get a specific credential by ID using CQRS pattern </summary>
+  /// <param name="id"> Credential ID </param>
+  /// <returns> Credential details </returns>
   [HttpGet("{id:guid}")]
   public async Task<ActionResult<CredentialResponseDto>> GetCredential(Guid id) {
     try {
@@ -91,12 +83,10 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Get a credential by user ID and type using CQRS pattern
-  /// </summary>
-  /// <param name="userId">User ID</param>
-  /// <param name="type">Credential type</param>
-  /// <returns>Credential details</returns>
+  /// <summary> Get a credential by user ID and type using CQRS pattern </summary>
+  /// <param name="userId"> User ID </param>
+  /// <param name="type"> Credential type </param>
+  /// <returns> Credential details </returns>
   [HttpGet("user/{userId}/type/{type}")]
   public async Task<ActionResult<CredentialResponseDto>> GetCredentialByUserIdAndType(Guid userId, string type) {
     try {
@@ -116,11 +106,9 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Create a new credential using CQRS pattern
-  /// </summary>
-  /// <param name="createDto">Credential data</param>
-  /// <returns>Created credential</returns>
+  /// <summary> Create a new credential using CQRS pattern </summary>
+  /// <param name="createDto"> Credential data </param>
+  /// <returns> Created credential </returns>
   [HttpPost]
   public async Task<ActionResult<CredentialResponseDto>> CreateCredential([FromBody] CreateCredentialDto createDto) {
     try {
@@ -128,14 +116,7 @@ public class CredentialsController : ControllerBase {
 
       _logger.LogInformation("Creating credential for user {UserId}", createDto.UserId);
 
-      var command = new CreateCredentialCommand {
-        UserId = createDto.UserId,
-        Type = createDto.Type,
-        Value = createDto.Value,
-        Metadata = createDto.Metadata,
-        ExpiresAt = createDto.ExpiresAt,
-        IsActive = createDto.IsActive,
-      };
+      var command = new CreateCredentialCommand { UserId = createDto.UserId, Type = createDto.Type, Value = createDto.Value, Metadata = createDto.Metadata, ExpiresAt = createDto.ExpiresAt, IsActive = createDto.IsActive };
 
       var createdCredential = await _mediator.Send(command);
       var response = MapToResponseDto(createdCredential);
@@ -149,30 +130,18 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Update an existing credential using CQRS pattern
-  /// </summary>
-  /// <param name="id">Credential ID</param>
-  /// <param name="updateDto">Updated credential data</param>
-  /// <returns>Updated credential</returns>
+  /// <summary> Update an existing credential using CQRS pattern </summary>
+  /// <param name="id"> Credential ID </param>
+  /// <param name="updateDto"> Updated credential data </param>
+  /// <returns> Updated credential </returns>
   [HttpPut("{id}")]
-  public async Task<ActionResult<CredentialResponseDto>> UpdateCredential(
-    Guid id,
-    [FromBody] UpdateCredentialDto updateDto
-  ) {
+  public async Task<ActionResult<CredentialResponseDto>> UpdateCredential(Guid id, [FromBody] UpdateCredentialDto updateDto) {
     try {
       if (!ModelState.IsValid) return BadRequest(ModelState);
 
       _logger.LogInformation("Updating credential {CredentialId}", id);
 
-      var command = new UpdateCredentialCommand {
-        Id = id,
-        Type = updateDto.Type,
-        Value = updateDto.Value,
-        Metadata = updateDto.Metadata,
-        ExpiresAt = updateDto.ExpiresAt,
-        IsActive = updateDto.IsActive,
-      };
+      var command = new UpdateCredentialCommand { Id = id, Type = updateDto.Type, Value = updateDto.Value, Metadata = updateDto.Metadata, ExpiresAt = updateDto.ExpiresAt, IsActive = updateDto.IsActive };
 
       var updatedCredential = await _mediator.Send(command);
       var response = MapToResponseDto(updatedCredential);
@@ -187,11 +156,9 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Soft delete a credential using CQRS pattern
-  /// </summary>
-  /// <param name="id">Credential ID to delete</param>
-  /// <returns>No content if successful</returns>
+  /// <summary> Soft delete a credential using CQRS pattern </summary>
+  /// <param name="id"> Credential ID to delete </param>
+  /// <returns> No content if successful </returns>
   [HttpDelete("{id}")]
   public async Task<IActionResult> SoftDeleteCredential(Guid id) {
     try {
@@ -211,11 +178,9 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Restore a soft-deleted credential using CQRS pattern
-  /// </summary>
-  /// <param name="id">Credential ID to restore</param>
-  /// <returns>No content if successful</returns>
+  /// <summary> Restore a soft-deleted credential using CQRS pattern </summary>
+  /// <param name="id"> Credential ID to restore </param>
+  /// <returns> No content if successful </returns>
   [HttpPost("{id}/restore")]
   public async Task<IActionResult> RestoreCredential(Guid id) {
     try {
@@ -235,11 +200,9 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Permanently delete a credential using CQRS pattern
-  /// </summary>
-  /// <param name="id">Credential ID to delete</param>
-  /// <returns>No content if successful</returns>
+  /// <summary> Permanently delete a credential using CQRS pattern </summary>
+  /// <param name="id"> Credential ID to delete </param>
+  /// <returns> No content if successful </returns>
   [HttpDelete("{id}/hard")]
   public async Task<IActionResult> HardDeleteCredential(Guid id) {
     try {
@@ -259,11 +222,9 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Mark a credential as used using CQRS pattern
-  /// </summary>
-  /// <param name="id">Credential ID</param>
-  /// <returns>No content if successful</returns>
+  /// <summary> Mark a credential as used using CQRS pattern </summary>
+  /// <param name="id"> Credential ID </param>
+  /// <returns> No content if successful </returns>
   [HttpPost("{id}/mark-used")]
   public async Task<IActionResult> MarkCredentialAsUsed(Guid id) {
     try {
@@ -283,11 +244,9 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Deactivate a credential using CQRS pattern
-  /// </summary>
-  /// <param name="id">Credential ID</param>
-  /// <returns>No content if successful</returns>
+  /// <summary> Deactivate a credential using CQRS pattern </summary>
+  /// <param name="id"> Credential ID </param>
+  /// <returns> No content if successful </returns>
   [HttpPost("{id}/deactivate")]
   public async Task<IActionResult> DeactivateCredential(Guid id) {
     try {
@@ -307,11 +266,9 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Activate a credential using CQRS pattern
-  /// </summary>
-  /// <param name="id">Credential ID</param>
-  /// <returns>No content if successful</returns>
+  /// <summary> Activate a credential using CQRS pattern </summary>
+  /// <param name="id"> Credential ID </param>
+  /// <returns> No content if successful </returns>
   [HttpPost("{id}/activate")]
   public async Task<IActionResult> ActivateCredential(Guid id) {
     try {
@@ -331,10 +288,8 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Get soft-deleted credentials using CQRS pattern
-  /// </summary>
-  /// <returns>List of soft-deleted credentials</returns>
+  /// <summary> Get soft-deleted credentials using CQRS pattern </summary>
+  /// <returns> List of soft-deleted credentials </returns>
   [HttpGet("deleted")]
   public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetDeletedCredentials() {
     try {
@@ -353,11 +308,9 @@ public class CredentialsController : ControllerBase {
     }
   }
 
-  /// <summary>
-  /// Map Credential entity to response DTO
-  /// </summary>
-  /// <param name="credential">Credential entity</param>
-  /// <returns>Credential response DTO</returns>
+  /// <summary> Map Credential entity to response DTO </summary>
+  /// <param name="credential"> Credential entity </param>
+  /// <returns> Credential response DTO </returns>
   private static CredentialResponseDto MapToResponseDto(Credential credential) {
     return new CredentialResponseDto {
       Id = credential.Id,

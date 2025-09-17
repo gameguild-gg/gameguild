@@ -4,9 +4,7 @@ using GameGuild.Modules.Credentials.Commands;
 
 namespace GameGuild.Modules.Credentials.Handlers;
 
-/// <summary>
-/// Handler for HardDeleteCredentialCommand using CQRS pattern
-/// </summary>
+/// <summary> Handler for HardDeleteCredentialCommand using CQRS pattern </summary>
 public class HardDeleteCredentialCommandHandler : IRequestHandler<HardDeleteCredentialCommand, bool> {
   private readonly ICredentialService _credentialService;
 

@@ -20,5 +20,5 @@ await app.RunAsync().ConfigureAwait(false);
 
 // REMARK: Required for functional and integration tests to work.
 namespace GameGuild {
-  internal partial class Program { };
+  internal class Program { };
 }

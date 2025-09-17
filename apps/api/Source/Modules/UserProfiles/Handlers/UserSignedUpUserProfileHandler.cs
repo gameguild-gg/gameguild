@@ -1,16 +1,13 @@
 using GameGuild.CQRS;
+using GameGuild.Modules.Authentication;
 using IMediator = GameGuild.CQRS.IMediator;
+
 
 namespace GameGuild.Modules.UserProfiles;
 
-/// <summary>
-/// Notification handler that automatically creates a UserProfile when a user signs up
-/// </summary>
-public class UserSignedUpUserProfileHandler(
-  IMediator mediator,
-  ILogger<UserSignedUpUserProfileHandler> logger
-) : INotificationHandler<Authentication.UserSignedUpNotification> {
-  public async Task Handle(Authentication.UserSignedUpNotification notification, CancellationToken cancellationToken) {
+/// <summary> Notification handler that automatically creates a UserProfile when a user signs up </summary>
+public class UserSignedUpUserProfileHandler(IMediator mediator, ILogger<UserSignedUpUserProfileHandler> logger) : INotificationHandler<UserSignedUpNotification> {
+  public async Task Handle(UserSignedUpNotification notification, CancellationToken cancellationToken) {
     try {
       logger.LogInformation("Creating UserProfile for newly signed up user {UserId}", notification.UserId);
 
@@ -30,13 +27,7 @@ public class UserSignedUpUserProfileHandler(
       var result = await mediator.Send(createProfileCommand, cancellationToken);
 
       if (result.IsSuccess) { logger.LogInformation("Successfully created UserProfile for user {UserId}", notification.UserId); }
-      else {
-        logger.LogWarning(
-          "Failed to create UserProfile for user {UserId}: {Error}",
-          notification.UserId,
-          result.Error?.Description
-        );
-      }
+      else { logger.LogWarning("Failed to create UserProfile for user {UserId}: {Error}", notification.UserId, result.Error?.Description); }
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error creating UserProfile for user {UserId} during signup", notification.UserId);
@@ -44,9 +35,7 @@ public class UserSignedUpUserProfileHandler(
     }
   }
 
-  /// <summary>
-  /// Extracts given name and family name from username or email
-  /// </summary>
+  /// <summary> Extracts given name and family name from username or email </summary>
   private static (string GivenName, string FamilyName) ExtractNamesFromUserInfo(string username, string email) {
     // Try to extract from username first
     if (!string.IsNullOrEmpty(username) && username != email) {
@@ -77,9 +66,7 @@ public class UserSignedUpUserProfileHandler(
     return ("User", "");
   }
 
-  /// <summary>
-  /// Capitalizes the first letter of a string
-  /// </summary>
+  /// <summary> Capitalizes the first letter of a string </summary>
   private static string CapitalizeFirst(string input) {
     if (string.IsNullOrEmpty(input)) return input;
 

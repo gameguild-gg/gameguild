@@ -11,60 +11,42 @@ namespace GameGuild.Modules.Certificates;
 [Index(nameof(CompletionPercentage))]
 [Index(nameof(TenantId))]
 public class Certificate : EntityBase, ITenantable {
-  [Required][MaxLength(255)] public string Name { get; set; } = string.Empty;
+  [Required] [MaxLength(255)] public string Name { get; set; } = string.Empty;
 
   public string Description { get; set; } = string.Empty;
 
   public CertificateType Type { get; set; }
 
-  /// <summary>
-  /// Program that this certificate is associated with (null for non-program certificates)
-  /// </summary>
+  /// <summary> Program that this certificate is associated with (null for non-program certificates) </summary>
   public Guid? ProgramId { get; set; }
 
-  /// <summary>
-  /// Product that this certificate is associated with (null for non-product certificates)
-  /// </summary>
+  /// <summary> Product that this certificate is associated with (null for non-product certificates) </summary>
   public Guid? ProductId { get; set; }
 
-  /// <summary>
-  /// Required completion percentage for program-based certificates (0-100)
-  /// </summary>
+  /// <summary> Required completion percentage for program-based certificates (0-100) </summary>
   [Column(TypeName = "decimal(5,2)")]
   public decimal CompletionPercentage { get; set; } = 100;
 
-  /// <summary>
-  /// Minimum grade required for certificate issuance (0-100, null = no minimum)
-  /// </summary>
+  /// <summary> Minimum grade required for certificate issuance (0-100, null = no minimum) </summary>
   [Column(TypeName = "decimal(5,2)")]
   public decimal? MinimumGrade { get; set; }
 
-  /// <summary>
-  /// Whether feedback submission is required for certificate issuance
-  /// </summary>
+  /// <summary> Whether feedback submission is required for certificate issuance </summary>
   public bool RequiresFeedback { get; set; }
 
-  /// <summary>
-  /// Whether rating submission is required for certificate issuance
-  /// </summary>
+  /// <summary> Whether rating submission is required for certificate issuance </summary>
   public bool RequiresRating { get; set; }
 
-  /// <summary>
-  /// Minimum rating required if rating is required (1-5, null = any rating accepted)
-  /// </summary>
+  /// <summary> Minimum rating required if rating is required (1-5, null = any rating accepted) </summary>
   [Column(TypeName = "decimal(2,1)")]
   public decimal? MinimumRating { get; set; }
 
-  /// <summary>
-  /// How long the certificate remains valid (in days, null = never expires)
-  /// </summary>
+  /// <summary> How long the certificate remains valid (in days, null = never expires) </summary>
   public int? ValidityDays { get; set; }
 
   public VerificationMethod VerificationMethod { get; set; } = VerificationMethod.Code;
 
-  /// <summary>
-  /// Template for certificate design/layout
-  /// </summary>
+  /// <summary> Template for certificate design/layout </summary>
   [MaxLength(500)]
   public string? CertificateTemplate { get; set; }
 

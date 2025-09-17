@@ -1,20 +1,18 @@
+using GameGuild.CQRS;
+
+
 namespace GameGuild.Modules.TestingLab;
 
 public class CreateTestingSessionCommandHandler : ITestingLabCommandHandler<CreateTestingSessionCommand, TestingSession> {
   private readonly ITestingLocationRepository _locationRepository;
 
-  private readonly CQRS.IMediator _mediator;
+  private readonly IMediator _mediator;
 
   private readonly ITestingRequestService _requestService;
 
   private readonly ITestingSessionService _sessionService;
 
-  public CreateTestingSessionCommandHandler(
-    ITestingSessionService sessionService,
-    ITestingRequestService requestService,
-    ITestingLocationRepository locationRepository,
-    CQRS.IMediator mediator
-  ) {
+  public CreateTestingSessionCommandHandler(ITestingSessionService sessionService, ITestingRequestService requestService, ITestingLocationRepository locationRepository, IMediator mediator) {
     _sessionService = sessionService;
     _requestService = requestService;
     _locationRepository = locationRepository;
@@ -50,14 +48,7 @@ public class CreateTestingSessionCommandHandler : ITestingLabCommandHandler<Crea
     var createdSession = await _sessionService.CreateAsync(testingSession);
 
     // Publish domain event
-    var domainEvent = new TestingSessionCreatedEvent(
-      createdSession.Id,
-      createdSession.TestingRequestId,
-      createdSession.SessionName,
-      createdSession.SessionDate,
-      createdSession.CreatedById,
-      createdSession.CreatedAt
-    );
+    var domainEvent = new TestingSessionCreatedEvent(createdSession.Id, createdSession.TestingRequestId, createdSession.SessionName, createdSession.SessionDate, createdSession.CreatedById, createdSession.CreatedAt);
 
     await _mediator.Publish(domainEvent, cancellationToken);
 

@@ -1,9 +1,5 @@
-namespace GameGuild.Modules.GameJams.Models {
-  public enum JamStatus {
-    Upcoming,
-    Active,
-    Voting,
-    Completed,
-    Cancelled,
-  }
+namespace GameGuild.Modules.GameJams.Models;
+
+public enum JamStatus {
+  Upcoming, Active, Voting, Completed, Cancelled,
 }

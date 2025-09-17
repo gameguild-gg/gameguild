@@ -4,42 +4,18 @@ using GameGuild.Database;
 
 namespace GameGuild.Modules.Posts;
 
-/// <summary>
-/// Handler for getting a single post by ID
-/// </summary>
-public class GetPostByIdHandler(
-  ApplicationDbContext context,
-  ILogger<GetPostByIdHandler> logger
-) : IQueryHandler<GetPostByIdQuery, Result<Post>> {
+/// <summary> Handler for getting a single post by ID </summary>
+public class GetPostByIdHandler(ApplicationDbContext context, ILogger<GetPostByIdHandler> logger) : IQueryHandler<GetPostByIdQuery, Result<Post>> {
   public async Task<Result<Post>> Handle(GetPostByIdQuery request, CancellationToken cancellationToken) {
     try {
-      logger.LogInformation(
-        "Getting post {PostId} for tenant {TenantId}",
-        request.PostId,
-        request.TenantId
-      );
+      logger.LogInformation("Getting post {PostId} for tenant {TenantId}", request.PostId, request.TenantId);
 
-      var post = await context.Posts
-                              .Where(p => p.Id == request.PostId &&
-                                          (request.TenantId == null || p.Tenant == null || p.Tenant.Id == request.TenantId) &&
-                                          p.DeletedAt == null
-                              )
-                              .FirstOrDefaultAsync(cancellationToken);
+      var post = await context.Posts.Where(p => p.Id == request.PostId && (request.TenantId == null || p.Tenant == null || p.Tenant.Id == request.TenantId) && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
       if (post == null) {
-        logger.LogWarning(
-          "Post {PostId} not found in tenant {TenantId}",
-          request.PostId,
-          request.TenantId
-        );
+        logger.LogWarning("Post {PostId} not found in tenant {TenantId}", request.PostId, request.TenantId);
 
-        return Result.Failure<Post>(
-          new Error(
-            "Post.NotFound",
-            $"Post with ID {request.PostId} not found",
-            ErrorType.NotFound
-          )
-        );
+        return Result.Failure<Post>(new Error("Post.NotFound", $"Post with ID {request.PostId} not found", ErrorType.NotFound));
       }
 
       logger.LogInformation("Successfully retrieved post {PostId}", request.PostId);
@@ -49,57 +25,23 @@ public class GetPostByIdHandler(
     catch (Exception ex) {
       logger.LogError(ex, "Error getting post {PostId}", request.PostId);
 
-      return Result.Failure<Post>(
-        new Error(
-          "GetPost.Failed",
-          $"Failed to get post: {ex.Message}",
-          ErrorType.Failure
-        )
-      );
+      return Result.Failure<Post>(new Error("GetPost.Failed", $"Failed to get post: {ex.Message}", ErrorType.Failure));
     }
   }
 }
 
-/// <summary>
-/// Handler for updating posts
-/// </summary>
-public class UpdatePostHandler(
-  ApplicationDbContext context,
-  ILogger<UpdatePostHandler> logger,
-  IDomainEventPublisher eventPublisher
-) : ICommandHandler<UpdatePostCommand, Result<Post>> {
+/// <summary> Handler for updating posts </summary>
+public class UpdatePostHandler(ApplicationDbContext context, ILogger<UpdatePostHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<UpdatePostCommand, Result<Post>> {
   public async Task<Result<Post>> Handle(UpdatePostCommand request, CancellationToken cancellationToken) {
     try {
-      logger.LogInformation(
-        "Updating post {PostId} by user {UserId}",
-        request.PostId,
-        request.UserId
-      );
+      logger.LogInformation("Updating post {PostId} by user {UserId}", request.PostId, request.UserId);
 
-      var post = await context.Posts
-                              .Where(p => p.Id == request.PostId && p.DeletedAt == null)
-                              .FirstOrDefaultAsync(cancellationToken);
+      var post = await context.Posts.Where(p => p.Id == request.PostId && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
-      if (post == null) {
-        return Result.Failure<Post>(
-          new Error(
-            "Post.NotFound",
-            $"Post with ID {request.PostId} not found",
-            ErrorType.NotFound
-          )
-        );
-      }
+      if (post == null) { return Result.Failure<Post>(new Error("Post.NotFound", $"Post with ID {request.PostId} not found", ErrorType.NotFound)); }
 
       // Authorization: Only post author can update (or admin in future)
-      if (post.AuthorId != request.UserId) {
-        return Result.Failure<Post>(
-          new Error(
-            "Post.Unauthorized",
-            "You can only update your own posts",
-            ErrorType.Validation
-          )
-        );
-      }
+      if (post.AuthorId != request.UserId) { return Result.Failure<Post>(new Error("Post.Unauthorized", "You can only update your own posts", ErrorType.Validation)); }
 
       // Track changes for event
       var changes = new Dictionary<string, object>();
@@ -143,80 +85,33 @@ public class UpdatePostHandler(
       post.Touch(); // Update timestamp
       await context.SaveChangesAsync(cancellationToken);
 
-      logger.LogInformation(
-        "Successfully updated post {PostId} with {ChangeCount} changes",
-        request.PostId,
-        changes.Count
-      );
+      logger.LogInformation("Successfully updated post {PostId} with {ChangeCount} changes", request.PostId, changes.Count);
 
       // Publish domain event
-      await eventPublisher.PublishAsync(
-        new PostUpdatedEvent(
-          post.Id,
-          post.AuthorId ?? Guid.Empty,
-          changes,
-          post.UpdatedAt,
-          post.Tenant?.Id ?? Guid.Empty
-        ),
-        cancellationToken
-      );
+      await eventPublisher.PublishAsync(new PostUpdatedEvent(post.Id, post.AuthorId ?? Guid.Empty, changes, post.UpdatedAt, post.Tenant?.Id ?? Guid.Empty), cancellationToken);
 
       return Result.Success(post);
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error updating post {PostId}", request.PostId);
 
-      return Result.Failure<Post>(
-        new Error(
-          "UpdatePost.Failed",
-          $"Failed to update post: {ex.Message}",
-          ErrorType.Failure
-        )
-      );
+      return Result.Failure<Post>(new Error("UpdatePost.Failed", $"Failed to update post: {ex.Message}", ErrorType.Failure));
     }
   }
 }
 
-/// <summary>
-/// Handler for deleting posts
-/// </summary>
-public class DeletePostHandler(
-  ApplicationDbContext context,
-  ILogger<DeletePostHandler> logger,
-  IDomainEventPublisher eventPublisher
-) : ICommandHandler<DeletePostCommand, Result<bool>> {
+/// <summary> Handler for deleting posts </summary>
+public class DeletePostHandler(ApplicationDbContext context, ILogger<DeletePostHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<DeletePostCommand, Result<bool>> {
   public async Task<Result<bool>> Handle(DeletePostCommand request, CancellationToken cancellationToken) {
     try {
-      logger.LogInformation(
-        "Deleting post {PostId} by user {UserId}",
-        request.PostId,
-        request.UserId
-      );
+      logger.LogInformation("Deleting post {PostId} by user {UserId}", request.PostId, request.UserId);
 
-      var post = await context.Posts
-                              .Where(p => p.Id == request.PostId && p.DeletedAt == null)
-                              .FirstOrDefaultAsync(cancellationToken);
+      var post = await context.Posts.Where(p => p.Id == request.PostId && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
-      if (post == null) {
-        return Result.Failure<bool>(
-          new Error(
-            "Post.NotFound",
-            $"Post with ID {request.PostId} not found",
-            ErrorType.NotFound
-          )
-        );
-      }
+      if (post == null) { return Result.Failure<bool>(new Error("Post.NotFound", $"Post with ID {request.PostId} not found", ErrorType.NotFound)); }
 
       // Authorization: Only post author can delete (or admin in future)
-      if (post.AuthorId != request.UserId) {
-        return Result.Failure<bool>(
-          new Error(
-            "Post.Unauthorized",
-            "You can only delete your own posts",
-            ErrorType.Validation
-          )
-        );
-      }
+      if (post.AuthorId != request.UserId) { return Result.Failure<bool>(new Error("Post.Unauthorized", "You can only delete your own posts", ErrorType.Validation)); }
 
       // Soft delete
       post.SoftDelete();
@@ -242,46 +137,20 @@ public class DeletePostHandler(
     catch (Exception ex) {
       logger.LogError(ex, "Error deleting post {PostId}", request.PostId);
 
-      return Result.Failure<bool>(
-        new Error(
-          "DeletePost.Failed",
-          $"Failed to delete post: {ex.Message}",
-          ErrorType.Failure
-        )
-      );
+      return Result.Failure<bool>(new Error("DeletePost.Failed", $"Failed to delete post: {ex.Message}", ErrorType.Failure));
     }
   }
 }
 
-/// <summary>
-/// Handler for toggling post likes
-/// </summary>
-public class TogglePostLikeHandler(
-  ApplicationDbContext context,
-  ILogger<TogglePostLikeHandler> logger,
-  IDomainEventPublisher eventPublisher
-) : ICommandHandler<TogglePostLikeCommand, Result<bool>> {
+/// <summary> Handler for toggling post likes </summary>
+public class TogglePostLikeHandler(ApplicationDbContext context, ILogger<TogglePostLikeHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<TogglePostLikeCommand, Result<bool>> {
   public async Task<Result<bool>> Handle(TogglePostLikeCommand request, CancellationToken cancellationToken) {
     try {
-      logger.LogInformation(
-        "Toggling like for post {PostId} by user {UserId}",
-        request.PostId,
-        request.UserId
-      );
+      logger.LogInformation("Toggling like for post {PostId} by user {UserId}", request.PostId, request.UserId);
 
-      var post = await context.Posts
-                              .Where(p => p.Id == request.PostId && p.DeletedAt == null)
-                              .FirstOrDefaultAsync(cancellationToken);
+      var post = await context.Posts.Where(p => p.Id == request.PostId && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
-      if (post == null) {
-        return Result.Failure<bool>(
-          new Error(
-            "Post.NotFound",
-            $"Post with ID {request.PostId} not found",
-            ErrorType.NotFound
-          )
-        );
-      }
+      if (post == null) { return Result.Failure<bool>(new Error("Post.NotFound", $"Post with ID {request.PostId} not found", ErrorType.NotFound)); }
 
       // For simplicity, we're just updating the like count
       // In a real implementation, you might have a separate PostLikes table
@@ -301,26 +170,11 @@ public class TogglePostLikeHandler(
 
       await context.SaveChangesAsync(cancellationToken);
 
-      logger.LogInformation(
-        "Post {PostId} like toggled to {IsLiked}, new count: {LikesCount}",
-        request.PostId,
-        isLiked,
-        post.LikesCount
-      );
+      logger.LogInformation("Post {PostId} like toggled to {IsLiked}, new count: {LikesCount}", request.PostId, isLiked, post.LikesCount);
 
       if (isLiked) {
         // Publish domain event for likes
-        await eventPublisher.PublishAsync(
-          new PostLikedEvent(
-            post.Id,
-            post.AuthorId ?? Guid.Empty,
-            request.UserId,
-            post.LikesCount,
-            DateTime.UtcNow,
-            post.Tenant?.Id ?? Guid.Empty
-          ),
-          cancellationToken
-        );
+        await eventPublisher.PublishAsync(new PostLikedEvent(post.Id, post.AuthorId ?? Guid.Empty, request.UserId, post.LikesCount, DateTime.UtcNow, post.Tenant?.Id ?? Guid.Empty), cancellationToken);
       }
 
       return Result.Success(isLiked);
@@ -328,13 +182,7 @@ public class TogglePostLikeHandler(
     catch (Exception ex) {
       logger.LogError(ex, "Error toggling like for post {PostId}", request.PostId);
 
-      return Result.Failure<bool>(
-        new Error(
-          "TogglePostLike.Failed",
-          $"Failed to toggle post like: {ex.Message}",
-          ErrorType.Failure
-        )
-      );
+      return Result.Failure<bool>(new Error("TogglePostLike.Failed", $"Failed to toggle post like: {ex.Message}", ErrorType.Failure));
     }
   }
 }

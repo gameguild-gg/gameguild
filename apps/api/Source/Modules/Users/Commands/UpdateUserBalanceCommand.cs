@@ -1,9 +1,9 @@
 using GameGuild.CQRS;
-﻿namespace GameGuild.Modules.Users;
 
-/// <summary>
-/// Command to update user balance
-/// </summary>
+
+namespace GameGuild.Modules.Users;
+
+/// <summary> Command to update user balance </summary>
 public sealed class UpdateUserBalanceCommand : ICommand<User> {
   [Required] public Guid UserId { get; set; }
 
@@ -13,8 +13,6 @@ public sealed class UpdateUserBalanceCommand : ICommand<User> {
 
   public string? Reason { get; set; }
 
-  /// <summary>
-  /// Expected version for optimistic concurrency control
-  /// </summary>
+  /// <summary> Expected version for optimistic concurrency control </summary>
   public int? ExpectedVersion { get; set; }
 }

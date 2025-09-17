@@ -7,20 +7,17 @@ namespace GameGuild.Modules.UserProfiles;
 /// <summary>
 /// Handler for getting user profile by ID
 /// </summary>
-public class GetUserProfileByIdHandler(ApplicationDbContext context, ILogger<GetUserProfileByIdHandler> logger)
-  : IQueryHandler<GetUserProfileByIdQuery, Result<UserProfile?>> {
+public class GetUserProfileByIdHandler(ApplicationDbContext context, ILogger<GetUserProfileByIdHandler> logger) : IQueryHandler<GetUserProfileByIdQuery, Result<UserProfile?>> {
   public async Task<Result<UserProfile?>> Handle(GetUserProfileByIdQuery request, CancellationToken cancellationToken) {
     try {
-      IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>()
-                                             .Include(up => up.Metadata);
+      IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>().Include(up => up.Metadata);
 
       if (!request.IncludeDeleted)
         query = query.Where(up => up.DeletedAt == null);
       else
         query = query.IgnoreQueryFilters();
 
-      var userProfile = await query
-                          .FirstOrDefaultAsync(up => up.Id == request.UserProfileId, cancellationToken);
+      var userProfile = await query.FirstOrDefaultAsync(up => up.Id == request.UserProfileId, cancellationToken);
 
       if (userProfile == null) {
         logger.LogDebug("User profile not found: {UserProfileId}", request.UserProfileId);
@@ -35,9 +32,7 @@ public class GetUserProfileByIdHandler(ApplicationDbContext context, ILogger<Get
     catch (Exception ex) {
       logger.LogError(ex, "Error retrieving user profile {UserProfileId}", request.UserProfileId);
 
-      return Result.Failure<UserProfile?>(
-        Error.Failure("UserProfile.QueryFailed", "Failed to retrieve user profile")
-      );
+      return Result.Failure<UserProfile?>(Error.Failure("UserProfile.QueryFailed", "Failed to retrieve user profile"));
     }
   }
 }

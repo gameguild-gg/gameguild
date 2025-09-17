@@ -18,15 +18,11 @@ namespace GameGuild.Modules.Programs;
 public class Program : Content {
   [MaxLength(500)] public string? Thumbnail { get; set; }
 
-  /// <summary>
-  /// Video showcase URL for program preview
-  /// </summary>
+  /// <summary> Video showcase URL for program preview </summary>
   [MaxLength(500)]
   public string? VideoShowcaseUrl { get; set; }
 
-  /// <summary>
-  /// Estimated time load in hours to complete the program
-  /// </summary>
+  /// <summary> Estimated time load in hours to complete the program </summary>
   public float? EstimatedHours { get; set; }
 
   // TODO: Add verification system later
@@ -35,29 +31,19 @@ public class Program : Content {
   // - VerifiedBy (string?)
   // - VerificationNote (string?)
 
-  /// <summary>
-  /// Enrollment status for the program
-  /// </summary>
+  /// <summary> Enrollment status for the program </summary>
   public EnrollmentStatus EnrollmentStatus { get; set; } = EnrollmentStatus.Open;
 
-  /// <summary>
-  /// Maximum number of enrollments allowed (null = unlimited)
-  /// </summary>
+  /// <summary> Maximum number of enrollments allowed (null = unlimited) </summary>
   public int? MaxEnrollments { get; set; }
 
-  /// <summary>
-  /// Enrollment deadline (null = no deadline)
-  /// </summary>
+  /// <summary> Enrollment deadline (null = no deadline) </summary>
   public DateTime? EnrollmentDeadline { get; set; }
 
-  /// <summary>
-  /// Category of the program (Programming, DataScience, etc.)
-  /// </summary>
+  /// <summary> Category of the program (Programming, DataScience, etc.) </summary>
   public ProgramCategory Category { get; set; } = ProgramCategory.Other;
 
-  /// <summary>
-  /// Difficulty level of the program
-  /// </summary>
+  /// <summary> Difficulty level of the program </summary>
   public ProgramDifficulty Difficulty { get; set; } = ProgramDifficulty.Beginner;
 
   // Navigation properties
@@ -76,59 +62,34 @@ public class Program : Content {
   public virtual ICollection<ProgramWishlist> ProgramWishlists { get; set; } = new List<ProgramWishlist>();
 
   // Computed properties for skills via Certificates
-  /// <summary>
-  /// Get all skills required by certificates in this program where RelationshipType is Required
-  /// </summary>
-  public IEnumerable<CertificateTag> SkillsRequired {
-    get => Certificates.SelectMany(c => c.CertificateTags.Where(ct => ct.RelationshipType == CertificateTagRelationshipType.Required));
-  }
+  /// <summary> Get all skills required by certificates in this program where RelationshipType is Required </summary>
+  public IEnumerable<CertificateTag> SkillsRequired { get => Certificates.SelectMany(c => c.CertificateTags.Where(ct => ct.RelationshipType == CertificateTagRelationshipType.Required)); }
 
-  /// <summary>
-  /// Get all skills provided by certificates in this program where RelationshipType is Demonstrates
-  /// </summary>
-  public IEnumerable<CertificateTag> SkillsProvided {
-    get => Certificates.SelectMany(c => c.CertificateTags.Where(ct => ct.RelationshipType == CertificateTagRelationshipType.Demonstrates));
-  }
+  /// <summary> Get all skills provided by certificates in this program where RelationshipType is Demonstrates </summary>
+  public IEnumerable<CertificateTag> SkillsProvided { get => Certificates.SelectMany(c => c.CertificateTags.Where(ct => ct.RelationshipType == CertificateTagRelationshipType.Demonstrates)); }
 
   // Computed properties for metrics
-  public int CurrentEnrollments {
-    get => ProgramUsers.Count(pu => pu.IsActive);
-  }
+  public int CurrentEnrollments { get => ProgramUsers.Count(pu => pu.IsActive); }
 
-  public decimal AverageRating {
-    get => ProgramRatings.Count != 0 ? ProgramRatings.Average(pr => pr.Rating) : 0;
-  }
+  public decimal AverageRating { get => ProgramRatings.Count != 0 ? ProgramRatings.Average(pr => pr.Rating) : 0; }
 
-  public int TotalRatings {
-    get => ProgramRatings.Count;
-  }
+  public int TotalRatings { get => ProgramRatings.Count; }
 
-  public bool IsEnrollmentOpen {
-    get =>
-      EnrollmentStatus == EnrollmentStatus.Open &&
-      (MaxEnrollments == null || CurrentEnrollments < MaxEnrollments) &&
-      (EnrollmentDeadline == null || EnrollmentDeadline > DateTime.UtcNow);
-  }
+  public bool IsEnrollmentOpen { get => EnrollmentStatus == EnrollmentStatus.Open && (MaxEnrollments == null || CurrentEnrollments < MaxEnrollments) && (EnrollmentDeadline == null || EnrollmentDeadline > DateTime.UtcNow); }
 
-  /// <summary>
-  /// Calculate estimated weeks to complete based on hours per week load
-  /// </summary>
-  /// <param name="hoursPerWeek">Number of hours user can dedicate per week</param>
-  /// <returns>Estimated weeks to completion, or null if EstimatedHours is not set</returns>
+  /// <summary> Calculate estimated weeks to complete based on hours per week load </summary>
+  /// <param name="hoursPerWeek"> Number of hours user can dedicate per week </param>
+  /// <returns> Estimated weeks to completion, or null if EstimatedHours is not set </returns>
   public float? GetEstimatedWeeks(int hoursPerWeek) {
     if (EstimatedHours == null || EstimatedHours <= 0 || hoursPerWeek <= 0) return null;
 
-    return (float)Math.Ceiling((double)EstimatedHours.Value / hoursPerWeek);
+    return (float) Math.Ceiling((double) EstimatedHours.Value / hoursPerWeek);
   }
 
-  /// <summary>
-  /// Get skills required as TagProficiencies with their proficiency levels
-  /// </summary>
+  /// <summary> Get skills required as TagProficiencies with their proficiency levels </summary>
   public IEnumerable<TagProficiency> GetRequiredSkills() { return SkillsRequired.Select(ct => ct.Tag); }
 
-  /// <summary>
-  /// Get skills provided as TagProficiencies with their proficiency levels
-  /// </summary>
+  /// <summary> Get skills provided as TagProficiencies with their proficiency levels </summary>
   public IEnumerable<TagProficiency> GetProvidedSkills() { return SkillsProvided.Select(ct => ct.Tag); }
 
   // Helper methods for JSON metadata
@@ -150,10 +111,7 @@ public class Program : Content {
   public void SetMetadata<T>(string key, T value) {
     if (Metadata == null) Metadata = new ResourceMetadata { ResourceType = nameof(Program), AdditionalData = "{}" };
 
-    var metadataDict = string.IsNullOrEmpty(Metadata.AdditionalData)
-                         ? new Dictionary<string, object>()
-                         : JsonSerializer.Deserialize<Dictionary<string, object>>(Metadata.AdditionalData) ??
-                           new Dictionary<string, object>();
+    var metadataDict = string.IsNullOrEmpty(Metadata.AdditionalData) ? new Dictionary<string, object>() : JsonSerializer.Deserialize<Dictionary<string, object>>(Metadata.AdditionalData) ?? new Dictionary<string, object>();
 
     metadataDict[key] = value!;
     Metadata.AdditionalData = JsonSerializer.Serialize(metadataDict);
@@ -167,6 +125,6 @@ public class Program : Content {
   public float? CalculateEstimatedWeeks(int hoursPerWeek) {
     if (EstimatedHours == null || EstimatedHours <= 0 || hoursPerWeek <= 0) return null;
 
-    return (float)Math.Ceiling((double)EstimatedHours.Value / hoursPerWeek);
+    return (float) Math.Ceiling((double) EstimatedHours.Value / hoursPerWeek);
   }
 }

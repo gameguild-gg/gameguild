@@ -1,11 +1,6 @@
 ﻿namespace GameGuild.Modules.Programs;
 
-public record MonetizationDto(
-  decimal Price,
-  string Currency = "USD",
-  bool IsSubscription = false,
-  int? SubscriptionDurationDays = null
-) {
+public record MonetizationDto(decimal Price, string Currency = "USD", bool IsSubscription = false, int? SubscriptionDurationDays = null) {
   public decimal Price { get; init; } = Price;
 
   public string Currency { get; init; } = Currency;

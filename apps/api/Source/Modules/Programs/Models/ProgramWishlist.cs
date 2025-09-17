@@ -13,14 +13,10 @@ public class ProgramWishlist : EntityBase {
 
   public Guid ProgramId { get; set; }
 
-  /// <summary>
-  /// When the program was added to wishlist
-  /// </summary>
+  /// <summary> When the program was added to wishlist </summary>
   public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 
-  /// <summary>
-  /// Optional notes about why the user saved this program
-  /// </summary>
+  /// <summary> Optional notes about why the user saved this program </summary>
   [Column(TypeName = "text")]
   public string? Notes { get; set; }
 

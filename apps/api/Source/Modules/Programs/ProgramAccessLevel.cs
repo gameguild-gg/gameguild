@@ -1,31 +1,19 @@
 namespace GameGuild;
 
-/// <summary>
-/// Program access levels for products
-/// </summary>
+/// <summary> Program access levels for products </summary>
 public enum ProgramAccessLevel {
-  /// <summary>
-  /// Basic access - limited features
-  /// </summary>
+  /// <summary> Basic access - limited features </summary>
   Basic = 0,
 
-  /// <summary>
-  /// Standard access - most features available
-  /// </summary>
+  /// <summary> Standard access - most features available </summary>
   Standard = 1,
 
-  /// <summary>
-  /// Premium access - all features including exclusive content
-  /// </summary>
+  /// <summary> Premium access - all features including exclusive content </summary>
   Premium = 2,
 
-  /// <summary>
-  /// Enterprise access - full access plus enterprise features
-  /// </summary>
+  /// <summary> Enterprise access - full access plus enterprise features </summary>
   Enterprise = 3,
 
-  /// <summary>
-  /// Lifetime access - permanent access to all content
-  /// </summary>
+  /// <summary> Lifetime access - permanent access to all content </summary>
   Lifetime = 4,
 }

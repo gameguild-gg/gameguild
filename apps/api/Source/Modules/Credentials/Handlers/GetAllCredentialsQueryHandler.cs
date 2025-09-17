@@ -10,6 +10,7 @@ namespace GameGuild.Modules.Credentials.Handlers;
 /// </summary>
 public class GetAllCredentialsQueryHandler : IRequestHandler<GetAllCredentialsQuery, IEnumerable<Credential>> {
   private readonly ApplicationDbContext _context;
+
   private readonly ILogger<GetAllCredentialsQueryHandler> _logger;
 
   public GetAllCredentialsQueryHandler(ApplicationDbContext context, ILogger<GetAllCredentialsQueryHandler> logger) {
@@ -21,9 +22,7 @@ public class GetAllCredentialsQueryHandler : IRequestHandler<GetAllCredentialsQu
     _logger.LogInformation("Retrieving all credentials");
 
     try {
-      var credentials = await _context.Credentials
-                                      .Include(c => c.User)
-                                      .ToListAsync(cancellationToken);
+      var credentials = await _context.Credentials.Include(c => c.User).ToListAsync(cancellationToken);
 
       _logger.LogInformation("Retrieved {Count} credentials", credentials.Count);
 
