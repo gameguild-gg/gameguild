@@ -144,6 +144,38 @@ public static class WebApplicationBuilderExtensions {
     return builder;
   }
 
+  public static WebApplicationBuilder AddApplicationLayer(this WebApplicationBuilder builder, Action<ApplicationLayerOptions> setupApplicationLayerOptions) {
+    ArgumentNullException.ThrowIfNull(builder);
+    ArgumentNullException.ThrowIfNull(setupApplicationLayerOptions);
+
+    // Create and configure options
+    var applicationLayerOptions = ApplicationLayerOptionsBuilder.Create(builder.Configuration);
+
+    // Apply custom configurations
+    setupApplicationLayerOptions(applicationLayerOptions);
+
+    // Add services with configured options
+    DependencyInjection.AddApplicationLayer(builder.Services, builder.Configuration, applicationLayerOptions);
+
+    return builder;
+  }
+
+  public static WebApplicationBuilder AddInfrastructureLayer(this WebApplicationBuilder builder, Action<InfrastructureLayerOptions> setupInfrastructureLayerOptions) {
+    ArgumentNullException.ThrowIfNull(builder);
+    ArgumentNullException.ThrowIfNull(setupInfrastructureLayerOptions);
+
+    // Create and configure options
+    var infrastructureLayerOptions = InfrastructureLayerOptionsBuilder.Create(builder.Configuration);
+
+    // Apply custom configurations
+    setupInfrastructureLayerOptions(infrastructureLayerOptions);
+
+    // Add services with configured options
+    DependencyInjection.AddInfrastructureLayer(builder.Services, builder.Configuration, infrastructureLayerOptions);
+
+    return builder;
+  }
+
   /// <summary>
   /// Adds the infrastructure layer services to the WebApplicationBuilder.
   /// Includes repositories, external service integrations, and data access components.
