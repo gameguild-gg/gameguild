@@ -1,21 +1,15 @@
 using System.Security.Claims;
-using GameGuild.Services;
-using GameGuild.GraphQL;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Projects;
+using GameGuild.Services;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 
 
 namespace GameGuild.GraphQL;
 
-/// <summary>
-/// GraphQL extensions for permission management and querying
-/// </summary>
+/// <summary> GraphQL extensions for permission management and querying </summary>
 [ExtendObjectType<Query>]
 public class PermissionQueries {
-  /// <summary>
-  /// Get effective permissions for current user on a resource
-  /// </summary>
+  /// <summary> Get effective permissions for current user on a resource </summary>
   [Authorize]
   public async Task<IEnumerable<EffectivePermission>> GetEffectivePermissions([Service] IDacPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, string resourceType, Guid resourceId, string? userId = null) {
     var context = httpContextAccessor.HttpContext!;
@@ -32,9 +26,7 @@ public class PermissionQueries {
     return await GetEffectivePermissionsByType(resolver, resourceType, targetUserId, tenantId, resourceId);
   }
 
-  /// <summary>
-  /// Get permission hierarchy for debugging and understanding permission resolution
-  /// </summary>
+  /// <summary> Get permission hierarchy for debugging and understanding permission resolution </summary>
   [Authorize]
   public async Task<PermissionHierarchy> GetPermissionHierarchy(
     [Service] IDacPermissionResolver resolver,
@@ -58,9 +50,7 @@ public class PermissionQueries {
     return await GetPermissionHierarchyByType(resolver, resourceType, targetUserId, tenantId, permission, resourceId);
   }
 
-  /// <summary>
-  /// Check if current user has specific permission on a resource
-  /// </summary>
+  /// <summary> Check if current user has specific permission on a resource </summary>
   [Authorize]
   public async Task<bool> HasPermission([Service] IDacPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, string resourceType, Guid resourceId, PermissionType permission) {
     var context = httpContextAccessor.HttpContext!;
@@ -72,16 +62,14 @@ public class PermissionQueries {
     return result.IsGranted;
   }
 
-  /// <summary>
-  /// Get all resources where user has specific permission
-  /// </summary>
+  /// <summary> Get all resources where user has specific permission </summary>
   [Authorize]
   public async Task<IEnumerable<Guid>> GetResourcesWithPermission([Service] IDacPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, string resourceType, PermissionType permission, Guid[ ] resourceIds) {
     var context = httpContextAccessor.HttpContext!;
     var userId = GetUserIdFromContext(context);
     var tenantId = GetTenantIdFromContext(context);
 
-    var results = await BulkResolvePermissionsByType(resolver, resourceType, userId, tenantId, resourceIds, new[ ] { permission });
+    var results = await BulkResolvePermissionsByType(resolver, resourceType, userId, tenantId, resourceIds, [permission]);
 
     return results.Where(kvp => kvp.Value.ContainsKey(permission) && kvp.Value[permission].IsGranted).Select(kvp => kvp.Key);
   }
@@ -148,14 +136,10 @@ public class PermissionQueries {
   #endregion
 }
 
-/// <summary>
-/// GraphQL mutations for permission management
-/// </summary>
+/// <summary> GraphQL mutations for permission management </summary>
 [ExtendObjectType<Mutation>]
 public class PermissionMutations {
-  /// <summary>
-  /// Share a resource with specific users
-  /// </summary>
+  /// <summary> Share a resource with specific users </summary>
   [Authorize]
   public async Task<ShareResult> ShareResource([Service] IResourcePermissionService service, [Service] IDacPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, ShareResourceInput input) {
     var context = httpContextAccessor.HttpContext!;
@@ -179,9 +163,7 @@ public class PermissionMutations {
     return await service.ShareResourceAsync(input.ResourceType, input.ResourceId, shareRequest, userId);
   }
 
-  /// <summary>
-  /// Update user permissions on a resource
-  /// </summary>
+  /// <summary> Update user permissions on a resource </summary>
   [Authorize]
   public async Task<PermissionUpdateResult> UpdateUserPermissions(
     [Service] IResourcePermissionService service,
@@ -206,9 +188,7 @@ public class PermissionMutations {
     return await service.UpdateUserPermissionsAsync(input.ResourceType, input.ResourceId, input.TargetUserId, input.Permissions, userId, input.ExpiresAt);
   }
 
-  /// <summary>
-  /// Remove user access from a resource
-  /// </summary>
+  /// <summary> Remove user access from a resource </summary>
   [Authorize]
   public async Task<PermissionUpdateResult> RemoveUserAccess([Service] IResourcePermissionService service, [Service] IDacPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, RemoveUserAccessInput input) {
     var context = httpContextAccessor.HttpContext!;
@@ -240,17 +220,11 @@ public class PermissionMutations {
   #endregion
 }
 
-/// <summary>
-/// GraphQL input for sharing a resource
-/// </summary>
+/// <summary> GraphQL input for sharing a resource </summary>
 public record ShareResourceInput(string ResourceType, Guid ResourceId, string[ ] UserEmails, Guid[ ] UserIds, PermissionType[ ] Permissions, DateTime? ExpiresAt, string? Message, bool RequireAcceptance = true, bool NotifyUsers = true);
 
-/// <summary>
-/// GraphQL input for updating user permissions
-/// </summary>
+/// <summary> GraphQL input for updating user permissions </summary>
 public record UpdateUserPermissionsInput(string ResourceType, Guid ResourceId, Guid TargetUserId, PermissionType[ ] Permissions, DateTime? ExpiresAt);
 
-/// <summary>
-/// GraphQL input for removing user access
-/// </summary>
+/// <summary> GraphQL input for removing user access </summary>
 public record RemoveUserAccessInput(string ResourceType, Guid ResourceId, Guid TargetUserId);
