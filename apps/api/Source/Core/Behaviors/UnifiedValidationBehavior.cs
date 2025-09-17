@@ -1,4 +1,3 @@
-using FluentValidation;
 using GameGuild.CQRS;
 
 namespace GameGuild;

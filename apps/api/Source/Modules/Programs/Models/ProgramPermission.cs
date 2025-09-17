@@ -1,7 +1,3 @@
-using GameGuild.Modules.Permissions;
-using GameGuild.Modules.Resources;
-
-
 namespace GameGuild.Modules.Programs;
 
 /// <summary>
