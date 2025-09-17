@@ -73,19 +73,19 @@ public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor htt
   }
 
   private static TResponse CreateUnauthorizedResponse<T>() {
-    var error = Common.Error.Failure("Authorization.Unauthorized", "Authentication is required");
+    var error = Error.Failure("Authorization.Unauthorized", "Authentication is required");
 
     return CreateErrorResponse<T>(error);
   }
 
   private static TResponse CreateForbiddenResponse<T>() {
-    var error = Common.Error.Failure("Authorization.Forbidden", "Insufficient permissions");
+    var error = Error.Failure("Authorization.Forbidden", "Insufficient permissions");
 
     return CreateErrorResponse<T>(error);
   }
 
-  private static TResponse CreateErrorResponse<T>(Common.Error error) {
-    // Convert Common.Error to CQRS.Error
+  private static TResponse CreateErrorResponse<T>(Error error) {
+    // Convert Error to CQRS.Error
     var cqrsError = GameGuild.CQRS.Error.Create(error.Code, error.Description);
 
     // Handle Result pattern
