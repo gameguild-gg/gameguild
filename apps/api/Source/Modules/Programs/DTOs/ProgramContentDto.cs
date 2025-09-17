@@ -17,7 +17,7 @@ public class ProgramContentDto {
 
   public string Description { get; set; } = string.Empty;
 
-  public Common.ProgramContentType Type { get; set; }
+  public ProgramContentType Type { get; set; }
 
   public JsonDocument? Body { get; set; }
 
