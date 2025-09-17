@@ -1,4 +1,6 @@
-﻿using GameGuild.CQRS;
+﻿using DotNetEnv;
+using GameGuild.CQRS;
+using GameGuild.Database;
 
 
 namespace GameGuild;
@@ -22,17 +24,35 @@ public static class WebApplicationBuilderExtensions {
     builder.Services.AddPresentationLayer(builder.Configuration);
 
     // Add application layer services (CQRS handlers, domain services)
-    builder.AddApplicationLayer();
+    builder.AddApplicationLayer(builder.Configuration);
 
     // Add infrastructure layer services (repositories, external services)
-    builder.AddInfrastructureLayer();
+    builder.AddInfrastructureLayer(builder.Configuration);
 
     return builder;
   }
 
   /// <summary>
   /// Configures environment variables and configuration sources.
-  /// Adds JSON configuration files with proper precedence and reload-on-change support.
+  /// </summary>
+  /// <param name="builder">The WebApplicationBuilder instance</param>
+  /// <returns>The WebApplicationBuilder for method chaining</returns>
+  public static WebApplicationBuilder ConfigureEnvironment(this WebApplicationBuilder builder) {
+    // Load .env file for local development
+    Env.Load();
+
+    // Configure configuration sources with proper precedence
+    builder.Configuration.SetBasePath(AppContext.BaseDirectory)
+           .AddJsonFile("appsettings.json", optional : true, reloadOnChange : true)
+           .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional : true, reloadOnChange : true)
+           .AddEnvironmentVariables(); // Highest precedence
+
+    return builder;
+  }
+
+  /// <summary>
+  ///     Configures environment variables and configuration sources.
+  ///     Adds JSON configuration files with proper precedence and reload-on-change support.
   /// </summary>
   /// <param name="builder">The WebApplicationBuilder instance</param>
   /// <returns>The WebApplicationBuilder for method chaining</returns>
@@ -41,7 +61,11 @@ public static class WebApplicationBuilderExtensions {
     ArgumentNullException.ThrowIfNull(builder);
 
     // Configure configuration sources with proper precedence
-    builder.Configuration.SetBasePath(AppContext.BaseDirectory).AddJsonFile("appsettings.json", true, true).AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
+    builder // 
+      .Configuration // 
+      .SetBasePath(AppContext.BaseDirectory) // 
+      .AddJsonFile("appsettings.json", true, true) // 
+      .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
 
     return builder;
   }
@@ -161,30 +185,6 @@ public static class WebApplicationBuilderExtensions {
 
     // Add infrastructure layer services (repositories, external services)
     builder.AddInfrastructureLayer();
-
-    return builder;
-  }
-
-  /// <summary>
-  /// Configures environment-specific settings.
-  /// </summary>
-  /// <param name="builder">The WebApplicationBuilder instance</param>
-  /// <returns>The configured WebApplicationBuilder</returns>
-  public static WebApplicationBuilder ConfigureEnvironment(this WebApplicationBuilder builder) {
-    ArgumentNullException.ThrowIfNull(builder);
-
-    // Environment-specific configurations can be added here,
-    // For example, logging levels, configuration sources, etc.
-
-    if (builder.Environment.IsDevelopment()) {
-      // Development-specific environment setup
-    }
-    else if (builder.Environment.IsStaging()) {
-      // Staging-specific environment setup
-    }
-    else if (builder.Environment.IsProduction()) {
-      // Production-specific environment setup
-    }
 
     return builder;
   }
