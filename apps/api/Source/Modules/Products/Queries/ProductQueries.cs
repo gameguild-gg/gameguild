@@ -135,7 +135,7 @@ public record ProductRevenueReport {
 
   public decimal AverageOrderValue { get; init; }
 
-  public IEnumerable<ProductRevenueDataPoint> DataPoints { get; init; } = Enumerable.Empty<ProductRevenueDataPoint>();
+  public IEnumerable<ProductRevenueDataPoint> DataPoints { get; init; } = [];
 }
 
 /// <summary> Revenue data point for specific time period </summary>

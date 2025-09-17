@@ -38,8 +38,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
       await _permissionService.CreateRoleTemplateAsync(
                                 "TestingLabAdmin",
                                 "Full administrative control over all Testing Lab resources",
-                                new List<PermissionTemplate> {
-                                  // TestingLabSettings - full control
+                                [
                                   new PermissionTemplate { Action = "create", ResourceType = "TestingLabSettings" },
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingLabSettings" },
                                   new PermissionTemplate { Action = "edit", ResourceType = "TestingLabSettings" },
@@ -58,6 +57,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                                   new PermissionTemplate { Action = "delete", ResourceType = "TestingLocation" },
 
                                   // Feedback - full control
+
                                   new PermissionTemplate { Action = "create", ResourceType = "TestingFeedback" },
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingFeedback" },
                                   new PermissionTemplate { Action = "edit", ResourceType = "TestingFeedback" },
@@ -65,6 +65,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                                   new PermissionTemplate { Action = "moderate", ResourceType = "TestingFeedback" },
 
                                   // Requests - full control
+
                                   new PermissionTemplate { Action = "create", ResourceType = "TestingRequest" },
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingRequest" },
                                   new PermissionTemplate { Action = "edit", ResourceType = "TestingRequest" },
@@ -72,9 +73,10 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                                   new PermissionTemplate { Action = "approve", ResourceType = "TestingRequest" },
 
                                   // Participants - full control
+
                                   new PermissionTemplate { Action = "manage", ResourceType = "TestingParticipant" },
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingParticipant" },
-                                }
+                                ]
                               )
                               .ConfigureAwait(false);
 
@@ -82,8 +84,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
       await _permissionService.CreateRoleTemplateAsync(
                                 "TestingLabManager",
                                 "Can manage testing resources but cannot delete sessions or locations",
-                                new List<PermissionTemplate> {
-                                  // TestingLabSettings - can read and edit
+                                [
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingLabSettings" },
                                   new PermissionTemplate { Action = "edit", ResourceType = "TestingLabSettings" },
 
@@ -103,14 +104,16 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                                   new PermissionTemplate { Action = "moderate", ResourceType = "TestingFeedback" },
 
                                   // Requests - can handle
+
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingRequest" },
                                   new PermissionTemplate { Action = "edit", ResourceType = "TestingRequest" },
                                   new PermissionTemplate { Action = "approve", ResourceType = "TestingRequest" },
 
                                   // Participants - can manage
+
                                   new PermissionTemplate { Action = "manage", ResourceType = "TestingParticipant" },
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingParticipant" },
-                                }
+                                ]
                               )
                               .ConfigureAwait(false);
 
@@ -118,13 +121,12 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
       await _permissionService.CreateRoleTemplateAsync(
                                 "TestingLabCoordinator",
                                 "Can coordinate testing sessions and handle requests",
-                                new List<PermissionTemplate> {
-                                  // TestingLabSettings - read only
+                                [
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingLabSettings" },
 
                                   // Sessions - read and edit own
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingSession" },
-                                  new PermissionTemplate { Action = "edit", ResourceType = "TestingSession", Constraints = new List<PermissionConstraint> { new PermissionConstraint { Type = "owner", Value = "true" } } },
+                                  new PermissionTemplate { Action = "edit", ResourceType = "TestingSession", Constraints = [new PermissionConstraint { Type = "owner", Value = "true" }] },
 
                                   // Locations - read only
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingLocation" },
@@ -139,7 +141,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
 
                                   // Participants - read only
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingParticipant" },
-                                }
+                                ]
                               )
                               .ConfigureAwait(false);
 
@@ -147,8 +149,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
       await _permissionService.CreateRoleTemplateAsync(
                                 "TestingLabTester",
                                 "Can participate in testing sessions and provide feedback",
-                                new List<PermissionTemplate> {
-                                  // TestingLabSettings - read only
+                                [
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingLabSettings" },
 
                                   // Sessions - read only
@@ -160,12 +161,12 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
                                   // Feedback - create and edit own
                                   new PermissionTemplate { Action = "create", ResourceType = "TestingFeedback" },
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingFeedback" },
-                                  new PermissionTemplate { Action = "edit", ResourceType = "TestingFeedback", Constraints = new List<PermissionConstraint> { new PermissionConstraint { Type = "owner", Value = "true" } } },
+                                  new PermissionTemplate { Action = "edit", ResourceType = "TestingFeedback", Constraints = [new PermissionConstraint { Type = "owner", Value = "true" }] },
 
                                   // Requests - create only
                                   new PermissionTemplate { Action = "create", ResourceType = "TestingRequest" },
-                                  new PermissionTemplate { Action = "read", ResourceType = "TestingRequest", Constraints = new List<PermissionConstraint> { new PermissionConstraint { Type = "owner", Value = "true" } } },
-                                }
+                                  new PermissionTemplate { Action = "read", ResourceType = "TestingRequest", Constraints = [new PermissionConstraint { Type = "owner", Value = "true" }] },
+                                ]
                               )
                               .ConfigureAwait(false);
 
@@ -173,8 +174,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
       await _permissionService.CreateRoleTemplateAsync(
                                 "TestingLabLocationManager",
                                 "Can manage testing locations and view sessions",
-                                new List<PermissionTemplate> {
-                                  // TestingLabSettings - read only
+                                [
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingLabSettings" },
 
                                   // Sessions - read only
@@ -188,7 +188,7 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
 
                                   // Feedback - read only
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingFeedback" },
-                                }
+                                ]
                               )
                               .ConfigureAwait(false);
 
@@ -196,14 +196,14 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
       await _permissionService.CreateRoleTemplateAsync(
                                 "TestingLabReadOnly",
                                 "Can view all testing lab resources but cannot make changes",
-                                new List<PermissionTemplate> {
+                                [
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingLabSettings" },
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingSession" },
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingLocation" },
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingFeedback" },
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingRequest" },
                                   new PermissionTemplate { Action = "read", ResourceType = "TestingParticipant" },
-                                }
+                                ]
                               )
                               .ConfigureAwait(false);
 

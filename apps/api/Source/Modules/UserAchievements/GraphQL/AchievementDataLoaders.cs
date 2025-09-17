@@ -105,15 +105,15 @@ public class AchievementStatisticsDataLoader : BatchDataLoader<Guid, Achievement
       results[achievementId] = new AchievementStatisticsDto {
         TotalAchievementsAwarded = earnCount,
         UsersWithAchievements = uniqueUsers,
-        MostEarnedAchievements = new List<AchievementPopularityDto> {
+        MostEarnedAchievements = [
           new AchievementPopularityDto {
             AchievementId = achievementId,
             Name = "", // Will be populated elsewhere if needed
             TimesEarned = earnCount,
             EarnRate = earnRate,
           },
-        },
-        RarestAchievements = new List<AchievementPopularityDto>(),
+        ],
+        RarestAchievements = [],
       };
     }
 

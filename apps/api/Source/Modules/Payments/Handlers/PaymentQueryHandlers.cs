@@ -39,7 +39,7 @@ public class GetUserPaymentsQueryHandler : IRequestHandler<GetUserPaymentsQuery,
 
   public async Task<IEnumerable<Payment>> Handle(GetUserPaymentsQuery request, CancellationToken cancellationToken) {
     // Check authorization
-    if (_userContext.UserId != request.UserId && !_userContext.IsInRole("Admin")) { return Enumerable.Empty<Payment>(); }
+    if (_userContext.UserId != request.UserId && !_userContext.IsInRole("Admin")) { return []; }
 
     var query = _context.Payments.Include(p => p.Refunds).Where(p => p.UserId == request.UserId);
 
@@ -67,7 +67,7 @@ public class GetProductPaymentsQueryHandler : IRequestHandler<GetProductPayments
 
   public async Task<IEnumerable<Payment>> Handle(GetProductPaymentsQuery request, CancellationToken cancellationToken) {
     // Only admins can view product payments
-    if (!_userContext.IsInRole("Admin")) { return Enumerable.Empty<Payment>(); }
+    if (!_userContext.IsInRole("Admin")) { return []; }
 
     var query = _context.Payments.Include(p => p.Refunds).Where(p => p.ProductId == request.ProductId);
 

@@ -119,21 +119,21 @@ public class ProjectPermissionController : ControllerBase {
   [RequireProjectPermission(PermissionType.Read)]
   public ActionResult<IEnumerable<ProjectRoleTemplate>> GetProjectRoleTemplates() {
     var templates = new[ ] {
-      new ProjectRoleTemplate { Name = "Viewer", Description = "Can view project content", Permissions = new[ ] { PermissionType.Read, PermissionType.Comment } },
+      new ProjectRoleTemplate { Name = "Viewer", Description = "Can view project content", Permissions = [PermissionType.Read, PermissionType.Comment] },
       new ProjectRoleTemplate {
         Name = "Collaborator",
         Description = "Can edit project content and collaborate",
-        Permissions = new[ ] { PermissionType.Read, PermissionType.Edit, PermissionType.Comment, PermissionType.Reply, PermissionType.Share, PermissionType.Create },
+        Permissions = [PermissionType.Read, PermissionType.Edit, PermissionType.Comment, PermissionType.Reply, PermissionType.Share, PermissionType.Create],
       },
       new ProjectRoleTemplate {
         Name = "Editor",
         Description = "Can edit, review, and publish project content",
-        Permissions = new[ ] { PermissionType.Read, PermissionType.Edit, PermissionType.Create, PermissionType.Comment, PermissionType.Reply, PermissionType.Share, PermissionType.Review, PermissionType.Approve, PermissionType.Publish },
+        Permissions = [PermissionType.Read, PermissionType.Edit, PermissionType.Create, PermissionType.Comment, PermissionType.Reply, PermissionType.Share, PermissionType.Review, PermissionType.Approve, PermissionType.Publish],
       },
       new ProjectRoleTemplate {
         Name = "Admin",
         Description = "Full access to project including user management",
-        Permissions = new[ ] {
+        Permissions = [
           PermissionType.Read,
           PermissionType.Edit,
           PermissionType.Create,
@@ -146,7 +146,7 @@ public class ProjectPermissionController : ControllerBase {
           PermissionType.Publish,
           PermissionType.Archive,
           PermissionType.Restore,
-        },
+        ],
       },
     };
 
@@ -216,21 +216,21 @@ public class ProjectPermissionController : ControllerBase {
 
   private static ProjectRoleTemplate? GetRoleTemplate(string roleName) {
     return roleName.ToLower() switch {
-      "viewer" => new ProjectRoleTemplate { Name = "Viewer", Description = "Can view project content", Permissions = new[ ] { PermissionType.Read, PermissionType.Comment } },
+      "viewer" => new ProjectRoleTemplate { Name = "Viewer", Description = "Can view project content", Permissions = [PermissionType.Read, PermissionType.Comment] },
       "collaborator" => new ProjectRoleTemplate {
         Name = "Collaborator",
         Description = "Can edit project content and collaborate",
-        Permissions = new[ ] { PermissionType.Read, PermissionType.Edit, PermissionType.Comment, PermissionType.Reply, PermissionType.Share, PermissionType.Create },
+        Permissions = [PermissionType.Read, PermissionType.Edit, PermissionType.Comment, PermissionType.Reply, PermissionType.Share, PermissionType.Create],
       },
       "editor" => new ProjectRoleTemplate {
         Name = "Editor",
         Description = "Can edit, review, and publish project content",
-        Permissions = new[ ] { PermissionType.Read, PermissionType.Edit, PermissionType.Create, PermissionType.Comment, PermissionType.Reply, PermissionType.Share, PermissionType.Review, PermissionType.Approve, PermissionType.Publish },
+        Permissions = [PermissionType.Read, PermissionType.Edit, PermissionType.Create, PermissionType.Comment, PermissionType.Reply, PermissionType.Share, PermissionType.Review, PermissionType.Approve, PermissionType.Publish],
       },
       "admin" => new ProjectRoleTemplate {
         Name = "Admin",
         Description = "Full access to project including user management",
-        Permissions = new[ ] {
+        Permissions = [
           PermissionType.Read,
           PermissionType.Edit,
           PermissionType.Create,
@@ -243,7 +243,7 @@ public class ProjectPermissionController : ControllerBase {
           PermissionType.Publish,
           PermissionType.Archive,
           PermissionType.Restore,
-        },
+        ],
       },
       _ => null,
     };
@@ -264,7 +264,7 @@ public class ProjectCollaboratorDto {
 
   public string Role { get; set; } = string.Empty;
 
-  public PermissionType[ ] Permissions { get; set; } = Array.Empty<PermissionType>();
+  public PermissionType[ ] Permissions { get; set; } = [];
 
   public DateTime JoinedAt { get; set; }
 
@@ -279,7 +279,7 @@ public class ProjectCollaboratorDto {
 public class AddCollaboratorRequest {
   public string Email { get; set; } = string.Empty;
 
-  public PermissionType[ ] Permissions { get; set; } = Array.Empty<PermissionType>();
+  public PermissionType[ ] Permissions { get; set; } = [];
 
   public DateTime? ExpiresAt { get; set; }
 
@@ -290,7 +290,7 @@ public class AddCollaboratorRequest {
 
 /// <summary> Request to update collaborator permissions </summary>
 public class UpdateCollaboratorRequest {
-  public PermissionType[ ] Permissions { get; set; } = Array.Empty<PermissionType>();
+  public PermissionType[ ] Permissions { get; set; } = [];
 
   public DateTime? ExpiresAt { get; set; }
 }
@@ -301,16 +301,16 @@ public class ProjectRoleTemplate {
 
   public string Description { get; set; } = string.Empty;
 
-  public PermissionType[ ] Permissions { get; set; } = Array.Empty<PermissionType>();
+  public PermissionType[ ] Permissions { get; set; } = [];
 }
 
 /// <summary> Request to share project with specific role </summary>
 public class ShareProjectWithRoleRequest {
   public string RoleName { get; set; } = string.Empty;
 
-  public string[ ] UserEmails { get; set; } = Array.Empty<string>();
+  public string[ ] UserEmails { get; set; } = [];
 
-  public Guid[ ] UserIds { get; set; } = Array.Empty<Guid>();
+  public Guid[ ] UserIds { get; set; } = [];
 
   public DateTime? ExpiresAt { get; set; }
 
