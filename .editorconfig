@@ -1,0 +1,20 @@
+# top-most EditorConfig
+root = true
+
+[*.cs]
+# Treat all analyzer diagnostics as warnings by default (can override selectively)
+dotnet_analyzer_diagnostic.severity = warning
+
+# Optionally suppress specific noisy rules temporarily (can be refined later)
+# CA1812: internal class never instantiated (often FP with EF configurations)
+dotnet_diagnostic.CA1812.severity = silent
+# CA1062: parameter null check (noisy for record handlers, can re-enable later)
+dotnet_diagnostic.CA1062.severity = warning
+# CA2007: ConfigureAwait (not needed in ASP.NET Core context normally)
+dotnet_diagnostic.CA2007.severity = suggestion
+# CA1848/1849 LoggerMessage performance suggestions
+dotnet_diagnostic.CA1848.severity = suggestion
+
+# Style simplifications shouldn't fail builds
+csharp_style_namespace_declarations = file_scoped:error
+# But don't elevate misuse of namespace path to error
