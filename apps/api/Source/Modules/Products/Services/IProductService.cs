@@ -1,5 +1,6 @@
 using GameGuild.Modules.Contents;
 using ProductEntity = GameGuild.Modules.Products.Product;
+using ProductType = GameGuild.ProductType;
 
 
 namespace GameGuild.Modules.Products;

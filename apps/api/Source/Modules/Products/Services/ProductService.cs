@@ -1,6 +1,8 @@
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
+using Microsoft.EntityFrameworkCore;
 using ProductEntity = GameGuild.Modules.Products.Product;
+using ProductType = GameGuild.ProductType;
 
 
 namespace GameGuild.Modules.Products;
