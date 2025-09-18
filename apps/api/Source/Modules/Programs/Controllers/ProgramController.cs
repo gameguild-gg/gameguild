@@ -7,12 +7,23 @@ using ProgramEntity = GameGuild.Modules.Programs.Program;
 namespace GameGuild.Modules.Programs;
 
 /// <summary>
-///   REST API controller for managing programs Implements 3-layer DAC permission system for all routes DAC Attribute Usage Examples: - Tenant Level: [RequireTenantPermission(PermissionType.Create)] - Content-Type Level:
-///   [RequireContentTypePermission
-///   <ProgramEntity>
-///     (PermissionType.Read)] - Resource Level (Preferred): [GameGuild.Authorization.RequireResourcePermissionAttribute
-///     <ProgramPermission, ProgramEntity> (PermissionType.Update)] - Resource Level (Explicit): [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, ProgramPermission, ProgramEntity> (PermissionType.Update)]
+/// REST API controller for comprehensive program management operations
 /// </summary>
+/// <remarks>
+/// ProgramController implements a complete API for educational program management with:
+/// - Three-tier Data Access Control (DAC) permission system
+/// - Public endpoints for program discovery and enrollment
+/// - Administrative endpoints for content management
+/// - User-specific endpoints for progress tracking
+/// 
+/// Permission Levels:
+/// - Tenant Level: [RequireTenantPermission(PermissionType.Create)]
+/// - Content-Type Level: [RequireContentTypePermission&lt;ProgramEntity&gt;(PermissionType.Read)]
+/// - Resource Level: [RequireResourcePermission&lt;ProgramPermission, ProgramEntity&gt;(PermissionType.Update)]
+/// 
+/// The controller follows RESTful conventions with proper HTTP status codes,
+/// response caching, and comprehensive error handling for production use.
+/// </remarks>
 [ApiController]
 [Route("api/[controller]")]
 public class ProgramController(IProgramService programService) : ControllerBase {
