@@ -26,6 +26,7 @@ using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserAchievements;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
+using GameGuild.Source.Modules.Programs.Models;
 using Tag = GameGuild.Modules.Tags.Models.Tag;
 using UserRoleAssignment = GameGuild.Modules.Permissions.UserRoleAssignment;
 
@@ -243,9 +244,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<AchievementProgress> AchievementProgress { get; set; }
 
   // Notifications Management DbSets
-  public DbSet<GameGuild.Modules.Notifications.Models.Notification> Notifications { get; set; }
+  public DbSet<GameGuild.Modules.Notifications.Notification> Notifications { get; set; }
 
-  public DbSet<GameGuild.Modules.Notifications.Models.NotificationPreferences> NotificationPreferences { get; set; }
+  public DbSet<GameGuild.Modules.Notifications.NotificationPreferences> NotificationPreferences { get; set; }
 
   // KYC Management DbSets
   public DbSet<UserKycVerification> UserKycVerifications { get; set; }
