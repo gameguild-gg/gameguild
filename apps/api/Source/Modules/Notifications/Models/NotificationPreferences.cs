@@ -1,4 +1,8 @@
-namespace GameGuild.Modules.Notifications.Models;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+
+namespace GameGuild.Modules.Notifications;
 
 /// <summary> User preferences for notifications </summary>
 [Table("NotificationPreferences")]
