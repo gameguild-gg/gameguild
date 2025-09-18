@@ -1,5 +1,8 @@
+using GameGuild.Attributes;
+using GameGuild.Authorization.Identity;
 using GameGuild.Modules.Resources.Models;
 using GameGuild.Modules.Resources.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -18,7 +21,11 @@ public class ResourcesController : ControllerBase {
   [HttpGet("usage")]
   public async Task<ActionResult<MultiResourceUsageResponse>> GetUsageOverview() {
     var tenantId = User.GetTenantId();
-    var overview = await _resourceQuotaService.GetTenantUsageOverviewAsync(tenantId);
+    if (!tenantId.HasValue) {
+      return BadRequest("Tenant context is required");
+    }
+
+    var overview = await _resourceQuotaService.GetTenantUsageOverviewAsync(tenantId.Value);
 
     return Ok(overview);
   }
@@ -27,7 +34,11 @@ public class ResourcesController : ControllerBase {
   [HttpGet("usage/{type}")]
   public async Task<ActionResult<ResourceUsageResponse>> GetResourceUsageDetails(ResourceUsageType type, [FromQuery] int historyDays = 30) {
     var tenantId = User.GetTenantId();
-    var details = await _resourceQuotaService.GetResourceUsageDetailsAsync(tenantId, type, historyDays);
+    if (!tenantId.HasValue) {
+      return BadRequest("Tenant context is required");
+    }
+
+    var details = await _resourceQuotaService.GetResourceUsageDetailsAsync(tenantId.Value, type, historyDays);
 
     return Ok(details);
   }
@@ -36,7 +47,11 @@ public class ResourcesController : ControllerBase {
   [HttpPost("check-limits")]
   public async Task<ActionResult<ResourceLimitCheckResponse>> CheckLimits([FromBody] CheckLimitsRequest request) {
     var tenantId = User.GetTenantId();
-    var result = await _resourceQuotaService.CheckLimitsAsync(tenantId, request.Type, request.Amount);
+    if (!tenantId.HasValue) {
+      return BadRequest("Tenant context is required");
+    }
+
+    var result = await _resourceQuotaService.CheckLimitsAsync(tenantId.Value, request.Type, request.Amount);
 
     return Ok(result);
   }
@@ -45,7 +60,11 @@ public class ResourcesController : ControllerBase {
   [HttpPost("check-multiple-limits")]
   public async Task<ActionResult<Dictionary<ResourceUsageType, ResourceLimitCheckResponse>>> CheckMultipleLimits([FromBody] Dictionary<ResourceUsageType, long> requestedAmounts) {
     var tenantId = User.GetTenantId();
-    var results = await _resourceQuotaService.CheckMultipleLimitsAsync(tenantId, requestedAmounts);
+    if (!tenantId.HasValue) {
+      return BadRequest("Tenant context is required");
+    }
+
+    var results = await _resourceQuotaService.CheckMultipleLimitsAsync(tenantId.Value, requestedAmounts);
 
     return Ok(results);
   }
@@ -54,9 +73,16 @@ public class ResourcesController : ControllerBase {
   [HttpPost("consume")]
   public async Task<ActionResult<ResourceLimitCheckResponse>> ConsumeResource([FromBody] ConsumeResourceRequest request) {
     var tenantId = User.GetTenantId();
-    var userId = User.GetUserId();
+    if (!tenantId.HasValue) {
+      return BadRequest("Tenant context is required");
+    }
 
-    var result = await _resourceQuotaService.TryConsumeResourceAsync(tenantId, request.Type, request.Amount, userId, request.Source);
+    var userId = User.GetUserId();
+    if (!userId.HasValue) {
+      return BadRequest("User context is required");
+    }
+
+    var result = await _resourceQuotaService.TryConsumeResourceAsync(tenantId.Value, request.Type, request.Amount, userId.Value, request.Source);
 
     return Ok(result);
   }
@@ -65,11 +91,20 @@ public class ResourcesController : ControllerBase {
   [HttpPost("record-usage")]
   public async Task<ActionResult<bool>> RecordUsage([FromBody] RecordUsageRequest request) {
     var tenantId = User.GetTenantId();
+    if (!tenantId.HasValue) {
+      return BadRequest("Tenant context is required");
+    }
+
     var userId = User.GetUserId();
+    if (!userId.HasValue) {
+      return BadRequest("User context is required");
+    }
 
-    var success = await _resourceQuotaService.RecordUsageAsync(tenantId, request.Type, request.Amount, userId, request.Source, request.Metadata);
+    var success = await _resourceQuotaService.RecordUsageAsync(tenantId.Value, request.Type, request.Amount, userId.Value, request.Source, request.Metadata);
 
-    if (!success) return BadRequest("Failed to record usage");
+    if (!success) {
+      return BadRequest("Failed to record usage");
+    }
 
     return Ok(success);
   }
@@ -78,7 +113,11 @@ public class ResourcesController : ControllerBase {
   [HttpGet("usage/{type}/history")]
   public async Task<ActionResult<IEnumerable<ResourceUsageRecord>>> GetUsageHistory(ResourceUsageType type, [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null) {
     var tenantId = User.GetTenantId();
-    var history = await _resourceQuotaService.GetUsageHistoryAsync(tenantId, type, fromDate, toDate);
+    if (!tenantId.HasValue) {
+      return BadRequest("Tenant context is required");
+    }
+
+    var history = await _resourceQuotaService.GetUsageHistoryAsync(tenantId.Value, type, fromDate, toDate);
 
     return Ok(history);
   }
@@ -87,7 +126,7 @@ public class ResourcesController : ControllerBase {
 
   /// <summary> Set resource quota for a tenant (admin only) </summary>
   [HttpPost("admin/quotas")]
-  // [RequireRole("Admin", "TenantManager")]
+  [Authorize(Roles = "Admin,TenantManager")]
   public async Task<ActionResult<ResourceQuota>> SetQuota([FromBody] SetQuotaRequest request) {
     var quota = await _resourceQuotaService.SetQuotaAsync(request.TenantId, request.Type, request.SoftLimit, request.HardLimit, request.Period);
 
@@ -96,7 +135,7 @@ public class ResourcesController : ControllerBase {
 
   /// <summary> Get all quotas for a tenant (admin only) </summary>
   [HttpGet("admin/tenants/{tenantId:guid}/quotas")]
-  // [RequireRole("Admin", "TenantManager")]
+  [Authorize(Roles = "Admin,TenantManager")]
   public async Task<ActionResult<IEnumerable<ResourceQuota>>> GetTenantQuotas(Guid tenantId) {
     var quotas = await _resourceQuotaService.GetTenantQuotasAsync(tenantId);
 
@@ -105,18 +144,20 @@ public class ResourcesController : ControllerBase {
 
   /// <summary> Delete a resource quota (admin only) </summary>
   [HttpDelete("admin/quotas")]
-  // [RequireRole("Admin", "TenantManager")]
+  [Authorize(Roles = "Admin,TenantManager")]
   public async Task<ActionResult> DeleteQuota([FromBody] DeleteQuotaRequest request) {
     var success = await _resourceQuotaService.DeleteQuotaAsync(request.TenantId, request.Type);
 
-    if (!success) return NotFound();
+    if (!success) {
+      return NotFound();
+    }
 
     return NoContent();
   }
 
   /// <summary> Get tenants that have exceeded their limits (admin only) </summary>
   [HttpGet("admin/exceeding-limits")]
-  // [RequireRole("Admin")]
+  [Authorize(Roles = "Admin")]
   public async Task<ActionResult<IEnumerable<Guid>>> GetTenantsExceedingLimits([FromQuery] ResourceUsageType? type = null, [FromQuery] bool hardLimitOnly = false) {
     var tenants = await _resourceQuotaService.GetTenantsExceedingLimitsAsync(type, hardLimitOnly);
 
@@ -125,7 +166,7 @@ public class ResourcesController : ControllerBase {
 
   /// <summary> Reset expired quotas (admin only) </summary>
   [HttpPost("admin/reset-expired-quotas")]
-  // [RequireRole("Admin")]
+  [Authorize(Roles = "Admin")]
   public async Task<ActionResult<int>> ResetExpiredQuotas() {
     var resetCount = await _resourceQuotaService.ResetExpiredQuotasAsync();
 
@@ -134,7 +175,7 @@ public class ResourcesController : ControllerBase {
 
   /// <summary> Clean up old usage records (admin only) </summary>
   [HttpDelete("admin/cleanup-usage-records")]
-  // [RequireRole("Admin")]
+  [Authorize(Roles = "Admin")]
   public async Task<ActionResult<int>> CleanupOldUsageRecords([FromQuery] DateTime olderThan) {
     var cleanedCount = await _resourceQuotaService.CleanupOldUsageRecordsAsync(olderThan);
 
@@ -143,11 +184,13 @@ public class ResourcesController : ControllerBase {
 
   /// <summary> Recalculate usage for a tenant and resource type (admin only) </summary>
   [HttpPost("admin/recalculate-usage")]
-  // [RequireRole("Admin")]
+  [Authorize(Roles = "Admin")]
   public async Task<ActionResult<bool>> RecalculateUsage([FromBody] RecalculateUsageRequest request) {
     var success = await _resourceQuotaService.RecalculateUsageAsync(request.TenantId, request.Type);
 
-    if (!success) return BadRequest("Failed to recalculate usage");
+    if (!success) {
+      return BadRequest("Failed to recalculate usage");
+    }
 
     return Ok(success);
   }
