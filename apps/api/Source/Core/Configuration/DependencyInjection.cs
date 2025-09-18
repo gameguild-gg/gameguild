@@ -1,8 +1,21 @@
 using System.Reflection;
+using GameGuild.Authorization.Identity;
+using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
+using GameGuild.Database;
+using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Billing;
+using GameGuild.Modules.Credentials;
+using GameGuild.Modules.Posts;
+using GameGuild.Modules.Products;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Resources;
+using GameGuild.Modules.Subscriptions;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.TestingLab;
+using GameGuild.Modules.UserAchievements;
+using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild;
@@ -109,6 +122,9 @@ public static class DependencyInjection {
     // Add CQRS services (handlers, behaviors, etc.)
     services.AddCQRS(assemblies);
 
+    // Core infrastructure services are now registered in the Infrastructure Layer
+    // This ensures they're available when modules are registered
+
     return services;
   }
 
@@ -120,12 +136,18 @@ public static class DependencyInjection {
     ArgumentNullException.ThrowIfNull(services);
     ArgumentNullException.ThrowIfNull(configuration);
 
+    // Register core infrastructure services FIRST (required by modules)
+    services.AddCoreInfrastructure();
+
+    // Register database context
+    ServiceCollectionExtensions.AddDatabaseContext(services, configuration);
+
     // Register repositories
     // TODO: Enable when repository implementations are ready
     // services.AddRepositories();
 
     // Register external services (email, payment, etc.)
-    services.AddExternalServices();
+    services.AddExternalServices(configuration);
 
     return services;
   }
@@ -183,15 +205,51 @@ public static class DependencyInjection {
   // }
 
   /// <summary> Registers external service implementations </summary>
-  private static IServiceCollection AddExternalServices(this IServiceCollection services) {
+  private static IServiceCollection AddExternalServices(this IServiceCollection services, IConfiguration configuration) {
     // Add module services
     services.AddResourcesModule();
     services.AddTenantsModule();
     services.AddProjectsModule();
 
+    // Add missing modules
+    services.AddSubscriptionsModule();
+    services.AddPostsModule();
+    services.AddTestingLabModule();
+    services.AddCredentialsModule();
+    services.AddUsersModule();
+    services.AddBillingModule();
+    services.AddUserAchievementsModule();
+    services.AddProductsModule();
+
+    // Add Authentication module
+    services.AddAuthModule(configuration);
+
     // External services will be added here as modules are implemented
     // Email service, payment providers, notification services, etc.
 
+    return services;
+  }
+
+  /// <summary> Registers core infrastructure services required by CQRS handlers </summary>
+  private static IServiceCollection AddCoreInfrastructure(this IServiceCollection services) {
+    // Add debug logging
+    Console.WriteLine("🔧 AddCoreInfrastructure called");
+
+    // Register domain event publisher
+    services.AddScoped<IDomainEventPublisher, DomainEventPublisher>();
+    Console.WriteLine("✅ IDomainEventPublisher registered");
+
+    // Register context services
+    services.AddScoped<IUserContext, UserContext>();
+    Console.WriteLine("✅ IUserContext registered");
+
+    services.AddScoped<ITenantContext, TenantContext>();
+    Console.WriteLine("✅ ITenantContext registered");
+
+    services.AddHttpContextAccessor(); // Required by UserContext and TenantContext
+    Console.WriteLine("✅ HttpContextAccessor registered");
+
+    Console.WriteLine("🔧 AddCoreInfrastructure completed successfully");
     return services;
   }
 }
