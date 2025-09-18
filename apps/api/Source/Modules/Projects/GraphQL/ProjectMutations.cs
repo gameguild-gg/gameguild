@@ -1,3 +1,4 @@
+using GameGuild.Core.Domain.Identity;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Contents;
 

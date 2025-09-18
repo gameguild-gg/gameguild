@@ -1,3 +1,4 @@
+using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents;
 using Microsoft.AspNetCore.Mvc;
