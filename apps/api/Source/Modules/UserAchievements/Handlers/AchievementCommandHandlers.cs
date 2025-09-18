@@ -1,10 +1,17 @@
+using GameGuild; // For Result and Error classes
 using GameGuild.CQRS;
 using GameGuild.Database;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 
 namespace GameGuild.Modules.UserAchievements;
 
-/// <summary> Handler for creating achievements </summary>
+/// <summary> 
+/// Handler for creating new achievements in the gamification system.
+/// Supports creating achievements with multiple levels and prerequisites.
+/// Publishes domain events for integration with other modules.
+/// </summary>
 public class CreateAchievementCommandHandler : ICommandHandler<CreateAchievementCommand, Result<Achievement>> {
   private readonly ApplicationDbContext _context;
 
@@ -12,18 +19,30 @@ public class CreateAchievementCommandHandler : ICommandHandler<CreateAchievement
 
   private readonly IPublisher _publisher;
 
+  /// <summary>
+  /// Initializes a new instance of the CreateAchievementCommandHandler.
+  /// </summary>
+  /// <param name="context">Database context for data access</param>
+  /// <param name="logger">Logger for diagnostic information</param>
+  /// <param name="publisher">Event publisher for domain events</param>
   public CreateAchievementCommandHandler(ApplicationDbContext context, ILogger<CreateAchievementCommandHandler> logger, IPublisher publisher) {
     _context = context;
     _logger = logger;
     _publisher = publisher;
   }
 
+  /// <summary>
+  /// Handles the creation of a new achievement with validation and event publishing.
+  /// </summary>
+  /// <param name="request">Command containing achievement details</param>
+  /// <param name="cancellationToken">Cancellation token for async operations</param>
+  /// <returns>Result containing the created achievement or error information</returns>
   public async Task<Result<Achievement>> Handle(CreateAchievementCommand request, CancellationToken cancellationToken) {
     try {
       // Check if achievement with same name exists in tenant
       var existingAchievement = await _context.Achievements.Where(a => a.Name == request.Name && a.TenantId == request.TenantId).FirstOrDefaultAsync(cancellationToken);
 
-      if (existingAchievement != null) { return Result.Failure<Achievement>(CQRS.Error.Conflict("Achievement", "Achievement with this name already exists")); }
+      if (existingAchievement != null) { return Result.Failure<Achievement>(Error.Conflict("Achievement", "Achievement with this name already exists")); }
 
       var achievement = new Achievement {
         Name = request.Name,
@@ -91,7 +110,7 @@ public class CreateAchievementCommandHandler : ICommandHandler<CreateAchievement
     catch (Exception ex) {
       _logger.LogError(ex, "Error creating achievement {AchievementName}", request.Name);
 
-      return Result.Failure<Achievement>(CQRS.Error.Failure("CreateAchievement", "Failed to create achievement"));
+      return Result.Failure<Achievement>(Error.Failure("CreateAchievement", "Failed to create achievement"));
     }
   }
 }
@@ -114,7 +133,7 @@ public class UpdateAchievementCommandHandler : ICommandHandler<UpdateAchievement
     try {
       var achievement = await _context.Achievements.FirstOrDefaultAsync(a => a.Id == request.AchievementId, cancellationToken);
 
-      if (achievement == null) { return Result.Failure<Achievement>(CQRS.Error.NotFound("Achievement", "Achievement not found")); }
+      if (achievement == null) { return Result.Failure<Achievement>(Error.NotFound("Achievement", "Achievement not found")); }
 
       // Update only provided fields
       if (!string.IsNullOrEmpty(request.Name)) achievement.Name = request.Name;
@@ -147,7 +166,7 @@ public class UpdateAchievementCommandHandler : ICommandHandler<UpdateAchievement
     catch (Exception ex) {
       _logger.LogError(ex, "Error updating achievement {AchievementId}", request.AchievementId);
 
-      return Result.Failure<Achievement>(CQRS.Error.Failure("UpdateAchievement", "Failed to update achievement"));
+      return Result.Failure<Achievement>(Error.Failure("UpdateAchievement", "Failed to update achievement"));
     }
   }
 }
@@ -170,7 +189,7 @@ public class DeleteAchievementCommandHandler : ICommandHandler<DeleteAchievement
     try {
       var achievement = await _context.Achievements.FirstOrDefaultAsync(a => a.Id == request.AchievementId, cancellationToken);
 
-      if (achievement == null) { return Result.Failure(CQRS.Error.NotFound("Achievement", "Achievement not found")); }
+      if (achievement == null) { return Result.Failure(Error.NotFound("Achievement", "Achievement not found")); }
 
       // Check if any users have earned this achievement
       var hasEarnedAchievements = await _context.UserAchievements.AnyAsync(ua => ua.AchievementId == request.AchievementId, cancellationToken);
@@ -197,7 +216,7 @@ public class DeleteAchievementCommandHandler : ICommandHandler<DeleteAchievement
     catch (Exception ex) {
       _logger.LogError(ex, "Error deleting achievement {AchievementId}", request.AchievementId);
 
-      return Result.Failure(CQRS.Error.Failure("DeleteAchievement", "Failed to delete achievement"));
+      return Result.Failure(Error.Failure("DeleteAchievement", "Failed to delete achievement"));
     }
   }
 }
