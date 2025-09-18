@@ -7,7 +7,7 @@ namespace GameGuild;
 /// No more exceptions for business logic - only Result<Error> patterns.
 /// </summary>
 public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse> {
+    where TRequest : IBaseRequest {
 
   private readonly IEnumerable<FluentValidation.IValidator<TRequest>> _validators;
   private readonly ILogger<ValidationBehavior<TRequest, TResponse>> _logger;

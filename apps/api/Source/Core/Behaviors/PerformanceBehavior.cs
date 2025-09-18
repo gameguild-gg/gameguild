@@ -5,7 +5,7 @@ using GameGuild.CQRS;
 namespace GameGuild;
 
 /// <summary> Performance monitoring behavior for tracking slow requests and memory usage </summary>
-public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavior<TRequest, TResponse>> logger, IDateTimeProvider dateTimeProvider) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse> {
+public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavior<TRequest, TResponse>> logger, IDateTimeProvider dateTimeProvider) : IPipelineBehavior<TRequest, TResponse> where TRequest : IBaseRequest {
   private const int SlowRequestThresholdMs = 1000; // 1 second
 
   private const int CriticalRequestThresholdMs = 5000; // 5 seconds

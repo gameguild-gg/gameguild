@@ -5,7 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 namespace GameGuild;
 
 /// <summary> Caching behavior for read operations (queries) to improve performance </summary>
-public class CachingBehavior<TRequest, TResponse>(IMemoryCache cache, ILogger<CachingBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse>, ICachedRequest {
+public class CachingBehavior<TRequest, TResponse>(IMemoryCache cache, ILogger<CachingBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : IBaseRequest, ICachedRequest {
   public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken) {
     var cacheKey = request.CacheKey;
     var requestName = typeof(TRequest).Name;
@@ -48,7 +48,7 @@ public class CachingBehavior<TRequest, TResponse>(IMemoryCache cache, ILogger<Ca
 
     var isSuccessProperty = response.GetType().GetProperty("IsSuccess");
 
-    if (isSuccessProperty != null) return (bool) isSuccessProperty.GetValue(response)!;
+    if (isSuccessProperty != null) return (bool)isSuccessProperty.GetValue(response)!;
 
     // Cache all other responses
     return true;

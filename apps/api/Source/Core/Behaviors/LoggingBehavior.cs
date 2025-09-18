@@ -5,7 +5,7 @@ using GameGuild.CQRS;
 namespace GameGuild;
 
 /// <summary> Unified logging behavior that supports both GameGuild.CQRS and Result patterns </summary>
-public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse> {
+public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : IBaseRequest {
   public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken) {
     var requestName = typeof(TRequest).Name;
     var requestId = Guid.NewGuid();
