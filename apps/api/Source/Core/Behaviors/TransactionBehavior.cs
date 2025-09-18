@@ -1,4 +1,4 @@
-using System.Transactions;
+using System.Data;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
@@ -41,7 +41,7 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     // If we already have an active transaction, don't create a new one
     if (_context.Database.CurrentTransaction is not null) { return await next().ConfigureAwait(false); }
 
-    var isolationLevel = (request as ITransactionalRequest)?.IsolationLevel ?? System.Data.IsolationLevel.ReadCommitted;
+    var isolationLevel = (request as ITransactionalRequest)?.IsolationLevel ?? IsolationLevel.ReadCommitted;
 
     _logger.LogDebug("Starting transaction for {RequestType} with isolation level {IsolationLevel}", typeof(TRequest).Name, isolationLevel);
 
