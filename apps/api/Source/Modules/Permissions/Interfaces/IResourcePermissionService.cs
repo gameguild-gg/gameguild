@@ -1,3 +1,6 @@
+using GameGuild.Core.Domain.Permissions;
+
+
 namespace GameGuild.Services;
 
 /// <summary> Service for managing resource-level permission sharing and collaboration </summary>
