@@ -44,13 +44,28 @@ public interface IPermissionService {
   /// </summary>
   Task<IEnumerable<PermissionType>> GetTenantPermissionsAsync(Guid? userId, Guid? tenantId);
 
+  /// <summary>
+  /// Get global default permissions that apply to all users
+  /// </summary>
+  Task<IEnumerable<PermissionType>> GetGlobalDefaultPermissionsAsync();
+
+  /// <summary>
+  /// Set global default permissions that apply to all users
+  /// </summary>
+  Task SetGlobalDefaultPermissionsAsync(PermissionType[] permissions);
+
+  /// <summary>
+  /// Get tenant default permissions for a specific tenant
+  /// </summary>
+  Task<IEnumerable<PermissionType>> GetTenantDefaultPermissionsAsync(Guid tenantId);
+
   // ===== LAYER 2: CONTENT-TYPE PERMISSIONS =====
 
   /// <summary>
   /// Grant content-type permissions to a user
   /// </summary>
   Task<ContentTypePermission> GrantContentTypePermissionAsync(
-      Guid userId, Guid? tenantId,
+      Guid? userId, Guid? tenantId,
       string contentTypeName, PermissionType[] permissions
   );
 
@@ -58,7 +73,7 @@ public interface IPermissionService {
   /// Check if user has content-type permission
   /// </summary>
   Task<bool> HasContentTypePermissionAsync(
-      Guid userId, Guid? tenantId,
+      Guid? userId, Guid? tenantId,
       string contentTypeName, PermissionType permission
   );
 
@@ -66,7 +81,7 @@ public interface IPermissionService {
   /// Get all content-type permissions for a user
   /// </summary>
   Task<IEnumerable<PermissionType>> GetContentTypePermissionsAsync(
-      Guid userId, Guid? tenantId, string contentTypeName
+      Guid? userId, Guid? tenantId, string contentTypeName
   );
 
   // ===== LAYER 3: RESOURCE-SPECIFIC PERMISSIONS =====
@@ -93,7 +108,7 @@ public interface IPermissionService {
   /// Get all resource permissions for a user using generic resource type
   /// </summary>
   Task<IEnumerable<PermissionType>> GetResourcePermissionsAsync<TPermission, TResource>(
-      Guid userId, Guid? tenantId, Guid resourceId
+      Guid? userId, Guid? tenantId, Guid resourceId
   ) where TPermission : ResourcePermission<TResource>, new()
     where TResource : EntityBase;
 
