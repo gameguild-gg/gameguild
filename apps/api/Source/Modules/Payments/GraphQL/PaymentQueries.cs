@@ -1,3 +1,4 @@
+using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 
 
@@ -26,7 +27,12 @@ public class PaymentQueries {
     CancellationToken cancellationToken = default
   ) {
     var query = new GetUserPaymentsQuery {
-      UserId = userId ?? userContext.UserId ?? Guid.Empty, Status = status, FromDate = fromDate, ToDate = toDate, Skip = skip, Take = Math.Min(take, 100), // Limit to prevent abuse
+      UserId = userId ?? userContext.UserId ?? Guid.Empty,
+      Status = status,
+      FromDate = fromDate,
+      ToDate = toDate,
+      Skip = skip,
+      Take = Math.Min(take, 100), // Limit to prevent abuse
     };
 
     return await mediator.Send(query, cancellationToken);
