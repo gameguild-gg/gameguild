@@ -80,4 +80,13 @@ public static class CaseTransformExtensions {
   /// <param name="options"> Optional transformation options. </param>
   /// <returns> The type name in slug format. </returns>
   public static string ToSlugCase(this Type type, CaseTransformOptions? options = null) { return CaseTransformerFactory.Slug.TransformType(type, options ?? CaseTransformOptions.Default); }
+
+  /// <summary> Generates a unique slug by appending a number if the base slug already exists. </summary>
+  /// <param name="input"> The string to convert to a unique slug. </param>
+  /// <param name="existingSlugs"> Collection of existing slugs to check against. </param>
+  /// <param name="options"> Optional transformation options. </param>
+  /// <returns> A unique slug string. </returns>
+  public static string ToUniqueSlugCase(this string input, IEnumerable<string> existingSlugs, CaseTransformOptions? options = null) {
+    return CaseTransformerFactory.Slug.GenerateUnique(input, existingSlugs, options ?? CaseTransformOptions.Default);
+  }
 }
