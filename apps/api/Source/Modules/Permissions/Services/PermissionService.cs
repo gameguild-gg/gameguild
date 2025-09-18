@@ -16,7 +16,7 @@ public class PermissionService : IPermissionService {
 
   #region Layer 1: Tenant-Wide Permissions
 
-  public async Task<TenantPermission> GrantTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[ ] permissions) {
+  public async Task<TenantPermission> GrantTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions) {
     if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
 
     // Combine all permissions using bitwise OR
@@ -40,7 +40,7 @@ public class PermissionService : IPermissionService {
     return existingPermission;
   }
 
-  public async Task<List<TenantPermission>> BulkGrantTenantPermissionAsync(Guid[ ] userIds, Guid tenantId, PermissionType[ ] permissions) {
+  public async Task<List<TenantPermission>> BulkGrantTenantPermissionAsync(Guid[] userIds, Guid tenantId, PermissionType[] permissions) {
     if (userIds == null || userIds.Length == 0) throw new ArgumentException("At least one user ID must be specified", nameof(userIds));
 
     if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
@@ -217,7 +217,7 @@ public class PermissionService : IPermissionService {
 
     if (existingPermission != null) { existingPermission.UpdatePermissions(combinedPermissions); }
     else {
-      existingPermission = (TPermission) ResourcePermission<TResource>.Create(userId, tenantId, resourceId, combinedPermissions);
+      existingPermission = (TPermission)ResourcePermission<TResource>.Create(userId, tenantId, resourceId, combinedPermissions);
       _context.Set<TPermission>().Add(existingPermission);
     }
 
@@ -251,7 +251,7 @@ public class PermissionService : IPermissionService {
     return permissions;
   }
 
-  public async Task BulkGrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[ ] resourceIds, PermissionType[ ] permissions)
+  public async Task BulkGrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds, PermissionType[] permissions)
     where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase {
     if (resourceIds == null || resourceIds.Length == 0) throw new ArgumentException("At least one resource ID must be specified", nameof(resourceIds));
 
@@ -266,7 +266,7 @@ public class PermissionService : IPermissionService {
 
       if (existingPermission != null) { existingPermission.UpdatePermissions(combinedPermissions); }
       else {
-        var newPermission = (TPermission) ResourcePermission<TResource>.Create(userId, tenantId, resourceId, combinedPermissions);
+        var newPermission = (TPermission)ResourcePermission<TResource>.Create(userId, tenantId, resourceId, combinedPermissions);
         _context.Set<TPermission>().Add(newPermission);
       }
     }
@@ -283,7 +283,7 @@ public class PermissionService : IPermissionService {
     );
   }
 
-  public async Task ShareResourceAsync<TPermission, TResource>(Guid resourceId, Guid targetUserId, Guid? tenantId, PermissionType[ ] permissions, DateTime? expiresAt = null)
+  public async Task ShareResourceAsync<TPermission, TResource>(Guid resourceId, Guid targetUserId, Guid? tenantId, PermissionType[] permissions, DateTime? expiresAt = null)
     where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase {
     var resourcePermission = await GrantResourcePermissionAsync<TPermission, TResource>(targetUserId, tenantId, resourceId, permissions);
 
