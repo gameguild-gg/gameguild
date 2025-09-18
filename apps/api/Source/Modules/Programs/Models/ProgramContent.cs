@@ -1,4 +1,6 @@
 using System.Text.Json;
+using GameGuild.Modules.Contents;
+using GameGuild.Source.Modules.Programs.Models;
 
 
 namespace GameGuild.Modules.Programs;

@@ -1,14 +1,24 @@
 ﻿using System.ComponentModel;
 
+namespace GameGuild.Source.Modules.Programs.Models;
 
-namespace GameGuild.Modules.Programs;
-
+/// <summary>
+/// Represents different methods for grading program content
+/// </summary>
 public enum GradingMethod {
-  [Description("Graded manually by an instructor or teaching assistant")] Instructor,
+  /// <summary>Graded manually by an instructor or teaching assistant</summary>
+  [Description("Graded manually by an instructor or teaching assistant")]
+  Instructor,
 
-  [Description("Peer review-based grading by other students")] Peer,
+  /// <summary>Peer review-based grading by other students</summary>
+  [Description("Peer review-based grading by other students")]
+  Peer,
 
-  [Description("Automated grading using AI algorithms")] Ai,
+  /// <summary>Automated grading using AI algorithms</summary>
+  [Description("Automated grading using AI algorithms")]
+  Ai,
 
-  [Description("Graded automatically using predefined test cases")] AutomatedTests,
+  /// <summary>Graded automatically using predefined test cases</summary>
+  [Description("Graded automatically using predefined test cases")]
+  AutomatedTests,
 }
