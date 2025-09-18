@@ -260,7 +260,7 @@ public class ProjectCommandHandlers
 
   /// <summary> Format permissions for an owner collaborator </summary>
   private static string FormatOwnerPermissions() {
-    var ownerPermissions = new[ ] {
+    var ownerPermissions = new[] {
       PermissionType.Read, PermissionType.Edit, PermissionType.Delete, PermissionType.Publish, PermissionType.Unpublish, PermissionType.Archive, PermissionType.Create, PermissionType.Approve, PermissionType.Monetize,
     };
 
@@ -269,7 +269,7 @@ public class ProjectCommandHandlers
 
   /// <summary> Format permissions for an editor collaborator </summary>
   private static string FormatEditorPermissions() {
-    var editorPermissions = new[ ] { PermissionType.Read, PermissionType.Edit, PermissionType.Comment, PermissionType.Submit };
+    var editorPermissions = new[] { PermissionType.Read, PermissionType.Edit, PermissionType.Comment, PermissionType.Submit };
 
     return string.Join(",", editorPermissions.Select(p => p.ToString()));
   }
