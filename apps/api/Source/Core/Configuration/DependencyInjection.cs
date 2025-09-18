@@ -88,7 +88,8 @@ public static class DependencyInjection {
     //           }
     //         );
 
-    // 19. GraphQL (handled by the application layer)
+    // 19. GraphQL server configuration
+    if (options.EnableGraphQl) services.SetupGraphQl(configuration, options.GraphQl);
 
     // 20. gRPC (handled by the application layer)
 

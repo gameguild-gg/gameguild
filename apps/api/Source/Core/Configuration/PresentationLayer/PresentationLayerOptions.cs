@@ -71,7 +71,7 @@ public class PresentationLayerOptions {
 
   public bool EnableSignalR { get; set; }
 
-  public bool EnableGraphQl { get; set; }
+  public bool EnableGraphQl { get; set; } = true;
 
   // Feature Flags (OpenFeature)
   public bool EnableFeatureFlags { get; set; }
