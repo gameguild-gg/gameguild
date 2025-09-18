@@ -48,17 +48,17 @@ public class ProjectPermissionController : ControllerBase {
     var users = await _resourcePermissionService.GetResourceUsersAsync("projects", projectId, userId);
 
     var collaborators = users.Select(u => new ProjectCollaboratorDto {
-        UserId = u.UserId,
-        UserName = u.UserName,
-        Email = u.Email,
-        ProfilePictureUrl = u.ProfilePictureUrl,
-        Role = DetermineProjectRole(u.Permissions),
-        Permissions = u.Permissions,
-        JoinedAt = u.GrantedAt,
-        InvitedBy = u.GrantedByUserName,
-        IsOwner = u.IsOwner,
-        ExpiresAt = u.ExpiresAt,
-      }
+      UserId = u.UserId,
+      UserName = u.UserName,
+      Email = u.Email,
+      ProfilePictureUrl = u.ProfilePictureUrl,
+      Role = DetermineProjectRole(u.Permissions),
+      Permissions = u.Permissions,
+      JoinedAt = u.GrantedAt,
+      InvitedBy = u.GrantedByUserName,
+      IsOwner = u.IsOwner,
+      ExpiresAt = u.ExpiresAt,
+    }
     );
 
     return Ok(collaborators);
@@ -119,7 +119,7 @@ public class ProjectPermissionController : ControllerBase {
   [HttpGet("role-templates")]
   [RequireProjectPermission(PermissionType.Read)]
   public ActionResult<IEnumerable<ProjectRoleTemplate>> GetProjectRoleTemplates() {
-    var templates = new[ ] {
+    var templates = new[] {
       new ProjectRoleTemplate { Name = "Viewer", Description = "Can view project content", Permissions = [PermissionType.Read, PermissionType.Comment] },
       new ProjectRoleTemplate {
         Name = "Collaborator",
@@ -201,7 +201,7 @@ public class ProjectPermissionController : ControllerBase {
     return Guid.TryParse(tenantIdClaim, out var tenantId) ? tenantId : null;
   }
 
-  private static string DetermineProjectRole(PermissionType[ ] permissions) {
+  private static string DetermineProjectRole(PermissionType[] permissions) {
     var permissionSet = permissions.ToHashSet();
 
     if (permissionSet.Contains(PermissionType.Delete) && permissionSet.Contains(PermissionType.Archive)) return "Admin";
@@ -265,7 +265,7 @@ public class ProjectCollaboratorDto {
 
   public string Role { get; set; } = string.Empty;
 
-  public PermissionType[ ] Permissions { get; set; } = [];
+  public PermissionType[] Permissions { get; set; } = [];
 
   public DateTime JoinedAt { get; set; }
 
@@ -280,7 +280,7 @@ public class ProjectCollaboratorDto {
 public class AddCollaboratorRequest {
   public string Email { get; set; } = string.Empty;
 
-  public PermissionType[ ] Permissions { get; set; } = [];
+  public PermissionType[] Permissions { get; set; } = [];
 
   public DateTime? ExpiresAt { get; set; }
 
@@ -291,7 +291,7 @@ public class AddCollaboratorRequest {
 
 /// <summary> Request to update collaborator permissions </summary>
 public class UpdateCollaboratorRequest {
-  public PermissionType[ ] Permissions { get; set; } = [];
+  public PermissionType[] Permissions { get; set; } = [];
 
   public DateTime? ExpiresAt { get; set; }
 }
@@ -302,16 +302,16 @@ public class ProjectRoleTemplate {
 
   public string Description { get; set; } = string.Empty;
 
-  public PermissionType[ ] Permissions { get; set; } = [];
+  public PermissionType[] Permissions { get; set; } = [];
 }
 
 /// <summary> Request to share project with specific role </summary>
 public class ShareProjectWithRoleRequest {
   public string RoleName { get; set; } = string.Empty;
 
-  public string[ ] UserEmails { get; set; } = [];
+  public string[] UserEmails { get; set; } = [];
 
-  public Guid[ ] UserIds { get; set; } = [];
+  public Guid[] UserIds { get; set; } = [];
 
   public DateTime? ExpiresAt { get; set; }
 
