@@ -1,7 +1,8 @@
 using GameGuild.Modules.Certificates;
 
 
-namespace GameGuild.Source.Modules.Certificates.Dtos;
+namespace GameGuild.Modules.Certificates;
+
 
 public static class CertificateDtoMappings {
   public static Certificate ToEntity(this CreateCertificateDto dto, Guid programId) {

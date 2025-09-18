@@ -1,4 +1,5 @@
-namespace GameGuild.Source.Modules.Certificates.Dtos;
+namespace GameGuild.Modules.Certificates;
+
 
 public class CreateCertificateDto {
   [Required] [MaxLength(255)] public string Name { get; set; } = string.Empty;

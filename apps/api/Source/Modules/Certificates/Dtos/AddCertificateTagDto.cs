@@ -1,4 +1,4 @@
-namespace GameGuild.Source.Modules.Certificates.Dtos;
+namespace GameGuild.Modules.Certificates;
 
 public class AddCertificateTagDto {
   [Required] public Guid TagId { get; set; }
