@@ -7,28 +7,31 @@ namespace GameGuild.Modules.Users;
 /// <summary> REST API controller for managing users using CQRS pattern </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class UsersController(IMediator mediator) : ControllerBase {
+public class UsersController(IMediator mediator, ILogger<UsersController> logger) : ControllerBase {
   /// <summary> Get all users with optional filtering and pagination </summary>
   [HttpGet]
+  [ProducesResponseType<IEnumerable<UserResponseDto>>(StatusCodes.Status200OK)]
+  [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
   public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetUsers([FromQuery] bool includeDeleted = false, [FromQuery] int skip = 0, [FromQuery] int take = 50, [FromQuery] bool? isActive = null) {
+    logger.LogDebug("Getting users with includeDeleted={IncludeDeleted}, skip={Skip}, take={Take}, isActive={IsActive}", includeDeleted, skip, take, isActive);
     var query = new GetAllUsersQuery { IncludeDeleted = includeDeleted, Skip = skip, Take = take, IsActive = isActive };
 
     var users = await mediator.Send(query);
 
     var userDtos = users.Select(u => new UserResponseDto {
-                            Id = u.Id,
-                            Version = u.Version,
-                            Name = u.Name,
-                            Username = u.Username,
-                            Email = u.Email,
-                            IsActive = u.IsActive,
-                            Balance = u.Balance,
-                            AvailableBalance = u.AvailableBalance,
-                            CreatedAt = u.CreatedAt,
-                            UpdatedAt = u.UpdatedAt,
-                            DeletedAt = u.DeletedAt,
-                            IsDeleted = u.DeletedAt != null,
-                          }
+      Id = u.Id,
+      Version = u.Version,
+      Name = u.Name,
+      Username = u.Username,
+      Email = u.Email,
+      IsActive = u.IsActive,
+      Balance = u.Balance,
+      AvailableBalance = u.AvailableBalance,
+      CreatedAt = u.CreatedAt,
+      UpdatedAt = u.UpdatedAt,
+      DeletedAt = u.DeletedAt,
+      IsDeleted = u.DeletedAt != null,
+    }
                         )
                         .ToList();
 
@@ -37,7 +40,11 @@ public class UsersController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get a user by ID </summary>
   [HttpGet("{id:guid}")]
+  [ProducesResponseType<UserResponseDto>(StatusCodes.Status200OK)]
+  [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+  [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
   public async Task<ActionResult<UserResponseDto>> GetUser(Guid id, [FromQuery] bool includeDeleted = false) {
+    logger.LogDebug("Getting user with ID {UserId}", id);
     var query = new GetUserByIdQuery { UserId = id, IncludeDeleted = includeDeleted };
 
     var user = await mediator.Send(query);
@@ -64,10 +71,19 @@ public class UsersController(IMediator mediator) : ControllerBase {
 
   /// <summary> Create a new user </summary>
   [HttpPost]
+  [ProducesResponseType<UserResponseDto>(StatusCodes.Status201Created)]
+  [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+  [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+  [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+  [ProducesResponseType<ProblemDetails>(StatusCodes.Status403Forbidden)]
+  [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
   public async Task<ActionResult<UserResponseDto>> CreateUser([FromBody] CreateUserDto createDto) {
+    logger.LogDebug("Creating user with email {Email}", createDto.Email);
     var command = new CreateUserCommand { Name = createDto.Name, Email = createDto.Email, IsActive = createDto.IsActive, InitialBalance = createDto.InitialBalance };
 
     var user = await mediator.Send(command);
+
+    logger.LogInformation("Successfully created user {UserId} with email {Email}", user.Id, user.Email);
 
     var userDto = new UserResponseDto {
       Id = user.Id,
@@ -114,7 +130,11 @@ public class UsersController(IMediator mediator) : ControllerBase {
 
   /// <summary> Delete a user </summary>
   [HttpDelete("{id:guid}")]
+  [ProducesResponseType(StatusCodes.Status204NoContent)]
+  [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+  [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
   public async Task<IActionResult> DeleteUser(Guid id, [FromQuery] bool softDelete = true, [FromQuery] string? reason = null) {
+    logger.LogDebug("Deleting user with ID {UserId}, softDelete={SoftDelete}", id, softDelete);
     var command = new DeleteUserCommand { UserId = id, SoftDelete = softDelete, Reason = reason };
 
     var result = await mediator.Send(command);
@@ -203,19 +223,19 @@ public class UsersController(IMediator mediator) : ControllerBase {
     var users = await mediator.Send(query);
 
     var userDtos = users.Items.Select(u => new UserResponseDto {
-                            Id = u.Id,
-                            Version = u.Version,
-                            Name = u.Name,
-                            Username = u.Username,
-                            Email = u.Email,
-                            IsActive = u.IsActive,
-                            Balance = u.Balance,
-                            AvailableBalance = u.AvailableBalance,
-                            CreatedAt = u.CreatedAt,
-                            UpdatedAt = u.UpdatedAt,
-                            DeletedAt = u.DeletedAt,
-                            IsDeleted = u.DeletedAt != null,
-                          }
+      Id = u.Id,
+      Version = u.Version,
+      Name = u.Name,
+      Username = u.Username,
+      Email = u.Email,
+      IsActive = u.IsActive,
+      Balance = u.Balance,
+      AvailableBalance = u.AvailableBalance,
+      CreatedAt = u.CreatedAt,
+      UpdatedAt = u.UpdatedAt,
+      DeletedAt = u.DeletedAt,
+      IsDeleted = u.DeletedAt != null,
+    }
                         )
                         .ToList();
 
