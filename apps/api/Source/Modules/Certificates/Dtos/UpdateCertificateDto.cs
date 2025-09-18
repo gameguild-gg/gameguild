@@ -1,4 +1,5 @@
-namespace GameGuild.Source.Modules.Certificates.Dtos;
+namespace GameGuild.Modules.Certificates;
+
 
 public class UpdateCertificateDto {
   [Required] public Guid Id { get; set; }
