@@ -1,4 +1,5 @@
 ﻿using GameGuild.Modules.Contents;
+using ProductTypeEnum = GameGuild.ProductType;
 
 
 namespace GameGuild.Modules.Products;
@@ -12,7 +13,7 @@ public class UpdateProductInput {
 
   public string? Description { get; set; }
 
-  public ProductType? Type { get; set; }
+  public GameGuild.ProductType? Type { get; set; }
 
   public bool? IsBundle { get; set; }
 

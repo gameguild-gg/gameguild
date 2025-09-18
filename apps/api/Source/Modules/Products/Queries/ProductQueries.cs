@@ -1,5 +1,6 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents;
+using ProductTypeEnum = GameGuild.ProductType;
 
 
 namespace GameGuild.Modules.Products;
@@ -15,7 +16,7 @@ public record GetProductByIdQuery : IRequest<Product?> {
 
 /// <summary> Query to get products list </summary>
 public record GetProductsQuery : IRequest<IEnumerable<Product>> {
-  public ProductType? Type { get; init; }
+  public ProductTypeEnum? Type { get; init; }
 
   public ContentStatus? Status { get; init; }
 
@@ -172,7 +173,7 @@ public record UserProductAccess {
 
 /// <summary> Query to get products by type </summary>
 public record GetProductsByTypeQuery : IRequest<IEnumerable<Product>> {
-  public ProductType Type { get; init; }
+  public GameGuild.ProductType Type { get; init; }
 
   public int Skip { get; init; } = 0;
 
@@ -190,7 +191,7 @@ public record GetPublishedProductsQuery : IRequest<IEnumerable<Product>> {
 public record SearchProductsQuery : IRequest<IEnumerable<Product>> {
   public string SearchTerm { get; init; } = string.Empty;
 
-  public ProductType? Type { get; init; }
+  public ProductTypeEnum? Type { get; init; }
 
   public int Skip { get; init; } = 0;
 
@@ -282,7 +283,7 @@ public record GetUserProductQuery : IRequest<UserProduct?> {
 
 /// <summary> Query to get product count </summary>
 public record GetProductCountQuery : IRequest<int> {
-  public ProductType? Type { get; init; }
+  public ProductTypeEnum? Type { get; init; }
 
   public ContentStatus? Status { get; init; }
 }

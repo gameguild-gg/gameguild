@@ -1,6 +1,8 @@
+using GameGuild.Authorization.Identity;
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents;
 using Microsoft.AspNetCore.Mvc;
+using ProductTypeEnum = GameGuild.ProductType;
 
 
 namespace GameGuild.Modules.Products;
@@ -79,7 +81,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Get products by type (content-type level read permission) </summary>
   [HttpGet("type/{type}")]
   [RequireContentTypePermission<Product>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Product>>> GetProductsByType(ProductType type, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<Product>>> GetProductsByType(ProductTypeEnum type, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var products = await mediator.Send(new GetProductsByTypeQuery { Type = type, Skip = skip, Take = take });
 
     return Ok(products);
@@ -323,7 +325,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Get product count (content-type level read permission) </summary>
   [HttpGet("analytics/count")]
   [RequireContentTypePermission<Product>(PermissionType.Read)]
-  public async Task<ActionResult<int>> GetProductCount([FromQuery] ProductType? type = null, [FromQuery] ContentStatus? status = null) {
+  public async Task<ActionResult<int>> GetProductCount([FromQuery] ProductTypeEnum? type = null, [FromQuery] ContentStatus? status = null) {
     var count = await mediator.Send(new GetProductCountQuery { Type = type, Status = status });
 
     return Ok(count);
