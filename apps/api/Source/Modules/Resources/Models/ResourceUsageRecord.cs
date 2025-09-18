@@ -1,3 +1,7 @@
+using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild;
+using Microsoft.EntityFrameworkCore;
+
 namespace GameGuild.Modules.Resources.Models;
 
 /// <summary> Tracks resource usage over time for analytics and monitoring </summary>
@@ -60,6 +64,6 @@ public class ResourceUsageRecord : EntityBase {
     var endOfMonth = startOfMonth.AddMonths(1).AddTicks(-1);
     var daysInMonth = DateTime.DaysInMonth(month.Year, month.Month);
 
-    return new ResourceUsageRecord { Type = type, TenantId = tenantId, Count = count, PeriodStart = startOfMonth, PeriodEnd = endOfMonth, AveragePerDay = (double) count / daysInMonth, PeakUsage = peakUsage, PeakUsageDate = peakDate };
+    return new ResourceUsageRecord { Type = type, TenantId = tenantId, Count = count, PeriodStart = startOfMonth, PeriodEnd = endOfMonth, AveragePerDay = (double)count / daysInMonth, PeakUsage = peakUsage, PeakUsageDate = peakDate };
   }
 }
