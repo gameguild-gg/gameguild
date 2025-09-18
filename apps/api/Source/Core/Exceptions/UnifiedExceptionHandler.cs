@@ -10,7 +10,7 @@ namespace GameGuild.Core;
 /// </summary>
 internal sealed class UnifiedExceptionHandler(ILogger<UnifiedExceptionHandler> logger) : IExceptionHandler {
 
-    public async ValueTask<bool> HandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken) {
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken) {
         logger.LogError(exception, "Exception occurred: {Message}", exception.Message);
 
         var problemDetails = CreateProblemDetails(exception);
