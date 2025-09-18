@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 namespace GameGuild.Modules.Features.Models;
 
 public class FeatureFlagConfiguration : IEntityTypeConfiguration<FeatureFlag> {
