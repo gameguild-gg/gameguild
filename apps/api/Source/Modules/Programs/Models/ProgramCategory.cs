@@ -3,6 +3,14 @@
 
 namespace GameGuild;
 
+/// <summary>
+/// Educational program categorization for discovery and organization
+/// </summary>
+/// <remarks>
+/// Categories enable learners to find relevant programs and allow the platform
+/// to organize content by domain expertise. Each category represents a major
+/// field of study with specialized learning paths and career outcomes.
+/// </remarks>
 public enum ProgramCategory {
   [Description("Programming and software development")] Programming,
 
