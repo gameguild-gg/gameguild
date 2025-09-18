@@ -1,7 +1,9 @@
+using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
+using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 
-namespace GameGuild.Modules.Programs;
+namespace GameGuild.Source.Modules.Programs.Models;
 
 /// <summary> Represents a user's enrollment in a program (course) Tracks enrollment status, progress, and completion </summary>
 [Table("program_enrollments")]
@@ -25,7 +27,7 @@ public class ProgramEnrollment : EntityBase {
 
   /// <summary> Navigation property to the Program entity </summary>
   [ForeignKey(nameof(ProgramId))]
-  public virtual Program Program { get; set; } = null!;
+  public virtual ProgramEntity Program { get; set; } = null!;
 
   /// <summary> Current enrollment status </summary>
   public EnrollmentStatus EnrollmentStatus { get; set; } = EnrollmentStatus.Active;

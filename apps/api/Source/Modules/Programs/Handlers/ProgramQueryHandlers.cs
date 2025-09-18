@@ -1,20 +1,23 @@
 using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
+using GameGuild.Source.Modules.Programs.Models;
+using GameGuild.Source.Modules.Programs.Queries;
+using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 
 namespace GameGuild.Modules.Programs;
 
 /// <summary> Query handlers for Program data retrieval operations Implements data access logic for program queries with proper filtering and authorization </summary>
-public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQueryHandlers> logger) : IRequestHandler<GetAllProgramsQuery, IEnumerable<Program>>,
-                                                                                                        IRequestHandler<GetProgramByIdQuery, Program?>,
-                                                                                                        IRequestHandler<GetProgramBySlugQuery, Program?>,
-                                                                                                        IRequestHandler<GetPublishedProgramBySlugQuery, Program?>,
-                                                                                                        IRequestHandler<SearchProgramsQuery, IEnumerable<Program>>,
-                                                                                                        IRequestHandler<GetProgramsByCategoryQuery, IEnumerable<Program>>,
-                                                                                                        IRequestHandler<GetProgramsByDifficultyQuery, IEnumerable<Program>>,
-                                                                                                        IRequestHandler<GetProgramsByCreatorQuery, IEnumerable<Program>>,
-                                                                                                        IRequestHandler<GetUserEnrolledProgramsQuery, IEnumerable<Program>>,
+public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQueryHandlers> logger) : IRequestHandler<GetAllProgramsQuery, IEnumerable<ProgramEntity>>,
+                                                                                                        IRequestHandler<GetProgramByIdQuery, ProgramEntity?>,
+                                                                                                        IRequestHandler<GetProgramBySlugQuery, ProgramEntity?>,
+                                                                                                        IRequestHandler<GetPublishedProgramBySlugQuery, ProgramEntity?>,
+                                                                                                        IRequestHandler<SearchProgramsQuery, IEnumerable<ProgramEntity>>,
+                                                                                                        IRequestHandler<GetProgramsByCategoryQuery, IEnumerable<ProgramEntity>>,
+                                                                                                        IRequestHandler<GetProgramsByDifficultyQuery, IEnumerable<ProgramEntity>>,
+                                                                                                        IRequestHandler<GetProgramsByCreatorQuery, IEnumerable<ProgramEntity>>,
+                                                                                                        IRequestHandler<GetUserEnrolledProgramsQuery, IEnumerable<ProgramEntity>>,
                                                                                                         IRequestHandler<GetProgramEnrollmentsQuery, IEnumerable<ProgramUser>>,
                                                                                                         IRequestHandler<CheckUserEnrollmentQuery, ProgramUser?>,
                                                                                                         IRequestHandler<GetProgramContentQuery, IEnumerable<ProgramContent>>,
@@ -22,13 +25,13 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
                                                                                                         IRequestHandler<GetProgramStatisticsQuery, ProgramStatistics>,
                                                                                                         IRequestHandler<GetGlobalProgramStatisticsQuery, GlobalProgramStatistics>,
                                                                                                         IRequestHandler<GetCreatorProgramStatisticsQuery, CreatorProgramStatistics>,
-                                                                                                        IRequestHandler<GetPopularProgramsQuery, IEnumerable<Program>>,
-                                                                                                        IRequestHandler<GetRecentProgramsQuery, IEnumerable<Program>>,
-                                                                                                        IRequestHandler<GetFeaturedProgramsQuery, IEnumerable<Program>>,
-                                                                                                        IRequestHandler<GetRecommendedProgramsQuery, IEnumerable<Program>>,
+                                                                                                        IRequestHandler<GetPopularProgramsQuery, IEnumerable<ProgramEntity>>,
+                                                                                                        IRequestHandler<GetRecentProgramsQuery, IEnumerable<ProgramEntity>>,
+                                                                                                        IRequestHandler<GetFeaturedProgramsQuery, IEnumerable<ProgramEntity>>,
+                                                                                                        IRequestHandler<GetRecommendedProgramsQuery, IEnumerable<ProgramEntity>>,
                                                                                                         IRequestHandler<GetProgramRatingsQuery, IEnumerable<ProgramRating>>,
                                                                                                         IRequestHandler<GetUserProgramRatingQuery, ProgramRating?>,
-                                                                                                        IRequestHandler<GetUserWishlistQuery, IEnumerable<Program>>,
+                                                                                                        IRequestHandler<GetUserWishlistQuery, IEnumerable<ProgramEntity>>,
                                                                                                         IRequestHandler<CheckProgramInWishlistQuery, bool> {
   public async Task<bool> Handle(CheckProgramInWishlistQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Checking if program {ProgramId} is in wishlist for user {UserId}", request.ProgramId, request.UserId);
@@ -49,7 +52,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   }
   // ===== BASIC QUERY HANDLERS =====
 
-  public async Task<IEnumerable<Program>> Handle(GetAllProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramEntity>> Handle(GetAllProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting all programs with filters");
 
     var query = context.Programs.Where(p => p.DeletedAt == null);
@@ -124,7 +127,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     return statistics;
   }
 
-  public async Task<IEnumerable<Program>> Handle(GetFeaturedProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramEntity>> Handle(GetFeaturedProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting featured programs");
 
     // Note: This is a simplified implementation. You might want to add a "Featured" flag to programs
@@ -183,7 +186,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
 
   // ===== TRENDING AND RECOMMENDATION HANDLERS =====
 
-  public async Task<IEnumerable<Program>> Handle(GetPopularProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramEntity>> Handle(GetPopularProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting popular programs");
 
     var sinceDate = DateTime.UtcNow.AddDays(-request.DaysBack);
@@ -290,7 +293,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     return ratings;
   }
 
-  public async Task<IEnumerable<Program>> Handle(GetProgramsByCategoryQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramEntity>> Handle(GetProgramsByCategoryQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting programs by category: {Category}", request.Category);
 
     var query = context.Programs.Where(p => p.Category == request.Category && p.DeletedAt == null);
@@ -304,7 +307,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     return programs;
   }
 
-  public async Task<IEnumerable<Program>> Handle(GetProgramsByCreatorQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramEntity>> Handle(GetProgramsByCreatorQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting programs by creator: {CreatorId}", request.CreatorId);
 
     // CreatorId property doesn't exist in current Program model, return empty for now
@@ -320,7 +323,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     return programs;
   }
 
-  public async Task<IEnumerable<Program>> Handle(GetProgramsByDifficultyQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramEntity>> Handle(GetProgramsByDifficultyQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting programs by difficulty: {Difficulty}", request.Difficulty);
 
     var query = context.Programs.Where(p => p.Difficulty == request.Difficulty && p.DeletedAt == null);
@@ -377,7 +380,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     return program;
   }
 
-  public async Task<IEnumerable<Program>> Handle(GetRecentProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramEntity>> Handle(GetRecentProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting recent programs");
 
     var sinceDate = DateTime.UtcNow.AddDays(-request.DaysBack);
@@ -394,7 +397,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     return programs;
   }
 
-  public async Task<IEnumerable<Program>> Handle(GetRecommendedProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramEntity>> Handle(GetRecommendedProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting recommended programs for user: {UserId}", request.UserId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
@@ -427,7 +430,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
 
   // ===== ENROLLMENT QUERY HANDLERS =====
 
-  public async Task<IEnumerable<Program>> Handle(GetUserEnrolledProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramEntity>> Handle(GetUserEnrolledProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting enrolled programs for user: {UserId}", request.UserId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
@@ -460,7 +463,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     var isCompleted = enrollment.CompletedAt.HasValue; // Fixed: use CompletedAt instead of IsCompleted
     var completedAt = enrollment.CompletedAt; // Fixed: use CompletedAt directly
 
-    var progress = new ProgramUserProgress(request.ProgramId, request.UserId, completedContent, totalContent, totalContent > 0 ? (decimal) completedContent / totalContent * 100 : 0, timeSpent, lastActivity, isCompleted, completedAt);
+    var progress = new ProgramUserProgress(request.ProgramId, request.UserId, completedContent, totalContent, totalContent > 0 ? (decimal)completedContent / totalContent * 100 : 0, timeSpent, lastActivity, isCompleted, completedAt);
 
     return progress;
   }
@@ -495,7 +498,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
 
   // ===== SEARCH AND FILTER HANDLERS =====
 
-  public async Task<IEnumerable<Program>> Handle(SearchProgramsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramEntity>> Handle(SearchProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Searching programs with term: {SearchTerm}", request.SearchTerm);
 
     var query = context.Programs.Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public);

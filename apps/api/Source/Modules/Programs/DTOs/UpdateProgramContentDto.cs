@@ -1,4 +1,6 @@
-﻿namespace GameGuild.Modules.Programs;
+﻿using GameGuild.Source.Modules.Programs.Models;
+
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// DTO for updating existing program content
