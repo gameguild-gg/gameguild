@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using GameGuild.Core.Domain.Identity;
 
 
-namespace GameGuild.Core.Infrastructure.Identity;
+namespace GameGuild.Authorization.Identity;
 
 /// <summary> Implementation of resource context for tracking current resource access Provides thread-safe resource context management for request lifecycle </summary>
 public class ResourceContext : IResourceContext {

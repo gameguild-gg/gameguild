@@ -1,7 +1,7 @@
 using System.Security.Claims;
 
 
-namespace GameGuild.Core.Infrastructure.Identity;
+namespace GameGuild.Authorization.Identity;
 
 /// <summary> Implementation of tenant context from HTTP context Provides access to current tenant information from claims, headers, and query parameters </summary>
 public class TenantContext : Domain.Identity.ITenantContext {
