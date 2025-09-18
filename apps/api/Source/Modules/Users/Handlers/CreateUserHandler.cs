@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using GameGuild.CQRS;
 using GameGuild.Database;
 
@@ -10,7 +12,9 @@ public class CreateUserHandler(ApplicationDbContext context, ILogger<CreateUserH
     // Check if email already exists
     var existingUser = await context.Users.FirstOrDefaultAsync(user => user.Email == request.Email, cancellationToken);
 
-    if (existingUser != null) throw new InvalidOperationException($"User with email {request.Email} already exists");
+    if (existingUser != null) {
+      throw new InvalidOperationException($"User with email {request.Email} already exists");
+    }
 
     // Generate unique username from name using slugify
     var baseUsername = request.Name.ToSlugCase();
@@ -23,8 +27,8 @@ public class CreateUserHandler(ApplicationDbContext context, ILogger<CreateUserH
 
     var user = new User { Name = request.Name, Username = uniqueUsername, Email = request.Email, IsActive = request.IsActive, Balance = normalizedBalance, AvailableBalance = normalizedBalance };
 
-    context.Users.Add(user);
-    await context.SaveChangesAsync(cancellationToken);
+    _ = context.Users.Add(user);
+    _ = await context.SaveChangesAsync(cancellationToken);
 
     logger.LogInformation("User {UserId} created with email {Email}", user.Id, user.Email);
 

@@ -1,3 +1,7 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Database;
 using GameGuild.Modules.Credentials;
 
 
@@ -29,13 +33,13 @@ public sealed class User : EntityBase, IUser {
   /// <summary>
   /// Total wallet balance including pending/frozen funds
   /// </summary>
-  [Column(TypeName = "decimal(10,2)")]
+  [Column(TypeName = "decimal(18,8)")]
   public decimal Balance { get; set; }
 
   /// <summary>
   /// Available balance that can be spent (excludes frozen/pending funds)
   /// </summary>
-  [Column(TypeName = "decimal(10,2)")]
+  [Column(TypeName = "decimal(18,8)")]
   public decimal AvailableBalance { get; set; }
 
   /// <summary>
