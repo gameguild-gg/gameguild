@@ -1,6 +1,8 @@
 ﻿using System.Text.Json;
 
 
+using GameGuild.Source.Modules.Programs.Models;
+
 namespace GameGuild.Modules.Programs;
 
 /// <summary>
