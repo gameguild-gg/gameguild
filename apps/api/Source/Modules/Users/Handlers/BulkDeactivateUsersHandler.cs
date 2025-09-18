@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Users;
 
 /// <summary> Handler for bulk deactivating users </summary>
 public class BulkDeactivateUsersHandler(ApplicationDbContext context, ILogger<BulkDeactivateUsersHandler> logger, IMediator mediator) : IResultCommandHandler<BulkDeactivateUsersCommand, BulkOperationResult> {
-  public async Task<CQRS.Result<BulkOperationResult>> Handle(BulkDeactivateUsersCommand request, CancellationToken cancellationToken) {
+  public async Task<Result<BulkOperationResult>> Handle(BulkDeactivateUsersCommand request, CancellationToken cancellationToken) {
     var deactivatedUsers = new List<User>();
     var errors = new List<string>();
     var successfulCount = 0;
@@ -51,6 +51,6 @@ public class BulkDeactivateUsersHandler(ApplicationDbContext context, ILogger<Bu
 
     logger.LogInformation("Bulk deactivate completed: {Successful}/{Total} users deactivated. Reason: {Reason}", successfulCount, request.UserIds.Count, request.Reason ?? "Not specified");
 
-    return CQRS.Result.Success(result);
+    return Result.Success(result);
   }
 }
