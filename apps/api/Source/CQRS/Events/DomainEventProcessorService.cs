@@ -1,3 +1,6 @@
+using GameGuild.Database;
+using Microsoft.EntityFrameworkCore;
+
 namespace GameGuild.CQRS;
 
 /// <summary> Background service for processing domain events </summary>
