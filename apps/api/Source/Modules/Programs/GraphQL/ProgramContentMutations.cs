@@ -1,3 +1,4 @@
+using GameGuild.Authorization;
 using GameGuild.GraphQL;
 using GradingMethodEnum = GameGuild.GradingMethod;
 using ProgramContentTypeEnum = GameGuild.ProgramContentType;
