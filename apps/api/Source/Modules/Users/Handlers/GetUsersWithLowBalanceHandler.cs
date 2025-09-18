@@ -5,7 +5,7 @@ using GameGuild.Database;
 namespace GameGuild.Modules.Users;
 
 /// <summary> Handler for getting users with low balance </summary>
-public class GetUsersWithLowBalanceHandler(ApplicationDbContext context) : IQueryHandler<GetUsersWithLowBalanceQuery, PagedResult<User>> {
+public class GetUsersWithLowBalanceHandler(ApplicationDbContext context) : IRequestHandler<GetUsersWithLowBalanceQuery, PagedResult<User>> {
   public async Task<PagedResult<User>> Handle(GetUsersWithLowBalanceQuery request, CancellationToken cancellationToken) {
     var query = context.Users.AsQueryable();
 
