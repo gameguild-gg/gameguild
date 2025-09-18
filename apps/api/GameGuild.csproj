@@ -49,24 +49,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="appSettings.json">
-      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
-    </Content>
-    <Content Update="appSettings.Development.json">
-      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
-    </Content>
-    <Content Update="appSettings.Production.json">
-      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
-    </Content>
-    <Content Remove="Source\Compatibility\**"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="tests/**/*"/>
-    <Compile Remove="Source\Compatibility\**"/>
-  </ItemGroup>
-
-  <ItemGroup>
     <Using Include="HotChocolate.Types"/>
     <Using Include="HotChocolate.Types.Descriptors"/>
     <Using Include="HotChocolate.Data"/>
@@ -76,13 +58,5 @@
     <Using Include="Microsoft.EntityFrameworkCore.Metadata.Builders"/>
     <Using Include="System.ComponentModel.DataAnnotations"/>
     <Using Include="System.ComponentModel.DataAnnotations.Schema"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Remove="Source\Compatibility\**"/>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Remove="Source\Compatibility\**"/>
   </ItemGroup>
 </Project>
