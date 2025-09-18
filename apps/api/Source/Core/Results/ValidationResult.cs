@@ -1,9 +1,11 @@
-using Microsoft.IdentityModel.Tokens.Experimental;
-
-
 namespace GameGuild;
 
-/// <summary> Validation result containing success status and error messages </summary>
+/// <summary> 
+/// Legacy validation result containing success status and error messages.
+/// Note: This is being phased out in favor of the unified Result<T> pattern.
+/// New code should use Result.ValidationFailure() instead.
+/// </summary>
+[Obsolete("Use Result<T> pattern with Error.ValidationFailure() instead. This type will be removed in a future version.")]
 public class ValidationResult {
   public bool IsValid { get; private set; }
 
@@ -13,7 +15,7 @@ public class ValidationResult {
 
   public static ValidationResult Success() { return new ValidationResult { IsValid = true }; }
 
-  public static ValidationResult Failure(params ValidationError[ ] errors) { return new ValidationResult { IsValid = false, Errors = errors.ToList() }; }
+  public static ValidationResult Failure(params ValidationError[] errors) { return new ValidationResult { IsValid = false, Errors = errors.ToList() }; }
 
   public static ValidationResult Failure(string errorMessage, string? propertyName = null) { return new ValidationResult { IsValid = false, Errors = [new ValidationError(errorMessage, propertyName)] }; }
 
