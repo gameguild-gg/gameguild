@@ -58,7 +58,12 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     if (originalProgram == null) throw new ArgumentException("Program not found", nameof(id));
 
     var clonedProgram = new ProgramEntity {
-      Title = newTitle, Description = originalProgram.Description, Slug = GenerateSlug(newTitle), Thumbnail = originalProgram.Thumbnail, Status = ContentStatus.Draft, Visibility = AccessLevel.Private,
+      Title = newTitle,
+      Description = originalProgram.Description,
+      Slug = GenerateSlug(newTitle),
+      Thumbnail = originalProgram.Thumbnail,
+      Status = ContentStatus.Draft,
+      Visibility = AccessLevel.Private,
     };
 
     context.Programs.Add(clonedProgram);
@@ -100,7 +105,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
 
     // Auto-assign sort order if not provided
     if (content.SortOrder == 0) {
-      var maxOrder = await context.ProgramContents.Where(pc => !pc.IsDeleted && pc.ProgramId == programId).MaxAsync(pc => (int?) pc.SortOrder) ?? 0;
+      var maxOrder = await context.ProgramContents.Where(pc => !pc.IsDeleted && pc.ProgramId == programId).MaxAsync(pc => (int?)pc.SortOrder) ?? 0;
       content.SortOrder = maxOrder + 1;
     }
 
@@ -404,7 +409,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   public async Task<int> GetUserCountForProgramAsync(Guid programId) { return await context.ProgramUsers.Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive).CountAsync(); }
 
   public async Task<decimal> GetAverageCompletionRateAsync(Guid programId) {
-    var averageCompletion = await context.ProgramUsers.Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive).AverageAsync(pu => (decimal?) pu.CompletionPercentage) ?? 0;
+    var averageCompletion = await context.ProgramUsers.Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive).AverageAsync(pu => (decimal?)pu.CompletionPercentage) ?? 0;
 
     return averageCompletion;
   }
@@ -414,7 +419,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     var averageCompletion = await GetAverageCompletionRateAsync(programId);
     var completedCount = await context.ProgramUsers.Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive && pu.CompletedAt != null).CountAsync();
 
-    return new Dictionary<string, object> { ["totalUsers"] = userCount, ["averageCompletion"] = averageCompletion, ["completedUsers"] = completedCount, ["completionRate"] = userCount > 0 ? (decimal) completedCount / userCount * 100 : 0 };
+    return new Dictionary<string, object> { ["totalUsers"] = userCount, ["averageCompletion"] = averageCompletion, ["completedUsers"] = completedCount, ["completionRate"] = userCount > 0 ? (decimal)completedCount / userCount * 100 : 0 };
   }
 
   // Private Helper Methods
@@ -435,7 +440,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
 
     var completedContent = await context.ContentInteractions.Where(ci => !ci.IsDeleted && ci.ProgramUserId == programUserId && ci.Status == ProgressStatus.Completed).CountAsync();
 
-    programUser.CompletionPercentage = (decimal) completedContent / totalContent * 100;
+    programUser.CompletionPercentage = (decimal)completedContent / totalContent * 100;
 
     if (programUser is { CompletionPercentage: >= 100, CompletedAt: null }) programUser.CompletedAt = DateTime.UtcNow;
 
@@ -560,7 +565,14 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
       return await GetUserProgressDtoAsync(programId, userId);
 
     var programUser = new ProgramUser {
-      Id = Guid.NewGuid(), ProgramId = programId, UserId = userId, JoinedAt = DateTime.UtcNow, LastAccessedAt = DateTime.UtcNow, CompletionPercentage = 0, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow,
+      Id = Guid.NewGuid(),
+      ProgramId = programId,
+      UserId = userId,
+      JoinedAt = DateTime.UtcNow,
+      LastAccessedAt = DateTime.UtcNow,
+      CompletionPercentage = 0,
+      CreatedAt = DateTime.UtcNow,
+      UpdatedAt = DateTime.UtcNow,
     };
 
     context.ProgramUsers.Add(programUser);
