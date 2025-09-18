@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using GameGuild.Services;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
