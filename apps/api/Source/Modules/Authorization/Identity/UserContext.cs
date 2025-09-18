@@ -1,10 +1,11 @@
 using System.Security.Claims;
+using GameGuild.Core.Domain.Identity;
 
 
 namespace GameGuild.Authorization.Identity;
 
 /// <summary> Implementation of user context from HTTP context Provides access to current user information from claims </summary>
-public class UserContext : Domain.Identity.IUserContext {
+public class UserContext : IUserContext {
   private readonly IHttpContextAccessor _httpContextAccessor;
 
   private readonly ILogger<UserContext> _logger;

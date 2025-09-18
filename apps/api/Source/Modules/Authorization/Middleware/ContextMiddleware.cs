@@ -1,3 +1,5 @@
+using GameGuild.Core.Domain.Identity;
+
 namespace GameGuild.Authorization.Middleware;
 
 /// <summary> Middleware to set up user and tenant context for requests </summary>

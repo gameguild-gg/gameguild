@@ -1,9 +1,10 @@
 using System.Security.Claims;
+using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
-using CqrsResult = GameGuild.CQRS.Result;
+using GameGuild.Modules.Authentication;
 
 
-namespace GameGuild;
+namespace GameGuild.Modules.Authorization;
 
 /// <summary> Authorization behavior for securing commands and queries </summary>
 public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor httpContextAccessor, ILogger<AuthorizationBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : IBaseRequest {
@@ -72,20 +73,17 @@ public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor htt
   }
 
   private static TResponse CreateErrorResponse<T>(Error error) {
-    // Convert Error to CQRS.Error
-    var cqrsError = CQRS.Error.Create(error.Code, error.Description);
-
     // Handle Result pattern
-    if (typeof(T) == typeof(CqrsResult)) return (TResponse)(object)CqrsResult.Failure(cqrsError);
+    if (typeof(T) == typeof(Result)) return (TResponse)(object)Result.Failure(error);
 
     if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Result<>)) {
       var resultType = typeof(T).GetGenericArguments()[0];
-      var failureMethod = typeof(CqrsResult).GetMethod("Failure", [typeof(CQRS.Error)])!.MakeGenericMethod(resultType);
+      var failureMethod = typeof(Result<>).MakeGenericType(resultType).GetMethod("Failure", [typeof(Error)])!;
 
-      return (TResponse)failureMethod.Invoke(null, [cqrsError])!;
+      return (TResponse)failureMethod.Invoke(null, [error])!;
     }
 
     // Fallback - throw exception for non-Result responses
-    throw new UnauthorizedAccessException(error.Description);
+    throw new UnauthorizedAccessException(error.Message);
   }
 }
