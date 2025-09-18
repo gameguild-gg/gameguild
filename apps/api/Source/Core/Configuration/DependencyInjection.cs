@@ -1,5 +1,8 @@
 using System.Reflection;
 using GameGuild.CQRS;
+using GameGuild.Modules.Projects;
+using GameGuild.Modules.Resources;
+using GameGuild.Modules.Tenants;
 
 
 namespace GameGuild;
@@ -180,6 +183,11 @@ public static class DependencyInjection {
 
   /// <summary> Registers external service implementations </summary>
   private static IServiceCollection AddExternalServices(this IServiceCollection services) {
+    // Add module services
+    services.AddResourcesModule();
+    services.AddTenantsModule();
+    services.AddProjectsModule();
+
     // External services will be added here as modules are implemented
     // Email service, payment providers, notification services, etc.
 
