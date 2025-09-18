@@ -53,7 +53,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
     foreach (var productProgram in productPrograms) {
       try {
-        var enrollment = await EnrollUserAsync(userId, productProgram.ProgramId, EnrollmentProductPurchase);
+        var enrollment = await EnrollUserAsync(userId, productProgram.ProgramId, EnrollmentSource.ProductPurchase);
         enrollments.Add(enrollment);
       }
       catch (Exception ex) {
