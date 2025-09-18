@@ -4,6 +4,9 @@ namespace GameGuild.Modules.TestingLab;
 [Table("SessionRegistrationPermissions")]
 [Index(nameof(UserId), nameof(TenantId), nameof(ResourceId), Name = "IX_SessionRegistrationPermissions_User_Tenant_Resource")]
 public class SessionRegistrationPermission : ResourcePermission<SessionRegistration> {
+  public SessionRegistrationPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
+    : base(userId, tenantId, resourceId, permissions) { }
+
   /// <summary> Check if user can view this session registration </summary>
   public bool CanView { get => HasPermission(PermissionType.Read); }
 

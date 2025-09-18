@@ -2,7 +2,6 @@ namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Permission class for SessionWaitlist entities Manages access control for session waitlists </summary>
 public class SessionWaitlistPermission : ResourcePermission<SessionWaitlist> {
-  /// <summary> Initialize SessionWaitlist permission </summary>
-  /// <param name="permissionType"> The type of permission required </param>
-  public SessionWaitlistPermission(PermissionType permissionType) : base(permissionType) { }
+  public SessionWaitlistPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
+    : base(userId, tenantId, resourceId, permissions) { }
 }
