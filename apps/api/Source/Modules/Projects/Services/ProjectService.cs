@@ -471,7 +471,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
       ProjectId = projectId,
       FollowerCount = project.Followers.Count,
       FeedbackCount = project.Feedbacks.Count(f => f.Status == ContentStatus.Published),
-      AverageRating = project.Feedbacks.Any(f => f.Status == ContentStatus.Published) ? (decimal?) project.Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating) : null,
+      AverageRating = project.Feedbacks.Any(f => f.Status == ContentStatus.Published) ? (decimal?)project.Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating) : null,
       TotalDownloads = project.Releases.Sum(r => r.DownloadCount),
       ActiveTeamCount = project.Teams.Count(t => t.IsActive),
       CollaboratorCount = project.Collaborators.Count,
@@ -516,7 +516,7 @@ public class ProjectService(ApplicationDbContext context) : IProjectService {
     var averageRating = project.Feedbacks.Count != 0 ? project.Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating) : 0;
 
     // Weighted trending score
-    return (decimal) (recentFollowers * 2.0 + recentFeedback * 1.5 + totalDownloads * 0.001 + averageRating * 0.5);
+    return (decimal)(recentFollowers * 2.0 + recentFeedback * 1.5 + totalDownloads * 0.001 + averageRating * 0.5);
   }
 
   #endregion
