@@ -1,5 +1,6 @@
 using GameGuild.Modules.Features.Models;
 using GameGuild.Modules.Features.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -91,22 +92,22 @@ public class FeatureFlagsController : ControllerBase {
 
       return Ok(
         flags.Select(f => new {
-                       f.Id,
-                       f.Key,
-                       f.Name,
-                       f.Description,
-                       f.IsEnabled,
-                       f.Type,
-                       f.DefaultValue,
-                       f.EnabledValue,
-                       f.IsGlobal,
-                       f.RolloutPercentage,
-                       f.Environment,
-                       f.TenantId,
-                       f.CreatedAt,
-                       f.UpdatedAt,
-                       TargetCount = f.Targets.Count
-                     }
+          f.Id,
+          f.Key,
+          f.Name,
+          f.Description,
+          f.IsEnabled,
+          f.Type,
+          f.DefaultValue,
+          f.EnabledValue,
+          f.IsGlobal,
+          f.RolloutPercentage,
+          f.Environment,
+          f.TenantId,
+          f.CreatedAt,
+          f.UpdatedAt,
+          TargetCount = f.Targets.Count
+        }
         )
       );
     }
