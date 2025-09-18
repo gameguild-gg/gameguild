@@ -418,9 +418,6 @@ public interface IProgramService {
   /// <summary> Schedule program for publishing </summary>
   Task<ProgramEntity> SchedulePublishAsync(Guid id, DateTime publishAt);
 
-  /// <summary> Set program visibility/access level </summary>
-  Task<ProgramEntity> SetVisibilityAsync(Guid id, AccessLevel visibility);
-
   // Search & Discovery
 
   /// <summary>
