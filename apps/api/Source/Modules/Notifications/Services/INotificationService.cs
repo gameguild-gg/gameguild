@@ -1,7 +1,4 @@
-using GameGuild.Modules.Notifications.Dtos;
-
-
-namespace GameGuild.Modules.Notifications.Services;
+using GameGuild.Modules.Notifications;
 
 /// <summary>
 /// Service interface for notification management

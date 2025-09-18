@@ -242,6 +242,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<AchievementProgress> AchievementProgress { get; set; }
 
+  // Notifications Management DbSets
+  public DbSet<GameGuild.Modules.Notifications.Models.Notification> Notifications { get; set; }
+
+  public DbSet<GameGuild.Modules.Notifications.Models.NotificationPreferences> NotificationPreferences { get; set; }
+
   // KYC Management DbSets
   public DbSet<UserKycVerification> UserKycVerifications { get; set; }
 

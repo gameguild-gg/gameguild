@@ -1,24 +1,19 @@
-using GameGuild.Modules.Notifications.Dtos;
-using GameGuild.Modules.Notifications.Services;
+using GameGuild.Authorization.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Modules.Notifications.Controllers;
+namespace GameGuild.Modules.Notifications;
 
 /// <summary> API controller for notification management </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 [Authorize]
-public class NotificationsController : ControllerBase {
-  private readonly INotificationService _notificationService;
-
-  public NotificationsController(INotificationService notificationService) { _notificationService = notificationService; }
-
+public class NotificationsController(INotificationService notificationService) : ControllerBase {
   /// <summary> Get user's notifications with filtering and pagination </summary>
   [HttpGet]
   public async Task<ActionResult<NotificationResponseDto>> GetNotifications([FromQuery] NotificationQueryDto query) {
     var userId = User.GetUserId();
-    var result = await _notificationService.GetNotificationsAsync(userId, query);
+    var result = await notificationService.GetNotificationsAsync(userId, query);
 
     return Ok(result);
   }
@@ -27,7 +22,7 @@ public class NotificationsController : ControllerBase {
   [HttpGet("{id:guid}")]
   public async Task<ActionResult<NotificationDto>> GetNotification(Guid id) {
     var userId = User.GetUserId();
-    var notification = await _notificationService.GetNotificationByIdAsync(id, userId);
+    var notification = await notificationService.GetNotificationByIdAsync(id, userId);
 
     if (notification == null) return NotFound();
 
@@ -38,7 +33,7 @@ public class NotificationsController : ControllerBase {
   [HttpPost]
   // [RequireRole("Admin", "System")]
   public async Task<ActionResult<NotificationDto>> CreateNotification([FromBody] CreateNotificationDto dto) {
-    var notification = await _notificationService.CreateNotificationAsync(dto);
+    var notification = await notificationService.CreateNotificationAsync(dto);
 
     return CreatedAtAction(nameof(GetNotification), new { id = notification.Id }, notification);
   }
@@ -47,7 +42,7 @@ public class NotificationsController : ControllerBase {
   [HttpPost("bulk")]
   // [RequireRole("Admin", "System")]
   public async Task<ActionResult<List<NotificationDto>>> CreateBulkNotifications([FromBody] List<CreateNotificationDto> dtos) {
-    var notifications = await _notificationService.CreateBulkNotificationsAsync(dtos);
+    var notifications = await notificationService.CreateBulkNotificationsAsync(dtos);
 
     return Ok(notifications);
   }
@@ -56,7 +51,7 @@ public class NotificationsController : ControllerBase {
   [HttpPatch("{id:guid}/read")]
   public async Task<ActionResult> MarkAsRead(Guid id) {
     var userId = User.GetUserId();
-    var success = await _notificationService.MarkAsReadAsync(id, userId);
+    var success = await notificationService.MarkAsReadAsync(id, userId);
 
     if (!success) return NotFound();
 
@@ -67,7 +62,7 @@ public class NotificationsController : ControllerBase {
   [HttpPatch("read-all")]
   public async Task<ActionResult<int>> MarkAllAsRead() {
     var userId = User.GetUserId();
-    var count = await _notificationService.MarkAllAsReadAsync(userId);
+    var count = await notificationService.MarkAllAsReadAsync(userId);
 
     return Ok(count);
   }
@@ -76,7 +71,7 @@ public class NotificationsController : ControllerBase {
   [HttpPatch("{id:guid}/archive")]
   public async Task<ActionResult> ArchiveNotification(Guid id) {
     var userId = User.GetUserId();
-    var success = await _notificationService.ArchiveNotificationAsync(id, userId);
+    var success = await notificationService.ArchiveNotificationAsync(id, userId);
 
     if (!success) return NotFound();
 
@@ -87,7 +82,7 @@ public class NotificationsController : ControllerBase {
   [HttpPatch("{id:guid}/star")]
   public async Task<ActionResult> ToggleStar(Guid id) {
     var userId = User.GetUserId();
-    var success = await _notificationService.ToggleStarAsync(id, userId);
+    var success = await notificationService.ToggleStarAsync(id, userId);
 
     if (!success) return NotFound();
 
@@ -98,7 +93,7 @@ public class NotificationsController : ControllerBase {
   [HttpDelete("{id:guid}")]
   public async Task<ActionResult> DeleteNotification(Guid id) {
     var userId = User.GetUserId();
-    var success = await _notificationService.DeleteNotificationAsync(id, userId);
+    var success = await notificationService.DeleteNotificationAsync(id, userId);
 
     if (!success) return NotFound();
 
@@ -109,7 +104,7 @@ public class NotificationsController : ControllerBase {
   [HttpGet("unread-count")]
   public async Task<ActionResult<int>> GetUnreadCount() {
     var userId = User.GetUserId();
-    var count = await _notificationService.GetUnreadCountAsync(userId);
+    var count = await notificationService.GetUnreadCountAsync(userId);
 
     return Ok(count);
   }
@@ -118,7 +113,7 @@ public class NotificationsController : ControllerBase {
   [HttpPatch("bulk-action")]
   public async Task<ActionResult<int>> BulkAction([FromBody] BulkNotificationActionDto dto) {
     var userId = User.GetUserId();
-    var count = await _notificationService.BulkActionAsync(userId, dto);
+    var count = await notificationService.BulkActionAsync(userId, dto);
 
     return Ok(count);
   }
@@ -127,7 +122,7 @@ public class NotificationsController : ControllerBase {
   [HttpGet("preferences")]
   public async Task<ActionResult<NotificationPreferencesDto>> GetPreferences() {
     var userId = User.GetUserId();
-    var preferences = await _notificationService.GetPreferencesAsync(userId);
+    var preferences = await notificationService.GetPreferencesAsync(userId);
 
     return Ok(preferences);
   }
@@ -136,7 +131,7 @@ public class NotificationsController : ControllerBase {
   [HttpPut("preferences")]
   public async Task<ActionResult<NotificationPreferencesDto>> UpdatePreferences([FromBody] NotificationPreferencesDto dto) {
     var userId = User.GetUserId();
-    var updatedPreferences = await _notificationService.UpdatePreferencesAsync(userId, dto);
+    var updatedPreferences = await notificationService.UpdatePreferencesAsync(userId, dto);
 
     return Ok(updatedPreferences);
   }
@@ -146,7 +141,7 @@ public class NotificationsController : ControllerBase {
   // [RequireRole("Admin")]
   public async Task<ActionResult<int>> CleanupOldNotifications([FromQuery] DateTime? olderThan = null) {
     var cutoffDate = olderThan ?? DateTime.UtcNow.AddMonths(-6); // Default to 6 months
-    var count = await _notificationService.CleanupOldNotificationsAsync(cutoffDate);
+    var count = await notificationService.CleanupOldNotificationsAsync(cutoffDate);
 
     return Ok(count);
   }
