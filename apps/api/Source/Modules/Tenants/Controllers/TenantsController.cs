@@ -167,6 +167,7 @@ public class TenantsController(
   /// <param name="dto"> Tenant update DTO </param>
   /// <returns> Updated tenant </returns>
   [HttpPut("{id:guid}")]
+  [RequireTenantPermission(PermissionType.Edit)]
   public async Task<ActionResult<Tenant>> UpdateTenant(Guid id, [FromBody] UpdateTenantDto dto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -179,10 +180,11 @@ public class TenantsController(
   }
 
   /// <summary> Soft delete a tenant </summary>
-  /// <param name="id"> Tenant ID to delete </param>
-  /// <returns> No content if successful </returns>
+  /// <param name="id"> Tenant ID </param>
+  /// <returns> Deletion result </returns>
   [HttpDelete("{id:guid}")]
-  public async Task<IActionResult> DeleteTenant(Guid id) {
+  [RequireTenantPermission(PermissionType.Delete)]
+  public async Task<ActionResult> DeleteTenant(Guid id) {
     var command = new DeleteTenantCommand(id);
     var result = await deleteTenantHandler.Handle(command, CancellationToken.None);
 
@@ -192,10 +194,11 @@ public class TenantsController(
   }
 
   /// <summary> Restore a soft-deleted tenant </summary>
-  /// <param name="id"> Tenant ID to restore </param>
-  /// <returns> No content if successful </returns>
+  /// <param name="id"> Tenant ID </param>
+  /// <returns> Restoration result </returns>
   [HttpPost("{id:guid}/restore")]
-  public async Task<IActionResult> RestoreTenant(Guid id) {
+  [RequireTenantPermission(PermissionType.Restore)]
+  public async Task<ActionResult> RestoreTenant(Guid id) {
     var command = new RestoreTenantCommand(id);
     var result = await restoreTenantHandler.Handle(command, CancellationToken.None);
 
@@ -205,10 +208,11 @@ public class TenantsController(
   }
 
   /// <summary> Permanently delete a tenant </summary>
-  /// <param name="id"> Tenant ID to delete permanently </param>
-  /// <returns> No content if successful </returns>
+  /// <param name="id"> Tenant ID </param>
+  /// <returns> Deletion result </returns>
   [HttpDelete("{id:guid}/permanent")]
-  public async Task<IActionResult> HardDeleteTenant(Guid id) {
+  [RequireTenantPermission(PermissionType.HardDelete)]
+  public async Task<ActionResult> HardDeleteTenant(Guid id) {
     var command = new HardDeleteTenantCommand(id);
     var result = await hardDeleteTenantHandler.Handle(command, CancellationToken.None);
 
@@ -219,9 +223,10 @@ public class TenantsController(
 
   /// <summary> Activate a tenant </summary>
   /// <param name="id"> Tenant ID </param>
-  /// <returns> No content if successful </returns>
+  /// <returns> Activation result </returns>
   [HttpPost("{id:guid}/activate")]
-  public async Task<IActionResult> ActivateTenant(Guid id) {
+  [RequireTenantPermission(PermissionType.Edit)]
+  public async Task<ActionResult> ActivateTenant(Guid id) {
     var command = new ActivateTenantCommand(id);
     var result = await activateTenantHandler.Handle(command, CancellationToken.None);
 
@@ -232,9 +237,10 @@ public class TenantsController(
 
   /// <summary> Deactivate a tenant </summary>
   /// <param name="id"> Tenant ID </param>
-  /// <returns> No content if successful </returns>
+  /// <returns> Deactivation result </returns>
   [HttpPost("{id:guid}/deactivate")]
-  public async Task<IActionResult> DeactivateTenant(Guid id) {
+  [RequireTenantPermission(PermissionType.Edit)]
+  public async Task<ActionResult> DeactivateTenant(Guid id) {
     var command = new DeactivateTenantCommand(id);
     var result = await deactivateTenantHandler.Handle(command, CancellationToken.None);
 
@@ -247,6 +253,7 @@ public class TenantsController(
   /// <param name="dto"> Bulk delete DTO </param>
   /// <returns> Number of deleted tenants </returns>
   [HttpPost("bulk-delete")]
+  [RequireTenantPermission(PermissionType.Delete)]
   public async Task<ActionResult<int>> BulkDeleteTenants([FromBody] BulkDeleteTenantsDto dto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -262,6 +269,7 @@ public class TenantsController(
   /// <param name="dto"> Bulk restore DTO </param>
   /// <returns> Number of restored tenants </returns>
   [HttpPost("bulk-restore")]
+  [RequireTenantPermission(PermissionType.Restore)]
   public async Task<ActionResult<int>> BulkRestoreTenants([FromBody] BulkRestoreTenantsDto dto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
