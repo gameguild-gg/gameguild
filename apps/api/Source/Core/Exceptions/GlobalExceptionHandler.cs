@@ -29,7 +29,7 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
           Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
           Title = "Validation Error",
           Detail = validationException.Message,
-          Extensions = new Dictionary<string, object?> { ["errors"] = new[ ] { validationException.Message } },
+          Extensions = new Dictionary<string, object?> { ["errors"] = new[] { validationException.Message } },
         },
       ArgumentException argumentException => new ProblemDetails { Status = StatusCodes.Status400BadRequest, Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1", Title = "Bad Request", Detail = argumentException.Message },
       InvalidOperationException invalidOperationException when invalidOperationException.Message.Contains("not found") =>
