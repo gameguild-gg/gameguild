@@ -2,7 +2,7 @@ using IUserContextCommon = GameGuild.IUserContext;
 using IUserContextCore = GameGuild.Core.Domain.Identity.IUserContext;
 
 
-namespace GameGuild.Core.Infrastructure.Identity;
+namespace GameGuild.Authorization.Identity;
 
 /// <summary> Adapter that implements the Common IUserContext interface while delegating to Core implementation Provides backward compatibility during migration from Common to Core </summary>
 public class UserContextAdapter : IUserContextCommon {

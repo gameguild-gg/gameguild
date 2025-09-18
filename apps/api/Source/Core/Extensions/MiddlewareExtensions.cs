@@ -1,4 +1,4 @@
-﻿using GameGuild.Core.Infrastructure.Middleware;
+﻿using GameGuild.Authorization.Middleware;
 
 
 namespace GameGuild;

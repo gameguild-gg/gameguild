@@ -1,4 +1,4 @@
-namespace GameGuild.Core.Infrastructure.Middleware;
+namespace GameGuild.Authorization.Middleware;
 
 /// <summary> Middleware to set up user and tenant context for requests </summary>
 public class ContextMiddleware {

@@ -3,7 +3,7 @@ using System.Globalization;
 using GameGuild.Core.Domain.Identity;
 
 
-namespace GameGuild.Core.Infrastructure.Identity;
+namespace GameGuild.Authorization.Identity;
 
 /// <summary> Implementation of localization context Provides culture, timezone, and regional settings management </summary>
 public class LocalizationContext : ILocalizationContext {

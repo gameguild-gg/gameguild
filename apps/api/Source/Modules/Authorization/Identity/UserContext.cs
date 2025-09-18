@@ -1,7 +1,7 @@
 using System.Security.Claims;
 
 
-namespace GameGuild.Core.Infrastructure.Identity;
+namespace GameGuild.Authorization.Identity;
 
 /// <summary> Implementation of user context from HTTP context Provides access to current user information from claims </summary>
 public class UserContext : Domain.Identity.IUserContext {
@@ -42,7 +42,7 @@ public class UserContext : Domain.Identity.IUserContext {
     get {
       if (_user == null) return new Dictionary<string, object>();
 
-      return _user.Claims.ToDictionary(c => c.Type, c => (object) c.Value);
+      return _user.Claims.ToDictionary(c => c.Type, c => (object)c.Value);
     }
   }
 
