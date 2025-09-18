@@ -1,6 +1,4 @@
 using GameGuild.Core.Domain.Identity;
-using GameGuild.Core.Domain.Projects;
-using GameGuild.Core.Domain.ValueObjects;
 using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
