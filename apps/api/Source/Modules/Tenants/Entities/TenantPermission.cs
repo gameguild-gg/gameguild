@@ -1,4 +1,6 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Modules.Permissions;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Tenants;
