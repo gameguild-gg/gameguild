@@ -95,7 +95,7 @@ public class ProductCommandHandlers
       // Update properties
       if (!string.IsNullOrEmpty(request.Name)) {
         product.Name = request.Name;
-        product.Title = request.Name; // Update Resource.Title as well
+        product.Title = request.Name; // Update ReTitle as well
       }
 
       if (request.Description != null) product.Description = request.Description;
