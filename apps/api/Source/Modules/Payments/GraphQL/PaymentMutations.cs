@@ -1,3 +1,5 @@
+using GameGuild.Core.Domain.Identity;
+
 namespace GameGuild.Modules.Payments;
 
 /// <summary>

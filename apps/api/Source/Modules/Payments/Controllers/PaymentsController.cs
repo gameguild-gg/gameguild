@@ -1,4 +1,6 @@
+using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
+using GameGuild.Database;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
