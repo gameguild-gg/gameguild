@@ -1,4 +1,5 @@
 using System.Text.Json;
+using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Programs;
@@ -52,7 +53,9 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
       _logger.LogInformation("Payment intent created: {PaymentId} for user {UserId}", payment.Id, request.UserId);
 
       return new CreatePaymentResult {
-        Success = true, Payment = payment, ClientSecret = $"pi_{payment.Id}_secret", // Placeholder for actual payment provider integration
+        Success = true,
+        Payment = payment,
+        ClientSecret = $"pi_{payment.Id}_secret", // Placeholder for actual payment provider integration
       };
     }
     catch (Exception ex) {
