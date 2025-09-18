@@ -11,7 +11,7 @@ public class TenantAuthService(ITenantService tenantService, ITenantContextServi
   public async Task<SignInResponseDto> EnhanceWithTenantDataAsync(SignInResponseDto authResult, User user, Guid? tenantId = null) {
     // Get available tenants for the user
     var tenantPermissions = await tenantService.GetTenantsForUserAsync(user.Id);
-    var availableTenants = tenantPermissions.Where(tp => tp.IsValid).ToList();
+    var availableTenants = tenantPermissions.Where(tp => !tp.IsExpired).ToList();
 
     // If no tenants available, return original result
     if (availableTenants.Count == 0) return authResult;
@@ -46,7 +46,7 @@ public class TenantAuthService(ITenantService tenantService, ITenantContextServi
 
     // Generate new token with tenant claims
     var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-    var roles = new[ ] { "User" }; // TODO: fetch actual tenant-specific roles
+    var roles = new[] { "User" }; // TODO: fetch actual tenant-specific roles
     var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
 
     // Update response with new token and tenant info
@@ -66,8 +66,8 @@ public class TenantAuthService(ITenantService tenantService, ITenantContextServi
 
     // Add permission flags if available
     if (tenantPermission != null) {
-      claims.Add(new Claim(JwtClaimTypes.TenantPermissionFlags1, tenantPermission.PermissionFlags1.ToString()));
-      claims.Add(new Claim(JwtClaimTypes.TenantPermissionFlags2, tenantPermission.PermissionFlags2.ToString()));
+      claims.Add(new Claim(JwtClaimTypes.TenantPermissionFlags1, ((long)tenantPermission.Permissions).ToString()));
+      claims.Add(new Claim(JwtClaimTypes.TenantPermissionFlags2, "0")); // TenantPermission uses single Permissions enum, not dual flags
     }
 
     return claims;
