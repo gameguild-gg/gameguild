@@ -30,13 +30,13 @@ public static class ServiceCollectionExtensions {
     options.Validate();
 
     services.AddHttpLogging(loggingOptions => {
-        loggingOptions.LoggingFields = HttpLoggingFields.All;
+      loggingOptions.LoggingFields = HttpLoggingFields.All;
 
-        if (options.LogRequestHeaders) loggingOptions.LoggingFields |= HttpLoggingFields.RequestHeaders;
-        if (options.LogResponseHeaders) loggingOptions.LoggingFields |= HttpLoggingFields.ResponseHeaders;
-        if (options.LogRequestBody) loggingOptions.LoggingFields |= HttpLoggingFields.RequestBody;
-        if (options.LogResponseBody) loggingOptions.LoggingFields |= HttpLoggingFields.ResponseBody;
-      }
+      if (options.LogRequestHeaders) loggingOptions.LoggingFields |= HttpLoggingFields.RequestHeaders;
+      if (options.LogResponseHeaders) loggingOptions.LoggingFields |= HttpLoggingFields.ResponseHeaders;
+      if (options.LogRequestBody) loggingOptions.LoggingFields |= HttpLoggingFields.RequestBody;
+      if (options.LogResponseBody) loggingOptions.LoggingFields |= HttpLoggingFields.ResponseBody;
+    }
     );
 
     return services;
@@ -47,13 +47,13 @@ public static class ServiceCollectionExtensions {
     options.Validate();
 
     services.AddProblemDetails(problemDetailsOptions => {
-        problemDetailsOptions.CustomizeProblemDetails = context => {
-          context.ProblemDetails.Instance = context.HttpContext.Request.Path;
-          context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+      problemDetailsOptions.CustomizeProblemDetails = context => {
+        context.ProblemDetails.Instance = context.HttpContext.Request.Path;
+        context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
 
-          if (options.IncludeExceptionDetails && context.Exception != null) context.ProblemDetails.Extensions["exception"] = context.Exception.ToString();
-        };
-      }
+        if (options.IncludeExceptionDetails && context.Exception != null) context.ProblemDetails.Extensions["exception"] = context.Exception.ToString();
+      };
+    }
     );
 
     return services;
@@ -66,11 +66,11 @@ public static class ServiceCollectionExtensions {
     services.AddLocalization(localizationOptions => { localizationOptions.ResourcesPath = "Resources"; });
 
     services.Configure<RequestLocalizationOptions>(requestLocalizationOptions => {
-        var supportedCultures = options.SupportedCultures;
-        requestLocalizationOptions.DefaultRequestCulture = new RequestCulture(options.DefaultCulture);
-        requestLocalizationOptions.SupportedCultures = supportedCultures.Select(c => new CultureInfo(c)).ToList();
-        requestLocalizationOptions.SupportedUICultures = supportedCultures.Select(c => new CultureInfo(c)).ToList();
-      }
+      var supportedCultures = options.SupportedCultures;
+      requestLocalizationOptions.DefaultRequestCulture = new RequestCulture(options.DefaultCulture);
+      requestLocalizationOptions.SupportedCultures = supportedCultures.Select(c => new CultureInfo(c)).ToList();
+      requestLocalizationOptions.SupportedUICultures = supportedCultures.Select(c => new CultureInfo(c)).ToList();
+    }
     );
 
     return services;
@@ -81,9 +81,9 @@ public static class ServiceCollectionExtensions {
     options.Validate();
 
     services.AddResponseCompression(compressionOptions => {
-        compressionOptions.MimeTypes = options.MimeTypes;
-        compressionOptions.EnableForHttps = true;
-      }
+      compressionOptions.MimeTypes = options.MimeTypes;
+      compressionOptions.EnableForHttps = true;
+    }
     );
 
     return services;
@@ -94,24 +94,24 @@ public static class ServiceCollectionExtensions {
     options.Validate();
 
     services.AddCors(corsOptions => {
-        corsOptions.AddDefaultPolicy(policyBuilder => {
-            if (options.AllowedOrigins.Length > 0)
-              policyBuilder.WithOrigins(options.AllowedOrigins);
-            else
-              policyBuilder.AllowAnyOrigin();
+      corsOptions.AddDefaultPolicy(policyBuilder => {
+        if (options.AllowedOrigins.Length > 0)
+          policyBuilder.WithOrigins(options.AllowedOrigins);
+        else
+          policyBuilder.AllowAnyOrigin();
 
-            if (options.AllowedMethods.Length > 0)
-              policyBuilder.WithMethods(options.AllowedMethods);
-            else
-              policyBuilder.AllowAnyMethod();
+        if (options.AllowedMethods.Length > 0)
+          policyBuilder.WithMethods(options.AllowedMethods);
+        else
+          policyBuilder.AllowAnyMethod();
 
-            if (options.AllowedHeaders.Length > 0)
-              policyBuilder.WithHeaders(options.AllowedHeaders);
-            else
-              policyBuilder.AllowAnyHeader();
-          }
-        );
+        if (options.AllowedHeaders.Length > 0)
+          policyBuilder.WithHeaders(options.AllowedHeaders);
+        else
+          policyBuilder.AllowAnyHeader();
       }
+      );
+    }
     );
 
     return services;
@@ -176,13 +176,13 @@ public static class ServiceCollectionExtensions {
     options.Validate();
 
     services.AddRateLimiter(rateLimiterOptions => {
-        // TODO: Fix rate limiter configuration for .NET 9
-        // These methods may not be available in .NET 9
-        // Fixed window for internal API calls and the Console application.
-        // rateLimiterOptions.AddFixedWindowLimiter("InternalPolicy", policyOptions => { ... });
-        // Sliding window for public API calls with rate limiting.
-        // rateLimiterOptions.AddSlidingWindowLimiter("PublicPolicy", policyOptions => { ... });
-      }
+      // TODO: Fix rate limiter configuration for .NET 9
+      // These methods may not be available in .NET 9
+      // Fixed window for internal API calls and the Console application.
+      // rateLimiterOptions.AddFixedWindowLimiter("InternalPolicy", policyOptions => { ... });
+      // Sliding window for public API calls with rate limiting.
+      // rateLimiterOptions.AddSlidingWindowLimiter("PublicPolicy", policyOptions => { ... });
+    }
     );
 
     return services;
@@ -211,15 +211,15 @@ public static class ServiceCollectionExtensions {
     options.Validate();
 
     services.AddApiVersioning(setup => {
-                setup.AssumeDefaultVersionWhenUnspecified = options.AssumeDefaultVersionWhenUnspecified;
-                setup.DefaultApiVersion = options.DefaultApiVersion;
-                setup.ApiVersionReader = ApiVersioningOptionsBuilder.CreateReader(options.ReadingStrategy, options);
-              }
+      setup.AssumeDefaultVersionWhenUnspecified = options.AssumeDefaultVersionWhenUnspecified;
+      setup.DefaultApiVersion = options.DefaultApiVersion;
+      setup.ApiVersionReader = ApiVersioningOptionsBuilder.CreateReader(options.ReadingStrategy, options);
+    }
             )
             .AddApiExplorer(setup => {
-                setup.GroupNameFormat = options.GroupNameFormat;
-                setup.SubstituteApiVersionInUrl = options.SubstituteApiVersionInUrl;
-              }
+              setup.GroupNameFormat = options.GroupNameFormat;
+              setup.SubstituteApiVersionInUrl = options.SubstituteApiVersionInUrl;
+            }
             );
 
     return services;
@@ -244,30 +244,30 @@ public static class ServiceCollectionExtensions {
 
     // Add Swashbuckle for Swagger UI
     services.AddSwaggerGen(genOptions => {
-        genOptions.SwaggerDoc(
-          options.Version,
-          new OpenApiInfo {
-            Title = options.Title,
-            Version = options.Version,
-            Description = options.Description,
-            Contact = new OpenApiContact { Name = options.ContactName, Email = options.ContactEmail, Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null },
-            License = BuildLicense(options),
-            TermsOfService = !string.IsNullOrEmpty(options.TermsOfServiceUrl) ? new Uri(options.TermsOfServiceUrl) : null,
-          }
-        );
+      genOptions.SwaggerDoc(
+        options.Version,
+        new OpenApiInfo {
+          Title = options.Title,
+          Version = options.Version,
+          Description = options.Description,
+          Contact = new OpenApiContact { Name = options.ContactName, Email = options.ContactEmail, Url = !string.IsNullOrEmpty(options.ContactUrl) ? new Uri(options.ContactUrl) : null },
+          License = BuildLicense(options),
+          TermsOfService = !string.IsNullOrEmpty(options.TermsOfServiceUrl) ? new Uri(options.TermsOfServiceUrl) : null,
+        }
+      );
 
-        // Use fully-qualified type names (without root namespace) to avoid collisions for nested record types
-        // e.g. TenantsController+ArchiveRequest vs ResourcesController+ArchiveRequest
-        genOptions.CustomSchemaIds(t => {
-            var fullName = t.FullName ?? t.Name;
-            // Strip common root namespace to keep schema ids concise
-            fullName = fullName.Replace("GameGuild.", string.Empty, StringComparison.Ordinal);
+      // Use fully-qualified type names (without root namespace) to avoid collisions for nested record types
+      // e.g. TenantsController+ArchiveRequest vs ResourcesController+ArchiveRequest
+      genOptions.CustomSchemaIds(t => {
+        var fullName = t.FullName ?? t.Name;
+        // Strip common root namespace to keep schema ids concise
+        fullName = fullName.Replace("GameGuild.", string.Empty, StringComparison.Ordinal);
 
-            // Replace '+' (nested type separator) with '.' for readability
-            return fullName.Replace('+', '.');
-          }
-        );
+        // Replace '+' (nested type separator) with '.' for readability
+        return fullName.Replace('+', '.');
       }
+      );
+    }
     );
 
     return services;
@@ -287,10 +287,10 @@ public static class ServiceCollectionExtensions {
     options.Validate();
 
     services.AddMemoryCache(cacheOptions => {
-        cacheOptions.SizeLimit = options.SizeLimit;
-        cacheOptions.CompactionPercentage = options.CompactionPercentage;
-        cacheOptions.ExpirationScanFrequency = options.ExpirationScanFrequency;
-      }
+      cacheOptions.SizeLimit = options.SizeLimit;
+      cacheOptions.CompactionPercentage = options.CompactionPercentage;
+      cacheOptions.ExpirationScanFrequency = options.ExpirationScanFrequency;
+    }
     );
 
     return services;
@@ -301,9 +301,9 @@ public static class ServiceCollectionExtensions {
     options.Validate();
 
     services.AddResponseCaching(cachingOptions => {
-        cachingOptions.MaximumBodySize = options.MaximumBodySize;
-        cachingOptions.UseCaseSensitivePaths = options.UseCaseSensitivePaths;
-      }
+      cachingOptions.MaximumBodySize = options.MaximumBodySize;
+      cachingOptions.UseCaseSensitivePaths = options.UseCaseSensitivePaths;
+    }
     );
 
     return services;
@@ -314,11 +314,11 @@ public static class ServiceCollectionExtensions {
     options.Validate();
 
     services.AddSignalR(signalROptions => {
-        signalROptions.EnableDetailedErrors = options.EnableDetailedErrors;
-        signalROptions.KeepAliveInterval = options.KeepAliveInterval;
-        signalROptions.ClientTimeoutInterval = options.ClientTimeoutInterval;
-        signalROptions.MaximumReceiveMessageSize = options.MaximumReceiveMessageSize;
-      }
+      signalROptions.EnableDetailedErrors = options.EnableDetailedErrors;
+      signalROptions.KeepAliveInterval = options.KeepAliveInterval;
+      signalROptions.ClientTimeoutInterval = options.ClientTimeoutInterval;
+      signalROptions.MaximumReceiveMessageSize = options.MaximumReceiveMessageSize;
+    }
     );
 
     return services;
