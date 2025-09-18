@@ -1,4 +1,5 @@
 using FluentValidation;
+using GameGuild.CQRS;
 using GameGuild.Modules.Authentication.Validators;
 
 
