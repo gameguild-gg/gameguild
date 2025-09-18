@@ -52,8 +52,8 @@ public class FeatureFlagIntegrationTest {
         var testFlag = new FeatureFlag {
             Key = "test-feature",
             Name = "Test Feature",
-            Type = FeatureFlagType.Boolean,
-            Value = "true",
+            Type = FeatureFlagType.Toggle,
+            EnabledValue = "true",
             IsEnabled = true,
             Environment = "test"
         };
