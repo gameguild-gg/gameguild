@@ -1,4 +1,7 @@
 using GameGuild.Database;
+using GameGuild.Modules.Permissions;
+using Microsoft.EntityFrameworkCore;
+using TenantPermissionEntity = GameGuild.TenantPermission;
 
 
 namespace GameGuild.Modules.Tenants;
@@ -6,7 +9,7 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 /// Service implementation for managing tenants
 /// </summary>
-public class TenantService(ApplicationDbContext context, IPermissionService permissionService) : ITenantService {
+public class TenantService(ApplicationDbContext context) : ITenantService {
   /// <summary>
   /// Get all tenants
   /// </summary>
@@ -152,9 +155,32 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// <param name="userId">User ID</param>
   /// <param name="tenantId">Tenant ID</param>
   /// <returns>Created TenantPermission relationship</returns>
-  public async Task<TenantPermission> AddUserToTenantAsync(Guid userId, Guid tenantId) {
-    // Use the permission service to handle tenant membership
-    return await permissionService.JoinTenantAsync(userId, tenantId);
+  public async Task<TenantPermissionEntity> AddUserToTenantAsync(Guid userId, Guid tenantId) {
+    // Check if tenant exists and is active
+    var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId && t.DeletedAt == null && t.IsActive);
+    if (tenant == null) {
+      throw new InvalidOperationException($"Active tenant with ID {tenantId} not found");
+    }
+
+    // Check if user already has a membership
+    var existingMembership = await context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId);
+
+    if (existingMembership != null) {
+      // Reactivate if needed
+      if (existingMembership.DeletedAt != null) {
+        existingMembership.Restore();
+        _ = await context.SaveChangesAsync();
+      }
+      return existingMembership;
+    }
+
+    // Create new membership with basic permissions
+    var membership = TenantPermissionEntity.CreateUserPermission(userId, tenantId, PermissionType.Read);
+
+    context.TenantPermissions.Add(membership);
+    _ = await context.SaveChangesAsync();
+
+    return membership;
   }
 
   /// <summary>
@@ -164,7 +190,14 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// <param name="tenantId">Tenant ID</param>
   /// <returns>True if removed successfully</returns>
   public async Task<bool> RemoveUserFromTenantAsync(Guid userId, Guid tenantId) {
-    await permissionService.LeaveTenantAsync(userId, tenantId);
+    var membership = await context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null);
+
+    if (membership == null) {
+      return false;
+    }
+
+    membership.SoftDelete();
+    _ = await context.SaveChangesAsync();
 
     return true;
   }
@@ -174,8 +207,10 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="tenantId">Tenant ID</param>
   /// <returns>List of TenantPermission relationships</returns>
-  public async Task<IEnumerable<TenantPermission>> GetUsersInTenantAsync(Guid tenantId) {
-    return await context.TenantPermissions.Where(tp => tp.TenantId == tenantId && tp.UserId != null).Include(tp => tp.User).Include(tp => tp.Tenant).ToListAsync();
+  public async Task<IEnumerable<TenantPermissionEntity>> GetUsersInTenantAsync(Guid tenantId) {
+    return await context.TenantPermissions
+      .Where(tp => tp.TenantId == tenantId && tp.UserId != null && tp.DeletedAt == null)
+      .ToListAsync();
   }
 
   /// <summary>
@@ -183,7 +218,11 @@ public class TenantService(ApplicationDbContext context, IPermissionService perm
   /// </summary>
   /// <param name="userId">User ID</param>
   /// <returns>List of TenantPermission relationships</returns>
-  public async Task<IEnumerable<TenantPermission>> GetTenantsForUserAsync(Guid userId) { return await permissionService.GetUserTenantsAsync(userId); }
+  public async Task<IEnumerable<TenantPermissionEntity>> GetTenantsForUserAsync(Guid userId) {
+    return await context.TenantPermissions
+      .Where(tp => tp.UserId == userId && tp.DeletedAt == null && tp.TenantId != null)
+      .ToListAsync();
+  }
 
   // === DEFAULT TENANT FUNCTIONALITY ===
 
