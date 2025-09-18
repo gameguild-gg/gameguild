@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using GameGuild.Core.Domain.Permissions;
 using GameGuild.Core.Domain.Services;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
@@ -69,7 +70,7 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
 
     // Define basic permissions that every user should have by default
     // Note: CREATE permission for tenants should be explicitly granted, not a global default
-    var defaultPermissions = new[ ] {
+    var defaultPermissions = new[] {
       PermissionType.Read, // Allow users to read public content
       PermissionType.Comment, // Allow commenting on content
       PermissionType.Vote, // Allow voting on content
@@ -87,7 +88,7 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
 
     // Grant default permissions for Projects so users can create and manage their own projects
     // Setting userId and tenantId to null makes these global defaults for the content type
-    var projectPermissions = new[ ] {
+    var projectPermissions = new[] {
       PermissionType.Read,
       PermissionType.Create, // Allow users to create projects
       PermissionType.Edit, // Allow users to edit their own projects
@@ -103,10 +104,10 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
 
     // Grant default permissions for TenantUserGroup and TenantUserGroupMembership
     // Note: TenantDomain permissions should be restricted to admins, not given as defaults
-    var tenantResourceTypes = new[ ] { "TenantUserGroup", "TenantUserGroupMembership" };
+    var tenantResourceTypes = new[] { "TenantUserGroup", "TenantUserGroupMembership" };
 
     foreach (var resourceType in tenantResourceTypes) {
-      var permissions = new[ ] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete };
+      var permissions = new[] { PermissionType.Read, PermissionType.Create, PermissionType.Edit, PermissionType.Delete };
 
       await permissionService.GrantContentTypePermissionAsync(null, null, resourceType, permissions);
       logger.LogInformation("Content-type default permissions seeded for {ResourceType} with {PermissionsLength} permissions", resourceType, permissions.Length);
@@ -114,7 +115,7 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
 
     // For TenantDomain, only grant Read permissions by default
     // Create/Edit/Delete should be restricted to users with explicit admin permissions
-    var tenantDomainPermissions = new[ ] { PermissionType.Read };
+    var tenantDomainPermissions = new[] { PermissionType.Read };
     await permissionService.GrantContentTypePermissionAsync(null, null, "TenantDomain", tenantDomainPermissions);
     logger.LogInformation("Content-type default permissions seeded for TenantDomain with {PermissionsLength} permissions (Read only)", tenantDomainPermissions.Length);
   }
@@ -123,10 +124,10 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
     logger.LogInformation("Seeding testing lab content-type default permissions...");
 
     // Grant default permissions for TestingSession, TestingRequest, TestingFeedback, and SessionRegistration
-    var testingLabResourceTypes = new[ ] { "TestingSession", "TestingRequest", "TestingFeedback", "SessionRegistration" };
+    var testingLabResourceTypes = new[] { "TestingSession", "TestingRequest", "TestingFeedback", "SessionRegistration" };
 
     foreach (var resourceType in testingLabResourceTypes) {
-      var permissions = new[ ] {
+      var permissions = new[] {
         PermissionType.Read, // Allow users to view testing sessions and requests
         PermissionType.Create, // Allow users to create testing requests
         PermissionType.Edit, // Allow users to edit their own testing content
@@ -196,7 +197,7 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
     }
 
     // Grant super admin essential permissions globally
-    var globalPermissions = new[ ] { PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete, PermissionType.Publish, PermissionType.Approve, PermissionType.Review };
+    var globalPermissions = new[] { PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete, PermissionType.Publish, PermissionType.Approve, PermissionType.Review };
 
     await permissionService.GrantTenantPermissionAsync(createdUser.Id, null, globalPermissions);
     logger.LogInformation("Granted {PermissionCount} global tenant permissions to super admin", globalPermissions.Length);
@@ -225,7 +226,7 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
     logger.LogInformation("Granted tenant-specific permissions to super admin for default tenant");
 
     // Grant essential content type permissions
-    var contentTypes = new[ ] {
+    var contentTypes = new[] {
       "Project",
       "TenantDomain",
       "TenantUserGroup",
@@ -242,7 +243,7 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
       "TestingLabSettings",
     };
 
-    var contentPermissions = new[ ] { PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete, PermissionType.Draft };
+    var contentPermissions = new[] { PermissionType.Create, PermissionType.Read, PermissionType.Edit, PermissionType.Delete, PermissionType.Draft };
 
     foreach (var contentType in contentTypes) {
       await permissionService.GrantContentTypePermissionAsync(createdUser.Id, null, contentType, contentPermissions);
