@@ -110,7 +110,7 @@ public sealed class Project : Content {
   /// <summary> Computed property: Average rating from feedback </summary>
   [GraphQLIgnore]
   [NotMapped]
-  public decimal? AverageRating { get => Feedbacks.Count != 0 ? (decimal?) Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating) : null; }
+  public decimal? AverageRating { get => Feedbacks.Count != 0 ? (decimal?)Feedbacks.Where(f => f.Status == ContentStatus.Published).Average(f => f.Rating) : null; }
 
   /// <summary> Computed property: Total feedback count </summary>
   [GraphQLIgnore]
