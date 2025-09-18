@@ -65,5 +65,9 @@
     <EmbeddedResource Remove="Tests/**/*"/>
     <Content Remove="Tests/**/*"/>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Source\Modules\Billing\CQRS\" />
+    <Folder Include="Source\Modules\Billing\GraphQL\" />
+  </ItemGroup>
 
 </Project>
