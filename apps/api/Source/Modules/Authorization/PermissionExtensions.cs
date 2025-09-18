@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using GameGuild.Core.Domain.Permissions;
 using GameGuild.Modules.Projects;
 using GameGuild.Services;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
@@ -64,7 +65,7 @@ public class PermissionQueries {
 
   /// <summary> Get all resources where user has specific permission </summary>
   [Authorize]
-  public async Task<IEnumerable<Guid>> GetResourcesWithPermission([Service] IDacPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, string resourceType, PermissionType permission, Guid[ ] resourceIds) {
+  public async Task<IEnumerable<Guid>> GetResourcesWithPermission([Service] IDacPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, string resourceType, PermissionType permission, Guid[] resourceIds) {
     var context = httpContextAccessor.HttpContext!;
     var userId = GetUserIdFromContext(context);
     var tenantId = GetTenantIdFromContext(context);
@@ -122,7 +123,7 @@ public class PermissionQueries {
   }
 
   private static async Task<Dictionary<Guid, Dictionary<PermissionType, PermissionResult>>>
-    BulkResolvePermissionsByType(IDacPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, Guid[ ] resourceIds, PermissionType[ ] permissions) {
+    BulkResolvePermissionsByType(IDacPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, Guid[] resourceIds, PermissionType[] permissions) {
     return resourceType.ToLower() switch {
       "project" or "projects" => await resolver.BulkResolvePermissionsAsync<Project>(userId, tenantId, resourceIds, permissions),
       "post" or "posts" => await resolver.BulkResolvePermissionsAsync<EntityBase>(userId, tenantId, resourceIds, permissions),
@@ -157,7 +158,13 @@ public class PermissionMutations {
     if (!canGrantPermissions) throw new UnauthorizedAccessException("You don't have permission to grant some of the requested permissions");
 
     var shareRequest = new ShareResourceRequest {
-      UserEmails = input.UserEmails, UserIds = input.UserIds, Permissions = input.Permissions, ExpiresAt = input.ExpiresAt, Message = input.Message, RequireAcceptance = input.RequireAcceptance, NotifyUsers = input.NotifyUsers,
+      UserEmails = input.UserEmails,
+      UserIds = input.UserIds,
+      Permissions = input.Permissions,
+      ExpiresAt = input.ExpiresAt,
+      Message = input.Message,
+      RequireAcceptance = input.RequireAcceptance,
+      NotifyUsers = input.NotifyUsers,
     };
 
     return await service.ShareResourceAsync(input.ResourceType, input.ResourceId, shareRequest, userId);
@@ -221,10 +228,10 @@ public class PermissionMutations {
 }
 
 /// <summary> GraphQL input for sharing a resource </summary>
-public record ShareResourceInput(string ResourceType, Guid ResourceId, string[ ] UserEmails, Guid[ ] UserIds, PermissionType[ ] Permissions, DateTime? ExpiresAt, string? Message, bool RequireAcceptance = true, bool NotifyUsers = true);
+public record ShareResourceInput(string ResourceType, Guid ResourceId, string[] UserEmails, Guid[] UserIds, PermissionType[] Permissions, DateTime? ExpiresAt, string? Message, bool RequireAcceptance = true, bool NotifyUsers = true);
 
 /// <summary> GraphQL input for updating user permissions </summary>
-public record UpdateUserPermissionsInput(string ResourceType, Guid ResourceId, Guid TargetUserId, PermissionType[ ] Permissions, DateTime? ExpiresAt);
+public record UpdateUserPermissionsInput(string ResourceType, Guid ResourceId, Guid TargetUserId, PermissionType[] Permissions, DateTime? ExpiresAt);
 
 /// <summary> GraphQL input for removing user access </summary>
 public record RemoveUserAccessInput(string ResourceType, Guid ResourceId, Guid TargetUserId);
