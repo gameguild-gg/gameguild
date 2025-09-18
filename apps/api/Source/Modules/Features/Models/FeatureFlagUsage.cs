@@ -1,3 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild;
+using Microsoft.EntityFrameworkCore;
+
 namespace GameGuild.Modules.Features.Models;
 
 /// <summary> Represents usage analytics for feature flags </summary>
