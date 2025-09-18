@@ -24,7 +24,7 @@ public abstract class Resource : EntityBase, ILocalizable, ITenantable {
   public virtual ResourceMetadata? Metadata { get; set; }
 
   // todo: this could be better implemented if it was an enum
-  // todo: suggestion: the unicity of the resource is given by the lang and the resourceid. resourceid is not the id of the resource. we will filter the latest version of the resourceid and the lang it is requested
+  // todo: suggestion: the unicity of the resource is given by the lang and the resourceid. resourceid is not the id of the re we will filter the latest version of the resourceid and the lang it is requested
   /// <summary> Collection of localizations for this resource </summary>
   public virtual ICollection<ResourceLocalization> Localizations { get; set; } = new List<ResourceLocalization>();
 
