@@ -98,7 +98,12 @@ public class AchievementMutations {
     if (input.UserId != userContext.UserId && !userContext.IsInRole("Admin") && !userContext.IsInRole("Moderator")) { throw new GraphQLException("Access denied"); }
 
     var command = new UpdateAchievementProgressCommand {
-      UserId = input.UserId, AchievementId = input.AchievementId, ProgressIncrement = input.ProgressIncrement, Context = input.Context, AutoAward = input.AutoAward, TenantId = tenantContext.TenantId,
+      UserId = input.UserId,
+      AchievementId = input.AchievementId,
+      ProgressIncrement = input.ProgressIncrement,
+      Context = input.Context,
+      AutoAward = input.AutoAward,
+      TenantId = tenantContext.TenantId,
     };
 
     var result = await mediator.Send(command);

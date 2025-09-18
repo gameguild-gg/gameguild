@@ -181,18 +181,18 @@ public class GetRevenueReportQueryHandler : IRequestHandler<GetRevenueReportQuer
     var groupedPayments = groupBy.ToLower() switch {
       "hour" => payments.GroupBy(p => new DateTime(p.CreatedAt.Year, p.CreatedAt.Month, p.CreatedAt.Day, p.CreatedAt.Hour, 0, 0)),
       "day" => payments.GroupBy(p => p.CreatedAt.Date),
-      "week" => payments.GroupBy(p => p.CreatedAt.Date.AddDays(-(int) p.CreatedAt.DayOfWeek)),
+      "week" => payments.GroupBy(p => p.CreatedAt.Date.AddDays(-(int)p.CreatedAt.DayOfWeek)),
       "month" => payments.GroupBy(p => new DateTime(p.CreatedAt.Year, p.CreatedAt.Month, 1)),
       "year" => payments.GroupBy(p => new DateTime(p.CreatedAt.Year, 1, 1)),
       _ => payments.GroupBy(p => p.CreatedAt.Date),
     };
 
     return groupedPayments.Select(g => {
-                              var revenue = g.Sum(p => p.Amount);
-                              var refunded = g.Sum(p => refundsByPayment.GetValueOrDefault(p.Id, 0));
+      var revenue = g.Sum(p => p.Amount);
+      var refunded = g.Sum(p => refundsByPayment.GetValueOrDefault(p.Id, 0));
 
-                              return new RevenueDataPoint { Date = g.Key, Revenue = revenue, NetRevenue = revenue - refunded, TransactionCount = g.Count(), AverageTransactionValue = g.Average(p => p.Amount) };
-                            }
+      return new RevenueDataPoint { Date = g.Key, Revenue = revenue, NetRevenue = revenue - refunded, TransactionCount = g.Count(), AverageTransactionValue = g.Average(p => p.Amount) };
+    }
                           )
                           .OrderBy(dp => dp.Date);
   }
