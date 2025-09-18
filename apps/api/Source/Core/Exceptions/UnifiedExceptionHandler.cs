@@ -25,23 +25,17 @@ internal sealed class UnifiedExceptionHandler(ILogger<UnifiedExceptionHandler> l
 
     private static ProblemDetails CreateProblemDetails(Exception exception) {
         return exception switch {
-            UnifiedValidationException validationException => new ValidationProblemDetails(
-                validationException.ValidationErrors.ToDictionary(
-                    error => error.PropertyName,
-                    error => new[] { error.ErrorMessage }
-                )
+            ValidationException validationException => new ValidationProblemDetails(
+                validationException.Errors.Select((error, index) => new KeyValuePair<string, string[]>(
+                    $"error{index}", new[] { error }
+                )).ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
             ) {
                 Status = StatusCodes.Status400BadRequest,
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
                 Title = "Validation Error",
                 Detail = "One or more validation errors occurred.",
                 Extensions = new Dictionary<string, object?> {
-                    ["errors"] = validationException.ValidationErrors.Select(e => new {
-                        property = e.PropertyName,
-                        message = e.ErrorMessage,
-                        attemptedValue = e.AttemptedValue,
-                        errorCode = e.ErrorCode
-                    })
+                    ["errors"] = validationException.Errors
                 }
             },
 
@@ -57,10 +51,9 @@ internal sealed class UnifiedExceptionHandler(ILogger<UnifiedExceptionHandler> l
             },
 
             DomainValidationException domainValidationException => new ValidationProblemDetails(
-                domainValidationException.ValidationResult.Errors.ToDictionary(
-                    error => error.PropertyName ?? "General",
-                    error => new[] { error.ErrorMessage }
-                )
+                domainValidationException.ValidationResult.Errors.Select((error, index) => new KeyValuePair<string, string[]>(
+                    error.PropertyName ?? $"error{index}", new[] { error.Message }
+                )).ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
             ) {
                 Status = StatusCodes.Status400BadRequest,
                 Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
