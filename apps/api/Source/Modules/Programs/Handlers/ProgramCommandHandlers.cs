@@ -5,7 +5,21 @@ using GameGuild.Modules.Contents;
 
 namespace GameGuild.Modules.Programs;
 
-/// <summary> Command handlers for Program management operations Implements business logic and data persistence for program commands </summary>
+/// <summary>
+/// CQRS command handlers for comprehensive program management operations
+/// </summary>
+/// <remarks>
+/// ProgramCommandHandlers implements the command side of CQRS pattern for program operations including:
+/// - Program lifecycle management (Create, Update, Delete, Publish, Archive)
+/// - Content management and organization within programs
+/// - User enrollment and participation management
+/// - Rating and wishlist operations
+/// - Bulk administrative operations
+/// 
+/// Each handler encapsulates business logic, validation, and data persistence
+/// for specific command operations while maintaining transaction integrity
+/// and consistent logging for audit and monitoring purposes.
+/// </remarks>
 public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<ProgramCommandHandlers> logger) : IRequestHandler<CreateProgramCommand, Program>,
                                                                                                             IRequestHandler<UpdateProgramCommand, Program>,
                                                                                                             IRequestHandler<DeleteProgramCommand, bool>,
@@ -143,7 +157,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
       EstimatedHours = request.EstimatedHours,
       Category = request.Category,
       Difficulty = request.Difficulty,
-      EnrollmentStatus = (EnrollmentStatus) request.EnrollmentStatus,
+      EnrollmentStatus = (EnrollmentStatus)request.EnrollmentStatus,
       MaxEnrollments = request.MaxEnrollments,
       EnrollmentDeadline = request.EnrollmentDeadline,
       Status = ContentStatus.Draft,
@@ -366,7 +380,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
 
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.ProgramId} not found"); }
 
-    program.EnrollmentStatus = (EnrollmentStatus) request.Status;
+    program.EnrollmentStatus = (EnrollmentStatus)request.Status;
     if (request.MaxEnrollments.HasValue) program.MaxEnrollments = request.MaxEnrollments;
     if (request.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = request.EnrollmentDeadline;
     program.UpdatedAt = DateTime.UtcNow;
@@ -397,7 +411,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
     if (request.EstimatedHours.HasValue) program.EstimatedHours = request.EstimatedHours;
     if (request.Category.HasValue) program.Category = request.Category.Value;
     if (request.Difficulty.HasValue) program.Difficulty = request.Difficulty.Value;
-    if (request.EnrollmentStatus.HasValue) program.EnrollmentStatus = (EnrollmentStatus) request.EnrollmentStatus.Value;
+    if (request.EnrollmentStatus.HasValue) program.EnrollmentStatus = (EnrollmentStatus)request.EnrollmentStatus.Value;
     if (request.MaxEnrollments.HasValue) program.MaxEnrollments = request.MaxEnrollments;
     if (request.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = request.EnrollmentDeadline;
 
