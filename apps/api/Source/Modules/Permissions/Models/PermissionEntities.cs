@@ -312,14 +312,14 @@ public class TenantPermission : PermissionBase {
 public class ContentTypePermission : PermissionBase {
   private ContentTypePermission() { }
 
-  public ContentTypePermission(Guid userId, Guid? tenantId, string contentTypeName, PermissionType permissions) : base(userId, tenantId, permissions) {
+  public ContentTypePermission(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType permissions) : base(userId, tenantId, permissions) {
     ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
   }
 
   /// <summary> Name of the content type (e.g., "Post", "Comment", "User") </summary>
   public string ContentTypeName { get; private set; } = string.Empty;
 
-  public static ContentTypePermission Create(Guid userId, Guid? tenantId, string contentTypeName, PermissionType permissions) { return new(userId, tenantId, contentTypeName, permissions); }
+  public static ContentTypePermission Create(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType permissions) { return new(userId, tenantId, contentTypeName, permissions); }
 }
 
 /// <summary> Resource-specific permissions (permissions for a specific resource instance) </summary>
