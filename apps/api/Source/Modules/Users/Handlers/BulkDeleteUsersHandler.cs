@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Users;
 
 /// <summary> Handler for bulk deleting users </summary>
 public class BulkDeleteUsersHandler(ApplicationDbContext context, ILogger<BulkDeleteUsersHandler> logger, IMediator mediator) : IResultCommandHandler<BulkDeleteUsersCommand, BulkOperationResult> {
-  public async Task<CQRS.Result<BulkOperationResult>> Handle(BulkDeleteUsersCommand request, CancellationToken cancellationToken) {
+  public async Task<Result<BulkOperationResult>> Handle(BulkDeleteUsersCommand request, CancellationToken cancellationToken) {
     var users = await context.Users.Where(u => request.UserIds.Contains(u.Id)).ToListAsync(cancellationToken);
 
     var successCount = 0;
@@ -52,6 +52,6 @@ public class BulkDeleteUsersHandler(ApplicationDbContext context, ILogger<BulkDe
       request.Reason ?? "Not specified"
     );
 
-    return CQRS.Result.Success(result);
+    return Result.Success(result);
   }
 }
