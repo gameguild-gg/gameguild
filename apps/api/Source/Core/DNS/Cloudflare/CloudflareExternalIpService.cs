@@ -153,7 +153,7 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
   #region Private Methods
 
   private void ValidateConfiguration() {
-    _isEnabled = !string.IsNullOrWhiteSpace(_options.ApiToken) && !string.IsNullOrWhiteSpace(_options.ZoneId) && _options.Records != null && _options.Records.Count != 0;
+    _isEnabled = !string.IsNullOrWhiteSpace(_options.ApiToken) && !string.IsNullOrWhiteSpace(_options.ZoneId) && _options.DnsRecords != null && _options.DnsRecords.Count != 0;
 
     if (!_isEnabled) {
       _logger.LogWarning("Cloudflare Dynamic DNS service is disabled due to missing configuration");
@@ -171,7 +171,7 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
       _options.TimeoutSeconds = 10;
     }
 
-    _logger.LogInformation("Cloudflare Dynamic DNS service configured for zone {ZoneId} with {RecordCount} records", _options.ZoneId, _options.Records.Count);
+    _logger.LogInformation("Cloudflare Dynamic DNS service configured for zone {ZoneId} with {RecordCount} records", _options.ZoneId, _options.DnsRecords.Count);
   }
 
   private List<string> GetShuffledIpServices() {
@@ -188,7 +188,7 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
   private async Task<bool> UpdateCloudflareRecordsAsync(string ipAddress, CancellationToken cancellationToken) {
     var allSuccess = true;
 
-    foreach (var record in _options.Records) {
+    foreach (var record in _options.DnsRecords) {
       try {
         var success = await UpdateSingleRecordAsync(record, ipAddress, cancellationToken);
 
@@ -206,7 +206,7 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
     return allSuccess;
   }
 
-  private async Task<bool> UpdateSingleRecordAsync(CloudflareDnsRecord record, string ipAddress, CancellationToken cancellationToken) {
+  private async Task<bool> UpdateSingleRecordAsync(DnsRecordConfiguration record, string ipAddress, CancellationToken cancellationToken) {
     try {
       // First, get the current record to obtain its ID
       var recordId = await GetRecordIdAsync(record.Name, cancellationToken);
