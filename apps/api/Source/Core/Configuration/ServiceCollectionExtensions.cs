@@ -1,9 +1,17 @@
 ﻿using System.Globalization;
+using GameGuild.Database;
 using GameGuild.Modules.Features.Infrastructure;
 using GameGuild.Modules.Features.Services;
+using GameGuild.Modules.Posts;
+using GameGuild.Modules.Products;
+using GameGuild.Modules.Programs;
+using GameGuild.Modules.UserAchievements;
+using GameGuild.Source.Modules.Programs.GraphQL;
+using HotChocolate;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using OpenFeature;
 
@@ -332,7 +340,44 @@ public static class ServiceCollectionExtensions {
     options ??= GraphQlOptionsBuilder.Create(configuration);
     options.Validate();
 
-    // GraphQL services can be configured by the application layer if enabled.
+    // Add GraphQL server with HotChocolate
+    var builder = services
+      .AddGraphQLServer()
+      .AddGlobalObjectIdentification()
+      .AddFiltering()
+      .AddSorting()
+      .AddProjections()
+      // Add root types
+      .AddQueryType<GameGuild.GraphQL.Query>()
+      .AddMutationType<GameGuild.GraphQL.Mutation>()
+      // Add modules' GraphQL types
+      .AddPostsGraphQL()
+      .AddUserAchievementsGraphQL()
+      .AddProductGraphQl()
+      .AddProgramContentGraphQL()
+      .AddContentInteractionGraphQL();
+
+    return services;
+  }
+
+  /// <summary> Adds database context with proper configuration </summary>
+  /// <param name="services"> The service collection </param>
+  /// <param name="configuration"> The application configuration </param>
+  /// <returns> The service collection for chaining </returns>
+  public static IServiceCollection AddDatabaseContext(this IServiceCollection services, IConfiguration configuration) {
+    // Build database options from configuration
+    var dbOptions = InfrastructureConfiguration.CreateDatabaseOptions(configuration);
+
+    // Add DbContextFactory for GraphQL DataLoaders (must be registered first)
+    services.AddDbContextFactory<ApplicationDbContext>(options => {
+      InfrastructureConfiguration.ConfigureDbContext(options, dbOptions);
+    });
+
+    // Add regular DbContext using the factory (ensures compatible lifetimes)
+    services.AddScoped<ApplicationDbContext>(provider => {
+      var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
+      return factory.CreateDbContext();
+    });
 
     return services;
   }

@@ -54,6 +54,9 @@ internal static class WebApplicationExtensions {
     // Map controller endpoints
     app.MapControllers();
 
+    // Map GraphQL endpoint
+    app.MapGraphQL("/graphql");
+
     // Additional minimal endpoints would be mapped here when implemented via IEndpoint.
 
     return app;
@@ -75,9 +78,9 @@ internal static class WebApplicationExtensions {
     app.UseSwagger();
 
     app.UseSwaggerUI(options => {
-        options.SwaggerEndpoint($"/swagger/{documentName}/swagger.json", "GameGuild API v1");
-        options.RoutePrefix = "swagger"; // Swagger UI will be available at /swagger
-      }
+      options.SwaggerEndpoint($"/swagger/{documentName}/swagger.json", "GameGuild API v1");
+      options.RoutePrefix = "swagger"; // Swagger UI will be available at /swagger
+    }
     );
 
     return app;
