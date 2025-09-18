@@ -145,19 +145,23 @@ public static class ServiceCollectionExtensions {
     options ??= FeatureFlagsOptionsBuilder.Create(configuration);
     options.Validate();
 
-    // Register OpenFeature API singleton and services
+    // Register our custom database provider
+    services.AddSingleton<DatabaseFeatureFlagProvider>();
+
+    // Register OpenFeature API singleton  
     services.AddSingleton(Api.Instance);
-    // TODO: 
-    // services.AddSingleton<FeatureClient>(provider => provider.GetRequiredService<Api>().GetFeatureClient());
 
-    // Register the main feature flag service
+    // Register FeatureClient with our database provider
+    services.AddSingleton<FeatureClient>(provider => {
+      var api = provider.GetRequiredService<Api>();
+      var databaseProvider = provider.GetRequiredService<DatabaseFeatureFlagProvider>();
+
+      // Set the database provider as the default provider for OpenFeature
+      api.SetProviderAsync(databaseProvider).GetAwaiter().GetResult();
+
+      return api.GetClient();
+    });    // Register the main feature flag service (now uses OpenFeature with database provider)
     services.AddSingleton<IFeatureFlagService, FeatureFlagService>();
-
-    // Register OpenFeature-specific service for advanced scenarios
-    services.AddSingleton<IOpenFeatureFlagService, FeatureFlagOpenFeatureService>();
-
-    // Add hosted service to initialize OpenFeature provider during startup
-    services.AddHostedService<OpenFeatureHostedInitializer>();
 
     return services;
   }
