@@ -9,6 +9,21 @@ namespace GameGuild.Modules.Resources;
 /// </summary>
 public abstract class ResourcePermission<T> : WithPermissions where T : EntityBase {
   /// <summary>
+  /// Default parameterless constructor (required by Entity Framework and GraphQL)
+  /// </summary>
+  public ResourcePermission() : base() { }
+
+  /// <summary>
+  /// Constructor for creating a resource permission
+  /// </summary>
+  public ResourcePermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions) : base() {
+    UserId = userId;
+    TenantId = tenantId;
+    ResourceId = resourceId;
+    AddPermission(permissions);
+  }
+
+  /// <summary>
   /// Resource reference - strongly typed to the content entity
   /// </summary>
   [GraphQLType(typeof(NonNullType<UuidType>))]
