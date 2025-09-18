@@ -1,6 +1,15 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Database;
+using Microsoft.EntityFrameworkCore;
+
 namespace GameGuild.Modules.UserAchievements;
 
-/// <summary> Represents an achievement definition that users can earn </summary>
+/// <summary> 
+/// Represents an achievement definition that users can earn in the gamification system.
+/// Achievements can be simple badges, multi-level progressions, or complex prerequisites-based rewards.
+/// Examples: "First Post" badge, "Veteran User" (5 levels), "Community Leader" (requires multiple prerequisites)
+/// </summary>
 [Table("achievements")]
 [Index(nameof(Category))]
 [Index(nameof(IsActive))]
@@ -16,12 +25,18 @@ public class Achievement : EntityBase {
   [MaxLength(500)]
   public string? Description { get; set; }
 
-  /// <summary> The category this achievement belongs to (e.g., "social", "learning", "contribution") </summary>
+  /// <summary> 
+  /// The category this achievement belongs to for grouping and filtering.
+  /// Common categories: "social", "learning", "contribution", "milestone", "engagement"
+  /// </summary>
   [Required]
   [MaxLength(50)]
   public string Category { get; set; } = string.Empty;
 
-  /// <summary> The type of achievement (e.g., "milestone", "badge", "trophy") </summary>
+  /// <summary> 
+  /// The type of achievement indicating its nature and rarity.
+  /// Common types: "badge" (simple accomplishment), "trophy" (major milestone), "medal" (competitive achievement)
+  /// </summary>
   [Required]
   [MaxLength(50)]
   public string Type { get; set; } = "badge";
@@ -46,7 +61,10 @@ public class Achievement : EntityBase {
   /// <summary> Whether this achievement can be earned multiple times </summary>
   public bool IsRepeatable { get; set; } = false;
 
-  /// <summary> Conditions required to earn this achievement (stored as JSON) </summary>
+  /// <summary> 
+  /// Conditions required to earn this achievement, stored as JSON for flexibility.
+  /// Examples: {"posts_count": 10}, {"login_streak": 7}, {"events_attended": 5, "role": "moderator"}
+  /// </summary>
   [Column(TypeName = "jsonb")]
   public string? Conditions { get; set; }
 
