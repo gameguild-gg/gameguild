@@ -190,7 +190,7 @@ public class ModulePermissionService : IModulePermissionService {
 
       return new TestingLabPermissions {
         CanCreateSessions = await CanCreateTestingSessionsAsync(userId, tenantId),
-        CanEditSessions = await HasModulePermissionAsync(userId, tenantId, ModuleType.TestingLab, ModuleAction.EditSession),
+        CanEditSessions = await HasModulePermissionAsync(userId, tenantId, ModuleType.TestingLab, ModuleAction.Edit),
         CanDeleteSessions = await CanDeleteTestingSessionsAsync(userId, tenantId),
         CanManageTesters = await CanManageTestersAsync(userId, tenantId),
         CanViewReports = await CanViewTestingReportsAsync(userId, tenantId),
@@ -346,9 +346,9 @@ public class ModulePermissionService : IModulePermissionService {
   }
 
   private async Task EnsureTestingLabDefaultRoles() {
-    var testingLabRoles = new[ ] {
-      new { Name = "Tester", Description = "Can participate in testing sessions", Permissions = new[ ] { ModuleAction.ParticipateInSession } },
-      new { Name = "TestLead", Description = "Can manage testing sessions", Permissions = new[ ] { ModuleAction.CreateSession, ModuleAction.EditSession, ModuleAction.ManageTesters } },
+    var testingLabRoles = new[] {
+      new { Name = "Tester", Description = "Can participate in testing sessions", Permissions = new[ ] { ModuleAction.Execute } },
+      new { Name = "TestLead", Description = "Can manage testing sessions", Permissions = new[ ] { ModuleAction.CreateSession, ModuleAction.Edit, ModuleAction.ManageTesters } },
       new { Name = "TestAdmin", Description = "Full testing lab administration", Permissions = Enum.GetValues<ModuleAction>() },
     };
 
@@ -356,7 +356,7 @@ public class ModulePermissionService : IModulePermissionService {
       var existingRole = await _context.ModuleRoles.FirstOrDefaultAsync(r => r.Name == roleInfo.Name && r.Module == ModuleType.TestingLab);
 
       if (existingRole == null) {
-        var permissions = roleInfo.Permissions.Select(action => new ModulePermissionDefinition { Module = ModuleType.TestingLab, Action = action, IsGranted = true, CreatedAt = DateTime.UtcNow }).ToList();
+        var permissions = roleInfo.Permissions.Select(action => new ModulePermissionDefinition { Module = ModuleType.TestingLab, Action = action, IsGranted = true }).ToList();
 
         var role = new ModuleRole {
           Id = Guid.NewGuid(),

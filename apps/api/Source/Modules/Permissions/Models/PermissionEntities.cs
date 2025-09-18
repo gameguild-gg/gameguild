@@ -324,7 +324,7 @@ public class ContentTypePermission : PermissionBase {
 
 /// <summary> Resource-specific permissions (permissions for a specific resource instance) </summary>
 public class ResourcePermission<TResource> : PermissionBase where TResource : EntityBase {
-  private ResourcePermission() { }
+  public ResourcePermission() { }
 
   public ResourcePermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions) : base(userId, tenantId, permissions) { ResourceId = resourceId; }
 
