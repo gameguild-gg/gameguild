@@ -1,4 +1,7 @@
-﻿namespace GameGuild.Modules.Users;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace GameGuild.Modules.Users;
 
 internal sealed class UserConfiguration : IEntityTypeConfiguration<User> {
   public void Configure(EntityTypeBuilder<User> builder) {
