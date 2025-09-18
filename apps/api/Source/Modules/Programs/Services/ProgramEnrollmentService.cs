@@ -52,7 +52,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
     foreach (var productProgram in productPrograms) {
       try {
-        var enrollment = await EnrollUserAsync(userId, productProgram.ProgramId, EnrollmentSource.ProductPurchase);
+        var enrollment = await EnrollUserAsync(userId, productProgram.ProgramId, EnrollmentProductPurchase);
         enrollments.Add(enrollment);
       }
       catch (Exception ex) {
@@ -143,7 +143,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
       CompletedEnrollments = completedEnrollments,
       CancelledEnrollments = cancelledEnrollments,
       AverageProgressPercentage = totalEnrollments > 0 ? enrollments.Average(e => e.ProgressPercentage) : 0,
-      CompletionRate = totalEnrollments > 0 ? (decimal) completedEnrollments / totalEnrollments * 100 : 0,
+      CompletionRate = totalEnrollments > 0 ? (decimal)completedEnrollments / totalEnrollments * 100 : 0,
       AverageFinalGrade = enrollments.Where(e => e.FinalGrade.HasValue).Any() ? enrollments.Where(e => e.FinalGrade.HasValue).Average(e => e.FinalGrade!.Value) : null,
       CertificatesIssued = enrollments.Count(e => e.CertificateIssued),
     };

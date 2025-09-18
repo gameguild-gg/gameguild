@@ -1,8 +1,16 @@
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild;
+namespace GameGuild.Modules.Programs;
 
+/// <summary>
+/// Content types defining the nature and interaction model of program materials
+/// </summary>
+/// <remarks>
+/// Content types determine how learners interact with materials and what
+/// features are available (submissions, grading, discussions, etc.).
+/// Each type has specific UI rendering and business logic requirements.
+/// </remarks>
 public enum ProgramContentType {
   [Description("Instructional content page")] Page,
 
