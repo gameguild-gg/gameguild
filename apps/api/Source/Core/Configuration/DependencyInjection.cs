@@ -127,11 +127,11 @@ public static class DependencyInjection {
   }
 
   /// <summary> Gets all application assemblies to scan for types with explicit entry assembly </summary>
-  public static Assembly[ ] GetApplicationAssemblies(Assembly entryAssembly, params Assembly[ ] additionalAssemblies) {
+  public static Assembly[] GetApplicationAssemblies(Assembly entryAssembly, params Assembly[] additionalAssemblies) {
     ArgumentNullException.ThrowIfNull(entryAssembly);
     ArgumentNullException.ThrowIfNull(additionalAssemblies);
 
-    var baseAssemblies = new[ ] {
+    var baseAssemblies = new[] {
       Assembly.GetExecutingAssembly(), // Core assembly
       entryAssembly, // Explicitly provided entry assembly (e.g., API assembly)
     };
@@ -140,7 +140,7 @@ public static class DependencyInjection {
   }
 
   /// <summary> Gets assemblies from the current application domain that match the specified pattern </summary>
-  public static Assembly[ ] GetAssembliesByPattern(string pattern = "GameGuild.*") {
+  public static Assembly[] GetAssembliesByPattern(string pattern = "GameGuild.*") {
     return AppDomain.CurrentDomain.GetAssemblies().Where(assembly => assembly.FullName?.StartsWith(pattern, StringComparison.OrdinalIgnoreCase) == true).ToArray();
   }
 
