@@ -1,5 +1,7 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using GameGuild.Modules.Resources;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Tenants;

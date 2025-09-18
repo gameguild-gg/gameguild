@@ -1,3 +1,8 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+
+
 namespace GameGuild.Modules.Tenants;
 
 /// <summary> Represents a user group within a tenant (e.g., Students, Professors, Administrators) </summary>
@@ -65,7 +70,7 @@ public class TenantUserGroup : EntityBase {
 
   /// <summary> Get the full hierarchy path of this group </summary>
   /// <returns> Array of group names from root to this group </returns>
-  public string[ ] GetHierarchyPath() {
+  public string[] GetHierarchyPath() {
     var path = new List<string>();
     var current = this;
 

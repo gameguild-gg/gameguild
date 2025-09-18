@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 using UserModel = GameGuild.Modules.Users.User;
 
 

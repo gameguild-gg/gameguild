@@ -1,4 +1,7 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Modules.Resources;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Tenants;
@@ -37,7 +40,7 @@ public class Tenant : Resource {
   public string AdminEmail { get; set; } = string.Empty;
 
   /// <summary> Navigation property to tenant permissions and user memberships </summary>
-  public virtual ICollection<TenantPermission> TenantPermissions { get; set; } = new List<TenantPermission>();
+  public virtual ICollection<TenantPermission> TenantPermissions { get; set; } = [];
 
   /// <summary> Navigation property to tenant settings </summary>
   public virtual TenantSettings? Settings { get; set; }
