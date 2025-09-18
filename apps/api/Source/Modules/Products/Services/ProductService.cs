@@ -30,7 +30,7 @@ public class ProductService(ApplicationDbContext context) : IProductService {
     return await context.Products.Include(p => p.Creator).Include(p => p.ProductPricings).Where(p => p.DeletedAt == null).OrderBy(p => p.Name).Skip(skip).Take(take).ToListAsync();
   }
 
-  public async Task<IEnumerable<ProductEntity>> GetProductsByTypeAsync(ProductType type, int skip = 0, int take = 50) {
+  public async Task<IEnumerable<ProductEntity>> GetProductsByTypeAsync(GameGuild.ProductType type, int skip = 0, int take = 50) {
     return await context.Products.Include(p => p.Creator).Include(p => p.ProductPricings).Where(p => p.DeletedAt == null && p.Type == type).OrderBy(p => p.Name).Skip(skip).Take(take).ToListAsync();
   }
 
@@ -375,7 +375,7 @@ public class ProductService(ApplicationDbContext context) : IProductService {
   }
 
   // Analytics and statistics
-  public async Task<int> GetProductCountAsync(ProductType? type = null, AccessLevel? visibility = null) {
+  public async Task<int> GetProductCountAsync(GameGuild.ProductType? type = null, AccessLevel? visibility = null) {
     var query = context.Products.Where(p => p.DeletedAt == null);
 
     if (type.HasValue) query = query.Where(p => p.Type == type.Value);

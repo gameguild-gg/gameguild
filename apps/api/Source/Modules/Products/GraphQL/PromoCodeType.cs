@@ -1,4 +1,5 @@
 ﻿using GameGuild.Database;
+using PromoCodeTypeEnum = GameGuild.PromoCodeType;
 
 
 namespace GameGuild.Modules.Products;
@@ -13,7 +14,7 @@ public class PromoCodeType : ObjectType<PromoCode> {
 
     descriptor.Field(pc => pc.Code).Type<NonNullType<StringType>>().Description("The promotional code");
 
-    descriptor.Field(pc => pc.Type).Type<NonNullType<EnumType<PromoCodeType>>>().Description("The type of discount (percentage or fixed amount)");
+    descriptor.Field(pc => pc.Type).Type<NonNullType<EnumType<PromoCodeTypeEnum>>>().Description("The type of discount (percentage or fixed amount)");
 
     descriptor.Field(pc => pc.DiscountPercentage).Type<DecimalType>().Description("The discount percentage (for percentage-based discounts)");
 
@@ -29,22 +30,22 @@ public class PromoCodeType : ObjectType<PromoCode> {
               .Type<NonNullType<IntType>>()
               .Description("Current number of times this code has been used")
               .Resolve(async context => {
-                  var promoCode = context.Parent<PromoCode>();
-                  var dbContext = context.Service<ApplicationDbContext>();
+                var promoCode = context.Parent<PromoCode>();
+                var dbContext = context.Service<ApplicationDbContext>();
 
-                  return await dbContext.PromoCodeUses.Where(pcu => !pcu.IsDeleted && pcu.PromoCodeId == promoCode.Id).CountAsync();
-                }
+                return await dbContext.PromoCodeUses.Where(pcu => !pcu.IsDeleted && pcu.PromoCodeId == promoCode.Id).CountAsync();
+              }
               );
 
     descriptor.Field("isValid")
               .Type<NonNullType<BooleanType>>()
               .Description("Indicates if the promo code is currently valid")
               .Resolve(async context => {
-                  var promoCode = context.Parent<PromoCode>();
-                  var productService = context.Service<IProductService>();
+                var promoCode = context.Parent<PromoCode>();
+                var productService = context.Service<IProductService>();
 
-                  return await productService.IsPromoCodeValidAsync(promoCode.Code);
-                }
+                return await productService.IsPromoCodeValidAsync(promoCode.Code);
+              }
               );
   }
 }

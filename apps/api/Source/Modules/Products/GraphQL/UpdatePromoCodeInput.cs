@@ -1,4 +1,6 @@
-﻿namespace GameGuild.Modules.Products;
+﻿using PromoCodeTypeEnum = GameGuild.PromoCodeType;
+
+namespace GameGuild.Modules.Products;
 
 public class UpdatePromoCodeInput {
   public required Guid Id { get; set; }
@@ -9,7 +11,7 @@ public class UpdatePromoCodeInput {
 
   public DateTime? ExpiryDate { get; set; }
 
-  public PromoCodeType? DiscountType { get; set; }
+  public PromoCodeTypeEnum? DiscountType { get; set; }
 
   public DateTime? ValidFrom { get; set; }
 
