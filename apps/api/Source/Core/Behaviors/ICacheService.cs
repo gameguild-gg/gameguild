@@ -1,4 +1,4 @@
-namespace GameGuild.CQRS;
+namespace GameGuild;
 
 /// <summary> Cache service interface </summary>
 public interface ICacheService {

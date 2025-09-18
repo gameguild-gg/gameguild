@@ -1,4 +1,4 @@
-namespace GameGuild.CQRS;
+namespace GameGuild;
 
 /// <summary> Simple validator interface </summary>
 /// <typeparam name="T"> Type to validate </typeparam>

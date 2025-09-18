@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Reflection;
 
 
-namespace GameGuild.CQRS;
+namespace GameGuild;
 
 /// <summary> Pipeline behavior for exception handling with optimized reflection caching </summary>
 /// <typeparam name="TRequest"> Request type </typeparam>

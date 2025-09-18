@@ -1,4 +1,4 @@
-namespace GameGuild.CQRS;
+namespace GameGuild;
 
 /// <summary> Pipeline behavior for request pre-processing </summary>
 /// <typeparam name="TRequest"> Request type </typeparam>

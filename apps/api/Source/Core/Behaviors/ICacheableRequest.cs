@@ -1,4 +1,4 @@
-namespace GameGuild.CQRS;
+namespace GameGuild;
 
 /// <summary> Marker interface for cacheable requests </summary>
 public interface ICacheableRequest {

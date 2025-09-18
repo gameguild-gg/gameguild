@@ -2,7 +2,7 @@ using System.Transactions;
 using GameGuild.Database;
 
 
-namespace GameGuild.CQRS;
+namespace GameGuild;
 
 /// <summary> Interface for requests that require a database transaction </summary>
 public interface ITransactionalRequest {
@@ -47,34 +47,34 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     var strategy = _context.Database.CreateExecutionStrategy();
 
     return await strategy.ExecuteAsync(async () => {
-               await using var transaction = await _context.Database.BeginTransactionAsync(isolationLevel, cancellationToken);
+      await using var transaction = await _context.Database.BeginTransactionAsync(isolationLevel, cancellationToken);
 
-               try {
-                 var response = await next().ConfigureAwait(false);
+      try {
+        var response = await next().ConfigureAwait(false);
 
-                 // Check if the response indicates failure (for Result types)
-                 if (IsFailureResponse(response)) {
-                   _logger.LogDebug("Rolling back transaction for {RequestType} due to failure response", typeof(TRequest).Name);
-                   await transaction.RollbackAsync(cancellationToken);
+        // Check if the response indicates failure (for Result types)
+        if (IsFailureResponse(response)) {
+          _logger.LogDebug("Rolling back transaction for {RequestType} due to failure response", typeof(TRequest).Name);
+          await transaction.RollbackAsync(cancellationToken);
 
-                   return response;
-                 }
+          return response;
+        }
 
-                 await transaction.CommitAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
-                 _logger.LogDebug("Committed transaction for {RequestType}", typeof(TRequest).Name);
+        _logger.LogDebug("Committed transaction for {RequestType}", typeof(TRequest).Name);
 
-                 return response;
-               }
-               catch (Exception ex) {
-                 _logger.LogError(ex, "Error in transaction for {RequestType}, rolling back", typeof(TRequest).Name);
+        return response;
+      }
+      catch (Exception ex) {
+        _logger.LogError(ex, "Error in transaction for {RequestType}, rolling back", typeof(TRequest).Name);
 
-                 try { await transaction.RollbackAsync(cancellationToken); }
-                 catch (Exception rollbackEx) { _logger.LogError(rollbackEx, "Error rolling back transaction for {RequestType}", typeof(TRequest).Name); }
+        try { await transaction.RollbackAsync(cancellationToken); }
+        catch (Exception rollbackEx) { _logger.LogError(rollbackEx, "Error rolling back transaction for {RequestType}", typeof(TRequest).Name); }
 
-                 throw;
-               }
-             }
+        throw;
+      }
+    }
            );
   }
 
