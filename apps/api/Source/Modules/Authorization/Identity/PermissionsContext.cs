@@ -91,7 +91,11 @@ public class PermissionsContext : IPermissionsContext {
 
     var effectiveTenantId = tenantId ?? TenantId;
 
-    try { return await _permissionService.HasResourcePermissionAsync(UserId.Value, effectiveTenantId, resourceType, resourceId, permission); }
+    try {
+      // Use IDacPermissionResolver to handle resource type mapping
+      var result = await _dacPermissionResolver.ResolvePermissionAsync<EntityBase>(UserId.Value, effectiveTenantId, permission, resourceId, resourceType);
+      return result.IsGranted;
+    }
     catch (Exception ex) {
       _logger.LogWarning(ex, "Error checking resource permission {Permission} for user {UserId} in tenant {TenantId} for resource {ResourceType}:{ResourceId}", permission, UserId, effectiveTenantId, resourceType, resourceId);
 
