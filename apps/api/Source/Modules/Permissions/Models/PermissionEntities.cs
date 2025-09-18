@@ -268,10 +268,10 @@ public abstract class PermissionBase : EntityBase {
   public PermissionType Permissions { get; protected set; }
 
   /// <summary> When the permission was granted </summary>
-  public DateTime CreatedAt { get; protected set; }
+  public override DateTime CreatedAt { get; set; }
 
   /// <summary> When the permission was last updated </summary>
-  public DateTime UpdatedAt { get; protected set; }
+  public override DateTime UpdatedAt { get; set; }
 
   /// <summary> Optional expiration date for temporary permissions </summary>
   public DateTime? ExpiresAt { get; protected set; }
