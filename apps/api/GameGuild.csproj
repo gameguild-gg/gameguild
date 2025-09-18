@@ -59,9 +59,11 @@
     <Using Include="System.ComponentModel.DataAnnotations"/>
     <Using Include="System.ComponentModel.DataAnnotations.Schema"/>
   </ItemGroup>
-
   <ItemGroup>
-    <Folder Include="Source\Common\" />
-    <Folder Include="Source\Shared\" />
+    <Compile Remove="Tests/**/*"/>
+    <None Remove="Tests/**/*"/>
+    <EmbeddedResource Remove="Tests/**/*"/>
+    <Content Remove="Tests/**/*"/>
   </ItemGroup>
+
 </Project>
