@@ -1,15 +1,12 @@
-using CqrsResult = GameGuild.CQRS.Result;
-
-
 namespace GameGuild;
 
 public static class CustomResults {
-  public static Microsoft.AspNetCore.Http.IResult Problem(CqrsResult result) {
+  public static Microsoft.AspNetCore.Http.IResult Problem(Result result) {
     if (result.IsSuccess) throw new InvalidOperationException();
 
     if (result.Error == null) throw new InvalidOperationException("Error cannot be null for failed result");
 
-    return Results.Problem(title : GetTitle(result.Error), detail : GetDetail(result.Error), type : GetType(), statusCode : GetStatusCode());
+    return Results.Problem(title: GetTitle(result.Error), detail: GetDetail(result.Error), type: GetType(), statusCode: GetStatusCode());
 
     static string GetTitle(Error error) { return error.Code; }
 
