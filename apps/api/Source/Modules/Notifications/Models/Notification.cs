@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 
 
-namespace GameGuild.Modules.Notifications.Models;
+namespace GameGuild.Modules.Notifications;
 
 /// <summary> Represents a notification sent to a user </summary>
 [Table("Notifications")]
