@@ -896,4 +896,19 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     // In a real implementation, you'd query the junction table
     return new List<Guid>();
   }
+
+  public async Task<ProgramEntity> PublishAsync(Guid id) {
+    var program = await GetProgramByIdAsync(id);
+
+    if (program == null) {
+      throw new ArgumentException($"Program with ID {id} not found", nameof(id));
+    }
+
+    program.Status = ContentStatus.Published;
+    program.Touch();
+
+    await context.SaveChangesAsync();
+
+    return program;
+  }
 }
