@@ -3,12 +3,22 @@ using GameGuild.Modules.Subscriptions.Models;
 
 namespace GameGuild.Modules.Subscriptions.Abstractions;
 
-/// <summary> Repository interface for subscription data access </summary>
+/// <summary> 
+/// Repository interface for subscription data access with specialized query methods.
+/// Extends the base repository pattern with subscription-specific operations
+/// for efficient data retrieval and business logic support.
+/// </summary>
 public interface ISubscriptionRepository : IRepository<UserSubscription, Guid> {
-  /// <summary> Gets all subscriptions for a user </summary>
+  /// <summary> 
+  /// Gets all subscriptions for a user, including historical subscriptions.
+  /// Useful for displaying subscription history and analytics.
+  /// </summary>
   Task<IEnumerable<UserSubscription>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
-  /// <summary> Gets the active subscription for a user </summary>
+  /// <summary> 
+  /// Gets the currently active subscription for a user.
+  /// Returns null if the user has no active subscription.
+  /// </summary>
   Task<UserSubscription?> GetActiveUserSubscriptionAsync(Guid userId, CancellationToken cancellationToken = default);
 
   /// <summary> Gets all subscriptions for a plan </summary>
