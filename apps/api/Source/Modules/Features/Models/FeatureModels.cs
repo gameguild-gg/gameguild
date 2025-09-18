@@ -78,7 +78,7 @@ public class FeatureEvaluationResult {
     try {
       if (Value is T directValue) return directValue;
 
-      return (T) Convert.ChangeType(Value, typeof(T));
+      return (T)Convert.ChangeType(Value, typeof(T));
     }
     catch { return default; }
   }
