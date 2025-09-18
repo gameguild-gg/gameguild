@@ -1,9 +1,17 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Database;
 using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.UserAchievements;
 
-/// <summary> Represents different levels for a multi-level achievement </summary>
+/// <summary> 
+/// Represents different levels for a multi-level achievement system.
+/// Allows achievements to have progressive tiers (Bronze, Silver, Gold) with increasing requirements and rewards.
+/// Each level requires more progress but awards more points.
+/// </summary>
 [Table("achievement_levels")]
 [Index(nameof(AchievementId))]
 [Index(nameof(Level))]
@@ -26,7 +34,10 @@ public class AchievementLevel : EntityBase {
   [MaxLength(300)]
   public string? Description { get; set; }
 
-  /// <summary> Points required to reach this level </summary>
+  /// <summary> 
+  /// Points or actions required to reach this level.
+  /// For example: Level 1 = 10 posts, Level 2 = 50 posts, Level 3 = 100 posts
+  /// </summary>
   public int RequiredProgress { get; set; }
 
   /// <summary> Points awarded for reaching this level </summary>
@@ -41,7 +52,11 @@ public class AchievementLevel : EntityBase {
   public string? Color { get; set; }
 }
 
-/// <summary> Represents prerequisites for earning an achievement </summary>
+/// <summary> 
+/// Represents prerequisites for earning an achievement, creating dependency chains.
+/// Ensures users must complete certain achievements before unlocking others.
+/// Example: "Advanced User" requires "Beginner" and "Intermediate" achievements.
+/// </summary>
 [Table("achievement_prerequisites")]
 [Index(nameof(AchievementId))]
 [Index(nameof(PrerequisiteAchievementId))]
@@ -65,7 +80,11 @@ public class AchievementPrerequisite : EntityBase {
   public int? MinimumLevel { get; set; }
 }
 
-/// <summary> Tracks user's progress towards achievements </summary>
+/// <summary> 
+/// Tracks user's incremental progress towards achievements that require multiple actions.
+/// Separate from UserAchievement which represents completed achievements.
+/// Used for achievements like "Create 10 posts" or "Login for 7 consecutive days".
+/// </summary>
 [Table("achievement_progress")]
 [Index(nameof(UserId))]
 [Index(nameof(AchievementId))]
