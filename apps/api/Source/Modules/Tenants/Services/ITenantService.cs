@@ -1,3 +1,5 @@
+using TenantPermissionEntity = GameGuild.TenantPermission;
+
 namespace GameGuild.Modules.Tenants;
 
 /// <summary> Service interface for managing tenants </summary>
@@ -59,7 +61,7 @@ public interface ITenantService {
   /// <param name="userId"> User ID </param>
   /// <param name="tenantId"> Tenant ID </param>
   /// <returns> Created TenantPermission relationship </returns>
-  Task<TenantPermission> AddUserToTenantAsync(Guid userId, Guid tenantId);
+  Task<TenantPermissionEntity> AddUserToTenantAsync(Guid userId, Guid tenantId);
 
   /// <summary> Remove a user from a tenant </summary>
   /// <param name="userId"> User ID </param>
@@ -70,12 +72,12 @@ public interface ITenantService {
   /// <summary> Get users in a tenant </summary>
   /// <param name="tenantId"> Tenant ID </param>
   /// <returns> List of TenantPermission relationships </returns>
-  Task<IEnumerable<TenantPermission>> GetUsersInTenantAsync(Guid tenantId);
+  Task<IEnumerable<TenantPermissionEntity>> GetUsersInTenantAsync(Guid tenantId);
 
   /// <summary> Get tenants for a user </summary>
   /// <param name="userId"> User ID </param>
   /// <returns> List of TenantPermission relationships </returns>
-  Task<IEnumerable<TenantPermission>> GetTenantsForUserAsync(Guid userId);
+  Task<IEnumerable<TenantPermissionEntity>> GetTenantsForUserAsync(Guid userId);
 
   // === DEFAULT TENANT FUNCTIONALITY ===
 
