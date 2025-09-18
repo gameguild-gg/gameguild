@@ -68,7 +68,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
 
     if (request.Visibility.HasValue) query = query.Where(p => p.Visibility == request.Visibility.Value);
 
-    if (request.EnrollmentStatus.HasValue) query = query.Where(p => p.EnrollmentStatus == (EnrollmentStatus) request.EnrollmentStatus.Value);
+    if (request.EnrollmentStatus.HasValue) query = query.Where(p => p.EnrollmentStatus == (EnrollmentStatus)request.EnrollmentStatus.Value);
 
     // Remove CreatorId filter since this property doesn't exist in the current Program model
     // if (!string.IsNullOrEmpty(request.CreatorId)) query = query.Where(p => p.CreatorId == request.CreatorId);
@@ -353,7 +353,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
 
     var averageRating = ratings.Count > 0 ? ratings.Average(r => r.Rating) : 0;
     var totalRatings = ratings.Count;
-    var completionRate = totalEnrollments > 0 ? (decimal) completedEnrollments / totalEnrollments : 0;
+    var completionRate = totalEnrollments > 0 ? (decimal)completedEnrollments / totalEnrollments : 0;
 
     // Note: Average completion time would need actual time tracking
     var averageCompletionTime = TimeSpan.Zero;
@@ -479,7 +479,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
 
   // ===== WISHLIST QUERY HANDLERS =====
 
-  public async Task<IEnumerable<Program>> Handle(GetUserWishlistQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProgramEntity>> Handle(GetUserWishlistQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting wishlist for user: {UserId}", request.UserId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid

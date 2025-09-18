@@ -13,7 +13,7 @@ public class ProgramContentService(ApplicationDbContext context) : IProgramConte
 
     // If no sort order is specified, put it at the end
     if (content.SortOrder == 0) {
-      var maxOrder = await context.ProgramContents.Where(pc => pc.ProgramId == content.ProgramId && pc.ParentId == content.ParentId && !pc.IsDeleted).MaxAsync(pc => (int?) pc.SortOrder) ?? 0;
+      var maxOrder = await context.ProgramContents.Where(pc => pc.ProgramId == content.ProgramId && pc.ParentId == content.ParentId && !pc.IsDeleted).MaxAsync(pc => (int?)pc.SortOrder) ?? 0;
       content.SortOrder = maxOrder + 1;
     }
 
