@@ -19,8 +19,8 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
     var openFeatureContext = ConvertToOpenFeatureContext(context);
 
     return openFeatureContext != null
-             ? await featureClient.GetBooleanValueAsync(key, defaultValue, openFeatureContext, cancellationToken : ct).ConfigureAwait(false)
-             : await featureClient.GetBooleanValueAsync(key, defaultValue, cancellationToken : ct).ConfigureAwait(false);
+             ? await featureClient.GetBooleanValueAsync(key, defaultValue, openFeatureContext, cancellationToken: ct).ConfigureAwait(false)
+             : await featureClient.GetBooleanValueAsync(key, defaultValue, cancellationToken: ct).ConfigureAwait(false);
   }
 
   /// <summary> Gets a string feature flag value with optional evaluation context. </summary>
@@ -35,8 +35,8 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
     var openFeatureContext = ConvertToOpenFeatureContext(context);
 
     return openFeatureContext != null
-             ? await featureClient.GetStringValueAsync(key, defaultValue, openFeatureContext, cancellationToken : ct).ConfigureAwait(false)
-             : await featureClient.GetStringValueAsync(key, defaultValue, cancellationToken : ct).ConfigureAwait(false);
+             ? await featureClient.GetStringValueAsync(key, defaultValue, openFeatureContext, cancellationToken: ct).ConfigureAwait(false)
+             : await featureClient.GetStringValueAsync(key, defaultValue, cancellationToken: ct).ConfigureAwait(false);
   }
 
   /// <summary> Gets an integer feature flag value with optional evaluation context. </summary>
@@ -51,8 +51,8 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
     var openFeatureContext = ConvertToOpenFeatureContext(context);
 
     return openFeatureContext != null
-             ? await featureClient.GetIntegerValueAsync(key, defaultValue, openFeatureContext, cancellationToken : ct).ConfigureAwait(false)
-             : await featureClient.GetIntegerValueAsync(key, defaultValue, cancellationToken : ct).ConfigureAwait(false);
+             ? await featureClient.GetIntegerValueAsync(key, defaultValue, openFeatureContext, cancellationToken: ct).ConfigureAwait(false)
+             : await featureClient.GetIntegerValueAsync(key, defaultValue, cancellationToken: ct).ConfigureAwait(false);
   }
 
   /// <summary> Gets a double feature flag value with optional evaluation context. </summary>
@@ -67,8 +67,8 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
     var openFeatureContext = ConvertToOpenFeatureContext(context);
 
     return openFeatureContext != null
-             ? await featureClient.GetDoubleValueAsync(key, defaultValue, openFeatureContext, cancellationToken : ct).ConfigureAwait(false)
-             : await featureClient.GetDoubleValueAsync(key, defaultValue, cancellationToken : ct).ConfigureAwait(false);
+             ? await featureClient.GetDoubleValueAsync(key, defaultValue, openFeatureContext, cancellationToken: ct).ConfigureAwait(false)
+             : await featureClient.GetDoubleValueAsync(key, defaultValue, cancellationToken: ct).ConfigureAwait(false);
   }
 
   /// <summary> Converts Game Guild's feature evaluation context to OpenFeature's evaluation context. </summary>
@@ -80,18 +80,23 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
     var builder = EvaluationContext.Builder();
 
     // Convert our domain context to OpenFeature context
-    if (!string.IsNullOrEmpty(context.UserId)) builder.Set("userId", context.UserId);
+    if (context.UserId.HasValue) builder.Set("userId", context.UserId.Value.ToString());
 
-    if (!string.IsNullOrEmpty(context.SessionId)) builder.Set("sessionId", context.SessionId);
-
-    if (!string.IsNullOrEmpty(context.TenantId)) builder.Set("tenantId", context.TenantId);
+    if (context.TenantId.HasValue) builder.Set("tenantId", context.TenantId.Value.ToString());
 
     if (!string.IsNullOrEmpty(context.Environment)) builder.Set("environment", context.Environment);
 
-    if (!string.IsNullOrEmpty(context.Location)) builder.Set("location", context.Location);
+    if (!string.IsNullOrEmpty(context.IpAddress)) builder.Set("ipAddress", context.IpAddress);
+
+    if (!string.IsNullOrEmpty(context.UserAgent)) builder.Set("userAgent", context.UserAgent);
+
+    // Add user roles
+    if (context.UserRoles.Any()) {
+      builder.Set("userRoles", string.Join(",", context.UserRoles));
+    }
 
     // Add custom attributes
-    foreach (var kvp in context.Attributes) {
+    foreach (var kvp in context.CustomAttributes) {
       // Convert the object to OpenFeature Value
       var value = kvp.Value switch {
         string s => new Value(s),
