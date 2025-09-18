@@ -4,7 +4,7 @@ using GameGuild.Modules.Resources;
 namespace GameGuild.Modules.Contents;
 
 /// <summary>
-/// Represents a content item that is a specialized resource.
+/// Represents a content item that is a specialized re
 /// </summary>
 public abstract class Content : Resource {
   // Content-specific properties can be added here if needed
