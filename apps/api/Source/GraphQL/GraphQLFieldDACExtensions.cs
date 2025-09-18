@@ -39,7 +39,7 @@ public static class GraphQLFieldDACExtensions {
     where TPermission : ResourcePermission<TEntity> where TEntity : EntityBase {
     return descriptor.Directive(
       "dacAuthorize",
-      new ArgumentNode("level", new StringValueNode(DACPermissionLevel.ReToString())),
+      new ArgumentNode("level", new StringValueNode(DACPermissionLevel.Resource.ToString())),
       new ArgumentNode("permission", new StringValueNode(permission.ToString())),
       new ArgumentNode("entityType", new StringValueNode(typeof(TEntity).Name)),
       new ArgumentNode("permissionType", new StringValueNode(typeof(TPermission).Name)),
@@ -56,7 +56,7 @@ public static class GraphQLFieldDACExtensions {
   public static IObjectFieldDescriptor RequireResourcePermission<TEntity>(this IObjectFieldDescriptor descriptor, PermissionType permission, string resourceIdParameter = "id") where TEntity : EntityBase {
     return descriptor.Directive(
       "dacAuthorize",
-      new ArgumentNode("level", new StringValueNode(DACPermissionLevel.ReToString())),
+      new ArgumentNode("level", new StringValueNode(DACPermissionLevel.Resource.ToString())),
       new ArgumentNode("permission", new StringValueNode(permission.ToString())),
       new ArgumentNode("entityType", new StringValueNode(typeof(TEntity).Name)),
       new ArgumentNode("resourceIdParameter", new StringValueNode(resourceIdParameter))
