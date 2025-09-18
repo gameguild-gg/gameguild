@@ -1,7 +1,8 @@
 using System.ComponentModel;
 
 
-namespace GameGuild;
+namespace GameGuild.Modules.Certificates;
+
 
 public enum CertificateType {
   [Description("Standard certificate for completing a single program")] ProgramCompletion,

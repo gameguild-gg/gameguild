@@ -8,11 +8,12 @@ using CreateCertificateDto = GameGuild.Source.Modules.Certificates.Dtos.CreateCe
 using UpdateCertificateDto = GameGuild.Source.Modules.Certificates.Dtos.UpdateCertificateDto;
 
 
-namespace GameGuild.Modules.Certificates.Controllers;
+namespace GameGuild.Modules.Certificates;
+
 
 /// <summary> Manage certificates for a specific Program, including skill tags. Protected by resource-level Program permissions. </summary>
 [ApiController]
-[Route("api/programs/{programId}/certificates")]
+[Route("programs/{programId:guid}/certificates")]
 [Authorize]
 public class ProgramCertificatesController(ApplicationDbContext db) : ControllerBase {
   /// <summary> List all certificates associated with a program </summary>
