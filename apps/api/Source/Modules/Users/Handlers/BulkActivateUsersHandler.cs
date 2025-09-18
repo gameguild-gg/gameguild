@@ -53,6 +53,6 @@ public class BulkActivateUsersHandler(ApplicationDbContext context, ILogger<Bulk
 
     logger.LogInformation("Bulk activate completed: {Successful}/{Total} users activated. Reason: {Reason}", successfulCount, request.UserIds.Count, request.Reason ?? "Not specified");
 
-    return GameGuild.CQRS.Result.Success(result);
+    return Result.Success(result);
   }
 }

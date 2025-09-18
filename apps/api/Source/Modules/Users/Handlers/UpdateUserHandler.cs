@@ -1,5 +1,7 @@
 using GameGuild.CQRS;
 using GameGuild.Database;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 
 namespace GameGuild.Modules.Users;
@@ -9,7 +11,9 @@ public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserH
   public async Task<User> Handle(UpdateUserCommand request, CancellationToken cancellationToken) {
     var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
 
-    if (user == null) throw new InvalidOperationException($"User with ID {request.UserId} not found");
+    if (user == null) {
+      throw new InvalidOperationException($"User with ID {request.UserId} not found");
+    }
 
     // Optimistic concurrency control
     if (request.ExpectedVersion.HasValue && user.Version != request.ExpectedVersion.Value) throw new InvalidOperationException($"Concurrency conflict. Expected version {request.ExpectedVersion}, but current version is {user.Version}");
