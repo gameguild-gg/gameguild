@@ -2,7 +2,7 @@ using ITenantContextCommon = GameGuild.ITenantContext;
 using ITenantContextCore = GameGuild.Core.Domain.Identity.ITenantContext;
 
 
-namespace GameGuild.Core.Infrastructure.Identity;
+namespace GameGuild.Authorization.Identity;
 
 /// <summary> Adapter that implements the Common ITenantContext interface while delegating to Core implementation Provides backward compatibility during migration from Common to Core </summary>
 public class TenantContextAdapter : ITenantContextCommon {

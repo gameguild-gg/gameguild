@@ -2,7 +2,7 @@ using GameGuild.Core.Domain.Identity;
 using GameGuild.Core.Domain.Permissions;
 
 
-namespace GameGuild.Core.Infrastructure.Identity;
+namespace GameGuild.Authorization.Identity;
 
 /// <summary> Implementation of permissions context for the current request Provides centralized permission checking and authorization services </summary>
 public class PermissionsContext : IPermissionsContext {
@@ -99,7 +99,7 @@ public class PermissionsContext : IPermissionsContext {
     }
   }
 
-  public async Task<bool> HasAnyTenantPermissionAsync(PermissionType[ ] permissions, Guid? tenantId = null) {
+  public async Task<bool> HasAnyTenantPermissionAsync(PermissionType[] permissions, Guid? tenantId = null) {
     if (!(permissions?.Length > 0)) return false;
 
     foreach (var permission in permissions) {
