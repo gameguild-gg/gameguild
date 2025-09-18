@@ -1,11 +1,21 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
+using GameGuild;
+using GameGuild.Database;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Subscriptions.Events;
 using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Subscriptions.Models;
 
+/// <summary>
+/// Represents a user's subscription to a service plan with billing and lifecycle management.
+/// Tracks subscription status, billing cycles, trial periods, and external payment provider integration.
+/// Supports various subscription models including trials, recurring billing, and cancellations.
+/// </summary>
 [Table("user_subscriptions")]
 [Index(nameof(UserId))]
 [Index(nameof(Status))]
@@ -15,22 +25,40 @@ namespace GameGuild.Modules.Subscriptions.Models;
 [Index(nameof(NextBillingAt))]
 [Index(nameof(ExternalSubscriptionId))]
 public class UserSubscription : EntityBase {
+  /// <summary> The user who owns this subscription </summary>
   public Guid UserId { get; set; }
 
+  /// <summary> The subscription plan that defines the service features and pricing </summary>
   public Guid SubscriptionPlanId { get; set; }
 
+  /// <summary> 
+  /// Current status of the subscription (Active, Trialing, Cancelled, etc.)
+  /// Determines billing behavior and feature access
+  /// </summary>
   public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Active;
 
-  /// <summary> Billing cycle frequency </summary>
+  /// <summary> 
+  /// Billing cycle frequency that determines how often the user is charged.
+  /// Common values: Monthly, Yearly, Weekly
+  /// </summary>
   public BillingCycle BillingCycle { get; set; } = BillingCycle.Monthly;
 
-  /// <summary> Current subscription amount </summary>
+  /// <summary> 
+  /// Current subscription amount including any discounts or adjustments.
+  /// Amount may change during subscription lifetime due to plan changes or prorations.
+  /// </summary>
   public Money Amount { get; set; } = Money.Zero();
 
-  /// <summary> Whether this subscription auto-renews </summary>
+  /// <summary> 
+  /// Whether this subscription automatically renews at the end of each billing period.
+  /// When false, subscription will end at the current period end date.
+  /// </summary>
   public bool AutoRenew { get; set; } = true;
 
-  /// <summary> Number of billing cycles processed </summary>
+  /// <summary> 
+  /// Number of completed billing cycles since subscription creation.
+  /// Used for tracking subscription tenure and applying cycle-based discounts.
+  /// </summary>
   public int BillingCycleCount { get; set; }
 
   /// <summary> Reason for cancellation (if cancelled) </summary>
@@ -95,15 +123,19 @@ public class UserSubscription : EntityBase {
   public int? GetRemainingTrialDays() {
     if (!IsTrialing || !TrialEndsAt.HasValue) return null;
 
+    // Calculate days remaining, ensuring we use UTC for consistency
     var remaining = (TrialEndsAt.Value - DateTime.UtcNow).Days;
 
+    // Prevent negative values for expired trials
     return Math.Max(0, remaining);
   }
 
   /// <summary> Gets days until next billing </summary>
   public int GetDaysUntilNextBilling() {
+    // Return -1 for inactive subscriptions or missing billing dates
     if (!IsActive || !NextBillingAt.HasValue) return -1;
 
+    // Calculate days until billing, preventing negative values
     return Math.Max(0, (NextBillingAt.Value - DateTime.UtcNow).Days);
   }
 
@@ -111,10 +143,12 @@ public class UserSubscription : EntityBase {
 
   /// <summary> Activates the subscription </summary>
   public void Activate() {
-    if (Status != SubscriptionStatus.PendingActivation && Status != SubscriptionStatus.Trialing) throw new InvalidOperationException("Can only activate pending or trialing subscriptions");
+    // Only allow activation from specific states to maintain data integrity
+    if (Status != SubscriptionStatus.PendingActivation && Status != SubscriptionStatus.Trialing)
+      throw new InvalidOperationException("Can only activate pending or trialing subscriptions");
 
     Status = SubscriptionStatus.Active;
-    Touch();
+    Touch(); // Update timestamps
     AddDomainEvent(new SubscriptionActivatedEvent(Id, UserId));
   }
 
@@ -133,10 +167,14 @@ public class UserSubscription : EntityBase {
     if (Status != SubscriptionStatus.Trialing) throw new InvalidOperationException("Can only end trial for trialing subscriptions");
 
     if (convertToPaid) {
+      // Convert trial to active paid subscription
       Status = SubscriptionStatus.Active;
       AddDomainEvent(new SubscriptionActivatedEvent(Id, UserId));
     }
-    else { Cancel(Models.CancellationReason.TrialEnded, "Trial period ended without conversion"); }
+    else {
+      // Cancel subscription if user doesn't convert to paid
+      Cancel(Models.CancellationReason.TrialEnded, "Trial period ended without conversion");
+    }
 
     Touch();
     AddDomainEvent(new SubscriptionTrialEndedEvent(Id, UserId, convertToPaid));
@@ -144,14 +182,19 @@ public class UserSubscription : EntityBase {
 
   /// <summary> Cancels the subscription </summary>
   public void Cancel(CancellationReason reason, string? note = null, DateTime? effectiveDate = null) {
+    // Idempotent operation - no-op if already cancelled
     if (Status == SubscriptionStatus.Cancelled) return;
 
-    var oldStatus = Status;
+    var oldStatus = Status; // Preserve for domain event
     Status = SubscriptionStatus.Cancelled;
     CancellationReason = reason;
     CancellationNote = note;
     CanceledAt = DateTime.UtcNow;
+
+    // Use provided effective date or immediate cancellation
     EndsAt = effectiveDate ?? DateTime.UtcNow;
+
+    // Prevent future renewals
     AutoRenew = false;
 
     Touch();
@@ -190,15 +233,17 @@ public class UserSubscription : EntityBase {
     LastPaymentAt = paymentDate;
 
     // Calculate next billing date based on billing cycle
+    // Default to monthly if billing cycle is unrecognized
     NextBillingAt = BillingCycle switch {
       BillingCycle.Monthly => paymentDate.AddMonths(1),
       BillingCycle.Quarterly => paymentDate.AddMonths(3),
       BillingCycle.SemiAnnually => paymentDate.AddMonths(6),
       BillingCycle.Annually => paymentDate.AddYears(1),
       BillingCycle.Biannually => paymentDate.AddYears(2),
-      _ => paymentDate.AddMonths(1),
+      _ => paymentDate.AddMonths(1), // Fallback to monthly
     };
 
+    // Track billing cycles for analytics and business logic
     IncrementBillingCycle();
   }
 
@@ -210,23 +255,28 @@ public class UserSubscription : EntityBase {
       BillingCycle = billingCycle,
       Amount = amount,
       CurrentPeriodStart = startDate,
+      // Set initial status based on trial configuration
       Status = trialEndDate.HasValue ? SubscriptionStatus.Trialing : SubscriptionStatus.PendingActivation,
     };
 
+    // Configure trial period if specified
     if (trialEndDate.HasValue) { subscription.TrialEndsAt = trialEndDate; }
 
-    // Calculate billing dates
+    // Calculate billing period end date based on cycle type
+    // Default to monthly for unrecognized cycles
     subscription.CurrentPeriodEnd = billingCycle switch {
       BillingCycle.Monthly => startDate.AddMonths(1),
       BillingCycle.Quarterly => startDate.AddMonths(3),
       BillingCycle.SemiAnnually => startDate.AddMonths(6),
       BillingCycle.Annually => startDate.AddYears(1),
       BillingCycle.Biannually => startDate.AddYears(2),
-      _ => startDate.AddMonths(1),
+      _ => startDate.AddMonths(1), // Fallback to monthly
     };
 
+    // Set initial billing date to period end
     subscription.NextBillingAt = subscription.CurrentPeriodEnd;
 
+    // Raise domain event for subscription creation
     subscription.AddDomainEvent(new SubscriptionCreatedEvent(subscription.Id, userId, subscriptionPlanId, startDate, trialEndDate));
 
     return subscription;
