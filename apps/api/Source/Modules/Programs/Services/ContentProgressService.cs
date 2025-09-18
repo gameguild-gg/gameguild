@@ -1,4 +1,5 @@
 using GameGuild.Database;
+using GameGuild.Source.Modules.Programs.Models;
 
 
 namespace GameGuild.Modules.Programs;
@@ -93,7 +94,7 @@ public class ContentProgressService : IContentProgressService {
                                          .Where(x => x.cp.UserId == userId && x.pc.ProgramId == programId && x.pc.IsRequired && x.cp.CompletionStatus == ContentCompletionStatus.Completed)
                                          .CountAsync();
 
-    return totalContent > 0 ? (decimal) completedContent / totalContent * 100 : 0;
+    return totalContent > 0 ? (decimal)completedContent / totalContent * 100 : 0;
   }
 
   /// <summary> Get next content item to access in program </summary>
@@ -154,7 +155,7 @@ public class ContentProgressService : IContentProgressService {
       CompletedContentItems = completed,
       InProgressContentItems = inProgress,
       NotStartedContentItems = notStarted,
-      AverageCompletionRate = totalContent > 0 ? (decimal) completed / totalContent * 100 : 0,
+      AverageCompletionRate = totalContent > 0 ? (decimal)completed / totalContent * 100 : 0,
       AverageScore = allProgress.Where(cp => cp.Score.HasValue).Any() ? allProgress.Where(cp => cp.Score.HasValue).Average(cp => cp.Score!.Value) : 0,
       TotalTimeSpentHours = allProgress.Sum(cp => cp.TimeSpentSeconds) / 3600,
       CompletionByContentType = completionByType,
