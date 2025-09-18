@@ -5,9 +5,6 @@ namespace GameGuild.Modules.TestingLab;
 /// Manages access control for testing locations
 /// </summary>
 public class TestingLocationPermission : ResourcePermission<TestingLocation> {
-  /// <summary>
-  /// Initialize TestingLocation permission
-  /// </summary>
-  /// <param name="permissionType">The type of permission required</param>
-  public TestingLocationPermission(PermissionType permissionType) : base(permissionType) { }
+  public TestingLocationPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
+    : base(userId, tenantId, resourceId, permissions) { }
 }
