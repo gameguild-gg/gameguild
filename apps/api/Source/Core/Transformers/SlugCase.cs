@@ -3,6 +3,9 @@
 /// <summary>
 /// Provides utilities for converting strings to URL-friendly slug format.
 /// Backward compatibility wrapper around SlugCaseTransformer.
+/// 
+/// RECOMMENDATION: Use extension methods like input.ToSlugCase() for new code.
+/// This static class is maintained for backward compatibility and methods not yet available as extensions.
 /// </summary>
 public static class SlugCase {
   private static readonly SlugCaseTransformer Transformer = new();
