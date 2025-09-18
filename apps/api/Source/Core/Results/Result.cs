@@ -6,7 +6,7 @@ namespace GameGuild;
 /// Simplified Result pattern that uses only Error for all failure scenarios.
 /// No more ValidationError, BusinessRuleError, etc. - just Error.
 /// </summary>
-public class Result {
+public class Result : IResult {
   public Result(bool isSuccess, Error error) {
     if (isSuccess && error != Error.None || !isSuccess && error == Error.None)
       throw new ArgumentException("Invalid error", nameof(error));

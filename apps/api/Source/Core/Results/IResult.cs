@@ -1,4 +1,4 @@
-namespace GameGuild.CQRS;
+namespace GameGuild;
 
 /// <summary> Base interface for all operation results </summary>
 public interface IResult {
@@ -9,10 +9,7 @@ public interface IResult {
   bool IsFailure { get => !IsSuccess; }
 
   /// <summary> The error that occurred during the operation (if any) </summary>
-  Error? Error { get; }
-
-  /// <summary> Collection of validation errors (if any) </summary>
-  IEnumerable<ValidationError> ValidationErrors { get; }
+  Error Error { get; }
 }
 
 /// <summary> Generic interface for operation results with a value </summary>
