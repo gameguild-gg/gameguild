@@ -1,3 +1,5 @@
+using GameGuild.CQRS;
+
 namespace GameGuild;
 
 /// <summary> Pipeline behavior for request post-processing </summary>

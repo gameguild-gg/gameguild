@@ -6,7 +6,7 @@ using CqrsResult = GameGuild.CQRS.Result;
 namespace GameGuild;
 
 /// <summary> Authorization behavior for securing commands and queries </summary>
-public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor httpContextAccessor, ILogger<AuthorizationBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequest<TResponse> {
+public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor httpContextAccessor, ILogger<AuthorizationBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : IBaseRequest {
   public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken) {
     var requestName = typeof(TRequest).Name;
     var user = httpContextAccessor.HttpContext?.User;
@@ -76,13 +76,13 @@ public class AuthorizationBehavior<TRequest, TResponse>(IHttpContextAccessor htt
     var cqrsError = CQRS.Error.Create(error.Code, error.Description);
 
     // Handle Result pattern
-    if (typeof(T) == typeof(CqrsResult)) return (TResponse) (object) CqrsResult.Failure(cqrsError);
+    if (typeof(T) == typeof(CqrsResult)) return (TResponse)(object)CqrsResult.Failure(cqrsError);
 
     if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Result<>)) {
       var resultType = typeof(T).GetGenericArguments()[0];
       var failureMethod = typeof(CqrsResult).GetMethod("Failure", [typeof(CQRS.Error)])!.MakeGenericMethod(resultType);
 
-      return (TResponse) failureMethod.Invoke(null, [cqrsError])!;
+      return (TResponse)failureMethod.Invoke(null, [cqrsError])!;
     }
 
     // Fallback - throw exception for non-Result responses
