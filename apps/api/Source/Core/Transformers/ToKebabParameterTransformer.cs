@@ -1,8 +1,15 @@
-namespace GameGuild;
+using Microsoft.AspNetCore.Routing;
 
-/// <summary> Transforms route parameters from PascalCase to kebab-case Example: "TenantRoles" becomes "tenant-roles" </summary>
+namespace GameGuild.Core.Transformers;
+
+/// <summary>
+/// ASP.NET Core route parameter transformer that converts PascalCase route values to kebab-case URLs.
+/// Used for consistent URL formatting across the application.
+/// </summary>
 public class ToKebabParameterTransformer : IOutboundParameterTransformer {
-  private static readonly KebabCaseTransformer Transformer = new KebabCaseTransformer();
+  private static readonly KebabCaseTransformer Transformer = new();
 
-  public string? TransformOutbound(object? value) { return value is not string s ? null : Transformer.Transform(s); }
+  public string? TransformOutbound(object? value) {
+    return value is not string s ? null : Transformer.Transform(s);
+  }
 }
