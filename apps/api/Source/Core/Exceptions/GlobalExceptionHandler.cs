@@ -43,7 +43,10 @@ internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> log
       SecurityException securityException => new ProblemDetails { Status = StatusCodes.Status403Forbidden, Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3", Title = "Forbidden", Detail = securityException.Message },
       TimeoutException => new ProblemDetails { Status = StatusCodes.Status408RequestTimeout, Type = "https://tools.ietf.org/html/rfc7231#section-6.5.7", Title = "Request Timeout", Detail = "The request took too long to process" },
       NotSupportedException notSupportedException => new ProblemDetails {
-        Status = StatusCodes.Status501NotImplemented, Type = "https://tools.ietf.org/html/rfc7231#section-6.6.2", Title = "Not Implemented", Detail = notSupportedException.Message,
+        Status = StatusCodes.Status501NotImplemented,
+        Type = "https://tools.ietf.org/html/rfc7231#section-6.6.2",
+        Title = "Not Implemented",
+        Detail = notSupportedException.Message,
       },
       _ => new ProblemDetails { Status = StatusCodes.Status500InternalServerError, Type = "https://tools.ietf.org/html/rfc7231#section-6.6.1", Title = "Server Error", Detail = "An unexpected error occurred while processing your request" },
     };
