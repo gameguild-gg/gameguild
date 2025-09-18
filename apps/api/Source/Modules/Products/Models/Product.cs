@@ -22,7 +22,7 @@ public class Product : Content {
 
   [MaxLength(500)] public string? ImageUrl { get; set; }
 
-  public ProductType Type { get; set; } = ProductType.Program;
+  public GameGuild.ProductType Type { get; set; } = GameGuild.ProductType.Program;
 
   public bool IsBundle { get; set; }
 

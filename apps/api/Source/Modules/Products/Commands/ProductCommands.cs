@@ -14,7 +14,7 @@ public record CreateProductCommand : IRequest<CreateProductResult> {
 
   public string? ImageUrl { get; init; }
 
-  public ProductType Type { get; init; } = ProductType.Program;
+  public GameGuild.ProductType Type { get; init; } = GameGuild.ProductType.Program;
 
   public bool IsBundle { get; init; }
 
@@ -47,7 +47,7 @@ public record UpdateProductCommand : IRequest<UpdateProductResult> {
 
   public string? ImageUrl { get; init; }
 
-  public ProductType? Type { get; init; }
+  public GameGuild.ProductType? Type { get; init; }
 
   public bool? IsBundle { get; init; }
 

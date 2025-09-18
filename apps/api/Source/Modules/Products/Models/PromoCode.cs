@@ -1,8 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild;
+using GameGuild.Modules.Billing;
 using GameGuild.Modules.Payments;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
+using PromoCodeTypeEnum = GameGuild.PromoCodeType;
+
+namespace GameGuild.Modules.Products;
 
 /// <summary> EntityBase representing promotional codes for discounts Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality </summary>
 [Table("promo_codes")]
@@ -33,7 +38,7 @@ public class PromoCode : EntityBase {
   public string? Description { get; set; }
 
   /// <summary> Type of discount this promo code provides </summary>
-  public PromoCodeType Type { get; set; }
+  public PromoCodeTypeEnum Type { get; set; }
 
   /// <summary> Discount percentage (for PercentageOff type) </summary>
   [Column(TypeName = "decimal(5,2)")]
@@ -102,6 +107,6 @@ public class PromoCode : EntityBase {
 
     if (MinimumOrderAmount.HasValue && orderAmount < MinimumOrderAmount.Value) return 0;
 
-    return Type switch { PromoCodeType.PercentageOff => orderAmount * (DiscountPercentage ?? 0) / 100, PromoCodeType.FixedAmountOff => Math.Min(DiscountAmount ?? 0, orderAmount), _ => 0 };
+    return Type switch { PromoCodeTypeEnum.PercentageOff => orderAmount * (DiscountPercentage ?? 0) / 100, PromoCodeTypeEnum.FixedAmountOff => Math.Min(DiscountAmount ?? 0, orderAmount), _ => 0 };
   }
 }
