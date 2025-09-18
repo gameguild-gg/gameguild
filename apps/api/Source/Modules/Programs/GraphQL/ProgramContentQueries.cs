@@ -1,3 +1,4 @@
+using GameGuild.Authorization;
 using GameGuild.GraphQL;
 using ProgramContentEntity = GameGuild.Modules.Programs.ProgramContent;
 
