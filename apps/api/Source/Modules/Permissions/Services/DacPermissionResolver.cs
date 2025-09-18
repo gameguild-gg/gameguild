@@ -1,3 +1,5 @@
+using GameGuild.Core.Domain.Permissions;
+
 namespace GameGuild.Core.Infrastructure.Permissions;
 
 /// <summary> Enhanced DAC Permission Resolver implementing three-layer permission system Follows Clean Architecture with proper separation of concerns </summary>
@@ -63,7 +65,7 @@ public class DacPermissionResolver : IDacPermissionResolver {
     }
   }
 
-  public async Task<bool> CanGrantPermissionsAsync(Guid grantorUserId, Guid? tenantId, PermissionType[ ] permissions, Guid? resourceId = null, string? contentTypeName = null) {
+  public async Task<bool> CanGrantPermissionsAsync(Guid grantorUserId, Guid? tenantId, PermissionType[] permissions, Guid? resourceId = null, string? contentTypeName = null) {
     try {
       // User can only grant permissions they have themselves
       foreach (var permission in permissions) {
@@ -129,7 +131,7 @@ public class DacPermissionResolver : IDacPermissionResolver {
     }
   }
 
-  public async Task<Dictionary<Guid, Dictionary<PermissionType, PermissionResult>>> BulkResolvePermissionsAsync<TResource>(Guid userId, Guid? tenantId, Guid[ ] resourceIds, PermissionType[ ] permissions) where TResource : EntityBase {
+  public async Task<Dictionary<Guid, Dictionary<PermissionType, PermissionResult>>> BulkResolvePermissionsAsync<TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds, PermissionType[] permissions) where TResource : EntityBase {
     var results = new Dictionary<Guid, Dictionary<PermissionType, PermissionResult>>();
 
     try {
