@@ -7,7 +7,7 @@ using GameGuild.Database;
 namespace GameGuild.Modules.Users;
 
 /// <summary> Handler for searching users with filtering and pagination </summary>
-public class SearchUsersHandler(ApplicationDbContext context) : IQueryHandler<SearchUsersQuery, PagedResult<User>> {
+public class SearchUsersHandler(ApplicationDbContext context) : IRequestHandler<SearchUsersQuery, PagedResult<User>> {
   public async Task<PagedResult<User>> Handle(SearchUsersQuery request, CancellationToken cancellationToken) {
     IQueryable<User> query = context.Users.Include(u => u.Credentials);
 
