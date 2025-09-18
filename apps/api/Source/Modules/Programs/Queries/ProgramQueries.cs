@@ -1,9 +1,10 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents;
-using ProgramAvailabilityStatus = GameGuild.EnrollmentStatus;
+using GameGuild.Modules.Programs;
+using ProgramAvailabilityStatus = GameGuild.Source.Modules.Programs.Models.EnrollmentStatus;
+using ProgramEntity = GameGuild.Modules.Programs.Program;
 
-
-namespace GameGuild.Modules.Programs;
+namespace GameGuild.Source.Modules.Programs.Queries;
 
 /// <summary>
 /// Queries for Program data retrieval using CQRS pattern
@@ -26,16 +27,16 @@ public record GetAllProgramsQuery(
   bool IncludeArchived = false,
   string? SortBy = "CreatedAt",
   bool SortDescending = true
-) : IRequest<IEnumerable<Program>>;
+) : IRequest<IEnumerable<ProgramEntity>>;
 
 /// <summary> Query to get a program by ID </summary>
-public record GetProgramByIdQuery(Guid Id, bool IncludeContent = false, bool IncludeEnrollments = false, bool IncludeRatings = false) : IRequest<Program?>;
+public record GetProgramByIdQuery(Guid Id, bool IncludeContent = false, bool IncludeEnrollments = false, bool IncludeRatings = false) : IRequest<ProgramEntity?>;
 
 /// <summary> Query to get a program by slug </summary>
-public record GetProgramBySlugQuery(string Slug, bool IncludeContent = false, bool IncludeEnrollments = false, bool IncludeRatings = false) : IRequest<Program?>;
+public record GetProgramBySlugQuery(string Slug, bool IncludeContent = false, bool IncludeEnrollments = false, bool IncludeRatings = false) : IRequest<ProgramEntity?>;
 
 /// <summary> Query to get published program by slug (public access) </summary>
-public record GetPublishedProgramBySlugQuery(string Slug, bool IncludeContent = false) : IRequest<Program?>;
+public record GetPublishedProgramBySlugQuery(string Slug, bool IncludeContent = false) : IRequest<ProgramEntity?>;
 
 // ===== SEARCH AND FILTER QUERIES =====
 
@@ -50,21 +51,21 @@ public record SearchProgramsQuery(
   bool AvailableForEnrollment = false,
   int Skip = 0,
   int Take = 50
-) : IRequest<IEnumerable<Program>>;
+) : IRequest<IEnumerable<ProgramEntity>>;
 
 /// <summary> Query to get programs by category </summary>
-public record GetProgramsByCategoryQuery(ProgramCategory Category, int Skip = 0, int Take = 50, bool OnlyPublished = true) : IRequest<IEnumerable<Program>>;
+public record GetProgramsByCategoryQuery(ProgramCategory Category, int Skip = 0, int Take = 50, bool OnlyPublished = true) : IRequest<IEnumerable<ProgramEntity>>;
 
 /// <summary> Query to get programs by difficulty </summary>
-public record GetProgramsByDifficultyQuery(ProgramDifficulty Difficulty, int Skip = 0, int Take = 50, bool OnlyPublished = true) : IRequest<IEnumerable<Program>>;
+public record GetProgramsByDifficultyQuery(ProgramDifficulty Difficulty, int Skip = 0, int Take = 50, bool OnlyPublished = true) : IRequest<IEnumerable<ProgramEntity>>;
 
 /// <summary> Query to get programs by creator </summary>
-public record GetProgramsByCreatorQuery(string CreatorId, int Skip = 0, int Take = 50, bool OnlyPublished = false) : IRequest<IEnumerable<Program>>;
+public record GetProgramsByCreatorQuery(string CreatorId, int Skip = 0, int Take = 50, bool OnlyPublished = false) : IRequest<IEnumerable<ProgramEntity>>;
 
 // ===== ENROLLMENT QUERIES =====
 
 /// <summary> Query to get enrolled programs for a user </summary>
-public record GetUserEnrolledProgramsQuery(string UserId, int Skip = 0, int Take = 50, bool OnlyActive = true) : IRequest<IEnumerable<Program>>;
+public record GetUserEnrolledProgramsQuery(string UserId, int Skip = 0, int Take = 50, bool OnlyActive = true) : IRequest<IEnumerable<ProgramEntity>>;
 
 /// <summary> Query to get program enrollments </summary>
 public record GetProgramEnrollmentsQuery(Guid ProgramId, int Skip = 0, int Take = 50, bool OnlyActive = true) : IRequest<IEnumerable<ProgramUser>>;
@@ -94,16 +95,16 @@ public record GetCreatorProgramStatisticsQuery(string CreatorId, DateTime? FromD
 // ===== TRENDING AND RECOMMENDATIONS =====
 
 /// <summary> Query to get popular programs </summary>
-public record GetPopularProgramsQuery(int Skip = 0, int Take = 10, int DaysBack = 30) : IRequest<IEnumerable<Program>>;
+public record GetPopularProgramsQuery(int Skip = 0, int Take = 10, int DaysBack = 30) : IRequest<IEnumerable<ProgramEntity>>;
 
 /// <summary> Query to get recent programs </summary>
-public record GetRecentProgramsQuery(int Skip = 0, int Take = 10, int DaysBack = 7) : IRequest<IEnumerable<Program>>;
+public record GetRecentProgramsQuery(int Skip = 0, int Take = 10, int DaysBack = 7) : IRequest<IEnumerable<ProgramEntity>>;
 
 /// <summary> Query to get featured programs </summary>
-public record GetFeaturedProgramsQuery(int Skip = 0, int Take = 10) : IRequest<IEnumerable<Program>>;
+public record GetFeaturedProgramsQuery(int Skip = 0, int Take = 10) : IRequest<IEnumerable<ProgramEntity>>;
 
 /// <summary> Query to get recommended programs for user </summary>
-public record GetRecommendedProgramsQuery(string UserId, int Take = 10) : IRequest<IEnumerable<Program>>;
+public record GetRecommendedProgramsQuery(string UserId, int Take = 10) : IRequest<IEnumerable<ProgramEntity>>;
 
 // ===== RATING QUERIES =====
 
@@ -116,7 +117,7 @@ public record GetUserProgramRatingQuery(Guid ProgramId, string UserId) : IReques
 // ===== WISHLIST QUERIES =====
 
 /// <summary> Query to get user's wishlist programs </summary>
-public record GetUserWishlistQuery(string UserId, int Skip = 0, int Take = 50) : IRequest<IEnumerable<Program>>;
+public record GetUserWishlistQuery(string UserId, int Skip = 0, int Take = 50) : IRequest<IEnumerable<ProgramEntity>>;
 
 /// <summary> Query to check if program is in user's wishlist </summary>
 public record CheckProgramInWishlistQuery(Guid ProgramId, string UserId) : IRequest<bool>;
