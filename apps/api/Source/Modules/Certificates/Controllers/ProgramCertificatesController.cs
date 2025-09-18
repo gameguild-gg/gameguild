@@ -1,15 +1,10 @@
 using GameGuild.Database;
 using GameGuild.Modules.Programs;
-using GameGuild.Source.Modules.Certificates.Dtos;
 using Microsoft.AspNetCore.Mvc;
-using AddCertificateTagDto = GameGuild.Source.Modules.Certificates.Dtos.AddCertificateTagDto;
 using CertificateEntity = GameGuild.Modules.Certificates.Certificate;
-using CreateCertificateDto = GameGuild.Source.Modules.Certificates.Dtos.CreateCertificateDto;
-using UpdateCertificateDto = GameGuild.Source.Modules.Certificates.Dtos.UpdateCertificateDto;
 
 
 namespace GameGuild.Modules.Certificates;
-
 
 /// <summary> Manage certificates for a specific Program, including skill tags. Protected by resource-level Program permissions. </summary>
 [ApiController]
