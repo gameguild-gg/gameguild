@@ -1,6 +1,8 @@
 using System.Text.Json;
 using GameGuild.Database;
 using GameGuild.Modules.Resources.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 
 namespace GameGuild.Modules.Resources.Services;
@@ -171,7 +173,7 @@ public class ResourceQuotaService : IResourceQuotaService {
     var limitCheck = await CheckLimitsAsync(tenantId, type, amount, cancellationToken);
 
     if (limitCheck.CanProceed) {
-      await RecordUsageAsync(tenantId, type, amount, userId, source, cancellationToken : cancellationToken);
+      await RecordUsageAsync(tenantId, type, amount, userId, source, cancellationToken: cancellationToken);
       _logger.LogDebug("Successfully consumed {Amount} units of {Type} for tenant {TenantId}", amount, type, tenantId);
     }
     else { _logger.LogWarning("Failed to consume {Amount} units of {Type} for tenant {TenantId}: {Reason}", amount, type, tenantId, limitCheck.Message); }
@@ -214,7 +216,7 @@ public class ResourceQuotaService : IResourceQuotaService {
     };
 
     if (quota?.HardLimit.HasValue == true && quota.HardLimit.Value > 0) {
-      response.UsagePercentage = (double) response.CurrentUsage / quota.HardLimit.Value * 100;
+      response.UsagePercentage = (double)response.CurrentUsage / quota.HardLimit.Value * 100;
       response.RemainingQuota = Math.Max(0, quota.HardLimit.Value - response.CurrentUsage);
     }
 
