@@ -1,5 +1,7 @@
 using GameGuild.Database;
-
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Reputations;
 
@@ -92,7 +94,12 @@ public class ReputationService(ApplicationDbContext context) : IReputationServic
 
   private void CreateHistoryEntry(IReputation reputation, int scoreChange, string reason, Guid? tenantId) {
     var historyEntry = new UserReputationHistory {
-      PointsChange = scoreChange, PreviousScore = reputation.Score - scoreChange, NewScore = reputation.Score, Reason = reason, OccurredAt = DateTime.UtcNow, Title = $"Reputation change: {scoreChange:+#;-#;0}",
+      PointsChange = scoreChange,
+      PreviousScore = reputation.Score - scoreChange,
+      NewScore = reputation.Score,
+      Reason = reason,
+      OccurredAt = DateTime.UtcNow,
+      Title = $"Reputation change: {scoreChange:+#;-#;0}",
     };
 
     // Set the appropriate foreign key based on reputation type
@@ -110,7 +117,6 @@ public class ReputationService(ApplicationDbContext context) : IReputationServic
       // Get tenant-specific reputations
       var tenantReputations = await context.UserTenantReputations.Include(utr => utr.CurrentLevel)
                                            .Include(utr => utr.TenantPermission)
-                                           .ThenInclude(tp => tp.User)
                                            .Where(utr => utr.Score >= minimumLevel.MinimumScore && utr.TenantPermission.TenantId == tenantId.Value && !utr.IsDeleted)
                                            .OrderByDescending(utr => utr.Score)
                                            .ToListAsync();
@@ -145,7 +151,6 @@ public class ReputationService(ApplicationDbContext context) : IReputationServic
     if (tenantId.HasValue) {
       var tenantReputations = await context.UserTenantReputations.Include(utr => utr.CurrentLevel)
                                            .Include(utr => utr.TenantPermission)
-                                           .ThenInclude(tp => tp.User)
                                            .Where(utr => utr.TenantPermission.TenantId == tenantId.Value && !utr.IsDeleted)
                                            .OrderByDescending(utr => utr.Score)
                                            .Take(limit)
