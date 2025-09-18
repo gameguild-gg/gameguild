@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Users;
 /// Handler for bulk activating users
 /// </summary>
 public class BulkActivateUsersHandler(ApplicationDbContext context, ILogger<BulkActivateUsersHandler> logger, IMediator mediator) : IResultCommandHandler<BulkActivateUsersCommand, BulkOperationResult> {
-  public async Task<GameGuild.CQRS.Result<BulkOperationResult>> Handle(BulkActivateUsersCommand request, CancellationToken cancellationToken) {
+  public async Task<Result<BulkOperationResult>> Handle(BulkActivateUsersCommand request, CancellationToken cancellationToken) {
     var activatedUsers = new List<User>();
     var errors = new List<string>();
     var successfulCount = 0;

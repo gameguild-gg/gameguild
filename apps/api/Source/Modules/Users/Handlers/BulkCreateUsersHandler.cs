@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Users;
 
 /// <summary> Handler for bulk creating users </summary>
 public class BulkCreateUsersHandler(ApplicationDbContext context, ILogger<BulkCreateUsersHandler> logger, IMediator mediator) : IResultCommandHandler<BulkCreateUsersCommand, BulkOperationResult> {
-  public async Task<CQRS.Result<BulkOperationResult>> Handle(BulkCreateUsersCommand request, CancellationToken cancellationToken) {
+  public async Task<Result<BulkOperationResult>> Handle(BulkCreateUsersCommand request, CancellationToken cancellationToken) {
     var createdUsers = new List<User>();
     var errors = new List<string>();
     var successfulCount = 0;
@@ -53,6 +53,6 @@ public class BulkCreateUsersHandler(ApplicationDbContext context, ILogger<BulkCr
 
     logger.LogInformation("Bulk create completed: {Successful}/{Total} users created. Reason: {Reason}", successfulCount, request.Users.Count, request.Reason ?? "Not specified");
 
-    return CQRS.Result.Success(result);
+    return Result.Success(result);
   }
 }
