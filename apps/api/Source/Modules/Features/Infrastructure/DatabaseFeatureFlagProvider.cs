@@ -308,8 +308,8 @@ public class DatabaseFeatureFlagProvider : FeatureProvider {
         FeatureFlagId = featureFlag.Id,
         UserId = context.UserId,
         TenantId = context.TenantId,
-        IsEnabled = isEnabled,
-        Value = value?.ToString(),
+        WasEnabled = isEnabled,
+        ReturnedValue = value?.ToString(),
         Environment = context.Environment,
         Reason = reason,
         ContextData = JsonSerializer.Serialize(new {
