@@ -119,11 +119,53 @@ public class PermissionService : IPermissionService {
     return permissions;
   }
 
+  public async Task<IEnumerable<PermissionType>> GetGlobalDefaultPermissionsAsync() {
+    var globalDefault = await _context.TenantPermissions.AsNoTracking().FirstOrDefaultAsync(tp => tp.UserId == null && tp.TenantId == null && tp.DeletedAt == null);
+
+    if (globalDefault == null) return Enumerable.Empty<PermissionType>();
+
+    var permissions = new HashSet<PermissionType>();
+    AddPermissionFlags(permissions, globalDefault.Permissions);
+
+    return permissions;
+  }
+
+  public async Task SetGlobalDefaultPermissionsAsync(PermissionType[] permissions) {
+    if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
+
+    var combinedPermissions = permissions.Aggregate((current, next) => current | next);
+
+    var existingPermission = await _context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == null && tp.TenantId == null && tp.DeletedAt == null);
+
+    if (existingPermission != null) {
+      existingPermission.UpdatePermissions(combinedPermissions);
+      _logger.LogInformation("Updated global default permissions: {Permissions}", combinedPermissions);
+    }
+    else {
+      var newPermission = new TenantPermission(null, null, combinedPermissions);
+      _context.TenantPermissions.Add(newPermission);
+      _logger.LogInformation("Created global default permissions: {Permissions}", combinedPermissions);
+    }
+
+    await _context.SaveChangesAsync();
+  }
+
+  public async Task<IEnumerable<PermissionType>> GetTenantDefaultPermissionsAsync(Guid tenantId) {
+    var tenantDefault = await _context.TenantPermissions.AsNoTracking().FirstOrDefaultAsync(tp => tp.UserId == null && tp.TenantId == tenantId && tp.DeletedAt == null);
+
+    if (tenantDefault == null) return Enumerable.Empty<PermissionType>();
+
+    var permissions = new HashSet<PermissionType>();
+    AddPermissionFlags(permissions, tenantDefault.Permissions);
+
+    return permissions;
+  }
+
   #endregion
 
   #region Layer 2: Content-Type Permissions
 
-  public async Task<ContentTypePermission> GrantContentTypePermissionAsync(Guid userId, Guid? tenantId, string contentTypeName, PermissionType[ ] permissions) {
+  public async Task<ContentTypePermission> GrantContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType[] permissions) {
     if (string.IsNullOrWhiteSpace(contentTypeName)) throw new ArgumentException("Content type name cannot be empty", nameof(contentTypeName));
 
     if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
@@ -145,13 +187,13 @@ public class PermissionService : IPermissionService {
     return existingPermission;
   }
 
-  public async Task<bool> HasContentTypePermissionAsync(Guid userId, Guid? tenantId, string contentTypeName, PermissionType permission) {
+  public async Task<bool> HasContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType permission) {
     var contentTypePermission = await _context.ContentTypePermissions.AsNoTracking().FirstOrDefaultAsync(ctp => ctp.UserId == userId && ctp.TenantId == tenantId && ctp.ContentTypeName == contentTypeName && ctp.DeletedAt == null);
 
     return contentTypePermission?.HasPermission(permission) == true;
   }
 
-  public async Task<IEnumerable<PermissionType>> GetContentTypePermissionsAsync(Guid userId, Guid? tenantId, string contentTypeName) {
+  public async Task<IEnumerable<PermissionType>> GetContentTypePermissionsAsync(Guid? userId, Guid? tenantId, string contentTypeName) {
     var permissions = new HashSet<PermissionType>();
 
     var contentTypePermission = await _context.ContentTypePermissions.AsNoTracking().FirstOrDefaultAsync(ctp => ctp.UserId == userId && ctp.TenantId == tenantId && ctp.ContentTypeName == contentTypeName && ctp.DeletedAt == null);
@@ -165,7 +207,7 @@ public class PermissionService : IPermissionService {
 
   #region Layer 3: Resource-Specific Permissions
 
-  public async Task<TPermission> GrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType[ ] permissions)
+  public async Task<TPermission> GrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType[] permissions)
     where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase {
     if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
 
@@ -199,7 +241,7 @@ public class PermissionService : IPermissionService {
     return resourcePermission?.HasPermission(permission) == true;
   }
 
-  public async Task<IEnumerable<PermissionType>> GetResourcePermissionsAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId) where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase {
+  public async Task<IEnumerable<PermissionType>> GetResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid resourceId) where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase {
     var permissions = new HashSet<PermissionType>();
 
     var resourcePermission = await _context.Set<TPermission>().AsNoTracking().FirstOrDefaultAsync(rp => rp.UserId == userId && rp.TenantId == tenantId && rp.ResourceId == resourceId && rp.DeletedAt == null);
