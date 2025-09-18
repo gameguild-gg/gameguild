@@ -1,3 +1,7 @@
+using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild;
+using Microsoft.EntityFrameworkCore;
+
 namespace GameGuild.Modules.Resources.Models;
 
 /// <summary>
@@ -84,7 +88,7 @@ public class ResourceQuota : EntityBase {
   public double GetUsagePercentage() {
     if (!HardLimit.HasValue || HardLimit.Value == 0) return 0;
 
-    return (double) CurrentUsage / HardLimit.Value * 100;
+    return (double)CurrentUsage / HardLimit.Value * 100;
   }
 
   /// <summary>
