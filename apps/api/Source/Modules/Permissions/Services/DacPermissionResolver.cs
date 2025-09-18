@@ -24,7 +24,7 @@ public class DacPermissionResolver : IDacPermissionResolver {
     catch (Exception ex) {
       _logger.LogError(ex, "Error resolving permission {Permission} for user {UserId} in tenant {TenantId}", permission, userId, tenantId);
 
-      return new PermissionResult { IsGranted = false, Source = PermissionSource.None, Reason = "Error during permission resolution", Priority = 0 };
+      return new PermissionResult { IsGranted = false, Source = PermissionNone, Reason = "Error during permission resolution", Priority = 0 };
     }
   }
 
@@ -125,7 +125,7 @@ public class DacPermissionResolver : IDacPermissionResolver {
     catch (Exception ex) {
       _logger.LogError(ex, "Error building permission hierarchy for user {UserId} in tenant {TenantId}", userId, tenantId);
 
-      hierarchy.FinalResult = new PermissionResult { IsGranted = false, Source = PermissionSource.None, Reason = "Error building permission hierarchy", Priority = 0 };
+      hierarchy.FinalResult = new PermissionResult { IsGranted = false, Source = PermissionNone, Reason = "Error building permission hierarchy", Priority = 0 };
 
       return hierarchy;
     }
@@ -168,20 +168,20 @@ public class DacPermissionResolver : IDacPermissionResolver {
   private async Task AddGlobalDefaultLayer(List<PermissionLayer> layers, PermissionType permission) {
     var globalDefaults = await _permissionService.GetGlobalDefaultPermissionsAsync();
 
-    if (globalDefaults.Contains(permission)) { layers.Add(new PermissionLayer { Source = PermissionSource.GlobalDefault, IsGranted = true, IsDefault = true, Priority = 1, Description = "Global default permission" }); }
+    if (globalDefaults.Contains(permission)) { layers.Add(new PermissionLayer { Source = PermissionGlobalDefault, IsGranted = true, IsDefault = true, Priority = 1, Description = "Global default permission" }); }
   }
 
   private async Task AddTenantDefaultLayer(List<PermissionLayer> layers, Guid tenantId, PermissionType permission) {
     var tenantDefaults = await _permissionService.GetTenantDefaultPermissionsAsync(tenantId);
 
-    if (tenantDefaults.Contains(permission)) { layers.Add(new PermissionLayer { Source = PermissionSource.TenantDefault, IsGranted = true, IsDefault = true, Priority = 2, Description = $"Tenant {tenantId} default permission" }); }
+    if (tenantDefaults.Contains(permission)) { layers.Add(new PermissionLayer { Source = PermissionTenantDefault, IsGranted = true, IsDefault = true, Priority = 2, Description = $"Tenant {tenantId} default permission" }); }
   }
 
   private async Task AddContentTypeDefaultLayer(List<PermissionLayer> layers, Guid? tenantId, string contentTypeName, PermissionType permission) {
     var contentTypePermissions = await _permissionService.GetContentTypePermissionsAsync(null, tenantId, contentTypeName);
 
     if (contentTypePermissions.Contains(permission)) {
-      layers.Add(new PermissionLayer { Source = PermissionSource.ContentTypeDefault, IsGranted = true, IsDefault = true, Priority = 3, Description = $"Content type {contentTypeName} default permission" });
+      layers.Add(new PermissionLayer { Source = PermissionContentTypeDefault, IsGranted = true, IsDefault = true, Priority = 3, Description = $"Content type {contentTypeName} default permission" });
     }
   }
 
@@ -189,7 +189,7 @@ public class DacPermissionResolver : IDacPermissionResolver {
     var userTenantPermissions = await _permissionService.GetTenantPermissionsAsync(userId, tenantId);
 
     if (userTenantPermissions.Contains(permission)) {
-      layers.Add(new PermissionLayer { Source = PermissionSource.TenantUser, IsGranted = true, IsDefault = false, Priority = 4, Description = $"User {userId} tenant {tenantId} permission" });
+      layers.Add(new PermissionLayer { Source = PermissionTenantUser, IsGranted = true, IsDefault = false, Priority = 4, Description = $"User {userId} tenant {tenantId} permission" });
     }
   }
 
@@ -197,21 +197,21 @@ public class DacPermissionResolver : IDacPermissionResolver {
     var userContentTypePermissions = await _permissionService.GetContentTypePermissionsAsync(userId, tenantId, contentTypeName);
 
     if (userContentTypePermissions.Contains(permission)) {
-      layers.Add(new PermissionLayer { Source = PermissionSource.ContentTypeUser, IsGranted = true, IsDefault = false, Priority = 5, Description = $"User {userId} content type {contentTypeName} permission" });
+      layers.Add(new PermissionLayer { Source = PermissionContentTypeUser, IsGranted = true, IsDefault = false, Priority = 5, Description = $"User {userId} content type {contentTypeName} permission" });
     }
   }
 
   private async Task AddResourceDefaultLayer<TResource>(List<PermissionLayer> layers, Guid? tenantId, Guid resourceId, PermissionType permission) where TResource : EntityBase {
     var resourceDefaults = await _permissionService.GetResourcePermissionsAsync<ResourcePermission<TResource>, TResource>(null, tenantId, resourceId);
 
-    if (resourceDefaults.Contains(permission)) { layers.Add(new PermissionLayer { Source = PermissionSource.ResourceDefault, IsGranted = true, IsDefault = true, Priority = 6, Description = $"Resource {resourceId} default permission" }); }
+    if (resourceDefaults.Contains(permission)) { layers.Add(new PermissionLayer { Source = PermissionResourceDefault, IsGranted = true, IsDefault = true, Priority = 6, Description = $"Resource {resourceId} default permission" }); }
   }
 
   private async Task AddUserResourceLayer<TResource>(List<PermissionLayer> layers, Guid userId, Guid? tenantId, Guid resourceId, PermissionType permission) where TResource : EntityBase {
     var userResourcePermissions = await _permissionService.GetResourcePermissionsAsync<ResourcePermission<TResource>, TResource>(userId, tenantId, resourceId);
 
     if (userResourcePermissions.Contains(permission)) {
-      layers.Add(new PermissionLayer { Source = PermissionSource.ResourceUser, IsGranted = true, IsDefault = false, Priority = 7, Description = $"User {userId} resource {resourceId} permission" });
+      layers.Add(new PermissionLayer { Source = PermissionResourceUser, IsGranted = true, IsDefault = false, Priority = 7, Description = $"User {userId} resource {resourceId} permission" });
     }
   }
 
@@ -220,7 +220,7 @@ public class DacPermissionResolver : IDacPermissionResolver {
   private static PermissionResult CreateFinalResult(PermissionLayer? effectiveLayer) {
     return new PermissionResult {
       IsGranted = effectiveLayer?.IsGranted == true,
-      Source = effectiveLayer?.Source ?? PermissionSource.None,
+      Source = effectiveLayer?.Source ?? PermissionNone,
       GrantedBy = effectiveLayer?.GrantedBy,
       GrantedAt = effectiveLayer?.GrantedAt,
       ExpiresAt = effectiveLayer?.ExpiresAt,
@@ -232,14 +232,14 @@ public class DacPermissionResolver : IDacPermissionResolver {
 
   private static string GetSourceDescription(PermissionSource source) {
     return source switch {
-      PermissionSource.GlobalDefault => "Global default permissions",
-      PermissionSource.TenantDefault => "Tenant default permissions",
-      PermissionSource.ContentTypeDefault => "Content type default permissions",
-      PermissionSource.TenantUser => "User tenant permissions",
-      PermissionSource.ContentTypeUser => "User content type permissions",
-      PermissionSource.ResourceDefault => "Resource default permissions",
-      PermissionSource.ResourceUser => "User resource permissions",
-      PermissionSource.SystemOverride => "System override",
+      PermissionGlobalDefault => "Global default permissions",
+      PermissionTenantDefault => "Tenant default permissions",
+      PermissionContentTypeDefault => "Content type default permissions",
+      PermissionTenantUser => "User tenant permissions",
+      PermissionContentTypeUser => "User content type permissions",
+      PermissionResourceDefault => "Resource default permissions",
+      PermissionResourceUser => "User resource permissions",
+      PermissionSystemOverride => "System override",
       _ => "Unknown source",
     };
   }
