@@ -38,9 +38,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       return CreatedAtAction(nameof(LocalSignUp), result);
     }
     catch (ValidationException ex) {
-      _logger.LogWarning("Validation failed for sign-up: {ValidationErrors}", string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
+      _logger.LogWarning("Validation failed for sign-up: {ValidationErrors}", string.Join(", ", ex.Errors));
 
-      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
+      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors), Status = StatusCodes.Status400BadRequest });
     }
     catch (InvalidOperationException ex) {
       _logger.LogWarning("Sign-up operation failed: {Message}", ex.Message);
@@ -75,9 +75,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       return Ok(result);
     }
     catch (ValidationException ex) {
-      _logger.LogWarning("Validation failed for sign-in: {ValidationErrors}", string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
+      _logger.LogWarning("Validation failed for sign-in: {ValidationErrors}", string.Join(", ", ex.Errors));
 
-      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
+      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors), Status = StatusCodes.Status400BadRequest });
     }
     catch (UnauthorizedAccessException ex) {
       _logger.LogWarning("Sign-in failed for email: {Email} - {Message}", request.Email, ex.Message);
@@ -111,9 +111,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       return Ok(result);
     }
     catch (ValidationException ex) {
-      _logger.LogWarning("Validation failed for Google ID token sign-in: {ValidationErrors}", string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
+      _logger.LogWarning("Validation failed for Google ID token sign-in: {ValidationErrors}", string.Join(", ", ex.Errors));
 
-      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
+      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors), Status = StatusCodes.Status400BadRequest });
     }
     catch (UnauthorizedAccessException ex) {
       _logger.LogWarning("Google ID token sign-in failed: {Message}", ex.Message);
@@ -153,9 +153,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       return Ok(result);
     }
     catch (ValidationException ex) {
-      _logger.LogWarning("Validation failed for token refresh: {ValidationErrors}", string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
+      _logger.LogWarning("Validation failed for token refresh: {ValidationErrors}", string.Join(", ", ex.Errors));
 
-      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
+      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors), Status = StatusCodes.Status400BadRequest });
     }
     catch (UnauthorizedAccessException ex) {
       _logger.LogWarning("Token refresh failed: {Message}", ex.Message);
@@ -190,9 +190,9 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       return NoContent();
     }
     catch (ValidationException ex) {
-      _logger.LogWarning("Validation failed for token revocation: {ValidationErrors}", string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)));
+      _logger.LogWarning("Validation failed for token revocation: {ValidationErrors}", string.Join(", ", ex.Errors));
 
-      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage)), Status = StatusCodes.Status400BadRequest });
+      return BadRequest(new ProblemDetails { Title = "Validation Error", Detail = string.Join(", ", ex.Errors), Status = StatusCodes.Status400BadRequest });
     }
     catch (UnauthorizedAccessException ex) {
       _logger.LogWarning("Token revocation failed: {Message}", ex.Message);
