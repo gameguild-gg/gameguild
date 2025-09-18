@@ -69,7 +69,7 @@ public class SubscriptionsController : ControllerBase {
     if (subscription == null) return NotFound();
 
     subscription.Activate();
-    _subscriptionRepository.Update(subscription);
+    await _subscriptionRepository.UpdateAsync(subscription, cancellationToken);
     await _subscriptionRepository.SaveChangesAsync(cancellationToken);
 
     return NoContent();
@@ -83,7 +83,7 @@ public class SubscriptionsController : ControllerBase {
     if (subscription == null) return NotFound();
 
     subscription.StartTrial(request.TrialEndDate);
-    _subscriptionRepository.Update(subscription);
+    await _subscriptionRepository.UpdateAsync(subscription, cancellationToken);
     await _subscriptionRepository.SaveChangesAsync(cancellationToken);
 
     return NoContent();
