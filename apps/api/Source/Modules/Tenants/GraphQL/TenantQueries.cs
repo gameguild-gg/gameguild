@@ -72,7 +72,7 @@ public class TenantQueries {
     var query = new GetTenantBySlugQuery(slug, false);
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
+    if (result.IsFailure) throw new GraphQLException(result.Error.Message);
 
     return result.Value;
   }
@@ -89,7 +89,7 @@ public class TenantQueries {
     var query = new GetDeletedTenantsQuery();
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
+    if (result.IsFailure) throw new GraphQLException(result.Error.Message);
 
     return result.Value;
   }
@@ -106,7 +106,7 @@ public class TenantQueries {
     var query = new GetActiveTenantsQuery();
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
+    if (result.IsFailure) throw new GraphQLException(result.Error.Message);
 
     return result.Value;
   }
@@ -123,7 +123,7 @@ public class TenantQueries {
     var query = new SearchTenantsQuery(input.SearchTerm, input.IsActive, input.IncludeDeleted, input.SortBy, input.SortDescending, input.Limit, input.Offset);
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
+    if (result.IsFailure) throw new GraphQLException(result.Error.Message);
 
     return result.Value;
   }
@@ -140,7 +140,7 @@ public class TenantQueries {
     var query = new GetTenantStatisticsQuery();
     var result = await mediator.Send(query);
 
-    if (result.IsFailure) throw new GraphQLException(result.Error.Description);
+    if (result.IsFailure) throw new GraphQLException(result.Error.Message);
 
     return result.Value;
   }

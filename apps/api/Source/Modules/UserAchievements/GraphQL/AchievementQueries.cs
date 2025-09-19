@@ -38,7 +38,7 @@ public class AchievementQueries {
 
     var result = await mediator.Send(query);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Get achievement by ID </summary>
@@ -47,7 +47,7 @@ public class AchievementQueries {
 
     var result = await mediator.Send(query);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Get user's achievements </summary>
@@ -81,7 +81,7 @@ public class AchievementQueries {
 
     var result = await mediator.Send(query);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Get user's achievement progress </summary>
@@ -90,7 +90,7 @@ public class AchievementQueries {
 
     var result = await mediator.Send(query);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Get user's achievement summary </summary>
@@ -99,7 +99,7 @@ public class AchievementQueries {
 
     var result = await mediator.Send(query);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Get achievement leaderboard </summary>
@@ -108,7 +108,7 @@ public class AchievementQueries {
 
     var result = await mediator.Send(query);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Get available achievements for a user </summary>
@@ -117,7 +117,7 @@ public class AchievementQueries {
 
     var result = await mediator.Send(query);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Check achievement prerequisites for a user </summary>
@@ -126,7 +126,7 @@ public class AchievementQueries {
 
     var result = await mediator.Send(query);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Get achievement statistics </summary>
@@ -135,6 +135,6 @@ public class AchievementQueries {
 
     var result = await mediator.Send(query);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 }
