@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using StackExchange.Redis;
 
 namespace GameGuild.Core.Configuration;
 
@@ -13,7 +14,24 @@ public static class HealthCheckConfiguration {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        options ??= new HealthCheckOptions();
+        // Bind configuration to options if not provided
+        if (options == null) {
+            options = new HealthCheckOptions();
+            configuration.GetSection("HealthChecks").Bind(options);
+
+            // Override with environment variables if available
+            var redisConnectionFromEnv = configuration.GetValue<string>("REDIS_CONNECTION_STRING");
+            if (!string.IsNullOrEmpty(redisConnectionFromEnv)) {
+                options.RedisConnectionString = redisConnectionFromEnv;
+            }
+
+            // Allow disabling Redis health check via environment variable
+            var disableRedisCheck = configuration.GetValue<bool?>("DISABLE_REDIS_HEALTH_CHECK");
+            if (disableRedisCheck == true) {
+                options.EnableRedisCheck = false;
+            }
+        }
+
         options.Validate();
 
         var healthChecksBuilder = services.AddHealthChecks();
@@ -29,11 +47,18 @@ public static class HealthCheckConfiguration {
 
         // Redis cache health check
         if (options.EnableRedisCheck && !string.IsNullOrEmpty(options.RedisConnectionString)) {
-            // Note: You'll need to add the StackExchange.Redis.Extensions.AspNetCore.HealthCheck package
-            // healthChecksBuilder.AddRedis(options.RedisConnectionString, 
-            //     name: "redis", 
-            //     failureStatus: HealthStatus.Unhealthy,
-            //     tags: new[] { "cache", "redis", "ready" });
+            // Register Redis connection multiplexer for health check
+            services.AddSingleton<IConnectionMultiplexer>(provider => {
+                try {
+                    return ConnectionMultiplexer.Connect(options.RedisConnectionString);
+                }
+                catch (Exception ex) {
+                    var logger = provider.GetService<ILogger<RedisHealthCheck>>();
+                    logger?.LogWarning(ex, "Failed to connect to Redis for health check: {ConnectionString}", options.RedisConnectionString);
+                    // Return null to allow graceful degradation
+                    return null!;
+                }
+            });
 
             // For now, use a custom Redis health check
             healthChecksBuilder.AddCheck<RedisHealthCheck>(
@@ -80,7 +105,10 @@ public static class HealthCheckConfiguration {
         }
 
         // Register custom health check implementations
-        services.AddSingleton<RedisHealthCheck>();
+        // Only register RedisHealthCheck if Redis is enabled and connection available
+        if (options.EnableRedisCheck) {
+            services.AddSingleton<RedisHealthCheck>();
+        }
         services.AddSingleton<PaymentProviderHealthCheck>();
         services.AddSingleton<KycProviderHealthCheck>();
         services.AddSingleton<MemoryHealthCheck>();
