@@ -1,5 +1,6 @@
 using FluentValidation;
 using GameGuild.CQRS;
+using GameGuild.Modules.Authentication.Services;
 using GameGuild.Modules.Authentication.Validators;
 
 
@@ -18,12 +19,27 @@ public static class AuthModuleDependencyInjection {
   /// <summary> Registers core authentication services. </summary>
   private static IServiceCollection AddAuthServices(this IServiceCollection services) {
     // Core authentication services
-    services.AddScoped<IAuthService, AuthService>();
+    services.AddScoped<IAuthService, EnhancedAuthService>(); // Use enhanced version with security features
     services.AddScoped<IJwtTokenService, JwtTokenService>();
     services.AddScoped<IOAuthService, OAuthService>();
     services.AddScoped<IWeb3Service, Web3Service>();
     services.AddScoped<IEmailVerificationService, EmailVerificationService>();
     services.AddScoped<ITenantAuthService, TenantAuthService>();
+
+    // MFA and session management services
+    services.AddScoped<IMfaService, MfaService>();
+    services.AddScoped<ISessionManagementService, SessionManagementService>();
+    services.AddScoped<IEncryptionService, EncryptionService>();
+
+    // Security services
+    services.AddScoped<IAuthenticationAnomalyService, AuthenticationAnomalyService>();
+    services.AddScoped<IUserEnumerationProtectionService, UserEnumerationProtectionService>();
+
+    // Audit logging service
+    services.AddScoped<IAuditService, AuditService>();
+
+    // HTTP context accessor for IP tracking
+    services.AddHttpContextAccessor();
 
     // HTTP clients for external services
     services.AddHttpClient<IOAuthService, OAuthService>();
@@ -58,6 +74,9 @@ public static class AuthModuleDependencyInjection {
   private static IServiceCollection AddAuthAuthentication(this IServiceCollection services, IConfiguration configuration) {
     // Configure JWT authentication
     services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+
+    // Configure session management options
+    services.Configure<Services.SessionOptions>(configuration.GetSection("SessionManagement"));
 
     // Add JWT authentication configuration
     services.AddAuthJwtConfiguration(configuration);
