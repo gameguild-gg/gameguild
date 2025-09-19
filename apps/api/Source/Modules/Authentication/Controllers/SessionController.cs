@@ -85,7 +85,7 @@ public class SessionController : BaseController {
                 return NotFound("Session not found");
             }
 
-            var success = await _sessionService.TerminateSessionAsync(sessionId, SessionTerminationReason.UserRevoked);
+            var success = await _sessionService.TerminateSessionAsync(sessionId, SessionTerminationReason.UserLogout);
 
             if (!success) {
                 return BadRequest("Failed to terminate session");
@@ -111,7 +111,7 @@ public class SessionController : BaseController {
 
             var terminatedCount = await _sessionService.TerminateAllUserSessionsAsync(
               userId,
-              SessionTerminationReason.UserRevoked,
+              SessionTerminationReason.UserLogout,
               currentSessionId);
 
             _logger.LogInformation("User {UserId} terminated {Count} other sessions", userId, terminatedCount);
@@ -137,7 +137,7 @@ public class SessionController : BaseController {
 
             var terminatedCount = await _sessionService.TerminateAllUserSessionsAsync(
               userId,
-              SessionTerminationReason.UserRevoked);
+              SessionTerminationReason.UserLogout);
 
             _logger.LogInformation("User {UserId} terminated all {Count} sessions", userId, terminatedCount);
 
