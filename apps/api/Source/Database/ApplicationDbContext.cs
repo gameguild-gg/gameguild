@@ -277,6 +277,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     // Configure soft delete global query filters
     modelBuilder.ConfigureSoftDelete();
 
+    // Configure owned value objects for improved domain modeling
+    modelBuilder.ConfigureValueObjects();
+
     // Configure inheritance strategies for content hierarchy
     ConfigureInheritanceStrategies(modelBuilder);
   }
