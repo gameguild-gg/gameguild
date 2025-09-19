@@ -33,7 +33,7 @@ public class AchievementMutations {
 
     var result = await mediator.Send(command);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Update an existing achievement </summary>
@@ -58,7 +58,7 @@ public class AchievementMutations {
 
     var result = await mediator.Send(command);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Delete an achievement </summary>
@@ -88,7 +88,7 @@ public class AchievementMutations {
 
     var result = await mediator.Send(command);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Update achievement progress for a user </summary>
@@ -108,7 +108,7 @@ public class AchievementMutations {
 
     var result = await mediator.Send(command);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Revoke an achievement from a user </summary>
@@ -136,7 +136,7 @@ public class AchievementMutations {
 
     var result = await mediator.Send(command);
 
-    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Description);
+    return result.IsSuccess ? result.Value : throw new GraphQLException(result.Error.Message);
   }
 
   /// <summary> Mark user achievement as notified </summary>

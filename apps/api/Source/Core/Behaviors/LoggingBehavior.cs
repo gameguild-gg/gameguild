@@ -28,7 +28,7 @@ public class LoggingBehavior<TRequest, TResponse>(ILogger<LoggingBehavior<TReque
             requestName,
             stopwatch.ElapsedMilliseconds,
             result.Error.Code,
-            result.Error.Description,
+            result.Error.Message,
             requestId
           );
       }

@@ -33,7 +33,7 @@ public class UserSignUpPostHandler(IMediator mediator, ILogger<UserSignUpPostHan
       var result = await mediator.Send(createPostCommand, cancellationToken);
 
       if (result.IsSuccess) { logger.LogInformation("Successfully created welcome post {PostId} for user {UserId}", result.Value?.Id, notification.UserId); }
-      else { logger.LogWarning("Failed to create welcome post for user {UserId}: {Error}", notification.UserId, result.Error?.Description); }
+      else { logger.LogWarning("Failed to create welcome post for user {UserId}: {Error}", notification.UserId, result.Error?.Message); }
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error creating welcome post for user {UserId} during signup", notification.UserId);
