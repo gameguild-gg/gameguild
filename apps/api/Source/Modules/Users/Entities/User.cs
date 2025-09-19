@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Database;
 using GameGuild.Modules.Credentials;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Users;
@@ -11,19 +11,26 @@ namespace GameGuild.Modules.Users;
 [Index(nameof(Email), IsUnique = true)]
 [Index(nameof(Username), IsUnique = true)]
 public sealed class User : EntityBase, IUser {
-  [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
+  [Required][MaxLength(100)] public string Name { get; set; } = string.Empty;
 
-  [Required] [MaxLength(50)] public string Username { get; set; } = string.Empty;
+  [Required][MaxLength(50)] public string Username { get; set; } = string.Empty;
 
-  [Required] [EmailAddress] [MaxLength(255)] public string Email { get; set; } = string.Empty;
+  // Use EmailAddress value object for strong typing and validation
+  public EmailAddress EmailAddress { get; set; } = new("user@example.com");
+
+  // Legacy Email property for backwards compatibility (mapped to EmailAddress.Value)
+  [NotMapped]
+  public string Email {
+    get => EmailAddress.Value;
+    set => EmailAddress = new EmailAddress(value);
+  }
 
   public bool IsActive { get; set; } = true;
 
   /// <summary>
-  /// Optional phone number
+  /// Phone number as value object with validation and formatting
   /// </summary>
-  [MaxLength(20)]
-  public string? PhoneNumber { get; set; }
+  public PhoneNumber? PhoneNumber { get; set; }
 
   /// <summary>
   /// Date and time when the user was last seen/logged in
@@ -33,14 +40,12 @@ public sealed class User : EntityBase, IUser {
   /// <summary>
   /// Total wallet balance including pending/frozen funds
   /// </summary>
-  [Column(TypeName = "decimal(18,8)")]
-  public decimal Balance { get; set; }
+  public Money Balance { get; set; } = Money.Zero();
 
   /// <summary>
   /// Available balance that can be spent (excludes frozen/pending funds)
   /// </summary>
-  [Column(TypeName = "decimal(18,8)")]
-  public decimal AvailableBalance { get; set; }
+  public Money AvailableBalance { get; set; } = Money.Zero();
 
   /// <summary>
   /// Navigation property to user credentials
@@ -83,7 +88,7 @@ public sealed class User : EntityBase, IUser {
     ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
     Name = name;
-    PhoneNumber = phoneNumber;
+    PhoneNumber = !string.IsNullOrWhiteSpace(phoneNumber) ? new PhoneNumber(phoneNumber) : null;
     Touch();
   }
 
@@ -108,7 +113,13 @@ public sealed class User : EntityBase, IUser {
     ArgumentException.ThrowIfNullOrWhiteSpace(name);
     ArgumentException.ThrowIfNullOrWhiteSpace(username);
 
-    return new User { Email = email, Name = name, Username = username, PhoneNumber = phoneNumber, IsActive = true };
+    return new User {
+      Email = email,
+      Name = name,
+      Username = username,
+      PhoneNumber = !string.IsNullOrWhiteSpace(phoneNumber) ? new PhoneNumber(phoneNumber) : null,
+      IsActive = true
+    };
   }
 
   /// <summary>
@@ -126,7 +137,7 @@ public sealed class User : EntityBase, IUser {
   /// </summary>
   /// <param name="phoneNumber">New phone number</param>
   public void UpdatePhoneNumber(string? phoneNumber) {
-    PhoneNumber = phoneNumber;
+    PhoneNumber = !string.IsNullOrWhiteSpace(phoneNumber) ? new PhoneNumber(phoneNumber) : null;
     Touch();
   }
 }
