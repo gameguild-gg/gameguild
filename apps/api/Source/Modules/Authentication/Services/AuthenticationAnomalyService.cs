@@ -207,7 +207,8 @@ public class AuthenticationAnomalyService : IAuthenticationAnomalyService {
             IsNewDevice = false,
             IsUnusualTime = false,
             RecentSuccessfulLogins = recentAttempts.Count,
-            UniqueLo
+            UniqueLocations = 0,
+            UniqueDevices = 0
         };
 
         if (!recentAttempts.Any()) {
