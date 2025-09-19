@@ -27,7 +27,7 @@ public class UserSignedUpUserProfileHandler(IMediator mediator, ILogger<UserSign
       var result = await mediator.Send(createProfileCommand, cancellationToken);
 
       if (result.IsSuccess) { logger.LogInformation("Successfully created UserProfile for user {UserId}", notification.UserId); }
-      else { logger.LogWarning("Failed to create UserProfile for user {UserId}: {Error}", notification.UserId, result.Error?.Description); }
+      else { logger.LogWarning("Failed to create UserProfile for user {UserId}: {Error}", notification.UserId, result.Error?.Message); }
     }
     catch (Exception ex) {
       logger.LogError(ex, "Error creating UserProfile for user {UserId} during signup", notification.UserId);
