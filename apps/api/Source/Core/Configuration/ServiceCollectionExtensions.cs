@@ -1,5 +1,7 @@
 ﻿using System.Globalization;
+using GameGuild.Core.REST;
 using GameGuild.Database;
+using GameGuild.Extensions;
 using GameGuild.Modules.Features.Infrastructure;
 using GameGuild.Modules.Features.Services;
 using GameGuild.Modules.Posts;
@@ -243,6 +245,35 @@ public static class ServiceCollectionExtensions {
 
     // API Explorer is now configured as part of API Versioning setup
     services.AddEndpointsApiExplorer();
+
+    return services;
+  }
+
+  /// <summary>
+  /// Setup REST conventions including status codes, ETag support, and response standardization
+  /// </summary>
+  public static IServiceCollection SetupRestConventions(this IServiceCollection services, IConfiguration configuration) {
+    // TODO: Restore REST conventions after fixing corrupted files
+    // services.AddRestConventions();
+
+    // Configure enhanced API versioning with REST patterns
+    /*
+    services.AddRestApiVersioning(options => {
+      options.Strategy = ApiVersionStrategy.UrlSegmentAndQuery;
+      options.SupportedVersions = new List<Asp.Versioning.ApiVersion>
+      {
+        new(1, 0),
+        new(1, 1),
+        new(2, 0)
+      };
+      options.DeprecatedVersions = new List<Asp.Versioning.ApiVersion>();
+      options.IncludeVersionInSwagger = true;
+      options.AutoDeprecateOldVersions = false;
+    });
+
+    // Add versioned Swagger documentation
+    services.AddVersionedSwagger();
+    */
 
     return services;
   }
