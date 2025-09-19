@@ -1,0 +1,204 @@
+using GameGuild.Modules.Authentication.Models;
+using GameGuild.Modules.Authentication.Services;
+using GameGuild.Modules.Core.Validation;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+
+namespace GameGuild.Modules.Core.Filters;
+
+/// <summary>
+/// Global filter for input validation and hardening
+/// </summary>
+public class InputValidationFilter : IActionFilter {
+    private readonly IInputSanitizationService _sanitizationService;
+    private readonly IAuditService _auditService;
+    private readonly ILogger<InputValidationFilter> _logger;
+
+    public InputValidationFilter(
+      IInputSanitizationService sanitizationService,
+      IAuditService auditService,
+      ILogger<InputValidationFilter> logger) {
+        _sanitizationService = sanitizationService;
+        _auditService = auditService;
+        _logger = logger;
+    }
+
+    public void OnActionExecuting(ActionExecutingContext context) {
+        // Validate model state
+        if (!context.ModelState.IsValid) {
+            var errors = context.ModelState
+              .Where(x => x.Value?.Errors.Count > 0)
+              .SelectMany(x => x.Value!.Errors)
+              .Select(x => x.ErrorMessage)
+              .ToList();
+
+            _logger.LogWarning("Input validation failed: {Errors}", string.Join(", ", errors));
+
+            // Log security violation for potential injection attempts
+            if (HasSuspiciousContent(context)) {
+                _ = Task.Run(async () => {
+                    try {
+                        await _auditService.LogSecurityViolationAsync(
+                          "InputValidationFailed",
+                          $"Suspicious input detected: {string.Join(", ", errors)}",
+                          GetUserId(context),
+                          new { Errors = errors, Action = context.ActionDescriptor.DisplayName });
+                    }
+                    catch (Exception ex) {
+                        _logger.LogError(ex, "Failed to log security violation");
+                    }
+                });
+            }
+
+            context.Result = new BadRequestObjectResult(new {
+                error = "Invalid input",
+                details = errors
+            });
+            return;
+        }
+
+        // Apply additional hardening
+        ApplyInputHardening(context);
+    }
+
+    public void OnActionExecuted(ActionExecutedContext context) {
+        // No action needed after execution
+    }
+
+    private bool HasSuspiciousContent(ActionExecutingContext context) {
+        var suspiciousPatterns = new[] {
+      "<script", "javascript:", "vbscript:", "onload=", "onerror=",
+      "eval(", "alert(", "document.cookie", "window.location",
+      "drop table", "union select", "' or 1=1", "/* */",
+      "../", "..\\", "%2e%2e", "file://", "gopher://",
+      "data:text/html", "data:application"
+    };
+
+        foreach (var parameter in context.ActionArguments) {
+            if (parameter.Value is string stringValue) {
+                var lowerValue = stringValue.ToLowerInvariant();
+                if (suspiciousPatterns.Any(pattern => lowerValue.Contains(pattern))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void ApplyInputHardening(ActionExecutingContext context) {
+        foreach (var parameter in context.ActionArguments.ToList()) {
+            if (parameter.Value is string stringValue) {
+                // Sanitize string inputs
+                var sanitized = _sanitizationService.SanitizeString(stringValue);
+                if (sanitized != stringValue) {
+                    context.ActionArguments[parameter.Key] = sanitized;
+                    _logger.LogDebug("Sanitized input parameter {Parameter}", parameter.Key);
+                }
+            }
+        }
+    }
+
+    private Guid? GetUserId(ActionExecutingContext context) {
+        var userIdClaim = context.HttpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
+    }
+}
+
+/// <summary>
+/// Configuration options for input validation
+/// </summary>
+public class InputValidationOptions {
+    public bool EnableInputSanitization { get; set; } = true;
+    public bool EnableSuspiciousContentDetection { get; set; } = true;
+    public bool LogSuspiciousActivity { get; set; } = true;
+    public int MaxStringLength { get; set; } = 1000;
+    public int MaxCollectionSize { get; set; } = 100;
+    public string[] AllowedFileExtensions { get; set; } = [".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx"];
+    public long MaxFileSize { get; set; } = 10 * 1024 * 1024; // 10MB
+}
+
+/// <summary>
+/// Middleware for request size limiting
+/// </summary>
+public class RequestSizeLimitMiddleware {
+    private readonly RequestDelegate _next;
+    private readonly ILogger<RequestSizeLimitMiddleware> _logger;
+    private readonly long _maxRequestSize;
+
+    public RequestSizeLimitMiddleware(
+      RequestDelegate next,
+      ILogger<RequestSizeLimitMiddleware> logger,
+      IConfiguration configuration) {
+        _next = next;
+        _logger = logger;
+        _maxRequestSize = configuration.GetValue<long>("InputValidation:MaxRequestSize", 50 * 1024 * 1024); // 50MB default
+    }
+
+    public async Task InvokeAsync(HttpContext context) {
+        if (context.Request.ContentLength > _maxRequestSize) {
+            _logger.LogWarning("Request size {Size} exceeds limit {Limit} from IP {IP}",
+              context.Request.ContentLength, _maxRequestSize, context.Connection.RemoteIpAddress);
+
+            context.Response.StatusCode = 413; // Payload Too Large
+            await context.Response.WriteAsync("Request size exceeds maximum allowed size");
+            return;
+        }
+
+        await _next(context);
+    }
+}
+
+/// <summary>
+/// Filter for pagination validation
+/// </summary>
+public class PaginationValidationFilter : ActionFilterAttribute {
+    public int MaxPageSize { get; set; } = 100;
+    public int DefaultPageSize { get; set; } = 20;
+
+    public override void OnActionExecuting(ActionExecutingContext context) {
+        foreach (var parameter in context.ActionArguments) {
+            if (parameter.Value is BoundedPaginationRequest pagination) {
+                // Ensure pagination limits are respected
+                if (pagination.PageSize > MaxPageSize) {
+                    pagination.PageSize = MaxPageSize;
+                }
+
+                if (pagination.PageSize <= 0) {
+                    pagination.PageSize = DefaultPageSize;
+                }
+
+                if (pagination.Page <= 0) {
+                    pagination.Page = 1;
+                }
+            }
+        }
+
+        base.OnActionExecuting(context);
+    }
+}
+
+/// <summary>
+/// Extension methods for input validation configuration
+/// </summary>
+public static class InputValidationExtensions {
+    public static IServiceCollection AddInputValidation(this IServiceCollection services, IConfiguration configuration) {
+        services.Configure<InputValidationOptions>(configuration.GetSection("InputValidation"));
+        services.AddScoped<IInputSanitizationService, InputSanitizationService>();
+        services.AddScoped<InputValidationFilter>();
+
+        // Add custom model binder for safe enum binding
+        services.Configure<MvcOptions>(options => {
+            options.ModelBinderProviders.Insert(0, new SafeEnumModelBinderProvider());
+            options.Filters.Add<InputValidationFilter>();
+            options.Filters.Add<PaginationValidationFilter>();
+        });
+
+        return services;
+    }
+
+    public static IApplicationBuilder UseInputValidation(this IApplicationBuilder app) {
+        app.UseMiddleware<RequestSizeLimitMiddleware>();
+        return app;
+    }
+}
