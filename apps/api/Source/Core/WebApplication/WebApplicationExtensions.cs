@@ -71,7 +71,7 @@ internal static class WebApplicationExtensions {
     app.UseGraphQLSecurity();
 
     app.UseAuthorization();
-    app.UseRateLimiter();
+    app.UseRateLimiting();
 
     return app;
   }  /// <summary> Configures the complete GameGuild application pipeline. </summary>
