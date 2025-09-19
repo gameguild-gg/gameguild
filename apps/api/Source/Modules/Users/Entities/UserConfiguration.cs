@@ -19,9 +19,21 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User> {
 
     builder.Property(user => user.Email).HasMaxLength(255).IsRequired();
 
-    builder.Property(user => user.Balance).HasColumnType("decimal(18,8)").HasDefaultValue(0m);
+    builder.Property(user => user.Balance)
+           .HasColumnType("decimal(18,8)")
+           .HasDefaultValue(0m)
+           .HasConversion(
+             money => money.Amount, // To database
+             amount => Money.FromDecimal(amount, "USD") // From database - using static method
+           );
 
-    builder.Property(user => user.AvailableBalance).HasColumnType("decimal(18,8)").HasDefaultValue(0m);
+    builder.Property(user => user.AvailableBalance)
+           .HasColumnType("decimal(18,8)")
+           .HasDefaultValue(0m)
+           .HasConversion(
+             money => money.Amount, // To database
+             amount => Money.FromDecimal(amount, "USD") // From database - using static method
+           );
 
     // Optimistic concurrency
     builder.Property(user => user.Version).IsRowVersion();
