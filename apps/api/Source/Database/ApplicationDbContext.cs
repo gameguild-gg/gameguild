@@ -1,5 +1,6 @@
 using System.Reflection;
 using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Authentication.Models;
 using GameGuild.Modules.Billing.Models;
 using GameGuild.Modules.Certificates;
 using GameGuild.Modules.Comments;
@@ -43,6 +44,21 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<Credential> Credentials { get; set; }
 
   public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+  // MFA and Session Management DbSets
+  public DbSet<UserMfaConfiguration> UserMfaConfigurations { get; set; }
+
+  public DbSet<UserSession> UserSessions { get; set; }
+
+  public DbSet<MfaAttempt> MfaAttempts { get; set; }
+
+  public DbSet<TrustedDevice> TrustedDevices { get; set; }
+
+  // Audit Logging DbSet
+  public DbSet<AuditLog> AuditLogs { get; set; }
+
+  // Authentication Security DbSets
+  public DbSet<LoginAttempt> LoginAttempts { get; set; }
 
   public DbSet<Tenant> Tenants { get; set; }
 
