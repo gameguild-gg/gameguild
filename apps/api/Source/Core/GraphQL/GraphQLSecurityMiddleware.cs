@@ -89,7 +89,7 @@ public class GraphQLSecurityMiddleware {
               ? GraphQLQueryAnalysis.Invalid(string.Join("; ", violations))
               : GraphQLQueryAnalysis.Valid(depthAnalysis.MaxDepth, complexityAnalysis.TotalComplexity, complexityAnalysis.FieldCount);
         }
-        catch (GraphQLSyntaxException ex) {
+        catch (Exception ex) when (ex.Message.Contains("syntax")) {
             _logger.LogWarning("Invalid GraphQL syntax: {Error}", ex.Message);
             return GraphQLQueryAnalysis.Invalid($"Invalid GraphQL syntax: {ex.Message}");
         }
