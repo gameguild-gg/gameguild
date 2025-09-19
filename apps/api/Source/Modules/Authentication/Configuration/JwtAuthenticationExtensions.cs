@@ -24,17 +24,17 @@ public static class JwtAuthenticationExtensions {
     jwtOptions.Validate();
 
     services.AddAuthentication(options => {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-              }
+      options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+      options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+      options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    }
             )
             .AddJwtBearer(options => {
-                options.SaveToken = true;
-                options.RequireHttpsMetadata = true; // Enforce HTTPS in production
-                options.TokenValidationParameters = CreateTokenValidationParameters(jwtOptions);
-                options.Events = CreateJwtBearerEvents();
-              }
+              options.SaveToken = true;
+              options.RequireHttpsMetadata = true; // Enforce HTTPS in production
+              options.TokenValidationParameters = CreateTokenValidationParameters(jwtOptions);
+              options.Events = CreateJwtBearerEvents();
+            }
             );
 
     return services;
@@ -128,23 +128,12 @@ public static class JwtAuthenticationExtensions {
   /// Adds authorization policies for different authentication scenarios.
   /// </summary>
   public static IServiceCollection AddAuthorizationPolicies(this IServiceCollection services) {
-    services.AddAuthorization(options => {
-        // Default policy requires authentication
-        options.DefaultPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
-
-        // Policy for public endpoints
-        options.AddPolicy("Public", policy => policy.RequireAssertion(_ => true));
-
-        // Policy for tenant-specific access
-        options.AddPolicy("TenantAccess", policy => policy.RequireAuthenticatedUser().RequireClaim("tenant_id"));
-
-        // Policy for administrative access
-        options.AddPolicy("AdminAccess", policy => policy.RequireAuthenticatedUser().RequireClaim("role", "Admin"));
-
-        // Policy for Web3 authenticated users
-        options.AddPolicy("Web3Access", policy => policy.RequireAuthenticatedUser().RequireClaim("auth_method", "web3"));
-      }
-    );
+    services.AddAuthorizationBuilder()
+        .SetDefaultPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
+        .AddPolicy("Public", policy => policy.RequireAssertion(_ => true))
+        .AddPolicy("TenantAccess", policy => policy.RequireAuthenticatedUser().RequireClaim("tenant_id"))
+        .AddPolicy("AdminAccess", policy => policy.RequireAuthenticatedUser().RequireClaim("role", "Admin"))
+        .AddPolicy("Web3Access", policy => policy.RequireAuthenticatedUser().RequireClaim("auth_method", "web3"));
 
     return services;
   }
