@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.RegularExpressions;
 using GameGuild.Core.Services;
 using Microsoft.Extensions.Options;
 
@@ -8,7 +9,12 @@ namespace GameGuild.Core.Middleware;
 /// Middleware for enforcing rate limits per endpoint, user, and IP address
 /// Integrates with the IRateLimitingService for comprehensive rate limiting
 /// </summary>
-public class RateLimitingMiddleware {
+public partial class RateLimitingMiddleware {
+    [GeneratedRegex(@"/\d+(?=/|$)", RegexOptions.IgnoreCase)]
+    private static partial Regex NumberIdRegex();
+
+    [GeneratedRegex(@"/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?=/|$)", RegexOptions.IgnoreCase)]
+    private static partial Regex GuidIdRegex();
     private readonly RequestDelegate _next;
     private readonly IRateLimitingService _rateLimitingService;
     private readonly RateLimitingOptions _options;
@@ -97,17 +103,9 @@ public class RateLimitingMiddleware {
         path = path.TrimEnd('/');
 
         // Replace common ID patterns with placeholders for better grouping
-        path = System.Text.RegularExpressions.Regex.Replace(
-          path,
-          @"/\d+(?=/|$)",
-          "/{id}",
-          System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        path = NumberIdRegex().Replace(path, "/{id}");
 
-        path = System.Text.RegularExpressions.Regex.Replace(
-          path,
-          @"/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?=/|$)",
-          "/{guid}",
-          System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        path = GuidIdRegex().Replace(path, "/{guid}");
 
         return path.ToLowerInvariant();
     }
@@ -117,14 +115,14 @@ public class RateLimitingMiddleware {
         context.Response.ContentType = "application/json";
 
         // Add rate limit headers
-        context.Response.Headers.Add("X-RateLimit-Limit", "Various limits apply");
-        context.Response.Headers.Add("X-RateLimit-Remaining", "0");
+        context.Response.Headers["X-RateLimit-Limit"] = "Various limits apply";
+        context.Response.Headers["X-RateLimit-Remaining"] = "0";
 
         if (checkResult.RetryAfter.HasValue) {
             var retryAfterSeconds = (int)Math.Ceiling(checkResult.RetryAfter.Value.TotalSeconds);
-            context.Response.Headers.Add("Retry-After", retryAfterSeconds.ToString());
-            context.Response.Headers.Add("X-RateLimit-Reset",
-              DateTimeOffset.UtcNow.Add(checkResult.RetryAfter.Value).ToUnixTimeSeconds().ToString());
+            context.Response.Headers["Retry-After"] = retryAfterSeconds.ToString();
+            context.Response.Headers["X-RateLimit-Reset"] =
+              DateTimeOffset.UtcNow.Add(checkResult.RetryAfter.Value).ToUnixTimeSeconds().ToString();
         }
 
         var response = new {
