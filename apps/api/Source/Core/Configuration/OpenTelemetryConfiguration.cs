@@ -102,7 +102,14 @@ public static class OpenTelemetryConfiguration {
             });
 
         services.AddOpenTelemetry()
-            .ConfigureResource(builder => builder.Merge(resourceBuilder))
+            .ConfigureResource(builder => {
+                // Simplified resource configuration without merge
+                builder.AddService(ServiceName, ServiceVersion)
+                       .AddAttributes([
+                           new KeyValuePair<string, object>("service.instance.id", Environment.MachineName),
+                           new KeyValuePair<string, object>("service.namespace", "GameGuild")
+                       ]);
+            })
             .WithTracing(tracingBuilder => {
                 tracingBuilder
                     .AddSource(CqrsActivitySource.Name)
@@ -146,9 +153,9 @@ public static class OpenTelemetryConfiguration {
                 metricsBuilder
                     .AddMeter(ApplicationMeter.Name)
                     .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddRuntimeInstrumentation()
-                    .AddProcessInstrumentation();
+                    .AddHttpClientInstrumentation();
+                // .AddRuntimeInstrumentation()  // DISABLED: Method doesn't exist in current OpenTelemetry version
+                // .AddProcessInstrumentation();  // DISABLED: Method doesn't exist in current OpenTelemetry version
 
                 // Configure exporters based on options
                 if (options.EnableConsoleExporter) {
