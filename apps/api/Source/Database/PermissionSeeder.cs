@@ -22,6 +22,11 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
   private readonly ISimplePermissionService _permissionService = permissionService;
 
   public async Task SeedDefaultRoleTemplatesAsync() {
+    // TEMPORARILY DISABLED: RoleTemplate methods commented out due to type conflicts
+    _logger.LogInformation("RoleTemplate seeding temporarily disabled due to type conflicts");
+    return;
+
+    /*
     try {
       // Check if we already have role templates
       var existingRoles = await _permissionService.GetRoleTemplatesAsync().ConfigureAwait(false);
@@ -214,5 +219,6 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
 
       throw;
     }
+    */
   }
 }
