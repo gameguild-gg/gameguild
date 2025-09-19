@@ -435,15 +435,32 @@ public static class ServiceCollectionExtensions {
     // Build database options from configuration
     var dbOptions = InfrastructureConfiguration.CreateDatabaseOptions(configuration);
 
-    // Add DbContextFactory for GraphQL DataLoaders (must be registered first)
+    // Configure pooling size based on environment
+    var poolSize = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") switch {
+      "Development" => 16,  // Lower for development
+      "Testing" => 8,       // Even lower for tests
+      _ => 64               // Production default
+    };
+
+    // Add DbContextPool for improved performance and reduced allocations
+    services.AddDbContextPool<ApplicationDbContext>(options => {
+      InfrastructureConfiguration.ConfigureDbContext(options, dbOptions);
+
+      // Enable sensitive data logging only in development for pooled contexts
+      if (dbOptions.EnableSensitiveDataLogging) {
+        options.EnableSensitiveDataLogging();
+      }
+
+      // Enable query splitting for better performance with complex includes
+      options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+    }, poolSize);
+
+    // Add DbContextFactory for GraphQL DataLoaders (compatible with pooling)
     services.AddDbContextFactory<ApplicationDbContext>(options => {
       InfrastructureConfiguration.ConfigureDbContext(options, dbOptions);
-    });
 
-    // Add regular DbContext using the factory (ensures compatible lifetimes)
-    services.AddScoped<ApplicationDbContext>(provider => {
-      var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
-      return factory.CreateDbContext();
+      // DataLoader contexts also benefit from query splitting
+      options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
     });
 
     return services;
