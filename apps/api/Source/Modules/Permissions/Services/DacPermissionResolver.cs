@@ -1,4 +1,5 @@
 using GameGuild.Core.Domain.Permissions;
+using GameGuild.Core.Logging;
 
 namespace GameGuild.Core.Infrastructure.Permissions;
 
@@ -14,10 +15,19 @@ public class DacPermissionResolver : IDacPermissionResolver {
   }
 
   public async Task<PermissionResult> ResolvePermissionAsync<TResource>(Guid userId, Guid? tenantId, PermissionType permission, Guid? resourceId = null, string? contentTypeName = null) where TResource : EntityBase {
+    using var userContext = LoggingExtensions.WithUserContext(userId, tenantId);
+    using var permissionContext = LoggingExtensions.WithPermissionContext(permission.ToString(), typeof(TResource).Name, resourceId);
+
     try {
+      _logger.LogDebug("Starting permission resolution for {Permission} on {ResourceType}", permission, typeof(TResource).Name);
+
       var hierarchy = await GetPermissionHierarchyAsync<TResource>(userId, tenantId, permission, resourceId, contentTypeName);
 
-      _logger.LogDebug("Permission {Permission} resolved for user {UserId} in tenant {TenantId}: {IsGranted} from {Source}", permission, userId, tenantId, hierarchy.FinalResult.IsGranted, hierarchy.FinalResult.Source);
+      _logger.LogInformation("Permission {Permission} resolved: {IsGranted} from {Source} (Priority: {Priority})", permission, hierarchy.FinalResult.IsGranted, hierarchy.FinalResult.Source, hierarchy.FinalResult.Priority);
+
+      if (!hierarchy.FinalResult.IsGranted) {
+        _logger.LogWarning("Permission {Permission} denied: {Reason}", permission, hierarchy.FinalResult.Reason);
+      }
 
       return hierarchy.FinalResult;
     }
@@ -66,18 +76,24 @@ public class DacPermissionResolver : IDacPermissionResolver {
   }
 
   public async Task<bool> CanGrantPermissionsAsync(Guid grantorUserId, Guid? tenantId, PermissionType[] permissions, Guid? resourceId = null, string? contentTypeName = null) {
+    using var userContext = LoggingExtensions.WithUserContext(grantorUserId, tenantId);
+
     try {
+      _logger.LogDebug("Checking if user can grant {PermissionCount} permissions", permissions.Length);
+
       // User can only grant permissions they have themselves
       foreach (var permission in permissions) {
         var canGrant = await HasPermissionInContext(grantorUserId, tenantId, permission, resourceId, contentTypeName);
 
         if (!canGrant) {
-          _logger.LogWarning("User {UserId} attempted to grant permission {Permission} they don't have in tenant {TenantId}", grantorUserId, permission, tenantId);
-
+          _logger.LogWarning("User cannot grant permission {Permission} - user lacks this permission", permission);
           return false;
         }
+
+        _logger.LogDebug("User can grant permission {Permission}", permission);
       }
 
+      _logger.LogInformation("User can grant all {PermissionCount} requested permissions", permissions.Length);
       return true;
     }
     catch (Exception ex) {
