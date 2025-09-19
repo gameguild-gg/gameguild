@@ -9,23 +9,17 @@ namespace GameGuild.Services;
 /// <summary> Simple permission service - roles are just templates that create individual user permissions </summary>
 public interface ISimplePermissionService {
   // Role Template Management - TEMPORARILY DISABLED DUE TO TYPE CONFLICTS
-  // Task<RoleTemplate> CreateRoleTemplateAsync(string name, string description, List<PermissionTemplate> permissions);
+  // Task<CoreRoleTemplate> CreateRoleTemplateAsync(string name, string description, List<PermissionTemplate> permissions);
+  // Task<CoreRoleTemplate> UpdateRoleTemplateAsync(string name, string description, List<PermissionTemplate> permissions);
+  // Task<CoreRoleTemplate> UpdateRoleTemplateAsync(string currentName, string newName, string description, List<PermissionTemplate> permissions);
+  // Task<CoreRoleTemplate> UpdateRoleTemplateAsync(Guid id, string name, string description, List<PermissionTemplate> permissions);
 
-  // Task<RoleTemplate> UpdateRoleTemplateAsync(string name, string description, List<PermissionTemplate> permissions);
+  Task<bool> DeleteRoleTemplateAsync(string name);
+  Task<bool> DeleteRoleTemplateAsync(Guid id);
 
-  // Task<RoleTemplate> UpdateRoleTemplateAsync(string currentName, string newName, string description, List<PermissionTemplate> permissions);
-
-  // Task<RoleTemplate> UpdateRoleTemplateAsync(Guid id, string name, string description, List<PermissionTemplate> permissions);
-
-  // Task<bool> DeleteRoleTemplateAsync(string name);
-
-  // Task<bool> DeleteRoleTemplateAsync(Guid id);
-
-  // Task<List<RoleTemplate>> GetRoleTemplatesAsync();
-
-  // Task<RoleTemplate?> GetRoleTemplateAsync(string name);
-
-  // Task<RoleTemplate?> GetRoleTemplateAsync(Guid id);
+  // Task<List<CoreRoleTemplate>> GetRoleTemplatesAsync();
+  // Task<CoreRoleTemplate?> GetRoleTemplateAsync(string name);
+  // Task<CoreRoleTemplate?> GetRoleTemplateAsync(Guid id);
 
   // User Role Assignment
   Task AssignRoleToUserAsync(Guid userId, Guid? tenantId, string roleName, DateTime? expiresAt = null);
@@ -56,98 +50,48 @@ public class SimplePermissionService(ApplicationDbContext context, ILogger<Simpl
 
   private readonly ILogger<SimplePermissionService> _logger = logger;
 
-  // ===== ROLE TEMPLATE MANAGEMENT - TEMPORARILY DISABLED DUE TO TYPE CONFLICTS =====
+  // ===== ROLE TEMPLATE MANAGEMENT =====
+  // Most methods temporarily disabled due to type conflicts between Core and Permissions RoleTemplate entities
 
-  // public async Task<RoleTemplate> CreateRoleTemplateAsync(string name, string description, List<PermissionTemplate> permissions) {
-  //   var existingRole = await _context.RoleTemplates.FirstOrDefaultAsync(r => r.Name == name);
-  //
-  //   if (existingRole != null) { throw new InvalidOperationException($"Role template '{name}' already exists"); }
-  //
-  //   var roleTemplate = new RoleTemplate { Name = name, Description = description, PermissionTemplates = permissions, IsSystemRole = false };
-  //
-  //   _context.RoleTemplates.Add(roleTemplate);
-  //   await _context.SaveChangesAsync();
-  //
-  //   _logger.LogInformation("Created role template '{RoleName}' with {PermissionCount} permissions", name, permissions.Count);
-  //
-  //   return roleTemplate;
-  // }
+  public async Task<bool> DeleteRoleTemplateAsync(string name) {
+    var roleTemplate = await _context.RoleTemplates.FirstOrDefaultAsync(r => r.Name == name);
 
-  // public async Task<RoleTemplate> UpdateRoleTemplateAsync(string name, string description, List<PermissionTemplate> permissions) {
-  //   _logger.LogInformation("UpdateRoleTemplateAsync (simple) called with name: '{Name}', description: '{Description}', permissions count: {Count}", name, description, permissions.Count);
-  //
-  //   var roleTemplate = await _context.RoleTemplates.FirstOrDefaultAsync(r => r.Name == name);
-  //
-  //   if (roleTemplate == null) {
-  //     _logger.LogWarning("Role template '{Name}' not found in database", name);
-  //
-  //     throw new InvalidOperationException($"Role template '{name}' not found");
-  //   }
-  //
-  //   if (roleTemplate.IsSystemRole) { throw new InvalidOperationException($"Cannot modify system role '{name}'"); }
-  //
-  //   roleTemplate.Description = description;
-  //   roleTemplate.PermissionTemplates = permissions;
-  //
-  //   // Explicitly mark the entity as modified to ensure EF tracks the JSON changes
-  //   _context.Entry(roleTemplate).Property(r => r.PermissionTemplatesJson).IsModified = true;
-  //
-  //   _logger.LogInformation("Before SaveChanges (simple update) - Role: {Name}, Description: {Description}, PermissionCount: {Count}", roleTemplate.Name, roleTemplate.Description, permissions.Count);
-  //
-  //   await _context.SaveChangesAsync();
-  //
-  //   _logger.LogInformation("Updated role template '{RoleName}' with {PermissionCount} permissions", name, permissions.Count);
-  //
-  //   // Verify the change was persisted
-  //   var verifyRole = await _context.RoleTemplates.FirstOrDefaultAsync(r => r.Name == name);
-  //   _logger.LogInformation("Verification (simple update) - Persisted role: {Name}, Description: {Description}, PermissionCount: {Count}", verifyRole?.Name, verifyRole?.Description, verifyRole?.PermissionTemplates?.Count);
-  //
-  //   return roleTemplate;
-  // }
+    if (roleTemplate == null) { return false; }
 
-  // public async Task<RoleTemplate> UpdateRoleTemplateAsync(string currentName, string newName, string description, List<PermissionTemplate> permissions) {
-  //   var roleTemplate = await _context.RoleTemplates.FirstOrDefaultAsync(r => r.Name == currentName);
-  //
-  //   if (roleTemplate == null) { throw new InvalidOperationException($"Role template '{currentName}' not found"); }
-  //
-  //   if (roleTemplate.IsSystemRole) { throw new InvalidOperationException($"Cannot modify system role '{currentName}'"); }
-  //
-  //   // Check if new name conflicts with existing role (only if name is changing)
-  //   if (currentName != newName) {
-  //     var existingRole = await _context.RoleTemplates.FirstOrDefaultAsync(r => r.Name == newName);
-  //
-  //     if (existingRole != null) { throw new InvalidOperationException($"Role template '{newName}' already exists"); }
-  //
-  //     roleTemplate.Name = newName;
-  //   }
-  //
-  //   roleTemplate.Description = description;
-  //   roleTemplate.PermissionTemplates = permissions;
-  //
-  //   // Explicitly mark the entity as modified to ensure EF tracks the JSON changes
-  //   _context.Entry(roleTemplate).Property(r => r.PermissionTemplatesJson).IsModified = true;
-  //
-  //   _logger.LogInformation("Before SaveChanges (name change) - Role: {Name}, Description: {Description}, PermissionCount: {Count}", roleTemplate.Name, roleTemplate.Description, permissions.Count);
-  //
-  //   await _context.SaveChangesAsync();
-  //
-  //   _logger.LogInformation("After SaveChanges - Updated role template '{CurrentName}' to '{NewName}' with {PermissionCount} permissions", currentName, newName, permissions.Count);
-  //
-  //   // Verify the change was persisted
-  //   var verifyRole = await _context.RoleTemplates.FirstOrDefaultAsync(r => r.Name == roleTemplate.Name);
-  //   _logger.LogInformation("Verification - Persisted role: {Name}, Description: {Description}, PermissionCount: {Count}", verifyRole?.Name, verifyRole?.Description, verifyRole?.PermissionTemplates?.Count);
-  //
-  //   return roleTemplate;
-  // }
+    if (roleTemplate.IsSystemRole) { throw new InvalidOperationException($"Cannot delete system role '{name}'"); }
 
-  // public async Task<bool> DeleteRoleTemplateAsync(string name) {
-  //   var roleTemplate = await _context.RoleTemplates.FirstOrDefaultAsync(r => r.Name == name);
-  //
-  //   if (roleTemplate == null) return false;
-  //
-  //   if (roleTemplate.IsSystemRole) { throw new InvalidOperationException($"Cannot delete system role '{name}'"); }
-  //
-  //   // Check if any users are assigned to this role
+    // Check if any users are assigned to this role
+    var hasAssignments = await _context.UserRoleAssignments.AnyAsync(r => r.RoleName == name && r.IsActive);
+
+    if (hasAssignments) { throw new InvalidOperationException($"Cannot delete role '{name}' because users are still assigned to it"); }
+
+    _context.RoleTemplates.Remove(roleTemplate);
+    await _context.SaveChangesAsync();
+
+    _logger.LogInformation("Deleted role template '{RoleName}'", name);
+
+    return true;
+  }
+
+  public async Task<bool> DeleteRoleTemplateAsync(Guid id) {
+    var roleTemplate = await _context.RoleTemplates.FirstOrDefaultAsync(r => r.Id == id);
+
+    if (roleTemplate == null) { return false; }
+
+    if (roleTemplate.IsSystemRole) { throw new InvalidOperationException($"Cannot delete system role '{roleTemplate.Name}'"); }
+
+    // Check if any users are assigned to this role
+    var hasAssignments = await _context.UserRoleAssignments.AnyAsync(r => r.RoleName == roleTemplate.Name && r.IsActive);
+
+    if (hasAssignments) { throw new InvalidOperationException($"Cannot delete role '{roleTemplate.Name}' because users are still assigned to it"); }
+
+    _context.RoleTemplates.Remove(roleTemplate);
+    await _context.SaveChangesAsync();
+
+    _logger.LogInformation("Deleted role template with ID '{Id}' (name: '{Name}')", id, roleTemplate.Name);
+
+    return true;
+  }
   //   var hasAssignments = await _context.UserRoleAssignments.AnyAsync(r => r.RoleName == name && r.IsActive);
   //
   //   if (hasAssignments) { throw new InvalidOperationException($"Cannot delete role '{name}' because users are still assigned to it"); }
