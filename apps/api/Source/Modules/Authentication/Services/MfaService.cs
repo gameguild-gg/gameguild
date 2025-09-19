@@ -136,7 +136,7 @@ public class MfaService : IMfaService {
 
             _logger.LogInformation("MFA setup completed for user {UserId}", userId);
 
-            return MfaVerificationResult.Success("MFA enabled successfully", backupCodes);
+            return MfaVerificationResult.Success("MFA enabled successfully", backupCodes.ToArray());
         }
         catch (Exception ex) {
             _logger.LogError(ex, "Failed to complete MFA setup for user {UserId}", userId);
