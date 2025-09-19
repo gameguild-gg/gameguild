@@ -1,3 +1,8 @@
+using GameGuild.Core.Configuration;
+using GameGuild.Core.GraphQL;
+using GameGuild.Core.Middleware;
+using GameGuild.Core.REST;
+
 namespace GameGuild;
 
 /// <summary> Extension methods for WebApplication to configure the request pipeline and application concerns. </summary>
@@ -33,23 +38,52 @@ internal static class WebApplicationExtensions {
   public static WebApplication ConfigureCommonPipeline(this WebApplication app) {
     ArgumentNullException.ThrowIfNull(app);
 
+    // Add correlation ID middleware very early in pipeline
+    app.UseCorrelationId();
+
+    // Add comprehensive request logging after correlation ID
+    app.UseRequestLogging(options => {
+      options.LogRequestHeaders = app.Environment.IsDevelopment();
+      options.LogResponseHeaders = app.Environment.IsDevelopment();
+      options.LogRequestBody = app.Environment.IsDevelopment();
+      options.SlowRequestThresholdMs = app.Environment.IsDevelopment() ? 1000 : 2000;
+    });
+
+    // Add global exception handling after logging but before other middleware
+    app.UseGlobalExceptionHandling();
+
+    // TODO: Restore REST conventions after fixing corrupted files
+    // app.UseRestConventions();
+    // app.UseRestApiVersioning();
+
     app.UseHttpsRedirection();
     app.UseRouting();
     app.UseCors();
     app.UseAuthentication();
+
+    // Use cookie policy for secure cookie configuration
+    app.UseCookiePolicy();
+
+    // Add custom rate limiting middleware after authentication but before authorization
+    app.UseRateLimiting();
+
+    // Add GraphQL security middleware for complexity/depth analysis
+    app.UseGraphQLSecurity();
+
     app.UseAuthorization();
     app.UseRateLimiter();
 
     return app;
-  }
-
-  /// <summary> Configures the complete GameGuild application pipeline. </summary>
-  /// <param name="app"> The web application </param>
-  /// <returns> The web application for chaining </returns>
+  }  /// <summary> Configures the complete GameGuild application pipeline. </summary>
+     /// <param name="app"> The web application </param>
+     /// <returns> The web application for chaining </returns>
   public static WebApplication ConfigurePipeline(this WebApplication app) {
     ArgumentNullException.ThrowIfNull(app);
 
     app = app.ConfigureDevelopmentPipeline().ConfigureProductionPipeline().ConfigureCommonPipeline().UseOpenApi();
+
+    // Map health check endpoints
+    app.UseApplicationHealthChecks();
 
     // Map controller endpoints
     app.MapControllers();
