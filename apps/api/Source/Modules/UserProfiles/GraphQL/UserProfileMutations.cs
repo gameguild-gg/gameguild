@@ -16,7 +16,7 @@ public class UserProfileMutations {
 
     var result = await mediator.Send(command);
 
-    if (!result.IsSuccess) throw new GraphQLException(result.Error.Description);
+    if (!result.IsSuccess) throw new GraphQLException(result.Error.Message);
 
     return result.Value;
   }
@@ -27,7 +27,7 @@ public class UserProfileMutations {
 
     var result = await mediator.Send(command);
 
-    if (!result.IsSuccess) throw new GraphQLException(result.Error.Description);
+    if (!result.IsSuccess) throw new GraphQLException(result.Error.Message);
 
     return result.Value;
   }
@@ -38,7 +38,7 @@ public class UserProfileMutations {
 
     var result = await mediator.Send(command);
 
-    if (!result.IsSuccess) throw new GraphQLException(result.Error.Description);
+    if (!result.IsSuccess) throw new GraphQLException(result.Error.Message);
 
     return result.Value;
   }
@@ -49,7 +49,7 @@ public class UserProfileMutations {
 
     var result = await mediator.Send(command);
 
-    if (!result.IsSuccess) throw new GraphQLException(result.Error.Description);
+    if (!result.IsSuccess) throw new GraphQLException(result.Error.Message);
 
     return result.Value;
   }
