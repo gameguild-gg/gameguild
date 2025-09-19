@@ -210,6 +210,7 @@ public class RateLimitingService : IRateLimitingService {
     private RateLimitCheckResult CheckMemoryRateLimit(string key, int requestsPerMinute, int burstSize, string reason) {
         var window = _memoryCache.GetOrCreate($"{key}:window", entry => {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
+            entry.Size = 1; // Each rate limit window counts as 1 unit for memory management
             return new RateLimitWindow();
         })!;
 
@@ -278,6 +279,7 @@ public class RateLimitingService : IRateLimitingService {
     private void RecordMemoryRequest(string key, int requestsPerMinute, int burstSize) {
         var window = _memoryCache.GetOrCreate($"{key}:window", entry => {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
+            entry.Size = 1; // Each rate limit window counts as 1 unit for memory management
             return new RateLimitWindow();
         })!;
 
