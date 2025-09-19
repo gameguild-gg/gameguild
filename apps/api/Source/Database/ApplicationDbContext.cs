@@ -88,7 +88,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<ResourceLocalization> ResourceLocalizations { get; set; }
 
   // Simplified Permission System DbSets
-  public DbSet<RoleTemplate> RoleTemplates { get; set; }
+  public DbSet<GameGuild.Source.Core.Tenants.RoleTemplate> RoleTemplates { get; set; }
 
   public DbSet<UserRoleAssignment> UserRoleAssignments { get; set; }
 
