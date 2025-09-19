@@ -1,5 +1,6 @@
 using System.Reflection;
 using GameGuild.Authorization.Identity;
+using GameGuild.Core.Configuration;
 using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.Database;
@@ -122,6 +123,9 @@ public static class DependencyInjection {
     // Add CQRS services (handlers, behaviors, etc.)
     services.AddCQRS(assemblies);
 
+    // Add telemetry pipeline behavior for CQRS operations
+    services.AddTransient(typeof(IPipelineBehavior<,>), typeof(Core.Behaviors.TelemetryBehavior<,>));
+
     // Core infrastructure services are now registered in the Infrastructure Layer
     // This ensures they're available when modules are registered
 
@@ -139,8 +143,20 @@ public static class DependencyInjection {
     // Register core infrastructure services FIRST (required by modules)
     services.AddCoreInfrastructure();
 
+    // Register core business services
+    services.AddCoreServices();
+
     // Register database context
     ServiceCollectionExtensions.AddDatabaseContext(services, configuration);
+
+    // Add OpenTelemetry observability
+    services.AddOpenTelemetryObservability(configuration);
+
+    // Add health checks
+    services.AddApplicationHealthChecks(configuration);
+
+    // Add telemetry services
+    services.AddScoped<Core.Telemetry.IPermissionTelemetryService, Core.Telemetry.PermissionTelemetryService>();
 
     // Register repositories
     // TODO: Enable when repository implementations are ready
