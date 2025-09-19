@@ -206,7 +206,9 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<Program?> Handle(GetProgramByIdQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting program by ID: {ProgramId}", request.Id);
 
-    var query = context.Programs.Where(p => p.Id == request.Id && p.DeletedAt == null);
+    var query = context.Programs
+      .AsNoTracking() // Read-only query optimization
+      .Where(p => p.Id == request.Id && p.DeletedAt == null);
 
     if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted));
 
@@ -227,7 +229,9 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<Program?> Handle(GetProgramBySlugQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting program by slug: {Slug}", request.Slug);
 
-    var query = context.Programs.Where(p => p.Slug == request.Slug && p.DeletedAt == null);
+    var query = context.Programs
+      .AsNoTracking() // Read-only query optimization
+      .Where(p => p.Slug == request.Slug && p.DeletedAt == null);
 
     if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted));
 
@@ -250,7 +254,9 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<IEnumerable<ProgramContent>> Handle(GetProgramContentQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting content for program: {ProgramId}", request.ProgramId);
 
-    var query = context.ProgramContents.Where(pc => pc.ProgramId == request.ProgramId && !pc.IsDeleted);
+    var query = context.ProgramContents
+      .AsNoTracking() // Read-only query optimization
+      .Where(pc => pc.ProgramId == request.ProgramId && !pc.IsDeleted);
 
     if (request.OnlyVisible) {
       query = query.Where(pc => pc.Visibility == Visibility.Published); // Fixed to use ProgramContent's own properties
