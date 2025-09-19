@@ -3,8 +3,8 @@ using GameGuild.CQRS;
 namespace GameGuild;
 
 /// <summary>
-/// Simplified validation behavior that converts FluentValidation failures to Result<T> with Error.
-/// No more exceptions for business logic - only Result<Error> patterns.
+/// MediatR pipeline behavior that converts FluentValidation failures to Result<T> with Error.
+/// Uses the modern Result<T> pattern instead of throwing exceptions for validation failures.
 /// </summary>
 public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IBaseRequest {
