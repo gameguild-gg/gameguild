@@ -78,7 +78,9 @@ public class TestingLabPermissionController : ControllerBase {
   public async Task<ActionResult> DeleteTestingLabRoleTemplateByName(string name) {
     try {
       _logger.LogInformation("Attempting to delete TestingLab role template by name '{Name}'", name);
-      var deleted = await _permissionService.DeleteRoleTemplateAsync(name);
+      // TODO: Uncomment when DeleteRoleTemplateAsync is available in ISimplePermissionService
+      // var deleted = await _permissionService.DeleteRoleTemplateAsync(name);
+      var deleted = false; // Temporary stub
 
       if (!deleted) { return NotFound($"Role template with name '{name}' not found"); }
 

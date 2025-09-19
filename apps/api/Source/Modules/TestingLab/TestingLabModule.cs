@@ -1,4 +1,7 @@
 using GameGuild.Core.Modules;
+using GameGuild.Modules.TestingLab;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Source.Modules.TestingLab;
 
@@ -16,13 +19,12 @@ public class TestingLabModule : ModuleBase {
     base.ConfigureServices(services, configuration);
 
     // Register TestingLab repositories
-    // Note: Service registrations will be added based on actual available types
-    // services.AddScoped<ITestingRequestRepository, TestingRequestRepository>();
-    // services.AddScoped<ITestingLocationRepository, TestingLocationRepository>();
+    services.AddScoped<ITestingRequestRepository, TestingRequestRepository>();
+    services.AddScoped<ITestingLocationRepository, TestingLocationRepository>();
 
     // Register TestingLab services  
-    // services.AddScoped<ITestingRequestService, TestingRequestService>();
-    // services.AddScoped<ITestingSessionService, TestingSessionService>();
+    services.AddScoped<ITestingRequestService, TestingRequestService>();
+    services.AddScoped<ITestingSessionService, TestingSessionService>();
 
     // CQRS handlers are automatically registered by assembly scanning
 
