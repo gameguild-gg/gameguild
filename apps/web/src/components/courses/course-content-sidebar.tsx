@@ -90,7 +90,7 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '', isMobile
             : "hover:bg-muted"
         ) : (
           isActive
-            ? "bg-primary text-primary-foreground"
+            ? "bg-accent/80 text-accent-foreground font-medium border border-accent/40"
             : "hover:bg-muted/50"
         )
       )} style={{ paddingLeft: `${paddingLeft + 12}px` }}>
