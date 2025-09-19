@@ -1,3 +1,5 @@
+using GameGuild.Core.Configuration;
+
 namespace GameGuild;
 
 public class PresentationLayerOptions {
@@ -49,6 +51,16 @@ public class PresentationLayerOptions {
 
   public bool EnableAuthentication { get; set; } = true;
 
+  /// <summary>
+  /// Enable cookie security features (secure cookie configuration, HttpOnly, SameSite policies)
+  /// </summary>
+  public bool EnableCookieSecurity { get; set; } = true;
+
+  /// <summary>
+  /// Cookie security configuration options
+  /// </summary>
+  public CookieSecurityOptions CookieSecurity { get; set; } = new();
+
   public bool EnableAuthorization { get; set; } = true;
 
   public bool EnableResponseCompression { get; set; } = true;
@@ -60,6 +72,26 @@ public class PresentationLayerOptions {
   public bool EnableLocalization { get; set; }
 
   public bool EnableModelValidation { get; set; } = true;
+
+  /// <summary>
+  /// Enable FluentValidation features (validation pipeline behavior)
+  /// </summary>
+  public bool EnableFluentValidation { get; set; } = true;
+
+  /// <summary>
+  /// FluentValidation configuration options
+  /// </summary>
+  public FluentValidationOptions FluentValidation { get; set; } = new();
+
+  /// <summary>
+  /// Enable error handling features (global exception handling, ProblemDetails)
+  /// </summary>
+  public bool EnableErrorHandling { get; set; } = true;
+
+  /// <summary>
+  /// Error handling configuration options
+  /// </summary>
+  public ErrorHandlingOptions ErrorHandling { get; set; } = new();
 
   public bool EnableHealthChecks { get; set; } = true;
 
@@ -82,6 +114,9 @@ public class PresentationLayerOptions {
     ApiVersioning?.Validate();
     OpenApi?.Validate();
     Authentication?.Validate();
+    CookieSecurity?.Validate();
     FeatureFlags?.Validate();
+    FluentValidation?.Validate();
+    ErrorHandling?.Validate();
   }
 }
