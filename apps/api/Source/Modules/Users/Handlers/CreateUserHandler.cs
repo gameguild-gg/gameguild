@@ -25,7 +25,7 @@ public class CreateUserHandler(ApplicationDbContext context, ILogger<CreateUserH
     // Normalize negative balance to zero - business rule
     var normalizedBalance = Math.Max(0, request.InitialBalance);
 
-    var user = new User { Name = request.Name, Username = uniqueUsername, Email = request.Email, IsActive = request.IsActive, Balance = normalizedBalance, AvailableBalance = normalizedBalance };
+    var user = new User { Name = request.Name, Username = uniqueUsername, Email = request.Email, IsActive = request.IsActive, Balance = Money.FromDecimal(normalizedBalance), AvailableBalance = Money.FromDecimal(normalizedBalance) };
 
     _ = context.Users.Add(user);
     _ = await context.SaveChangesAsync(cancellationToken);

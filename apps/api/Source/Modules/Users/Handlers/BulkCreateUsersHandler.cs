@@ -28,7 +28,7 @@ public class BulkCreateUsersHandler(ApplicationDbContext context, ILogger<BulkCr
 
         var uniqueUsername = SlugCase.GenerateUnique(userDto.Name, existingUsernames, 50);
 
-        var user = new User { Name = userDto.Name, Username = uniqueUsername, Email = userDto.Email, IsActive = userDto.IsActive, Balance = userDto.InitialBalance, AvailableBalance = userDto.InitialBalance };
+        var user = new User { Name = userDto.Name, Username = uniqueUsername, Email = userDto.Email, IsActive = userDto.IsActive, Balance = Money.FromDecimal(userDto.InitialBalance), AvailableBalance = Money.FromDecimal(userDto.InitialBalance) };
 
         context.Users.Add(user);
         createdUsers.Add(user);

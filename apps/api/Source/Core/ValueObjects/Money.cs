@@ -47,10 +47,15 @@ public record Money {
 
   public static bool operator <=(Money left, Money right) { return !(left > right); }
 
-  // Implicit conversion operators for easier interoperability
-  public static implicit operator Money(decimal amount) { return new Money(amount); }
+  // Explicit conversion operators to prevent ambiguous conversions
+  public static explicit operator Money(decimal amount) { return new Money(amount); }
 
-  public static implicit operator decimal(Money money) { return money.Amount; }
+  public static explicit operator decimal(Money money) { return money.Amount; }
+
+  // Factory methods for cleaner conversion syntax
+  public static Money FromDecimal(decimal amount, string currency = "USD") { return new Money(amount, currency); }
+
+  public decimal ToDecimal() { return Amount; }
 
   public override string ToString() { return $"{Amount:C} {Currency}"; }
 }
