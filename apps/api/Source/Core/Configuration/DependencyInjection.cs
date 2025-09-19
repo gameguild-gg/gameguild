@@ -336,4 +336,29 @@ public static class DependencyInjection {
     Console.WriteLine("🔧 AddCoreInfrastructure completed successfully");
     return services;
   }
+
+  /// <summary> Registers core business services for tenant isolation, privacy, and role management </summary>
+  private static IServiceCollection AddCoreServices(this IServiceCollection services) {
+    // Add debug logging
+    Console.WriteLine("🔧 AddCoreServices called");
+
+    // Tenant isolation and management services
+    services.AddScoped<ITenantIsolationService, TenantIsolationService>();
+    Console.WriteLine("✅ ITenantIsolationService registered");
+
+    // Role template management services
+    services.AddScoped<IRoleTemplateService, RoleTemplateService>();
+    Console.WriteLine("✅ IRoleTemplateService registered");
+
+    // Username normalization services
+    services.AddScoped<IUsernameNormalizationService, UsernameNormalizationService>();
+    Console.WriteLine("✅ IUsernameNormalizationService registered");
+
+    // Privacy management services
+    services.AddScoped<IUserPrivacyService, UserPrivacyService>();
+    Console.WriteLine("✅ IUserPrivacyService registered");
+
+    Console.WriteLine("🔧 AddCoreServices completed successfully");
+    return services;
+  }
 }
