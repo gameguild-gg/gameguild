@@ -27,6 +27,9 @@ using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserAchievements;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
+using GameGuild.Source.Core.Services;
+using GameGuild.Source.Core.Tenants;
+using GameGuild.Source.Core.Users;
 using GameGuild.Source.Modules.Programs.Models;
 using Tag = GameGuild.Modules.Tags.Models.Tag;
 using UserRoleAssignment = GameGuild.Modules.Permissions.UserRoleAssignment;
@@ -273,6 +276,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
   public DbSet<ProgramRating> ProgramRatings { get; set; }
 
   public DbSet<ProgramWishlist> ProgramWishlists { get; set; }
+
+  // Tenant Management Enhancement DbSets
+  public DbSet<TenantRoleApplication> TenantRoleApplications { get; set; }
+
+  public DbSet<UserTenantRole> UserTenantRoles { get; set; }
+
+  // Privacy Management DbSets
+  public DbSet<UserPrivacySettings> UserPrivacySettings { get; set; }
+
+  public DbSet<UserPrivacyAuditLog> UserPrivacyAuditLog { get; set; }
 
   protected override void OnModelCreating(ModelBuilder modelBuilder) {
     base.OnModelCreating(modelBuilder);
