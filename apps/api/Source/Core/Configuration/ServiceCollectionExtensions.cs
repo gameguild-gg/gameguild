@@ -378,6 +378,10 @@ public static class ServiceCollectionExtensions {
       .AddFiltering()
       .AddSorting()
       .AddProjections()
+      // Add security middleware for depth analysis
+      .AddMaxExecutionDepthRule(options.MaxDepth)
+      // Add DAC authorization
+      .AddDACAuthorization()
       // Add root types
       .AddQueryType<GameGuild.GraphQL.Query>()
       .AddMutationType<GameGuild.GraphQL.Mutation>()
@@ -388,10 +392,24 @@ public static class ServiceCollectionExtensions {
       .AddProgramContentGraphQL()
       .AddContentInteractionGraphQL();
 
+    // Configure GraphQL HTTP options
+    services.Configure<HotChocolate.AspNetCore.GraphQLHttpOptions>(httpOptions => {
+      var isProduction = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")?.Equals("Production", StringComparison.OrdinalIgnoreCase) == true;
+      httpOptions.EnableGetRequests = options.EnableIntrospection && !isProduction;
+      httpOptions.EnableMultipartRequests = true;
+    });
+
+    // Configure GraphQL server options
+    services.Configure<HotChocolate.Execution.Options.RequestExecutorOptions>(executorOptions => {
+      executorOptions.ExecutionTimeout = options.Timeout;
+      var isProduction = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")?.Equals("Production", StringComparison.OrdinalIgnoreCase) == true;
+      executorOptions.IncludeExceptionDetails = !isProduction;
+    });
+
     return services;
   }
 
-  /// <summary> Adds database context with proper configuration </summary>
+  /// <summary> Adds database context with proper configuration and pooling </summary>
   /// <param name="services"> The service collection </param>
   /// <param name="configuration"> The application configuration </param>
   /// <returns> The service collection for chaining </returns>
