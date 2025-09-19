@@ -51,16 +51,16 @@ internal sealed class UnifiedExceptionHandler(ILogger<UnifiedExceptionHandler> l
                 }
             },
 
-            DomainValidationException domainValidationException => new ValidationProblemDetails(
-                domainValidationException.ValidationResult.Errors.Select((error, index) => new KeyValuePair<string, string[]>(
-                    error.PropertyName ?? $"error{index}", new[] { error.Message }
-                )).ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
-            ) {
-                Status = StatusCodes.Status400BadRequest,
-                Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-                Title = "Domain Validation Error",
-                Detail = domainValidationException.Message
-            },
+            // DomainValidationException domainValidationException => new ValidationProblemDetails(
+            //     domainValidationException.ValidationResult.Errors.Select((error, index) => new KeyValuePair<string, string[]>(
+            //         error.PropertyName ?? $"error{index}", new[] { error.Message }
+            //     )).ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
+            // ) {
+            //     Status = StatusCodes.Status400BadRequest,
+            //     Type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+            //     Title = "Domain Validation Error",
+            //     Detail = domainValidationException.Message
+            // },
 
             DomainException domainException => new ProblemDetails {
                 Status = StatusCodes.Status400BadRequest,
