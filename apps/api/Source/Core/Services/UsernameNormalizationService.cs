@@ -75,12 +75,27 @@ public interface IUsernameNormalizationService {
 /// <summary>
 /// Implementation of username normalization service
 /// </summary>
-public class UsernameNormalizationService : IUsernameNormalizationService {
-    private static readonly Regex InvalidCharsRegex = new(@"[^a-z0-9\-_.]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    private static readonly Regex MultipleHyphensRegex = new(@"-{2,}", RegexOptions.Compiled);
-    private static readonly Regex StartEndHyphensRegex = new(@"^-+|-+$", RegexOptions.Compiled);
-    private static readonly Regex UsernameValidationRegex = new(@"^[a-z0-9][a-z0-9\-_.]*[a-z0-9]$|^[a-z0-9]$", RegexOptions.Compiled);
-    private static readonly Regex SlugValidationRegex = new(@"^[a-z0-9][a-z0-9\-]*[a-z0-9]$|^[a-z0-9]$", RegexOptions.Compiled);
+public partial class UsernameNormalizationService : IUsernameNormalizationService {
+    [GeneratedRegex(@"[^a-z0-9\-_.]", RegexOptions.Compiled | RegexOptions.IgnoreCase)]
+    private static partial Regex InvalidCharsRegex();
+
+    [GeneratedRegex(@"-{2,}", RegexOptions.Compiled)]
+    private static partial Regex MultipleHyphensRegex();
+
+    [GeneratedRegex(@"^-+|-+$", RegexOptions.Compiled)]
+    private static partial Regex StartEndHyphensRegex();
+
+    [GeneratedRegex(@"^[a-z0-9][a-z0-9\-_.]*[a-z0-9]$|^[a-z0-9]$", RegexOptions.Compiled)]
+    private static partial Regex UsernameValidationRegex();
+
+    [GeneratedRegex(@"^[a-z0-9][a-z0-9\-]*[a-z0-9]$|^[a-z0-9]$", RegexOptions.Compiled)]
+    private static partial Regex SlugValidationRegex();
+
+    [GeneratedRegex(@"[\s_\.]+", RegexOptions.Compiled)]
+    private static partial Regex SpaceUnderscoreDotRegex();
+
+    [GeneratedRegex(@"[^a-z0-9\-]", RegexOptions.Compiled)]
+    private static partial Regex NonAlphanumericHyphenRegex();
 
     // Reserved usernames that cannot be used
     private static readonly HashSet<string> ReservedUsernames = new(StringComparer.OrdinalIgnoreCase) {
@@ -141,13 +156,13 @@ public class UsernameNormalizationService : IUsernameNormalizationService {
         normalized = normalized.Replace(' ', '-').Replace('_', '-');
 
         // Remove invalid characters (keep only a-z, 0-9, hyphens, dots)
-        normalized = InvalidCharsRegex.Replace(normalized, "");
+        normalized = InvalidCharsRegex().Replace(normalized, "");
 
         // Replace multiple consecutive hyphens with single hyphen
-        normalized = MultipleHyphensRegex.Replace(normalized, "-");
+        normalized = MultipleHyphensRegex().Replace(normalized, "-");
 
         // Remove leading/trailing hyphens
-        normalized = StartEndHyphensRegex.Replace(normalized, "");
+        normalized = StartEndHyphensRegex().Replace(normalized, "");
 
         // Ensure it doesn't start or end with a dot
         normalized = normalized.Trim('.');
@@ -208,16 +223,16 @@ public class UsernameNormalizationService : IUsernameNormalizationService {
         slug = RemoveDiacritics(slug);
 
         // Replace spaces and other separators with hyphens
-        slug = Regex.Replace(slug, @"[\s_\.]+", "-");
+        slug = SpaceUnderscoreDotRegex().Replace(slug, "-");
 
         // Remove invalid characters (keep only a-z, 0-9, hyphens)
-        slug = Regex.Replace(slug, @"[^a-z0-9\-]", "");
+        slug = NonAlphanumericHyphenRegex().Replace(slug, "");
 
         // Replace multiple consecutive hyphens with single hyphen
-        slug = MultipleHyphensRegex.Replace(slug, "-");
+        slug = MultipleHyphensRegex().Replace(slug, "-");
 
         // Remove leading/trailing hyphens
-        slug = StartEndHyphensRegex.Replace(slug, "");
+        slug = StartEndHyphensRegex().Replace(slug, "");
 
         // Truncate to max length
         if (slug.Length > maxLength) {
@@ -268,7 +283,7 @@ public class UsernameNormalizationService : IUsernameNormalizationService {
             return false;
         }
 
-        return UsernameValidationRegex.IsMatch(username) && !IsReservedUsername(username);
+        return UsernameValidationRegex().IsMatch(username) && !IsReservedUsername(username);
     }
 
     public bool IsValidSlug(string slug) {
@@ -276,7 +291,7 @@ public class UsernameNormalizationService : IUsernameNormalizationService {
             return false;
         }
 
-        return SlugValidationRegex.IsMatch(slug);
+        return SlugValidationRegex().IsMatch(slug);
     }
 
     public bool IsReservedUsername(string username) {
