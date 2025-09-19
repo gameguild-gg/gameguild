@@ -189,15 +189,33 @@ public static class ServiceCollectionExtensions {
     options ??= RateLimitingOptionsBuilder.Create(configuration);
     options.Validate();
 
-    services.AddRateLimiter(rateLimiterOptions => {
-      // TODO: Fix rate limiter configuration for .NET 9
-      // These methods may not be available in .NET 9
-      // Fixed window for internal API calls and the Console application.
-      // rateLimiterOptions.AddFixedWindowLimiter("InternalPolicy", policyOptions => { ... });
-      // Sliding window for public API calls with rate limiting.
-      // rateLimiterOptions.AddSlidingWindowLimiter("PublicPolicy", policyOptions => { ... });
+    // Register rate limiting options
+    services.Configure<RateLimitingOptions>(config => {
+      config.RequestsPerMinute = options.RequestsPerMinute;
+      config.BurstSize = options.BurstSize;
+      config.ExemptPaths = options.ExemptPaths;
+      config.AuthRequestsPerMinute = options.AuthRequestsPerMinute;
+      config.GraphQLRequestsPerMinute = options.GraphQLRequestsPerMinute;
+      config.PaymentRequestsPerMinute = options.PaymentRequestsPerMinute;
+      config.RequestsPerMinutePerIP = options.RequestsPerMinutePerIP;
+      config.BurstSizePerIP = options.BurstSizePerIP;
+      config.RequestsPerMinutePerUser = options.RequestsPerMinutePerUser;
+      config.BurstSizePerUser = options.BurstSizePerUser;
+      config.RedisConnectionString = options.RedisConnectionString;
+      config.UseDistributedRateLimiting = options.UseDistributedRateLimiting;
+      config.EndpointSpecificLimits = options.EndpointSpecificLimits;
+    });
+
+    // Register rate limiting service
+    services.AddScoped<GameGuild.Core.Services.IRateLimitingService, GameGuild.Core.Services.RateLimitingService>();
+
+    // Add distributed cache if Redis is configured
+    if (options.UseDistributedRateLimiting && !string.IsNullOrWhiteSpace(options.RedisConnectionString)) {
+      services.AddStackExchangeRedisCache(redisOptions => {
+        redisOptions.Configuration = options.RedisConnectionString;
+        redisOptions.InstanceName = "GameGuild_RateLimit";
+      });
     }
-    );
 
     return services;
   }
