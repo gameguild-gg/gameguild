@@ -48,9 +48,9 @@ public class UserSignUpPostHandler(IMediator mediator, ILogger<UserSignUpPostHan
     var displayName = notification.Username ?? GetDisplayNameFromEmail(notification.Email);
     var signUpMethod = DetermineSignUpMethod(notification);
 
-    var welcomeTitles = new[ ] { $"🎉 Welcome {displayName} to Game Guild!", $"👋 {displayName} joined the community!", $"� New member alert: {displayName}!", $"⭐ Say hello to {displayName}!" };
+    var welcomeTitles = new[] { $"🎉 Welcome {displayName} to Game Guild!", $"👋 {displayName} joined the community!", $"� New member alert: {displayName}!", $"⭐ Say hello to {displayName}!" };
 
-    var welcomeDescriptions = new[ ] {
+    var welcomeDescriptions = new[] {
       $"We're excited to have {displayName} join our Game Guild community! Let's give them a warm welcome.",
       $"Everyone please welcome {displayName} to our growing community of creators and learners.",
       $"{displayName} just started their Game Guild journey. Welcome aboard!",
@@ -78,7 +78,7 @@ public class UserSignUpPostHandler(IMediator mediator, ILogger<UserSignUpPostHan
       user = new { id = notification.UserId, displayName = displayName, email = notification.Email, signUpMethod = signUpMethod, signUpTime = notification.SignUpTime, },
       welcome = new {
         message = $"Welcome to Game Guild, {displayName}! 🎮",
-        tips = new[ ] { "Explore our community programs and projects", "Connect with other creators and learners", "Share your own projects and achievements", "Participate in community challenges and events" },
+        tips = new[] { "Explore our community programs and projects", "Connect with other creators and learners", "Share your own projects and achievements", "Participate in community challenges and events" },
       },
       metadata = new { auto_generated = true, post_type = "user_signup", template_version = "1.0" },
     };

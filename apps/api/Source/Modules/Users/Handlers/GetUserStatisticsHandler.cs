@@ -21,7 +21,7 @@ public class GetUserStatisticsHandler(ApplicationDbContext context) : IQueryHand
 
     var now = DateTime.UtcNow;
     var today = now.Date;
-    var weekStart = today.AddDays(-(int) today.DayOfWeek);
+    var weekStart = today.AddDays(-(int)today.DayOfWeek);
     var monthStart = new DateTime(today.Year, today.Month, 1);
 
     var statistics = new UserStatistics {
