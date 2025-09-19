@@ -1,3 +1,4 @@
+using GameGuild.Core.Logging;
 using GameGuild.Database;
 
 
@@ -17,25 +18,30 @@ public class PermissionService : IPermissionService {
   #region Layer 1: Tenant-Wide Permissions
 
   public async Task<TenantPermission> GrantTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions) {
+    using var userContext = LoggingExtensions.WithUserContext(userId, tenantId);
+
     if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
 
     // Combine all permissions using bitwise OR
     var combinedPermissions = permissions.Aggregate((current, next) => current | next);
+
+    _logger.LogDebug("Granting tenant permissions: {Permissions}", string.Join(", ", permissions));
 
     // Check if permission already exists
     var existingPermission = await _context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null);
 
     if (existingPermission != null) {
       existingPermission.UpdatePermissions(combinedPermissions);
-      _logger.LogInformation("Updated tenant permissions for User:{UserId}, Tenant:{TenantId}, Permissions:{Permissions}", userId, tenantId, combinedPermissions);
+      _logger.LogInformation("Updated tenant permissions: {Permissions}", combinedPermissions);
     }
     else {
       existingPermission = new TenantPermission(userId, tenantId, combinedPermissions);
       _context.TenantPermissions.Add(existingPermission);
-      _logger.LogInformation("Granted new tenant permissions for User:{UserId}, Tenant:{TenantId}, Permissions:{Permissions}", userId, tenantId, combinedPermissions);
+      _logger.LogInformation("Granted new tenant permissions: {Permissions}", combinedPermissions);
     }
 
     await _context.SaveChangesAsync();
+    _logger.LogDebug("Tenant permissions saved to database");
 
     return existingPermission;
   }
@@ -73,25 +79,48 @@ public class PermissionService : IPermissionService {
   }
 
   public async Task<bool> HasTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType permission) {
+    using var userContext = LoggingExtensions.WithUserContext(userId, tenantId);
+    using var permissionContext = LoggingExtensions.WithPermissionContext(permission.ToString());
+
+    _logger.LogDebug("Evaluating tenant permission {Permission}", permission);
+
     // For null user, only check default permissions
-    if (!userId.HasValue) return await CheckDefaultTenantPermissionAsync(tenantId, permission);
+    if (!userId.HasValue) {
+      _logger.LogDebug("No user context, checking default permissions only");
+      return await CheckDefaultTenantPermissionAsync(tenantId, permission);
+    }
 
     // 1. Check user-specific permissions first
     var userPermission = await _context.TenantPermissions.AsNoTracking().FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null);
 
-    if (userPermission?.HasPermission(permission) == true) return true;
+    if (userPermission?.HasPermission(permission) == true) {
+      _logger.LogDebug("Permission {Permission} granted via user-specific tenant permissions", permission);
+      return true;
+    }
 
     // 2. Check tenant default permissions
     if (tenantId.HasValue) {
       var tenantDefault = await _context.TenantPermissions.AsNoTracking().FirstOrDefaultAsync(tp => tp.UserId == null && tp.TenantId == tenantId && tp.DeletedAt == null);
 
-      if (tenantDefault?.HasPermission(permission) == true) return true;
+      if (tenantDefault?.HasPermission(permission) == true) {
+        _logger.LogDebug("Permission {Permission} granted via tenant default permissions", permission);
+        return true;
+      }
     }
 
     // 3. Check global default permissions
     var globalDefault = await _context.TenantPermissions.AsNoTracking().FirstOrDefaultAsync(tp => tp.UserId == null && tp.TenantId == null && tp.DeletedAt == null);
 
-    return globalDefault?.HasPermission(permission) == true;
+    var hasGlobalPermission = globalDefault?.HasPermission(permission) == true;
+
+    if (hasGlobalPermission) {
+      _logger.LogDebug("Permission {Permission} granted via global default permissions", permission);
+    }
+    else {
+      _logger.LogDebug("Permission {Permission} denied - no matching permissions found", permission);
+    }
+
+    return hasGlobalPermission;
   }
 
   public async Task<IEnumerable<PermissionType>> GetTenantPermissionsAsync(Guid? userId, Guid? tenantId) {
