@@ -60,8 +60,15 @@ services:
       - CORS__ALLOWED_ORIGINS__1=${CORS__ALLOWED_ORIGINS__1:-https://www.gameguild.gg}
       - CORS__ALLOWED_ORIGINS__2=${CORS__ALLOWED_ORIGINS__2:-https://gameguild.gg}
       - CORS__ALLOW_CREDENTIALS=${CORS__ALLOW_CREDENTIALS:-true}
+      # Redis Configuration
+      - REDIS_CONNECTION_STRING=${REDIS_CONNECTION_STRING:-redis:6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      # Health Checks Configuration
+      - HealthChecks__EnableRedisCheck=${ENABLE_REDIS_HEALTH_CHECK:-true}
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     links:
       - postgres
@@ -144,10 +151,35 @@ services:
     ports:
       - "8080:8080"
     environment:
-      ADMINER_DEFAULT_SERVER: postgres  
+      ADMINER_DEFAULT_SERVER: postgres
     depends_on:
       postgres:
         condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    command: >
+      sh -c "
+        if [ -n \"$$REDIS_PASSWORD\" ]; then
+          redis-server --requirepass $$REDIS_PASSWORD --appendonly yes --appendfsync everysec
+        else
+          redis-server --appendonly yes --appendfsync everysec
+        fi
+      "
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 #  minio:
 #    image: minio/minio
@@ -188,4 +220,7 @@ volumes:
   #    driver: local
   postgres:
     name: postgres
+    driver: local
+  redis:
+    name: redis
     driver: local
