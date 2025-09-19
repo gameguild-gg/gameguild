@@ -1,0 +1,200 @@
+using GameGuild.Modules.Core.Filters;
+// using GameGuild.Modules.Core.Validation; // Temporarily disabled due to ValidationResult obsolescence
+using Microsoft.AspNetCore.Mvc;
+
+namespace GameGuild.Modules.Core.Configuration;
+
+/// <summary>
+/// Configuration extensions for input hardening and validation
+/// </summary>
+public static class InputHardeningExtensions {
+    /// <summary>
+    /// Adds comprehensive input hardening services
+    /// </summary>
+    public static IServiceCollection AddInputHardening(this IServiceCollection services, IConfiguration configuration) {
+        // Configure input validation options
+        services.Configure<InputValidationOptions>(configuration.GetSection("InputValidation"));
+
+        // Add input sanitization service
+        services.AddScoped<IInputSanitizationService, InputSanitizationService>();
+
+        // Add HTTP context accessor for filters
+        services.AddHttpContextAccessor();
+
+        // Configure MVC with input hardening filters and model binders
+        services.Configure<MvcOptions>(options => {
+            // Add safe enum model binder provider
+            options.ModelBinderProviders.Insert(0, new SafeEnumModelBinderProvider());
+
+            // Add input validation filter
+            options.Filters.Add<InputValidationFilter>();
+
+            // Add pagination validation filter
+            options.Filters.Add<PaginationValidationFilter>();
+
+            // Configure model validation
+            options.ModelValidatorProviders.Clear();
+            options.ModelMetadataDetailsProviders.Add(new DefaultBindingMetadataProvider());
+        });
+
+        // Configure JSON options for enum handling
+        services.Configure<JsonOptions>(options => {
+            options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        });
+
+        // Configure API behavior options
+        services.Configure<ApiBehaviorOptions>(options => {
+            options.SuppressConsumesConstraintForFormFileParameters = true;
+            options.SuppressInferBindingSourcesForParameters = false;
+            options.SuppressMapClientErrors = false;
+            options.SuppressModelStateInvalidFilter = false;
+        });
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds input hardening middleware to the application pipeline
+    /// </summary>
+    public static IApplicationBuilder UseInputHardening(this IApplicationBuilder app) {
+        // Add request size limiting middleware
+        app.UseMiddleware<RequestSizeLimitMiddleware>();
+
+        return app;
+    }
+}
+
+/// <summary>
+/// Extension methods for common input validation scenarios
+/// </summary>
+public static class ValidationExtensions {
+    /// <summary>
+    /// Validates and returns a bounded pagination request
+    /// </summary>
+    public static BoundedPaginationRequest ValidatePagination(this ControllerBase controller, int? page, int? pageSize) {
+        return new BoundedPaginationRequest {
+            Page = page ?? 1,
+            PageSize = pageSize ?? 20
+        };
+    }
+
+    /// <summary>
+    /// Validates and sanitizes a string input
+    /// </summary>
+    public static string ValidateAndSanitizeString(this IInputSanitizationService service, string? input, int maxLength = 255, bool required = false) {
+        if (string.IsNullOrEmpty(input)) {
+            if (required) {
+                throw new ArgumentException("Value is required");
+            }
+            return string.Empty;
+        }
+
+        var sanitized = service.SanitizeString(input, maxLength);
+
+        if (required && string.IsNullOrEmpty(sanitized)) {
+            throw new ArgumentException("Value cannot be empty after sanitization");
+        }
+
+        return sanitized;
+    }
+
+    /// <summary>
+    /// Validates file upload requirements
+    /// </summary>
+    public static ValidationResult ValidateFile(this IFormFile file, string[] allowedExtensions, long maxSizeBytes = 10 * 1024 * 1024) {
+        if (file == null) {
+            return new ValidationResult("File is required");
+        }
+
+        if (file.Length == 0) {
+            return new ValidationResult("File cannot be empty");
+        }
+
+        if (file.Length > maxSizeBytes) {
+            return new ValidationResult($"File size must not exceed {maxSizeBytes / (1024 * 1024)}MB");
+        }
+
+        var extension = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+        if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension)) {
+            return new ValidationResult($"File extension must be one of: {string.Join(", ", allowedExtensions)}");
+        }
+
+        return ValidationResult.Success!;
+    }
+}
+
+/// <summary>
+/// Common input hardening constants
+/// </summary>
+public static class InputHardeningConstants {
+    public const int MaxStringLength = 1000;
+    public const int MaxCollectionSize = 100;
+    public const int MaxFileSize = 10 * 1024 * 1024; // 10MB
+    public const int MaxRequestSize = 50 * 1024 * 1024; // 50MB
+
+    public static readonly string[] AllowedImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+    public static readonly string[] AllowedDocumentExtensions = [".pdf", ".doc", ".docx", ".txt", ".rtf"];
+    public static readonly string[] AllowedArchiveExtensions = [".zip", ".rar", ".7z"];
+
+    public static readonly string[] AllowedImageMimeTypes = [
+      "image/jpeg", "image/png", "image/gif", "image/webp"
+    ];
+
+    public static readonly string[] AllowedDocumentMimeTypes = [
+      "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
+    "application/rtf"
+    ];
+}
+
+/// <summary>
+/// Base model for paginated requests with built-in validation
+/// </summary>
+public abstract class PaginatedRequestBase {
+    private int _page = 1;
+    private int _pageSize = 20;
+
+    [BoundedNumber(Minimum = 1, Maximum = 10000)]
+    public virtual int Page {
+        get => _page;
+        set => _page = Math.Max(1, Math.Min(value, 10000));
+    }
+
+    [BoundedNumber(Minimum = 1, Maximum = 100)]
+    public virtual int PageSize {
+        get => _pageSize;
+        set => _pageSize = Math.Max(1, Math.Min(value, 100));
+    }
+
+    public int Skip => (Page - 1) * PageSize;
+    public int Take => PageSize;
+}
+
+/// <summary>
+/// Base model for search requests with input validation
+/// </summary>
+public abstract class SearchRequestBase : PaginatedRequestBase {
+    private string _searchTerm = string.Empty;
+
+    [BoundedString(MaxLength = 200, AllowEmpty = true)]
+    public virtual string SearchTerm {
+        get => _searchTerm;
+        set => _searchTerm = value?.Trim() ?? string.Empty;
+    }
+
+    [BoundedString(MaxLength = 50, AllowEmpty = true)]
+    public virtual string? SortBy { get; set; }
+
+    [SafeEnum(typeof(SortOrder))]
+    public virtual SortOrder SortOrder { get; set; } = SortOrder.Ascending;
+}
+
+/// <summary>
+/// Sort order enumeration for search requests
+/// </summary>
+public enum SortOrder {
+    Ascending = 0,
+    Descending = 1
+}
