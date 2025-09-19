@@ -22,9 +22,9 @@ public class SearchUsersHandler(ApplicationDbContext context) : IRequestHandler<
       query = query.Where(user => EF.Functions.ILike(user.Name, term) || EF.Functions.ILike(user.Email, term) || EF.Functions.ILike(user.Username, term));
     }
 
-    if (request.MinBalance.HasValue) query = query.Where(u => u.Balance >= request.MinBalance.Value);
+    if (request.MinBalance.HasValue) query = query.Where(u => u.Balance.Amount >= request.MinBalance.Value);
 
-    if (request.MaxBalance.HasValue) query = query.Where(u => u.Balance <= request.MaxBalance.Value);
+    if (request.MaxBalance.HasValue) query = query.Where(u => u.Balance.Amount <= request.MaxBalance.Value);
 
     if (request.CreatedAfter.HasValue) query = query.Where(u => u.CreatedAt >= request.CreatedAfter.Value);
 
