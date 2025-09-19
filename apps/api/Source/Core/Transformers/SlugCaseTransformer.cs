@@ -7,7 +7,9 @@ namespace GameGuild;
 /// <summary>
 /// Slug case transformer implementation using Slugify.Core.
 /// </summary>
-public class SlugCaseTransformer : CachedCaseTransformer {
+public partial class SlugCaseTransformer : CachedCaseTransformer {
+  [GeneratedRegex(@"^[a-z0-9]+(?:-[a-z0-9]+)*$", RegexOptions.Compiled)]
+  private static partial Regex SlugValidationRegex();
   private static readonly SlugHelper SlugHelper;
 
   static SlugCaseTransformer() {
@@ -56,7 +58,7 @@ public class SlugCaseTransformer : CachedCaseTransformer {
 
     // Check if it matches slug pattern: lowercase letters, numbers, and dashes
     // No leading/trailing dashes, no consecutive dashes
-    return Regex.IsMatch(input, @"^[a-z0-9]+(?:-[a-z0-9]+)*$");
+    return SlugValidationRegex().IsMatch(input);
   }
 
   /// <summary>

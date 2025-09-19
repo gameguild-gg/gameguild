@@ -7,7 +7,12 @@ using GameGuild.Modules.Contents;
 namespace GameGuild.Modules.Posts;
 
 /// <summary> Handler for creating posts following the Content/Resource architecture </summary>
-public class CreatePostHandler(ApplicationDbContext context, ILogger<CreatePostHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<CreatePostCommand, Result<Post>> {
+public partial class CreatePostHandler(ApplicationDbContext context, ILogger<CreatePostHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<CreatePostCommand, Result<Post>> {
+  [GeneratedRegex(@"[^a-z0-9\-]", RegexOptions.Compiled)]
+  private static partial Regex NonAlphanumericHyphenRegex();
+
+  [GeneratedRegex(@"-+", RegexOptions.Compiled)]
+  private static partial Regex MultipleHyphensRegex();
   public async Task<Result<Post>> Handle(CreatePostCommand request, CancellationToken cancellationToken) {
     try {
       logger.LogInformation("Creating post for user {AuthorId} in tenant {TenantId}", request.AuthorId, request.TenantId);
@@ -72,10 +77,10 @@ public class CreatePostHandler(ApplicationDbContext context, ILogger<CreatePostH
     var slug = title.ToLowerInvariant().Replace(" ", "-").Replace("'", "").Replace("\"", "");
 
     // Remove special characters
-    slug = Regex.Replace(slug, @"[^a-z0-9\-]", "");
+    slug = NonAlphanumericHyphenRegex().Replace(slug, "");
 
     // Remove multiple consecutive dashes
-    slug = Regex.Replace(slug, @"-+", "-");
+    slug = MultipleHyphensRegex().Replace(slug, "-");
 
     // Trim dashes from start and end
     slug = slug.Trim('-');
