@@ -17,8 +17,8 @@ public class UpdateUserBalanceHandler(ApplicationDbContext context, ILogger<Upda
     var oldBalance = user.Balance;
     var oldAvailableBalance = user.AvailableBalance;
 
-    user.Balance = request.Balance;
-    user.AvailableBalance = request.AvailableBalance;
+    user.Balance = Money.FromDecimal(request.Balance);
+    user.AvailableBalance = Money.FromDecimal(request.AvailableBalance);
     user.Touch();
 
     await context.SaveChangesAsync(cancellationToken);
@@ -34,7 +34,7 @@ public class UpdateUserBalanceHandler(ApplicationDbContext context, ILogger<Upda
     );
 
     // Publish domain event
-    await mediator.Publish(new UserBalanceUpdatedEvent(user.Id, oldBalance, request.Balance, oldAvailableBalance, request.AvailableBalance, request.Reason), cancellationToken);
+    await mediator.Publish(new UserBalanceUpdatedEvent(user.Id, oldBalance.ToDecimal(), request.Balance, oldAvailableBalance.ToDecimal(), request.AvailableBalance, request.Reason), cancellationToken);
 
     return user;
   }

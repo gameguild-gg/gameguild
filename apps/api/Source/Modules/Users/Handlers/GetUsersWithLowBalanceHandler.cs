@@ -13,7 +13,7 @@ public class GetUsersWithLowBalanceHandler(ApplicationDbContext context) : IRequ
     if (request.IncludeDeleted) query = query.IgnoreQueryFilters();
 
     // Filter by low balance
-    query = query.Where(u => u.AvailableBalance <= request.ThresholdBalance);
+    query = query.Where(u => u.AvailableBalance.Amount <= request.ThresholdBalance);
 
     // Apply search term if provided
     if (!string.IsNullOrWhiteSpace(request.SearchTerm)) query = query.Where(u => u.Name.Contains(request.SearchTerm) || u.Email.Contains(request.SearchTerm));
@@ -22,7 +22,7 @@ public class GetUsersWithLowBalanceHandler(ApplicationDbContext context) : IRequ
     var totalCount = await query.CountAsync(cancellationToken);
 
     // Apply pagination and ordering
-    var users = await query.OrderBy(u => u.AvailableBalance) // Order by balance ascending (lowest first)
+    var users = await query.OrderBy(u => u.AvailableBalance.Amount) // Order by balance ascending (lowest first)
                            .ThenBy(u => u.Name)
                            .Skip(request.Skip)
                            .Take(request.Take)
