@@ -1,0 +1,386 @@
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+
+namespace GameGuild.Modules.Core.Validation;
+
+/// <summary>
+/// Validation attributes for input hardening
+/// </summary>
+
+/// <summary>
+/// Validates that a string property has bounded length and optional pattern
+/// </summary>
+public class BoundedStringAttribute : ValidationAttribute {
+    public int MinLength { get; set; } = 0;
+    public int MaxLength { get; set; } = 255;
+    public string? Pattern { get; set; }
+    public bool AllowEmpty { get; set; } = false;
+
+    protected override ValidationResult IsValid(object? value, ValidationContext validationContext) {
+        if (value == null || (value is string str && string.IsNullOrEmpty(str))) {
+            return AllowEmpty ? ValidationResult.Success : new ValidationResult("Value is required");
+        }
+
+        if (value is not string stringValue) {
+            return new ValidationResult("Value must be a string");
+        }
+
+        if (stringValue.Length < MinLength) {
+            return new ValidationResult($"Value must be at least {MinLength} characters long");
+        }
+
+        if (stringValue.Length > MaxLength) {
+            return new ValidationResult($"Value must not exceed {MaxLength} characters");
+        }
+
+        if (!string.IsNullOrEmpty(Pattern) && !Regex.IsMatch(stringValue, Pattern)) {
+            return new ValidationResult($"Value does not match required pattern");
+        }
+
+        return ValidationResult.Success;
+    }
+}
+
+/// <summary>
+/// Validates that a collection has bounded size
+/// </summary>
+public class BoundedCollectionAttribute : ValidationAttribute {
+    public int MinCount { get; set; } = 0;
+    public int MaxCount { get; set; } = 100;
+
+    protected override ValidationResult IsValid(object? value, ValidationContext validationContext) {
+        if (value == null) {
+            return MinCount == 0 ? ValidationResult.Success : new ValidationResult("Collection is required");
+        }
+
+        if (value is not System.Collections.ICollection collection) {
+            return new ValidationResult("Value must be a collection");
+        }
+
+        if (collection.Count < MinCount) {
+            return new ValidationResult($"Collection must have at least {MinCount} items");
+        }
+
+        if (collection.Count > MaxCount) {
+            return new ValidationResult($"Collection must not have more than {MaxCount} items");
+        }
+
+        return ValidationResult.Success;
+    }
+}
+
+/// <summary>
+/// Validates that a numeric value is within bounded range
+/// </summary>
+public class BoundedNumberAttribute : ValidationAttribute {
+    public double Minimum { get; set; } = double.MinValue;
+    public double Maximum { get; set; } = double.MaxValue;
+
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext) {
+        if (value == null) {
+            return ValidationResult.Success;
+        }
+
+        if (!double.TryParse(value.ToString(), out var numericValue)) {
+            return new ValidationResult("Value must be a number");
+        }
+
+        if (numericValue < Minimum) {
+            return new ValidationResult($"Value must be at least {Minimum}");
+        }
+
+        if (numericValue > Maximum) {
+            return new ValidationResult($"Value must not exceed {Maximum}");
+        }
+
+        return ValidationResult.Success;
+    }
+}
+
+/// <summary>
+/// Validates file upload properties
+/// </summary>
+public class FileValidationAttribute : ValidationAttribute {
+    public long MaxSizeBytes { get; set; } = 10 * 1024 * 1024; // 10MB default
+    public string[] AllowedExtensions { get; set; } = [];
+    public string[] AllowedMimeTypes { get; set; } = [];
+
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext) {
+        if (value == null) {
+            return ValidationResult.Success;
+        }
+
+        if (value is not IFormFile file) {
+            return new ValidationResult("Value must be a file");
+        }
+
+        // Check file size
+        if (file.Length > MaxSizeBytes) {
+            return new ValidationResult($"File size must not exceed {MaxSizeBytes / (1024 * 1024)}MB");
+        }
+
+        // Check file extension
+        if (AllowedExtensions.Length > 0) {
+            var extension = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+            if (string.IsNullOrEmpty(extension) || !AllowedExtensions.Contains(extension)) {
+                return new ValidationResult($"File extension must be one of: {string.Join(", ", AllowedExtensions)}");
+            }
+        }
+
+        // Check MIME type
+        if (AllowedMimeTypes.Length > 0) {
+            if (string.IsNullOrEmpty(file.ContentType) || !AllowedMimeTypes.Contains(file.ContentType.ToLowerInvariant())) {
+                return new ValidationResult($"File type must be one of: {string.Join(", ", AllowedMimeTypes)}");
+            }
+        }
+
+        return ValidationResult.Success;
+    }
+}
+
+/// <summary>
+/// Validates that an enum value is within allowed values
+/// </summary>
+public class SafeEnumAttribute : ValidationAttribute {
+    public Type EnumType { get; }
+    public object[]? AllowedValues { get; set; }
+
+    public SafeEnumAttribute(Type enumType) {
+        EnumType = enumType ?? throw new ArgumentNullException(nameof(enumType));
+
+        if (!EnumType.IsEnum) {
+            throw new ArgumentException("Type must be an enum", nameof(enumType));
+        }
+    }
+
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext) {
+        if (value == null) {
+            return ValidationResult.Success;
+        }
+
+        // Check if value is a valid enum value
+        if (!Enum.IsDefined(EnumType, value)) {
+            return new ValidationResult($"Value must be a valid {EnumType.Name}");
+        }
+
+        // Check if value is in allowed subset (if specified)
+        if (AllowedValues != null && AllowedValues.Length > 0) {
+            if (!AllowedValues.Contains(value)) {
+                return new ValidationResult($"Value must be one of: {string.Join(", ", AllowedValues)}");
+            }
+        }
+
+        return ValidationResult.Success;
+    }
+}
+
+/// <summary>
+/// Pagination model with bounded limits
+/// </summary>
+public class BoundedPaginationRequest {
+    private int _pageSize = 20;
+    private int _page = 1;
+
+    [BoundedNumber(Minimum = 1, Maximum = 10000)]
+    public int Page {
+        get => _page;
+        set => _page = Math.Max(1, Math.Min(value, 10000));
+    }
+
+    [BoundedNumber(Minimum = 1, Maximum = 100)]
+    public int PageSize {
+        get => _pageSize;
+        set => _pageSize = Math.Max(1, Math.Min(value, 100));
+    }
+
+    public int Skip => (Page - 1) * PageSize;
+    public int Take => PageSize;
+}
+
+/// <summary>
+/// Service for input sanitization and validation
+/// </summary>
+public interface IInputSanitizationService {
+    string SanitizeHtml(string input);
+    string SanitizeString(string input, int maxLength = 255);
+    bool IsValidEmail(string email);
+    bool IsValidUrl(string url);
+    bool IsValidSlug(string slug);
+    string GenerateSlug(string input, int maxLength = 100);
+    T ValidateAndBindEnum<T>(string value, T defaultValue) where T : struct, Enum;
+}
+
+public class InputSanitizationService : IInputSanitizationService {
+    private static readonly Regex HtmlTagRegex = new(@"<[^>]*>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex UrlRegex = new(@"^https?://[^\s/$.?#].[^\s]*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex SlugRegex = new(@"^[a-z0-9]+(?:-[a-z0-9]+)*$", RegexOptions.Compiled);
+    private static readonly Regex SlugCleanupRegex = new(@"[^a-z0-9\-]", RegexOptions.Compiled);
+
+    public string SanitizeHtml(string input) {
+        if (string.IsNullOrEmpty(input)) {
+            return string.Empty;
+        }
+
+        // Remove HTML tags
+        var sanitized = HtmlTagRegex.Replace(input, string.Empty);
+
+        // Decode HTML entities
+        sanitized = System.Net.WebUtility.HtmlDecode(sanitized);
+
+        return sanitized.Trim();
+    }
+
+    public string SanitizeString(string input, int maxLength = 255) {
+        if (string.IsNullOrEmpty(input)) {
+            return string.Empty;
+        }
+
+        // Remove control characters and normalize whitespace
+        var sanitized = new string(input.Where(c => !char.IsControl(c) || char.IsWhiteSpace(c)).ToArray());
+        sanitized = Regex.Replace(sanitized, @"\s+", " ").Trim();
+
+        // Truncate if necessary
+        if (sanitized.Length > maxLength) {
+            sanitized = sanitized[..maxLength].Trim();
+        }
+
+        return sanitized;
+    }
+
+    public bool IsValidEmail(string email) {
+        if (string.IsNullOrEmpty(email) || email.Length > 254) {
+            return false;
+        }
+
+        return EmailRegex.IsMatch(email);
+    }
+
+    public bool IsValidUrl(string url) {
+        if (string.IsNullOrEmpty(url) || url.Length > 2048) {
+            return false;
+        }
+
+        return UrlRegex.IsMatch(url) && Uri.TryCreate(url, UriKind.Absolute, out _);
+    }
+
+    public bool IsValidSlug(string slug) {
+        if (string.IsNullOrEmpty(slug) || slug.Length > 100) {
+            return false;
+        }
+
+        return SlugRegex.IsMatch(slug);
+    }
+
+    public string GenerateSlug(string input, int maxLength = 100) {
+        if (string.IsNullOrEmpty(input)) {
+            return string.Empty;
+        }
+
+        // Convert to lowercase and replace spaces with hyphens
+        var slug = input.ToLowerInvariant().Replace(' ', '-');
+
+        // Remove invalid characters
+        slug = SlugCleanupRegex.Replace(slug, string.Empty);
+
+        // Remove consecutive hyphens
+        slug = Regex.Replace(slug, @"-+", "-");
+
+        // Remove leading/trailing hyphens
+        slug = slug.Trim('-');
+
+        // Truncate if necessary
+        if (slug.Length > maxLength) {
+            slug = slug[..maxLength].TrimEnd('-');
+        }
+
+        return slug;
+    }
+
+    public T ValidateAndBindEnum<T>(string value, T defaultValue) where T : struct, Enum {
+        if (string.IsNullOrEmpty(value)) {
+            return defaultValue;
+        }
+
+        if (Enum.TryParse<T>(value, true, out var result) && Enum.IsDefined(typeof(T), result)) {
+            return result;
+        }
+
+        return defaultValue;
+    }
+}
+
+/// <summary>
+/// Model binder for safe enum binding
+/// </summary>
+public class SafeEnumModelBinder : IModelBinder {
+    public Task BindModelAsync(ModelBindingContext bindingContext) {
+        if (bindingContext == null) {
+            throw new ArgumentNullException(nameof(bindingContext));
+        }
+
+        var modelName = bindingContext.ModelName;
+        var valueProviderResult = bindingContext.ValueProvider.GetValue(modelName);
+
+        if (valueProviderResult == ValueProviderResult.None) {
+            return Task.CompletedTask;
+        }
+
+        bindingContext.ModelState.SetModelValue(modelName, valueProviderResult);
+
+        var value = valueProviderResult.FirstValue;
+        var modelType = bindingContext.ModelType;
+
+        // Handle nullable enums
+        var enumType = Nullable.GetUnderlyingType(modelType) ?? modelType;
+
+        if (!enumType.IsEnum) {
+            bindingContext.Result = ModelBindingResult.Failed();
+            return Task.CompletedTask;
+        }
+
+        if (string.IsNullOrEmpty(value)) {
+            if (Nullable.GetUnderlyingType(modelType) != null) {
+                bindingContext.Result = ModelBindingResult.Successful(null);
+            }
+            else {
+                bindingContext.ModelState.TryAddModelError(modelName, "Value is required");
+                bindingContext.Result = ModelBindingResult.Failed();
+            }
+            return Task.CompletedTask;
+        }
+
+        if (Enum.TryParse(enumType, value, true, out var enumValue) && Enum.IsDefined(enumType, enumValue)) {
+            bindingContext.Result = ModelBindingResult.Successful(enumValue);
+        }
+        else {
+            bindingContext.ModelState.TryAddModelError(modelName, $"Invalid value for {enumType.Name}");
+            bindingContext.Result = ModelBindingResult.Failed();
+        }
+
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// Model binder provider for safe enum binding
+/// </summary>
+public class SafeEnumModelBinderProvider : IModelBinderProvider {
+    public IModelBinder? GetBinder(ModelBinderProviderContext context) {
+        if (context == null) {
+            throw new ArgumentNullException(nameof(context));
+        }
+
+        var modelType = context.Metadata.ModelType;
+        var enumType = Nullable.GetUnderlyingType(modelType) ?? modelType;
+
+        if (enumType.IsEnum) {
+            return new SafeEnumModelBinder();
+        }
+
+        return null;
+    }
+}
