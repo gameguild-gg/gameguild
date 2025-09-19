@@ -5,6 +5,7 @@ using GameGuild.Core.Domain.Services;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Credentials;
+using GameGuild.Modules.Programs;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
@@ -257,7 +258,7 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
     logger.LogInformation("Seeding sample courses...");
 
     // Check if programs already exist
-    var existingPrograms = await context.Set<Modules.Programs.Program>().AnyAsync();
+    var existingPrograms = await context.Set<Program>().AnyAsync();
 
     if (existingPrograms) {
       logger.LogInformation("Programs already exist, skipping seeding");
