@@ -1,5 +1,8 @@
 using System.Linq.Expressions;
+using GameGuild.Database;
 using GameGuild.Modules.Resources;
+using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild;
