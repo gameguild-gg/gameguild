@@ -404,7 +404,7 @@ public static class ServiceCollectionExtensions {
       .AddQueryType<GameGuild.GraphQL.Query>()
       .AddMutationType<GameGuild.GraphQL.Mutation>()
       // Add modules' GraphQL types
-      .AddPostsGraphQL()
+      // .AddPostsGraphQL()  // DISABLED: Extension method doesn't exist
       .AddUserAchievementsGraphQL()
       .AddProductGraphQl()
       .AddProgramContentGraphQL()
@@ -452,7 +452,7 @@ public static class ServiceCollectionExtensions {
       }
 
       // Enable query splitting for better performance with complex includes
-      options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+      // options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);  // DISABLED: Method doesn't exist in current EF version
     }, poolSize);
 
     // Add DbContextFactory for GraphQL DataLoaders (compatible with pooling)
@@ -460,7 +460,7 @@ public static class ServiceCollectionExtensions {
       InfrastructureConfiguration.ConfigureDbContext(options, dbOptions);
 
       // DataLoader contexts also benefit from query splitting
-      options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+      // options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);  // DISABLED: Method doesn't exist in current EF version
     });
 
     return services;
