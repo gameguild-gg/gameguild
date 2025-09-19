@@ -9,6 +9,7 @@ using GameGuild.Modules.Billing;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Posts;
 using GameGuild.Modules.Products;
+using GameGuild.Modules.Programs;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Subscriptions;
@@ -16,7 +17,16 @@ using GameGuild.Modules.Tenants;
 using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserAchievements;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
+using GameGuild.Source.Core.Services;
+using GameGuild.Source.Modules.Authorization;
+using GameGuild.Source.Modules.Billing;
+using GameGuild.Source.Modules.Payments;
+using GameGuild.Source.Modules.Posts;
+using GameGuild.Source.Modules.TestingLab;
+using static GameGuild.Source.Core.Services.RoleTemplateService;
+using static GameGuild.Source.Core.Services.TenantIsolationService;
+using static GameGuild.Source.Core.Services.UsernameNormalizationService;
+using static GameGuild.Source.Core.Services.UserPrivacyService;
 
 
 namespace GameGuild;
@@ -35,58 +45,109 @@ public static class DependencyInjection {
 
     // Register the presentation layer services
 
+    // 0. Structured Logging (must be first for proper logging throughout)
+    services.AddStructuredLogging(configuration);
+
     // 1. HTTP Logging (capture everything)
-    if (options.EnableHttpLogging) services.SetupHttpLogging(configuration, options.HttpLogging);
+    if (options.EnableHttpLogging) {
+      services.SetupHttpLogging(configuration, options.HttpLogging);
+    }
 
     // 2. Exception Handling/Problem Details (early error handling)
-    if (options.EnableProblemDetails) services.SetupProblemDetails(configuration, options.ProblemDetails);
+    if (options.EnableProblemDetails) {
+      services.SetupProblemDetails(configuration, options.ProblemDetails);
+    }
 
-    // 3. Localization (early for error messages)
-    if (options.EnableLocalization) services.SetupLocalization(configuration, options.Localization);
+    // 3. Localization (early for proper culture context)
+    if (options.EnableLocalization) {
+      services.SetupLocalization(configuration, options.Localization);
+    }
 
     // 4. Memory Caching (foundation for other services)
-    if (options.EnableMemoryCaching) services.SetupMemoryCaching(configuration, options.MemoryCaching);
+    if (options.EnableMemoryCaching) {
+      services.SetupMemoryCaching(configuration, options.MemoryCaching);
+    }
 
-    // 5. Response Caching (after memory caching)
-    if (options.EnableResponseCaching) services.SetupResponseCaching(configuration, options.ResponseCaching);
+    // 5. Response Caching (early performance optimization)
+    if (options.EnableResponseCaching) {
+      services.SetupResponseCaching(configuration, options.ResponseCaching);
+    }
 
-    // 6. Response Compression
-    if (options.EnableResponseCompression) services.SetupResponseCompression(configuration, options.ResponseCompression);
-
-    // 7. CORS (Cross-Origin Resource Sharing)
+    // 6. Response Compression (early performance optimization)
+    if (options.EnableResponseCompression) {
+      services.SetupResponseCompression(configuration, options.ResponseCompression);
+    }    // 7. CORS (Cross-Origin Resource Sharing)
     // TODO: CF-Connecting-IP Cloudflare header support.
-    if (options.EnableCors) services.SetupCors(configuration, options.Cors);
+    if (options.EnableCors) {
+      services.SetupCors(configuration, options.Cors);
+    }
 
     // 8. Authentication (identify user, and tenant)
-    if (options.EnableAuthentication) services.SetupAuthentication(configuration, options.Authentication);
+    if (options.EnableAuthentication) {
+      services.SetupAuthentication(configuration, options.Authentication);
+    }
 
-    // 9. Request Context (after authentication, unified request context handling)
-    // Handles user, tenant, location, and feature information in one cohesive service
-    if (options.EnableRequestContext) services.SetupRequestContext(configuration, options.RequestContext);
+    // 8.5. Cookie Security
+    if (options.EnableCookieSecurity) {
+      services.AddCookieSecurity(configuration, options.CookieSecurity);
+    }
 
-    // 10. Authorization (after context is established and feature flags are checked)
-    if (options.EnableAuthorization) services.SetupAuthorization(configuration, options.Authorization);
+    // 9. Request Context (user/tenant context after authentication)
+    if (options.EnableRequestContext) {
+      services.SetupRequestContext(configuration, options.RequestContext);
+    }
 
-    // 11. Rate Limiting
-    if (options.EnableRateLimiting) services.SetupRateLimiting(configuration, options.RateLimiting);
+    // 10. Authorization (depends on authentication)
+    if (options.EnableAuthorization) {
+      services.SetupAuthorization(configuration, options.Authorization);
+    }
+
+    // 11. Rate Limiting (after authentication for user-based limits)
+    if (options.EnableRateLimiting) {
+      services.SetupRateLimiting(configuration, options.RateLimiting);
+    }
 
     // 12. Model Validation
-    if (options.EnableModelValidation) services.SetupModelValidation(configuration, options.ModelValidation);
+    if (options.EnableModelValidation) {
+      services.SetupModelValidation(configuration, options.ModelValidation);
+    }
 
-    // 13. Feature Flags (OpenFeature)
-    if (options.EnableFeatureFlags) services.SetupFeatureFlags(configuration, options.FeatureFlags);
+    // 13. API Robustness (FluentValidation pipeline behaviors and enhanced error handling)
+    if (options.EnableFluentValidation) {
+      services.SetupFluentValidation(configuration, options.FluentValidation);
+    }
+
+    if (options.EnableErrorHandling) {
+      services.SetupErrorHandling(configuration, options.ErrorHandling);
+    }
+
+    // 14. Feature Flags (OpenFeature)
+    if (options.EnableFeatureFlags) {
+      services.SetupFeatureFlags(configuration, options.FeatureFlags);
+    }
 
     // 14. API Versioning
-    if (options.EnableApiVersioning) services.SetupApiVersioning(configuration, options.ApiVersioning);
+    if (options.EnableApiVersioning) {
+      services.SetupApiVersioning(configuration, options.ApiVersioning);
+    }
+
+    // 14.5. REST Conventions (Enhanced versioning, status codes, ETags)
+    services.SetupRestConventions(configuration);
 
     // 15. API Explorer
-    if (options.EnableApiExplorer) services.SetupApiExplorer(configuration, options.ApiVersioning);
+    if (options.EnableApiExplorer) {
+      services.SetupApiExplorer(configuration, options.ApiVersioning);
+    }
 
     // 16. Health Checks
-    if (options.EnableHealthChecks) services.SetupHealthChecks(configuration, options.HealthChecks);
+    if (options.EnableHealthChecks) {
+      services.SetupHealthChecks(configuration, options.HealthChecks);
+    }
 
     // 17. SignalR (real-time communication)
-    if (options.EnableSignalR) services.SetupSignalR(configuration, options.SignalR);
+    if (options.EnableSignalR) {
+      services.SetupSignalR(configuration, options.SignalR);
+    }
 
     // 18. Controllers/Endpoints
     // services.AddControllers(options => { options.Conventions.Add(new RouteTokenTransformerConvention(new GameGuild.ToKebabParameterTransformer())); })
@@ -103,12 +164,16 @@ public static class DependencyInjection {
     //         );
 
     // 19. GraphQL server configuration
-    if (options.EnableGraphQl) services.SetupGraphQl(configuration, options.GraphQl);
+    if (options.EnableGraphQl) {
+      services.SetupGraphQl(configuration, options.GraphQl);
+    }
 
     // 20. gRPC (handled by the application layer)
 
     // 21. OpenAPI/Swagger
-    if (options.EnableOpenApi) services.SetupOpenApi(configuration, options.OpenApi);
+    if (options.EnableOpenApi) {
+      services.SetupOpenApi(configuration, options.OpenApi);
+    }
 
     return services;
   }
@@ -222,23 +287,26 @@ public static class DependencyInjection {
 
   /// <summary> Registers external service implementations </summary>
   private static IServiceCollection AddExternalServices(this IServiceCollection services, IConfiguration configuration) {
-    // Add module services
+    // Add modules using the new standardized IModule pattern where available
+
+    // Core business modules with IModule implementations
+    services.AddAuthenticationModule(configuration);
+    services.AddProgramsModuleV2(configuration); // Keep V2 temporarily until updated
+    services.AddBillingModule(configuration);
+    services.AddPaymentsModule(configuration);
+    services.AddTestingLabModule(configuration);
+    services.AddPostsModule(configuration);
+    services.AddAuthorizationModule(configuration);
+
+    // Legacy modules still using old pattern (to be migrated)
     services.AddResourcesModule();
     services.AddTenantsModule();
     services.AddProjectsModule();
-
-    // Add missing modules
     services.AddSubscriptionsModule();
-    services.AddPostsModule();
-    services.AddTestingLabModule();
     services.AddCredentialsModule();
     services.AddUsersModule();
-    services.AddBillingModule();
     services.AddUserAchievementsModule();
     services.AddProductsModule();
-
-    // Add Authentication module
-    services.AddAuthModule(configuration);
 
     // External services will be added here as modules are implemented
     // Email service, payment providers, notification services, etc.
