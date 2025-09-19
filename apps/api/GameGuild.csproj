@@ -11,63 +11,83 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Asp.Versioning.Mvc"/>
-    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer"/>
+    <PackageReference Include="Asp.Versioning.Mvc" />
+    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
 
-    <PackageReference Include="BCrypt.Net-Next"/>
+    <PackageReference Include="BCrypt.Net-Next" />
 
-    <PackageReference Include="DotNetEnv"/>
+    <PackageReference Include="DotNetEnv" />
 
-    <PackageReference Include="FluentValidation"/>
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions"/>
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
 
-    <PackageReference Include="HotChocolate.AspNetCore"/>
-    <PackageReference Include="HotChocolate.Data.EntityFramework"/>
-    <PackageReference Include="HotChocolate.Types.Analyzers"/>
+    <PackageReference Include="HotChocolate.AspNetCore" />
+    <PackageReference Include="HotChocolate.Data.EntityFramework" />
+    <PackageReference Include="HotChocolate.Types.Analyzers" />
 
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 
-    <PackageReference Include="Microsoft.EntityFrameworkCore"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools"/>
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
 
-    <PackageReference Include="Newtonsoft.Json"/>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"/>
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
 
-    <PackageReference Include="OpenFeature"/>
+    <PackageReference Include="OpenFeature" />
 
-    <PackageReference Include="Serilog"/>
-    <PackageReference Include="Slugify.Core"/>
+    <PackageReference Include="OpenTelemetry" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
+    <PackageReference Include="OpenTelemetry.Exporter.Console" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
 
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt"/>
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Enrichers.Environment" />
+    <PackageReference Include="Serilog.Enrichers.Process" />
+    <PackageReference Include="Serilog.Enrichers.Thread" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
 
-    <PackageReference Include="Swashbuckle.AspNetCore"/>
+    <PackageReference Include="Slugify.Core" />
+
+    <PackageReference Include="StackExchange.Redis" />
+    <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
+    <PackageReference Include="System.Threading.RateLimiting" />
+
+    <PackageReference Include="QRCoder" />
+    <PackageReference Include="Otp.NET" />
+    <PackageReference Include="UAParser" />
+
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+
+    <PackageReference Include="Swashbuckle.AspNetCore" />
 
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="HotChocolate.Types"/>
-    <Using Include="HotChocolate.Types.Descriptors"/>
-    <Using Include="HotChocolate.Data"/>
+    <Using Include="HotChocolate.Types" />
+    <Using Include="HotChocolate.Types.Descriptors" />
+    <Using Include="HotChocolate.Data" />
 
-    <Using Include="Microsoft.AspNetCore.Authorization"/>
-    <Using Include="Microsoft.EntityFrameworkCore"/>
-    <Using Include="Microsoft.EntityFrameworkCore.Metadata.Builders"/>
-    <Using Include="System.ComponentModel.DataAnnotations"/>
-    <Using Include="System.ComponentModel.DataAnnotations.Schema"/>
+    <Using Include="Microsoft.AspNetCore.Authorization" />
+    <Using Include="Microsoft.EntityFrameworkCore" />
+    <Using Include="Microsoft.EntityFrameworkCore.Metadata.Builders" />
+    <Using Include="System.ComponentModel.DataAnnotations" />
+    <Using Include="System.ComponentModel.DataAnnotations.Schema" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="Tests/**/*"/>
-    <None Remove="Tests/**/*"/>
-    <EmbeddedResource Remove="Tests/**/*"/>
-    <Content Remove="Tests/**/*"/>
+    <Compile Remove="Tests/**/*" />
+    <None Remove="Tests/**/*" />
+    <EmbeddedResource Remove="Tests/**/*" />
+    <Content Remove="Tests/**/*" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Source\Modules\Billing\CQRS\" />
-    <Folder Include="Source\Modules\Billing\GraphQL\" />
-  </ItemGroup>
-
 </Project>
