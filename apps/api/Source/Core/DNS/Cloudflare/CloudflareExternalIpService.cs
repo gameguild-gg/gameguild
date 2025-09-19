@@ -30,8 +30,6 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, IDispos
 
   private DateTime? _lastUpdate;
 
-  private int _currentServiceIndex;
-
   private readonly Random _random = new Random();
 
   public CloudflareExternalIpService(ILogger<CloudflareExternalIpService> logger, IOptions<CloudflareDynamicDnsOptions> options, HttpClient httpClient) {
