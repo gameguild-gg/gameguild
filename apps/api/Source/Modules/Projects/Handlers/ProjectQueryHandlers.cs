@@ -84,7 +84,9 @@ public class ProjectQueryHandlers
     try {
       _logger.LogDebug("Getting project by ID: {ProjectId}", request.ProjectId);
 
-      var query = _context.Projects.Where(p => p.Id == request.ProjectId && p.DeletedAt == null);
+      var query = _context.Projects
+        .AsNoTracking() // Read-only query optimization
+        .Where(p => p.Id == request.ProjectId && p.DeletedAt == null);
 
       // Include related data if requested
       if (request.IncludeTeam) { query = query.Include(p => p.Collaborators); }
@@ -146,7 +148,9 @@ public class ProjectQueryHandlers
 
   public async Task<IEnumerable<Project>> Handle(GetProjectsByCategoryQuery request, CancellationToken cancellationToken) {
     try {
-      var query = _context.Projects.Where(p => p.CategoryId == request.CategoryId && p.DeletedAt == null);
+      var query = _context.Projects
+        .AsNoTracking() // Read-only query optimization
+        .Where(p => p.CategoryId == request.CategoryId && p.DeletedAt == null);
 
       if (request.Status.HasValue) { query = query.Where(p => p.Status == request.Status.Value); }
 
@@ -164,7 +168,9 @@ public class ProjectQueryHandlers
 
   public async Task<IEnumerable<Project>> Handle(GetProjectsByCreatorQuery request, CancellationToken cancellationToken) {
     try {
-      var query = _context.Projects.Where(p => p.Collaborators.Any(c => c.UserId == request.CreatorId && c.Role == ProjectRoles.Owner) && p.DeletedAt == null);
+      var query = _context.Projects
+        .AsNoTracking() // Read-only query optimization
+        .Where(p => p.Collaborators.Any(c => c.UserId == request.CreatorId && c.Role == ProjectRoles.Owner) && p.DeletedAt == null);
 
       if (request.Status.HasValue) { query = query.Where(p => p.Status == request.Status.Value); }
 
@@ -182,7 +188,9 @@ public class ProjectQueryHandlers
 
   public async Task<IEnumerable<Project>> Handle(GetProjectsByStatusQuery request, CancellationToken cancellationToken) {
     try {
-      var query = _context.Projects.Where(p => p.Status == request.Status && p.DeletedAt == null);
+      var query = _context.Projects
+        .AsNoTracking() // Read-only query optimization
+        .Where(p => p.Status == request.Status && p.DeletedAt == null);
 
       if (request.Type.HasValue) { query = query.Where(p => p.Type == request.Type.Value); }
 
