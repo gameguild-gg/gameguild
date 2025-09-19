@@ -16,17 +16,14 @@ public partial class RateLimitingMiddleware {
     [GeneratedRegex(@"/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?=/|$)", RegexOptions.IgnoreCase)]
     private static partial Regex GuidIdRegex();
     private readonly RequestDelegate _next;
-    private readonly IRateLimitingService _rateLimitingService;
     private readonly RateLimitingOptions _options;
     private readonly ILogger<RateLimitingMiddleware> _logger;
 
     public RateLimitingMiddleware(
       RequestDelegate next,
-      IRateLimitingService rateLimitingService,
       IOptions<RateLimitingOptions> options,
       ILogger<RateLimitingMiddleware> logger) {
         _next = next;
-        _rateLimitingService = rateLimitingService;
         _options = options.Value;
         _logger = logger;
     }
@@ -38,11 +35,13 @@ public partial class RateLimitingMiddleware {
             return;
         }
 
+        // Resolve the rate limiting service from the request scope
+        var rateLimitingService = context.RequestServices.GetRequiredService<IRateLimitingService>();
         var endpoint = GetEndpointIdentifier(context);
 
         try {
             // Check rate limit before processing request
-            var checkResult = await _rateLimitingService.CheckRateLimitAsync(context, endpoint);
+            var checkResult = await rateLimitingService.CheckRateLimitAsync(context, endpoint);
 
             if (!checkResult.IsAllowed) {
                 await HandleRateLimitExceeded(context, checkResult);
@@ -54,7 +53,7 @@ public partial class RateLimitingMiddleware {
 
             // Record successful request (only after successful processing)
             if (context.Response.StatusCode < 400) {
-                await _rateLimitingService.RecordRequestAsync(context, endpoint);
+                await rateLimitingService.RecordRequestAsync(context, endpoint);
             }
         }
         catch (Exception ex) {

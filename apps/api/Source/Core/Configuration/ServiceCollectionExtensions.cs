@@ -216,6 +216,10 @@ public static class ServiceCollectionExtensions {
         redisOptions.InstanceName = "GameGuild_RateLimit";
       });
     }
+    else {
+      // Add in-memory distributed cache as fallback
+      services.AddDistributedMemoryCache();
+    }
 
     return services;
   }
