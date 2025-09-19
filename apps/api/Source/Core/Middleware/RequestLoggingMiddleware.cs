@@ -39,11 +39,7 @@ public class RequestLoggingMiddleware {
         using var requestContext = LoggingExtensions.WithRequestContext(
             context.Request.Method,
             context.Request.Path,
-            context.Request.QueryString.ToString(),
-            context.Request.ContentType,
-            GetUserAgent(context.Request),
-            GetClientIpAddress(context),
-            correlationId);
+            GetUserAgent(context.Request));
 
         _logger.LogInformation("Request started: {Method} {Path}{QueryString}",
             context.Request.Method,
@@ -213,7 +209,7 @@ public class RequestLoggingMiddleware {
 
         return headers
             .Where(h => !sensitiveHeaders.Contains(h.Key))
-            .ToDictionary(h => h.Key, h => string.Join(", ", h.Value), StringComparer.OrdinalIgnoreCase);
+            .ToDictionary(h => h.Key, h => string.Join(", ", (string[])h.Value!), StringComparer.OrdinalIgnoreCase);
     }
 
     private static string GetUserAgent(HttpRequest request) {
