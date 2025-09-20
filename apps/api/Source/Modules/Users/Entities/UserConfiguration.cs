@@ -9,6 +9,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User> {
 
     // Index configurations
     builder.HasIndex(user => user.Email).IsUnique();
+    builder.HasIndex(user => user.EmailAddress).IsUnique(); // Index on EmailAddress value object
     builder.HasIndex(user => user.IsActive);
     builder.HasIndex(user => user.DeletedAt);
     builder.HasIndex(user => user.CreatedAt);
@@ -19,20 +20,37 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User> {
 
     builder.Property(user => user.Email).HasMaxLength(255).IsRequired();
 
+    // Configure EmailAddress as converted value object (single column)
+    builder.Property(u => u.EmailAddress)
+        .HasColumnName("Email")
+        .HasMaxLength(255)
+        .IsRequired()
+        .HasConversion(
+            emailAddr => emailAddr.Value, // To database
+            email => new EmailAddress(email) // From database
+        );
+
+    // Configure PhoneNumber as converted value object (single column)
+    builder.Property(u => u.PhoneNumber)
+        .HasColumnName("PhoneNumber")
+        .HasMaxLength(20)
+        .HasConversion(
+            phone => phone != null ? phone.Value : null, // To database (nullable)
+            phoneStr => phoneStr != null ? PhoneNumber.FromString(phoneStr) : null // From database (nullable)
+        );
+
     builder.Property(user => user.Balance)
            .HasColumnType("decimal(18,8)")
-           .HasDefaultValue(0m)
            .HasConversion(
              money => money.Amount, // To database
-             amount => Money.FromDecimal(amount, "USD") // From database - using static method
+             amount => new Money(amount, "USD") // From database - explicit constructor
            );
 
     builder.Property(user => user.AvailableBalance)
            .HasColumnType("decimal(18,8)")
-           .HasDefaultValue(0m)
            .HasConversion(
              money => money.Amount, // To database
-             amount => Money.FromDecimal(amount, "USD") // From database - using static method
+             amount => new Money(amount, "USD") // From database - explicit constructor
            );
 
     // Optimistic concurrency
