@@ -7,7 +7,7 @@ Consolidated summary.
 ```env
 DB_CONNECTION_STRING=Host=localhost;Database=gameguild;Username=postgres;Password=postgres
 ASPNETCORE_ENVIRONMENT=Development
-NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_API_URL=http://localhost:5295
 ```
 
 ## Database
