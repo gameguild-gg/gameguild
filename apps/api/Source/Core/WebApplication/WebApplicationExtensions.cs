@@ -1,4 +1,5 @@
 using GameGuild.Core.Configuration;
+using GameGuild.Core.Domain.Services;
 using GameGuild.Core.GraphQL;
 using GameGuild.Core.Middleware;
 using GameGuild.Core.REST;
@@ -82,6 +83,9 @@ internal static class WebApplicationExtensions {
 
     app = app.ConfigureDevelopmentPipeline().ConfigureProductionPipeline().ConfigureCommonPipeline().UseOpenApi();
 
+    // Ensure database is seeded
+    app.SeedDatabase();
+
     // Map health check endpoints
     app.UseApplicationHealthChecks();
 
@@ -116,6 +120,32 @@ internal static class WebApplicationExtensions {
       options.RoutePrefix = "swagger"; // Swagger UI will be available at /swagger
     }
     );
+
+    return app;
+  }
+
+  /// <summary> Seeds the database with initial data in development and staging environments </summary>
+  /// <param name="app"> The web application </param>
+  /// <returns> The web application for chaining </returns>
+  public static WebApplication SeedDatabase(this WebApplication app) {
+    ArgumentNullException.ThrowIfNull(app);
+
+    // Only seed in development and staging environments
+    if (!app.Environment.IsDevelopment() && !app.Environment.IsStaging()) {
+      return app;
+    }
+
+    using var scope = app.Services.CreateScope();
+    var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
+
+    try {
+      seeder.SeedAsync().GetAwaiter().GetResult();
+    }
+    catch (Exception ex) {
+      var logger = scope.ServiceProvider.GetRequiredService<ILogger<WebApplication>>();
+      logger.LogError(ex, "An error occurred while seeding the database");
+      throw;
+    }
 
     return app;
   }
