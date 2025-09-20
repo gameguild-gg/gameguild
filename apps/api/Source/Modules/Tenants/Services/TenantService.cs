@@ -1,7 +1,7 @@
 using GameGuild.Database;
 using GameGuild.Modules.Permissions;
 using Microsoft.EntityFrameworkCore;
-using TenantPermissionEntity = GameGuild.TenantPermission;
+using TenantPermissionEntity = GameGuild.Modules.Tenants.TenantPermission;
 
 
 namespace GameGuild.Modules.Tenants;
@@ -175,7 +175,8 @@ public class TenantService(ApplicationDbContext context) : ITenantService {
     }
 
     // Create new membership with basic permissions
-    var membership = TenantPermissionEntity.CreateUserPermission(userId, tenantId, PermissionType.Read);
+    var membership = new TenantPermissionEntity(userId, tenantId);
+    membership.AddPermission(PermissionType.Read);
 
     context.TenantPermissions.Add(membership);
     _ = await context.SaveChangesAsync();

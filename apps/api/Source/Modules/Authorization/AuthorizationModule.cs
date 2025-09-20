@@ -1,4 +1,7 @@
+using GameGuild.Core.Domain.Permissions;
+using GameGuild.Core.Infrastructure.Permissions;
 using GameGuild.Core.Modules;
+using GameGuild.Services;
 
 namespace GameGuild.Source.Modules.Authorization;
 
@@ -16,7 +19,9 @@ public class AuthorizationModule : ModuleBase {
         base.ConfigureServices(services, configuration);
 
         // Register Authorization services
-        // TODO: Add authorization services, DAC services, and middleware components
+        services.AddScoped<IPermissionService, PermissionService>();
+        services.AddScoped<IModulePermissionService, ModulePermissionService>();
+        services.AddScoped<ISimplePermissionService, SimplePermissionService>();
 
         // CQRS handlers are automatically registered by assembly scanning
 

@@ -13,5 +13,5 @@ public interface ITenantAuthService {
   Task<IEnumerable<Claim>> GetTenantClaimsAsync(User user, Guid tenantId);
 
   /// <summary> Get all available tenants for a user </summary>
-  Task<IEnumerable<TenantPermission>> GetUserTenantsAsync(User user);
+  Task<IEnumerable<GameGuild.Modules.Tenants.TenantPermission>> GetUserTenantsAsync(User user);
 }

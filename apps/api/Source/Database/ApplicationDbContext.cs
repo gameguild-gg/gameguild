@@ -65,7 +65,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<Tenant> Tenants { get; set; }
 
-  public DbSet<TenantPermission> TenantPermissions { get; set; } = null!;
+  public DbSet<GameGuild.Modules.Tenants.TenantPermission> TenantPermissions { get; set; } = null!;
 
   public DbSet<TenantDomain> TenantDomains { get; set; } = null!;
 
@@ -86,7 +86,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   public DbSet<ResourceMetadata> ResourceMetadata { get; set; }
 
-  public DbSet<ContentTypePermission> ContentTypePermissions { get; set; }
+  public DbSet<GameGuild.Modules.Permissions.ContentTypePermission> ContentTypePermissions { get; set; }
 
   public DbSet<ResourceLocalization> ResourceLocalizations { get; set; }
 
@@ -289,6 +289,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
   protected override void OnModelCreating(ModelBuilder modelBuilder) {
     base.OnModelCreating(modelBuilder);
+
+    // Ignore TempModels to prevent conflicts with real entities
+    modelBuilder.Ignore<GameGuild.TempModels.User>();
+    modelBuilder.Ignore<GameGuild.TempModels.ContentTypePermission>();
+    modelBuilder.Ignore<GameGuild.TempModels.TenantPermission>();
+
+    // Ignore alternative permission models from PermissionEntities.cs (GameGuild namespace)
+    // These conflict with the real permission entities in GameGuild.Modules.Permissions
+    modelBuilder.Ignore<GameGuild.ContentTypePermission>();
+    modelBuilder.Ignore<GameGuild.PermissionBase>();
 
     // Apply all entity configurations from the assembly
     modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
