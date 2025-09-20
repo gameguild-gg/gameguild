@@ -1,13 +1,13 @@
 ﻿using System.Globalization;
 using GameGuild.Core.REST;
 using GameGuild.Database;
-using GameGuild.Extensions;
 using GameGuild.Modules.Features.Infrastructure;
 using GameGuild.Modules.Features.Services;
 using GameGuild.Modules.Posts;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.UserAchievements;
+using GameGuild.Source.GraphQL;
 using GameGuild.Source.Modules.Programs.GraphQL;
 using HotChocolate;
 using Microsoft.AspNetCore.HttpLogging;
@@ -396,12 +396,13 @@ public static class ServiceCollectionExtensions {
     // Add GraphQL server with HotChocolate
     var builder = services
       .AddGraphQLServer()
-      .AddGlobalObjectIdentification()
       .AddFiltering()
       .AddSorting()
       .AddProjections()
       // Add security middleware for depth analysis
       .AddMaxExecutionDepthRule(options.MaxDepth)
+      // Add HotChocolate authorization support
+      .AddAuthorization()
       // Add DAC authorization
       .AddDACAuthorization()
       // Add root types
