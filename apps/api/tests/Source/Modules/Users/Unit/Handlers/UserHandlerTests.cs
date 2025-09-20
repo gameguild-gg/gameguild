@@ -1,6 +1,6 @@
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Users;
-using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
