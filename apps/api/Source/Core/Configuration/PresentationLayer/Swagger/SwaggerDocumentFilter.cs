@@ -14,7 +14,7 @@ public class SwaggerDocumentFilter : IDocumentFilter {
     swaggerDoc.Servers = new List<OpenApiServer> {
       new OpenApiServer { Url = "https://api.GameGuild.com", Description = "Production API Server" },
       new OpenApiServer { Url = "https://staging-api.GameGuild.com", Description = "Staging API Server" },
-      new OpenApiServer { Url = "http://localhost:5000", Description = "Development API Server" },
+      new OpenApiServer { Url = "http://localhost:5295", Description = "Development API Server" },
     };
 
     // Add common tags

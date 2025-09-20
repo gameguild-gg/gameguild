@@ -38,7 +38,7 @@ USER appuser
 EXPOSE 5000
 
 # Set environment variables
-ENV ASPNETCORE_URLS=http://+:5000 \
+ENV ASPNETCORE_URLS=http://+:5295 \
     ASPNETCORE_ENVIRONMENT=Production \
     DOTNET_RUNNING_IN_CONTAINER=true \
     DOTNET_USE_POLLING_FILE_WATCHER=true \
@@ -46,7 +46,7 @@ ENV ASPNETCORE_URLS=http://+:5000 \
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+    CMD curl -f http://localhost:5295/health || exit 1
 
 # Entry point
 ENTRYPOINT ["dotnet", "GameGuild.dll"]
