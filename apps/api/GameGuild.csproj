@@ -22,6 +22,7 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
 
     <PackageReference Include="HotChocolate.AspNetCore" />
+    <PackageReference Include="HotChocolate.AspNetCore.Authorization" />
     <PackageReference Include="HotChocolate.Data.EntityFramework" />
     <PackageReference Include="HotChocolate.Types.Analyzers" />
 
