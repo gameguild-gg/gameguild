@@ -45,7 +45,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
       Assert.Equal("Test User", result.Name);
       Assert.Equal("test@example.com", result.Email);
       Assert.True(result.IsActive); // Default should be true
-      Assert.Equal(100m, result.Balance);
+      Assert.Equal(100m, result.Balance.Amount);
 
       // Verify user was saved to database
       var savedUser = await _context.Users.FindAsync(result.Id);
