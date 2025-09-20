@@ -122,9 +122,9 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services {
       // Arrange
       var users = new[]
       {
-                new User { Name = "User 1", Email = "user1@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
-                new User { Name = "User 2", Email = "user2@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
-                new User { Name = "User 3", Email = "user3@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
+                new User { Name = "User 1", Email = "user1@example.com", IsActive = true, Balance = Money.Zero(), AvailableBalance = Money.Zero() },
+                new User { Name = "User 2", Email = "user2@example.com", IsActive = true, Balance = Money.Zero(), AvailableBalance = Money.Zero() },
+                new User { Name = "User 3", Email = "user3@example.com", IsActive = false, Balance = Money.Zero(), AvailableBalance = Money.Zero() },
             };
 
       _context.Users.AddRange(users);
@@ -170,8 +170,8 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services {
       Assert.NotNull(result);
       Assert.Equal("New User", result.Name);
       Assert.Equal("new@example.com", result.Email);
-      Assert.Equal(150m, result.Balance);
-      Assert.Equal(150m, result.AvailableBalance);
+      Assert.Equal(150m, result.Balance.Amount);
+      Assert.Equal(150m, result.AvailableBalance.Amount);
       Assert.True(result.IsActive);
 
       // Verify in database
