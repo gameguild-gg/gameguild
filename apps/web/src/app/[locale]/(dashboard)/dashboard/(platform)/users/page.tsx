@@ -35,7 +35,7 @@ export default async function UsersPage({ searchParams = {} }: UsersPageProps) {
     const session = await auth();
     console.log('Session:', session ? 'authenticated' : 'not authenticated');
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:5000';
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:5295';
     const skip = (page - 1) * limit;
     const commonParams = new URLSearchParams();
     commonParams.set('skip', String(skip));
