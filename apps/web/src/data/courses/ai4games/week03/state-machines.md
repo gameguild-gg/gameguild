@@ -6,6 +6,7 @@
 
 I do not cover State Machines in depth on the introductory AI class because in order to implement a good state machine involves:
 
+- The best usecase is for animation control;
 - Building a nice UI so you can visualize the states and transitions;
 - Knowledge on advanced data structures such as graphs, trees, and a more specialized search algorithims;
 - Delegates, Events, Callbacks and Pointer to Functions;
