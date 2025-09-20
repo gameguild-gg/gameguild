@@ -391,3 +391,7 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
     </div>
   );
 }
+
+// Re-export for compatibility
+export { TestingLabOverview as TestingLabOverviewClient };
+

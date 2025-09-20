@@ -141,7 +141,7 @@ export async function getUsersData(page: number = 1, limit: number = 20, search?
  */
 export async function getUserById(id: string): Promise<UserResponseDto | null> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
 
     const response = await fetch(`${apiUrl}/users/${id}`, {
       headers: {
