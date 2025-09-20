@@ -276,7 +276,7 @@ export async function bulkDeactivateUsers(userIds: string[], reason?: string): P
 export async function getUserByUsername(username: string, includeDeleted = false): Promise<User | null> {
   try {
     // Try using the public client first (for public profiles)
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/users/search?searchTerm=${encodeURIComponent(username)}&includeDeleted=${includeDeleted}&take=1`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295'}/api/users/search?searchTerm=${encodeURIComponent(username)}&includeDeleted=${includeDeleted}&take=1`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
