@@ -243,7 +243,7 @@ export async function updateUser(id: string, prevState: ActionState, formData: F
       return { success: false, error: 'Please provide a valid email address' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
 
     const response = await fetch(`${apiUrl}/api/users/${id}`, {
       method: 'PUT',
@@ -283,7 +283,7 @@ export async function updateUser(id: string, prevState: ActionState, formData: F
  */
 export async function deleteUser(id: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
 
     const response = await fetch(`${apiUrl}/api/users/${id}?softDelete=true`, {
       method: 'DELETE',
@@ -320,7 +320,7 @@ export async function toggleUserStatus(
   user?: UserResponseDto;
 }> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
 
     const response = await fetch(`${apiUrl}/api/users/${id}`, {
       method: 'PUT',
@@ -366,7 +366,7 @@ export async function revalidateUsersData(): Promise<void> {
  */
 export async function bulkUpdateUsers(userIds: string[], updates: Partial<UpdateUserDto>): Promise<{ success: boolean; error?: string; updatedCount?: number }> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
 
     const response = await fetch(`${apiUrl}/users/bulk`, {
       method: 'PUT',
@@ -405,7 +405,7 @@ export async function bulkUpdateUsers(userIds: string[], updates: Partial<Update
  */
 export async function searchUsers(query: string, limit: number = 10): Promise<UserResponseDto[]> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
 
     const response = await fetch(`${apiUrl}/users/search?q=${encodeURIComponent(query)}&limit=${limit}`, {
       headers: {
@@ -434,7 +434,7 @@ export async function searchUsers(query: string, limit: number = 10): Promise<Us
  */
 export async function getUserStatistics(fromDate?: string, toDate?: string, includeDeleted: boolean = false): Promise<{ success: boolean; error?: string; statistics?: unknown }> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
     const params = new URLSearchParams({
       ...(fromDate && { fromDate }),
       ...(toDate && { toDate }),
@@ -478,7 +478,7 @@ export async function bulkActivateUsers(
   result?: unknown;
 }> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
     const params = new URLSearchParams();
     if (reason) params.append('reason', reason);
 
@@ -522,7 +522,7 @@ export async function bulkDeactivateUsers(
   result?: unknown;
 }> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
     const params = new URLSearchParams();
     if (reason) params.append('reason', reason);
 
