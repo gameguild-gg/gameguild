@@ -2,6 +2,7 @@ using System.Reflection;
 using GameGuild.Authorization.Identity;
 using GameGuild.Core.Configuration;
 using GameGuild.Core.Domain.Identity;
+using GameGuild.Core.Domain.Services;
 using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
@@ -18,6 +19,7 @@ using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserAchievements;
 using GameGuild.Modules.Users;
 using GameGuild.Source.Core.Services;
+using GameGuild.Source.Database;
 using GameGuild.Source.Modules.Authorization;
 using GameGuild.Source.Modules.Billing;
 using GameGuild.Source.Modules.Payments;
@@ -213,6 +215,9 @@ public static class DependencyInjection {
 
     // Register database context
     ServiceCollectionExtensions.AddDatabaseContext(services, configuration);
+
+    // Register database seeder
+    services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 
     // Add OpenTelemetry observability
     services.AddOpenTelemetryObservability(configuration);
