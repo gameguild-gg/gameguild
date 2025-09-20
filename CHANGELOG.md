@@ -1,3 +1,10 @@
+## [2.21.1](https://github.com/gameguild-gg/gameguild/compare/v2.21.0...v2.21.1) (2025-09-20)
+
+
+### Bug Fixes
+
+* **web:** Adds behaviour and decision trees ([44eead1](https://github.com/gameguild-gg/gameguild/commit/44eead14dd9f0115e38a8644768ef732133f442c))
+
 # [2.21.0](https://github.com/gameguild-gg/gameguild/compare/v2.20.0...v2.21.0) (2025-09-16)
 
 
