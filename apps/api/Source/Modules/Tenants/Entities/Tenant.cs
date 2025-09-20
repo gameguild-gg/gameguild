@@ -35,9 +35,8 @@ public class Tenant : Resource {
   public string Slug { get; set; } = string.Empty;
 
   /// <summary> Administrative email for the tenant </summary>
-  [Required]
   [MaxLength(255)]
-  public string AdminEmail { get; set; } = string.Empty;
+  public string? AdminEmail { get; set; }
 
   /// <summary> Navigation property to tenant permissions and user memberships </summary>
   public virtual ICollection<TenantPermission> TenantPermissions { get; set; } = [];

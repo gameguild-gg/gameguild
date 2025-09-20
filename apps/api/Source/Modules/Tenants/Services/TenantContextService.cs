@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
-using TenantPermissionEntity = GameGuild.TenantPermission;
+using TenantPermissionEntity = GameGuild.Modules.Tenants.TenantPermission;
 
 
 namespace GameGuild.Modules.Tenants;

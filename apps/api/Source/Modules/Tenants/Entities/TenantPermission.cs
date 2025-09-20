@@ -12,6 +12,15 @@ namespace GameGuild.Modules.Tenants;
 [Index(nameof(UserId), Name = "IX_TenantPermissions_UserId")]
 [Index(nameof(ExpiresAt), Name = "IX_TenantPermissions_ExpiresAt")]
 public class TenantPermission : WithPermissions {
+  /// <summary> Default constructor </summary>
+  public TenantPermission() { }
+
+  /// <summary> Constructor for creating tenant permissions with user and tenant </summary>
+  public TenantPermission(Guid? userId, Guid? tenantId) {
+    UserId = userId;
+    TenantId = tenantId;
+  }
+
   // Computed properties specific to tenant permissions
 
   /// <summary> Whether this represents an active membership </summary>
