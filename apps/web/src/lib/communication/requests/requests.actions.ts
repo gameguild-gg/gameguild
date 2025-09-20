@@ -108,7 +108,7 @@ export async function getRequestsData(page: number = 1, limit: number = 20, sear
       };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
     const skip = (page - 1) * limit;
 
     if (search) {
@@ -204,7 +204,7 @@ export async function getRequestById(id: string): Promise<Request | null> {
       throw new Error('Unauthorized');
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
 
     const response = await fetch(`${apiUrl}/api/requests/${id}`, {
       headers: {

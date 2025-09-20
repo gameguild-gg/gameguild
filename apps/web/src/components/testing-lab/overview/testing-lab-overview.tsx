@@ -1,1 +1,1 @@
-export { TestingLabOverview } from './testing-lab-overview-ssr';
+export { TestingLabOverview } from './testing-lab-overview-client';
