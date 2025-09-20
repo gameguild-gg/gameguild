@@ -308,6 +308,9 @@ public static class DependencyInjection {
     services.AddUserAchievementsModule();
     services.AddProductsModule();
 
+    // External infrastructure services
+    services.AddCloudflareServices(configuration);
+
     // External services will be added here as modules are implemented
     // Email service, payment providers, notification services, etc.
 
@@ -359,6 +362,28 @@ public static class DependencyInjection {
     Console.WriteLine("✅ IUserPrivacyService registered");
 
     Console.WriteLine("🔧 AddCoreServices completed successfully");
+    return services;
+  }
+
+  /// <summary> Registers Cloudflare DNS services </summary>
+  private static IServiceCollection AddCloudflareServices(this IServiceCollection services, IConfiguration configuration) {
+    // Configure CloudflareDynamicDnsOptions
+    services.Configure<GameGuild.Configuration.CloudflareDynamicDnsOptions>(
+        configuration.GetSection(GameGuild.Configuration.CloudflareDynamicDnsOptions.SectionName));
+
+    // Register HTTP client for CloudflareExternalIpService
+    services.AddHttpClient<GameGuild.DNS.Cloudflare.CloudflareExternalIpService>();
+
+    // Register the service for both interfaces
+    services.AddScoped<GameGuild.DNS.Cloudflare.CloudflareExternalIpService>();
+    services.AddScoped<GameGuild.DNS.Cloudflare.ICloudflareExternalIpService>(provider =>
+        provider.GetRequiredService<GameGuild.DNS.Cloudflare.CloudflareExternalIpService>());
+    services.AddScoped<GameGuild.Services.ICloudflareExternalIpService>(provider =>
+        provider.GetRequiredService<GameGuild.DNS.Cloudflare.CloudflareExternalIpService>());
+
+    // Register the hosted service (temporarily disabled due to scope issue)
+    // services.AddHostedService<GameGuild.DNS.Cloudflare.CloudflareExternalIpHostedService>();
+
     return services;
   }
 }

@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using GameGuild.Configuration;
+using GameGuild.Services;
 using Microsoft.Extensions.Options;
 
 
@@ -11,7 +12,7 @@ namespace GameGuild.DNS.Cloudflare;
 /// Service that periodically checks external IP and updates Cloudflare DNS records.
 /// Following Clean Architecture principles for infrastructure concerns
 /// </summary>
-public class CloudflareExternalIpService : ICloudflareExternalIpService, IDisposable {
+public class CloudflareExternalIpService : ICloudflareExternalIpService, GameGuild.Services.ICloudflareExternalIpService, IDisposable {
   private readonly ILogger<CloudflareExternalIpService> _logger;
 
   private readonly CloudflareDynamicDnsOptions _options;
