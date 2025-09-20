@@ -44,7 +44,7 @@ export class TestingLabSettingsAPI {
    * Get testing lab settings for the current tenant
    */
   static async getTestingLabSettings(accessToken: string): Promise<TestingLabSettingsDto> {
-    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
     const response = await fetch(`${apiUrl}/api/testing-lab/settings`, {
       method: 'GET',
       headers: {
@@ -64,7 +64,7 @@ export class TestingLabSettingsAPI {
    * Create or update testing lab settings for the current tenant
    */
   static async createOrUpdateTestingLabSettings(dto: CreateTestingLabSettingsDto, accessToken: string): Promise<TestingLabSettingsDto> {
-    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
     const response = await fetch(`${apiUrl}/api/testing-lab/settings`, {
       method: 'PUT',
       headers: {
@@ -86,7 +86,7 @@ export class TestingLabSettingsAPI {
    */
   static async updateTestingLabSettings(dto: UpdateTestingLabSettingsDto, accessToken: string): Promise<TestingLabSettingsDto> {
     // Use internal API URL for server-to-server communication
-    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
     const fullUrl = `${apiUrl}/api/testing-lab/settings`;
     
     console.log('Environment API_URL:', process.env.API_URL);
@@ -128,7 +128,7 @@ export class TestingLabSettingsAPI {
    * Reset testing lab settings to default values for the current tenant
    */
   static async resetTestingLabSettings(accessToken: string): Promise<TestingLabSettingsDto> {
-    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
     const response = await fetch(`${apiUrl}/api/testing-lab/settings/reset`, {
       method: 'POST',
       headers: {
@@ -148,7 +148,7 @@ export class TestingLabSettingsAPI {
    * Check if testing lab settings exist for the current tenant
    */
   static async testingLabSettingsExist(accessToken: string): Promise<boolean> {
-    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
     const response = await fetch(`${apiUrl}/api/testing-lab/settings/exists`, {
       method: 'GET',
       headers: {
