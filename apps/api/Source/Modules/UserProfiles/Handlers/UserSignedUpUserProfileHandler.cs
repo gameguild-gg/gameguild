@@ -1,9 +1,10 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Authentication;
+using GameGuild.Modules.UserProfiles;
 using IMediator = GameGuild.CQRS.IMediator;
 
 
-namespace GameGuild.Modules.UserProfiles;
+namespace GameGuild.Source.Modules.UserProfiles.Handlers;
 
 /// <summary> Notification handler that automatically creates a UserProfile when a user signs up </summary>
 public class UserSignedUpUserProfileHandler(IMediator mediator, ILogger<UserSignedUpUserProfileHandler> logger) : INotificationHandler<UserSignedUpNotification> {
@@ -68,8 +69,6 @@ public class UserSignedUpUserProfileHandler(IMediator mediator, ILogger<UserSign
 
   /// <summary> Capitalizes the first letter of a string </summary>
   private static string CapitalizeFirst(string input) {
-    if (string.IsNullOrEmpty(input)) return input;
-
-    return char.ToUpper(input[0]) + input[1..].ToLower();
+    return string.IsNullOrEmpty(input) ? input : char.ToUpper(input[0]) + input[1..].ToLower();
   }
 }
