@@ -38,7 +38,7 @@ const REVALIDATION_TIME = 300; // 5 minutes
 const getCachedUsersData = unstable_cache(
   async (page: number = 1, limit: number = 20, search?: string): Promise<UserData> => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
       const skip = (page - 1) * limit;
 
       if (search) {
