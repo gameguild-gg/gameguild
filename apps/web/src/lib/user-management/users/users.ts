@@ -190,7 +190,7 @@ export async function createUser(prevState: ActionState, formData: FormData): Pr
       return { success: false, error: 'Please provide a valid email address' };
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
 
     const response = await fetch(`${apiUrl}/api/users`, {
       method: 'POST',
