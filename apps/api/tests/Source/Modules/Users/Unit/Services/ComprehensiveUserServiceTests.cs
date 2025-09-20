@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Database;
 using GameGuild.Modules.Users;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Tests.Modules.Users.Unit.Services {
