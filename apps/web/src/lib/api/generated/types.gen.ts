@@ -120,7 +120,7 @@ export enum DevelopmentStatus {
 }
 
 export type EmailAddress = {
-  readonly value?: string | null;
+  value?: string | null;
 };
 
 export type MicrosoftAspNetCoreMvcProblemDetails = {
@@ -2688,7 +2688,7 @@ export type ModulesReputationsUserReputationHistory = {
   userReputationId?: string | null;
   userTenantReputation?: ModulesReputationsUserTenantReputation;
   userTenantReputationId?: string | null;
-  tenantPermission?: TenantPermission;
+  tenantPermission?: ModulesTenantsTenantPermission;
   tenantPermissionId?: string | null;
   reputation?: ModulesReputationsIReputation;
   reputationAction?: ModulesReputationsReputationAction;
@@ -2723,7 +2723,7 @@ export type ModulesReputationsUserTenantReputation = {
   localizations?: Array<ModulesResourcesResourceLocalization> | null;
   tenant?: ModulesTenantsTenant;
   readonly isGlobal?: boolean;
-  tenantPermission?: TenantPermission;
+  tenantPermission?: ModulesTenantsTenantPermission;
   tenantPermissionId?: string | null;
   score?: number;
   currentLevel?: ModulesReputationsReputationTier;
@@ -3208,7 +3208,7 @@ export type ModulesTenantsTenant = {
   isActive?: boolean;
   isDefault?: boolean;
   slug: string;
-  adminEmail: string;
+  adminEmail?: string | null;
   tenantPermissions?: Array<ModulesTenantsTenantPermission> | null;
   settings?: ModulesTenantsTenantSettings;
 };
@@ -4508,9 +4508,9 @@ export enum PermissionType {
 }
 
 export type PhoneNumber = {
-  readonly value?: string | null;
+  value?: string | null;
   countryCode?: string | null;
-  readonly nationalNumber?: string | null;
+  nationalNumber?: string | null;
 };
 
 export enum ProductAccessStatus {
@@ -4740,24 +4740,6 @@ export enum TagType {
   _6 = 6,
 }
 
-export type TenantPermission = {
-  tenant?: ModulesTenantsTenant;
-  readonly isGlobal?: boolean;
-  readonly isNew?: boolean;
-  readonly isDeleted?: boolean;
-  id?: string;
-  version?: number;
-  deletedAt?: string | null;
-  readonly domainEvents?: Array<CqrsIDomainEvent> | null;
-  readonly userId?: string | null;
-  readonly tenantId?: string | null;
-  permissions?: PermissionType;
-  createdAt?: string;
-  updatedAt?: string;
-  readonly expiresAt?: string | null;
-  readonly isExpired?: boolean;
-};
-
 export enum TransactionStatus {
   _0 = 0,
   _1 = 1,
@@ -4811,7 +4793,7 @@ export type GetApiAchievementsLeaderboardResponses = {
 
 export type GetApiAchievementsLeaderboardResponse = GetApiAchievementsLeaderboardResponses[keyof GetApiAchievementsLeaderboardResponses];
 
-export type GetApiAchievementsData = {
+export type GetAchievementsData = {
   body?: never;
   path?: never;
   query?: {
@@ -4828,37 +4810,37 @@ export type GetApiAchievementsData = {
     tenantId?: string;
     version?: string;
   };
-  url: '/api/Achievements';
+  url: '/achievements';
 };
 
-export type GetApiAchievementsResponses = {
+export type GetAchievementsResponses = {
   /**
    * OK
    */
   200: ModulesUserAchievementsAchievementsPageDto;
 };
 
-export type GetApiAchievementsResponse = GetApiAchievementsResponses[keyof GetApiAchievementsResponses];
+export type GetAchievementsResponse = GetAchievementsResponses[keyof GetAchievementsResponses];
 
-export type PostApiAchievementsData = {
+export type PostAchievementsData = {
   body?: ModulesUserAchievementsCreateAchievementCommand;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Achievements';
+  url: '/achievements';
 };
 
-export type PostApiAchievementsResponses = {
+export type PostAchievementsResponses = {
   /**
    * OK
    */
   200: ModulesUserAchievementsAchievement;
 };
 
-export type PostApiAchievementsResponse = PostApiAchievementsResponses[keyof PostApiAchievementsResponses];
+export type PostAchievementsResponse = PostAchievementsResponses[keyof PostAchievementsResponses];
 
-export type DeleteApiAchievementsByAchievementIdData = {
+export type DeleteAchievementsByAchievementIdData = {
   body?: never;
   path: {
     achievementId: string;
@@ -4866,17 +4848,17 @@ export type DeleteApiAchievementsByAchievementIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Achievements/{achievementId}';
+  url: '/achievements/{achievementId}';
 };
 
-export type DeleteApiAchievementsByAchievementIdResponses = {
+export type DeleteAchievementsByAchievementIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetApiAchievementsByAchievementIdData = {
+export type GetAchievementsByAchievementIdData = {
   body?: never;
   path: {
     achievementId: string;
@@ -4886,19 +4868,19 @@ export type GetApiAchievementsByAchievementIdData = {
     includePrerequisites?: boolean;
     version?: string;
   };
-  url: '/api/Achievements/{achievementId}';
+  url: '/achievements/{achievementId}';
 };
 
-export type GetApiAchievementsByAchievementIdResponses = {
+export type GetAchievementsByAchievementIdResponses = {
   /**
    * OK
    */
   200: ModulesUserAchievementsAchievement;
 };
 
-export type GetApiAchievementsByAchievementIdResponse = GetApiAchievementsByAchievementIdResponses[keyof GetApiAchievementsByAchievementIdResponses];
+export type GetAchievementsByAchievementIdResponse = GetAchievementsByAchievementIdResponses[keyof GetAchievementsByAchievementIdResponses];
 
-export type PutApiAchievementsByAchievementIdData = {
+export type PutAchievementsByAchievementIdData = {
   body?: ModulesUserAchievementsUpdateAchievementCommand;
   path: {
     achievementId: string;
@@ -4906,19 +4888,19 @@ export type PutApiAchievementsByAchievementIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Achievements/{achievementId}';
+  url: '/achievements/{achievementId}';
 };
 
-export type PutApiAchievementsByAchievementIdResponses = {
+export type PutAchievementsByAchievementIdResponses = {
   /**
    * OK
    */
   200: ModulesUserAchievementsAchievement;
 };
 
-export type PutApiAchievementsByAchievementIdResponse = PutApiAchievementsByAchievementIdResponses[keyof PutApiAchievementsByAchievementIdResponses];
+export type PutAchievementsByAchievementIdResponse = PutAchievementsByAchievementIdResponses[keyof PutAchievementsByAchievementIdResponses];
 
-export type PostApiAchievementsByAchievementIdAwardData = {
+export type PostAchievementsByAchievementIdAwardData = {
   body?: ModulesUserAchievementsAwardAchievementRequest;
   path: {
     achievementId: string;
@@ -4926,20 +4908,19 @@ export type PostApiAchievementsByAchievementIdAwardData = {
   query?: {
     version?: string;
   };
-  url: '/api/Achievements/{achievementId}/award';
+  url: '/achievements/{achievementId}/award';
 };
 
-export type PostApiAchievementsByAchievementIdAwardResponses = {
+export type PostAchievementsByAchievementIdAwardResponses = {
   /**
    * OK
    */
   200: ModulesUserAchievementsUserAchievement;
 };
 
-export type PostApiAchievementsByAchievementIdAwardResponse =
-  PostApiAchievementsByAchievementIdAwardResponses[keyof PostApiAchievementsByAchievementIdAwardResponses];
+export type PostAchievementsByAchievementIdAwardResponse = PostAchievementsByAchievementIdAwardResponses[keyof PostAchievementsByAchievementIdAwardResponses];
 
-export type PostApiAchievementsByAchievementIdBulkAwardData = {
+export type PostAchievementsByAchievementIdBulkAwardData = {
   body?: ModulesUserAchievementsBulkAwardAchievementRequest;
   path: {
     achievementId: string;
@@ -4947,20 +4928,20 @@ export type PostApiAchievementsByAchievementIdBulkAwardData = {
   query?: {
     version?: string;
   };
-  url: '/api/Achievements/{achievementId}/bulk-award';
+  url: '/achievements/{achievementId}/bulk-award';
 };
 
-export type PostApiAchievementsByAchievementIdBulkAwardResponses = {
+export type PostAchievementsByAchievementIdBulkAwardResponses = {
   /**
    * OK
    */
   200: Array<ModulesUserAchievementsUserAchievement>;
 };
 
-export type PostApiAchievementsByAchievementIdBulkAwardResponse =
-  PostApiAchievementsByAchievementIdBulkAwardResponses[keyof PostApiAchievementsByAchievementIdBulkAwardResponses];
+export type PostAchievementsByAchievementIdBulkAwardResponse =
+  PostAchievementsByAchievementIdBulkAwardResponses[keyof PostAchievementsByAchievementIdBulkAwardResponses];
 
-export type GetApiAchievementsByAchievementIdStatisticsData = {
+export type GetAchievementsByAchievementIdStatisticsData = {
   body?: never;
   path: {
     achievementId: string;
@@ -4968,36 +4949,36 @@ export type GetApiAchievementsByAchievementIdStatisticsData = {
   query?: {
     version?: string;
   };
-  url: '/api/Achievements/{achievementId}/statistics';
+  url: '/achievements/{achievementId}/statistics';
 };
 
-export type GetApiAchievementsByAchievementIdStatisticsResponses = {
+export type GetAchievementsByAchievementIdStatisticsResponses = {
   /**
    * OK
    */
   200: ModulesUserAchievementsAchievementStatisticsDto;
 };
 
-export type GetApiAchievementsByAchievementIdStatisticsResponse =
-  GetApiAchievementsByAchievementIdStatisticsResponses[keyof GetApiAchievementsByAchievementIdStatisticsResponses];
+export type GetAchievementsByAchievementIdStatisticsResponse =
+  GetAchievementsByAchievementIdStatisticsResponses[keyof GetAchievementsByAchievementIdStatisticsResponses];
 
-export type GetApiAchievementsStatisticsData = {
+export type GetAchievementsStatisticsData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Achievements/statistics';
+  url: '/achievements/statistics';
 };
 
-export type GetApiAchievementsStatisticsResponses = {
+export type GetAchievementsStatisticsResponses = {
   /**
    * OK
    */
   200: ModulesUserAchievementsAchievementStatisticsDto;
 };
 
-export type GetApiAchievementsStatisticsResponse = GetApiAchievementsStatisticsResponses[keyof GetApiAchievementsStatisticsResponses];
+export type GetAchievementsStatisticsResponse = GetAchievementsStatisticsResponses[keyof GetAchievementsStatisticsResponses];
 
 export type PostApiProgramsByProgramIdActivityGradesData = {
   body?: ModulesProgramsCreateActivityGradeDto;
@@ -5257,16 +5238,16 @@ export type PostApiAdminAuditExportResponses = {
   200: unknown;
 };
 
-export type PostApiAuthSignUpData = {
+export type PostAuthSignUpData = {
   body?: ModulesAuthenticationLocalSignUpRequestDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Auth/sign-up';
+  url: '/auth/sign-up';
 };
 
-export type PostApiAuthSignUpErrors = {
+export type PostAuthSignUpErrors = {
   /**
    * Bad Request
    */
@@ -5277,27 +5258,27 @@ export type PostApiAuthSignUpErrors = {
   409: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type PostApiAuthSignUpError = PostApiAuthSignUpErrors[keyof PostApiAuthSignUpErrors];
+export type PostAuthSignUpError = PostAuthSignUpErrors[keyof PostAuthSignUpErrors];
 
-export type PostApiAuthSignUpResponses = {
+export type PostAuthSignUpResponses = {
   /**
    * Created
    */
   201: ModulesAuthenticationSignInResponseDto;
 };
 
-export type PostApiAuthSignUpResponse = PostApiAuthSignUpResponses[keyof PostApiAuthSignUpResponses];
+export type PostAuthSignUpResponse = PostAuthSignUpResponses[keyof PostAuthSignUpResponses];
 
-export type PostApiAuthSignupData = {
+export type PostAuthSignupData = {
   body?: ModulesAuthenticationLocalSignUpRequestDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Auth/signup';
+  url: '/auth/signup';
 };
 
-export type PostApiAuthSignupErrors = {
+export type PostAuthSignupErrors = {
   /**
    * Bad Request
    */
@@ -5308,27 +5289,27 @@ export type PostApiAuthSignupErrors = {
   409: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type PostApiAuthSignupError = PostApiAuthSignupErrors[keyof PostApiAuthSignupErrors];
+export type PostAuthSignupError = PostAuthSignupErrors[keyof PostAuthSignupErrors];
 
-export type PostApiAuthSignupResponses = {
+export type PostAuthSignupResponses = {
   /**
    * Created
    */
   201: ModulesAuthenticationSignInResponseDto;
 };
 
-export type PostApiAuthSignupResponse = PostApiAuthSignupResponses[keyof PostApiAuthSignupResponses];
+export type PostAuthSignupResponse = PostAuthSignupResponses[keyof PostAuthSignupResponses];
 
-export type PostApiAuthSignInData = {
+export type PostAuthSignInData = {
   body?: ModulesAuthenticationLocalSignInRequestDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Auth/sign-in';
+  url: '/auth/sign-in';
 };
 
-export type PostApiAuthSignInErrors = {
+export type PostAuthSignInErrors = {
   /**
    * Bad Request
    */
@@ -5339,27 +5320,27 @@ export type PostApiAuthSignInErrors = {
   401: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type PostApiAuthSignInError = PostApiAuthSignInErrors[keyof PostApiAuthSignInErrors];
+export type PostAuthSignInError = PostAuthSignInErrors[keyof PostAuthSignInErrors];
 
-export type PostApiAuthSignInResponses = {
+export type PostAuthSignInResponses = {
   /**
    * OK
    */
   200: ModulesAuthenticationSignInResponseDto;
 };
 
-export type PostApiAuthSignInResponse = PostApiAuthSignInResponses[keyof PostApiAuthSignInResponses];
+export type PostAuthSignInResponse = PostAuthSignInResponses[keyof PostAuthSignInResponses];
 
-export type PostApiAuthSigninData = {
+export type PostAuthSigninData = {
   body?: ModulesAuthenticationLocalSignInRequestDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Auth/signin';
+  url: '/auth/signin';
 };
 
-export type PostApiAuthSigninErrors = {
+export type PostAuthSigninErrors = {
   /**
    * Bad Request
    */
@@ -5370,27 +5351,27 @@ export type PostApiAuthSigninErrors = {
   401: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type PostApiAuthSigninError = PostApiAuthSigninErrors[keyof PostApiAuthSigninErrors];
+export type PostAuthSigninError = PostAuthSigninErrors[keyof PostAuthSigninErrors];
 
-export type PostApiAuthSigninResponses = {
+export type PostAuthSigninResponses = {
   /**
    * OK
    */
   200: ModulesAuthenticationSignInResponseDto;
 };
 
-export type PostApiAuthSigninResponse = PostApiAuthSigninResponses[keyof PostApiAuthSigninResponses];
+export type PostAuthSigninResponse = PostAuthSigninResponses[keyof PostAuthSigninResponses];
 
-export type PostApiAuthGoogleData = {
+export type PostAuthGoogleData = {
   body?: ModulesAuthenticationGoogleIdTokenRequestDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Auth/google';
+  url: '/auth/google';
 };
 
-export type PostApiAuthGoogleErrors = {
+export type PostAuthGoogleErrors = {
   /**
    * Bad Request
    */
@@ -5401,27 +5382,27 @@ export type PostApiAuthGoogleErrors = {
   401: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type PostApiAuthGoogleError = PostApiAuthGoogleErrors[keyof PostApiAuthGoogleErrors];
+export type PostAuthGoogleError = PostAuthGoogleErrors[keyof PostAuthGoogleErrors];
 
-export type PostApiAuthGoogleResponses = {
+export type PostAuthGoogleResponses = {
   /**
    * OK
    */
   200: ModulesAuthenticationSignInResponseDto;
 };
 
-export type PostApiAuthGoogleResponse = PostApiAuthGoogleResponses[keyof PostApiAuthGoogleResponses];
+export type PostAuthGoogleResponse = PostAuthGoogleResponses[keyof PostAuthGoogleResponses];
 
-export type PostApiAuthRefreshData = {
+export type PostAuthRefreshData = {
   body?: ModulesAuthenticationRefreshTokenRequestDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Auth/refresh';
+  url: '/auth/refresh';
 };
 
-export type PostApiAuthRefreshErrors = {
+export type PostAuthRefreshErrors = {
   /**
    * Bad Request
    */
@@ -5432,27 +5413,27 @@ export type PostApiAuthRefreshErrors = {
   401: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type PostApiAuthRefreshError = PostApiAuthRefreshErrors[keyof PostApiAuthRefreshErrors];
+export type PostAuthRefreshError = PostAuthRefreshErrors[keyof PostAuthRefreshErrors];
 
-export type PostApiAuthRefreshResponses = {
+export type PostAuthRefreshResponses = {
   /**
    * OK
    */
   200: ModulesAuthenticationSignInResponseDto;
 };
 
-export type PostApiAuthRefreshResponse = PostApiAuthRefreshResponses[keyof PostApiAuthRefreshResponses];
+export type PostAuthRefreshResponse = PostAuthRefreshResponses[keyof PostAuthRefreshResponses];
 
-export type PostApiAuthRevokeData = {
+export type PostAuthRevokeData = {
   body?: ModulesAuthenticationRevokeTokenRequestDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Auth/revoke';
+  url: '/auth/revoke';
 };
 
-export type PostApiAuthRevokeErrors = {
+export type PostAuthRevokeErrors = {
   /**
    * Bad Request
    */
@@ -5463,43 +5444,43 @@ export type PostApiAuthRevokeErrors = {
   401: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type PostApiAuthRevokeError = PostApiAuthRevokeErrors[keyof PostApiAuthRevokeErrors];
+export type PostAuthRevokeError = PostAuthRevokeErrors[keyof PostAuthRevokeErrors];
 
-export type PostApiAuthRevokeResponses = {
+export type PostAuthRevokeResponses = {
   /**
    * No Content
    */
   204: void;
 };
 
-export type PostApiAuthRevokeResponse = PostApiAuthRevokeResponses[keyof PostApiAuthRevokeResponses];
+export type PostAuthRevokeResponse = PostAuthRevokeResponses[keyof PostAuthRevokeResponses];
 
-export type GetApiAuthProfileData = {
+export type GetAuthProfileData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Auth/profile';
+  url: '/auth/profile';
 };
 
-export type GetApiAuthProfileErrors = {
+export type GetAuthProfileErrors = {
   /**
    * Unauthorized
    */
   401: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type GetApiAuthProfileError = GetApiAuthProfileErrors[keyof GetApiAuthProfileErrors];
+export type GetAuthProfileError = GetAuthProfileErrors[keyof GetAuthProfileErrors];
 
-export type GetApiAuthProfileResponses = {
+export type GetAuthProfileResponses = {
   /**
    * OK
    */
   200: ModulesAuthenticationUserProfileDto;
 };
 
-export type GetApiAuthProfileResponse = GetApiAuthProfileResponses[keyof GetApiAuthProfileResponses];
+export type GetAuthProfileResponse = GetAuthProfileResponses[keyof GetAuthProfileResponses];
 
 export type PostApiWebhooksBillingByProviderData = {
   body?: never;
@@ -5637,78 +5618,78 @@ export type PostApiWebhooksBillingEventsByWebhookEventIdRetryResponses = {
   200: unknown;
 };
 
-export type GetApiCloudflareStatusData = {
+export type GetCloudflareStatusData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Cloudflare/status';
+  url: '/cloudflare/status';
 };
 
-export type GetApiCloudflareStatusResponses = {
+export type GetCloudflareStatusResponses = {
   /**
    * OK
    */
   200: ControllersCloudflareServiceStatus;
 };
 
-export type GetApiCloudflareStatusResponse = GetApiCloudflareStatusResponses[keyof GetApiCloudflareStatusResponses];
+export type GetCloudflareStatusResponse = GetCloudflareStatusResponses[keyof GetCloudflareStatusResponses];
 
-export type PostApiCloudflareUpdateData = {
+export type PostCloudflareUpdateData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Cloudflare/update';
+  url: '/cloudflare/update';
 };
 
-export type PostApiCloudflareUpdateResponses = {
+export type PostCloudflareUpdateResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetApiCloudflareExternalIpData = {
+export type GetCloudflareExternalIpData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Cloudflare/external-ip';
+  url: '/cloudflare/external-ip';
 };
 
-export type GetApiCloudflareExternalIpResponses = {
+export type GetCloudflareExternalIpResponses = {
   /**
    * OK
    */
   200: string;
 };
 
-export type GetApiCloudflareExternalIpResponse = GetApiCloudflareExternalIpResponses[keyof GetApiCloudflareExternalIpResponses];
+export type GetCloudflareExternalIpResponse = GetCloudflareExternalIpResponses[keyof GetCloudflareExternalIpResponses];
 
-export type PostApiContentInteractionStartData = {
+export type PostContentInteractionStartData = {
   body?: ModulesProgramsStartContentRequest;
   path?: never;
   query?: {
     programId?: string;
     version?: string;
   };
-  url: '/api/ContentInteraction/start';
+  url: '/content-interaction/start';
 };
 
-export type PostApiContentInteractionStartResponses = {
+export type PostContentInteractionStartResponses = {
   /**
    * OK
    */
   200: ModulesProgramsContentInteractionDto;
 };
 
-export type PostApiContentInteractionStartResponse = PostApiContentInteractionStartResponses[keyof PostApiContentInteractionStartResponses];
+export type PostContentInteractionStartResponse = PostContentInteractionStartResponses[keyof PostContentInteractionStartResponses];
 
-export type PutApiContentInteractionByInteractionIdProgressData = {
+export type PutContentInteractionByInteractionIdProgressData = {
   body?: ModulesProgramsUpdateProgressRequest;
   path: {
     interactionId: string;
@@ -5717,20 +5698,20 @@ export type PutApiContentInteractionByInteractionIdProgressData = {
     programId?: string;
     version?: string;
   };
-  url: '/api/ContentInteraction/{interactionId}/progress';
+  url: '/content-interaction/{interactionId}/progress';
 };
 
-export type PutApiContentInteractionByInteractionIdProgressResponses = {
+export type PutContentInteractionByInteractionIdProgressResponses = {
   /**
    * OK
    */
   200: ModulesProgramsContentInteractionDto;
 };
 
-export type PutApiContentInteractionByInteractionIdProgressResponse =
-  PutApiContentInteractionByInteractionIdProgressResponses[keyof PutApiContentInteractionByInteractionIdProgressResponses];
+export type PutContentInteractionByInteractionIdProgressResponse =
+  PutContentInteractionByInteractionIdProgressResponses[keyof PutContentInteractionByInteractionIdProgressResponses];
 
-export type PostApiContentInteractionByInteractionIdSubmitData = {
+export type PostContentInteractionByInteractionIdSubmitData = {
   body?: ModulesProgramsSubmitContentRequest;
   path: {
     interactionId: string;
@@ -5739,20 +5720,20 @@ export type PostApiContentInteractionByInteractionIdSubmitData = {
     programId?: string;
     version?: string;
   };
-  url: '/api/ContentInteraction/{interactionId}/submit';
+  url: '/content-interaction/{interactionId}/submit';
 };
 
-export type PostApiContentInteractionByInteractionIdSubmitResponses = {
+export type PostContentInteractionByInteractionIdSubmitResponses = {
   /**
    * OK
    */
   200: ModulesProgramsContentInteractionDto;
 };
 
-export type PostApiContentInteractionByInteractionIdSubmitResponse =
-  PostApiContentInteractionByInteractionIdSubmitResponses[keyof PostApiContentInteractionByInteractionIdSubmitResponses];
+export type PostContentInteractionByInteractionIdSubmitResponse =
+  PostContentInteractionByInteractionIdSubmitResponses[keyof PostContentInteractionByInteractionIdSubmitResponses];
 
-export type PostApiContentInteractionByInteractionIdCompleteData = {
+export type PostContentInteractionByInteractionIdCompleteData = {
   body?: ModulesProgramsCompleteContentRequest;
   path: {
     interactionId: string;
@@ -5761,20 +5742,20 @@ export type PostApiContentInteractionByInteractionIdCompleteData = {
     programId?: string;
     version?: string;
   };
-  url: '/api/ContentInteraction/{interactionId}/complete';
+  url: '/content-interaction/{interactionId}/complete';
 };
 
-export type PostApiContentInteractionByInteractionIdCompleteResponses = {
+export type PostContentInteractionByInteractionIdCompleteResponses = {
   /**
    * OK
    */
   200: ModulesProgramsContentInteractionDto;
 };
 
-export type PostApiContentInteractionByInteractionIdCompleteResponse =
-  PostApiContentInteractionByInteractionIdCompleteResponses[keyof PostApiContentInteractionByInteractionIdCompleteResponses];
+export type PostContentInteractionByInteractionIdCompleteResponse =
+  PostContentInteractionByInteractionIdCompleteResponses[keyof PostContentInteractionByInteractionIdCompleteResponses];
 
-export type GetApiContentInteractionUserByProgramUserIdContentByContentIdData = {
+export type GetContentInteractionUserByProgramUserIdContentByContentIdData = {
   body?: never;
   path: {
     programUserId: string;
@@ -5784,20 +5765,20 @@ export type GetApiContentInteractionUserByProgramUserIdContentByContentIdData = 
     programId?: string;
     version?: string;
   };
-  url: '/api/ContentInteraction/user/{programUserId}/content/{contentId}';
+  url: '/content-interaction/user/{programUserId}/content/{contentId}';
 };
 
-export type GetApiContentInteractionUserByProgramUserIdContentByContentIdResponses = {
+export type GetContentInteractionUserByProgramUserIdContentByContentIdResponses = {
   /**
    * OK
    */
   200: ModulesProgramsContentInteractionDto;
 };
 
-export type GetApiContentInteractionUserByProgramUserIdContentByContentIdResponse =
-  GetApiContentInteractionUserByProgramUserIdContentByContentIdResponses[keyof GetApiContentInteractionUserByProgramUserIdContentByContentIdResponses];
+export type GetContentInteractionUserByProgramUserIdContentByContentIdResponse =
+  GetContentInteractionUserByProgramUserIdContentByContentIdResponses[keyof GetContentInteractionUserByProgramUserIdContentByContentIdResponses];
 
-export type GetApiContentInteractionUserByProgramUserIdData = {
+export type GetContentInteractionUserByProgramUserIdData = {
   body?: never;
   path: {
     programUserId: string;
@@ -5806,20 +5787,20 @@ export type GetApiContentInteractionUserByProgramUserIdData = {
     programId?: string;
     version?: string;
   };
-  url: '/api/ContentInteraction/user/{programUserId}';
+  url: '/content-interaction/user/{programUserId}';
 };
 
-export type GetApiContentInteractionUserByProgramUserIdResponses = {
+export type GetContentInteractionUserByProgramUserIdResponses = {
   /**
    * OK
    */
   200: Array<ModulesProgramsContentInteractionDto>;
 };
 
-export type GetApiContentInteractionUserByProgramUserIdResponse =
-  GetApiContentInteractionUserByProgramUserIdResponses[keyof GetApiContentInteractionUserByProgramUserIdResponses];
+export type GetContentInteractionUserByProgramUserIdResponse =
+  GetContentInteractionUserByProgramUserIdResponses[keyof GetContentInteractionUserByProgramUserIdResponses];
 
-export type PutApiContentInteractionByInteractionIdTimeSpentData = {
+export type PutContentInteractionByInteractionIdTimeSpentData = {
   body?: ModulesProgramsUpdateTimeSpentRequest;
   path: {
     interactionId: string;
@@ -5828,18 +5809,18 @@ export type PutApiContentInteractionByInteractionIdTimeSpentData = {
     programId?: string;
     version?: string;
   };
-  url: '/api/ContentInteraction/{interactionId}/time-spent';
+  url: '/content-interaction/{interactionId}/time-spent';
 };
 
-export type PutApiContentInteractionByInteractionIdTimeSpentResponses = {
+export type PutContentInteractionByInteractionIdTimeSpentResponses = {
   /**
    * OK
    */
   200: ModulesProgramsContentInteractionDto;
 };
 
-export type PutApiContentInteractionByInteractionIdTimeSpentResponse =
-  PutApiContentInteractionByInteractionIdTimeSpentResponses[keyof PutApiContentInteractionByInteractionIdTimeSpentResponses];
+export type PutContentInteractionByInteractionIdTimeSpentResponse =
+  PutContentInteractionByInteractionIdTimeSpentResponses[keyof PutContentInteractionByInteractionIdTimeSpentResponses];
 
 export type GetCredentialsData = {
   body?: never;
@@ -5847,7 +5828,7 @@ export type GetCredentialsData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials';
+  url: '/credentials';
 };
 
 export type GetCredentialsResponses = {
@@ -5865,7 +5846,7 @@ export type PostCredentialsData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials';
+  url: '/credentials';
 };
 
 export type PostCredentialsResponses = {
@@ -5885,7 +5866,7 @@ export type GetCredentialsUserByUserIdData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials/user/{userId}';
+  url: '/credentials/user/{userId}';
 };
 
 export type GetCredentialsUserByUserIdResponses = {
@@ -5905,7 +5886,7 @@ export type DeleteCredentialsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials/{id}';
+  url: '/credentials/{id}';
 };
 
 export type DeleteCredentialsByIdResponses = {
@@ -5923,7 +5904,7 @@ export type GetCredentialsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials/{id}';
+  url: '/credentials/{id}';
 };
 
 export type GetCredentialsByIdResponses = {
@@ -5943,7 +5924,7 @@ export type PutCredentialsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials/{id}';
+  url: '/credentials/{id}';
 };
 
 export type PutCredentialsByIdResponses = {
@@ -5964,7 +5945,7 @@ export type GetCredentialsUserByUserIdTypeByTypeData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials/user/{userId}/type/{type}';
+  url: '/credentials/user/{userId}/type/{type}';
 };
 
 export type GetCredentialsUserByUserIdTypeByTypeResponses = {
@@ -5984,7 +5965,7 @@ export type PostCredentialsByIdRestoreData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials/{id}/restore';
+  url: '/credentials/{id}/restore';
 };
 
 export type PostCredentialsByIdRestoreResponses = {
@@ -6002,7 +5983,7 @@ export type DeleteCredentialsByIdHardData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials/{id}/hard';
+  url: '/credentials/{id}/hard';
 };
 
 export type DeleteCredentialsByIdHardResponses = {
@@ -6020,7 +6001,7 @@ export type PostCredentialsByIdMarkUsedData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials/{id}/mark-used';
+  url: '/credentials/{id}/mark-used';
 };
 
 export type PostCredentialsByIdMarkUsedResponses = {
@@ -6038,7 +6019,7 @@ export type PostCredentialsByIdDeactivateData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials/{id}/deactivate';
+  url: '/credentials/{id}/deactivate';
 };
 
 export type PostCredentialsByIdDeactivateResponses = {
@@ -6056,7 +6037,7 @@ export type PostCredentialsByIdActivateData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials/{id}/activate';
+  url: '/credentials/{id}/activate';
 };
 
 export type PostCredentialsByIdActivateResponses = {
@@ -6072,7 +6053,7 @@ export type GetCredentialsDeletedData = {
   query?: {
     version?: string;
   };
-  url: '/Credentials/deleted';
+  url: '/credentials/deleted';
 };
 
 export type GetCredentialsDeletedResponses = {
@@ -6236,7 +6217,7 @@ export type GetHealthData = {
   query?: {
     version?: string;
   };
-  url: '/Health';
+  url: '/health';
 };
 
 export type GetHealthResponses = {
@@ -6252,7 +6233,7 @@ export type GetHealthDatabaseData = {
   query?: {
     version?: string;
   };
-  url: '/Health/database';
+  url: '/health/database';
 };
 
 export type GetHealthDatabaseResponses = {
@@ -6268,7 +6249,7 @@ export type GetHealthDynamicDnsData = {
   query?: {
     version?: string;
   };
-  url: '/Health/dynamic-dns';
+  url: '/health/dynamic-dns';
 };
 
 export type GetHealthDynamicDnsResponses = {
@@ -6774,43 +6755,43 @@ export type PutApiModulePermissionsModulesByModuleRolesByRoleNameResponses = {
 export type PutApiModulePermissionsModulesByModuleRolesByRoleNameResponse =
   PutApiModulePermissionsModulesByModuleRolesByRoleNameResponses[keyof PutApiModulePermissionsModulesByModuleRolesByRoleNameResponses];
 
-export type GetApiNotificationsData = {
+export type GetNotificationsData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Notifications';
+  url: '/notifications';
 };
 
-export type GetApiNotificationsResponses = {
+export type GetNotificationsResponses = {
   /**
    * OK
    */
   200: ModulesNotificationsNotificationResponseDto;
 };
 
-export type GetApiNotificationsResponse = GetApiNotificationsResponses[keyof GetApiNotificationsResponses];
+export type GetNotificationsResponse = GetNotificationsResponses[keyof GetNotificationsResponses];
 
-export type GetApiNotificationsUnreadCountData = {
+export type GetNotificationsUnreadCountData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Notifications/unread-count';
+  url: '/notifications/unread-count';
 };
 
-export type GetApiNotificationsUnreadCountResponses = {
+export type GetNotificationsUnreadCountResponses = {
   /**
    * OK
    */
   200: number;
 };
 
-export type GetApiNotificationsUnreadCountResponse = GetApiNotificationsUnreadCountResponses[keyof GetApiNotificationsUnreadCountResponses];
+export type GetNotificationsUnreadCountResponse = GetNotificationsUnreadCountResponses[keyof GetNotificationsUnreadCountResponses];
 
-export type PutApiNotificationsByIdReadData = {
+export type PutNotificationsByIdReadData = {
   body?: never;
   path: {
     id: string;
@@ -6818,53 +6799,53 @@ export type PutApiNotificationsByIdReadData = {
   query?: {
     version?: string;
   };
-  url: '/api/Notifications/{id}/read';
+  url: '/notifications/{id}/read';
 };
 
-export type PutApiNotificationsByIdReadResponses = {
+export type PutNotificationsByIdReadResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetApiPaymentMethodsMeData = {
+export type GetPaymentMethodsMeData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Payment/methods/me';
+  url: '/payment/methods/me';
 };
 
-export type GetApiPaymentMethodsMeResponses = {
+export type GetPaymentMethodsMeResponses = {
   /**
    * OK
    */
   200: Array<ModulesPaymentsUserFinancialMethod>;
 };
 
-export type GetApiPaymentMethodsMeResponse = GetApiPaymentMethodsMeResponses[keyof GetApiPaymentMethodsMeResponses];
+export type GetPaymentMethodsMeResponse = GetPaymentMethodsMeResponses[keyof GetPaymentMethodsMeResponses];
 
-export type PostApiPaymentIntentData = {
+export type PostPaymentIntentData = {
   body?: ModulesPaymentsCreatePaymentCommand;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Payment/intent';
+  url: '/payment/intent';
 };
 
-export type PostApiPaymentIntentResponses = {
+export type PostPaymentIntentResponses = {
   /**
    * OK
    */
   200: ModulesPaymentsPayment;
 };
 
-export type PostApiPaymentIntentResponse = PostApiPaymentIntentResponses[keyof PostApiPaymentIntentResponses];
+export type PostPaymentIntentResponse = PostPaymentIntentResponses[keyof PostPaymentIntentResponses];
 
-export type PostApiPaymentByIdProcessData = {
+export type PostPaymentByIdProcessData = {
   body?: ModulesPaymentsProcessPaymentRequest;
   path: {
     id: string;
@@ -6872,19 +6853,19 @@ export type PostApiPaymentByIdProcessData = {
   query?: {
     version?: string;
   };
-  url: '/api/Payment/{id}/process';
+  url: '/payment/{id}/process';
 };
 
-export type PostApiPaymentByIdProcessResponses = {
+export type PostPaymentByIdProcessResponses = {
   /**
    * OK
    */
   200: ModulesPaymentsPayment;
 };
 
-export type PostApiPaymentByIdProcessResponse = PostApiPaymentByIdProcessResponses[keyof PostApiPaymentByIdProcessResponses];
+export type PostPaymentByIdProcessResponse = PostPaymentByIdProcessResponses[keyof PostPaymentByIdProcessResponses];
 
-export type PostApiPaymentByIdRefundData = {
+export type PostPaymentByIdRefundData = {
   body?: ModulesPaymentsRefundPaymentRequest;
   path: {
     id: string;
@@ -6892,19 +6873,19 @@ export type PostApiPaymentByIdRefundData = {
   query?: {
     version?: string;
   };
-  url: '/api/Payment/{id}/refund';
+  url: '/payment/{id}/refund';
 };
 
-export type PostApiPaymentByIdRefundResponses = {
+export type PostPaymentByIdRefundResponses = {
   /**
    * OK
    */
   200: ModulesPaymentsPaymentRefund;
 };
 
-export type PostApiPaymentByIdRefundResponse = PostApiPaymentByIdRefundResponses[keyof PostApiPaymentByIdRefundResponses];
+export type PostPaymentByIdRefundResponse = PostPaymentByIdRefundResponses[keyof PostPaymentByIdRefundResponses];
 
-export type GetApiPaymentByIdData = {
+export type GetPaymentByIdData = {
   body?: never;
   path: {
     id: string;
@@ -6912,19 +6893,19 @@ export type GetApiPaymentByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Payment/{id}';
+  url: '/payment/{id}';
 };
 
-export type GetApiPaymentByIdResponses = {
+export type GetPaymentByIdResponses = {
   /**
    * OK
    */
   200: ModulesPaymentsPayment;
 };
 
-export type GetApiPaymentByIdResponse = GetApiPaymentByIdResponses[keyof GetApiPaymentByIdResponses];
+export type GetPaymentByIdResponse = GetPaymentByIdResponses[keyof GetPaymentByIdResponses];
 
-export type GetApiPaymentUserByUserIdData = {
+export type GetPaymentUserByUserIdData = {
   body?: never;
   path: {
     userId: string;
@@ -6932,55 +6913,55 @@ export type GetApiPaymentUserByUserIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Payment/user/{userId}';
+  url: '/payment/user/{userId}';
 };
 
-export type GetApiPaymentUserByUserIdResponses = {
+export type GetPaymentUserByUserIdResponses = {
   /**
    * OK
    */
   200: Array<ModulesPaymentsPayment>;
 };
 
-export type GetApiPaymentUserByUserIdResponse = GetApiPaymentUserByUserIdResponses[keyof GetApiPaymentUserByUserIdResponses];
+export type GetPaymentUserByUserIdResponse = GetPaymentUserByUserIdResponses[keyof GetPaymentUserByUserIdResponses];
 
-export type GetApiPaymentStatsData = {
+export type GetPaymentStatsData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Payment/stats';
+  url: '/payment/stats';
 };
 
-export type GetApiPaymentStatsResponses = {
+export type GetPaymentStatsResponses = {
   /**
    * OK
    */
   200: ModulesPaymentsPaymentStats;
 };
 
-export type GetApiPaymentStatsResponse = GetApiPaymentStatsResponses[keyof GetApiPaymentStatsResponses];
+export type GetPaymentStatsResponse = GetPaymentStatsResponses[keyof GetPaymentStatsResponses];
 
-export type PostApiPaymentsData = {
+export type PostPaymentsData = {
   body?: ModulesPaymentsCreatePaymentRequest;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Payments';
+  url: '/payments';
 };
 
-export type PostApiPaymentsResponses = {
+export type PostPaymentsResponses = {
   /**
    * OK
    */
   200: ModulesPaymentsCreatePaymentResult;
 };
 
-export type PostApiPaymentsResponse = PostApiPaymentsResponses[keyof PostApiPaymentsResponses];
+export type PostPaymentsResponse = PostPaymentsResponses[keyof PostPaymentsResponses];
 
-export type GetApiPaymentsByIdData = {
+export type GetPaymentsByIdData = {
   body?: never;
   path: {
     id: string;
@@ -6988,19 +6969,19 @@ export type GetApiPaymentsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Payments/{id}';
+  url: '/payments/{id}';
 };
 
-export type GetApiPaymentsByIdResponses = {
+export type GetPaymentsByIdResponses = {
   /**
    * OK
    */
   200: ModulesPaymentsPayment;
 };
 
-export type GetApiPaymentsByIdResponse = GetApiPaymentsByIdResponses[keyof GetApiPaymentsByIdResponses];
+export type GetPaymentsByIdResponse = GetPaymentsByIdResponses[keyof GetPaymentsByIdResponses];
 
-export type GetApiPaymentsMyPaymentsData = {
+export type GetPaymentsMyPaymentsData = {
   body?: never;
   path?: never;
   query?: {
@@ -7011,19 +6992,19 @@ export type GetApiPaymentsMyPaymentsData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Payments/my-payments';
+  url: '/payments/my-payments';
 };
 
-export type GetApiPaymentsMyPaymentsResponses = {
+export type GetPaymentsMyPaymentsResponses = {
   /**
    * OK
    */
   200: Array<ModulesPaymentsPayment>;
 };
 
-export type GetApiPaymentsMyPaymentsResponse = GetApiPaymentsMyPaymentsResponses[keyof GetApiPaymentsMyPaymentsResponses];
+export type GetPaymentsMyPaymentsResponse = GetPaymentsMyPaymentsResponses[keyof GetPaymentsMyPaymentsResponses];
 
-export type GetApiPaymentsUsersByUserIdData = {
+export type GetPaymentsUsersByUserIdData = {
   body?: never;
   path: {
     userId: string;
@@ -7036,19 +7017,19 @@ export type GetApiPaymentsUsersByUserIdData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Payments/users/{userId}';
+  url: '/payments/users/{userId}';
 };
 
-export type GetApiPaymentsUsersByUserIdResponses = {
+export type GetPaymentsUsersByUserIdResponses = {
   /**
    * OK
    */
   200: Array<ModulesPaymentsPayment>;
 };
 
-export type GetApiPaymentsUsersByUserIdResponse = GetApiPaymentsUsersByUserIdResponses[keyof GetApiPaymentsUsersByUserIdResponses];
+export type GetPaymentsUsersByUserIdResponse = GetPaymentsUsersByUserIdResponses[keyof GetPaymentsUsersByUserIdResponses];
 
-export type GetApiPaymentsProductsByProductIdData = {
+export type GetPaymentsProductsByProductIdData = {
   body?: never;
   path: {
     productId: string;
@@ -7061,19 +7042,19 @@ export type GetApiPaymentsProductsByProductIdData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Payments/products/{productId}';
+  url: '/payments/products/{productId}';
 };
 
-export type GetApiPaymentsProductsByProductIdResponses = {
+export type GetPaymentsProductsByProductIdResponses = {
   /**
    * OK
    */
   200: Array<ModulesPaymentsPayment>;
 };
 
-export type GetApiPaymentsProductsByProductIdResponse = GetApiPaymentsProductsByProductIdResponses[keyof GetApiPaymentsProductsByProductIdResponses];
+export type GetPaymentsProductsByProductIdResponse = GetPaymentsProductsByProductIdResponses[keyof GetPaymentsProductsByProductIdResponses];
 
-export type PostApiPaymentsByIdProcessData = {
+export type PostPaymentsByIdProcessData = {
   body?: ModulesPaymentsProcessPaymentRequest;
   path: {
     id: string;
@@ -7081,19 +7062,19 @@ export type PostApiPaymentsByIdProcessData = {
   query?: {
     version?: string;
   };
-  url: '/api/Payments/{id}/process';
+  url: '/payments/{id}/process';
 };
 
-export type PostApiPaymentsByIdProcessResponses = {
+export type PostPaymentsByIdProcessResponses = {
   /**
    * OK
    */
   200: ModulesPaymentsProcessPaymentResult;
 };
 
-export type PostApiPaymentsByIdProcessResponse = PostApiPaymentsByIdProcessResponses[keyof PostApiPaymentsByIdProcessResponses];
+export type PostPaymentsByIdProcessResponse = PostPaymentsByIdProcessResponses[keyof PostPaymentsByIdProcessResponses];
 
-export type PostApiPaymentsByIdRefundData = {
+export type PostPaymentsByIdRefundData = {
   body?: ModulesPaymentsRefundPaymentRequest;
   path: {
     id: string;
@@ -7101,19 +7082,19 @@ export type PostApiPaymentsByIdRefundData = {
   query?: {
     version?: string;
   };
-  url: '/api/Payments/{id}/refund';
+  url: '/payments/{id}/refund';
 };
 
-export type PostApiPaymentsByIdRefundResponses = {
+export type PostPaymentsByIdRefundResponses = {
   /**
    * OK
    */
   200: ModulesPaymentsRefundPaymentResult;
 };
 
-export type PostApiPaymentsByIdRefundResponse = PostApiPaymentsByIdRefundResponses[keyof PostApiPaymentsByIdRefundResponses];
+export type PostPaymentsByIdRefundResponse = PostPaymentsByIdRefundResponses[keyof PostPaymentsByIdRefundResponses];
 
-export type PostApiPaymentsByIdCancelData = {
+export type PostPaymentsByIdCancelData = {
   body?: ModulesPaymentsCancelPaymentRequest;
   path: {
     id: string;
@@ -7121,19 +7102,19 @@ export type PostApiPaymentsByIdCancelData = {
   query?: {
     version?: string;
   };
-  url: '/api/Payments/{id}/cancel';
+  url: '/payments/{id}/cancel';
 };
 
-export type PostApiPaymentsByIdCancelResponses = {
+export type PostPaymentsByIdCancelResponses = {
   /**
    * OK
    */
   200: ModulesPaymentsCancelPaymentResult;
 };
 
-export type PostApiPaymentsByIdCancelResponse = PostApiPaymentsByIdCancelResponses[keyof PostApiPaymentsByIdCancelResponses];
+export type PostPaymentsByIdCancelResponse = PostPaymentsByIdCancelResponses[keyof PostPaymentsByIdCancelResponses];
 
-export type GetApiPaymentsStatsData = {
+export type GetPaymentsStatsData = {
   body?: never;
   path?: never;
   query?: {
@@ -7143,19 +7124,19 @@ export type GetApiPaymentsStatsData = {
     toDate?: string;
     version?: string;
   };
-  url: '/api/Payments/stats';
+  url: '/payments/stats';
 };
 
-export type GetApiPaymentsStatsResponses = {
+export type GetPaymentsStatsResponses = {
   /**
    * OK
    */
   200: ModulesPaymentsPaymentStats;
 };
 
-export type GetApiPaymentsStatsResponse = GetApiPaymentsStatsResponses[keyof GetApiPaymentsStatsResponses];
+export type GetPaymentsStatsResponse = GetPaymentsStatsResponses[keyof GetPaymentsStatsResponses];
 
-export type GetApiPaymentsRevenueReportData = {
+export type GetPaymentsRevenueReportData = {
   body?: never;
   path?: never;
   query?: {
@@ -7165,17 +7146,17 @@ export type GetApiPaymentsRevenueReportData = {
     productId?: string;
     version?: string;
   };
-  url: '/api/Payments/revenue-report';
+  url: '/payments/revenue-report';
 };
 
-export type GetApiPaymentsRevenueReportResponses = {
+export type GetPaymentsRevenueReportResponses = {
   /**
    * OK
    */
   200: ModulesPaymentsRevenueReport;
 };
 
-export type GetApiPaymentsRevenueReportResponse = GetApiPaymentsRevenueReportResponses[keyof GetApiPaymentsRevenueReportResponses];
+export type GetPaymentsRevenueReportResponse = GetPaymentsRevenueReportResponses[keyof GetPaymentsRevenueReportResponses];
 
 export type GetApiAdminPermissionsRoleTemplatesData = {
   body?: never;
@@ -7451,7 +7432,7 @@ export type PutApiAdminPermissionsDefaultRoleResponses = {
   200: unknown;
 };
 
-export type GetApiPostsData = {
+export type GetPostsData = {
   body?: never;
   path?: never;
   query?: {
@@ -7466,37 +7447,37 @@ export type GetApiPostsData = {
     tenantId?: string;
     version?: string;
   };
-  url: '/api/Posts';
+  url: '/posts';
 };
 
-export type GetApiPostsResponses = {
+export type GetPostsResponses = {
   /**
    * OK
    */
   200: ModulesPostsPostsPageDto;
 };
 
-export type GetApiPostsResponse = GetApiPostsResponses[keyof GetApiPostsResponses];
+export type GetPostsResponse = GetPostsResponses[keyof GetPostsResponses];
 
-export type PostApiPostsData = {
+export type PostPostsData = {
   body?: ModulesPostsCreatePostDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Posts';
+  url: '/posts';
 };
 
-export type PostApiPostsResponses = {
+export type PostPostsResponses = {
   /**
    * OK
    */
   200: ModulesPostsPostDto;
 };
 
-export type PostApiPostsResponse = PostApiPostsResponses[keyof PostApiPostsResponses];
+export type PostPostsResponse = PostPostsResponses[keyof PostPostsResponses];
 
-export type GetApiPostsByPostIdData = {
+export type GetPostsByPostIdData = {
   body?: never;
   path: {
     postId: string;
@@ -7504,55 +7485,55 @@ export type GetApiPostsByPostIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Posts/{postId}';
+  url: '/posts/{postId}';
 };
 
-export type GetApiPostsByPostIdResponses = {
+export type GetPostsByPostIdResponses = {
   /**
    * OK
    */
   200: ModulesPostsPostDto;
 };
 
-export type GetApiPostsByPostIdResponse = GetApiPostsByPostIdResponses[keyof GetApiPostsByPostIdResponses];
+export type GetPostsByPostIdResponse = GetPostsByPostIdResponses[keyof GetPostsByPostIdResponses];
 
-export type GetApiProductData = {
+export type GetProductData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Product';
+  url: '/product';
 };
 
-export type GetApiProductResponses = {
+export type GetProductResponses = {
   /**
    * OK
    */
   200: Array<ModulesProductsProduct>;
 };
 
-export type GetApiProductResponse = GetApiProductResponses[keyof GetApiProductResponses];
+export type GetProductResponse = GetProductResponses[keyof GetProductResponses];
 
-export type PostApiProductData = {
+export type PostProductData = {
   body?: ModulesProductsCreateProductCommand;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Product';
+  url: '/product';
 };
 
-export type PostApiProductResponses = {
+export type PostProductResponses = {
   /**
    * OK
    */
   200: ModulesProductsProduct;
 };
 
-export type PostApiProductResponse = PostApiProductResponses[keyof PostApiProductResponses];
+export type PostProductResponse = PostProductResponses[keyof PostProductResponses];
 
-export type DeleteApiProductByIdData = {
+export type DeleteProductByIdData = {
   body?: never;
   path: {
     id: string;
@@ -7560,17 +7541,17 @@ export type DeleteApiProductByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}';
+  url: '/product/{id}';
 };
 
-export type DeleteApiProductByIdResponses = {
+export type DeleteProductByIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetApiProductByIdData = {
+export type GetProductByIdData = {
   body?: never;
   path: {
     id: string;
@@ -7578,19 +7559,19 @@ export type GetApiProductByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}';
+  url: '/product/{id}';
 };
 
-export type GetApiProductByIdResponses = {
+export type GetProductByIdResponses = {
   /**
    * OK
    */
   200: ModulesProductsProduct;
 };
 
-export type GetApiProductByIdResponse = GetApiProductByIdResponses[keyof GetApiProductByIdResponses];
+export type GetProductByIdResponse = GetProductByIdResponses[keyof GetProductByIdResponses];
 
-export type PutApiProductByIdData = {
+export type PutProductByIdData = {
   body?: ModulesProductsUpdateProductCommand;
   path: {
     id: string;
@@ -7598,19 +7579,19 @@ export type PutApiProductByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}';
+  url: '/product/{id}';
 };
 
-export type PutApiProductByIdResponses = {
+export type PutProductByIdResponses = {
   /**
    * OK
    */
   200: ModulesProductsProduct;
 };
 
-export type PutApiProductByIdResponse = PutApiProductByIdResponses[keyof PutApiProductByIdResponses];
+export type PutProductByIdResponse = PutProductByIdResponses[keyof PutProductByIdResponses];
 
-export type GetApiProductTypeByTypeData = {
+export type GetProductTypeByTypeData = {
   body?: never;
   path: {
     type: ProductType;
@@ -7620,19 +7601,19 @@ export type GetApiProductTypeByTypeData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Product/type/{type}';
+  url: '/product/type/{type}';
 };
 
-export type GetApiProductTypeByTypeResponses = {
+export type GetProductTypeByTypeResponses = {
   /**
    * OK
    */
   200: Array<ModulesProductsProduct>;
 };
 
-export type GetApiProductTypeByTypeResponse = GetApiProductTypeByTypeResponses[keyof GetApiProductTypeByTypeResponses];
+export type GetProductTypeByTypeResponse = GetProductTypeByTypeResponses[keyof GetProductTypeByTypeResponses];
 
-export type GetApiProductPublishedData = {
+export type GetProductPublishedData = {
   body?: never;
   path?: never;
   query?: {
@@ -7640,19 +7621,19 @@ export type GetApiProductPublishedData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Product/published';
+  url: '/product/published';
 };
 
-export type GetApiProductPublishedResponses = {
+export type GetProductPublishedResponses = {
   /**
    * OK
    */
   200: Array<ModulesProductsProduct>;
 };
 
-export type GetApiProductPublishedResponse = GetApiProductPublishedResponses[keyof GetApiProductPublishedResponses];
+export type GetProductPublishedResponse = GetProductPublishedResponses[keyof GetProductPublishedResponses];
 
-export type GetApiProductSearchData = {
+export type GetProductSearchData = {
   body?: never;
   path?: never;
   query?: {
@@ -7661,19 +7642,19 @@ export type GetApiProductSearchData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Product/search';
+  url: '/product/search';
 };
 
-export type GetApiProductSearchResponses = {
+export type GetProductSearchResponses = {
   /**
    * OK
    */
   200: Array<ModulesProductsProduct>;
 };
 
-export type GetApiProductSearchResponse = GetApiProductSearchResponses[keyof GetApiProductSearchResponses];
+export type GetProductSearchResponse = GetProductSearchResponses[keyof GetProductSearchResponses];
 
-export type GetApiProductCreatorByCreatorIdData = {
+export type GetProductCreatorByCreatorIdData = {
   body?: never;
   path: {
     creatorId: string;
@@ -7683,19 +7664,19 @@ export type GetApiProductCreatorByCreatorIdData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Product/creator/{creatorId}';
+  url: '/product/creator/{creatorId}';
 };
 
-export type GetApiProductCreatorByCreatorIdResponses = {
+export type GetProductCreatorByCreatorIdResponses = {
   /**
    * OK
    */
   200: Array<ModulesProductsProduct>;
 };
 
-export type GetApiProductCreatorByCreatorIdResponse = GetApiProductCreatorByCreatorIdResponses[keyof GetApiProductCreatorByCreatorIdResponses];
+export type GetProductCreatorByCreatorIdResponse = GetProductCreatorByCreatorIdResponses[keyof GetProductCreatorByCreatorIdResponses];
 
-export type GetApiProductPriceRangeData = {
+export type GetProductPriceRangeData = {
   body?: never;
   path?: never;
   query?: {
@@ -7706,57 +7687,57 @@ export type GetApiProductPriceRangeData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Product/price-range';
+  url: '/product/price-range';
 };
 
-export type GetApiProductPriceRangeResponses = {
+export type GetProductPriceRangeResponses = {
   /**
    * OK
    */
   200: Array<ModulesProductsProduct>;
 };
 
-export type GetApiProductPriceRangeResponse = GetApiProductPriceRangeResponses[keyof GetApiProductPriceRangeResponses];
+export type GetProductPriceRangeResponse = GetProductPriceRangeResponses[keyof GetProductPriceRangeResponses];
 
-export type GetApiProductPopularData = {
+export type GetProductPopularData = {
   body?: never;
   path?: never;
   query?: {
     count?: number;
     version?: string;
   };
-  url: '/api/Product/popular';
+  url: '/product/popular';
 };
 
-export type GetApiProductPopularResponses = {
+export type GetProductPopularResponses = {
   /**
    * OK
    */
   200: Array<ModulesProductsProduct>;
 };
 
-export type GetApiProductPopularResponse = GetApiProductPopularResponses[keyof GetApiProductPopularResponses];
+export type GetProductPopularResponse = GetProductPopularResponses[keyof GetProductPopularResponses];
 
-export type GetApiProductRecentData = {
+export type GetProductRecentData = {
   body?: never;
   path?: never;
   query?: {
     count?: number;
     version?: string;
   };
-  url: '/api/Product/recent';
+  url: '/product/recent';
 };
 
-export type GetApiProductRecentResponses = {
+export type GetProductRecentResponses = {
   /**
    * OK
    */
   200: Array<ModulesProductsProduct>;
 };
 
-export type GetApiProductRecentResponse = GetApiProductRecentResponses[keyof GetApiProductRecentResponses];
+export type GetProductRecentResponse = GetProductRecentResponses[keyof GetProductRecentResponses];
 
-export type PostApiProductByIdPublishData = {
+export type PostProductByIdPublishData = {
   body?: never;
   path: {
     id: string;
@@ -7764,19 +7745,19 @@ export type PostApiProductByIdPublishData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/publish';
+  url: '/product/{id}/publish';
 };
 
-export type PostApiProductByIdPublishResponses = {
+export type PostProductByIdPublishResponses = {
   /**
    * OK
    */
   200: ModulesProductsProduct;
 };
 
-export type PostApiProductByIdPublishResponse = PostApiProductByIdPublishResponses[keyof PostApiProductByIdPublishResponses];
+export type PostProductByIdPublishResponse = PostProductByIdPublishResponses[keyof PostProductByIdPublishResponses];
 
-export type PostApiProductByIdUnpublishData = {
+export type PostProductByIdUnpublishData = {
   body?: never;
   path: {
     id: string;
@@ -7784,19 +7765,19 @@ export type PostApiProductByIdUnpublishData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/unpublish';
+  url: '/product/{id}/unpublish';
 };
 
-export type PostApiProductByIdUnpublishResponses = {
+export type PostProductByIdUnpublishResponses = {
   /**
    * OK
    */
   200: ModulesProductsProduct;
 };
 
-export type PostApiProductByIdUnpublishResponse = PostApiProductByIdUnpublishResponses[keyof PostApiProductByIdUnpublishResponses];
+export type PostProductByIdUnpublishResponse = PostProductByIdUnpublishResponses[keyof PostProductByIdUnpublishResponses];
 
-export type PostApiProductByIdArchiveData = {
+export type PostProductByIdArchiveData = {
   body?: never;
   path: {
     id: string;
@@ -7804,19 +7785,19 @@ export type PostApiProductByIdArchiveData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/archive';
+  url: '/product/{id}/archive';
 };
 
-export type PostApiProductByIdArchiveResponses = {
+export type PostProductByIdArchiveResponses = {
   /**
    * OK
    */
   200: ModulesProductsProduct;
 };
 
-export type PostApiProductByIdArchiveResponse = PostApiProductByIdArchiveResponses[keyof PostApiProductByIdArchiveResponses];
+export type PostProductByIdArchiveResponse = PostProductByIdArchiveResponses[keyof PostProductByIdArchiveResponses];
 
-export type PutApiProductByIdVisibilityData = {
+export type PutProductByIdVisibilityData = {
   body?: ModulesContentsAccessLevel;
   path: {
     id: string;
@@ -7824,19 +7805,19 @@ export type PutApiProductByIdVisibilityData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/visibility';
+  url: '/product/{id}/visibility';
 };
 
-export type PutApiProductByIdVisibilityResponses = {
+export type PutProductByIdVisibilityResponses = {
   /**
    * OK
    */
   200: ModulesProductsProduct;
 };
 
-export type PutApiProductByIdVisibilityResponse = PutApiProductByIdVisibilityResponses[keyof PutApiProductByIdVisibilityResponses];
+export type PutProductByIdVisibilityResponse = PutProductByIdVisibilityResponses[keyof PutProductByIdVisibilityResponses];
 
-export type GetApiProductByIdBundleItemsData = {
+export type GetProductByIdBundleItemsData = {
   body?: never;
   path: {
     id: string;
@@ -7844,19 +7825,19 @@ export type GetApiProductByIdBundleItemsData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/bundle-items';
+  url: '/product/{id}/bundle-items';
 };
 
-export type GetApiProductByIdBundleItemsResponses = {
+export type GetProductByIdBundleItemsResponses = {
   /**
    * OK
    */
   200: Array<ModulesProductsProduct>;
 };
 
-export type GetApiProductByIdBundleItemsResponse = GetApiProductByIdBundleItemsResponses[keyof GetApiProductByIdBundleItemsResponses];
+export type GetProductByIdBundleItemsResponse = GetProductByIdBundleItemsResponses[keyof GetProductByIdBundleItemsResponses];
 
-export type DeleteApiProductByBundleIdBundleItemsByProductIdData = {
+export type DeleteProductByBundleIdBundleItemsByProductIdData = {
   body?: never;
   path: {
     bundleId: string;
@@ -7865,20 +7846,20 @@ export type DeleteApiProductByBundleIdBundleItemsByProductIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{bundleId}/bundle-items/{productId}';
+  url: '/product/{bundleId}/bundle-items/{productId}';
 };
 
-export type DeleteApiProductByBundleIdBundleItemsByProductIdResponses = {
+export type DeleteProductByBundleIdBundleItemsByProductIdResponses = {
   /**
    * OK
    */
   200: ModulesProductsProduct;
 };
 
-export type DeleteApiProductByBundleIdBundleItemsByProductIdResponse =
-  DeleteApiProductByBundleIdBundleItemsByProductIdResponses[keyof DeleteApiProductByBundleIdBundleItemsByProductIdResponses];
+export type DeleteProductByBundleIdBundleItemsByProductIdResponse =
+  DeleteProductByBundleIdBundleItemsByProductIdResponses[keyof DeleteProductByBundleIdBundleItemsByProductIdResponses];
 
-export type PostApiProductByBundleIdBundleItemsByProductIdData = {
+export type PostProductByBundleIdBundleItemsByProductIdData = {
   body?: never;
   path: {
     bundleId: string;
@@ -7887,20 +7868,20 @@ export type PostApiProductByBundleIdBundleItemsByProductIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{bundleId}/bundle-items/{productId}';
+  url: '/product/{bundleId}/bundle-items/{productId}';
 };
 
-export type PostApiProductByBundleIdBundleItemsByProductIdResponses = {
+export type PostProductByBundleIdBundleItemsByProductIdResponses = {
   /**
    * OK
    */
   200: ModulesProductsProduct;
 };
 
-export type PostApiProductByBundleIdBundleItemsByProductIdResponse =
-  PostApiProductByBundleIdBundleItemsByProductIdResponses[keyof PostApiProductByBundleIdBundleItemsByProductIdResponses];
+export type PostProductByBundleIdBundleItemsByProductIdResponse =
+  PostProductByBundleIdBundleItemsByProductIdResponses[keyof PostProductByBundleIdBundleItemsByProductIdResponses];
 
-export type GetApiProductByIdPricingCurrentData = {
+export type GetProductByIdPricingCurrentData = {
   body?: never;
   path: {
     id: string;
@@ -7908,19 +7889,19 @@ export type GetApiProductByIdPricingCurrentData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/pricing/current';
+  url: '/product/{id}/pricing/current';
 };
 
-export type GetApiProductByIdPricingCurrentResponses = {
+export type GetProductByIdPricingCurrentResponses = {
   /**
    * OK
    */
   200: ModulesProductsProductPricing;
 };
 
-export type GetApiProductByIdPricingCurrentResponse = GetApiProductByIdPricingCurrentResponses[keyof GetApiProductByIdPricingCurrentResponses];
+export type GetProductByIdPricingCurrentResponse = GetProductByIdPricingCurrentResponses[keyof GetProductByIdPricingCurrentResponses];
 
-export type GetApiProductByIdPricingHistoryData = {
+export type GetProductByIdPricingHistoryData = {
   body?: never;
   path: {
     id: string;
@@ -7928,19 +7909,19 @@ export type GetApiProductByIdPricingHistoryData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/pricing/history';
+  url: '/product/{id}/pricing/history';
 };
 
-export type GetApiProductByIdPricingHistoryResponses = {
+export type GetProductByIdPricingHistoryResponses = {
   /**
    * OK
    */
   200: Array<ModulesProductsProductPricing>;
 };
 
-export type GetApiProductByIdPricingHistoryResponse = GetApiProductByIdPricingHistoryResponses[keyof GetApiProductByIdPricingHistoryResponses];
+export type GetProductByIdPricingHistoryResponse = GetProductByIdPricingHistoryResponses[keyof GetProductByIdPricingHistoryResponses];
 
-export type PostApiProductByIdPricingData = {
+export type PostProductByIdPricingData = {
   body?: ModulesProductsSetPricingRequest;
   path: {
     id: string;
@@ -7948,19 +7929,19 @@ export type PostApiProductByIdPricingData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/pricing';
+  url: '/product/{id}/pricing';
 };
 
-export type PostApiProductByIdPricingResponses = {
+export type PostProductByIdPricingResponses = {
   /**
    * OK
    */
   200: ModulesProductsProductPricing;
 };
 
-export type PostApiProductByIdPricingResponse = PostApiProductByIdPricingResponses[keyof PostApiProductByIdPricingResponses];
+export type PostProductByIdPricingResponse = PostProductByIdPricingResponses[keyof PostProductByIdPricingResponses];
 
-export type GetApiProductByIdSubscriptionPlansData = {
+export type GetProductByIdSubscriptionPlansData = {
   body?: never;
   path: {
     id: string;
@@ -7968,19 +7949,19 @@ export type GetApiProductByIdSubscriptionPlansData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/subscription-plans';
+  url: '/product/{id}/subscription-plans';
 };
 
-export type GetApiProductByIdSubscriptionPlansResponses = {
+export type GetProductByIdSubscriptionPlansResponses = {
   /**
    * OK
    */
   200: Array<ModulesProductsProductSubscriptionPlan>;
 };
 
-export type GetApiProductByIdSubscriptionPlansResponse = GetApiProductByIdSubscriptionPlansResponses[keyof GetApiProductByIdSubscriptionPlansResponses];
+export type GetProductByIdSubscriptionPlansResponse = GetProductByIdSubscriptionPlansResponses[keyof GetProductByIdSubscriptionPlansResponses];
 
-export type PostApiProductByIdSubscriptionPlansData = {
+export type PostProductByIdSubscriptionPlansData = {
   body?: ModulesProductsProductSubscriptionPlan;
   path: {
     id: string;
@@ -7988,19 +7969,19 @@ export type PostApiProductByIdSubscriptionPlansData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/subscription-plans';
+  url: '/product/{id}/subscription-plans';
 };
 
-export type PostApiProductByIdSubscriptionPlansResponses = {
+export type PostProductByIdSubscriptionPlansResponses = {
   /**
    * OK
    */
   200: ModulesProductsProductSubscriptionPlan;
 };
 
-export type PostApiProductByIdSubscriptionPlansResponse = PostApiProductByIdSubscriptionPlansResponses[keyof PostApiProductByIdSubscriptionPlansResponses];
+export type PostProductByIdSubscriptionPlansResponse = PostProductByIdSubscriptionPlansResponses[keyof PostProductByIdSubscriptionPlansResponses];
 
-export type GetApiProductSubscriptionPlansByPlanIdData = {
+export type GetProductSubscriptionPlansByPlanIdData = {
   body?: never;
   path: {
     planId: string;
@@ -8008,20 +7989,19 @@ export type GetApiProductSubscriptionPlansByPlanIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/subscription-plans/{planId}';
+  url: '/product/subscription-plans/{planId}';
 };
 
-export type GetApiProductSubscriptionPlansByPlanIdResponses = {
+export type GetProductSubscriptionPlansByPlanIdResponses = {
   /**
    * OK
    */
   200: ModulesProductsProductSubscriptionPlan;
 };
 
-export type GetApiProductSubscriptionPlansByPlanIdResponse =
-  GetApiProductSubscriptionPlansByPlanIdResponses[keyof GetApiProductSubscriptionPlansByPlanIdResponses];
+export type GetProductSubscriptionPlansByPlanIdResponse = GetProductSubscriptionPlansByPlanIdResponses[keyof GetProductSubscriptionPlansByPlanIdResponses];
 
-export type DeleteApiProductByIdAccessByUserIdData = {
+export type DeleteProductByIdAccessByUserIdData = {
   body?: never;
   path: {
     id: string;
@@ -8030,17 +8010,17 @@ export type DeleteApiProductByIdAccessByUserIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/access/{userId}';
+  url: '/product/{id}/access/{userId}';
 };
 
-export type DeleteApiProductByIdAccessByUserIdResponses = {
+export type DeleteProductByIdAccessByUserIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetApiProductByIdAccessByUserIdData = {
+export type GetProductByIdAccessByUserIdData = {
   body?: never;
   path: {
     id: string;
@@ -8049,19 +8029,19 @@ export type GetApiProductByIdAccessByUserIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/access/{userId}';
+  url: '/product/{id}/access/{userId}';
 };
 
-export type GetApiProductByIdAccessByUserIdResponses = {
+export type GetProductByIdAccessByUserIdResponses = {
   /**
    * OK
    */
   200: boolean;
 };
 
-export type GetApiProductByIdAccessByUserIdResponse = GetApiProductByIdAccessByUserIdResponses[keyof GetApiProductByIdAccessByUserIdResponses];
+export type GetProductByIdAccessByUserIdResponse = GetProductByIdAccessByUserIdResponses[keyof GetProductByIdAccessByUserIdResponses];
 
-export type PostApiProductByIdAccessByUserIdData = {
+export type PostProductByIdAccessByUserIdData = {
   body?: ModulesProductsGrantAccessRequest;
   path: {
     id: string;
@@ -8070,19 +8050,19 @@ export type PostApiProductByIdAccessByUserIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/access/{userId}';
+  url: '/product/{id}/access/{userId}';
 };
 
-export type PostApiProductByIdAccessByUserIdResponses = {
+export type PostProductByIdAccessByUserIdResponses = {
   /**
    * OK
    */
   200: ModulesProductsUserProduct;
 };
 
-export type PostApiProductByIdAccessByUserIdResponse = PostApiProductByIdAccessByUserIdResponses[keyof PostApiProductByIdAccessByUserIdResponses];
+export type PostProductByIdAccessByUserIdResponse = PostProductByIdAccessByUserIdResponses[keyof PostProductByIdAccessByUserIdResponses];
 
-export type GetApiProductByIdUserProductByUserIdData = {
+export type GetProductByIdUserProductByUserIdData = {
   body?: never;
   path: {
     id: string;
@@ -8091,19 +8071,19 @@ export type GetApiProductByIdUserProductByUserIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/user-product/{userId}';
+  url: '/product/{id}/user-product/{userId}';
 };
 
-export type GetApiProductByIdUserProductByUserIdResponses = {
+export type GetProductByIdUserProductByUserIdResponses = {
   /**
    * OK
    */
   200: ModulesProductsUserProduct;
 };
 
-export type GetApiProductByIdUserProductByUserIdResponse = GetApiProductByIdUserProductByUserIdResponses[keyof GetApiProductByIdUserProductByUserIdResponses];
+export type GetProductByIdUserProductByUserIdResponse = GetProductByIdUserProductByUserIdResponses[keyof GetProductByIdUserProductByUserIdResponses];
 
-export type GetApiProductAnalyticsCountData = {
+export type GetProductAnalyticsCountData = {
   body?: never;
   path?: never;
   query?: {
@@ -8111,19 +8091,19 @@ export type GetApiProductAnalyticsCountData = {
     status?: ModulesContentsContentStatus;
     version?: string;
   };
-  url: '/api/Product/analytics/count';
+  url: '/product/analytics/count';
 };
 
-export type GetApiProductAnalyticsCountResponses = {
+export type GetProductAnalyticsCountResponses = {
   /**
    * OK
    */
   200: number;
 };
 
-export type GetApiProductAnalyticsCountResponse = GetApiProductAnalyticsCountResponses[keyof GetApiProductAnalyticsCountResponses];
+export type GetProductAnalyticsCountResponse = GetProductAnalyticsCountResponses[keyof GetProductAnalyticsCountResponses];
 
-export type GetApiProductByIdAnalyticsUserCountData = {
+export type GetProductByIdAnalyticsUserCountData = {
   body?: never;
   path: {
     id: string;
@@ -8131,19 +8111,19 @@ export type GetApiProductByIdAnalyticsUserCountData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/analytics/user-count';
+  url: '/product/{id}/analytics/user-count';
 };
 
-export type GetApiProductByIdAnalyticsUserCountResponses = {
+export type GetProductByIdAnalyticsUserCountResponses = {
   /**
    * OK
    */
   200: number;
 };
 
-export type GetApiProductByIdAnalyticsUserCountResponse = GetApiProductByIdAnalyticsUserCountResponses[keyof GetApiProductByIdAnalyticsUserCountResponses];
+export type GetProductByIdAnalyticsUserCountResponse = GetProductByIdAnalyticsUserCountResponses[keyof GetProductByIdAnalyticsUserCountResponses];
 
-export type GetApiProductByIdAnalyticsRevenueData = {
+export type GetProductByIdAnalyticsRevenueData = {
   body?: never;
   path: {
     id: string;
@@ -8151,19 +8131,19 @@ export type GetApiProductByIdAnalyticsRevenueData = {
   query?: {
     version?: string;
   };
-  url: '/api/Product/{id}/analytics/revenue';
+  url: '/product/{id}/analytics/revenue';
 };
 
-export type GetApiProductByIdAnalyticsRevenueResponses = {
+export type GetProductByIdAnalyticsRevenueResponses = {
   /**
    * OK
    */
   200: number;
 };
 
-export type GetApiProductByIdAnalyticsRevenueResponse = GetApiProductByIdAnalyticsRevenueResponses[keyof GetApiProductByIdAnalyticsRevenueResponses];
+export type GetProductByIdAnalyticsRevenueResponse = GetProductByIdAnalyticsRevenueResponses[keyof GetProductByIdAnalyticsRevenueResponses];
 
-export type GetApiProgramData = {
+export type GetProgramData = {
   body?: never;
   path?: never;
   query?: {
@@ -8171,37 +8151,37 @@ export type GetApiProgramData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Program';
+  url: '/program';
 };
 
-export type GetApiProgramResponses = {
+export type GetProgramResponses = {
   /**
    * OK
    */
   200: Array<ModulesProgramsProgram>;
 };
 
-export type GetApiProgramResponse = GetApiProgramResponses[keyof GetApiProgramResponses];
+export type GetProgramResponse = GetProgramResponses[keyof GetProgramResponses];
 
-export type PostApiProgramData = {
+export type PostProgramData = {
   body?: ModulesProgramsCreateProgramDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Program';
+  url: '/program';
 };
 
-export type PostApiProgramResponses = {
+export type PostProgramResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramResponse = PostApiProgramResponses[keyof PostApiProgramResponses];
+export type PostProgramResponse = PostProgramResponses[keyof PostProgramResponses];
 
-export type GetApiProgramPublishedData = {
+export type GetProgramPublishedData = {
   body?: never;
   path?: never;
   query?: {
@@ -8209,19 +8189,19 @@ export type GetApiProgramPublishedData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Program/published';
+  url: '/program/published';
 };
 
-export type GetApiProgramPublishedResponses = {
+export type GetProgramPublishedResponses = {
   /**
    * OK
    */
   200: Array<ModulesProgramsProgram>;
 };
 
-export type GetApiProgramPublishedResponse = GetApiProgramPublishedResponses[keyof GetApiProgramPublishedResponses];
+export type GetProgramPublishedResponse = GetProgramPublishedResponses[keyof GetProgramPublishedResponses];
 
-export type GetApiProgramCategoryByCategoryData = {
+export type GetProgramCategoryByCategoryData = {
   body?: never;
   path: {
     category: ProgramCategory;
@@ -8231,19 +8211,19 @@ export type GetApiProgramCategoryByCategoryData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Program/category/{category}';
+  url: '/program/category/{category}';
 };
 
-export type GetApiProgramCategoryByCategoryResponses = {
+export type GetProgramCategoryByCategoryResponses = {
   /**
    * OK
    */
   200: Array<ModulesProgramsProgram>;
 };
 
-export type GetApiProgramCategoryByCategoryResponse = GetApiProgramCategoryByCategoryResponses[keyof GetApiProgramCategoryByCategoryResponses];
+export type GetProgramCategoryByCategoryResponse = GetProgramCategoryByCategoryResponses[keyof GetProgramCategoryByCategoryResponses];
 
-export type GetApiProgramDifficultyByDifficultyData = {
+export type GetProgramDifficultyByDifficultyData = {
   body?: never;
   path: {
     difficulty: ModulesProgramsProgramDifficulty;
@@ -8253,19 +8233,19 @@ export type GetApiProgramDifficultyByDifficultyData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Program/difficulty/{difficulty}';
+  url: '/program/difficulty/{difficulty}';
 };
 
-export type GetApiProgramDifficultyByDifficultyResponses = {
+export type GetProgramDifficultyByDifficultyResponses = {
   /**
    * OK
    */
   200: Array<ModulesProgramsProgram>;
 };
 
-export type GetApiProgramDifficultyByDifficultyResponse = GetApiProgramDifficultyByDifficultyResponses[keyof GetApiProgramDifficultyByDifficultyResponses];
+export type GetProgramDifficultyByDifficultyResponse = GetProgramDifficultyByDifficultyResponses[keyof GetProgramDifficultyByDifficultyResponses];
 
-export type GetApiProgramSearchData = {
+export type GetProgramSearchData = {
   body?: never;
   path?: never;
   query?: {
@@ -8274,19 +8254,19 @@ export type GetApiProgramSearchData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Program/search';
+  url: '/program/search';
 };
 
-export type GetApiProgramSearchResponses = {
+export type GetProgramSearchResponses = {
   /**
    * OK
    */
   200: Array<ModulesProgramsProgram>;
 };
 
-export type GetApiProgramSearchResponse = GetApiProgramSearchResponses[keyof GetApiProgramSearchResponses];
+export type GetProgramSearchResponse = GetProgramSearchResponses[keyof GetProgramSearchResponses];
 
-export type GetApiProgramCreatorByCreatorIdData = {
+export type GetProgramCreatorByCreatorIdData = {
   body?: never;
   path: {
     creatorId: string;
@@ -8296,57 +8276,57 @@ export type GetApiProgramCreatorByCreatorIdData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Program/creator/{creatorId}';
+  url: '/program/creator/{creatorId}';
 };
 
-export type GetApiProgramCreatorByCreatorIdResponses = {
+export type GetProgramCreatorByCreatorIdResponses = {
   /**
    * OK
    */
   200: Array<ModulesProgramsProgram>;
 };
 
-export type GetApiProgramCreatorByCreatorIdResponse = GetApiProgramCreatorByCreatorIdResponses[keyof GetApiProgramCreatorByCreatorIdResponses];
+export type GetProgramCreatorByCreatorIdResponse = GetProgramCreatorByCreatorIdResponses[keyof GetProgramCreatorByCreatorIdResponses];
 
-export type GetApiProgramPopularData = {
+export type GetProgramPopularData = {
   body?: never;
   path?: never;
   query?: {
     count?: number;
     version?: string;
   };
-  url: '/api/Program/popular';
+  url: '/program/popular';
 };
 
-export type GetApiProgramPopularResponses = {
+export type GetProgramPopularResponses = {
   /**
    * OK
    */
   200: Array<ModulesProgramsProgram>;
 };
 
-export type GetApiProgramPopularResponse = GetApiProgramPopularResponses[keyof GetApiProgramPopularResponses];
+export type GetProgramPopularResponse = GetProgramPopularResponses[keyof GetProgramPopularResponses];
 
-export type GetApiProgramRecentData = {
+export type GetProgramRecentData = {
   body?: never;
   path?: never;
   query?: {
     count?: number;
     version?: string;
   };
-  url: '/api/Program/recent';
+  url: '/program/recent';
 };
 
-export type GetApiProgramRecentResponses = {
+export type GetProgramRecentResponses = {
   /**
    * OK
    */
   200: Array<ModulesProgramsProgram>;
 };
 
-export type GetApiProgramRecentResponse = GetApiProgramRecentResponses[keyof GetApiProgramRecentResponses];
+export type GetProgramRecentResponse = GetProgramRecentResponses[keyof GetProgramRecentResponses];
 
-export type DeleteApiProgramByIdData = {
+export type DeleteProgramByIdData = {
   body?: never;
   path: {
     id: string;
@@ -8354,17 +8334,17 @@ export type DeleteApiProgramByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}';
+  url: '/program/{id}';
 };
 
-export type DeleteApiProgramByIdResponses = {
+export type DeleteProgramByIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetApiProgramByIdData = {
+export type GetProgramByIdData = {
   body?: never;
   path: {
     id: string;
@@ -8372,19 +8352,19 @@ export type GetApiProgramByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}';
+  url: '/program/{id}';
 };
 
-export type GetApiProgramByIdResponses = {
+export type GetProgramByIdResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type GetApiProgramByIdResponse = GetApiProgramByIdResponses[keyof GetApiProgramByIdResponses];
+export type GetProgramByIdResponse = GetProgramByIdResponses[keyof GetProgramByIdResponses];
 
-export type PutApiProgramByIdData = {
+export type PutProgramByIdData = {
   body?: ModulesProgramsUpdateProgramDto;
   path: {
     id: string;
@@ -8392,19 +8372,19 @@ export type PutApiProgramByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}';
+  url: '/program/{id}';
 };
 
-export type PutApiProgramByIdResponses = {
+export type PutProgramByIdResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PutApiProgramByIdResponse = PutApiProgramByIdResponses[keyof PutApiProgramByIdResponses];
+export type PutProgramByIdResponse = PutProgramByIdResponses[keyof PutProgramByIdResponses];
 
-export type GetApiProgramByIdWithContentData = {
+export type GetProgramByIdWithContentData = {
   body?: never;
   path: {
     id: string;
@@ -8412,19 +8392,19 @@ export type GetApiProgramByIdWithContentData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/with-content';
+  url: '/program/{id}/with-content';
 };
 
-export type GetApiProgramByIdWithContentResponses = {
+export type GetProgramByIdWithContentResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type GetApiProgramByIdWithContentResponse = GetApiProgramByIdWithContentResponses[keyof GetApiProgramByIdWithContentResponses];
+export type GetProgramByIdWithContentResponse = GetProgramByIdWithContentResponses[keyof GetProgramByIdWithContentResponses];
 
-export type PostApiProgramByIdCloneData = {
+export type PostProgramByIdCloneData = {
   body?: ModulesProgramsCloneProgramDto;
   path: {
     id: string;
@@ -8432,19 +8412,19 @@ export type PostApiProgramByIdCloneData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/clone';
+  url: '/program/{id}/clone';
 };
 
-export type PostApiProgramByIdCloneResponses = {
+export type PostProgramByIdCloneResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramByIdCloneResponse = PostApiProgramByIdCloneResponses[keyof PostApiProgramByIdCloneResponses];
+export type PostProgramByIdCloneResponse = PostProgramByIdCloneResponses[keyof PostProgramByIdCloneResponses];
 
-export type GetApiProgramSlugBySlugData = {
+export type GetProgramSlugBySlugData = {
   body?: never;
   path: {
     slug: string;
@@ -8452,19 +8432,19 @@ export type GetApiProgramSlugBySlugData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/slug/{slug}';
+  url: '/program/slug/{slug}';
 };
 
-export type GetApiProgramSlugBySlugResponses = {
+export type GetProgramSlugBySlugResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type GetApiProgramSlugBySlugResponse = GetApiProgramSlugBySlugResponses[keyof GetApiProgramSlugBySlugResponses];
+export type GetProgramSlugBySlugResponse = GetProgramSlugBySlugResponses[keyof GetProgramSlugBySlugResponses];
 
-export type PostApiProgramByIdContentData = {
+export type PostProgramByIdContentData = {
   body?: ModulesProgramsCreateContentDto;
   path: {
     id: string;
@@ -8472,19 +8452,19 @@ export type PostApiProgramByIdContentData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/content';
+  url: '/program/{id}/content';
 };
 
-export type PostApiProgramByIdContentResponses = {
+export type PostProgramByIdContentResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgramContent;
 };
 
-export type PostApiProgramByIdContentResponse = PostApiProgramByIdContentResponses[keyof PostApiProgramByIdContentResponses];
+export type PostProgramByIdContentResponse = PostProgramByIdContentResponses[keyof PostProgramByIdContentResponses];
 
-export type DeleteApiProgramByIdContentByContentIdData = {
+export type DeleteProgramByIdContentByContentIdData = {
   body?: never;
   path: {
     id: string;
@@ -8493,17 +8473,17 @@ export type DeleteApiProgramByIdContentByContentIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/content/{contentId}';
+  url: '/program/{id}/content/{contentId}';
 };
 
-export type DeleteApiProgramByIdContentByContentIdResponses = {
+export type DeleteProgramByIdContentByContentIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PutApiProgramByIdContentByContentIdData = {
+export type PutProgramByIdContentByContentIdData = {
   body?: ModulesProgramsUpdateContentDto;
   path: {
     id: string;
@@ -8512,19 +8492,19 @@ export type PutApiProgramByIdContentByContentIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/content/{contentId}';
+  url: '/program/{id}/content/{contentId}';
 };
 
-export type PutApiProgramByIdContentByContentIdResponses = {
+export type PutProgramByIdContentByContentIdResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgramContent;
 };
 
-export type PutApiProgramByIdContentByContentIdResponse = PutApiProgramByIdContentByContentIdResponses[keyof PutApiProgramByIdContentByContentIdResponses];
+export type PutProgramByIdContentByContentIdResponse = PutProgramByIdContentByContentIdResponses[keyof PutProgramByIdContentByContentIdResponses];
 
-export type PostApiProgramByIdContentReorderData = {
+export type PostProgramByIdContentReorderData = {
   body?: ModulesProgramsReorderContentDto;
   path: {
     id: string;
@@ -8532,17 +8512,17 @@ export type PostApiProgramByIdContentReorderData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/content/reorder';
+  url: '/program/{id}/content/reorder';
 };
 
-export type PostApiProgramByIdContentReorderResponses = {
+export type PostProgramByIdContentReorderResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type DeleteApiProgramByIdUsersByUserIdData = {
+export type DeleteProgramByIdUsersByUserIdData = {
   body?: never;
   path: {
     id: string;
@@ -8551,17 +8531,17 @@ export type DeleteApiProgramByIdUsersByUserIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/users/{userId}';
+  url: '/program/{id}/users/{userId}';
 };
 
-export type DeleteApiProgramByIdUsersByUserIdResponses = {
+export type DeleteProgramByIdUsersByUserIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PostApiProgramByIdUsersByUserIdData = {
+export type PostProgramByIdUsersByUserIdData = {
   body?: never;
   path: {
     id: string;
@@ -8570,19 +8550,19 @@ export type PostApiProgramByIdUsersByUserIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/users/{userId}';
+  url: '/program/{id}/users/{userId}';
 };
 
-export type PostApiProgramByIdUsersByUserIdResponses = {
+export type PostProgramByIdUsersByUserIdResponses = {
   /**
    * OK
    */
   200: ModulesProgramsUserProgressDto;
 };
 
-export type PostApiProgramByIdUsersByUserIdResponse = PostApiProgramByIdUsersByUserIdResponses[keyof PostApiProgramByIdUsersByUserIdResponses];
+export type PostProgramByIdUsersByUserIdResponse = PostProgramByIdUsersByUserIdResponses[keyof PostProgramByIdUsersByUserIdResponses];
 
-export type GetApiProgramByIdUsersData = {
+export type GetProgramByIdUsersData = {
   body?: never;
   path: {
     id: string;
@@ -8592,19 +8572,19 @@ export type GetApiProgramByIdUsersData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Program/{id}/users';
+  url: '/program/{id}/users';
 };
 
-export type GetApiProgramByIdUsersResponses = {
+export type GetProgramByIdUsersResponses = {
   /**
    * OK
    */
   200: Array<ModulesProgramsUserProgressDto>;
 };
 
-export type GetApiProgramByIdUsersResponse = GetApiProgramByIdUsersResponses[keyof GetApiProgramByIdUsersResponses];
+export type GetProgramByIdUsersResponse = GetProgramByIdUsersResponses[keyof GetProgramByIdUsersResponses];
 
-export type GetApiProgramByIdUsersByUserIdProgressData = {
+export type GetProgramByIdUsersByUserIdProgressData = {
   body?: never;
   path: {
     id: string;
@@ -8613,20 +8593,19 @@ export type GetApiProgramByIdUsersByUserIdProgressData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/users/{userId}/progress';
+  url: '/program/{id}/users/{userId}/progress';
 };
 
-export type GetApiProgramByIdUsersByUserIdProgressResponses = {
+export type GetProgramByIdUsersByUserIdProgressResponses = {
   /**
    * OK
    */
   200: ModulesProgramsUserProgressDto;
 };
 
-export type GetApiProgramByIdUsersByUserIdProgressResponse =
-  GetApiProgramByIdUsersByUserIdProgressResponses[keyof GetApiProgramByIdUsersByUserIdProgressResponses];
+export type GetProgramByIdUsersByUserIdProgressResponse = GetProgramByIdUsersByUserIdProgressResponses[keyof GetProgramByIdUsersByUserIdProgressResponses];
 
-export type PutApiProgramByIdUsersByUserIdProgressData = {
+export type PutProgramByIdUsersByUserIdProgressData = {
   body?: ModulesProgramsUpdateProgressDto;
   path: {
     id: string;
@@ -8635,20 +8614,19 @@ export type PutApiProgramByIdUsersByUserIdProgressData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/users/{userId}/progress';
+  url: '/program/{id}/users/{userId}/progress';
 };
 
-export type PutApiProgramByIdUsersByUserIdProgressResponses = {
+export type PutProgramByIdUsersByUserIdProgressResponses = {
   /**
    * OK
    */
   200: ModulesProgramsUserProgressDto;
 };
 
-export type PutApiProgramByIdUsersByUserIdProgressResponse =
-  PutApiProgramByIdUsersByUserIdProgressResponses[keyof PutApiProgramByIdUsersByUserIdProgressResponses];
+export type PutProgramByIdUsersByUserIdProgressResponse = PutProgramByIdUsersByUserIdProgressResponses[keyof PutProgramByIdUsersByUserIdProgressResponses];
 
-export type PostApiProgramByIdUsersByUserIdContentByContentIdCompleteData = {
+export type PostProgramByIdUsersByUserIdContentByContentIdCompleteData = {
   body?: never;
   path: {
     id: string;
@@ -8658,17 +8636,17 @@ export type PostApiProgramByIdUsersByUserIdContentByContentIdCompleteData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/users/{userId}/content/{contentId}/complete';
+  url: '/program/{id}/users/{userId}/content/{contentId}/complete';
 };
 
-export type PostApiProgramByIdUsersByUserIdContentByContentIdCompleteResponses = {
+export type PostProgramByIdUsersByUserIdContentByContentIdCompleteResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PostApiProgramByIdUsersByUserIdResetData = {
+export type PostProgramByIdUsersByUserIdResetData = {
   body?: never;
   path: {
     id: string;
@@ -8677,17 +8655,17 @@ export type PostApiProgramByIdUsersByUserIdResetData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/users/{userId}/reset';
+  url: '/program/{id}/users/{userId}/reset';
 };
 
-export type PostApiProgramByIdUsersByUserIdResetResponses = {
+export type PostProgramByIdUsersByUserIdResetResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PostApiProgramByIdSubmitData = {
+export type PostProgramByIdSubmitData = {
   body?: never;
   path: {
     id: string;
@@ -8695,19 +8673,19 @@ export type PostApiProgramByIdSubmitData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/submit';
+  url: '/program/{id}/submit';
 };
 
-export type PostApiProgramByIdSubmitResponses = {
+export type PostProgramByIdSubmitResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramByIdSubmitResponse = PostApiProgramByIdSubmitResponses[keyof PostApiProgramByIdSubmitResponses];
+export type PostProgramByIdSubmitResponse = PostProgramByIdSubmitResponses[keyof PostProgramByIdSubmitResponses];
 
-export type PostApiProgramByIdApproveData = {
+export type PostProgramByIdApproveData = {
   body?: never;
   path: {
     id: string;
@@ -8715,19 +8693,19 @@ export type PostApiProgramByIdApproveData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/approve';
+  url: '/program/{id}/approve';
 };
 
-export type PostApiProgramByIdApproveResponses = {
+export type PostProgramByIdApproveResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramByIdApproveResponse = PostApiProgramByIdApproveResponses[keyof PostApiProgramByIdApproveResponses];
+export type PostProgramByIdApproveResponse = PostProgramByIdApproveResponses[keyof PostProgramByIdApproveResponses];
 
-export type PostApiProgramByIdRejectData = {
+export type PostProgramByIdRejectData = {
   body?: ModulesProgramsRejectProgramDto;
   path: {
     id: string;
@@ -8735,19 +8713,19 @@ export type PostApiProgramByIdRejectData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/reject';
+  url: '/program/{id}/reject';
 };
 
-export type PostApiProgramByIdRejectResponses = {
+export type PostProgramByIdRejectResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramByIdRejectResponse = PostApiProgramByIdRejectResponses[keyof PostApiProgramByIdRejectResponses];
+export type PostProgramByIdRejectResponse = PostProgramByIdRejectResponses[keyof PostProgramByIdRejectResponses];
 
-export type PostApiProgramByIdWithdrawData = {
+export type PostProgramByIdWithdrawData = {
   body?: never;
   path: {
     id: string;
@@ -8755,19 +8733,19 @@ export type PostApiProgramByIdWithdrawData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/withdraw';
+  url: '/program/{id}/withdraw';
 };
 
-export type PostApiProgramByIdWithdrawResponses = {
+export type PostProgramByIdWithdrawResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramByIdWithdrawResponse = PostApiProgramByIdWithdrawResponses[keyof PostApiProgramByIdWithdrawResponses];
+export type PostProgramByIdWithdrawResponse = PostProgramByIdWithdrawResponses[keyof PostProgramByIdWithdrawResponses];
 
-export type PostApiProgramByIdArchiveData = {
+export type PostProgramByIdArchiveData = {
   body?: never;
   path: {
     id: string;
@@ -8775,19 +8753,19 @@ export type PostApiProgramByIdArchiveData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/archive';
+  url: '/program/{id}/archive';
 };
 
-export type PostApiProgramByIdArchiveResponses = {
+export type PostProgramByIdArchiveResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramByIdArchiveResponse = PostApiProgramByIdArchiveResponses[keyof PostApiProgramByIdArchiveResponses];
+export type PostProgramByIdArchiveResponse = PostProgramByIdArchiveResponses[keyof PostProgramByIdArchiveResponses];
 
-export type PostApiProgramByIdRestoreData = {
+export type PostProgramByIdRestoreData = {
   body?: never;
   path: {
     id: string;
@@ -8795,19 +8773,19 @@ export type PostApiProgramByIdRestoreData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/restore';
+  url: '/program/{id}/restore';
 };
 
-export type PostApiProgramByIdRestoreResponses = {
+export type PostProgramByIdRestoreResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramByIdRestoreResponse = PostApiProgramByIdRestoreResponses[keyof PostApiProgramByIdRestoreResponses];
+export type PostProgramByIdRestoreResponse = PostProgramByIdRestoreResponses[keyof PostProgramByIdRestoreResponses];
 
-export type PostApiProgramByIdPublishData = {
+export type PostProgramByIdPublishData = {
   body?: never;
   path: {
     id: string;
@@ -8815,19 +8793,19 @@ export type PostApiProgramByIdPublishData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/publish';
+  url: '/program/{id}/publish';
 };
 
-export type PostApiProgramByIdPublishResponses = {
+export type PostProgramByIdPublishResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramByIdPublishResponse = PostApiProgramByIdPublishResponses[keyof PostApiProgramByIdPublishResponses];
+export type PostProgramByIdPublishResponse = PostProgramByIdPublishResponses[keyof PostProgramByIdPublishResponses];
 
-export type PostApiProgramByIdUnpublishData = {
+export type PostProgramByIdUnpublishData = {
   body?: never;
   path: {
     id: string;
@@ -8835,19 +8813,19 @@ export type PostApiProgramByIdUnpublishData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/unpublish';
+  url: '/program/{id}/unpublish';
 };
 
-export type PostApiProgramByIdUnpublishResponses = {
+export type PostProgramByIdUnpublishResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramByIdUnpublishResponse = PostApiProgramByIdUnpublishResponses[keyof PostApiProgramByIdUnpublishResponses];
+export type PostProgramByIdUnpublishResponse = PostProgramByIdUnpublishResponses[keyof PostProgramByIdUnpublishResponses];
 
-export type PostApiProgramByIdScheduleData = {
+export type PostProgramByIdScheduleData = {
   body?: ModulesProgramsScheduleProgramDto;
   path: {
     id: string;
@@ -8855,19 +8833,19 @@ export type PostApiProgramByIdScheduleData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/schedule';
+  url: '/program/{id}/schedule';
 };
 
-export type PostApiProgramByIdScheduleResponses = {
+export type PostProgramByIdScheduleResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramByIdScheduleResponse = PostApiProgramByIdScheduleResponses[keyof PostApiProgramByIdScheduleResponses];
+export type PostProgramByIdScheduleResponse = PostProgramByIdScheduleResponses[keyof PostProgramByIdScheduleResponses];
 
-export type PostApiProgramByIdMonetizeData = {
+export type PostProgramByIdMonetizeData = {
   body?: ModulesProgramsMonetizationDto;
   path: {
     id: string;
@@ -8875,19 +8853,19 @@ export type PostApiProgramByIdMonetizeData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/monetize';
+  url: '/program/{id}/monetize';
 };
 
-export type PostApiProgramByIdMonetizeResponses = {
+export type PostProgramByIdMonetizeResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramByIdMonetizeResponse = PostApiProgramByIdMonetizeResponses[keyof PostApiProgramByIdMonetizeResponses];
+export type PostProgramByIdMonetizeResponse = PostProgramByIdMonetizeResponses[keyof PostProgramByIdMonetizeResponses];
 
-export type PostApiProgramByIdDisableMonetizationData = {
+export type PostProgramByIdDisableMonetizationData = {
   body?: never;
   path: {
     id: string;
@@ -8895,20 +8873,19 @@ export type PostApiProgramByIdDisableMonetizationData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/disable-monetization';
+  url: '/program/{id}/disable-monetization';
 };
 
-export type PostApiProgramByIdDisableMonetizationResponses = {
+export type PostProgramByIdDisableMonetizationResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgram;
 };
 
-export type PostApiProgramByIdDisableMonetizationResponse =
-  PostApiProgramByIdDisableMonetizationResponses[keyof PostApiProgramByIdDisableMonetizationResponses];
+export type PostProgramByIdDisableMonetizationResponse = PostProgramByIdDisableMonetizationResponses[keyof PostProgramByIdDisableMonetizationResponses];
 
-export type GetApiProgramByIdPricingData = {
+export type GetProgramByIdPricingData = {
   body?: never;
   path: {
     id: string;
@@ -8916,19 +8893,19 @@ export type GetApiProgramByIdPricingData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/pricing';
+  url: '/program/{id}/pricing';
 };
 
-export type GetApiProgramByIdPricingResponses = {
+export type GetProgramByIdPricingResponses = {
   /**
    * OK
    */
   200: ModulesProgramsPricingDto;
 };
 
-export type GetApiProgramByIdPricingResponse = GetApiProgramByIdPricingResponses[keyof GetApiProgramByIdPricingResponses];
+export type GetProgramByIdPricingResponse = GetProgramByIdPricingResponses[keyof GetProgramByIdPricingResponses];
 
-export type PutApiProgramByIdPricingData = {
+export type PutProgramByIdPricingData = {
   body?: ModulesProgramsUpdatePricingDto;
   path: {
     id: string;
@@ -8936,19 +8913,19 @@ export type PutApiProgramByIdPricingData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/pricing';
+  url: '/program/{id}/pricing';
 };
 
-export type PutApiProgramByIdPricingResponses = {
+export type PutProgramByIdPricingResponses = {
   /**
    * OK
    */
   200: ModulesProgramsPricingDto;
 };
 
-export type PutApiProgramByIdPricingResponse = PutApiProgramByIdPricingResponses[keyof PutApiProgramByIdPricingResponses];
+export type PutProgramByIdPricingResponse = PutProgramByIdPricingResponses[keyof PutProgramByIdPricingResponses];
 
-export type GetApiProgramByIdAnalyticsData = {
+export type GetProgramByIdAnalyticsData = {
   body?: never;
   path: {
     id: string;
@@ -8956,19 +8933,19 @@ export type GetApiProgramByIdAnalyticsData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/analytics';
+  url: '/program/{id}/analytics';
 };
 
-export type GetApiProgramByIdAnalyticsResponses = {
+export type GetProgramByIdAnalyticsResponses = {
   /**
    * OK
    */
   200: ModulesProgramsProgramAnalyticsDto;
 };
 
-export type GetApiProgramByIdAnalyticsResponse = GetApiProgramByIdAnalyticsResponses[keyof GetApiProgramByIdAnalyticsResponses];
+export type GetProgramByIdAnalyticsResponse = GetProgramByIdAnalyticsResponses[keyof GetProgramByIdAnalyticsResponses];
 
-export type GetApiProgramByIdAnalyticsCompletionRatesData = {
+export type GetProgramByIdAnalyticsCompletionRatesData = {
   body?: never;
   path: {
     id: string;
@@ -8976,20 +8953,20 @@ export type GetApiProgramByIdAnalyticsCompletionRatesData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/analytics/completion-rates';
+  url: '/program/{id}/analytics/completion-rates';
 };
 
-export type GetApiProgramByIdAnalyticsCompletionRatesResponses = {
+export type GetProgramByIdAnalyticsCompletionRatesResponses = {
   /**
    * OK
    */
   200: ModulesProgramsCompletionRatesDto;
 };
 
-export type GetApiProgramByIdAnalyticsCompletionRatesResponse =
-  GetApiProgramByIdAnalyticsCompletionRatesResponses[keyof GetApiProgramByIdAnalyticsCompletionRatesResponses];
+export type GetProgramByIdAnalyticsCompletionRatesResponse =
+  GetProgramByIdAnalyticsCompletionRatesResponses[keyof GetProgramByIdAnalyticsCompletionRatesResponses];
 
-export type GetApiProgramByIdAnalyticsEngagementData = {
+export type GetProgramByIdAnalyticsEngagementData = {
   body?: never;
   path: {
     id: string;
@@ -8997,19 +8974,19 @@ export type GetApiProgramByIdAnalyticsEngagementData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/analytics/engagement';
+  url: '/program/{id}/analytics/engagement';
 };
 
-export type GetApiProgramByIdAnalyticsEngagementResponses = {
+export type GetProgramByIdAnalyticsEngagementResponses = {
   /**
    * OK
    */
   200: ModulesProgramsEngagementMetricsDto;
 };
 
-export type GetApiProgramByIdAnalyticsEngagementResponse = GetApiProgramByIdAnalyticsEngagementResponses[keyof GetApiProgramByIdAnalyticsEngagementResponses];
+export type GetProgramByIdAnalyticsEngagementResponse = GetProgramByIdAnalyticsEngagementResponses[keyof GetProgramByIdAnalyticsEngagementResponses];
 
-export type GetApiProgramByIdAnalyticsRevenueData = {
+export type GetProgramByIdAnalyticsRevenueData = {
   body?: never;
   path: {
     id: string;
@@ -9017,19 +8994,19 @@ export type GetApiProgramByIdAnalyticsRevenueData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/analytics/revenue';
+  url: '/program/{id}/analytics/revenue';
 };
 
-export type GetApiProgramByIdAnalyticsRevenueResponses = {
+export type GetProgramByIdAnalyticsRevenueResponses = {
   /**
    * OK
    */
   200: ModulesProgramsRevenueAnalyticsDto;
 };
 
-export type GetApiProgramByIdAnalyticsRevenueResponse = GetApiProgramByIdAnalyticsRevenueResponses[keyof GetApiProgramByIdAnalyticsRevenueResponses];
+export type GetProgramByIdAnalyticsRevenueResponse = GetProgramByIdAnalyticsRevenueResponses[keyof GetProgramByIdAnalyticsRevenueResponses];
 
-export type PostApiProgramByIdCreateProductData = {
+export type PostProgramByIdCreateProductData = {
   body?: ModulesProgramsCreateProductFromProgramDto;
   path: {
     id: string;
@@ -9037,19 +9014,19 @@ export type PostApiProgramByIdCreateProductData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/create-product';
+  url: '/program/{id}/create-product';
 };
 
-export type PostApiProgramByIdCreateProductResponses = {
+export type PostProgramByIdCreateProductResponses = {
   /**
    * OK
    */
   200: string;
 };
 
-export type PostApiProgramByIdCreateProductResponse = PostApiProgramByIdCreateProductResponses[keyof PostApiProgramByIdCreateProductResponses];
+export type PostProgramByIdCreateProductResponse = PostProgramByIdCreateProductResponses[keyof PostProgramByIdCreateProductResponses];
 
-export type DeleteApiProgramByIdLinkProductByProductIdData = {
+export type DeleteProgramByIdLinkProductByProductIdData = {
   body?: never;
   path: {
     id: string;
@@ -9058,17 +9035,17 @@ export type DeleteApiProgramByIdLinkProductByProductIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/link-product/{productId}';
+  url: '/program/{id}/link-product/{productId}';
 };
 
-export type DeleteApiProgramByIdLinkProductByProductIdResponses = {
+export type DeleteProgramByIdLinkProductByProductIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PostApiProgramByIdLinkProductByProductIdData = {
+export type PostProgramByIdLinkProductByProductIdData = {
   body?: never;
   path: {
     id: string;
@@ -9077,17 +9054,17 @@ export type PostApiProgramByIdLinkProductByProductIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/link-product/{productId}';
+  url: '/program/{id}/link-product/{productId}';
 };
 
-export type PostApiProgramByIdLinkProductByProductIdResponses = {
+export type PostProgramByIdLinkProductByProductIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetApiProgramByIdProductsData = {
+export type GetProgramByIdProductsData = {
   body?: never;
   path: {
     id: string;
@@ -9095,17 +9072,17 @@ export type GetApiProgramByIdProductsData = {
   query?: {
     version?: string;
   };
-  url: '/api/Program/{id}/products';
+  url: '/program/{id}/products';
 };
 
-export type GetApiProgramByIdProductsResponses = {
+export type GetProgramByIdProductsResponses = {
   /**
    * OK
    */
   200: Array<string>;
 };
 
-export type GetApiProgramByIdProductsResponse = GetApiProgramByIdProductsResponses[keyof GetApiProgramByIdProductsResponses];
+export type GetProgramByIdProductsResponse = GetProgramByIdProductsResponses[keyof GetProgramByIdProductsResponses];
 
 export type GetProgramsByProgramIdCertificatesData = {
   body?: never;
@@ -9667,7 +9644,7 @@ export type PostApiProjectsByProjectIdPermissionsShareWithRoleResponses = {
 export type PostApiProjectsByProjectIdPermissionsShareWithRoleResponse =
   PostApiProjectsByProjectIdPermissionsShareWithRoleResponses[keyof PostApiProjectsByProjectIdPermissionsShareWithRoleResponses];
 
-export type GetApiProjectsData = {
+export type GetProjectsData = {
   body?: never;
   path?: never;
   query?: {
@@ -9683,37 +9660,37 @@ export type GetApiProjectsData = {
     sortDirection?: string;
     version?: string;
   };
-  url: '/api/Projects';
+  url: '/projects';
 };
 
-export type GetApiProjectsResponses = {
+export type GetProjectsResponses = {
   /**
    * OK
    */
   200: Array<ModulesProjectsProject>;
 };
 
-export type GetApiProjectsResponse = GetApiProjectsResponses[keyof GetApiProjectsResponses];
+export type GetProjectsResponse = GetProjectsResponses[keyof GetProjectsResponses];
 
-export type PostApiProjectsData = {
+export type PostProjectsData = {
   body?: ModulesProjectsCreateProjectRequest;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Projects';
+  url: '/projects';
 };
 
-export type PostApiProjectsResponses = {
+export type PostProjectsResponses = {
   /**
    * OK
    */
   200: ModulesProjectsCreateProjectResult;
 };
 
-export type PostApiProjectsResponse = PostApiProjectsResponses[keyof PostApiProjectsResponses];
+export type PostProjectsResponse = PostProjectsResponses[keyof PostProjectsResponses];
 
-export type DeleteApiProjectsByIdData = {
+export type DeleteProjectsByIdData = {
   body?: never;
   path: {
     id: string;
@@ -9723,19 +9700,19 @@ export type DeleteApiProjectsByIdData = {
     reason?: string;
     version?: string;
   };
-  url: '/api/Projects/{id}';
+  url: '/projects/{id}';
 };
 
-export type DeleteApiProjectsByIdResponses = {
+export type DeleteProjectsByIdResponses = {
   /**
    * OK
    */
   200: ModulesProjectsDeleteProjectResult;
 };
 
-export type DeleteApiProjectsByIdResponse = DeleteApiProjectsByIdResponses[keyof DeleteApiProjectsByIdResponses];
+export type DeleteProjectsByIdResponse = DeleteProjectsByIdResponses[keyof DeleteProjectsByIdResponses];
 
-export type GetApiProjectsByIdData = {
+export type GetProjectsByIdData = {
   body?: never;
   path: {
     id: string;
@@ -9747,19 +9724,19 @@ export type GetApiProjectsByIdData = {
     includeStatistics?: boolean;
     version?: string;
   };
-  url: '/api/Projects/{id}';
+  url: '/projects/{id}';
 };
 
-export type GetApiProjectsByIdResponses = {
+export type GetProjectsByIdResponses = {
   /**
    * OK
    */
   200: ModulesProjectsProject;
 };
 
-export type GetApiProjectsByIdResponse = GetApiProjectsByIdResponses[keyof GetApiProjectsByIdResponses];
+export type GetProjectsByIdResponse = GetProjectsByIdResponses[keyof GetProjectsByIdResponses];
 
-export type PutApiProjectsByIdData = {
+export type PutProjectsByIdData = {
   body?: ModulesProjectsUpdateProjectRequest;
   path: {
     id: string;
@@ -9767,19 +9744,19 @@ export type PutApiProjectsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Projects/{id}';
+  url: '/projects/{id}';
 };
 
-export type PutApiProjectsByIdResponses = {
+export type PutProjectsByIdResponses = {
   /**
    * OK
    */
   200: ModulesProjectsUpdateProjectResult;
 };
 
-export type PutApiProjectsByIdResponse = PutApiProjectsByIdResponses[keyof PutApiProjectsByIdResponses];
+export type PutProjectsByIdResponse = PutProjectsByIdResponses[keyof PutProjectsByIdResponses];
 
-export type GetApiProjectsSlugBySlugData = {
+export type GetProjectsSlugBySlugData = {
   body?: never;
   path: {
     slug: string;
@@ -9790,19 +9767,19 @@ export type GetApiProjectsSlugBySlugData = {
     includeCollaborators?: boolean;
     version?: string;
   };
-  url: '/api/Projects/slug/{slug}';
+  url: '/projects/slug/{slug}';
 };
 
-export type GetApiProjectsSlugBySlugResponses = {
+export type GetProjectsSlugBySlugResponses = {
   /**
    * OK
    */
   200: ModulesProjectsProject;
 };
 
-export type GetApiProjectsSlugBySlugResponse = GetApiProjectsSlugBySlugResponses[keyof GetApiProjectsSlugBySlugResponses];
+export type GetProjectsSlugBySlugResponse = GetProjectsSlugBySlugResponses[keyof GetProjectsSlugBySlugResponses];
 
-export type PostApiProjectsByIdPublishData = {
+export type PostProjectsByIdPublishData = {
   body?: never;
   path: {
     id: string;
@@ -9810,19 +9787,19 @@ export type PostApiProjectsByIdPublishData = {
   query?: {
     version?: string;
   };
-  url: '/api/Projects/{id}/publish';
+  url: '/projects/{id}/publish';
 };
 
-export type PostApiProjectsByIdPublishResponses = {
+export type PostProjectsByIdPublishResponses = {
   /**
    * OK
    */
   200: ModulesProjectsPublishProjectResult;
 };
 
-export type PostApiProjectsByIdPublishResponse = PostApiProjectsByIdPublishResponses[keyof PostApiProjectsByIdPublishResponses];
+export type PostProjectsByIdPublishResponse = PostProjectsByIdPublishResponses[keyof PostProjectsByIdPublishResponses];
 
-export type PostApiProjectsByIdUnpublishData = {
+export type PostProjectsByIdUnpublishData = {
   body?: never;
   path: {
     id: string;
@@ -9830,19 +9807,19 @@ export type PostApiProjectsByIdUnpublishData = {
   query?: {
     version?: string;
   };
-  url: '/api/Projects/{id}/unpublish';
+  url: '/projects/{id}/unpublish';
 };
 
-export type PostApiProjectsByIdUnpublishResponses = {
+export type PostProjectsByIdUnpublishResponses = {
   /**
    * OK
    */
   200: ModulesProjectsUnpublishProjectResult;
 };
 
-export type PostApiProjectsByIdUnpublishResponse = PostApiProjectsByIdUnpublishResponses[keyof PostApiProjectsByIdUnpublishResponses];
+export type PostProjectsByIdUnpublishResponse = PostProjectsByIdUnpublishResponses[keyof PostProjectsByIdUnpublishResponses];
 
-export type PostApiProjectsByIdArchiveData = {
+export type PostProjectsByIdArchiveData = {
   body?: never;
   path: {
     id: string;
@@ -9850,19 +9827,19 @@ export type PostApiProjectsByIdArchiveData = {
   query?: {
     version?: string;
   };
-  url: '/api/Projects/{id}/archive';
+  url: '/projects/{id}/archive';
 };
 
-export type PostApiProjectsByIdArchiveResponses = {
+export type PostProjectsByIdArchiveResponses = {
   /**
    * OK
    */
   200: ModulesProjectsArchiveProjectResult;
 };
 
-export type PostApiProjectsByIdArchiveResponse = PostApiProjectsByIdArchiveResponses[keyof PostApiProjectsByIdArchiveResponses];
+export type PostProjectsByIdArchiveResponse = PostProjectsByIdArchiveResponses[keyof PostProjectsByIdArchiveResponses];
 
-export type GetApiProjectsSearchData = {
+export type GetProjectsSearchData = {
   body?: never;
   path?: never;
   query?: {
@@ -9877,19 +9854,19 @@ export type GetApiProjectsSearchData = {
     sortDirection?: string;
     version?: string;
   };
-  url: '/api/Projects/search';
+  url: '/projects/search';
 };
 
-export type GetApiProjectsSearchResponses = {
+export type GetProjectsSearchResponses = {
   /**
    * OK
    */
   200: Array<ModulesProjectsProject>;
 };
 
-export type GetApiProjectsSearchResponse = GetApiProjectsSearchResponses[keyof GetApiProjectsSearchResponses];
+export type GetProjectsSearchResponse = GetProjectsSearchResponses[keyof GetProjectsSearchResponses];
 
-export type GetApiProjectsPopularData = {
+export type GetProjectsPopularData = {
   body?: never;
   path?: never;
   query?: {
@@ -9897,19 +9874,19 @@ export type GetApiProjectsPopularData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Projects/popular';
+  url: '/projects/popular';
 };
 
-export type GetApiProjectsPopularResponses = {
+export type GetProjectsPopularResponses = {
   /**
    * OK
    */
   200: Array<ModulesProjectsProject>;
 };
 
-export type GetApiProjectsPopularResponse = GetApiProjectsPopularResponses[keyof GetApiProjectsPopularResponses];
+export type GetProjectsPopularResponse = GetProjectsPopularResponses[keyof GetProjectsPopularResponses];
 
-export type GetApiProjectsRecentData = {
+export type GetProjectsRecentData = {
   body?: never;
   path?: never;
   query?: {
@@ -9917,19 +9894,19 @@ export type GetApiProjectsRecentData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Projects/recent';
+  url: '/projects/recent';
 };
 
-export type GetApiProjectsRecentResponses = {
+export type GetProjectsRecentResponses = {
   /**
    * OK
    */
   200: Array<ModulesProjectsProject>;
 };
 
-export type GetApiProjectsRecentResponse = GetApiProjectsRecentResponses[keyof GetApiProjectsRecentResponses];
+export type GetProjectsRecentResponse = GetProjectsRecentResponses[keyof GetProjectsRecentResponses];
 
-export type GetApiProjectsFeaturedData = {
+export type GetProjectsFeaturedData = {
   body?: never;
   path?: never;
   query?: {
@@ -9937,19 +9914,19 @@ export type GetApiProjectsFeaturedData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Projects/featured';
+  url: '/projects/featured';
 };
 
-export type GetApiProjectsFeaturedResponses = {
+export type GetProjectsFeaturedResponses = {
   /**
    * OK
    */
   200: Array<ModulesProjectsProject>;
 };
 
-export type GetApiProjectsFeaturedResponse = GetApiProjectsFeaturedResponses[keyof GetApiProjectsFeaturedResponses];
+export type GetProjectsFeaturedResponse = GetProjectsFeaturedResponses[keyof GetProjectsFeaturedResponses];
 
-export type GetApiProjectsByIdStatisticsData = {
+export type GetProjectsByIdStatisticsData = {
   body?: never;
   path: {
     id: string;
@@ -9959,19 +9936,19 @@ export type GetApiProjectsByIdStatisticsData = {
     toDate?: string;
     version?: string;
   };
-  url: '/api/Projects/{id}/statistics';
+  url: '/projects/{id}/statistics';
 };
 
-export type GetApiProjectsByIdStatisticsResponses = {
+export type GetProjectsByIdStatisticsResponses = {
   /**
    * OK
    */
   200: ModulesProjectsProjectStatistics;
 };
 
-export type GetApiProjectsByIdStatisticsResponse = GetApiProjectsByIdStatisticsResponses[keyof GetApiProjectsByIdStatisticsResponses];
+export type GetProjectsByIdStatisticsResponse = GetProjectsByIdStatisticsResponses[keyof GetProjectsByIdStatisticsResponses];
 
-export type GetApiProjectsCategoryByCategoryIdData = {
+export type GetProjectsCategoryByCategoryIdData = {
   body?: never;
   path: {
     categoryId: string;
@@ -9982,19 +9959,19 @@ export type GetApiProjectsCategoryByCategoryIdData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Projects/category/{categoryId}';
+  url: '/projects/category/{categoryId}';
 };
 
-export type GetApiProjectsCategoryByCategoryIdResponses = {
+export type GetProjectsCategoryByCategoryIdResponses = {
   /**
    * OK
    */
   200: Array<ModulesProjectsProject>;
 };
 
-export type GetApiProjectsCategoryByCategoryIdResponse = GetApiProjectsCategoryByCategoryIdResponses[keyof GetApiProjectsCategoryByCategoryIdResponses];
+export type GetProjectsCategoryByCategoryIdResponse = GetProjectsCategoryByCategoryIdResponses[keyof GetProjectsCategoryByCategoryIdResponses];
 
-export type GetApiProjectsCreatorByCreatorIdData = {
+export type GetProjectsCreatorByCreatorIdData = {
   body?: never;
   path: {
     creatorId: string;
@@ -10005,19 +9982,19 @@ export type GetApiProjectsCreatorByCreatorIdData = {
     take?: number;
     version?: string;
   };
-  url: '/api/Projects/creator/{creatorId}';
+  url: '/projects/creator/{creatorId}';
 };
 
-export type GetApiProjectsCreatorByCreatorIdResponses = {
+export type GetProjectsCreatorByCreatorIdResponses = {
   /**
    * OK
    */
   200: Array<ModulesProjectsProject>;
 };
 
-export type GetApiProjectsCreatorByCreatorIdResponse = GetApiProjectsCreatorByCreatorIdResponses[keyof GetApiProjectsCreatorByCreatorIdResponses];
+export type GetProjectsCreatorByCreatorIdResponse = GetProjectsCreatorByCreatorIdResponses[keyof GetProjectsCreatorByCreatorIdResponses];
 
-export type GetApiReputationsUserByUserIdData = {
+export type GetReputationsUserByUserIdData = {
   body?: never;
   path: {
     userId: string;
@@ -10026,19 +10003,19 @@ export type GetApiReputationsUserByUserIdData = {
     tenantId?: string;
     version?: string;
   };
-  url: '/api/Reputations/user/{userId}';
+  url: '/reputations/user/{userId}';
 };
 
-export type GetApiReputationsUserByUserIdResponses = {
+export type GetReputationsUserByUserIdResponses = {
   /**
    * OK
    */
   200: ModulesReputationsIReputation;
 };
 
-export type GetApiReputationsUserByUserIdResponse = GetApiReputationsUserByUserIdResponses[keyof GetApiReputationsUserByUserIdResponses];
+export type GetReputationsUserByUserIdResponse = GetReputationsUserByUserIdResponses[keyof GetReputationsUserByUserIdResponses];
 
-export type PostApiReputationsUserByUserIdUpdateData = {
+export type PostReputationsUserByUserIdUpdateData = {
   body?: number;
   path: {
     userId: string;
@@ -10048,19 +10025,19 @@ export type PostApiReputationsUserByUserIdUpdateData = {
     reason?: string;
     version?: string;
   };
-  url: '/api/Reputations/user/{userId}/update';
+  url: '/reputations/user/{userId}/update';
 };
 
-export type PostApiReputationsUserByUserIdUpdateResponses = {
+export type PostReputationsUserByUserIdUpdateResponses = {
   /**
    * OK
    */
   200: ModulesReputationsIReputation;
 };
 
-export type PostApiReputationsUserByUserIdUpdateResponse = PostApiReputationsUserByUserIdUpdateResponses[keyof PostApiReputationsUserByUserIdUpdateResponses];
+export type PostReputationsUserByUserIdUpdateResponse = PostReputationsUserByUserIdUpdateResponses[keyof PostReputationsUserByUserIdUpdateResponses];
 
-export type GetApiReputationsTierByTierData = {
+export type GetReputationsTierByTierData = {
   body?: ModulesReputationsReputationTier;
   path: {
     tier: string;
@@ -10069,17 +10046,17 @@ export type GetApiReputationsTierByTierData = {
     tenantId?: string;
     version?: string;
   };
-  url: '/api/Reputations/tier/{tier}';
+  url: '/reputations/tier/{tier}';
 };
 
-export type GetApiReputationsTierByTierResponses = {
+export type GetReputationsTierByTierResponses = {
   /**
    * OK
    */
   200: Array<ModulesReputationsIReputation>;
 };
 
-export type GetApiReputationsTierByTierResponse = GetApiReputationsTierByTierResponses[keyof GetApiReputationsTierByTierResponses];
+export type GetReputationsTierByTierResponse = GetReputationsTierByTierResponses[keyof GetReputationsTierByTierResponses];
 
 export type GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsData = {
   body?: never;
@@ -10260,25 +10237,25 @@ export type GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyRespons
 export type GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyResponse =
   GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyResponses[keyof GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyResponses];
 
-export type GetApiResourcesUsageData = {
+export type GetResourcesUsageData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Resources/usage';
+  url: '/resources/usage';
 };
 
-export type GetApiResourcesUsageResponses = {
+export type GetResourcesUsageResponses = {
   /**
    * OK
    */
   200: ModulesResourcesModelsMultiResourceUsageResponse;
 };
 
-export type GetApiResourcesUsageResponse = GetApiResourcesUsageResponses[keyof GetApiResourcesUsageResponses];
+export type GetResourcesUsageResponse = GetResourcesUsageResponses[keyof GetResourcesUsageResponses];
 
-export type GetApiResourcesUsageByTypeData = {
+export type GetResourcesUsageByTypeData = {
   body?: never;
   path: {
     type: ModulesResourcesModelsResourceUsageType;
@@ -10287,37 +10264,37 @@ export type GetApiResourcesUsageByTypeData = {
     historyDays?: number;
     version?: string;
   };
-  url: '/api/Resources/usage/{type}';
+  url: '/resources/usage/{type}';
 };
 
-export type GetApiResourcesUsageByTypeResponses = {
+export type GetResourcesUsageByTypeResponses = {
   /**
    * OK
    */
   200: ModulesResourcesModelsResourceUsageResponse;
 };
 
-export type GetApiResourcesUsageByTypeResponse = GetApiResourcesUsageByTypeResponses[keyof GetApiResourcesUsageByTypeResponses];
+export type GetResourcesUsageByTypeResponse = GetResourcesUsageByTypeResponses[keyof GetResourcesUsageByTypeResponses];
 
-export type PostApiResourcesCheckLimitsData = {
+export type PostResourcesCheckLimitsData = {
   body?: ModulesResourcesControllersCheckLimitsRequest;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Resources/check-limits';
+  url: '/resources/check-limits';
 };
 
-export type PostApiResourcesCheckLimitsResponses = {
+export type PostResourcesCheckLimitsResponses = {
   /**
    * OK
    */
   200: ModulesResourcesModelsResourceLimitCheckResponse;
 };
 
-export type PostApiResourcesCheckLimitsResponse = PostApiResourcesCheckLimitsResponses[keyof PostApiResourcesCheckLimitsResponses];
+export type PostResourcesCheckLimitsResponse = PostResourcesCheckLimitsResponses[keyof PostResourcesCheckLimitsResponses];
 
-export type PostApiResourcesCheckMultipleLimitsData = {
+export type PostResourcesCheckMultipleLimitsData = {
   body?: {
     Users?: number;
     Projects?: number;
@@ -10337,10 +10314,10 @@ export type PostApiResourcesCheckMultipleLimitsData = {
   query?: {
     version?: string;
   };
-  url: '/api/Resources/check-multiple-limits';
+  url: '/resources/check-multiple-limits';
 };
 
-export type PostApiResourcesCheckMultipleLimitsResponses = {
+export type PostResourcesCheckMultipleLimitsResponses = {
   /**
    * OK
    */
@@ -10361,45 +10338,45 @@ export type PostApiResourcesCheckMultipleLimitsResponses = {
   };
 };
 
-export type PostApiResourcesCheckMultipleLimitsResponse = PostApiResourcesCheckMultipleLimitsResponses[keyof PostApiResourcesCheckMultipleLimitsResponses];
+export type PostResourcesCheckMultipleLimitsResponse = PostResourcesCheckMultipleLimitsResponses[keyof PostResourcesCheckMultipleLimitsResponses];
 
-export type PostApiResourcesConsumeData = {
+export type PostResourcesConsumeData = {
   body?: ModulesResourcesControllersConsumeResourceRequest;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Resources/consume';
+  url: '/resources/consume';
 };
 
-export type PostApiResourcesConsumeResponses = {
+export type PostResourcesConsumeResponses = {
   /**
    * OK
    */
   200: ModulesResourcesModelsResourceLimitCheckResponse;
 };
 
-export type PostApiResourcesConsumeResponse = PostApiResourcesConsumeResponses[keyof PostApiResourcesConsumeResponses];
+export type PostResourcesConsumeResponse = PostResourcesConsumeResponses[keyof PostResourcesConsumeResponses];
 
-export type PostApiResourcesRecordUsageData = {
+export type PostResourcesRecordUsageData = {
   body?: ModulesResourcesControllersRecordUsageRequest;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Resources/record-usage';
+  url: '/resources/record-usage';
 };
 
-export type PostApiResourcesRecordUsageResponses = {
+export type PostResourcesRecordUsageResponses = {
   /**
    * OK
    */
   200: boolean;
 };
 
-export type PostApiResourcesRecordUsageResponse = PostApiResourcesRecordUsageResponses[keyof PostApiResourcesRecordUsageResponses];
+export type PostResourcesRecordUsageResponse = PostResourcesRecordUsageResponses[keyof PostResourcesRecordUsageResponses];
 
-export type GetApiResourcesUsageByTypeHistoryData = {
+export type GetResourcesUsageByTypeHistoryData = {
   body?: never;
   path: {
     type: ModulesResourcesModelsResourceUsageType;
@@ -10409,53 +10386,53 @@ export type GetApiResourcesUsageByTypeHistoryData = {
     toDate?: string;
     version?: string;
   };
-  url: '/api/Resources/usage/{type}/history';
+  url: '/resources/usage/{type}/history';
 };
 
-export type GetApiResourcesUsageByTypeHistoryResponses = {
+export type GetResourcesUsageByTypeHistoryResponses = {
   /**
    * OK
    */
   200: Array<ModulesResourcesModelsResourceUsageRecord>;
 };
 
-export type GetApiResourcesUsageByTypeHistoryResponse = GetApiResourcesUsageByTypeHistoryResponses[keyof GetApiResourcesUsageByTypeHistoryResponses];
+export type GetResourcesUsageByTypeHistoryResponse = GetResourcesUsageByTypeHistoryResponses[keyof GetResourcesUsageByTypeHistoryResponses];
 
-export type DeleteApiResourcesAdminQuotasData = {
+export type DeleteResourcesAdminQuotasData = {
   body?: ModulesResourcesControllersDeleteQuotaRequest;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Resources/admin/quotas';
+  url: '/resources/admin/quotas';
 };
 
-export type DeleteApiResourcesAdminQuotasResponses = {
+export type DeleteResourcesAdminQuotasResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PostApiResourcesAdminQuotasData = {
+export type PostResourcesAdminQuotasData = {
   body?: ModulesResourcesControllersSetQuotaRequest;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Resources/admin/quotas';
+  url: '/resources/admin/quotas';
 };
 
-export type PostApiResourcesAdminQuotasResponses = {
+export type PostResourcesAdminQuotasResponses = {
   /**
    * OK
    */
   200: ModulesResourcesModelsResourceQuota;
 };
 
-export type PostApiResourcesAdminQuotasResponse = PostApiResourcesAdminQuotasResponses[keyof PostApiResourcesAdminQuotasResponses];
+export type PostResourcesAdminQuotasResponse = PostResourcesAdminQuotasResponses[keyof PostResourcesAdminQuotasResponses];
 
-export type GetApiResourcesAdminTenantsByTenantIdQuotasData = {
+export type GetResourcesAdminTenantsByTenantIdQuotasData = {
   body?: never;
   path: {
     tenantId: string;
@@ -10463,20 +10440,20 @@ export type GetApiResourcesAdminTenantsByTenantIdQuotasData = {
   query?: {
     version?: string;
   };
-  url: '/api/Resources/admin/tenants/{tenantId}/quotas';
+  url: '/resources/admin/tenants/{tenantId}/quotas';
 };
 
-export type GetApiResourcesAdminTenantsByTenantIdQuotasResponses = {
+export type GetResourcesAdminTenantsByTenantIdQuotasResponses = {
   /**
    * OK
    */
   200: Array<ModulesResourcesModelsResourceQuota>;
 };
 
-export type GetApiResourcesAdminTenantsByTenantIdQuotasResponse =
-  GetApiResourcesAdminTenantsByTenantIdQuotasResponses[keyof GetApiResourcesAdminTenantsByTenantIdQuotasResponses];
+export type GetResourcesAdminTenantsByTenantIdQuotasResponse =
+  GetResourcesAdminTenantsByTenantIdQuotasResponses[keyof GetResourcesAdminTenantsByTenantIdQuotasResponses];
 
-export type GetApiResourcesAdminExceedingLimitsData = {
+export type GetResourcesAdminExceedingLimitsData = {
   body?: never;
   path?: never;
   query?: {
@@ -10484,75 +10461,73 @@ export type GetApiResourcesAdminExceedingLimitsData = {
     hardLimitOnly?: boolean;
     version?: string;
   };
-  url: '/api/Resources/admin/exceeding-limits';
+  url: '/resources/admin/exceeding-limits';
 };
 
-export type GetApiResourcesAdminExceedingLimitsResponses = {
+export type GetResourcesAdminExceedingLimitsResponses = {
   /**
    * OK
    */
   200: Array<string>;
 };
 
-export type GetApiResourcesAdminExceedingLimitsResponse = GetApiResourcesAdminExceedingLimitsResponses[keyof GetApiResourcesAdminExceedingLimitsResponses];
+export type GetResourcesAdminExceedingLimitsResponse = GetResourcesAdminExceedingLimitsResponses[keyof GetResourcesAdminExceedingLimitsResponses];
 
-export type PostApiResourcesAdminResetExpiredQuotasData = {
+export type PostResourcesAdminResetExpiredQuotasData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Resources/admin/reset-expired-quotas';
+  url: '/resources/admin/reset-expired-quotas';
 };
 
-export type PostApiResourcesAdminResetExpiredQuotasResponses = {
+export type PostResourcesAdminResetExpiredQuotasResponses = {
   /**
    * OK
    */
   200: number;
 };
 
-export type PostApiResourcesAdminResetExpiredQuotasResponse =
-  PostApiResourcesAdminResetExpiredQuotasResponses[keyof PostApiResourcesAdminResetExpiredQuotasResponses];
+export type PostResourcesAdminResetExpiredQuotasResponse = PostResourcesAdminResetExpiredQuotasResponses[keyof PostResourcesAdminResetExpiredQuotasResponses];
 
-export type DeleteApiResourcesAdminCleanupUsageRecordsData = {
+export type DeleteResourcesAdminCleanupUsageRecordsData = {
   body?: never;
   path?: never;
   query?: {
     olderThan?: string;
     version?: string;
   };
-  url: '/api/Resources/admin/cleanup-usage-records';
+  url: '/resources/admin/cleanup-usage-records';
 };
 
-export type DeleteApiResourcesAdminCleanupUsageRecordsResponses = {
+export type DeleteResourcesAdminCleanupUsageRecordsResponses = {
   /**
    * OK
    */
   200: number;
 };
 
-export type DeleteApiResourcesAdminCleanupUsageRecordsResponse =
-  DeleteApiResourcesAdminCleanupUsageRecordsResponses[keyof DeleteApiResourcesAdminCleanupUsageRecordsResponses];
+export type DeleteResourcesAdminCleanupUsageRecordsResponse =
+  DeleteResourcesAdminCleanupUsageRecordsResponses[keyof DeleteResourcesAdminCleanupUsageRecordsResponses];
 
-export type PostApiResourcesAdminRecalculateUsageData = {
+export type PostResourcesAdminRecalculateUsageData = {
   body?: ModulesResourcesControllersRecalculateUsageRequest;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Resources/admin/recalculate-usage';
+  url: '/resources/admin/recalculate-usage';
 };
 
-export type PostApiResourcesAdminRecalculateUsageResponses = {
+export type PostResourcesAdminRecalculateUsageResponses = {
   /**
    * OK
    */
   200: boolean;
 };
 
-export type PostApiResourcesAdminRecalculateUsageResponse =
-  PostApiResourcesAdminRecalculateUsageResponses[keyof PostApiResourcesAdminRecalculateUsageResponses];
+export type PostResourcesAdminRecalculateUsageResponse = PostResourcesAdminRecalculateUsageResponses[keyof PostResourcesAdminRecalculateUsageResponses];
 
 export type GetApiAuthSessionsData = {
   body?: never;
@@ -10708,43 +10683,43 @@ export type PostApiAuthSessionsRefreshResponses = {
   200: unknown;
 };
 
-export type GetApiSubscriptionMeData = {
+export type GetSubscriptionMeData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Subscription/me';
+  url: '/subscription/me';
 };
 
-export type GetApiSubscriptionMeErrors = {
+export type GetSubscriptionMeErrors = {
   /**
    * Unauthorized
    */
   401: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type GetApiSubscriptionMeError = GetApiSubscriptionMeErrors[keyof GetApiSubscriptionMeErrors];
+export type GetSubscriptionMeError = GetSubscriptionMeErrors[keyof GetSubscriptionMeErrors];
 
-export type GetApiSubscriptionMeResponses = {
+export type GetSubscriptionMeResponses = {
   /**
    * OK
    */
   200: Array<ModulesSubscriptionsModelsUserSubscription>;
 };
 
-export type GetApiSubscriptionMeResponse = GetApiSubscriptionMeResponses[keyof GetApiSubscriptionMeResponses];
+export type GetSubscriptionMeResponse = GetSubscriptionMeResponses[keyof GetSubscriptionMeResponses];
 
-export type GetApiSubscriptionMeActiveData = {
+export type GetSubscriptionMeActiveData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Subscription/me/active';
+  url: '/subscription/me/active';
 };
 
-export type GetApiSubscriptionMeActiveErrors = {
+export type GetSubscriptionMeActiveErrors = {
   /**
    * Unauthorized
    */
@@ -10755,18 +10730,18 @@ export type GetApiSubscriptionMeActiveErrors = {
   404: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type GetApiSubscriptionMeActiveError = GetApiSubscriptionMeActiveErrors[keyof GetApiSubscriptionMeActiveErrors];
+export type GetSubscriptionMeActiveError = GetSubscriptionMeActiveErrors[keyof GetSubscriptionMeActiveErrors];
 
-export type GetApiSubscriptionMeActiveResponses = {
+export type GetSubscriptionMeActiveResponses = {
   /**
    * OK
    */
   200: ModulesSubscriptionsModelsUserSubscription;
 };
 
-export type GetApiSubscriptionMeActiveResponse = GetApiSubscriptionMeActiveResponses[keyof GetApiSubscriptionMeActiveResponses];
+export type GetSubscriptionMeActiveResponse = GetSubscriptionMeActiveResponses[keyof GetSubscriptionMeActiveResponses];
 
-export type GetApiSubscriptionByIdData = {
+export type GetSubscriptionByIdData = {
   body?: never;
   path: {
     id: string;
@@ -10774,10 +10749,10 @@ export type GetApiSubscriptionByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Subscription/{id}';
+  url: '/subscription/{id}';
 };
 
-export type GetApiSubscriptionByIdErrors = {
+export type GetSubscriptionByIdErrors = {
   /**
    * Forbidden
    */
@@ -10788,18 +10763,18 @@ export type GetApiSubscriptionByIdErrors = {
   404: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type GetApiSubscriptionByIdError = GetApiSubscriptionByIdErrors[keyof GetApiSubscriptionByIdErrors];
+export type GetSubscriptionByIdError = GetSubscriptionByIdErrors[keyof GetSubscriptionByIdErrors];
 
-export type GetApiSubscriptionByIdResponses = {
+export type GetSubscriptionByIdResponses = {
   /**
    * OK
    */
   200: ModulesSubscriptionsModelsUserSubscription;
 };
 
-export type GetApiSubscriptionByIdResponse = GetApiSubscriptionByIdResponses[keyof GetApiSubscriptionByIdResponses];
+export type GetSubscriptionByIdResponse = GetSubscriptionByIdResponses[keyof GetSubscriptionByIdResponses];
 
-export type GetApiSubscriptionData = {
+export type GetSubscriptionData = {
   body?: never;
   path?: never;
   query?: {
@@ -10808,37 +10783,37 @@ export type GetApiSubscriptionData = {
     status?: SubscriptionStatus;
     version?: string;
   };
-  url: '/api/Subscription';
+  url: '/subscription';
 };
 
-export type GetApiSubscriptionErrors = {
+export type GetSubscriptionErrors = {
   /**
    * Forbidden
    */
   403: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type GetApiSubscriptionError = GetApiSubscriptionErrors[keyof GetApiSubscriptionErrors];
+export type GetSubscriptionError = GetSubscriptionErrors[keyof GetSubscriptionErrors];
 
-export type GetApiSubscriptionResponses = {
+export type GetSubscriptionResponses = {
   /**
    * OK
    */
   200: Array<ModulesSubscriptionsModelsUserSubscription>;
 };
 
-export type GetApiSubscriptionResponse = GetApiSubscriptionResponses[keyof GetApiSubscriptionResponses];
+export type GetSubscriptionResponse = GetSubscriptionResponses[keyof GetSubscriptionResponses];
 
-export type PostApiSubscriptionData = {
+export type PostSubscriptionData = {
   body?: ModulesSubscriptionsServicesCreateSubscriptionDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Subscription';
+  url: '/subscription';
 };
 
-export type PostApiSubscriptionErrors = {
+export type PostSubscriptionErrors = {
   /**
    * Bad Request
    */
@@ -10849,18 +10824,18 @@ export type PostApiSubscriptionErrors = {
   401: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type PostApiSubscriptionError = PostApiSubscriptionErrors[keyof PostApiSubscriptionErrors];
+export type PostSubscriptionError = PostSubscriptionErrors[keyof PostSubscriptionErrors];
 
-export type PostApiSubscriptionResponses = {
+export type PostSubscriptionResponses = {
   /**
    * Created
    */
   201: ModulesSubscriptionsModelsUserSubscription;
 };
 
-export type PostApiSubscriptionResponse = PostApiSubscriptionResponses[keyof PostApiSubscriptionResponses];
+export type PostSubscriptionResponse = PostSubscriptionResponses[keyof PostSubscriptionResponses];
 
-export type PostApiSubscriptionByIdCancelData = {
+export type PostSubscriptionByIdCancelData = {
   body?: never;
   path: {
     id: string;
@@ -10868,10 +10843,10 @@ export type PostApiSubscriptionByIdCancelData = {
   query?: {
     version?: string;
   };
-  url: '/api/Subscription/{id}/cancel';
+  url: '/subscription/{id}/cancel';
 };
 
-export type PostApiSubscriptionByIdCancelErrors = {
+export type PostSubscriptionByIdCancelErrors = {
   /**
    * Unauthorized
    */
@@ -10882,18 +10857,18 @@ export type PostApiSubscriptionByIdCancelErrors = {
   404: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type PostApiSubscriptionByIdCancelError = PostApiSubscriptionByIdCancelErrors[keyof PostApiSubscriptionByIdCancelErrors];
+export type PostSubscriptionByIdCancelError = PostSubscriptionByIdCancelErrors[keyof PostSubscriptionByIdCancelErrors];
 
-export type PostApiSubscriptionByIdCancelResponses = {
+export type PostSubscriptionByIdCancelResponses = {
   /**
    * OK
    */
   200: ModulesSubscriptionsModelsUserSubscription;
 };
 
-export type PostApiSubscriptionByIdCancelResponse = PostApiSubscriptionByIdCancelResponses[keyof PostApiSubscriptionByIdCancelResponses];
+export type PostSubscriptionByIdCancelResponse = PostSubscriptionByIdCancelResponses[keyof PostSubscriptionByIdCancelResponses];
 
-export type PostApiSubscriptionByIdResumeData = {
+export type PostSubscriptionByIdResumeData = {
   body?: never;
   path: {
     id: string;
@@ -10901,10 +10876,10 @@ export type PostApiSubscriptionByIdResumeData = {
   query?: {
     version?: string;
   };
-  url: '/api/Subscription/{id}/resume';
+  url: '/subscription/{id}/resume';
 };
 
-export type PostApiSubscriptionByIdResumeErrors = {
+export type PostSubscriptionByIdResumeErrors = {
   /**
    * Unauthorized
    */
@@ -10915,18 +10890,18 @@ export type PostApiSubscriptionByIdResumeErrors = {
   404: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type PostApiSubscriptionByIdResumeError = PostApiSubscriptionByIdResumeErrors[keyof PostApiSubscriptionByIdResumeErrors];
+export type PostSubscriptionByIdResumeError = PostSubscriptionByIdResumeErrors[keyof PostSubscriptionByIdResumeErrors];
 
-export type PostApiSubscriptionByIdResumeResponses = {
+export type PostSubscriptionByIdResumeResponses = {
   /**
    * OK
    */
   200: ModulesSubscriptionsModelsUserSubscription;
 };
 
-export type PostApiSubscriptionByIdResumeResponse = PostApiSubscriptionByIdResumeResponses[keyof PostApiSubscriptionByIdResumeResponses];
+export type PostSubscriptionByIdResumeResponse = PostSubscriptionByIdResumeResponses[keyof PostSubscriptionByIdResumeResponses];
 
-export type PutApiSubscriptionByIdPaymentMethodData = {
+export type PutSubscriptionByIdPaymentMethodData = {
   body?: ModulesSubscriptionsServicesUpdatePaymentMethodDto;
   path: {
     id: string;
@@ -10934,10 +10909,10 @@ export type PutApiSubscriptionByIdPaymentMethodData = {
   query?: {
     version?: string;
   };
-  url: '/api/Subscription/{id}/payment-method';
+  url: '/subscription/{id}/payment-method';
 };
 
-export type PutApiSubscriptionByIdPaymentMethodErrors = {
+export type PutSubscriptionByIdPaymentMethodErrors = {
   /**
    * Bad Request
    */
@@ -10952,36 +10927,36 @@ export type PutApiSubscriptionByIdPaymentMethodErrors = {
   404: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type PutApiSubscriptionByIdPaymentMethodError = PutApiSubscriptionByIdPaymentMethodErrors[keyof PutApiSubscriptionByIdPaymentMethodErrors];
+export type PutSubscriptionByIdPaymentMethodError = PutSubscriptionByIdPaymentMethodErrors[keyof PutSubscriptionByIdPaymentMethodErrors];
 
-export type PutApiSubscriptionByIdPaymentMethodResponses = {
+export type PutSubscriptionByIdPaymentMethodResponses = {
   /**
    * OK
    */
   200: ModulesSubscriptionsModelsUserSubscription;
 };
 
-export type PutApiSubscriptionByIdPaymentMethodResponse = PutApiSubscriptionByIdPaymentMethodResponses[keyof PutApiSubscriptionByIdPaymentMethodResponses];
+export type PutSubscriptionByIdPaymentMethodResponse = PutSubscriptionByIdPaymentMethodResponses[keyof PutSubscriptionByIdPaymentMethodResponses];
 
-export type PostApiSubscriptionsData = {
+export type PostSubscriptionsData = {
   body?: ModulesSubscriptionsControllersCreateSubscriptionRequest;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Subscriptions';
+  url: '/subscriptions';
 };
 
-export type PostApiSubscriptionsResponses = {
+export type PostSubscriptionsResponses = {
   /**
    * OK
    */
   200: ModulesSubscriptionsControllersSubscriptionResponse;
 };
 
-export type PostApiSubscriptionsResponse = PostApiSubscriptionsResponses[keyof PostApiSubscriptionsResponses];
+export type PostSubscriptionsResponse = PostSubscriptionsResponses[keyof PostSubscriptionsResponses];
 
-export type PostApiSubscriptionsByIdCancelData = {
+export type PostSubscriptionsByIdCancelData = {
   body?: ModulesSubscriptionsControllersCancelSubscriptionRequest;
   path: {
     id: string;
@@ -10989,17 +10964,17 @@ export type PostApiSubscriptionsByIdCancelData = {
   query?: {
     version?: string;
   };
-  url: '/api/Subscriptions/{id}/cancel';
+  url: '/subscriptions/{id}/cancel';
 };
 
-export type PostApiSubscriptionsByIdCancelResponses = {
+export type PostSubscriptionsByIdCancelResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetApiSubscriptionsByIdData = {
+export type GetSubscriptionsByIdData = {
   body?: never;
   path: {
     id: string;
@@ -11007,19 +10982,19 @@ export type GetApiSubscriptionsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Subscriptions/{id}';
+  url: '/subscriptions/{id}';
 };
 
-export type GetApiSubscriptionsByIdResponses = {
+export type GetSubscriptionsByIdResponses = {
   /**
    * OK
    */
   200: ModulesSubscriptionsControllersSubscriptionResponse;
 };
 
-export type GetApiSubscriptionsByIdResponse = GetApiSubscriptionsByIdResponses[keyof GetApiSubscriptionsByIdResponses];
+export type GetSubscriptionsByIdResponse = GetSubscriptionsByIdResponses[keyof GetSubscriptionsByIdResponses];
 
-export type GetApiSubscriptionsUserByUserIdData = {
+export type GetSubscriptionsUserByUserIdData = {
   body?: never;
   path: {
     userId: string;
@@ -11027,19 +11002,19 @@ export type GetApiSubscriptionsUserByUserIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Subscriptions/user/{userId}';
+  url: '/subscriptions/user/{userId}';
 };
 
-export type GetApiSubscriptionsUserByUserIdResponses = {
+export type GetSubscriptionsUserByUserIdResponses = {
   /**
    * OK
    */
   200: Array<ModulesSubscriptionsControllersSubscriptionResponse>;
 };
 
-export type GetApiSubscriptionsUserByUserIdResponse = GetApiSubscriptionsUserByUserIdResponses[keyof GetApiSubscriptionsUserByUserIdResponses];
+export type GetSubscriptionsUserByUserIdResponse = GetSubscriptionsUserByUserIdResponses[keyof GetSubscriptionsUserByUserIdResponses];
 
-export type PostApiSubscriptionsByIdActivateData = {
+export type PostSubscriptionsByIdActivateData = {
   body?: never;
   path: {
     id: string;
@@ -11047,17 +11022,17 @@ export type PostApiSubscriptionsByIdActivateData = {
   query?: {
     version?: string;
   };
-  url: '/api/Subscriptions/{id}/activate';
+  url: '/subscriptions/{id}/activate';
 };
 
-export type PostApiSubscriptionsByIdActivateResponses = {
+export type PostSubscriptionsByIdActivateResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PostApiSubscriptionsByIdStartTrialData = {
+export type PostSubscriptionsByIdStartTrialData = {
   body?: ModulesSubscriptionsControllersStartTrialRequest;
   path: {
     id: string;
@@ -11065,10 +11040,10 @@ export type PostApiSubscriptionsByIdStartTrialData = {
   query?: {
     version?: string;
   };
-  url: '/api/Subscriptions/{id}/start-trial';
+  url: '/subscriptions/{id}/start-trial';
 };
 
-export type PostApiSubscriptionsByIdStartTrialResponses = {
+export type PostSubscriptionsByIdStartTrialResponses = {
   /**
    * OK
    */
@@ -11477,44 +11452,44 @@ export type GetApiTenantDomainsDomainMatchResponses = {
 
 export type GetApiTenantDomainsDomainMatchResponse = GetApiTenantDomainsDomainMatchResponses[keyof GetApiTenantDomainsDomainMatchResponses];
 
-export type GetApiTenantsData = {
+export type GetTenantsData = {
   body?: never;
   path?: never;
   query?: {
     includeDeleted?: boolean;
     version?: string;
   };
-  url: '/api/Tenants';
+  url: '/tenants';
 };
 
-export type GetApiTenantsResponses = {
+export type GetTenantsResponses = {
   /**
    * OK
    */
   200: Array<ModulesTenantsTenant>;
 };
 
-export type GetApiTenantsResponse = GetApiTenantsResponses[keyof GetApiTenantsResponses];
+export type GetTenantsResponse = GetTenantsResponses[keyof GetTenantsResponses];
 
-export type PostApiTenantsData = {
+export type PostTenantsData = {
   body?: ModulesTenantsCreateTenantDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Tenants';
+  url: '/tenants';
 };
 
-export type PostApiTenantsResponses = {
+export type PostTenantsResponses = {
   /**
    * OK
    */
   200: ModulesTenantsTenant;
 };
 
-export type PostApiTenantsResponse = PostApiTenantsResponses[keyof PostApiTenantsResponses];
+export type PostTenantsResponse = PostTenantsResponses[keyof PostTenantsResponses];
 
-export type DeleteApiTenantsByIdData = {
+export type DeleteTenantsByIdData = {
   body?: never;
   path: {
     id: string;
@@ -11522,17 +11497,17 @@ export type DeleteApiTenantsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Tenants/{id}';
+  url: '/tenants/{id}';
 };
 
-export type DeleteApiTenantsByIdResponses = {
+export type DeleteTenantsByIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetApiTenantsByIdData = {
+export type GetTenantsByIdData = {
   body?: never;
   path: {
     id: string;
@@ -11541,19 +11516,19 @@ export type GetApiTenantsByIdData = {
     includeDeleted?: boolean;
     version?: string;
   };
-  url: '/api/Tenants/{id}';
+  url: '/tenants/{id}';
 };
 
-export type GetApiTenantsByIdResponses = {
+export type GetTenantsByIdResponses = {
   /**
    * OK
    */
   200: ModulesTenantsTenant;
 };
 
-export type GetApiTenantsByIdResponse = GetApiTenantsByIdResponses[keyof GetApiTenantsByIdResponses];
+export type GetTenantsByIdResponse = GetTenantsByIdResponses[keyof GetTenantsByIdResponses];
 
-export type PutApiTenantsByIdData = {
+export type PutTenantsByIdData = {
   body?: ModulesTenantsUpdateTenantDto;
   path: {
     id: string;
@@ -11561,19 +11536,19 @@ export type PutApiTenantsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Tenants/{id}';
+  url: '/tenants/{id}';
 };
 
-export type PutApiTenantsByIdResponses = {
+export type PutTenantsByIdResponses = {
   /**
    * OK
    */
   200: ModulesTenantsTenant;
 };
 
-export type PutApiTenantsByIdResponse = PutApiTenantsByIdResponses[keyof PutApiTenantsByIdResponses];
+export type PutTenantsByIdResponse = PutTenantsByIdResponses[keyof PutTenantsByIdResponses];
 
-export type GetApiTenantsByNameByNameData = {
+export type GetTenantsByNameByNameData = {
   body?: never;
   path: {
     name: string;
@@ -11582,19 +11557,19 @@ export type GetApiTenantsByNameByNameData = {
     includeDeleted?: boolean;
     version?: string;
   };
-  url: '/api/Tenants/by-name/{name}';
+  url: '/tenants/by-name/{name}';
 };
 
-export type GetApiTenantsByNameByNameResponses = {
+export type GetTenantsByNameByNameResponses = {
   /**
    * OK
    */
   200: ModulesTenantsTenant;
 };
 
-export type GetApiTenantsByNameByNameResponse = GetApiTenantsByNameByNameResponses[keyof GetApiTenantsByNameByNameResponses];
+export type GetTenantsByNameByNameResponse = GetTenantsByNameByNameResponses[keyof GetTenantsByNameByNameResponses];
 
-export type GetApiTenantsBySlugBySlugData = {
+export type GetTenantsBySlugBySlugData = {
   body?: never;
   path: {
     slug: string;
@@ -11603,55 +11578,55 @@ export type GetApiTenantsBySlugBySlugData = {
     includeDeleted?: boolean;
     version?: string;
   };
-  url: '/api/Tenants/by-slug/{slug}';
+  url: '/tenants/by-slug/{slug}';
 };
 
-export type GetApiTenantsBySlugBySlugResponses = {
+export type GetTenantsBySlugBySlugResponses = {
   /**
    * OK
    */
   200: ModulesTenantsTenant;
 };
 
-export type GetApiTenantsBySlugBySlugResponse = GetApiTenantsBySlugBySlugResponses[keyof GetApiTenantsBySlugBySlugResponses];
+export type GetTenantsBySlugBySlugResponse = GetTenantsBySlugBySlugResponses[keyof GetTenantsBySlugBySlugResponses];
 
-export type GetApiTenantsDeletedData = {
+export type GetTenantsDeletedData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Tenants/deleted';
+  url: '/tenants/deleted';
 };
 
-export type GetApiTenantsDeletedResponses = {
+export type GetTenantsDeletedResponses = {
   /**
    * OK
    */
   200: Array<ModulesTenantsTenant>;
 };
 
-export type GetApiTenantsDeletedResponse = GetApiTenantsDeletedResponses[keyof GetApiTenantsDeletedResponses];
+export type GetTenantsDeletedResponse = GetTenantsDeletedResponses[keyof GetTenantsDeletedResponses];
 
-export type GetApiTenantsActiveData = {
+export type GetTenantsActiveData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Tenants/active';
+  url: '/tenants/active';
 };
 
-export type GetApiTenantsActiveResponses = {
+export type GetTenantsActiveResponses = {
   /**
    * OK
    */
   200: Array<ModulesTenantsTenant>;
 };
 
-export type GetApiTenantsActiveResponse = GetApiTenantsActiveResponses[keyof GetApiTenantsActiveResponses];
+export type GetTenantsActiveResponse = GetTenantsActiveResponses[keyof GetTenantsActiveResponses];
 
-export type GetApiTenantsSearchData = {
+export type GetTenantsSearchData = {
   body?: never;
   path?: never;
   query?: {
@@ -11664,37 +11639,37 @@ export type GetApiTenantsSearchData = {
     offset?: number;
     version?: string;
   };
-  url: '/api/Tenants/search';
+  url: '/tenants/search';
 };
 
-export type GetApiTenantsSearchResponses = {
+export type GetTenantsSearchResponses = {
   /**
    * OK
    */
   200: Array<ModulesTenantsTenant>;
 };
 
-export type GetApiTenantsSearchResponse = GetApiTenantsSearchResponses[keyof GetApiTenantsSearchResponses];
+export type GetTenantsSearchResponse = GetTenantsSearchResponses[keyof GetTenantsSearchResponses];
 
-export type GetApiTenantsStatisticsData = {
+export type GetTenantsStatisticsData = {
   body?: never;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Tenants/statistics';
+  url: '/tenants/statistics';
 };
 
-export type GetApiTenantsStatisticsResponses = {
+export type GetTenantsStatisticsResponses = {
   /**
    * OK
    */
   200: ModulesTenantsTenantStatistics;
 };
 
-export type GetApiTenantsStatisticsResponse = GetApiTenantsStatisticsResponses[keyof GetApiTenantsStatisticsResponses];
+export type GetTenantsStatisticsResponse = GetTenantsStatisticsResponses[keyof GetTenantsStatisticsResponses];
 
-export type PostApiTenantsByIdRestoreData = {
+export type PostTenantsByIdRestoreData = {
   body?: never;
   path: {
     id: string;
@@ -11702,17 +11677,17 @@ export type PostApiTenantsByIdRestoreData = {
   query?: {
     version?: string;
   };
-  url: '/api/Tenants/{id}/restore';
+  url: '/tenants/{id}/restore';
 };
 
-export type PostApiTenantsByIdRestoreResponses = {
+export type PostTenantsByIdRestoreResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type DeleteApiTenantsByIdPermanentData = {
+export type DeleteTenantsByIdPermanentData = {
   body?: never;
   path: {
     id: string;
@@ -11720,17 +11695,17 @@ export type DeleteApiTenantsByIdPermanentData = {
   query?: {
     version?: string;
   };
-  url: '/api/Tenants/{id}/permanent';
+  url: '/tenants/{id}/permanent';
 };
 
-export type DeleteApiTenantsByIdPermanentResponses = {
+export type DeleteTenantsByIdPermanentResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PostApiTenantsByIdActivateData = {
+export type PostTenantsByIdActivateData = {
   body?: never;
   path: {
     id: string;
@@ -11738,17 +11713,17 @@ export type PostApiTenantsByIdActivateData = {
   query?: {
     version?: string;
   };
-  url: '/api/Tenants/{id}/activate';
+  url: '/tenants/{id}/activate';
 };
 
-export type PostApiTenantsByIdActivateResponses = {
+export type PostTenantsByIdActivateResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PostApiTenantsByIdDeactivateData = {
+export type PostTenantsByIdDeactivateData = {
   body?: never;
   path: {
     id: string;
@@ -11756,51 +11731,51 @@ export type PostApiTenantsByIdDeactivateData = {
   query?: {
     version?: string;
   };
-  url: '/api/Tenants/{id}/deactivate';
+  url: '/tenants/{id}/deactivate';
 };
 
-export type PostApiTenantsByIdDeactivateResponses = {
+export type PostTenantsByIdDeactivateResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PostApiTenantsBulkDeleteData = {
+export type PostTenantsBulkDeleteData = {
   body?: ModulesTenantsBulkDeleteTenantsDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Tenants/bulk-delete';
+  url: '/tenants/bulk-delete';
 };
 
-export type PostApiTenantsBulkDeleteResponses = {
+export type PostTenantsBulkDeleteResponses = {
   /**
    * OK
    */
   200: number;
 };
 
-export type PostApiTenantsBulkDeleteResponse = PostApiTenantsBulkDeleteResponses[keyof PostApiTenantsBulkDeleteResponses];
+export type PostTenantsBulkDeleteResponse = PostTenantsBulkDeleteResponses[keyof PostTenantsBulkDeleteResponses];
 
-export type PostApiTenantsBulkRestoreData = {
+export type PostTenantsBulkRestoreData = {
   body?: ModulesTenantsBulkRestoreTenantsDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Tenants/bulk-restore';
+  url: '/tenants/bulk-restore';
 };
 
-export type PostApiTenantsBulkRestoreResponses = {
+export type PostTenantsBulkRestoreResponses = {
   /**
    * OK
    */
   200: number;
 };
 
-export type PostApiTenantsBulkRestoreResponse = PostApiTenantsBulkRestoreResponses[keyof PostApiTenantsBulkRestoreResponses];
+export type PostTenantsBulkRestoreResponse = PostTenantsBulkRestoreResponses[keyof PostTenantsBulkRestoreResponses];
 
 export type GetTestingRequestsData = {
   body?: never;
@@ -11810,7 +11785,7 @@ export type GetTestingRequestsData = {
     take?: number;
     version?: string;
   };
-  url: '/Testing/requests';
+  url: '/testing/requests';
 };
 
 export type GetTestingRequestsResponses = {
@@ -11828,7 +11803,7 @@ export type PostTestingRequestsData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests';
+  url: '/testing/requests';
 };
 
 export type PostTestingRequestsResponses = {
@@ -11848,7 +11823,7 @@ export type DeleteTestingRequestsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/{id}';
+  url: '/testing/requests/{id}';
 };
 
 export type DeleteTestingRequestsByIdResponses = {
@@ -11866,7 +11841,7 @@ export type GetTestingRequestsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/{id}';
+  url: '/testing/requests/{id}';
 };
 
 export type GetTestingRequestsByIdResponses = {
@@ -11886,7 +11861,7 @@ export type PutTestingRequestsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/{id}';
+  url: '/testing/requests/{id}';
 };
 
 export type PutTestingRequestsByIdResponses = {
@@ -11906,7 +11881,7 @@ export type GetTestingRequestsByIdDetailsData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/{id}/details';
+  url: '/testing/requests/{id}/details';
 };
 
 export type GetTestingRequestsByIdDetailsResponses = {
@@ -11926,7 +11901,7 @@ export type PostTestingRequestsByIdRestoreData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/{id}/restore';
+  url: '/testing/requests/{id}/restore';
 };
 
 export type PostTestingRequestsByIdRestoreResponses = {
@@ -11944,7 +11919,7 @@ export type GetTestingSessionsData = {
     take?: number;
     version?: string;
   };
-  url: '/Testing/sessions';
+  url: '/testing/sessions';
 };
 
 export type GetTestingSessionsResponses = {
@@ -11962,7 +11937,7 @@ export type PostTestingSessionsData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions';
+  url: '/testing/sessions';
 };
 
 export type PostTestingSessionsResponses = {
@@ -11982,7 +11957,7 @@ export type DeleteTestingSessionsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{id}';
+  url: '/testing/sessions/{id}';
 };
 
 export type DeleteTestingSessionsByIdResponses = {
@@ -12000,7 +11975,7 @@ export type GetTestingSessionsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{id}';
+  url: '/testing/sessions/{id}';
 };
 
 export type GetTestingSessionsByIdResponses = {
@@ -12020,7 +11995,7 @@ export type PutTestingSessionsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{id}';
+  url: '/testing/sessions/{id}';
 };
 
 export type PutTestingSessionsByIdResponses = {
@@ -12040,7 +12015,7 @@ export type GetTestingSessionsByIdDetailsData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{id}/details';
+  url: '/testing/sessions/{id}/details';
 };
 
 export type GetTestingSessionsByIdDetailsResponses = {
@@ -12060,7 +12035,7 @@ export type PostTestingSessionsByIdRestoreData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{id}/restore';
+  url: '/testing/sessions/{id}/restore';
 };
 
 export type PostTestingSessionsByIdRestoreResponses = {
@@ -12077,7 +12052,7 @@ export type GetTestingPublicSessionsData = {
     take?: number;
     version?: string;
   };
-  url: '/Testing/public/sessions';
+  url: '/testing/public/sessions';
 };
 
 export type GetTestingPublicSessionsResponses = {
@@ -12097,7 +12072,7 @@ export type GetTestingRequestsByProjectVersionByProjectVersionIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/by-project-version/{projectVersionId}';
+  url: '/testing/requests/by-project-version/{projectVersionId}';
 };
 
 export type GetTestingRequestsByProjectVersionByProjectVersionIdResponses = {
@@ -12118,7 +12093,7 @@ export type GetTestingRequestsByCreatorByCreatorIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/by-creator/{creatorId}';
+  url: '/testing/requests/by-creator/{creatorId}';
 };
 
 export type GetTestingRequestsByCreatorByCreatorIdResponses = {
@@ -12139,7 +12114,7 @@ export type GetTestingRequestsByStatusByStatusData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/by-status/{status}';
+  url: '/testing/requests/by-status/{status}';
 };
 
 export type GetTestingRequestsByStatusByStatusResponses = {
@@ -12159,7 +12134,7 @@ export type GetTestingSessionsByRequestByTestingRequestIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/by-request/{testingRequestId}';
+  url: '/testing/sessions/by-request/{testingRequestId}';
 };
 
 export type GetTestingSessionsByRequestByTestingRequestIdResponses = {
@@ -12180,7 +12155,7 @@ export type GetTestingSessionsByLocationByLocationIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/by-location/{locationId}';
+  url: '/testing/sessions/by-location/{locationId}';
 };
 
 export type GetTestingSessionsByLocationByLocationIdResponses = {
@@ -12201,7 +12176,7 @@ export type GetTestingSessionsByStatusByStatusData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/by-status/{status}';
+  url: '/testing/sessions/by-status/{status}';
 };
 
 export type GetTestingSessionsByStatusByStatusResponses = {
@@ -12221,7 +12196,7 @@ export type GetTestingSessionsByManagerByManagerIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/by-manager/{managerId}';
+  url: '/testing/sessions/by-manager/{managerId}';
 };
 
 export type GetTestingSessionsByManagerByManagerIdResponses = {
@@ -12241,7 +12216,7 @@ export type GetTestingRequestsSearchData = {
     searchTerm?: string;
     version?: string;
   };
-  url: '/Testing/requests/search';
+  url: '/testing/requests/search';
 };
 
 export type GetTestingRequestsSearchResponses = {
@@ -12260,7 +12235,7 @@ export type GetTestingSessionsSearchData = {
     searchTerm?: string;
     version?: string;
   };
-  url: '/Testing/sessions/search';
+  url: '/testing/sessions/search';
 };
 
 export type GetTestingSessionsSearchResponses = {
@@ -12281,7 +12256,7 @@ export type DeleteTestingRequestsByRequestIdParticipantsByUserIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/{requestId}/participants/{userId}';
+  url: '/testing/requests/{requestId}/participants/{userId}';
 };
 
 export type DeleteTestingRequestsByRequestIdParticipantsByUserIdResponses = {
@@ -12300,7 +12275,7 @@ export type PostTestingRequestsByRequestIdParticipantsByUserIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/{requestId}/participants/{userId}';
+  url: '/testing/requests/{requestId}/participants/{userId}';
 };
 
 export type PostTestingRequestsByRequestIdParticipantsByUserIdResponses = {
@@ -12321,7 +12296,7 @@ export type GetTestingRequestsByRequestIdParticipantsData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/{requestId}/participants';
+  url: '/testing/requests/{requestId}/participants';
 };
 
 export type GetTestingRequestsByRequestIdParticipantsResponses = {
@@ -12343,7 +12318,7 @@ export type GetTestingRequestsByRequestIdParticipantsByUserIdCheckData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/{requestId}/participants/{userId}/check';
+  url: '/testing/requests/{requestId}/participants/{userId}/check';
 };
 
 export type GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses = {
@@ -12364,7 +12339,7 @@ export type DeleteTestingSessionsBySessionIdRegisterData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{sessionId}/register';
+  url: '/testing/sessions/{sessionId}/register';
 };
 
 export type DeleteTestingSessionsBySessionIdRegisterResponses = {
@@ -12382,7 +12357,7 @@ export type PostTestingSessionsBySessionIdRegisterData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{sessionId}/register';
+  url: '/testing/sessions/{sessionId}/register';
 };
 
 export type PostTestingSessionsBySessionIdRegisterResponses = {
@@ -12403,7 +12378,7 @@ export type GetTestingSessionsBySessionIdRegistrationsData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{sessionId}/registrations';
+  url: '/testing/sessions/{sessionId}/registrations';
 };
 
 export type GetTestingSessionsBySessionIdRegistrationsResponses = {
@@ -12424,7 +12399,7 @@ export type DeleteTestingSessionsBySessionIdWaitlistData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{sessionId}/waitlist';
+  url: '/testing/sessions/{sessionId}/waitlist';
 };
 
 export type DeleteTestingSessionsBySessionIdWaitlistResponses = {
@@ -12442,7 +12417,7 @@ export type GetTestingSessionsBySessionIdWaitlistData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{sessionId}/waitlist';
+  url: '/testing/sessions/{sessionId}/waitlist';
 };
 
 export type GetTestingSessionsBySessionIdWaitlistResponses = {
@@ -12463,7 +12438,7 @@ export type PostTestingSessionsBySessionIdWaitlistData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{sessionId}/waitlist';
+  url: '/testing/sessions/{sessionId}/waitlist';
 };
 
 export type PostTestingSessionsBySessionIdWaitlistResponses = {
@@ -12484,7 +12459,7 @@ export type GetTestingRequestsByRequestIdFeedbackData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/{requestId}/feedback';
+  url: '/testing/requests/{requestId}/feedback';
 };
 
 export type GetTestingRequestsByRequestIdFeedbackResponses = {
@@ -12505,7 +12480,7 @@ export type PostTestingRequestsByRequestIdFeedbackData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/{requestId}/feedback';
+  url: '/testing/requests/{requestId}/feedback';
 };
 
 export type PostTestingRequestsByRequestIdFeedbackResponses = {
@@ -12526,7 +12501,7 @@ export type GetTestingFeedbackByUserByUserIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/feedback/by-user/{userId}';
+  url: '/testing/feedback/by-user/{userId}';
 };
 
 export type GetTestingFeedbackByUserByUserIdResponses = {
@@ -12546,7 +12521,7 @@ export type GetTestingRequestsByRequestIdStatisticsData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/requests/{requestId}/statistics';
+  url: '/testing/requests/{requestId}/statistics';
 };
 
 export type GetTestingRequestsByRequestIdStatisticsResponses = {
@@ -12564,7 +12539,7 @@ export type GetTestingSessionsBySessionIdStatisticsData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{sessionId}/statistics';
+  url: '/testing/sessions/{sessionId}/statistics';
 };
 
 export type GetTestingSessionsBySessionIdStatisticsResponses = {
@@ -12582,7 +12557,7 @@ export type GetTestingUsersByUserIdActivityData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/users/{userId}/activity';
+  url: '/testing/users/{userId}/activity';
 };
 
 export type GetTestingUsersByUserIdActivityResponses = {
@@ -12598,7 +12573,7 @@ export type PostTestingSubmitSimpleData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/submit-simple';
+  url: '/testing/submit-simple';
 };
 
 export type PostTestingSubmitSimpleResponses = {
@@ -12616,7 +12591,7 @@ export type PostTestingFeedbackData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/feedback';
+  url: '/testing/feedback';
 };
 
 export type PostTestingFeedbackResponses = {
@@ -12632,7 +12607,7 @@ export type GetTestingMyRequestsData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/my-requests';
+  url: '/testing/my-requests';
 };
 
 export type GetTestingMyRequestsResponses = {
@@ -12650,7 +12625,7 @@ export type GetTestingAvailableForTestingData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/available-for-testing';
+  url: '/testing/available-for-testing';
 };
 
 export type GetTestingAvailableForTestingResponses = {
@@ -12668,7 +12643,7 @@ export type GetTestingAttendanceStudentsData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/attendance/students';
+  url: '/testing/attendance/students';
 };
 
 export type GetTestingAttendanceStudentsResponses = {
@@ -12684,7 +12659,7 @@ export type GetTestingAttendanceSessionsData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/attendance/sessions';
+  url: '/testing/attendance/sessions';
 };
 
 export type GetTestingAttendanceSessionsResponses = {
@@ -12702,7 +12677,7 @@ export type PostTestingSessionsBySessionIdAttendanceData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/sessions/{sessionId}/attendance';
+  url: '/testing/sessions/{sessionId}/attendance';
 };
 
 export type PostTestingSessionsBySessionIdAttendanceResponses = {
@@ -12720,7 +12695,7 @@ export type PostTestingFeedbackByFeedbackIdReportData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/feedback/{feedbackId}/report';
+  url: '/testing/feedback/{feedbackId}/report';
 };
 
 export type PostTestingFeedbackByFeedbackIdReportResponses = {
@@ -12738,7 +12713,7 @@ export type PostTestingFeedbackByFeedbackIdQualityData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/feedback/{feedbackId}/quality';
+  url: '/testing/feedback/{feedbackId}/quality';
 };
 
 export type PostTestingFeedbackByFeedbackIdQualityResponses = {
@@ -12756,7 +12731,7 @@ export type GetTestingLocationsData = {
     take?: number;
     version?: string;
   };
-  url: '/Testing/locations';
+  url: '/testing/locations';
 };
 
 export type GetTestingLocationsResponses = {
@@ -12774,7 +12749,7 @@ export type PostTestingLocationsData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/locations';
+  url: '/testing/locations';
 };
 
 export type PostTestingLocationsResponses = {
@@ -12794,7 +12769,7 @@ export type DeleteTestingLocationsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/locations/{id}';
+  url: '/testing/locations/{id}';
 };
 
 export type DeleteTestingLocationsByIdResponses = {
@@ -12812,7 +12787,7 @@ export type GetTestingLocationsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/locations/{id}';
+  url: '/testing/locations/{id}';
 };
 
 export type GetTestingLocationsByIdResponses = {
@@ -12832,7 +12807,7 @@ export type PutTestingLocationsByIdData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/locations/{id}';
+  url: '/testing/locations/{id}';
 };
 
 export type PutTestingLocationsByIdResponses = {
@@ -12852,7 +12827,7 @@ export type PostTestingLocationsByIdRestoreData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/locations/{id}/restore';
+  url: '/testing/locations/{id}/restore';
 };
 
 export type PostTestingLocationsByIdRestoreResponses = {
@@ -12869,7 +12844,7 @@ export type GetTestingPermissionsCheckData = {
     tenantId?: string;
     version?: string;
   };
-  url: '/Testing/permissions/check';
+  url: '/testing/permissions/check';
 };
 
 export type GetTestingPermissionsCheckResponses = {
@@ -12888,7 +12863,7 @@ export type GetTestingPermissionsMyPermissionsData = {
     tenantId?: string;
     version?: string;
   };
-  url: '/Testing/permissions/my-permissions';
+  url: '/testing/permissions/my-permissions';
 };
 
 export type GetTestingPermissionsMyPermissionsResponses = {
@@ -12906,7 +12881,7 @@ export type PostTestingPermissionsAssignRoleData = {
   query?: {
     version?: string;
   };
-  url: '/Testing/permissions/assign-role';
+  url: '/testing/permissions/assign-role';
 };
 
 export type PostTestingPermissionsAssignRoleResponses = {
@@ -12923,7 +12898,7 @@ export type PostTestingSessionsCreateWithPermissionsData = {
     tenantId?: string;
     version?: string;
   };
-  url: '/Testing/sessions/create-with-permissions';
+  url: '/testing/sessions/create-with-permissions';
 };
 
 export type PostTestingSessionsCreateWithPermissionsResponses = {
@@ -12945,7 +12920,7 @@ export type DeleteTestingSessionsByIdDeleteWithPermissionsData = {
     tenantId?: string;
     version?: string;
   };
-  url: '/Testing/sessions/{id}/delete-with-permissions';
+  url: '/testing/sessions/{id}/delete-with-permissions';
 };
 
 export type DeleteTestingSessionsByIdDeleteWithPermissionsResponses = {
@@ -12964,7 +12939,7 @@ export type GetTestingPermissionsUsersWithRoleByRoleNameData = {
     tenantId?: string;
     version?: string;
   };
-  url: '/Testing/permissions/users-with-role/{roleName}';
+  url: '/testing/permissions/users-with-role/{roleName}';
 };
 
 export type GetTestingPermissionsUsersWithRoleByRoleNameResponses = {
@@ -13471,7 +13446,7 @@ export type DeleteApiUsersByUserIdAchievementsByUserAchievementIdResponses = {
   200: unknown;
 };
 
-export type GetApiUserProfilesData = {
+export type GetUserProfilesData = {
   body?: never;
   path?: never;
   query?: {
@@ -13482,37 +13457,37 @@ export type GetApiUserProfilesData = {
     tenantId?: string;
     version?: string;
   };
-  url: '/api/UserProfiles';
+  url: '/user-profiles';
 };
 
-export type GetApiUserProfilesResponses = {
+export type GetUserProfilesResponses = {
   /**
    * OK
    */
   200: Array<ModulesUserProfilesUserProfileResponseDto>;
 };
 
-export type GetApiUserProfilesResponse = GetApiUserProfilesResponses[keyof GetApiUserProfilesResponses];
+export type GetUserProfilesResponse = GetUserProfilesResponses[keyof GetUserProfilesResponses];
 
-export type PostApiUserProfilesData = {
+export type PostUserProfilesData = {
   body?: ModulesUserProfilesCreateUserProfileDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/UserProfiles';
+  url: '/user-profiles';
 };
 
-export type PostApiUserProfilesResponses = {
+export type PostUserProfilesResponses = {
   /**
    * OK
    */
   200: ModulesUserProfilesUserProfileResponseDto;
 };
 
-export type PostApiUserProfilesResponse = PostApiUserProfilesResponses[keyof PostApiUserProfilesResponses];
+export type PostUserProfilesResponse = PostUserProfilesResponses[keyof PostUserProfilesResponses];
 
-export type DeleteApiUserProfilesByIdData = {
+export type DeleteUserProfilesByIdData = {
   body?: never;
   path: {
     id: string;
@@ -13521,17 +13496,17 @@ export type DeleteApiUserProfilesByIdData = {
     permanent?: boolean;
     version?: string;
   };
-  url: '/api/UserProfiles/{id}';
+  url: '/user-profiles/{id}';
 };
 
-export type DeleteApiUserProfilesByIdResponses = {
+export type DeleteUserProfilesByIdResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetApiUserProfilesByIdData = {
+export type GetUserProfilesByIdData = {
   body?: never;
   path: {
     id: string;
@@ -13540,19 +13515,19 @@ export type GetApiUserProfilesByIdData = {
     includeDeleted?: boolean;
     version?: string;
   };
-  url: '/api/UserProfiles/{id}';
+  url: '/user-profiles/{id}';
 };
 
-export type GetApiUserProfilesByIdResponses = {
+export type GetUserProfilesByIdResponses = {
   /**
    * OK
    */
   200: ModulesUserProfilesUserProfileResponseDto;
 };
 
-export type GetApiUserProfilesByIdResponse = GetApiUserProfilesByIdResponses[keyof GetApiUserProfilesByIdResponses];
+export type GetUserProfilesByIdResponse = GetUserProfilesByIdResponses[keyof GetUserProfilesByIdResponses];
 
-export type PutApiUserProfilesByIdData = {
+export type PutUserProfilesByIdData = {
   body?: ModulesUserProfilesUpdateUserProfileDto;
   headers?: {
     'If-Match'?: number;
@@ -13563,19 +13538,19 @@ export type PutApiUserProfilesByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/UserProfiles/{id}';
+  url: '/user-profiles/{id}';
 };
 
-export type PutApiUserProfilesByIdResponses = {
+export type PutUserProfilesByIdResponses = {
   /**
    * OK
    */
   200: ModulesUserProfilesUserProfileResponseDto;
 };
 
-export type PutApiUserProfilesByIdResponse = PutApiUserProfilesByIdResponses[keyof PutApiUserProfilesByIdResponses];
+export type PutUserProfilesByIdResponse = PutUserProfilesByIdResponses[keyof PutUserProfilesByIdResponses];
 
-export type GetApiUserProfilesUserByUserIdData = {
+export type GetUserProfilesUserByUserIdData = {
   body?: never;
   path: {
     userId: string;
@@ -13584,19 +13559,19 @@ export type GetApiUserProfilesUserByUserIdData = {
     includeDeleted?: boolean;
     version?: string;
   };
-  url: '/api/UserProfiles/user/{userId}';
+  url: '/user-profiles/user/{userId}';
 };
 
-export type GetApiUserProfilesUserByUserIdResponses = {
+export type GetUserProfilesUserByUserIdResponses = {
   /**
    * OK
    */
   200: ModulesUserProfilesUserProfileResponseDto;
 };
 
-export type GetApiUserProfilesUserByUserIdResponse = GetApiUserProfilesUserByUserIdResponses[keyof GetApiUserProfilesUserByUserIdResponses];
+export type GetUserProfilesUserByUserIdResponse = GetUserProfilesUserByUserIdResponses[keyof GetUserProfilesUserByUserIdResponses];
 
-export type PostApiUserProfilesByIdRestoreData = {
+export type PostUserProfilesByIdRestoreData = {
   body?: never;
   path: {
     id: string;
@@ -13604,17 +13579,17 @@ export type PostApiUserProfilesByIdRestoreData = {
   query?: {
     version?: string;
   };
-  url: '/api/UserProfiles/{id}/restore';
+  url: '/user-profiles/{id}/restore';
 };
 
-export type PostApiUserProfilesByIdRestoreResponses = {
+export type PostUserProfilesByIdRestoreResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type GetApiUsersData = {
+export type GetUsersData = {
   body?: never;
   path?: never;
   query?: {
@@ -13624,37 +13599,37 @@ export type GetApiUsersData = {
     isActive?: boolean;
     version?: string;
   };
-  url: '/api/Users';
+  url: '/users';
 };
 
-export type GetApiUsersErrors = {
+export type GetUsersErrors = {
   /**
    * Internal Server Error
    */
   500: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type GetApiUsersError = GetApiUsersErrors[keyof GetApiUsersErrors];
+export type GetUsersError = GetUsersErrors[keyof GetUsersErrors];
 
-export type GetApiUsersResponses = {
+export type GetUsersResponses = {
   /**
    * OK
    */
   200: Array<ModulesUsersUserResponseDto>;
 };
 
-export type GetApiUsersResponse = GetApiUsersResponses[keyof GetApiUsersResponses];
+export type GetUsersResponse = GetUsersResponses[keyof GetUsersResponses];
 
-export type PostApiUsersData = {
+export type PostUsersData = {
   body?: ModulesUsersCreateUserDto;
   path?: never;
   query?: {
     version?: string;
   };
-  url: '/api/Users';
+  url: '/users';
 };
 
-export type PostApiUsersErrors = {
+export type PostUsersErrors = {
   /**
    * Bad Request
    */
@@ -13677,18 +13652,18 @@ export type PostApiUsersErrors = {
   500: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type PostApiUsersError = PostApiUsersErrors[keyof PostApiUsersErrors];
+export type PostUsersError = PostUsersErrors[keyof PostUsersErrors];
 
-export type PostApiUsersResponses = {
+export type PostUsersResponses = {
   /**
    * Created
    */
   201: ModulesUsersUserResponseDto;
 };
 
-export type PostApiUsersResponse = PostApiUsersResponses[keyof PostApiUsersResponses];
+export type PostUsersResponse = PostUsersResponses[keyof PostUsersResponses];
 
-export type DeleteApiUsersByIdData = {
+export type DeleteUsersByIdData = {
   body?: never;
   path: {
     id: string;
@@ -13698,10 +13673,10 @@ export type DeleteApiUsersByIdData = {
     reason?: string;
     version?: string;
   };
-  url: '/api/Users/{id}';
+  url: '/users/{id}';
 };
 
-export type DeleteApiUsersByIdErrors = {
+export type DeleteUsersByIdErrors = {
   /**
    * Not Found
    */
@@ -13712,18 +13687,18 @@ export type DeleteApiUsersByIdErrors = {
   500: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type DeleteApiUsersByIdError = DeleteApiUsersByIdErrors[keyof DeleteApiUsersByIdErrors];
+export type DeleteUsersByIdError = DeleteUsersByIdErrors[keyof DeleteUsersByIdErrors];
 
-export type DeleteApiUsersByIdResponses = {
+export type DeleteUsersByIdResponses = {
   /**
    * No Content
    */
   204: void;
 };
 
-export type DeleteApiUsersByIdResponse = DeleteApiUsersByIdResponses[keyof DeleteApiUsersByIdResponses];
+export type DeleteUsersByIdResponse = DeleteUsersByIdResponses[keyof DeleteUsersByIdResponses];
 
-export type GetApiUsersByIdData = {
+export type GetUsersByIdData = {
   body?: never;
   path: {
     id: string;
@@ -13732,10 +13707,10 @@ export type GetApiUsersByIdData = {
     includeDeleted?: boolean;
     version?: string;
   };
-  url: '/api/Users/{id}';
+  url: '/users/{id}';
 };
 
-export type GetApiUsersByIdErrors = {
+export type GetUsersByIdErrors = {
   /**
    * Not Found
    */
@@ -13746,18 +13721,18 @@ export type GetApiUsersByIdErrors = {
   500: MicrosoftAspNetCoreMvcProblemDetails;
 };
 
-export type GetApiUsersByIdError = GetApiUsersByIdErrors[keyof GetApiUsersByIdErrors];
+export type GetUsersByIdError = GetUsersByIdErrors[keyof GetUsersByIdErrors];
 
-export type GetApiUsersByIdResponses = {
+export type GetUsersByIdResponses = {
   /**
    * OK
    */
   200: ModulesUsersUserResponseDto;
 };
 
-export type GetApiUsersByIdResponse = GetApiUsersByIdResponses[keyof GetApiUsersByIdResponses];
+export type GetUsersByIdResponse = GetUsersByIdResponses[keyof GetUsersByIdResponses];
 
-export type PutApiUsersByIdData = {
+export type PutUsersByIdData = {
   body?: ModulesUsersUpdateUserDto;
   path: {
     id: string;
@@ -13765,19 +13740,19 @@ export type PutApiUsersByIdData = {
   query?: {
     version?: string;
   };
-  url: '/api/Users/{id}';
+  url: '/users/{id}';
 };
 
-export type PutApiUsersByIdResponses = {
+export type PutUsersByIdResponses = {
   /**
    * OK
    */
   200: ModulesUsersUserResponseDto;
 };
 
-export type PutApiUsersByIdResponse = PutApiUsersByIdResponses[keyof PutApiUsersByIdResponses];
+export type PutUsersByIdResponse = PutUsersByIdResponses[keyof PutUsersByIdResponses];
 
-export type PostApiUsersByIdRestoreData = {
+export type PostUsersByIdRestoreData = {
   body?: never;
   path: {
     id: string;
@@ -13786,17 +13761,17 @@ export type PostApiUsersByIdRestoreData = {
     reason?: string;
     version?: string;
   };
-  url: '/api/Users/{id}/restore';
+  url: '/users/{id}/restore';
 };
 
-export type PostApiUsersByIdRestoreResponses = {
+export type PostUsersByIdRestoreResponses = {
   /**
    * OK
    */
   200: unknown;
 };
 
-export type PutApiUsersByIdBalanceData = {
+export type PutUsersByIdBalanceData = {
   body?: ModulesUsersUpdateUserBalanceDto;
   path: {
     id: string;
@@ -13804,19 +13779,19 @@ export type PutApiUsersByIdBalanceData = {
   query?: {
     version?: string;
   };
-  url: '/api/Users/{id}/balance';
+  url: '/users/{id}/balance';
 };
 
-export type PutApiUsersByIdBalanceResponses = {
+export type PutUsersByIdBalanceResponses = {
   /**
    * OK
    */
   200: ModulesUsersUserResponseDto;
 };
 
-export type PutApiUsersByIdBalanceResponse = PutApiUsersByIdBalanceResponses[keyof PutApiUsersByIdBalanceResponses];
+export type PutUsersByIdBalanceResponse = PutUsersByIdBalanceResponses[keyof PutUsersByIdBalanceResponses];
 
-export type GetApiUsersStatisticsData = {
+export type GetUsersStatisticsData = {
   body?: never;
   path?: never;
   query?: {
@@ -13825,19 +13800,19 @@ export type GetApiUsersStatisticsData = {
     includeDeleted?: boolean;
     version?: string;
   };
-  url: '/api/Users/statistics';
+  url: '/users/statistics';
 };
 
-export type GetApiUsersStatisticsResponses = {
+export type GetUsersStatisticsResponses = {
   /**
    * OK
    */
   200: ModulesUsersUserStatistics;
 };
 
-export type GetApiUsersStatisticsResponse = GetApiUsersStatisticsResponses[keyof GetApiUsersStatisticsResponses];
+export type GetUsersStatisticsResponse = GetUsersStatisticsResponses[keyof GetUsersStatisticsResponses];
 
-export type GetApiUsersSearchData = {
+export type GetUsersSearchData = {
   body?: never;
   path?: never;
   query?: {
@@ -13854,74 +13829,74 @@ export type GetApiUsersSearchData = {
     sortDirection?: ModulesUsersSortDirection;
     version?: string;
   };
-  url: '/api/Users/search';
+  url: '/users/search';
 };
 
-export type GetApiUsersSearchResponses = {
+export type GetUsersSearchResponses = {
   /**
    * OK
    */
   200: PagedResult1ModulesUsersUserResponseDto_Api_Version_0000_Culture_neutral_PublicKeyToken_null;
 };
 
-export type GetApiUsersSearchResponse = GetApiUsersSearchResponses[keyof GetApiUsersSearchResponses];
+export type GetUsersSearchResponse = GetUsersSearchResponses[keyof GetUsersSearchResponses];
 
-export type PostApiUsersBulkData = {
+export type PostUsersBulkData = {
   body?: Array<ModulesUsersCreateUserDto>;
   path?: never;
   query?: {
     reason?: string;
     version?: string;
   };
-  url: '/api/Users/bulk';
+  url: '/users/bulk';
 };
 
-export type PostApiUsersBulkResponses = {
+export type PostUsersBulkResponses = {
   /**
    * OK
    */
   200: BulkOperationResult;
 };
 
-export type PostApiUsersBulkResponse = PostApiUsersBulkResponses[keyof PostApiUsersBulkResponses];
+export type PostUsersBulkResponse = PostUsersBulkResponses[keyof PostUsersBulkResponses];
 
-export type PatchApiUsersBulkActivateData = {
+export type PatchUsersBulkActivateData = {
   body?: Array<string>;
   path?: never;
   query?: {
     reason?: string;
     version?: string;
   };
-  url: '/api/Users/bulk/activate';
+  url: '/users/bulk/activate';
 };
 
-export type PatchApiUsersBulkActivateResponses = {
+export type PatchUsersBulkActivateResponses = {
   /**
    * OK
    */
   200: BulkOperationResult;
 };
 
-export type PatchApiUsersBulkActivateResponse = PatchApiUsersBulkActivateResponses[keyof PatchApiUsersBulkActivateResponses];
+export type PatchUsersBulkActivateResponse = PatchUsersBulkActivateResponses[keyof PatchUsersBulkActivateResponses];
 
-export type PatchApiUsersBulkDeactivateData = {
+export type PatchUsersBulkDeactivateData = {
   body?: Array<string>;
   path?: never;
   query?: {
     reason?: string;
     version?: string;
   };
-  url: '/api/Users/bulk/deactivate';
+  url: '/users/bulk/deactivate';
 };
 
-export type PatchApiUsersBulkDeactivateResponses = {
+export type PatchUsersBulkDeactivateResponses = {
   /**
    * OK
    */
   200: BulkOperationResult;
 };
 
-export type PatchApiUsersBulkDeactivateResponse = PatchApiUsersBulkDeactivateResponses[keyof PatchApiUsersBulkDeactivateResponses];
+export type PatchUsersBulkDeactivateResponse = PatchUsersBulkDeactivateResponses[keyof PatchUsersBulkDeactivateResponses];
 
 export type ClientOptions = {
   baseUrl: `${string}://${string}` | (string & {});
