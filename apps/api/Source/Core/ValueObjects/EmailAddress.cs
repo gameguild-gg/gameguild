@@ -5,6 +5,9 @@ namespace GameGuild;
 
 /// <summary> Represents an email address value object with validation </summary>
 public record EmailAddress {
+  // Private parameterless constructor for EF Core
+  private EmailAddress() { Value = string.Empty; }
+
   public EmailAddress(string email) {
     if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email address cannot be null or empty.", nameof(email));
 
@@ -13,7 +16,7 @@ public record EmailAddress {
     Value = email.ToLowerInvariant().Trim();
   }
 
-  public string Value { get; }
+  public string Value { get; init; }
 
   public static implicit operator string(EmailAddress email) { return email.Value; }
 

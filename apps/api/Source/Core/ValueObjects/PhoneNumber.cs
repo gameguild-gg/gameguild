@@ -4,6 +4,13 @@ namespace GameGuild;
 ///     Represents a phone number value object with validation
 /// </summary>
 public record PhoneNumber {
+  // Private parameterless constructor for EF Core
+  private PhoneNumber() {
+    Value = string.Empty;
+    CountryCode = string.Empty;
+    NationalNumber = string.Empty;
+  }
+
   public PhoneNumber(string phoneNumber, string? countryCode = null) {
     if (string.IsNullOrWhiteSpace(phoneNumber)) throw new ArgumentException("Phone number cannot be null or empty.", nameof(phoneNumber));
 
@@ -27,13 +34,18 @@ public record PhoneNumber {
     Value = CountryCode + NationalNumber;
   }
 
-  public string Value { get; }
+  public string Value { get; init; }
 
-  public string CountryCode { get; }
+  public string CountryCode { get; init; }
 
-  public string NationalNumber { get; }
+  public string NationalNumber { get; init; }
 
   public static implicit operator string(PhoneNumber phone) { return phone.Value; }
+
+  // Factory method for EF Core that doesn't use optional parameters
+  public static PhoneNumber FromString(string phoneNumber) {
+    return new PhoneNumber(phoneNumber, null);
+  }
 
   private static string CleanPhoneNumber(string phoneNumber) {
     // Remove all non-digit characters except + at the beginning
@@ -56,7 +68,9 @@ public record PhoneNumber {
 
   public string GetDisplayFormat() {
     return CountryCode switch {
-      "+1" when NationalNumber.Length == 10 => $"({NationalNumber[..3]}) {NationalNumber.Substring(3, 3)}-{NationalNumber[6..]}", "+44" => $"{CountryCode} {NationalNumber}", _ => $"{CountryCode} {NationalNumber}"
+      "+1" when NationalNumber.Length == 10 => $"({NationalNumber[..3]}) {NationalNumber.Substring(3, 3)}-{NationalNumber[6..]}",
+      "+44" => $"{CountryCode} {NationalNumber}",
+      _ => $"{CountryCode} {NationalNumber}"
     };
   }
 
