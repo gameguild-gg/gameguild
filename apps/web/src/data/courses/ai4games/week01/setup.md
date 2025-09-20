@@ -18,9 +18,32 @@
 1. Read about Privacy and FERPA compliance [here](/ferpa-waiver)
 2. `Testable AI` assignments for in class coding assignments. [repo](https://github.com/gameguild-gg/ai4games)
 3. `MoBaGEn`, for interactive assignments. [repo](https://github.com/gameguild-gg/mobagen). Please leave a star there to help me gain visibility! Star this [website repo](https://github.com/gameguild-gg/gameguild) too!
-4. Install `CLion` (has `CMake` embedded);
-5. Install git and add the binaries to your `PATH`;
-6. Those repositories are updated constantly. Pay attention to syncing your repo frequently.
+4. Those repositories are updated constantly. Pay attention to syncing your repo frequently.
+5. Install you preferred IDE:
+    - **Preferred**: `CLion` it is PAID(but free for students [here](https://www.jetbrains.com/academy/student-pack/)), it has `CMake` embedded, works identically on all OS, and if you dont have `git`, it will warn you and install it for you. 
+    - **Alternative**: `Visual Studio`, it is FREE. Works only on Windows (While installing it, make sure you have `C++` tools and **ADD** the individual component `CMake`). Besides that, you still have to manually install `git` and add the binaries to your `PATH`.
+6. Intall you preferred `git` GUI, or use it via terminal.
+    - **Preferred**: `GitKraken`. It is free for students through [Github Student Pack](https://www.gitkraken.com/github-student-developer-pack-bundle). After applying for that, log in via `Github` social login and it grant you a license.
+
+::: note
+
+I won't be supporting Visual Studio on this course. Here goes a brief list I don't recommend using it:
+
+- It requires lots of clicks to do anything meaningful;
+- The common setup doesn't include our required tool `CMake`;
+- It does'nt automaticly detect if you don't have `git` and install it for you like CLion;
+- Selecting different executable to run is less intuitive;
+- Debugging on it require more clicks;
+- Less support on automated tests (you cannot select only the test you want to test);
+- User interface is not as intuitive and clean as CLion;
+- Auto complete is not that smart;
+- Error are not descriptive, you will spend more time trying to understand your error;
+- Navigating stacktrace is not as intuitive as CLion;
+- It is pretty common to lock resources and generate zombie processes;
+
+If you want to keep using it, do it on your own risk.
+
+:::
 
 ## Setup Windows machines to C++ development
 
@@ -87,7 +110,7 @@ In this class, I am going to use `CLion` as the `IDE`, because it has nice suppo
 - Download it [here](https://www.jetbrains.com/clion/).
 - If you are a student, you can get a free license [here](https://www.jetbrains.com/community/education/#students).
 
-If you want to use `Visual Studio`, be assured that you have the `C++ Desktop Development` workload installed, more info [this](https://docs.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-160). And then go to `Individual Components` and install `CMake Tools for Windows`.
+If you want to use `Visual Studio`, be assured that you have the `C++ Desktop Development` workload installed, more info [this](https://docs.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-160). And then go to `Individual Components` and install `CMake Tools for Windows`. And install `git`, if you don't have it already (test if you have it by going to your command line terminal and typing `git` then enter).
 
 ::: note
 
