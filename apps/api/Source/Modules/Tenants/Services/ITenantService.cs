@@ -1,4 +1,4 @@
-using TenantPermissionEntity = GameGuild.TenantPermission;
+using TenantPermissionEntity = GameGuild.Modules.Tenants.TenantPermission;
 
 namespace GameGuild.Modules.Tenants;
 

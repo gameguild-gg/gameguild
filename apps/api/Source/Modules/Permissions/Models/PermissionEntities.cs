@@ -295,19 +295,6 @@ public abstract class PermissionBase : EntityBase {
   public virtual bool HasPermission(PermissionType permission) { return !IsExpired && (Permissions & permission) == permission; }
 }
 
-/// <summary> Tenant-wide permissions </summary>
-public class TenantPermission : PermissionBase {
-  private TenantPermission() { }
-
-  public TenantPermission(Guid? userId, Guid? tenantId, PermissionType permissions) : base(userId, tenantId, permissions) { }
-
-  public static TenantPermission CreateUserPermission(Guid userId, Guid tenantId, PermissionType permissions) { return new(userId, tenantId, permissions); }
-
-  public static TenantPermission CreateTenantDefault(Guid tenantId, PermissionType permissions) { return new(null, tenantId, permissions); }
-
-  public static TenantPermission CreateGlobalDefault(PermissionType permissions) { return new(null, null, permissions); }
-}
-
 /// <summary> Content-type permissions (e.g., permissions for all Posts, all Comments, etc.) </summary>
 public class ContentTypePermission : PermissionBase {
   private ContentTypePermission() { }

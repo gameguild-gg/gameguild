@@ -1,3 +1,6 @@
+using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Tenants;
+
 namespace GameGuild;
 
 /// <summary>
@@ -64,7 +67,7 @@ public interface IPermissionService {
   /// <summary>
   /// Grant content-type permissions to a user
   /// </summary>
-  Task<ContentTypePermission> GrantContentTypePermissionAsync(
+  Task<GameGuild.Modules.Permissions.ContentTypePermission> GrantContentTypePermissionAsync(
       Guid? userId, Guid? tenantId,
       string contentTypeName, PermissionType[] permissions
   );

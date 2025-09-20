@@ -66,13 +66,13 @@ public class TenantAuthService(ITenantService tenantService, ITenantContextServi
 
     // Add permission flags if available
     if (tenantPermission != null) {
-      claims.Add(new Claim(JwtClaimTypes.TenantPermissionFlags1, ((long)tenantPermission.Permissions).ToString()));
-      claims.Add(new Claim(JwtClaimTypes.TenantPermissionFlags2, "0")); // TenantPermission uses single Permissions enum, not dual flags
+      claims.Add(new Claim(JwtClaimTypes.TenantPermissionFlags1, tenantPermission.PermissionFlags1.ToString()));
+      claims.Add(new Claim(JwtClaimTypes.TenantPermissionFlags2, tenantPermission.PermissionFlags2.ToString()));
     }
 
     return claims;
   }
 
   /// <summary> Get all available tenants for a user </summary>
-  public async Task<IEnumerable<TenantPermission>> GetUserTenantsAsync(User user) { return await tenantService.GetTenantsForUserAsync(user.Id); }
+  public async Task<IEnumerable<GameGuild.Modules.Tenants.TenantPermission>> GetUserTenantsAsync(User user) { return await tenantService.GetTenantsForUserAsync(user.Id); }
 }

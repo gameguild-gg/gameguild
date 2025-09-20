@@ -35,7 +35,7 @@ public class UserReputationHistory : Resource {
 
   /// <summary> The user-tenant whose reputation changed (for tenant-specific reputation tracking) </summary>
   [ForeignKey(nameof(TenantPermissionId))]
-  public TenantPermission? TenantPermission { get; set; }
+  public GameGuild.Modules.Tenants.TenantPermission? TenantPermission { get; set; }
 
   public Guid? TenantPermissionId { get; set; }
 
