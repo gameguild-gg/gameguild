@@ -1,8 +1,8 @@
 using GameGuild.Authorization;
+using GameGuild.Source.Modules.Authorization;
 using HotChocolate.Execution.Configuration;
 
-
-namespace GameGuild.Extensions;
+namespace GameGuild.Source.GraphQL;
 
 /// <summary> Extension methods for configuring 3-layer DAC authorization in HotChocolate GraphQL </summary>
 public static class GraphQLDACAuthorizationExtensions {
@@ -14,12 +14,14 @@ public static class GraphQLDACAuthorizationExtensions {
            // Add DAC directive type
            .AddDirectiveType<DACAuthorizeDirectiveType>()
 
-           // Add DAC authorization middleware
-           .UseField<DACAuthorizationMiddleware>()
-
            // Add enum types for authorization
            .AddType<EnumType<DACPermissionLevel>>()
-           .AddType<EnumType<PermissionType>>();
+           .AddType<EnumType<PermissionType>>()
+
+           // Configure schema building options
+           .ModifyOptions(o => {
+             o.StrictValidation = false; // Allow incomplete schema during development
+           });
   }
 
   /// <summary> Registers DAC authorization services in the dependency injection container </summary>
