@@ -242,7 +242,7 @@ export async function getRequestStatistics(): Promise<RequestStatistics> {
       throw new Error('Unauthorized');
     }
 
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
 
     const response = await fetch(`${apiUrl}/api/requests/statistics`, {
       headers: {
