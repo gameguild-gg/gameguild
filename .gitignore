@@ -60,3 +60,23 @@ GameGuild.sln.DotSettings.user
 **/swagger.json
 
 apps/api/.env
+apps/api/logs/gameguild-20250919_001.log
+apps/api/logs/gameguild-20250919_001.txt
+apps/api/logs/gameguild-20250919_002.log
+apps/api/logs/gameguild-20250919_002.txt
+apps/api/logs/gameguild-20250919_003.log
+apps/api/logs/gameguild-20250919_003.txt
+apps/api/logs/gameguild-20250919_004.log
+apps/api/logs/gameguild-20250919_004.txt
+apps/api/logs/gameguild-20250919_005.log
+apps/api/logs/gameguild-20250919_005.txt
+apps/api/logs/gameguild-20250919.log
+apps/api/logs/gameguild-20250919.txt
+apps/api/logs/gameguild-20250920_001.log
+apps/api/logs/gameguild-20250920_001.txt
+apps/api/logs/gameguild-20250920.log
+apps/api/logs/gameguild-20250920.txt
+apps/api/logs/gameguild-errors-20250919.log
+apps/api/logs/gameguild-errors-20250919.txt
+apps/api/logs/gameguild-errors-20250920.log
+apps/api/logs/gameguild-errors-20250920.txt
