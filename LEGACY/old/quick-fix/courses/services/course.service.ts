@@ -25,7 +25,7 @@ export function getCourseLevelConfig(level: keyof typeof COURSE_LEVELS) {
 const getCachedCourseData = unstable_cache(
   async (): Promise<Result<readonly Course[], Error>> => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5295';
 
       const response = await fetch(`${apiUrl}/api/program/published`, {
         headers: { 'Content-Type': 'application/json' },
