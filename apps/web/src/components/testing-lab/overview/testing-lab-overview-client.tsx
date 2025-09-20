@@ -16,13 +16,14 @@ interface UserRole {
   isAdmin: boolean;
 }
 
-interface TestingLabOverviewClientProps {
-  initialStats: TestingLabStats;
+interface TestingLabOverviewProps {
   userRole: 'student' | 'professor' | 'admin';
 }
 
-export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabOverviewClientProps) {
-  const [stats] = useState<TestingLabStats>(initialStats);
+export function TestingLabOverview({ userRole }: TestingLabOverviewProps) {
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery(testingLabQueries.stats(userRole));
+  const { data: sessions, isLoading: sessionsLoading } = useQuery(testingLabQueries.sessions());
+  const { data: requests, isLoading: requestsLoading } = useQuery(testingLabQueries.requests());
 
   const userRoleObj: UserRole = {
     type: userRole,
@@ -30,6 +31,54 @@ export function TestingLabOverviewClient({ initialStats, userRole }: TestingLabO
     isProfessor: userRole === 'professor',
     isAdmin: userRole === 'admin',
   };
+
+  // Handle loading state
+  if (statsLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 border-slate-700">
+              <CardHeader className="pb-2">
+                <div className="h-4 bg-slate-700 rounded animate-pulse"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-slate-700 rounded animate-pulse mb-2"></div>
+                <div className="h-3 bg-slate-700 rounded animate-pulse w-3/4"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (statsError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Card className="bg-red-900/20 border-red-700">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-red-400 mb-2">Failed to load testing lab data</p>
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+                className="border-red-700 text-red-400 hover:bg-red-900/20"
+              >
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Ensure stats exist before rendering
+  if (!stats) {
+    return null;
+  }
 
   const renderStatsCards = () => {
     if (userRoleObj.isStudent) {
