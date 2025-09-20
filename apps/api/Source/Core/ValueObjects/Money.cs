@@ -2,6 +2,12 @@ namespace GameGuild;
 
 /// <summary> Represents a money value with currency </summary>
 public record Money {
+  // Private parameterless constructor for EF Core
+  private Money() {
+    Amount = 0;
+    Currency = "USD";
+  }
+
   public Money(decimal amount, string currency = "USD") {
     if (amount < 0) throw new ArgumentException("Amount cannot be negative.", nameof(amount));
 
@@ -11,11 +17,14 @@ public record Money {
     Currency = currency.ToUpperInvariant();
   }
 
-  public decimal Amount { get; }
+  public decimal Amount { get; init; }
 
-  public string Currency { get; }
+  public string Currency { get; init; }
 
   public static Money Zero(string currency = "USD") { return new Money(0, currency); }
+
+  /// <summary> Creates a Money instance from a decimal amount with USD currency </summary>
+  public static Money FromDecimal(decimal amount) { return new Money(amount, "USD"); }
 
   public static Money operator +(Money left, Money right) {
     return left.Currency != right.Currency ? throw new InvalidOperationException("Cannot add money with different currencies.") : new Money(left.Amount + right.Amount, left.Currency);
