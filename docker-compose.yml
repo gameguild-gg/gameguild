@@ -9,7 +9,7 @@ services:
     image: game-guild-api
     restart: always
     ports:
-      - "${API_PORT:-5000}:5000"
+      - "${API_PORT:-5000}:5295"
     environment:
       # Database Configuration
       - DB_CONNECTION_STRING=${DB_CONNECTION_STRING:-Host=postgres;Port=5432;Database=postgres;Username=postgres;Password=postgres;}
@@ -20,7 +20,7 @@ services:
       - DATABASE__PASSWORD=${DATABASE__PASSWORD:-postgres}
       # Application Environment
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
-      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_URLS=http://+:5295
       # JWT Configuration
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-game-guild-production-jwt-secret-key-must-be-at-least-32-characters-long-and-secure}
       - JWT_ISSUER=${JWT_ISSUER:-GameGuild.API}
@@ -73,7 +73,7 @@ services:
     links:
       - postgres
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://$(hostname):5000/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://$(hostname):5295/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -85,7 +85,7 @@ services:
       dockerfile: Dockerfile
       args:
         # Build-time variables (bundled into client-side code)
-        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5295}
         - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL:-http://localhost:3000}
     image: game-guild-web
     container_name: web
@@ -94,7 +94,7 @@ services:
       - "${WEB_PORT:-3000}:3000"
     environment:
       # Next.js Configuration
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5000}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:5295}
       - NEXT_PUBLIC_WEB_URL=${NEXT_PUBLIC_WEB_URL:-http://localhost:3000}
       - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID:-}
       # NextAuth Configuration
