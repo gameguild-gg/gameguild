@@ -35,12 +35,12 @@ namespace GameGuild.Migrations {
                             
                             -- Ensure username is unique by adding counter if needed
                             final_username := base_username;
-                            counter := 1;
+                            counter := Money.FromDecimal(1);
                             
                             WHILE EXISTS (SELECT 1 FROM ""Users"" WHERE ""Username"" = final_username AND ""Id"" != user_record.""Id"")
                             LOOP
                                 final_username := base_username || '-' || counter;
-                                counter := counter + 1;
+                                counter := counter + Money.FromDecimal(1);
                             END LOOP;
                             
                             -- Update the user with the unique username

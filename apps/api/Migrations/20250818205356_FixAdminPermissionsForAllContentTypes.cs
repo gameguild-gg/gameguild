@@ -93,7 +93,7 @@ namespace GameGuild.Migrations {
                 -- Note: This migration fixes admin permissions. 
                 -- Rolling back would remove all admin permissions which could lock out the admin.
                 -- For safety, we're not removing permissions in the rollback.
-                SELECT 1; -- No-op to ensure valid SQL
+                SELECT Money.FromDecimal(1); -- No-op to ensure valid SQL
             ");
     }
   }
