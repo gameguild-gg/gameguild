@@ -7,13 +7,16 @@ using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Billing;
+using GameGuild.Modules.Billing.Controllers;
 using GameGuild.Modules.Credentials;
+using GameGuild.Modules.Payments;
 using GameGuild.Modules.Posts;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Subscriptions;
+using GameGuild.Modules.Subscriptions.Controllers;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserAchievements;
@@ -152,18 +155,19 @@ public static class DependencyInjection {
     }
 
     // 18. Controllers/Endpoints
-    // services.AddControllers(options => { options.Conventions.Add(new RouteTokenTransformerConvention(new GameGuild.ToKebabParameterTransformer())); })
-    //         .AddApplicationPart(typeof(PresentationLayerOptions).Assembly)
-    //         .AddApplicationPart(typeof(GameGuild.Users.UsersController).Assembly) // Users module
-    //         .AddApplicationPart(typeof(GameGuild.Tenants.Presentation.Controllers.TenantsController).Assembly) // Tenants module
-    //         .AddApplicationPart(typeof(GameGuild.Billing.Presentation.Controllers.BillingWebhooksController).Assembly) // Billing module
-    //         .AddApplicationPart(typeof(GameGuild.Payments.Presentation.Controllers.PaymentsController).Assembly) // Payments module
-    //         .AddApplicationPart(typeof(GameGuild.Subscriptions.Presentation.Controllers.SubscriptionsController).Assembly) // Subscriptions module
-    //         .AddJsonOptions(jsonOptions => {
-    //             jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    //             jsonOptions.JsonSerializerOptions.WriteIndented = true;
-    //           }
-    //         );
+    services.AddControllers(options => {
+      options.Conventions.Add(new Microsoft.AspNetCore.Mvc.ApplicationModels.RouteTokenTransformerConvention(new GameGuild.KebabParameterTransformer()));
+    })
+      .AddApplicationPart(typeof(PresentationLayerOptions).Assembly)
+      .AddApplicationPart(typeof(UsersController).Assembly) // Users module
+      .AddApplicationPart(typeof(TenantsController).Assembly) // Tenants module
+      .AddApplicationPart(typeof(BillingWebhooksController).Assembly) // Billing module
+      .AddApplicationPart(typeof(PaymentsController).Assembly) // Payments module
+      .AddApplicationPart(typeof(SubscriptionsController).Assembly) // Subscriptions module
+      .AddJsonOptions(jsonOptions => {
+        jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        jsonOptions.JsonSerializerOptions.WriteIndented = true;
+      });
 
     // 19. GraphQL server configuration
     if (options.EnableGraphQl) {
