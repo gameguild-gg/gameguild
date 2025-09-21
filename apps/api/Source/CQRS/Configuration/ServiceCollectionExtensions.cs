@@ -24,14 +24,14 @@ public static class ServiceCollectionExtensions {
   /// <param name="services"> Service collection </param>
   /// <param name="assemblies"> Assemblies to scan for handlers </param>
   /// <returns> Service collection </returns>
-  public static IServiceCollection AddCQRS(this IServiceCollection services, params Assembly[ ] assemblies) { return services.AddCQRS(_ => { }, assemblies); }
+  public static IServiceCollection AddCQRS(this IServiceCollection services, params Assembly[] assemblies) { return services.AddCQRS(_ => { }, assemblies); }
 
   /// <summary> Adds CQRS services to the service collection </summary>
   /// <param name="services"> Service collection </param>
   /// <param name="configuration"> Configuration action </param>
   /// <param name="assemblies"> Assemblies to scan for handlers </param>
   /// <returns> Service collection </returns>
-  public static IServiceCollection AddCQRS(this IServiceCollection services, Action<CqrsConfiguration>? configuration, params Assembly[ ] assemblies) {
+  public static IServiceCollection AddCQRS(this IServiceCollection services, Action<CqrsConfiguration>? configuration, params Assembly[] assemblies) {
     ArgumentNullException.ThrowIfNull(services);
     ArgumentNullException.ThrowIfNull(assemblies);
 
@@ -40,8 +40,8 @@ public static class ServiceCollectionExtensions {
     var config = new CqrsConfiguration();
     configuration?.Invoke(config);
 
-    // Register service factory
-    services.TryAddSingleton<ServiceFactory>(provider => serviceType => provider.GetService(serviceType));
+    // Register service factory - use scoped registration to avoid capturing root provider
+    services.TryAddScoped<ServiceFactory>(provider => serviceType => provider.GetService(serviceType));
     services.TryAddScoped<IMediator, Mediator>();
     services.TryAddScoped<ISender>(provider => provider.GetRequiredService<IMediator>());
     services.TryAddScoped<IPublisher>(provider => provider.GetRequiredService<IMediator>());
