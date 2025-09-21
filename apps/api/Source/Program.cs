@@ -59,5 +59,5 @@ finally {
 
 // REMARK: Required for functional and integration tests to work.
 namespace GameGuild {
-  internal class Program { };
+  public class Program { };
 }
