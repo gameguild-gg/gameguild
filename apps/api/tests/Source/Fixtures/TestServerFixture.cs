@@ -1,10 +1,18 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Credentials;
+using GameGuild.Modules.Products;
+using GameGuild.Modules.Programs;
+using GameGuild.Modules.Projects;
+using GameGuild.Modules.Resources;
+using GameGuild.Modules.Subscriptions;
+using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
+using GameGuild.Source.Modules.Payments;
 using GameGuild.Tests.Infrastructure.Integration;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -90,19 +98,18 @@ namespace GameGuild.Tests.Fixtures {
       });
 
       // Add application services (includes IDomainEventPublisher registration)
-      services.AddApplication();
+      services.AddApplicationLayer(configuration);
 
       // Add essential domain modules manually  
-      services.AddUserModule();
-      services.AddUserProfileModule();
-      services.AddTenantModule();
-      services.AddProjectModule();
+      services.AddUsersModule();
+      services.AddTenantsModule();
+      services.AddProjectsModule();
       services.AddCredentialsModule();
       services.AddProgramModule();
-      services.AddProductModule();
-      services.AddSubscriptionModule();
-      services.AddPaymentModule();
-      services.AddCommonServices();
+      services.AddProductsModule();
+      services.AddSubscriptionsModule();
+      services.AddPaymentsModule(configuration);
+      services.AddResourcesModule();
 
       // Add test module for infrastructure testing
       services = MockModules.TestModuleDependencyInjection.AddTestModule(services);
@@ -113,11 +120,11 @@ namespace GameGuild.Tests.Fixtures {
       // Replace the IAuthService with a mock for testing (avoids complex dependency chain)
       services.AddScoped<IAuthService, MockAuthService>();
 
-      // Add GraphQL infrastructure with testing configuration
-      services.AddGraphQLInfrastructure(DependencyInjection.GraphQLOptionsFactory.ForTesting());
-
-      // Explicitly enable introspection for tests (overrides any DisableIntrospection calls)
-      services.AddGraphQLServer().DisableIntrospection(false);
+      // Add GraphQL server with testing configuration
+      services.AddGraphQLServer()
+              .AddQueryType<GameGuild.GraphQL.Query>()
+              .DisableIntrospection(false)
+              .AddAuthorization();
 
       // Configure GraphQL to return 200 OK for validation errors
       services.Configure<HotChocolate.AspNetCore.GraphQLHttpOptions>(options => {

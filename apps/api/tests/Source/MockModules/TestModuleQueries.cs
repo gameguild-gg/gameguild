@@ -1,6 +1,7 @@
-using GameGuild.Common;
-using HotChocolate.Types;
 using GameGuild.CQRS;
+using GameGuild.Database;
+using GameGuild.GraphQL;
+using HotChocolate.Types;
 
 namespace GameGuild.Tests.MockModules;
 

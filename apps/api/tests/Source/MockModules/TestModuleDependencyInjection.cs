@@ -1,7 +1,7 @@
-using Microsoft.Extensions.DependencyInjection;
-using HotChocolate.Execution.Configuration;
-using GameGuild.CQRS;
 using System.Reflection;
+using GameGuild.CQRS;
+using HotChocolate.Execution.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 
 namespace GameGuild.Tests.MockModules;
@@ -14,8 +14,8 @@ public static class TestModuleDependencyInjection {
   /// Add test module services to DI container
   /// </summary>
   public static IServiceCollection AddTestModule(this IServiceCollection services) {
-    // Register MediatR for the test module assembly
-    services.AddMediatR(Assembly.GetExecutingAssembly());
+    // Register CQRS for the test module assembly
+    services.AddCQRS(Assembly.GetExecutingAssembly());
 
     // Explicitly register test handlers to ensure they're available
     services.AddScoped<IRequestHandler<GetTestItemsQuery, IEnumerable<TestItem>>, GetTestItemsHandler>();

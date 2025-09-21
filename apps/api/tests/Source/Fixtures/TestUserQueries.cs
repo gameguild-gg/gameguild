@@ -1,4 +1,5 @@
-using GameGuild.Common;
+using GameGuild;
+using GameGuild.GraphQL;
 using GameGuild.Modules.Users;
 using HotChocolate.Types;
 
