@@ -1,4 +1,6 @@
-using GameGuild.Common;
+using GameGuild;
+using GameGuild.Core.Domain.Identity;
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products;
@@ -6,7 +8,6 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using GameGuild.CQRS;
 using Moq;
 
 namespace GameGuild.Tests.Modules.Products;
@@ -37,8 +38,8 @@ public class ProductTests : IDisposable {
     // Add logging
     services.AddLogging(builder => builder.AddConsole());
 
-    // Add MediatR
-    services.AddMediatR(typeof(ProductCommandHandlers).Assembly);
+    // Add CQRS for command/query handling
+    services.AddCQRS(typeof(ProductCommandHandlers).Assembly);
 
     // Mock contexts
     _mockUserContext = new Mock<IUserContext>();
