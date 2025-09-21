@@ -1,8 +1,8 @@
-using GameGuild.Database;
-using GameGuild.Modules.Posts;
-using GameGuild.Modules.Contents;
-using GameGuild.Modules.Users;
 using GameGuild.CQRS;
+using GameGuild.Database;
+using GameGuild.Modules.Contents;
+using GameGuild.Modules.Posts;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,7 +24,7 @@ public class PostsQueryHandlersTests : IDisposable {
         options.UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()));
 
     services.AddLogging(builder => builder.AddConsole());
-    services.AddMediatR(typeof(GetPostsQuery).Assembly);
+    services.AddCQRS(typeof(GetPostsHandler).Assembly);
 
     // Register handlers
     services.AddScoped<GetPostsHandler>();
