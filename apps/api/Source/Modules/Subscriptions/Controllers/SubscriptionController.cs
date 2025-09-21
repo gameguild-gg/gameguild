@@ -14,7 +14,7 @@ namespace GameGuild.Modules.Subscriptions.Controllers;
 /// and administrative endpoints for subscription management.
 /// </remarks>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class SubscriptionController(ISubscriptionService subscriptionService) : ControllerBase {
 
   /// <summary>

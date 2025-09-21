@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Payments;
 
 /// <summary> REST API controller for payment operations </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 [Authorize]
 public class PaymentsController : ControllerBase {
   private readonly ILogger<PaymentsController> _logger;

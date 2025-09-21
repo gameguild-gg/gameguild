@@ -6,7 +6,7 @@ namespace GameGuild.Controllers;
 
 /// <summary> Controller for Cloudflare Dynamic DNS service management and monitoring. </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class CloudflareController : ControllerBase {
   private readonly ICloudflareExternalIpService _cloudflareService;
 

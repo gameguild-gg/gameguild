@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GameGuild.Modules.Posts;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class PostsController : ControllerBase {
   private readonly ILogger<PostsController> _logger;
 

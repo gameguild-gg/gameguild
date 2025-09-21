@@ -6,7 +6,7 @@ namespace GameGuild.Modules.UserProfiles;
 
 /// <summary> REST API controller for managing user profiles using CQRS pattern </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class UserProfilesController(IMediator mediator) : ControllerBase {
   /// <summary> Get all user profiles with optional filtering and pagination </summary>
   [HttpGet]

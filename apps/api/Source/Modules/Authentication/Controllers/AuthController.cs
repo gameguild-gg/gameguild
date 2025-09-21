@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Authentication;
 
 /// <summary> REST API controller for authentication operations using CQRS pattern. Provides clean separation between API layer and business logic with comprehensive error handling. </summary>
 [ApiController]
-[Route("api/[controller]")]
+  [Route("[controller]")]
 [Tags("Authentication")]
 public class AuthController(IMediator mediator, ILogger<AuthController> logger) : ControllerBase {
   private readonly ILogger<AuthController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

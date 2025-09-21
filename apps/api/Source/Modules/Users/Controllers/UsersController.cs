@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Users;
 
 /// <summary> REST API controller for managing users using CQRS pattern </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class UsersController(IMediator mediator, ILogger<UsersController> logger) : ControllerBase {
   /// <summary> Get all users with optional filtering and pagination </summary>
   [HttpGet]

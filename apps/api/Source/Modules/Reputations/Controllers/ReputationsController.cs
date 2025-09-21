@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace GameGuild.Modules.Reputations;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class ReputationsController : ControllerBase {
     private readonly IReputationService _reputationService;
     private readonly ILogger<ReputationsController> _logger;

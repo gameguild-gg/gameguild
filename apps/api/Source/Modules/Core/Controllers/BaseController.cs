@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Core.Controllers;
 /// Base controller providing common functionality for all API controllers
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public abstract class BaseController : ControllerBase {
     /// <summary>
     /// Gets the current user ID from the JWT token

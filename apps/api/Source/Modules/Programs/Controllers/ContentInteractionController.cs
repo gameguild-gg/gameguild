@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Programs;
 /// Follows permission inheritance: ContentInteraction inherits permissions from Program
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class ContentInteractionController(IContentInteractionService contentInteractionService, IProgramContentService programContentService) : ControllerBase {
   /// <summary>
   /// Start or resume content interaction
