@@ -1,8 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
 using GameGuild.Tests.Fixtures;
+using GameGuild.Tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 
@@ -22,15 +21,24 @@ public class UsersControllerIntegrationTests : IClassFixture<TestWebApplicationF
         _output = output;
         _scope = factory.Services.CreateScope();
         _client = factory.CreateClient();
+    }
 
-        // Add auth token for protected endpoints
-        var authToken = GenerateTestJwtToken();
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authToken);
+    private async Task EnsureAuthenticationAsync() {
+        if (_client.DefaultRequestHeaders.Authorization == null) {
+            var (token, _) = await AuthenticationHelper.CreateAuthenticatedUserAsync(
+                _scope.ServiceProvider,
+                null, // Don't specify userId - let it create a new user
+                "test@example.com",
+                ["User"]
+            );
+            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
     }
 
     [Fact]
     public async Task GetUsers_WithKebabCaseRoute_ShouldReturnUsers() {
         // Arrange
+        await EnsureAuthenticationAsync();
         var endpoint = "/users"; // This should be kebab-case transformed from "Users" controller
 
         // Act
@@ -42,20 +50,23 @@ public class UsersControllerIntegrationTests : IClassFixture<TestWebApplicationF
     }
 
     [Fact]
-    public async Task GetUsers_WithPascalCaseRoute_ShouldNotWork() {
+    public async Task GetUsers_WithPascalCaseRoute_ShouldAlsoWork() {
         // Arrange  
-        var endpoint = "/Users"; // This should NOT work with kebab-case transformer
+        await EnsureAuthenticationAsync();
+        var endpoint = "/Users"; // This should work because ASP.NET Core routing is case-insensitive by default
 
         // Act
         var response = await _client.GetAsync(endpoint);
 
         // Assert
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        // Should work because routing is case-insensitive, but the transformer ensures the canonical route is kebab-case
+        Assert.True(response.IsSuccessStatusCode, $"Expected success, but got {response.StatusCode}");
     }
 
     [Fact]
     public async Task GetUserById_WithKebabCaseRoute_ShouldWork() {
         // Arrange
+        await EnsureAuthenticationAsync();
         var userId = Guid.NewGuid();
         var endpoint = $"/users/{userId}"; // kebab-case route
 
@@ -65,20 +76,6 @@ public class UsersControllerIntegrationTests : IClassFixture<TestWebApplicationF
         // Assert
         Assert.True(response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.NotFound,
           $"Expected success, unauthorized, or not found, but got {response.StatusCode}");
-    }
-
-    private string GenerateTestJwtToken() {
-        // Simple test token generation - matches the pattern in existing tests
-        var claims = new Dictionary<string, object> {
-            ["sub"] = Guid.NewGuid().ToString(),
-            ["email"] = "test@example.com",
-            ["name"] = "Test User",
-            ["iat"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            ["exp"] = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds()
-        };
-
-        // Return a simple test token (in real tests, this would use proper JWT generation)
-        return "test-jwt-token";
     }
 
     public void Dispose() {
