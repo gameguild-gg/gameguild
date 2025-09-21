@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using FluentValidation;
-using GameGuild.Modules.Authentication;
 using GameGuild.CQRS;
+using GameGuild.Modules.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -188,7 +188,7 @@ public class AuthControllerTests {
     };
 
     _mediatorMock.Setup(m => m.Send(It.IsAny<RevokeTokenCommand>(), default))
-                .ReturnsAsync(MediatR.Unit.Value);
+                .ReturnsAsync(CQRS.Unit.Value);
 
     // Setup HttpContext for IP address
     _controller.ControllerContext = new ControllerContext {
