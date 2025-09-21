@@ -1,4 +1,5 @@
-using GameGuild.Common.Services;
+using GameGuild.Core.Domain.Permissions;
+using GameGuild.Core.Infrastructure.Permissions;
 using GameGuild.Database;
 using GameGuild.Modules.Permissions;
 using Microsoft.EntityFrameworkCore;
