@@ -3,7 +3,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Users;
 using GameGuild.Tests.Fixtures;
+using GameGuild.Tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 
@@ -19,11 +21,11 @@ public class ResourcePermissionControllerTests : IClassFixture<TestWebApplicatio
   private readonly IServiceScope _scope;
   private readonly ITestOutputHelper _output;
   private readonly string _authToken;
+  private readonly User _testUser;
 
   // Test data
   private readonly string _resourceType = "projects";
   private readonly Guid _resourceId = Guid.NewGuid();
-  private readonly Guid _userId = Guid.NewGuid();
   private readonly Guid _tenantId = Guid.NewGuid();
 
   public ResourcePermissionControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output) {
@@ -31,9 +33,9 @@ public class ResourcePermissionControllerTests : IClassFixture<TestWebApplicatio
     _output = output;
     _scope = factory.Services.CreateScope();
 
-    // Create authenticated client
+    // Create authenticated client with proper JWT token
     _client = factory.CreateClient();
-    _authToken = GenerateTestJwtToken();
+    (_authToken, _testUser) = CreateTestJwtTokenAsync().GetAwaiter().GetResult();
     _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _authToken);
   }
 
@@ -305,17 +307,19 @@ public class ResourcePermissionControllerTests : IClassFixture<TestWebApplicatio
     _output.WriteLine($"Unsupported resource type returned status: {response.StatusCode}");
   }
 
-  private string GenerateTestJwtToken() {
-    // Generate a simple test JWT token
-    // In a real test environment, you'd use your actual JWT generation logic
-    var payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new {
-      sub = _userId.ToString(),
-      tenant_id = _tenantId.ToString(),
-      exp = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds(),
-    })));
+  private async Task<(string token, User user)> CreateTestJwtTokenAsync() {
+    using var scope = _factory.Services.CreateScope();
+    var (token, user) = await AuthenticationHelper.CreateAuthenticatedUserAsync(
+      scope.ServiceProvider,
+      null, // Don't specify userId - let it create a new user
+      "test-resourcepermission@example.com",
+      ["User"]
+    );
 
-    // Simple mock JWT format
-    return $"header.{payload}.signature";
+    // Debug: Log the JWT token structure for troubleshooting
+    _output.WriteLine($"Generated JWT token: {token[..Math.Min(50, token.Length)]}...");
+
+    return (token, user);
   }
 
   public void Dispose() {
