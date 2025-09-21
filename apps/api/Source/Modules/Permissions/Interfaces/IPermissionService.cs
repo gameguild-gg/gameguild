@@ -62,6 +62,31 @@ public interface IPermissionService {
   /// </summary>
   Task<IEnumerable<PermissionType>> GetTenantDefaultPermissionsAsync(Guid tenantId);
 
+  /// <summary>
+  /// Revoke specific tenant permissions from a user
+  /// </summary>
+  Task RevokeTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions);
+
+  /// <summary>
+  /// Add user to tenant with minimal permissions
+  /// </summary>
+  Task<TenantPermission> JoinTenantAsync(Guid userId, Guid tenantId);
+
+  /// <summary>
+  /// Remove user from tenant by expiring their membership
+  /// </summary>
+  Task LeaveTenantAsync(Guid userId, Guid tenantId);
+
+  /// <summary>
+  /// Check if user is an active member of tenant
+  /// </summary>
+  Task<bool> IsUserInTenantAsync(Guid userId, Guid tenantId);
+
+  /// <summary>
+  /// Get all tenants where user has active membership
+  /// </summary>
+  Task<IEnumerable<TenantPermission>> GetUserTenantsAsync(Guid userId);
+
   // ===== LAYER 2: CONTENT-TYPE PERMISSIONS =====
 
   /// <summary>
@@ -86,6 +111,24 @@ public interface IPermissionService {
   Task<IEnumerable<PermissionType>> GetContentTypePermissionsAsync(
       Guid? userId, Guid? tenantId, string contentTypeName
   );
+
+  /// <summary>
+  /// Revoke content-type permissions from a user
+  /// </summary>
+  Task RevokeContentTypePermissionAsync(
+      Guid? userId, Guid? tenantId,
+      string contentTypeName, PermissionType[] permissions
+  );
+
+  /// <summary>
+  /// Set tenant default permissions for a specific tenant
+  /// </summary>
+  Task SetTenantDefaultPermissionsAsync(Guid tenantId, PermissionType[] permissions);
+
+  /// <summary>
+  /// Get effective tenant permissions for a user (includes hierarchy resolution)
+  /// </summary>
+  Task<IEnumerable<PermissionType>> GetEffectiveTenantPermissionsAsync(Guid? userId, Guid? tenantId);
 
   // ===== LAYER 3: RESOURCE-SPECIFIC PERMISSIONS =====
 
@@ -123,6 +166,14 @@ public interface IPermissionService {
   Task BulkGrantResourcePermissionAsync<TPermission, TResource>(
       Guid userId, Guid? tenantId,
       Guid[] resourceIds, PermissionType[] permissions
+  ) where TPermission : ResourcePermission<TResource>, new()
+    where TResource : EntityBase;
+
+  /// <summary>
+  /// Get bulk resource permissions for multiple resources
+  /// </summary>
+  Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(
+      Guid? userId, Guid? tenantId, Guid[] resourceIds
   ) where TPermission : ResourcePermission<TResource>, new()
     where TResource : EntityBase;
 

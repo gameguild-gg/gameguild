@@ -1,3 +1,4 @@
+using GameGuild;
 using GameGuild.Core.Logging;
 using GameGuild.Database;
 using GameGuild.Modules.Permissions;
@@ -224,14 +225,103 @@ public class PermissionService : IPermissionService {
   #region Layer 2: Content-Type Permissions
 
   public async Task<GameGuild.Modules.Permissions.ContentTypePermission> GrantContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType[] permissions) {
-    // TODO: Fix ContentTypePermission entity access issues
-    throw new NotImplementedException("ContentTypePermission needs proper entity access configuration");
+    using var userContext = LoggingExtensions.WithUserContext(userId, tenantId);
+
+    if (string.IsNullOrWhiteSpace(contentTypeName)) throw new ArgumentException("Content type name cannot be null or empty", nameof(contentTypeName));
+    if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
+
+    // Combine all permissions using bitwise OR
+    var combinedPermissions = permissions.Aggregate((current, next) => current | next);
+
+    _logger.LogDebug("Granting content type permissions for {ContentType}: {Permissions}", contentTypeName, string.Join(", ", permissions));
+
+    // Check for existing permission
+    var existingPermission = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
+      ctp.UserId == userId && ctp.TenantId == tenantId && ctp.ContentType == contentTypeName && ctp.DeletedAt == null);
+
+    if (existingPermission != null) {
+      // Update existing permission
+      foreach (var permission in permissions) {
+        existingPermission.AddPermission(permission);
+      }
+      _logger.LogInformation("Updated content type permissions for {ContentType}: {Permissions}", contentTypeName, combinedPermissions);
+    }
+    else {
+      // Create new permission
+      existingPermission = new ContentTypePermission { UserId = userId, TenantId = tenantId, ContentType = contentTypeName };
+      foreach (var permission in permissions) {
+        existingPermission.AddPermission(permission);
+      }
+      _context.ContentTypePermissions.Add(existingPermission);
+      _logger.LogInformation("Granted new content type permissions for {ContentType}: {Permissions}", contentTypeName, combinedPermissions);
+    }
+
+    await _context.SaveChangesAsync();
+    return existingPermission;
   }
 
   public async Task<bool> HasContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType permission) {
-    var contentTypePermission = await _context.ContentTypePermissions.AsNoTracking().FirstOrDefaultAsync(ctp => ctp.UserId == userId && ctp.TenantId == tenantId && ctp.ContentType == contentTypeName && ctp.DeletedAt == null);
+    using var userContext = LoggingExtensions.WithUserContext(userId, tenantId);
+    using var permissionContext = LoggingExtensions.WithPermissionContext(permission.ToString());
 
-    return contentTypePermission?.HasPermission(permission) == true;
+    if (string.IsNullOrWhiteSpace(contentTypeName)) {
+      _logger.LogDebug("Invalid content type name provided");
+      return false;
+    }
+
+    _logger.LogDebug("Evaluating content type permission {Permission} for content type {ContentType}", permission, contentTypeName);
+
+    // Check user-specific permissions first
+    if (userId.HasValue) {
+      var userPermission = await _context.ContentTypePermissions.AsNoTracking()
+        .FirstOrDefaultAsync(ctp =>
+          ctp.UserId == userId &&
+          ctp.TenantId == tenantId &&
+          ctp.ContentType == contentTypeName &&
+          ctp.DeletedAt == null &&
+          (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow));
+
+      if (userPermission != null) {
+        var hasUserPermission = userPermission.HasPermission(permission);
+        _logger.LogDebug("User-specific permission found: {HasPermission}", hasUserPermission);
+        if (hasUserPermission) return true;
+      }
+    }
+
+    // Check tenant default permissions
+    if (tenantId.HasValue) {
+      var tenantPermission = await _context.ContentTypePermissions.AsNoTracking()
+        .FirstOrDefaultAsync(ctp =>
+          ctp.UserId == null &&
+          ctp.TenantId == tenantId &&
+          ctp.ContentType == contentTypeName &&
+          ctp.DeletedAt == null &&
+          (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow));
+
+      if (tenantPermission != null) {
+        var hasTenantPermission = tenantPermission.HasPermission(permission);
+        _logger.LogDebug("Tenant default permission found: {HasPermission}", hasTenantPermission);
+        if (hasTenantPermission) return true;
+      }
+    }
+
+    // Check global default permissions
+    var globalPermission = await _context.ContentTypePermissions.AsNoTracking()
+      .FirstOrDefaultAsync(ctp =>
+        ctp.UserId == null &&
+        ctp.TenantId == null &&
+        ctp.ContentType == contentTypeName &&
+        ctp.DeletedAt == null &&
+        (ctp.ExpiresAt == null || ctp.ExpiresAt > DateTime.UtcNow));
+
+    if (globalPermission != null) {
+      var hasGlobalPermission = globalPermission.HasPermission(permission);
+      _logger.LogDebug("Global default permission found: {HasPermission}", hasGlobalPermission);
+      return hasGlobalPermission;
+    }
+
+    _logger.LogDebug("No permissions found for content type {ContentType}", contentTypeName);
+    return false;
   }
 
   public async Task<IEnumerable<PermissionType>> GetContentTypePermissionsAsync(Guid? userId, Guid? tenantId, string contentTypeName) {
@@ -349,6 +439,78 @@ public class PermissionService : IPermissionService {
 
   #endregion
 
+  #region Additional User-Tenant Management Methods
+
+  /// <summary>
+  /// Revoke specific tenant permissions from a user
+  /// </summary>
+  public async Task RevokeTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions) {
+    var existingPermission = await _context.TenantPermissions
+      .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null);
+
+    if (existingPermission != null) {
+      foreach (var permission in permissions) {
+        existingPermission.RemovePermission(permission);
+      }
+      await _context.SaveChangesAsync();
+    }
+  }
+
+  /// <summary>
+  /// Add user to tenant with minimal permissions
+  /// </summary>
+  public async Task<TenantPermission> JoinTenantAsync(Guid userId, Guid tenantId) {
+    var existingPermission = await _context.TenantPermissions
+      .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId);
+
+    if (existingPermission != null) {
+      // Reactivate existing membership
+      existingPermission.ExpiresAt = null;
+      existingPermission.Restore();
+    }
+    else {
+      existingPermission = new TenantPermission(userId, tenantId);
+      _context.TenantPermissions.Add(existingPermission);
+    }
+
+    await _context.SaveChangesAsync();
+    return existingPermission;
+  }
+
+  /// <summary>
+  /// Remove user from tenant by expiring their membership
+  /// </summary>
+  public async Task LeaveTenantAsync(Guid userId, Guid tenantId) {
+    var membership = await _context.TenantPermissions
+      .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId);
+
+    if (membership != null) {
+      membership.ExpiresAt = DateTime.UtcNow;
+      await _context.SaveChangesAsync();
+    }
+  }
+
+  /// <summary>
+  /// Check if user is an active member of tenant
+  /// </summary>
+  public async Task<bool> IsUserInTenantAsync(Guid userId, Guid tenantId) {
+    var membership = await _context.TenantPermissions.AsNoTracking()
+      .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null);
+
+    return membership != null && !membership.IsExpired;
+  }
+
+  /// <summary>
+  /// Get all tenants where user has active membership
+  /// </summary>
+  public async Task<IEnumerable<TenantPermission>> GetUserTenantsAsync(Guid userId) {
+    return await _context.TenantPermissions.AsNoTracking()
+      .Where(tp => tp.UserId == userId && tp.DeletedAt == null && (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow))
+      .ToListAsync();
+  }
+
+  #endregion
+
   #region Private Helper Methods
 
   private async Task<bool> CheckDefaultTenantPermissionAsync(Guid? tenantId, PermissionType permission) {
@@ -378,4 +540,121 @@ public class PermissionService : IPermissionService {
   }
 
   #endregion
+
+  public async Task RevokeContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType[] permissions) {
+    using var userContext = LoggingExtensions.WithUserContext(userId, tenantId);
+
+    if (string.IsNullOrWhiteSpace(contentTypeName)) throw new ArgumentException("Content type name cannot be null or empty", nameof(contentTypeName));
+    if (permissions == null || permissions.Length == 0) {
+      _logger.LogDebug("No permissions specified to revoke for content type {ContentType}", contentTypeName);
+      return; // Do nothing for empty permissions array
+    }
+
+    _logger.LogDebug("Revoking content type permissions for {ContentType}: {Permissions}", contentTypeName, string.Join(", ", permissions));
+
+    // Find existing permission
+    var existingPermission = await _context.ContentTypePermissions.FirstOrDefaultAsync(ctp =>
+      ctp.UserId == userId && ctp.TenantId == tenantId && ctp.ContentType == contentTypeName && ctp.DeletedAt == null);
+
+    if (existingPermission != null) {
+      // Remove specified permissions
+      foreach (var permission in permissions) {
+        existingPermission.RemovePermission(permission);
+      }
+
+      // If no permissions remain, soft delete the record
+      if (!Enum.GetValues<PermissionType>().Any(p => existingPermission.HasPermission(p))) {
+        existingPermission.SoftDelete();
+        _logger.LogInformation("Soft deleted content type permission record for {ContentType} (no permissions remaining)", contentTypeName);
+      }
+      else {
+        _logger.LogInformation("Revoked content type permissions for {ContentType}: {Permissions}", contentTypeName, string.Join(", ", permissions));
+      }
+
+      await _context.SaveChangesAsync();
+    }
+    else {
+      _logger.LogDebug("No existing content type permission found for {ContentType} to revoke", contentTypeName);
+    }
+  }
+
+  public async Task SetTenantDefaultPermissionsAsync(Guid tenantId, PermissionType[] permissions) {
+    using var userContext = LoggingExtensions.WithUserContext(null, tenantId);
+
+    if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
+
+    _logger.LogDebug("Setting tenant default permissions for {TenantId}: {Permissions}", tenantId, string.Join(", ", permissions));
+
+    // Find existing tenant default permission (userId = null)
+    var existingPermission = await _context.TenantPermissions.FirstOrDefaultAsync(tp =>
+      tp.UserId == null && tp.TenantId == tenantId && tp.DeletedAt == null);
+
+    if (existingPermission != null) {
+      // Clear existing permissions and set new ones
+      existingPermission.PermissionFlags1 = 0;
+      existingPermission.PermissionFlags2 = 0;
+      foreach (var permission in permissions) {
+        existingPermission.AddPermission(permission);
+      }
+      _logger.LogInformation("Updated tenant default permissions for {TenantId}: {Permissions}", tenantId, string.Join(", ", permissions));
+    }
+    else {
+      // Create new tenant default permission
+      existingPermission = new TenantPermission(null, tenantId);
+      foreach (var permission in permissions) {
+        existingPermission.AddPermission(permission);
+      }
+      _context.TenantPermissions.Add(existingPermission);
+      _logger.LogInformation("Created new tenant default permissions for {TenantId}: {Permissions}", tenantId, string.Join(", ", permissions));
+    }
+
+    await _context.SaveChangesAsync();
+  }
+
+  public async Task<IEnumerable<PermissionType>> GetEffectiveTenantPermissionsAsync(Guid? userId, Guid? tenantId) {
+    using var userContext = LoggingExtensions.WithUserContext(userId, tenantId);
+
+    _logger.LogDebug("Getting effective tenant permissions for user {UserId} in tenant {TenantId}", userId, tenantId);
+
+    var permissions = new HashSet<PermissionType>();
+
+    // 1. Start with global default permissions
+    var globalDefault = await _context.TenantPermissions.AsNoTracking()
+      .FirstOrDefaultAsync(tp => tp.UserId == null && tp.TenantId == null && tp.DeletedAt == null);
+    if (globalDefault != null) {
+      AddPermissionsFromEntity(permissions, globalDefault);
+      _logger.LogDebug("Added {Count} global default permissions", permissions.Count);
+    }
+
+    // 2. Add tenant default permissions (if has tenant)
+    if (tenantId.HasValue) {
+      var tenantDefault = await _context.TenantPermissions.AsNoTracking()
+        .FirstOrDefaultAsync(tp => tp.UserId == null && tp.TenantId == tenantId && tp.DeletedAt == null);
+      if (tenantDefault != null) {
+        AddPermissionsFromEntity(permissions, tenantDefault);
+        _logger.LogDebug("Added tenant default permissions, total: {Count}", permissions.Count);
+      }
+    }
+
+    // 3. Add user-specific permissions (if has user)
+    if (userId.HasValue) {
+      var userPermission = await _context.TenantPermissions.AsNoTracking()
+        .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null);
+      if (userPermission != null) {
+        AddPermissionsFromEntity(permissions, userPermission);
+        _logger.LogDebug("Added user-specific permissions, total: {Count}", permissions.Count);
+      }
+    }
+
+    _logger.LogInformation("Effective tenant permissions for user {UserId} in tenant {TenantId}: {Permissions}",
+      userId, tenantId, string.Join(", ", permissions));
+
+    return permissions;
+  }
+
+  public Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid[] resourceIds)
+    where TPermission : ResourcePermission<TResource>, new()
+    where TResource : EntityBase {
+    throw new NotImplementedException();
+  }
 }
