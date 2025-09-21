@@ -49,11 +49,21 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
 
     // Override configuration settings for testing
     builder.ConfigureAppConfiguration((context, config) => {
-      // Add test-specific configuration settings - must match development API configuration
+      // Clear existing configuration sources to ensure test settings take precedence
+      config.Sources.Clear();
+
+      // Add the main appsettings.json first
+      config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: false);
+      config.AddJsonFile($"appsettings.{context.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: false);
+
+      // Add environment variables
+      config.AddEnvironmentVariables();
+
+      // Add test-specific configuration that overrides everything else
       config.AddInMemoryCollection(
         new Dictionary<string, string?> {
             { "Jwt:SecretKey", "game-guild-super-secret-key-for-development-only-minimum-32-characters" },
-            { "Jwt:Issuer", "GameGuild.CMS" },
+            { "Jwt:Issuer", "GameGuild.API" },
             { "Jwt:Audience", "GameGuild.Users" },
             { "Jwt:ExpirationMinutes", "60" },
             { "Jwt:RefreshTokenExpirationDays", "7" },
@@ -136,12 +146,20 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
       // The main application already configures GraphQL through AddGraphQLInfrastructure
       // Trying to reconfigure it here causes duplicate registration issues
 
-      // Configure JWT for testing - must match the development API configuration
-      // This should match the configuration expected by AuthModuleDependencyInjection
+      // Configure JWT for testing - override the JwtOptions directly
+      services.PostConfigure<JwtOptions>(options => {
+        options.SecretKey = "game-guild-super-secret-key-for-development-only-minimum-32-characters";
+        options.Issuer = "GameGuild.API";
+        options.Audience = "GameGuild.Users";
+        options.ExpirationMinutes = 60;
+        options.RefreshTokenExpirationDays = 7;
+      });
+
+      // Also create a test JWT configuration for the JwtTokenService
       var testJwtConfig = new ConfigurationBuilder().AddInMemoryCollection(
                                                       new Dictionary<string, string?> {
                                                           { "Jwt:SecretKey", "game-guild-super-secret-key-for-development-only-minimum-32-characters" },
-                                                          { "Jwt:Issuer", "GameGuild.CMS" },
+                                                          { "Jwt:Issuer", "GameGuild.API" },
                                                           { "Jwt:Audience", "GameGuild.Users" },
                                                           { "Jwt:ExpirationMinutes", "60" },
                                                       }
@@ -156,12 +174,19 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program> {
         services.AddSingleton<IJwtTokenService>(provider => new JwtTokenService(testJwtConfig));
       }
 
-      // Don't remove or re-configure authentication services - let the main application handle them
+      // Important: Don't remove or re-configure JWT authentication services
       // The application already configures JWT authentication through AuthModuleDependencyInjection
-      // We just need to ensure our test JWT configuration is compatible
+      // Our test JWT configuration should be compatible with the main application's setup
 
       // Configure minimal controller setup for tests - let the main app handle authentication filters
       // This avoids conflicts with the authentication setup done by the main application
+      
+      // Replace rate limiting service with mock to prevent CQRS ServiceFactory scope resolution issue during testing
+      var rateLimitingServiceDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(GameGuild.Core.Services.IRateLimitingService));
+      if (rateLimitingServiceDescriptor != null) {
+        services.Remove(rateLimitingServiceDescriptor);
+      }
+      services.AddSingleton<GameGuild.Core.Services.IRateLimitingService, Helpers.MockRateLimitingService>();
     }
     );
   }
