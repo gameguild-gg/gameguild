@@ -1,4 +1,6 @@
-using GameGuild.Common;
+using GameGuild;
+using GameGuild.Core.Domain.Identity;
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Payments;
 using GameGuild.Modules.Products;
@@ -6,7 +8,6 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using GameGuild.CQRS;
 using Moq;
 
 namespace GameGuild.Tests.Modules.Payments;
@@ -37,8 +38,8 @@ public class PaymentTests : IDisposable {
     // Add logging
     services.AddLogging(builder => builder.AddConsole());
 
-    // Add MediatR
-    services.AddMediatR(typeof(CreatePaymentCommandHandler).Assembly);
+    // Add CQRS
+    services.AddCQRS(typeof(CreatePaymentCommandHandler).Assembly);
 
     // Mock contexts
     _mockUserContext = new Mock<IUserContext>();
