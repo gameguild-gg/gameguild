@@ -1,4 +1,5 @@
-using GameGuild.Common;
+using GameGuild;
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
@@ -51,8 +52,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Handlers {
         Name = "Test User",
         Email = $"test.user.{Guid.NewGuid()}@example.com",
         IsActive = true,
-        Balance = 100m,
-        AvailableBalance = 100m,
+        Balance = Money.FromDecimal(100m),
+        AvailableBalance = Money.FromDecimal(100m),
       };
 
       _context.Users.Add(user);

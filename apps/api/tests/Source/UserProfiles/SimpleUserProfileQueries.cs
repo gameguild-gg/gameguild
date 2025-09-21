@@ -1,8 +1,9 @@
-using GameGuild.Common;
+using GameGuild.CQRS;
+using GameGuild.Database;
+using GameGuild.GraphQL;
 using GameGuild.Modules.UserProfiles;
 using HotChocolate;
 using HotChocolate.Types;
-using GameGuild.CQRS;
 
 namespace GameGuild.Tests.UserProfiles;
 

@@ -1,6 +1,6 @@
-using GameGuild.Common;
-using GameGuild.Modules.UserProfiles;
+using GameGuild;
 using GameGuild.CQRS;
+using GameGuild.Modules.UserProfiles;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 

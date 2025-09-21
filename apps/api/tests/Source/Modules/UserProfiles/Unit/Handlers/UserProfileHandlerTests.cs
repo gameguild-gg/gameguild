@@ -1,4 +1,5 @@
-using GameGuild.Common;
+using GameGuild;
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.UserProfiles;
 using Microsoft.EntityFrameworkCore;
