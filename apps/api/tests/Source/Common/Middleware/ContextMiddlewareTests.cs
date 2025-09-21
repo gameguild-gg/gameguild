@@ -1,9 +1,12 @@
-using GameGuild.Common;
+    using System.Security.Claims;
+using GameGuild.Authorization.Identity;
+using GameGuild.Authorization.Middleware;
+using GameGuild.Core.Domain.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Security.Claims;
+using Xunit;
 
 
 namespace GameGuild.Tests.Common.Middleware;
@@ -18,7 +21,6 @@ public class ContextMiddlewareTests {
   public ContextMiddlewareTests() {
     var services = new ServiceCollection();
     services.AddLogging();
-    services.AddContextServices();
     _serviceProvider = services.BuildServiceProvider();
     _logger = _serviceProvider.GetRequiredService<ILogger<ContextMiddleware>>();
   }
@@ -34,14 +36,19 @@ public class ContextMiddlewareTests {
     );
 
     // Create context services with the test HTTP context
-    var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
-    var userLogger = new Mock<ILogger<UsersContext>>();
+    var httpContextAccessor = new Microsoft.AspNetCore.Http.HttpContextAccessor { HttpContext = httpContext };
+    var userLogger = new Mock<ILogger<UserContext>>();
     var tenantLogger = new Mock<ILogger<TenantContext>>();
-    var userContext = new UsersContext(httpContextAccessor, userLogger.Object);
+    var userContext = new UserContext(httpContextAccessor, userLogger.Object);
     var tenantContext = new TenantContext(httpContextAccessor, tenantLogger.Object);
 
+    // Create mock contexts for the additional parameters
+    var permissionsContext = new Mock<IPermissionsContext>();
+    var resourceContext = new Mock<IResourceContext>();
+    var localizationContext = new Mock<ILocalizationContext>();
+
     // Act
-    await middleware.InvokeAsync(httpContext, userContext, tenantContext);
+    await middleware.InvokeAsync(httpContext, userContext, tenantContext, permissionsContext.Object, resourceContext.Object, localizationContext.Object);
 
     // Assert
     Assert.True(userContext.IsAuthenticated);
@@ -56,9 +63,9 @@ public class ContextMiddlewareTests {
     // Arrange
     var testUserId = Guid.NewGuid().ToString();
     var httpContext = CreateHttpContextWithUser(testUserId, "test@example.com", "TestTenant");
-    var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
-    var userLogger = new Mock<ILogger<UsersContext>>();
-    var userContext = new UsersContext(httpContextAccessor, userLogger.Object);
+    var httpContextAccessor = new Microsoft.AspNetCore.Http.HttpContextAccessor { HttpContext = httpContext };
+    var userLogger = new Mock<ILogger<UserContext>>();
+    var userContext = new UserContext(httpContextAccessor, userLogger.Object);
 
     // Act & Assert
     Assert.True(userContext.IsAuthenticated);
@@ -73,7 +80,7 @@ public class ContextMiddlewareTests {
     var testUserId = Guid.NewGuid().ToString();
     var httpContext = CreateHttpContextWithUser(testUserId, "test@example.com", "TestTenant");
     httpContext.Request.Headers.Append("X-Tenant-Id", "tenant-123");
-    var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
+    var httpContextAccessor = new Microsoft.AspNetCore.Http.HttpContextAccessor { HttpContext = httpContext };
     var tenantLogger = new Mock<ILogger<TenantContext>>();
     var tenantContext = new TenantContext(httpContextAccessor, tenantLogger.Object);
 
@@ -86,9 +93,9 @@ public class ContextMiddlewareTests {
   public void UserContext_HandlesUnauthenticatedUser() {
     // Arrange
     var httpContext = new DefaultHttpContext();
-    var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
-    var userLogger = new Mock<ILogger<UsersContext>>();
-    var userContext = new UsersContext(httpContextAccessor, userLogger.Object);
+    var httpContextAccessor = new Microsoft.AspNetCore.Http.HttpContextAccessor { HttpContext = httpContext };
+    var userLogger = new Mock<ILogger<UserContext>>();
+    var userContext = new UserContext(httpContextAccessor, userLogger.Object);
 
     // Act & Assert
     Assert.False(userContext.IsAuthenticated);
@@ -97,7 +104,7 @@ public class ContextMiddlewareTests {
     Assert.Empty(userContext.Roles);
   }
 
-  private static HttpContext CreateHttpContextWithUser(string userId, string email, string tenantName) {
+  private static Microsoft.AspNetCore.Http.HttpContext CreateHttpContextWithUser(string userId, string email, string tenantName) {
     var claims = new[]
     {
             new Claim(ClaimTypes.NameIdentifier, userId),
@@ -111,7 +118,7 @@ public class ContextMiddlewareTests {
     var identity = new ClaimsIdentity(claims, "Test");
     var principal = new ClaimsPrincipal(identity);
 
-    var httpContext = new DefaultHttpContext {
+    var httpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext {
       User = principal,
     };
 
