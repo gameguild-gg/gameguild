@@ -1,4 +1,6 @@
-using GameGuild.Common;
+using GameGuild;
+using GameGuild.Core.Domain.Identity;
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products;
@@ -6,7 +8,6 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using GameGuild.CQRS;
 using Moq;
 
 namespace GameGuild.Tests.Modules.Products;
@@ -36,8 +37,8 @@ public class ProductQueryTests : IDisposable {
     // Add logging
     services.AddLogging(builder => builder.AddConsole());
 
-    // Add MediatR
-    services.AddMediatR(typeof(ProductQueryHandlers).Assembly);
+    // Add CQRS for command/query handling
+    services.AddCQRS(typeof(ProductQueryHandlers).Assembly);
 
     // Mock contexts
     _mockUserContext = new Mock<IUserContext>();
@@ -144,12 +145,12 @@ public class ProductQueryTests : IDisposable {
     var userId = Guid.NewGuid();
     await SeedTestUser(userId, "Test Creator");
 
-    await CreateTestProduct("Program Product", userId, type: GameGuild.Common.ProductType.Program);
-    await CreateTestProduct("Bundle Product", userId, type: GameGuild.Common.ProductType.Bundle);
-    await CreateTestProduct("Course Product", userId, type: GameGuild.Common.ProductType.Program);
+    await CreateTestProduct("Program Product", userId, type: GameGuild.ProductType.Program);
+    await CreateTestProduct("Bundle Product", userId, type: GameGuild.ProductType.Bundle);
+    await CreateTestProduct("Course Product", userId, type: GameGuild.ProductType.Program);
 
     var query = new GetProductsQuery {
-      Type = GameGuild.Common.ProductType.Program,
+      Type = GameGuild.ProductType.Program,
       Take = 10,
     };
 
@@ -159,7 +160,7 @@ public class ProductQueryTests : IDisposable {
     // Assert
     Assert.NotNull(result);
     Assert.Equal(2, result.Count());
-    Assert.All(result, p => Assert.Equal(GameGuild.Common.ProductType.Program, p.Type));
+    Assert.All(result, p => Assert.Equal(GameGuild.ProductType.Program, p.Type));
   }
 
   [Fact]
@@ -362,7 +363,7 @@ public class ProductQueryTests : IDisposable {
       string name,
       Guid creatorId,
       ContentStatus status = ContentStatus.Published,
-      GameGuild.Common.ProductType type = GameGuild.Common.ProductType.Program) {
+      ProductType type = ProductType.Program) {
     var product = new Product {
       Id = Guid.NewGuid(),
       Name = name,
