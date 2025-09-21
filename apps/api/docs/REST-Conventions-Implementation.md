@@ -395,7 +395,7 @@ To migrate existing controllers to use REST conventions:
 Before:
 ```csharp
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class UsersController : ControllerBase
 {
     [HttpGet("{id}")]
