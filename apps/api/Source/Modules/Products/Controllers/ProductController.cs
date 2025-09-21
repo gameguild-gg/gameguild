@@ -15,7 +15,7 @@ namespace GameGuild.Modules.Products;
 ///     <ProductPermission, Product> (PermissionType.Update)] - Resource Level (Explicit): [GameGuild.Authorization.RequireResourcePermissionAttribute<ProductPermission, ProductPermission, Product> (PermissionType.Update)]
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class ProductController(IMediator mediator) : ControllerBase {
   // ===== CONTENT-TYPE LEVEL OPERATIONS =====
 

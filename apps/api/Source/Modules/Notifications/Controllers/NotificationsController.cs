@@ -4,7 +4,7 @@ using GameGuild.Authorization.Identity;
 namespace GameGuild.Modules.Notifications;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class NotificationsController : ControllerBase
 {
     private readonly INotificationService _notificationService;

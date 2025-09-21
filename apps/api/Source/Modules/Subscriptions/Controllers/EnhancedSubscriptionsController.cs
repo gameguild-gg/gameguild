@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Subscriptions.Controllers;
 
 /// <summary> Controller for managing user subscriptions with enhanced domain patterns </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class SubscriptionsController : ControllerBase {
   private readonly IMediator _mediator;
 
