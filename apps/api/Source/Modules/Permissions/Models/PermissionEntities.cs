@@ -293,20 +293,12 @@ public abstract class PermissionBase : EntityBase {
 
   /// <summary> Check if this permission includes a specific permission type </summary>
   public virtual bool HasPermission(PermissionType permission) { return !IsExpired && (Permissions & permission) == permission; }
-}
 
-/// <summary> Content-type permissions (e.g., permissions for all Posts, all Comments, etc.) </summary>
-public class ContentTypePermission : PermissionBase {
-  private ContentTypePermission() { }
-
-  public ContentTypePermission(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType permissions) : base(userId, tenantId, permissions) {
-    ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
+  /// <summary> Add a permission to this entity (compatibility method) </summary>
+  public virtual void AddPermission(PermissionType permission) {
+    Permissions |= permission;
+    UpdatedAt = DateTime.UtcNow;
   }
-
-  /// <summary> Name of the content type (e.g., "Post", "Comment", "User") </summary>
-  public string ContentTypeName { get; private set; } = string.Empty;
-
-  public static ContentTypePermission Create(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType permissions) { return new(userId, tenantId, contentTypeName, permissions); }
 }
 
 /// <summary> Resource-specific permissions (permissions for a specific resource instance) </summary>
