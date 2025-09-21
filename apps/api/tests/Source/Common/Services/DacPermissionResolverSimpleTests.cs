@@ -1,6 +1,8 @@
-using GameGuild.Common;
-using GameGuild.Common.Services;
+using GameGuild;
+using GameGuild.Core.Domain.Permissions;
+using GameGuild.Core.Infrastructure.Permissions;
 using GameGuild.Modules.Permissions;
+using GameGuild.Services;
 using GameGuild.Tests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
