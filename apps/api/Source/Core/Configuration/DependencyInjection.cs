@@ -167,6 +167,7 @@ public static class DependencyInjection {
       .AddJsonOptions(jsonOptions => {
         jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         jsonOptions.JsonSerializerOptions.WriteIndented = true;
+        jsonOptions.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
       });
 
     // 19. GraphQL server configuration
