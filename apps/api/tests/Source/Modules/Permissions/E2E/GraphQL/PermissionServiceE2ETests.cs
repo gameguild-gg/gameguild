@@ -1,6 +1,6 @@
 using System.Text;
 using System.Text.Json;
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions;

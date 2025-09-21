@@ -1,4 +1,5 @@
-using GameGuild.Common;
+using GameGuild;
+using GameGuild.Core.Infrastructure.Permissions;
 using GameGuild.Database;
 using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions;

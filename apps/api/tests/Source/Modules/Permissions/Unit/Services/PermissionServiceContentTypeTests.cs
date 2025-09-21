@@ -1,4 +1,6 @@
-using GameGuild.Common;
+using GameGuild;
+using GameGuild.Core.Domain.Permissions;
+using GameGuild.Core.Infrastructure.Permissions;
 using GameGuild.Database;
 using GameGuild.Modules.Permissions;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +22,7 @@ public class PermissionServiceContentTypeTests : IDisposable {
                   .Options;
 
     _context = new ApplicationDbContext(options);
-    _permissionService = new PermissionService(_context);
+    _permissionService = new PermissionService(_context, Microsoft.Extensions.Logging.Abstractions.NullLogger<PermissionService>.Instance);
   }
 
   public void Dispose() { _context.Dispose(); }
