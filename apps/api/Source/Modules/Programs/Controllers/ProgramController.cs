@@ -25,7 +25,7 @@ namespace GameGuild.Modules.Programs;
 /// response caching, and comprehensive error handling for production use.
 /// </remarks>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class ProgramController(IProgramService programService) : ControllerBase {
   // ===== CONTENT-TYPE LEVEL OPERATIONS =====
 

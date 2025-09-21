@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Projects;
 
 /// <summary> REST API controller for managing projects using CQRS pattern </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 [Authorize]
 public class ProjectsController : ControllerBase {
   private readonly ILogger<ProjectsController> _logger;
