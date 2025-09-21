@@ -1,7 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Permissions;
@@ -435,7 +435,9 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     var jwtService = scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
     var userDto = new UserDto {
-      Id = user.Id, Username = user.Name, Email = user.Email
+      Id = user.Id,
+      Username = user.Name,
+      Email = user.Email
     };
 
     var roles = new[] {
@@ -517,7 +519,9 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
 
     var requestDto = new CreateSimpleTestingRequestDto {
       // Missing required fields
-      Title = "", VersionNumber = "", DownloadUrl = "invalid-url",
+      Title = "",
+      VersionNumber = "",
+      DownloadUrl = "invalid-url",
     };
 
     var json = JsonSerializer.Serialize(requestDto);
@@ -679,7 +683,8 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     SetAuthorizationHeader(token);
 
     var attendanceDto = new UpdateAttendanceDto {
-      UserId = user.Id, AttendanceStatus = AttendanceStatus.Completed,
+      UserId = user.Id,
+      AttendanceStatus = AttendanceStatus.Completed,
     };
 
     var json = JsonSerializer.Serialize(attendanceDto);
@@ -875,7 +880,10 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
   private async Task<TestingFeedback> SeedTestingFeedbackAsync(ApplicationDbContext context, TestingRequest testingRequest, UserModel user) {
     // Create a feedback form first
     var feedbackForm = new TestingFeedbackForm {
-      Id = Guid.NewGuid(), TestingRequestId = testingRequest.Id, FormSchema = "{}", CreatedAt = DateTime.UtcNow,
+      Id = Guid.NewGuid(),
+      TestingRequestId = testingRequest.Id,
+      FormSchema = "{}",
+      CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingFeedbackForms.Add(feedbackForm);
