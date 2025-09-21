@@ -1,9 +1,9 @@
+using GameGuild.CQRS;
 using GameGuild.Database;
-using GameGuild.Modules.Posts;
 using GameGuild.Modules.Contents;
+using GameGuild.Modules.Posts;
 using GameGuild.Modules.Posts.Services;
 using GameGuild.Modules.Users;
-using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -29,8 +29,8 @@ public class PostsModuleBasicTests : IDisposable {
     // Add logging
     services.AddLogging(builder => builder.AddConsole());
 
-    // Add MediatR for command/query handling
-    services.AddMediatR(typeof(CreatePostCommand).Assembly);
+    // Add CQRS for command/query handling
+    services.AddCQRS(typeof(PostService).Assembly);
 
     // Add Post service
     services.AddScoped<IPostService, PostService>();
