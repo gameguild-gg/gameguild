@@ -1,6 +1,6 @@
 using System.Text;
 using System.Text.Json;
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions;
@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
-using ProjectType = GameGuild.Common.ProjectType;
 
 
 namespace GameGuild.Tests.Modules.Projects.E2E.API;
