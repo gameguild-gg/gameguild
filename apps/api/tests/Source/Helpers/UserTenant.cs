@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 
 
 namespace GameGuild.Tests.Helpers {
@@ -6,7 +6,7 @@ namespace GameGuild.Tests.Helpers {
   /// Represents a relationship between a User and a Tenant
   /// Used only for testing purposes
   /// </summary>
-  public class UserTenant : Entity {
+  public class UserTenant : EntityBase {
     /// <summary>
     /// The ID of the user
     /// </summary>

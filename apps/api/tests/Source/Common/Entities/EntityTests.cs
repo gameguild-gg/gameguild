@@ -1,4 +1,4 @@
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
 using UserModel = GameGuild.Modules.Users.User;
@@ -81,7 +81,7 @@ public class EntityTests {
     var properties = new Dictionary<string, object?> { { nameof(UserModel.Name), "Jane Doe" }, { nameof(UserModel.Email), "jane@example.com" } };
 
     // Act
-    var user = Entity.Create<UserModel>(properties);
+    var user = EntityBase.Create<UserModel>(properties);
 
     // Assert
     Assert.Equal("Jane Doe", user.Name);
@@ -93,7 +93,7 @@ public class EntityTests {
   [Fact]
   public void BaseEntity_Create_WithoutProperties_CreatesInstanceWithDefaults() {
     // Act
-    var user = Entity.Create<UserModel>();
+    var user = EntityBase.Create<UserModel>();
 
     // Assert
     Assert.Equal(string.Empty, user.Name);
