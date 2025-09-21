@@ -1,5 +1,5 @@
-using GameGuild.Modules.Authentication;
 using GameGuild.CQRS;
+using GameGuild.Modules.Authentication;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -67,7 +67,7 @@ public class RevokeTokenHandlerTests {
     var result = await _handler.Handle(command, CancellationToken.None);
 
     // Assert
-    Assert.Equal(MediatR.Unit.Value, result);
+    Assert.Equal(CQRS.Unit.Value, result);
 
     _mockAuthService.Verify(x => x.RevokeRefreshTokenAsync(
         command.RefreshToken,
@@ -101,7 +101,7 @@ public class RevokeTokenHandlerTests {
     var result = await _handler.Handle(command, CancellationToken.None);
 
     // Assert
-    Assert.Equal(MediatR.Unit.Value, result);
+    Assert.Equal(CQRS.Unit.Value, result);
 
     _mockAuthService.Verify(x => x.RevokeRefreshTokenAsync(
         command.RefreshToken,
