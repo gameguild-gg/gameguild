@@ -1,6 +1,6 @@
+using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Users;
-using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -69,8 +69,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
     Assert.NotNull(result);
     Assert.Equal("John Doe", result.Name);
     Assert.Equal("john.doe@example.com", result.Email);
-    Assert.Equal(100.50m, result.Balance);
-    Assert.Equal(100.50m, result.AvailableBalance);
+    Assert.Equal(100.50m, result.Balance.ToDecimal());
+    Assert.Equal(100.50m, result.AvailableBalance.ToDecimal());
     Assert.True(result.IsActive);
     Assert.True(result.Id != Guid.Empty);
 
@@ -95,8 +95,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
     var result = await handler.Handle(command, CancellationToken.None);
 
     // Assert
-    Assert.Equal(0m, result.Balance);
-    Assert.Equal(0m, result.AvailableBalance);
+    Assert.Equal(0m, result.Balance.ToDecimal());
+    Assert.Equal(0m, result.AvailableBalance.ToDecimal());
   }
 
   [Fact]
@@ -106,8 +106,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "Existing User",
       Email = "existing@example.com",
       IsActive = true,
-      Balance = 0,
-      AvailableBalance = 0,
+      Balance = Money.FromDecimal(0m),
+      AvailableBalance = Money.FromDecimal(0m),
     };
     _context.Users.Add(existingUser);
     await _context.SaveChangesAsync();
@@ -136,8 +136,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "Original Name",
       Email = "original@example.com",
       IsActive = true,
-      Balance = 100m,
-      AvailableBalance = 100m,
+      Balance = Money.FromDecimal(100m),
+      AvailableBalance = Money.FromDecimal(100m),
     };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -192,8 +192,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "User To Delete",
       Email = "delete@example.com",
       IsActive = true,
-      Balance = 50m,
-      AvailableBalance = 50m,
+      Balance = Money.FromDecimal(50m),
+      AvailableBalance = Money.FromDecimal(50m),
     };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -232,8 +232,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "Inactive User",
       Email = "inactive@example.com",
       IsActive = false,
-      Balance = 0,
-      AvailableBalance = 0,
+      Balance = Money.FromDecimal(0m),
+      AvailableBalance = Money.FromDecimal(0m),
     };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -258,8 +258,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "Active User",
       Email = "active@example.com",
       IsActive = true,
-      Balance = 100m,
-      AvailableBalance = 100m,
+      Balance = Money.FromDecimal(100m),
+      AvailableBalance = Money.FromDecimal(100m),
     };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -288,8 +288,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "Balance User",
       Email = "balance@example.com",
       IsActive = true,
-      Balance = 100m,
-      AvailableBalance = 100m,
+      Balance = Money.FromDecimal(100m),
+      AvailableBalance = Money.FromDecimal(100m),
     };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -308,11 +308,11 @@ public class ComprehensiveUserHandlerTests : IDisposable {
 
     // Assert
     Assert.NotNull(result);
-    Assert.Equal(150m, result.Balance);
-    Assert.Equal(150m, result.AvailableBalance);
+    Assert.Equal(150m, result.Balance.ToDecimal());
+    Assert.Equal(150m, result.AvailableBalance.ToDecimal());
 
     var updatedUser = await _context.Users.FindAsync(user.Id);
-    Assert.Equal(150m, updatedUser!.Balance);
+    Assert.Equal(150m, updatedUser!.Balance.ToDecimal());
   }
 
   [Fact]
@@ -322,8 +322,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "Balance User",
       Email = "balance@example.com",
       IsActive = true,
-      Balance = 100m,
-      AvailableBalance = 100m,
+      Balance = Money.FromDecimal(100m),
+      AvailableBalance = Money.FromDecimal(100m),
     };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -341,8 +341,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
     var result = await handler.Handle(command, CancellationToken.None);
 
     // Assert
-    Assert.Equal(70m, result.Balance);
-    Assert.Equal(70m, result.AvailableBalance);
+    Assert.Equal(70m, result.Balance.ToDecimal());
+    Assert.Equal(70m, result.AvailableBalance.ToDecimal());
   }
 
   [Fact]
@@ -352,8 +352,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "Poor User",
       Email = "poor@example.com",
       IsActive = true,
-      Balance = 10m,
-      AvailableBalance = 10m,
+      Balance = Money.FromDecimal(10m),
+      AvailableBalance = Money.FromDecimal(10m),
     };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -372,7 +372,7 @@ public class ComprehensiveUserHandlerTests : IDisposable {
     // The validation would happen at the controller/validation layer
     var result = await handler.Handle(command, CancellationToken.None);
     Assert.NotNull(result);
-    Assert.Equal(-50m, result.Balance);
+    Assert.Equal(Money.FromDecimal(-50m), result.Balance);
   }
 
   #endregion
@@ -386,8 +386,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "Deleted User",
       Email = "deleted@example.com",
       IsActive = false,
-      Balance = 0,
-      AvailableBalance = 0,
+      Balance = Money.FromDecimal(0m),
+      AvailableBalance = Money.FromDecimal(0m),
     };
     user.SoftDelete(); // Actually soft delete the user
     _context.Users.Add(user);
@@ -418,8 +418,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "Query User",
       Email = "query@example.com",
       IsActive = true,
-      Balance = 75m,
-      AvailableBalance = 75m,
+      Balance = Money.FromDecimal(75m),
+      AvailableBalance = Money.FromDecimal(75m),
     };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -457,16 +457,16 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "Active User",
       Email = "active1@example.com",
       IsActive = true,
-      Balance = 100m,
-      AvailableBalance = 100m,
+      Balance = Money.FromDecimal(100m),
+      AvailableBalance = Money.FromDecimal(100m),
     };
 
     var inactiveUser = new User {
       Name = "Inactive User",
       Email = "inactive1@example.com",
       IsActive = false,
-      Balance = 0,
-      AvailableBalance = 0,
+      Balance = Money.FromDecimal(0m),
+      AvailableBalance = Money.FromDecimal(0m),
     };
 
     _context.Users.AddRange(activeUser, inactiveUser);
@@ -495,8 +495,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "Email Test User",
       Email = "emailtest@example.com",
       IsActive = true,
-      Balance = 75m,
-      AvailableBalance = 75m,
+      Balance = Money.FromDecimal(75m),
+      AvailableBalance = Money.FromDecimal(75m),
     };
     _context.Users.Add(user);
     await _context.SaveChangesAsync();
@@ -532,17 +532,15 @@ public class ComprehensiveUserHandlerTests : IDisposable {
     // Arrange
     var users = new[]
     {
-            new User { Name = "John Smith", Email = "john@example.com", IsActive = true, Balance = 100m, AvailableBalance = 100m },
-            new User { Name = "Jane Doe", Email = "jane@example.com", IsActive = true, Balance = 200m, AvailableBalance = 200m },
-            new User { Name = "John Williams", Email = "johnw@example.com", IsActive = true, Balance = 150m, AvailableBalance = 150m },
+            new User { Name = "John Smith", Email = "john@example.com", IsActive = true, Balance = Money.FromDecimal(100m), AvailableBalance = Money.FromDecimal(100m) },
+            new User { Name = "Jane Doe", Email = "jane@example.com", IsActive = true, Balance = Money.FromDecimal(200m), AvailableBalance = Money.FromDecimal(200m) },
+            new User { Name = "John Williams", Email = "johnw@example.com", IsActive = true, Balance = Money.FromDecimal(150m), AvailableBalance = Money.FromDecimal(150m) },
         };
     _context.Users.AddRange(users);
     await _context.SaveChangesAsync();
 
     var query = new SearchUsersQuery {
-      SearchTerm = "John",
-      Take = 10,
-      Skip = 0,
+      SearchTerm = "John"
     };
     var handler = new SearchUsersHandler(_context);
 
@@ -560,9 +558,9 @@ public class ComprehensiveUserHandlerTests : IDisposable {
     // Arrange
     var users = new[]
     {
-            new User { Name = "Low Balance User 1", Email = "low1@example.com", IsActive = true, Balance = 5m, AvailableBalance = 5m },
-            new User { Name = "High Balance User", Email = "high@example.com", IsActive = true, Balance = 1000m, AvailableBalance = 1000m },
-            new User { Name = "Low Balance User 2", Email = "low2@example.com", IsActive = true, Balance = 2m, AvailableBalance = 2m },
+            new User { Name = "Low Balance User 1", Email = "low1@example.com", IsActive = true, Balance = Money.FromDecimal(5m), AvailableBalance = Money.FromDecimal(5m) },
+            new User { Name = "High Balance User", Email = "high@example.com", IsActive = true, Balance = Money.FromDecimal(1000m), AvailableBalance = Money.FromDecimal(1000m) },
+            new User { Name = "Low Balance User 2", Email = "low2@example.com", IsActive = true, Balance = Money.FromDecimal(2m), AvailableBalance = Money.FromDecimal(2m) },
         };
     _context.Users.AddRange(users);
     await _context.SaveChangesAsync();
@@ -576,7 +574,7 @@ public class ComprehensiveUserHandlerTests : IDisposable {
     // Assert
     Assert.NotNull(result);
     Assert.Equal(2, result.Items.Count);
-    Assert.All(result.Items, user => Assert.True(user.Balance < 10m));
+    Assert.All(result.Items, user => Assert.True(user.Balance < Money.FromDecimal(10m)));
   }
 
   [Fact]
@@ -584,9 +582,9 @@ public class ComprehensiveUserHandlerTests : IDisposable {
     // Arrange
     var users = new[]
     {
-            new User { Name = "Active User 1", Email = "active1@example.com", IsActive = true, Balance = 100m, AvailableBalance = 100m },
-            new User { Name = "Active User 2", Email = "active2@example.com", IsActive = true, Balance = 200m, AvailableBalance = 200m },
-            new User { Name = "Inactive User", Email = "inactive@example.com", IsActive = false, Balance = 50m, AvailableBalance = 50m },
+            new User { Name = "Active User 1", Email = "active1@example.com", IsActive = true, Balance = Money.FromDecimal(100m), AvailableBalance = Money.FromDecimal(100m) },
+            new User { Name = "Active User 2", Email = "active2@example.com", IsActive = true, Balance = Money.FromDecimal(200m), AvailableBalance = Money.FromDecimal(200m) },
+            new User { Name = "Inactive User", Email = "inactive@example.com", IsActive = false, Balance = Money.FromDecimal(50m), AvailableBalance = Money.FromDecimal(50m) },
         };
     _context.Users.AddRange(users);
     await _context.SaveChangesAsync();
@@ -614,9 +612,9 @@ public class ComprehensiveUserHandlerTests : IDisposable {
     // Arrange
     var users = new[]
     {
-            new User { Name = "Inactive User 1", Email = "inactive1@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
-            new User { Name = "Inactive User 2", Email = "inactive2@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
-            new User { Name = "Inactive User 3", Email = "inactive3@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
+            new User { Name = "Inactive User 1", Email = "inactive1@example.com", IsActive = false, Balance = Money.FromDecimal(0m), AvailableBalance = Money.FromDecimal(0) },
+            new User { Name = "Inactive User 2", Email = "inactive2@example.com", IsActive = false, Balance = Money.FromDecimal(0m), AvailableBalance = Money.FromDecimal(0) },
+            new User { Name = "Inactive User 3", Email = "inactive3@example.com", IsActive = false, Balance = Money.FromDecimal(0m), AvailableBalance = Money.FromDecimal(0) },
         };
 
     _context.Users.AddRange(users);
@@ -633,8 +631,9 @@ public class ComprehensiveUserHandlerTests : IDisposable {
 
     // Assert
     Assert.NotNull(result);
-    Assert.Equal(3, result.Successful);
-    Assert.Equal(0, result.Failed);
+    Assert.True(result.IsSuccess);
+    Assert.Equal(3, result.Value.Successful);
+    Assert.Equal(0, result.Value.Failed);
 
     // Verify users are actually activated
     var activatedUsers = await _context.Users.Where(u => command.UserIds.Contains(u.Id)).ToListAsync();
@@ -646,14 +645,14 @@ public class ComprehensiveUserHandlerTests : IDisposable {
     // Arrange
     var users = new[]
     {
-            new User { Name = "Deleted User 1", Email = "deleted1@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
-            new User { Name = "Deleted User 2", Email = "deleted2@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
-            new User { Name = "Deleted User 3", Email = "deleted3@example.com", IsActive = false, Balance = 0, AvailableBalance = 0 },
+            new User { Name = "Deleted User 1", Email = "deleted1@example.com", IsActive = false, Balance = Money.FromDecimal(0m), AvailableBalance = Money.FromDecimal(0) },
+            new User { Name = "Deleted User 2", Email = "deleted2@example.com", IsActive = false, Balance = Money.FromDecimal(0m), AvailableBalance = Money.FromDecimal(0) },
+            new User { Name = "Deleted User 3", Email = "deleted3@example.com", IsActive = false, Balance = Money.FromDecimal(0m), AvailableBalance = Money.FromDecimal(0) },
         };
 
     // Mark them as soft deleted
     foreach (var user in users) {
-      user.DeletedAt = DateTime.UtcNow;
+      user.SoftDelete();
     }
 
     _context.Users.AddRange(users);
@@ -670,8 +669,9 @@ public class ComprehensiveUserHandlerTests : IDisposable {
 
     // Assert
     Assert.NotNull(result);
-    Assert.Equal(3, result.Successful);
-    Assert.Equal(0, result.Failed);
+    Assert.True(result.IsSuccess);
+    Assert.Equal(3, result.Value.Successful);
+    Assert.Equal(0, result.Value.Failed);
 
     // Verify users are actually restored
     var restoredUsers = await _context.Users.Where(u => command.UserIds.Contains(u.Id)).ToListAsync();
@@ -685,9 +685,9 @@ public class ComprehensiveUserHandlerTests : IDisposable {
     // Arrange
     var users = new[]
     {
-            new User { Name = "To Delete User 1", Email = "todelete1@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
-            new User { Name = "To Delete User 2", Email = "todelete2@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
-            new User { Name = "To Delete User 3", Email = "todelete3@example.com", IsActive = true, Balance = 0, AvailableBalance = 0 },
+            new User { Name = "To Delete User 1", Email = "todelete1@example.com", IsActive = true, Balance = Money.FromDecimal(0m), AvailableBalance = Money.FromDecimal(0) },
+            new User { Name = "To Delete User 2", Email = "todelete2@example.com", IsActive = true, Balance = Money.FromDecimal(0m), AvailableBalance = Money.FromDecimal(0) },
+            new User { Name = "To Delete User 3", Email = "todelete3@example.com", IsActive = true, Balance = Money.FromDecimal(0m), AvailableBalance = Money.FromDecimal(0) },
         };
 
     _context.Users.AddRange(users);
@@ -704,8 +704,9 @@ public class ComprehensiveUserHandlerTests : IDisposable {
 
     // Assert
     Assert.NotNull(result);
-    Assert.Equal(3, result.Successful);
-    Assert.Equal(0, result.Failed);
+    Assert.True(result.IsSuccess);
+    Assert.Equal(3, result.Value.Successful);
+    Assert.Equal(0, result.Value.Failed);
 
     // Verify users are soft deleted
     var deletedUsers = await _context.Users.Where(u => command.UserIds.Contains(u.Id)).ToListAsync();
@@ -722,8 +723,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
       Name = "Existing User",
       Email = "duplicate@example.com",
       IsActive = true,
-      Balance = 0,
-      AvailableBalance = 0,
+      Balance = Money.FromDecimal(0m),
+      AvailableBalance = Money.FromDecimal(0m),
     };
     _context.Users.Add(existingUser);
     await _context.SaveChangesAsync();
@@ -744,9 +745,10 @@ public class ComprehensiveUserHandlerTests : IDisposable {
 
     // Assert
     Assert.NotNull(result);
-    Assert.Equal(2, result.Successful); // Two successful creations
-    Assert.Equal(1, result.Failed); // One failed due to duplicate email
-    Assert.NotEmpty(result.Errors);
+    Assert.True(result.IsSuccess);
+    Assert.Equal(2, result.Value.Successful); // Two successful creations
+    Assert.Equal(1, result.Value.Failed); // One failed due to duplicate email
+    Assert.NotEmpty(result.Value.Errors);
   }
 
   #endregion
