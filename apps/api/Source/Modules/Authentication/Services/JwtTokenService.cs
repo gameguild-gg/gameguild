@@ -8,9 +8,9 @@ using Microsoft.IdentityModel.Tokens;
 namespace GameGuild.Modules.Authentication;
 
 public class JwtTokenService(IConfiguration configuration) : IJwtTokenService {
-  public string GenerateAccessToken(UserDto user, string[ ] roles) { return GenerateAccessToken(user, roles, null); }
+  public string GenerateAccessToken(UserDto user, string[] roles) { return GenerateAccessToken(user, roles, null); }
 
-  public string GenerateAccessToken(UserDto user, string[ ] roles, IEnumerable<Claim>? additionalClaims = null) {
+  public string GenerateAccessToken(UserDto user, string[] roles, IEnumerable<Claim>? additionalClaims = null) {
     var claims = new List<Claim> {
       new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
       new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), // Add for compatibility
@@ -24,12 +24,16 @@ public class JwtTokenService(IConfiguration configuration) : IJwtTokenService {
     if (additionalClaims != null) claims.AddRange(additionalClaims);
 
     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"] ?? "development-fallback-key-that-is-at-least-32-characters-long-for-testing"));
+
+    // Set a KeyId to match what validation expects
+    key.KeyId = "default-key";
+
     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
     var expiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
     var expires = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
-    var token = new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"], claims, expires : expires, signingCredentials : creds);
+    var token = new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"], claims, expires: expires, signingCredentials: creds);
 
     return new JwtSecurityTokenHandler().WriteToken(token);
   }
@@ -43,11 +47,15 @@ public class JwtTokenService(IConfiguration configuration) : IJwtTokenService {
   }
 
   public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token) {
+    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"] ?? "development-fallback-key-that-is-at-least-32-characters-long-for-testing"));
+    // Set the same KeyId as used in token generation and validation
+    key.KeyId = "default-key";
+
     var tokenValidationParameters = new TokenValidationParameters {
       ValidateAudience = false,
       ValidateIssuer = false,
       ValidateIssuerSigningKey = true,
-      IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"] ?? "development-fallback-key-that-is-at-least-32-characters-long-for-testing")),
+      IssuerSigningKey = key,
       ValidateLifetime = false, // We don't care about the token's expiration date
     };
 
@@ -70,13 +78,17 @@ public class JwtTokenService(IConfiguration configuration) : IJwtTokenService {
   }
 
   public ClaimsPrincipal? ValidateToken(string token) {
+    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"] ?? "development-fallback-key-that-is-at-least-32-characters-long-for-testing"));
+    // Set the same KeyId as used in token generation and validation
+    key.KeyId = "default-key";
+
     var tokenValidationParameters = new TokenValidationParameters {
       ValidateAudience = true,
       ValidateIssuer = true,
       ValidateIssuerSigningKey = true,
       ValidIssuer = configuration["Jwt:Issuer"],
       ValidAudience = configuration["Jwt:Audience"],
-      IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"] ?? "development-fallback-key-that-is-at-least-32-characters-long-for-testing")),
+      IssuerSigningKey = key,
       ValidateLifetime = true,
       ClockSkew = TimeSpan.FromMinutes(5), // Allow 5 minutes clock skew tolerance
     };

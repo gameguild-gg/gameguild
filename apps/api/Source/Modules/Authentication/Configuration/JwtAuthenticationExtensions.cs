@@ -44,6 +44,10 @@ public static class JwtAuthenticationExtensions {
   /// Creates comprehensive token validation parameters.
   /// </summary>
   private static TokenValidationParameters CreateTokenValidationParameters(JwtOptions jwtOptions) {
+    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey));
+    // Set the same KeyId as used in token generation
+    key.KeyId = "default-key";
+
     return new TokenValidationParameters {
       // Issuer validation
       ValidateIssuer = true,
@@ -59,7 +63,7 @@ public static class JwtAuthenticationExtensions {
 
       // Signing key validation
       ValidateIssuerSigningKey = true,
-      IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey)),
+      IssuerSigningKey = key,
 
       // Security requirements
       RequireSignedTokens = true,

@@ -126,9 +126,16 @@ public class JwtOptions {
   public void ApplyFallbacksWithWarnings(IConfiguration configuration) {
     var logger = GetLogger();
 
+    // Debug logging for test troubleshooting
+    logger?.LogInformation("JWT Configuration Debug: SecretKey from config = '{SecretKey}', Issuer = '{Issuer}', Audience = '{Audience}'",
+      configuration["Jwt:SecretKey"], configuration["Jwt:Issuer"], configuration["Jwt:Audience"]);
+
     if (string.IsNullOrEmpty(SecretKey)) {
       SecretKey = "game-guild-production-jwt-secret-key-must-be-at-least-32-characters-long-and-secure";
       logger?.LogWarning("JWT SecretKey not found in configuration. Using fallback value. Please set Jwt__SecretKey environment variable for production.");
+    }
+    else {
+      logger?.LogInformation("JWT SecretKey loaded from configuration: {SecretKeyLength} characters", SecretKey.Length);
     }
 
     if (string.IsNullOrEmpty(Issuer)) {
