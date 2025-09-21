@@ -84,7 +84,8 @@ internal static class WebApplicationExtensions {
     app = app.ConfigureDevelopmentPipeline().ConfigureProductionPipeline().ConfigureCommonPipeline().UseOpenApi();
 
     // Ensure database is seeded
-    app.SeedDatabase();
+    // Temporarily disable seeding until database schema is fixed
+    // app.SeedDatabase();
 
     // Map health check endpoints
     app.UseApplicationHealthChecks();
@@ -130,22 +131,23 @@ internal static class WebApplicationExtensions {
   public static WebApplication SeedDatabase(this WebApplication app) {
     ArgumentNullException.ThrowIfNull(app);
 
+    // TEMPORARILY DISABLED: Database schema is out of sync with entity models
     // Only seed in development and staging environments
-    if (!app.Environment.IsDevelopment() && !app.Environment.IsStaging()) {
-      return app;
-    }
+    //if (!app.Environment.IsDevelopment() && !app.Environment.IsStaging()) {
+    //  return app;
+    //}
 
-    using var scope = app.Services.CreateScope();
-    var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
+    //using var scope = app.Services.CreateScope();
+    //var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeeder>();
 
-    try {
-      seeder.SeedAsync().GetAwaiter().GetResult();
-    }
-    catch (Exception ex) {
-      var logger = scope.ServiceProvider.GetRequiredService<ILogger<WebApplication>>();
-      logger.LogError(ex, "An error occurred while seeding the database");
-      throw;
-    }
+    //try {
+    //  seeder.SeedAsync().GetAwaiter().GetResult();
+    //}
+    //catch (Exception ex) {
+    //  var logger = scope.ServiceProvider.GetRequiredService<ILogger<WebApplication>>();
+    //  logger.LogError(ex, "An error occurred while seeding the database");
+    //  throw;
+    //}
 
     return app;
   }
