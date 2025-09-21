@@ -403,8 +403,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators {
         Name = "Deleted User",
         Email = "deleted@example.com",
         IsActive = false,
-        Balance = 0m,
-        AvailableBalance = 0m,
+        Balance = Money.FromDecimal(0m),
+        AvailableBalance = Money.FromDecimal(0m),
       };
       deletedUser.SoftDelete();
 
@@ -633,8 +633,8 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Validators {
         Name = $"Test User {Guid.NewGuid():N}",
         Email = $"user{Guid.NewGuid():N}@example.com",
         IsActive = true,
-        Balance = 100m,
-        AvailableBalance = 100m,
+        Balance = Money.FromDecimal(100m),
+        AvailableBalance = Money.FromDecimal(100m),
       };
 
       _context.Users.Add(user);

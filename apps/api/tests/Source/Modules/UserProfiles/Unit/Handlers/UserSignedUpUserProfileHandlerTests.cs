@@ -1,6 +1,7 @@
+using GameGuild.CQRS;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.UserProfiles;
-using GameGuild.CQRS;
+using GameGuild.Source.Modules.UserProfiles.Handlers;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -30,7 +31,7 @@ public class UserSignedUpUserProfileHandlerTests {
       SignUpTime = DateTime.UtcNow,
     };
 
-    var mockResult = GameGuild.Common.Result.Success(new UserProfile {
+    var mockResult = Result.Success(new UserProfile {
       Id = userId,
       GivenName = "Test",
       FamilyName = "User",
@@ -71,7 +72,7 @@ public class UserSignedUpUserProfileHandlerTests {
       SignUpTime = DateTime.UtcNow,
     };
 
-    var mockResult = GameGuild.Common.Result.Success(new UserProfile());
+    var mockResult = Result.Success(new UserProfile());
     _mediatorMock
         .Setup(m => m.Send(It.IsAny<CreateUserProfileCommand>(), It.IsAny<CancellationToken>()))
         .ReturnsAsync(mockResult);
@@ -103,8 +104,8 @@ public class UserSignedUpUserProfileHandlerTests {
       SignUpTime = DateTime.UtcNow,
     };
 
-    var failureResult = GameGuild.Common.Result.Failure<UserProfile>(
-        GameGuild.Common.Error.Conflict("UserProfile.AlreadyExists", "Profile already exists")
+    var failureResult = Result.Failure<UserProfile>(
+        Error.Conflict("UserProfile.AlreadyExists", "Profile already exists")
     );
 
     _mediatorMock
