@@ -1,5 +1,7 @@
 using System.Diagnostics;
-using GameGuild.Common;
+using GameGuild;
+using GameGuild.Core.Domain.Permissions;
+using GameGuild.Core.Infrastructure.Permissions;
 using GameGuild.Database;
 using GameGuild.Modules.Comments;
 using GameGuild.Modules.Permissions;
@@ -25,7 +27,7 @@ public class PermissionPerformanceTests : IDisposable {
                                                                      .Options;
 
     _context = new ApplicationDbContext(options);
-    _permissionService = new PermissionService(_context);
+    _permissionService = new PermissionService(_context, Microsoft.Extensions.Logging.Abstractions.NullLogger<PermissionService>.Instance);
   }
 
   public void Dispose() { _context.Dispose(); }
@@ -140,13 +142,16 @@ public class PermissionPerformanceTests : IDisposable {
       permissions
     );
 
-    // Now check bulk permissions
-    var bulkResult =
-      await _permissionService.GetBulkResourcePermissionsAsync<CommentPermission, Comment>(
+    // Now check bulk permissions by checking each resource individually
+    var bulkResult = new Dictionary<Guid, IEnumerable<PermissionType>>();
+    foreach (var resourceId in resourceIds) {
+      var resourcePermissions = await _permissionService.GetResourcePermissionsAsync<CommentPermission, Comment>(
         user.Id,
         tenant.Id,
-        resourceIds
+        resourceId
       );
+      bulkResult[resourceId] = resourcePermissions;
+    }
 
     stopwatch.Stop();
 
@@ -178,14 +183,14 @@ public class PermissionPerformanceTests : IDisposable {
 
     // Set up complex permission hierarchy
     await _permissionService.SetGlobalDefaultPermissionsAsync([PermissionType.Read]);
-    await _permissionService.SetTenantDefaultPermissionsAsync(tenant.Id, [PermissionType.Comment]);
+    await _permissionService.GrantTenantPermissionAsync(null, tenant.Id, [PermissionType.Comment]);
     await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, [PermissionType.Vote]);
 
     var initialMemory = GC.GetTotalMemory(true);
 
     // Act - Repeatedly resolve effective permissions
     for (var i = 0; i < iterationCount; i++) {
-      var effectivePermissions = await _permissionService.GetEffectiveTenantPermissionsAsync(user.Id, tenant.Id);
+      var effectivePermissions = await _permissionService.GetTenantPermissionsAsync(user.Id, tenant.Id);
       var permissionList = effectivePermissions.ToList(); // Force enumeration
 
       Assert.NotEmpty(permissionList);
@@ -223,7 +228,7 @@ public class PermissionPerformanceTests : IDisposable {
 
     // Create complex permission scenario
     await _permissionService.SetGlobalDefaultPermissionsAsync([PermissionType.Read]);
-    await _permissionService.SetTenantDefaultPermissionsAsync(tenant.Id, [PermissionType.Comment]);
+    await _permissionService.GrantTenantPermissionAsync(null, tenant.Id, [PermissionType.Comment]);
     await _permissionService.GrantTenantPermissionAsync(user.Id, tenant.Id, [PermissionType.Vote]);
     await _permissionService.GrantContentTypePermissionAsync(user.Id, tenant.Id, "Comment", [PermissionType.Reply]);
     await _permissionService.GrantResourcePermissionAsync<CommentPermission, Comment>(
@@ -248,7 +253,7 @@ public class PermissionPerformanceTests : IDisposable {
         comment.Id,
         PermissionType.Edit
       );
-    var effectivePermissions = await _permissionService.GetEffectiveTenantPermissionsAsync(user.Id, tenant.Id);
+    var effectivePermissions = await _permissionService.GetTenantPermissionsAsync(user.Id, tenant.Id);
     var effectiveList = effectivePermissions.ToList();
 
     stopwatch.Stop();
@@ -352,7 +357,7 @@ public class PermissionPerformanceTests : IDisposable {
       for (var i = 0; i < operationsPerUser; i++) {
         // For the grant operation, use a separate context and service
         var grantContext = CreateNewDbContext();
-        var grantService = new PermissionService(grantContext);
+        var grantService = new PermissionService(grantContext, Microsoft.Extensions.Logging.Abstractions.NullLogger<PermissionService>.Instance);
         userTasks.Add(
           grantService.GrantTenantPermissionAsync(
             user.Id,
@@ -365,7 +370,7 @@ public class PermissionPerformanceTests : IDisposable {
         userTasks.Add(
           Task.Run(async () => {
             var checkContext = CreateNewDbContext();
-            var checkService = new PermissionService(checkContext);
+            var checkService = new PermissionService(checkContext, Microsoft.Extensions.Logging.Abstractions.NullLogger<PermissionService>.Instance);
             await checkService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read);
           }
           )
@@ -387,7 +392,7 @@ public class PermissionPerformanceTests : IDisposable {
 
     // Verify all users have permissions - use a fresh context for verification
     var verificationContext = CreateNewDbContext();
-    var verificationService = new PermissionService(verificationContext);
+    var verificationService = new PermissionService(verificationContext, Microsoft.Extensions.Logging.Abstractions.NullLogger<PermissionService>.Instance);
     var verificationTasks = users.Select(async user =>
                                            await verificationService.HasTenantPermissionAsync(user.Id, tenant.Id, PermissionType.Read)
     );

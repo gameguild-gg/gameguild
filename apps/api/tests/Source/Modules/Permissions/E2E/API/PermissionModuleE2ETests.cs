@@ -414,7 +414,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
     Guid userId, Guid tenantId, Guid resourceId,
     PermissionType[] permissions
   ) {
-    var resourcePermission = new CommentPermission { UserId = userId, TenantId = tenantId, ResourceId = resourceId };
+    var resourcePermission = new CommentPermission(userId, tenantId, resourceId, PermissionType.Read);
 
     foreach (var permission in permissions) resourcePermission.AddPermission(permission);
 
