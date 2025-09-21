@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using GameGuild.Tests.Infrastructure.Integration;
 using GameGuild.Tests.MockModules;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -8,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using GameGuild.Tests.Infrastructure.Integration;
 
 
 namespace GameGuild.Tests.Fixtures;
@@ -65,13 +65,13 @@ public class MockModuleTestServerFixture : IDisposable {
     services.AddHttpContextAccessor();
 
     // Add IDateTimeProvider for PerformanceBehavior
-    services.AddSingleton<GameGuild.Common.IDateTimeProvider, GameGuild.Common.DateTimeProvider>();
+    services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
     // Build a minimal GraphQL server for infrastructure testing only
     // Don't use AddGraphQLInfrastructure as it loads all production modules that need database
     services.AddGraphQLServer()
-        .AddQueryType<GameGuild.Common.Query>()
-        .AddMutationType<GameGuild.Common.Mutation>()
+        .AddQueryType<GameGuild.GraphQL.Query>()
+        .AddMutationType<GameGuild.GraphQL.Mutation>()
         .AddTestModuleGraphQL() // Use the dedicated test module GraphQL registration
         .AddFiltering()
         .AddSorting()

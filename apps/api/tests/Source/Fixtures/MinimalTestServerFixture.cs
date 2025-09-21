@@ -1,7 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using GameGuild.Common;
+using GameGuild;
 using GameGuild.Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -61,10 +61,11 @@ public class MinimalTestServerFixture : IDisposable {
         options.UseInMemoryDatabase(databaseName));
 
     // Add only the core infrastructure without domain modules
-    services.AddApplication(); // This adds MediatR and basic services
+    services.AddApplicationLayer(configuration); // This adds CQRS and basic services
 
     // Add GraphQL infrastructure only (no modules)
-    services.AddGraphQLInfrastructure();
+    services.AddGraphQLServer()
+        .AddQueryType<GameGuild.GraphQL.Query>();
 
     // Add basic controllers from the main application assembly
     services.AddControllers();

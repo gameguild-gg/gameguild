@@ -6,11 +6,13 @@ namespace GameGuild.Tests.Fixtures;
 public class MockTenantService : ITenantService {
   private readonly Dictionary<Guid, Tenant> _tenants = new();
   private readonly Dictionary<(Guid userId, Guid tenantId), TenantPermission> _permissions = new();
+  private Guid? _defaultTenantId;
 
   public MockTenantService() {
     // Create a default test tenant
     var testTenant = new Tenant { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Test Tenant", Slug = "test-tenant", IsActive = true };
     _tenants.Add(testTenant.Id, testTenant);
+    _defaultTenantId = testTenant.Id; // Set as default
   }
 
   public Task<IEnumerable<Tenant>> GetAllTenantsAsync() { return Task.FromResult<IEnumerable<Tenant>>(_tenants.Values); }
@@ -107,5 +109,55 @@ public class MockTenantService : ITenantService {
     var permissions = _permissions.Values.Where(p => p.UserId == userId);
 
     return Task.FromResult<IEnumerable<TenantPermission>>(permissions);
+  }
+
+  // === DEFAULT TENANT FUNCTIONALITY ===
+
+  public Task<Tenant> GetOrCreateDefaultTenantAsync() {
+    if (_defaultTenantId.HasValue && _tenants.TryGetValue(_defaultTenantId.Value, out var defaultTenant)) {
+      return Task.FromResult(defaultTenant);
+    }
+
+    // Create a default tenant if none exists
+    var tenant = new Tenant {
+      Id = Guid.NewGuid(),
+      Name = "Default Tenant",
+      Slug = "default",
+      IsActive = true
+    };
+
+    _tenants.Add(tenant.Id, tenant);
+    _defaultTenantId = tenant.Id;
+
+    return Task.FromResult(tenant);
+  }
+
+  public Task<Tenant?> GetDefaultTenantAsync() {
+    if (_defaultTenantId.HasValue && _tenants.TryGetValue(_defaultTenantId.Value, out var defaultTenant)) {
+      return Task.FromResult<Tenant?>(defaultTenant);
+    }
+
+    return Task.FromResult<Tenant?>(null);
+  }
+
+  public Task<Tenant> SetDefaultTenantAsync(Guid tenantId) {
+    if (!_tenants.TryGetValue(tenantId, out var tenant)) {
+      throw new ArgumentException("Tenant not found", nameof(tenantId));
+    }
+
+    _defaultTenantId = tenantId;
+    return Task.FromResult(tenant);
+  }
+
+  public Task<bool> IsDefaultTenantAsync(Guid tenantId) {
+    return Task.FromResult(_defaultTenantId == tenantId);
+  }
+
+  public async Task<Tenant> GetEffectiveTenantAsync(Guid? tenantId) {
+    if (tenantId.HasValue && _tenants.TryGetValue(tenantId.Value, out var tenant)) {
+      return tenant;
+    }
+
+    return await GetOrCreateDefaultTenantAsync();
   }
 }
