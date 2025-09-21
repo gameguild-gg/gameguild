@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Tenants;
 
 /// <summary> REST API controller for managing tenants using CQRS pattern </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 [Authorize]
 public class TenantsController(
   ICommandHandler<CreateTenantCommand, Result<Tenant>> createTenantHandler,

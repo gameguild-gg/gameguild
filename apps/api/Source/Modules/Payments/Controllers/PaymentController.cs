@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Payments;
 /// REST API controller for managing payments using CQRS pattern
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 public class PaymentController(CQRS.IMediator mediator) : ControllerBase {
   /// <summary>
   /// Get current user's payment methods

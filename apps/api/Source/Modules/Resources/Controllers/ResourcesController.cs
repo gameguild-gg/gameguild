@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Resources.Controllers;
 
 /// <summary> API controller for resource quota management and usage tracking </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 [Authorize]
 public class ResourcesController : ControllerBase {
   private readonly IResourceQuotaService _resourceQuotaService;

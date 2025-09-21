@@ -7,7 +7,7 @@ namespace GameGuild.Modules.UserAchievements;
 
 /// <summary> REST API controller for managing achievements </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("[controller]")]
 [Authorize]
 public class AchievementsController : ControllerBase {
   private readonly ILogger<AchievementsController> _logger;
