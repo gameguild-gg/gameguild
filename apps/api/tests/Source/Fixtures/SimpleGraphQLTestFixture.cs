@@ -1,13 +1,14 @@
+using GameGuild;
+using GameGuild.Database;
+using GameGuild.GraphQL;
+using GameGuild.Tests.MockModules;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.EntityFrameworkCore;
-using GameGuild.Common;
-using GameGuild.Database;
-using GameGuild.Tests.MockModules;
 
 
 namespace GameGuild.Tests.Fixtures;
@@ -55,8 +56,7 @@ public class SimpleGraphQLTestFixture : IDisposable {
     services.AddDbContext<ApplicationDbContext>(options =>
         options.UseInMemoryDatabase($"SimpleGraphQL_{Guid.NewGuid()}"));
 
-    // Add common services AFTER database context
-    services.AddCommonServices();
+    // Add common services AFTER database context\n    services.AddCQRS(Assembly.GetExecutingAssembly());\n    services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
     // Add our test module
     TestModuleDependencyInjection.AddTestModule(services);
