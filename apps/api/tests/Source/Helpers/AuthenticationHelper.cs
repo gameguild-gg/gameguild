@@ -1,9 +1,9 @@
 using System.Security.Claims;
+using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
-using GameGuild.Modules.Users;
-using GameGuild.Common;
 using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -43,8 +43,8 @@ namespace GameGuild.Tests.Helpers {
           Name = "Test User",
           Email = email ?? $"test.user.{Guid.NewGuid()}@example.com",
           IsActive = true,
-          Balance = 100m,
-          AvailableBalance = 100m,
+          Balance = Money.FromDecimal(100m),
+          AvailableBalance = Money.FromDecimal(100m),
         };
 
         context.Users.Add(user);
@@ -225,8 +225,8 @@ namespace GameGuild.Tests.Helpers {
         Name = isAdmin ? "Admin User" : "Test User",
         Email = email ?? $"test.user.{Guid.NewGuid()}@example.com",
         IsActive = true,
-        Balance = 100m,
-        AvailableBalance = 100m,
+        Balance = Money.FromDecimal(100m),
+        AvailableBalance = Money.FromDecimal(100m),
       };
 
       dbContext.Users.Add(user);
