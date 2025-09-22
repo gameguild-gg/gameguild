@@ -197,7 +197,7 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    var response = await _client.PostAsync("/auth/web3/challenge", content);
+    var response = await _client.PostAsync("/api/auth/web3/challenge", content);
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -223,7 +223,7 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    var response = await _client.PostAsync("/auth/web3/challenge", content);
+    var response = await _client.PostAsync("/api/auth/web3/challenge", content);
 
     // Assert
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -238,7 +238,7 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
     var content = new StringContent(json, Encoding.UTF8, "application/json");
 
     // Act
-    var response = await _client.PostAsync("/auth/send-email-verification", content);
+    var response = await _client.PostAsync("/api/auth/send-email-verification", content);
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -263,7 +263,7 @@ public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>
     const string redirectUri = "https://example.com/callback";
 
     // Act
-    var response = await _client.GetAsync($"/auth/github/signin?redirectUri={redirectUri}");
+    var response = await _client.GetAsync($"/api/auth/github/signin?redirectUri={redirectUri}");
 
     // Assert
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
