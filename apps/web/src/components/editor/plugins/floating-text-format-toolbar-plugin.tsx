@@ -371,18 +371,41 @@ export function FloatingTextFormatToolbarPlugin() {
                 <span>Strikethrough</span>
                 {isStrikethrough && <Check className="ml-auto h-5 w-5" />}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={(e) => e.preventDefault()}
-                onClick={() => {
-                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, "subscript")
-                  editor.getEditorState().read(() => updateToolbar())
-                }}
-              >
-                <Subscript className="mr-2 h-5 w-5" />
-                <span>Subscript</span>
-                {isSubscript && <Check className="ml-auto h-5 w-5" />}
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
+
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                  <Superscript className="mr-2 h-5 w-5" />
+                  <span>Script</span>
+                  {(isSubscript || isSuperscript) && <Check className="ml-auto h-5 w-5" />}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Posição do Texto</div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onSelect={(e) => e.preventDefault()}
+                    onClick={() => {
+                      editor.dispatchCommand(FORMAT_TEXT_COMMAND, "superscript")
+                      editor.getEditorState().read(() => updateToolbar())
+                    }}
+                  >
+                    <Superscript className="mr-2 h-5 w-5" />
+                    <span>Sobrescrito</span>
+                    {isSuperscript && <Check className="ml-auto h-5 w-5" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onSelect={(e) => e.preventDefault()}
+                    onClick={() => {
+                      editor.dispatchCommand(FORMAT_TEXT_COMMAND, "subscript")
+                      editor.getEditorState().read(() => updateToolbar())
+                    }}
+                  >
+                    <Subscript className="mr-2 h-5 w-5" />
+                    <span>Subscrito</span>
+                    {isSubscript && <Check className="ml-auto h-5 w-5" />}
+                  </DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
 
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
@@ -447,17 +470,6 @@ export function FloatingTextFormatToolbarPlugin() {
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onSelect={(e) => e.preventDefault()}
-                onClick={() => {
-                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, "superscript")
-                  editor.getEditorState().read(() => updateToolbar())
-                }}
-              >
-                <Superscript className="mr-2 h-5 w-5" />
-                <span>Superscript</span>
-                {isSuperscript && <Check className="ml-auto h-5 w-5" />}
-              </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={(e) => e.preventDefault()}
                 onClick={() => {
