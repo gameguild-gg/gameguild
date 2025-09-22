@@ -1,0 +1,928 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="88d5d802-2890-4ea6-a6ef-79b308e66552" name="MatheusMartins@DESKTOP-H9DM97K 2025-09-22 11:48:31" runUser="DESKTOP-H9DM97K\MatheusMartins" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2025-09-22T11:48:31.5156389-03:00" queuing="2025-09-22T11:48:31.5156390-03:00" start="2025-09-22T11:48:29.9673008-03:00" finish="2025-09-22T11:48:36.5534229-03:00" />
+  <TestSettings name="default" id="6ae49b32-6917-40e8-bab0-c4f646a0c6f9">
+    <Deployment runDeploymentRoot="MatheusMartins_DESKTOP-H9DM97K_2025-09-22_11_48_31" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="084610f0-8a0a-4204-bf3f-f4e33ef2d5fc" testId="24980367-a61f-0cac-562b-e0b095fda350" testName="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.MultipleEndpoints_WithAuth_ShouldHaveConsistentBehavior(endpoint: &quot;/users&quot;)" computerName="DESKTOP-H9DM97K" duration="00:00:00.0078714" startTime="2025-09-22T11:48:36.2286005-03:00" endTime="2025-09-22T11:48:36.2362562-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="084610f0-8a0a-4204-bf3f-f4e33ef2d5fc">
+      <Output>
+        <StdOut>Endpoint /users: NotFound</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="57b70264-6e88-4ce2-bd0e-907f4538bf15" testId="2f555447-432e-3203-9fc1-278bff8f51f0" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests.ModuleVersion_ShouldBeValidSemanticVersion(expectedVersion: &quot;2.0.0&quot;)" computerName="DESKTOP-H9DM97K" duration="00:00:00.0014874" startTime="2025-09-22T11:48:31.4123592-03:00" endTime="2025-09-22T11:48:31.4124528-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="57b70264-6e88-4ce2-bd0e-907f4538bf15" />
+    <UnitTestResult executionId="80fae8df-6207-4aa7-b16f-708cd7d2e8f6" testId="516f1ce2-45ca-2e0f-56f5-03d2bc0ff53b" testName="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.AdminEndpoint_WithAdminRole_ShouldSucceed" computerName="DESKTOP-H9DM97K" duration="00:00:00.0072458" startTime="2025-09-22T11:48:36.3908596-03:00" endTime="2025-09-22T11:48:36.3987635-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="80fae8df-6207-4aa7-b16f-708cd7d2e8f6">
+      <Output>
+        <StdOut>Admin endpoint /api/tenants with admin role: NotFound</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="272d4185-2505-4a19-89ca-a03d8f9a8c1b" testId="24c75b83-5d27-6333-bd61-6c06d95667b2" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_UnauthenticatedUser_ShouldReturnUnauthorized" computerName="DESKTOP-H9DM97K" duration="00:00:00.1086844" startTime="2025-09-22T11:48:31.3225122-03:00" endTime="2025-09-22T11:48:31.4352314-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="272d4185-2505-4a19-89ca-a03d8f9a8c1b" />
+    <UnitTestResult executionId="c6ab94c7-cde7-4372-b8c8-724909cfff4f" testId="b32a0eb3-7caa-5b41-81f9-fbc76f72c360" testName="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests.InvokeAsync_WithUnauthenticatedUser_ShouldLogAppropriately" computerName="DESKTOP-H9DM97K" duration="00:00:00.0033988" startTime="2025-09-22T11:48:31.4925993-03:00" endTime="2025-09-22T11:48:31.4926584-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c6ab94c7-cde7-4372-b8c8-724909cfff4f" />
+    <UnitTestResult executionId="c5250433-4e59-4d63-b146-832ed524101f" testId="5881a732-e549-ff8e-d9fe-5eae0809e16c" testName="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests.InvokeAsync_WithResourceContext_ShouldLogResourceInformation" computerName="DESKTOP-H9DM97K" duration="00:00:00.0139276" startTime="2025-09-22T11:48:31.4869219-03:00" endTime="2025-09-22T11:48:31.4924433-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c5250433-4e59-4d63-b146-832ed524101f" />
+    <UnitTestResult executionId="517c3677-595e-4f9f-b990-1e6d1df7cb36" testId="b80e3cfd-2b09-d151-d60f-545ade26f5a7" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests.ModuleVersion_ShouldBeValidSemanticVersion(expectedVersion: &quot;1.0.0&quot;)" computerName="DESKTOP-H9DM97K" duration="00:00:00.0063091" startTime="2025-09-22T11:48:31.4086029-03:00" endTime="2025-09-22T11:48:31.4088576-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="517c3677-595e-4f9f-b990-1e6d1df7cb36" />
+    <UnitTestResult executionId="14f8c352-d2f6-4a3d-831a-debf7a0d9faa" testId="7de125bb-2fa5-28e2-2f8f-b8f528c2fa90" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_CustomAuthorizationFails_ShouldReturnForbidden" computerName="DESKTOP-H9DM97K" duration="00:00:00.0030158" startTime="2025-09-22T11:48:31.4767567-03:00" endTime="2025-09-22T11:48:31.4768705-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="14f8c352-d2f6-4a3d-831a-debf7a0d9faa" />
+    <UnitTestResult executionId="0f68525b-d13e-4556-8a0e-36da71a78520" testId="6ceae11e-a432-345e-9596-42b73d7c1b2d" testName="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.MultipleEndpoints_WithAuth_ShouldHaveConsistentBehavior(endpoint: &quot;/tenants&quot;)" computerName="DESKTOP-H9DM97K" duration="00:00:03.4539714" startTime="2025-09-22T11:48:32.7727101-03:00" endTime="2025-09-22T11:48:36.2276751-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0f68525b-d13e-4556-8a0e-36da71a78520">
+      <Output>
+        <StdOut>Endpoint /tenants: OK</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="48d8017f-5d84-4dfe-a634-3eb1ef3bdbc3" testId="a1ab58da-b880-efc9-6257-04bb09aba600" testName="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ProtectedEndpoint_WithoutAuth_ShouldReturnUnauthorized" computerName="DESKTOP-H9DM97K" duration="00:00:00.0118372" startTime="2025-09-22T11:48:36.4049797-03:00" endTime="2025-09-22T11:48:36.4177233-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="48d8017f-5d84-4dfe-a634-3eb1ef3bdbc3">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected Unauthorized or Forbidden, but got OK</Message>
+          <StackTrace>   at GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ProtectedEndpoint_WithoutAuth_ShouldReturnUnauthorized() in W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Integration\AuthorizationIntegrationTests.cs:line 38&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="bd640a77-435e-46e0-8623-b27d95d3aae7" testId="23ac96e3-b1c9-08eb-a0f7-f517476a102b" testName="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_FallbackToLegacyService_ShouldWork" computerName="DESKTOP-H9DM97K" duration="00:00:00.1177478" startTime="2025-09-22T11:48:31.3226005-03:00" endTime="2025-09-22T11:48:31.4782374-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bd640a77-435e-46e0-8623-b27d95d3aae7">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : No service for type 'GameGuild.IPermissionService' has been registered.</Message>
+          <StackTrace>   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+   at GameGuild.RequireTenantPermissionAttribute.OnAuthorizationAsync(AuthorizationFilterContext context) in W:\repositories\game-guild\game-guild\apps\api\Source\Modules\Authorization\Attributes\RequireTenantPermissionAttribute.cs:line 16&#xD;
+   at GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_FallbackToLegacyService_ShouldWork() in W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Unit\DACAuthorizationAttributeTests.cs:line 137&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="1938e2e5-3f8a-4485-a29a-5c493b10e1b0" testId="9b0dc5ae-504b-633a-9557-5b5ced2b3012" testName="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_ExceptionDuringCheck_ShouldDeny" computerName="DESKTOP-H9DM97K" duration="00:00:00.0020070" startTime="2025-09-22T11:48:31.4916483-03:00" endTime="2025-09-22T11:48:31.4917170-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1938e2e5-3f8a-4485-a29a-5c493b10e1b0">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : No service for type 'GameGuild.IPermissionService' has been registered.</Message>
+          <StackTrace>   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+   at GameGuild.RequireTenantPermissionAttribute.OnAuthorizationAsync(AuthorizationFilterContext context) in W:\repositories\game-guild\game-guild\apps\api\Source\Modules\Authorization\Attributes\RequireTenantPermissionAttribute.cs:line 16&#xD;
+   at GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_ExceptionDuringCheck_ShouldDeny() in W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Unit\DACAuthorizationAttributeTests.cs:line 152&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="cacbd51f-01c7-4b8d-aaeb-f921f5f29f86" testId="565b4c34-9402-db21-0b1e-87505080d189" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_AuthenticatedUserWithoutRequiredPermission_ShouldReturnForbidden" computerName="DESKTOP-H9DM97K" duration="00:00:00.0016002" startTime="2025-09-22T11:48:31.4760294-03:00" endTime="2025-09-22T11:48:31.4761257-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="cacbd51f-01c7-4b8d-aaeb-f921f5f29f86" />
+    <UnitTestResult executionId="1f6c31be-4404-4929-86cf-9a8bbc90f2b2" testId="11aaeebd-943e-440d-1e0e-69b96d809040" testName="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.AuthorizationHeaders_ShouldBeProcessedCorrectly" computerName="DESKTOP-H9DM97K" duration="00:00:00.0156659" startTime="2025-09-22T11:48:36.4291389-03:00" endTime="2025-09-22T11:48:36.4456689-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1f6c31be-4404-4929-86cf-9a8bbc90f2b2">
+      <Output>
+        <StdOut>Auth header 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJiNmRlNDdkNS1kNjkzLTRmNTQtOGQ4Yy0zMmY4YzFkYWU2ODYiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJ1bmlxdWVfbmFtZSI6IlRlc3QgVXNlciIsInJvbGUiOiJVc2VyIiwidGVuYW50X2lkIjoiZThhYzEwMTctN2ZkMC00ODdjLWEwZGItMDQ2MzY4YTlmNjA0IiwicGVybWlzc2lvbiI6WyJyZWFkOnVzZXJzIiwicmVhZDp0ZW5hbnRzIl0sIm5iZiI6MTc1ODU1MjUxNiwiZXhwIjoxNzU4NjM4OTE2LCJpYXQiOjE3NTg1NTI1MTYsImlzcyI6IkdhbWVHdWlsZC5BUEkiLCJhdWQiOiJHYW1lR3VpbGQuVXNlcnMifQ.CN5FZunwfZCxRgFluJdRlFYuCZt2BoigIQzMySKmTa8': NotFound&#xD;
+Auth header 'bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJiNmRlNDdkNS1kNjkzLTRmNTQtOGQ4Yy0zMmY4YzFkYWU2ODYiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJ1bmlxdWVfbmFtZSI6IlRlc3QgVXNlciIsInJvbGUiOiJVc2VyIiwidGVuYW50X2lkIjoiZThhYzEwMTctN2ZkMC00ODdjLWEwZGItMDQ2MzY4YTlmNjA0IiwicGVybWlzc2lvbiI6WyJyZWFkOnVzZXJzIiwicmVhZDp0ZW5hbnRzIl0sIm5iZiI6MTc1ODU1MjUxNiwiZXhwIjoxNzU4NjM4OTE2LCJpYXQiOjE3NTg1NTI1MTYsImlzcyI6IkdhbWVHdWlsZC5BUEkiLCJhdWQiOiJHYW1lR3VpbGQuVXNlcnMifQ.CN5FZunwfZCxRgFluJdRlFYuCZt2BoigIQzMySKmTa8': NotFound&#xD;
+Auth header 'Bearer  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiJiNmRlNDdkNS1kNjkzLTRmNTQtOGQ4Yy0zMmY4YzFkYWU2ODYiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJ1bmlxdWVfbmFtZSI6IlRlc3QgVXNlciIsInJvbGUiOiJVc2VyIiwidGVuYW50X2lkIjoiZThhYzEwMTctN2ZkMC00ODdjLWEwZGItMDQ2MzY4YTlmNjA0IiwicGVybWlzc2lvbiI6WyJyZWFkOnVzZXJzIiwicmVhZDp0ZW5hbnRzIl0sIm5iZiI6MTc1ODU1MjUxNiwiZXhwIjoxNzU4NjM4OTE2LCJpYXQiOjE3NTg1NTI1MTYsImlzcyI6IkdhbWVHdWlsZC5BUEkiLCJhdWQiOiJHYW1lR3VpbGQuVXNlcnMifQ.CN5FZunwfZCxRgFluJdRlFYuCZt2BoigIQzMySKmTa8': NotFound</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="5692b0d6-3514-415c-9f3b-c10062a9830c" testId="1e682f09-19f1-ecba-2b63-c77172cc3bd8" testName="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ContextMiddleware_ShouldSetupCorrectly" computerName="DESKTOP-H9DM97K" duration="00:00:00.0052563" startTime="2025-09-22T11:48:36.3991372-03:00" endTime="2025-09-22T11:48:36.4046424-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5692b0d6-3514-415c-9f3b-c10062a9830c">
+      <Output>
+        <StdOut>Context middleware test: NotFound&#xD;
+Response content length: 0</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="3b9700b5-d6a8-472e-af18-d0021357c7b6" testId="7602f04b-943d-25e2-1f06-9b7443574e74" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests.AuthorizationModuleExtensions_ShouldProvideStandardizedPattern" computerName="DESKTOP-H9DM97K" duration="00:00:00.0142496" startTime="2025-09-22T11:48:31.4130511-03:00" endTime="2025-09-22T11:48:31.4176526-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3b9700b5-d6a8-472e-af18-d0021357c7b6" />
+    <UnitTestResult executionId="b33a7a3d-45ff-4251-934e-baae3ea37efe" testId="3d4c4149-de37-bd45-41c8-8889b70d489f" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_AuthenticatedUserWithRequiredPermission_ShouldSucceed" computerName="DESKTOP-H9DM97K" duration="00:00:00.0012455" startTime="2025-09-22T11:48:31.4771644-03:00" endTime="2025-09-22T11:48:31.4772589-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b33a7a3d-45ff-4251-934e-baae3ea37efe" />
+    <UnitTestResult executionId="fac04640-ac29-4f25-a57b-7db5be85c683" testId="96453879-361b-9b42-acc7-e3c391a4070f" testName="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests.InvokeAsync_ShouldAlwaysCallNext" computerName="DESKTOP-H9DM97K" duration="00:00:00.0034115" startTime="2025-09-22T11:48:31.4927799-03:00" endTime="2025-09-22T11:48:31.4928306-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="fac04640-ac29-4f25-a57b-7db5be85c683" />
+    <UnitTestResult executionId="1aab183d-f10f-4b63-9b32-85cdd3ce077f" testId="8538d350-cf3e-c5aa-a619-896a788a9c31" testName="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithInvalidUserId_ShouldReturnUnauthorized" computerName="DESKTOP-H9DM97K" duration="00:00:00.0012223" startTime="2025-09-22T11:48:31.4883598-03:00" endTime="2025-09-22T11:48:31.4884249-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1aab183d-f10f-4b63-9b32-85cdd3ce077f">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : No service for type 'GameGuild.IPermissionService' has been registered.</Message>
+          <StackTrace>   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+   at GameGuild.RequireTenantPermissionAttribute.OnAuthorizationAsync(AuthorizationFilterContext context) in W:\repositories\game-guild\game-guild\apps\api\Source\Modules\Authorization\Attributes\RequireTenantPermissionAttribute.cs:line 16&#xD;
+   at GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithInvalidUserId_ShouldReturnUnauthorized() in W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Unit\DACAuthorizationAttributeTests.cs:line 102&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="7f05aa99-c301-4e18-999c-b5b02cb59b8e" testId="ee107669-0d9f-0a8e-0c8a-0e9b6a1c2b0a" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_AuthenticatedUserWithoutRequiredRole_ShouldReturnForbidden" computerName="DESKTOP-H9DM97K" duration="00:00:00.0012191" startTime="2025-09-22T11:48:31.4763756-03:00" endTime="2025-09-22T11:48:31.4764628-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7f05aa99-c301-4e18-999c-b5b02cb59b8e" />
+    <UnitTestResult executionId="162d95dc-22c5-4342-833f-5b42304da6fc" testId="b4006d2b-6ba3-3d1f-c4e1-7ab365a97eef" testName="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ProtectedEndpoint_WithInvalidAuth_ShouldReturnUnauthorized" computerName="DESKTOP-H9DM97K" duration="00:00:00.0095145" startTime="2025-09-22T11:48:36.4190304-03:00" endTime="2025-09-22T11:48:36.4279993-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="162d95dc-22c5-4342-833f-5b42304da6fc">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected Unauthorized or Forbidden, but got OK</Message>
+          <StackTrace>   at GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ProtectedEndpoint_WithInvalidAuth_ShouldReturnUnauthorized() in W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Integration\AuthorizationIntegrationTests.cs:line 69&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="0ad7c9e9-d332-441e-930f-bfa8dc0733ad" testId="b9e9e12a-20ac-300f-50c5-fc881aef1fc7" testName="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithInvalidTenantId_ShouldReturnUnauthorized" computerName="DESKTOP-H9DM97K" duration="00:00:00.0006643" startTime="2025-09-22T11:48:31.4903666-03:00" endTime="2025-09-22T11:48:31.4905549-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0ad7c9e9-d332-441e-930f-bfa8dc0733ad">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : No service for type 'GameGuild.IPermissionService' has been registered.</Message>
+          <StackTrace>   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+   at GameGuild.RequireTenantPermissionAttribute.OnAuthorizationAsync(AuthorizationFilterContext context) in W:\repositories\game-guild\game-guild\apps\api\Source\Modules\Authorization\Attributes\RequireTenantPermissionAttribute.cs:line 16&#xD;
+   at GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithInvalidTenantId_ShouldReturnUnauthorized() in W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Unit\DACAuthorizationAttributeTests.cs:line 120&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="71d5a1ab-5ec2-4ee6-aa4b-ecbcba01694e" testId="421582c0-b730-0705-3faa-34d09358aa68" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests.AuthorizationModule_ShouldHaveCorrectMetadata" computerName="DESKTOP-H9DM97K" duration="00:00:00.0636569" startTime="2025-09-22T11:48:31.3202589-03:00" endTime="2025-09-22T11:48:31.3951146-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="71d5a1ab-5ec2-4ee6-aa4b-ecbcba01694e" />
+    <UnitTestResult executionId="e0514b35-b006-41b7-a5d6-d60d33f455da" testId="1473274a-840c-31c7-cfca-296150170d0f" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_NonAuthorizedRequest_ShouldPassThrough" computerName="DESKTOP-H9DM97K" duration="00:00:00.0035608" startTime="2025-09-22T11:48:31.4774911-03:00" endTime="2025-09-22T11:48:31.4839082-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e0514b35-b006-41b7-a5d6-d60d33f455da" />
+    <UnitTestResult executionId="0d532a41-3ebb-4950-bd5a-1f0e46424fc6" testId="7e40a372-fd02-cf04-2bde-78bf86cc0b59" testName="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithValidPermission_ShouldAllow" computerName="DESKTOP-H9DM97K" duration="00:00:00.0026194" startTime="2025-09-22T11:48:31.4837997-03:00" endTime="2025-09-22T11:48:31.4870568-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0d532a41-3ebb-4950-bd5a-1f0e46424fc6">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : No service for type 'GameGuild.IPermissionService' has been registered.</Message>
+          <StackTrace>   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+   at GameGuild.RequireTenantPermissionAttribute.OnAuthorizationAsync(AuthorizationFilterContext context) in W:\repositories\game-guild\game-guild\apps\api\Source\Modules\Authorization\Attributes\RequireTenantPermissionAttribute.cs:line 16&#xD;
+   at GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithValidPermission_ShouldAllow() in W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Unit\DACAuthorizationAttributeTests.cs:line 70&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="9c83deb6-d05b-41f4-b30e-539847637e76" testId="7544080d-a7d2-269d-cb43-2f36093c6ee3" testName="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests.InvokeAsync_WithAuthenticatedUser_ShouldLogContextInformation" computerName="DESKTOP-H9DM97K" duration="00:00:00.0066636" startTime="2025-09-22T11:48:31.4929509-03:00" endTime="2025-09-22T11:48:31.4930014-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9c83deb6-d05b-41f4-b30e-539847637e76" />
+    <UnitTestResult executionId="d9580fb9-7987-4657-bf4c-1888b0286681" testId="bab3b33a-fb80-8856-51bb-35252766bb19" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_AuthenticatedUserWithRequiredRole_ShouldSucceed" computerName="DESKTOP-H9DM97K" duration="00:00:00.0029870" startTime="2025-09-22T11:48:31.4747936-03:00" endTime="2025-09-22T11:48:31.4749400-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="d9580fb9-7987-4657-bf4c-1888b0286681" />
+    <UnitTestResult executionId="62d4c2cd-73a1-41aa-ab6e-6d3bc7573f8d" testId="3ca18151-78df-882e-54eb-7ba018418ee4" testName="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ProtectedEndpoint_WithValidAuth_ShouldSucceed" computerName="DESKTOP-H9DM97K" duration="00:00:00.0909032" startTime="2025-09-22T11:48:36.2373009-03:00" endTime="2025-09-22T11:48:36.3286254-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="62d4c2cd-73a1-41aa-ab6e-6d3bc7573f8d">
+      <Output>
+        <StdOut>Endpoint /api/users with auth: OK</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="16b1db34-f0a0-4fef-a6a9-752ca71f18eb" testId="e3c6f28b-dff9-5cfb-8f6f-fd0a744cfba5" testName="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.MultipleEndpoints_WithAuth_ShouldHaveConsistentBehavior(endpoint: &quot;/payments&quot;)" computerName="DESKTOP-H9DM97K" duration="00:00:01.4437386" startTime="2025-09-22T11:48:31.3225621-03:00" endTime="2025-09-22T11:48:32.7718227-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="16b1db34-f0a0-4fef-a6a9-752ca71f18eb">
+      <Output>
+        <StdOut>Endpoint /payments: MethodNotAllowed</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="463a1383-8966-4523-97f2-300435656156" testId="8e04fe63-e7d5-214e-a08d-dc4e351b5201" testName="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests.InvokeAsync_WithBearerToken_ShouldLogTokenLength" computerName="DESKTOP-H9DM97K" duration="00:00:00.0033449" startTime="2025-09-22T11:48:31.4942171-03:00" endTime="2025-09-22T11:48:31.4943000-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="463a1383-8966-4523-97f2-300435656156" />
+    <UnitTestResult executionId="31ff48e0-0ca5-4e1d-8188-15bfa777fdf0" testId="d9822f46-b2e6-0f58-aeaf-7a3f284dd8b3" testName="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.AdminEndpoint_WithUserRole_ShouldReturnForbidden" computerName="DESKTOP-H9DM97K" duration="00:00:00.0612872" startTime="2025-09-22T11:48:36.3288980-03:00" endTime="2025-09-22T11:48:36.3905447-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="31ff48e0-0ca5-4e1d-8188-15bfa777fdf0">
+      <Output>
+        <StdOut>Admin endpoint /tenants with user role: OK</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="e1a1f701-2aad-4140-8396-4ca44041b58c" testId="28112537-427c-3687-de41-3d40e761f5b0" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_AllAuthorizationChecksPass_ShouldSucceed" computerName="DESKTOP-H9DM97K" duration="00:00:00.0026462" startTime="2025-09-22T11:48:31.4755915-03:00" endTime="2025-09-22T11:48:31.4756989-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e1a1f701-2aad-4140-8396-4ca44041b58c" />
+    <UnitTestResult executionId="500cfdee-35fe-4c12-953a-e1c3d9a73e70" testId="abf14ef3-b192-33ed-09f4-84d6f4d9c367" testName="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests.InvokeAsync_WithoutAuthorizationHeader_ShouldNotLogToken" computerName="DESKTOP-H9DM97K" duration="00:00:00.1295237" startTime="2025-09-22T11:48:31.3223953-03:00" endTime="2025-09-22T11:48:31.4842685-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="500cfdee-35fe-4c12-953a-e1c3d9a73e70" />
+    <UnitTestResult executionId="84652b16-ca5b-44f0-bb54-72271b001d8f" testId="4031e711-ffd1-4e29-eb5f-0f6f04ca7f22" testName="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithoutPermission_ShouldDeny" computerName="DESKTOP-H9DM97K" duration="00:00:00.0016469" startTime="2025-09-22T11:48:31.4891160-03:00" endTime="2025-09-22T11:48:31.4892277-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="84652b16-ca5b-44f0-bb54-72271b001d8f">
+      <Output>
+        <ErrorInfo>
+          <Message>System.InvalidOperationException : No service for type 'GameGuild.IPermissionService' has been registered.</Message>
+          <StackTrace>   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+   at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+   at GameGuild.RequireTenantPermissionAttribute.OnAuthorizationAsync(AuthorizationFilterContext context) in W:\repositories\game-guild\game-guild\apps\api\Source\Modules\Authorization\Attributes\RequireTenantPermissionAttribute.cs:line 16&#xD;
+   at GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithoutPermission_ShouldDeny() in W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Unit\DACAuthorizationAttributeTests.cs:line 84&#xD;
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="772f75bf-eb56-4251-979f-6a83a2a8ada5" testId="7d5240e5-5e9a-2c80-39ec-8a3cf1b0641e" testName="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests.ConfigureServices_ShouldRegisterRequiredServices" computerName="DESKTOP-H9DM97K" duration="00:00:00.0134148" startTime="2025-09-22T11:48:31.4181949-03:00" endTime="2025-09-22T11:48:31.4312265-03:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="772f75bf-eb56-4251-979f-6a83a2a8ada5" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_UnauthenticatedUser_ShouldReturnUnauthorized" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="24c75b83-5d27-6333-bd61-6c06d95667b2">
+      <Execution id="272d4185-2505-4a19-89ca-a03d8f9a8c1b" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests" name="Handle_UnauthenticatedUser_ShouldReturnUnauthorized" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests.AuthorizationModule_ShouldHaveCorrectMetadata" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="421582c0-b730-0705-3faa-34d09358aa68">
+      <Execution id="71d5a1ab-5ec2-4ee6-aa4b-ecbcba01694e" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests" name="AuthorizationModule_ShouldHaveCorrectMetadata" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests.InvokeAsync_ShouldAlwaysCallNext" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="96453879-361b-9b42-acc7-e3c391a4070f">
+      <Execution id="fac04640-ac29-4f25-a57b-7db5be85c683" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests" name="InvokeAsync_ShouldAlwaysCallNext" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithValidPermission_ShouldAllow" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="7e40a372-fd02-cf04-2bde-78bf86cc0b59">
+      <Execution id="0d532a41-3ebb-4950-bd5a-1f0e46424fc6" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests" name="RequireTenantPermissionAttribute_WithValidPermission_ShouldAllow" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ProtectedEndpoint_WithInvalidAuth_ShouldReturnUnauthorized" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="b4006d2b-6ba3-3d1f-c4e1-7ab365a97eef">
+      <Execution id="162d95dc-22c5-4342-833f-5b42304da6fc" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests" name="ProtectedEndpoint_WithInvalidAuth_ShouldReturnUnauthorized" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests.ConfigureServices_ShouldRegisterRequiredServices" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="7d5240e5-5e9a-2c80-39ec-8a3cf1b0641e">
+      <Execution id="772f75bf-eb56-4251-979f-6a83a2a8ada5" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests" name="ConfigureServices_ShouldRegisterRequiredServices" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_ExceptionDuringCheck_ShouldDeny" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="9b0dc5ae-504b-633a-9557-5b5ced2b3012">
+      <Execution id="1938e2e5-3f8a-4485-a29a-5c493b10e1b0" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests" name="RequireTenantPermissionAttribute_ExceptionDuringCheck_ShouldDeny" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.AdminEndpoint_WithAdminRole_ShouldSucceed" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="516f1ce2-45ca-2e0f-56f5-03d2bc0ff53b">
+      <Execution id="80fae8df-6207-4aa7-b16f-708cd7d2e8f6" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests" name="AdminEndpoint_WithAdminRole_ShouldSucceed" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_AuthenticatedUserWithRequiredPermission_ShouldSucceed" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="3d4c4149-de37-bd45-41c8-8889b70d489f">
+      <Execution id="b33a7a3d-45ff-4251-934e-baae3ea37efe" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests" name="Handle_AuthenticatedUserWithRequiredPermission_ShouldSucceed" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.MultipleEndpoints_WithAuth_ShouldHaveConsistentBehavior(endpoint: &quot;/tenants&quot;)" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="6ceae11e-a432-345e-9596-42b73d7c1b2d">
+      <Execution id="0f68525b-d13e-4556-8a0e-36da71a78520" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests" name="MultipleEndpoints_WithAuth_ShouldHaveConsistentBehavior" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithInvalidTenantId_ShouldReturnUnauthorized" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="b9e9e12a-20ac-300f-50c5-fc881aef1fc7">
+      <Execution id="0ad7c9e9-d332-441e-930f-bfa8dc0733ad" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests" name="RequireTenantPermissionAttribute_WithInvalidTenantId_ShouldReturnUnauthorized" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_NonAuthorizedRequest_ShouldPassThrough" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="1473274a-840c-31c7-cfca-296150170d0f">
+      <Execution id="e0514b35-b006-41b7-a5d6-d60d33f455da" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests" name="Handle_NonAuthorizedRequest_ShouldPassThrough" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_AuthenticatedUserWithoutRequiredRole_ShouldReturnForbidden" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="ee107669-0d9f-0a8e-0c8a-0e9b6a1c2b0a">
+      <Execution id="7f05aa99-c301-4e18-999c-b5b02cb59b8e" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests" name="Handle_AuthenticatedUserWithoutRequiredRole_ShouldReturnForbidden" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ProtectedEndpoint_WithValidAuth_ShouldSucceed" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="3ca18151-78df-882e-54eb-7ba018418ee4">
+      <Execution id="62d4c2cd-73a1-41aa-ab6e-6d3bc7573f8d" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests" name="ProtectedEndpoint_WithValidAuth_ShouldSucceed" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests.ModuleVersion_ShouldBeValidSemanticVersion(expectedVersion: &quot;2.0.0&quot;)" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="2f555447-432e-3203-9fc1-278bff8f51f0">
+      <Execution id="57b70264-6e88-4ce2-bd0e-907f4538bf15" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests" name="ModuleVersion_ShouldBeValidSemanticVersion" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests.InvokeAsync_WithoutAuthorizationHeader_ShouldNotLogToken" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="abf14ef3-b192-33ed-09f4-84d6f4d9c367">
+      <Execution id="500cfdee-35fe-4c12-953a-e1c3d9a73e70" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests" name="InvokeAsync_WithoutAuthorizationHeader_ShouldNotLogToken" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_CustomAuthorizationFails_ShouldReturnForbidden" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="7de125bb-2fa5-28e2-2f8f-b8f528c2fa90">
+      <Execution id="14f8c352-d2f6-4a3d-831a-debf7a0d9faa" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests" name="Handle_CustomAuthorizationFails_ShouldReturnForbidden" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests.InvokeAsync_WithUnauthenticatedUser_ShouldLogAppropriately" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="b32a0eb3-7caa-5b41-81f9-fbc76f72c360">
+      <Execution id="c6ab94c7-cde7-4372-b8c8-724909cfff4f" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests" name="InvokeAsync_WithUnauthenticatedUser_ShouldLogAppropriately" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_FallbackToLegacyService_ShouldWork" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="23ac96e3-b1c9-08eb-a0f7-f517476a102b">
+      <Execution id="bd640a77-435e-46e0-8623-b27d95d3aae7" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests" name="RequireTenantPermissionAttribute_FallbackToLegacyService_ShouldWork" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithInvalidUserId_ShouldReturnUnauthorized" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="8538d350-cf3e-c5aa-a619-896a788a9c31">
+      <Execution id="1aab183d-f10f-4b63-9b32-85cdd3ce077f" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests" name="RequireTenantPermissionAttribute_WithInvalidUserId_ShouldReturnUnauthorized" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.AdminEndpoint_WithUserRole_ShouldReturnForbidden" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="d9822f46-b2e6-0f58-aeaf-7a3f284dd8b3">
+      <Execution id="31ff48e0-0ca5-4e1d-8188-15bfa777fdf0" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests" name="AdminEndpoint_WithUserRole_ShouldReturnForbidden" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_AllAuthorizationChecksPass_ShouldSucceed" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="28112537-427c-3687-de41-3d40e761f5b0">
+      <Execution id="e1a1f701-2aad-4140-8396-4ca44041b58c" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests" name="Handle_AllAuthorizationChecksPass_ShouldSucceed" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests.InvokeAsync_WithAuthenticatedUser_ShouldLogContextInformation" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="7544080d-a7d2-269d-cb43-2f36093c6ee3">
+      <Execution id="9c83deb6-d05b-41f4-b30e-539847637e76" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests" name="InvokeAsync_WithAuthenticatedUser_ShouldLogContextInformation" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.MultipleEndpoints_WithAuth_ShouldHaveConsistentBehavior(endpoint: &quot;/users&quot;)" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="24980367-a61f-0cac-562b-e0b095fda350">
+      <Execution id="084610f0-8a0a-4204-bf3f-f4e33ef2d5fc" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests" name="MultipleEndpoints_WithAuth_ShouldHaveConsistentBehavior" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests.InvokeAsync_WithBearerToken_ShouldLogTokenLength" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="8e04fe63-e7d5-214e-a08d-dc4e351b5201">
+      <Execution id="463a1383-8966-4523-97f2-300435656156" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests" name="InvokeAsync_WithBearerToken_ShouldLogTokenLength" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_AuthenticatedUserWithoutRequiredPermission_ShouldReturnForbidden" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="565b4c34-9402-db21-0b1e-87505080d189">
+      <Execution id="cacbd51f-01c7-4b8d-aaeb-f921f5f29f86" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests" name="Handle_AuthenticatedUserWithoutRequiredPermission_ShouldReturnForbidden" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests.Handle_AuthenticatedUserWithRequiredRole_ShouldSucceed" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="bab3b33a-fb80-8856-51bb-35252766bb19">
+      <Execution id="d9580fb9-7987-4657-bf4c-1888b0286681" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationBehaviorTests" name="Handle_AuthenticatedUserWithRequiredRole_ShouldSucceed" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests.InvokeAsync_WithResourceContext_ShouldLogResourceInformation" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="5881a732-e549-ff8e-d9fe-5eae0809e16c">
+      <Execution id="c5250433-4e59-4d63-b146-832ed524101f" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.Middleware.ContextMiddlewareTests" name="InvokeAsync_WithResourceContext_ShouldLogResourceInformation" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests.AuthorizationModuleExtensions_ShouldProvideStandardizedPattern" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="7602f04b-943d-25e2-1f06-9b7443574e74">
+      <Execution id="3b9700b5-d6a8-472e-af18-d0021357c7b6" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests" name="AuthorizationModuleExtensions_ShouldProvideStandardizedPattern" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithoutPermission_ShouldDeny" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="4031e711-ffd1-4e29-eb5f-0f6f04ca7f22">
+      <Execution id="84652b16-ca5b-44f0-bb54-72271b001d8f" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests" name="RequireTenantPermissionAttribute_WithoutPermission_ShouldDeny" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ProtectedEndpoint_WithoutAuth_ShouldReturnUnauthorized" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="a1ab58da-b880-efc9-6257-04bb09aba600">
+      <Execution id="48d8017f-5d84-4dfe-a634-3eb1ef3bdbc3" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests" name="ProtectedEndpoint_WithoutAuth_ShouldReturnUnauthorized" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests.ModuleVersion_ShouldBeValidSemanticVersion(expectedVersion: &quot;1.0.0&quot;)" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="b80e3cfd-2b09-d151-d60f-545ade26f5a7">
+      <Execution id="517c3677-595e-4f9f-b990-1e6d1df7cb36" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Unit.AuthorizationModuleTests" name="ModuleVersion_ShouldBeValidSemanticVersion" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.MultipleEndpoints_WithAuth_ShouldHaveConsistentBehavior(endpoint: &quot;/payments&quot;)" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="e3c6f28b-dff9-5cfb-8f6f-fd0a744cfba5">
+      <Execution id="16b1db34-f0a0-4fef-a6a9-752ca71f18eb" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests" name="MultipleEndpoints_WithAuth_ShouldHaveConsistentBehavior" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.AuthorizationHeaders_ShouldBeProcessedCorrectly" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="11aaeebd-943e-440d-1e0e-69b96d809040">
+      <Execution id="1f6c31be-4404-4929-86cf-9a8bbc90f2b2" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests" name="AuthorizationHeaders_ShouldBeProcessedCorrectly" />
+    </UnitTest>
+    <UnitTest name="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ContextMiddleware_ShouldSetupCorrectly" storage="w:\repositories\game-guild\game-guild\apps\api\tests\bin\debug\net9.0\gameguild.api.tests.dll" id="1e682f09-19f1-ecba-2b63-c77172cc3bd8">
+      <Execution id="5692b0d6-3514-415c-9f3b-c10062a9830c" />
+      <TestMethod codeBase="W:\repositories\game-guild\game-guild\apps\api\Tests\bin\Debug\net9.0\GameGuild.API.Tests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests" name="ContextMiddleware_ShouldSetupCorrectly" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="24980367-a61f-0cac-562b-e0b095fda350" executionId="084610f0-8a0a-4204-bf3f-f4e33ef2d5fc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2f555447-432e-3203-9fc1-278bff8f51f0" executionId="57b70264-6e88-4ce2-bd0e-907f4538bf15" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="516f1ce2-45ca-2e0f-56f5-03d2bc0ff53b" executionId="80fae8df-6207-4aa7-b16f-708cd7d2e8f6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="24c75b83-5d27-6333-bd61-6c06d95667b2" executionId="272d4185-2505-4a19-89ca-a03d8f9a8c1b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b32a0eb3-7caa-5b41-81f9-fbc76f72c360" executionId="c6ab94c7-cde7-4372-b8c8-724909cfff4f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="5881a732-e549-ff8e-d9fe-5eae0809e16c" executionId="c5250433-4e59-4d63-b146-832ed524101f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b80e3cfd-2b09-d151-d60f-545ade26f5a7" executionId="517c3677-595e-4f9f-b990-1e6d1df7cb36" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7de125bb-2fa5-28e2-2f8f-b8f528c2fa90" executionId="14f8c352-d2f6-4a3d-831a-debf7a0d9faa" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6ceae11e-a432-345e-9596-42b73d7c1b2d" executionId="0f68525b-d13e-4556-8a0e-36da71a78520" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a1ab58da-b880-efc9-6257-04bb09aba600" executionId="48d8017f-5d84-4dfe-a634-3eb1ef3bdbc3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="23ac96e3-b1c9-08eb-a0f7-f517476a102b" executionId="bd640a77-435e-46e0-8623-b27d95d3aae7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9b0dc5ae-504b-633a-9557-5b5ced2b3012" executionId="1938e2e5-3f8a-4485-a29a-5c493b10e1b0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="565b4c34-9402-db21-0b1e-87505080d189" executionId="cacbd51f-01c7-4b8d-aaeb-f921f5f29f86" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="11aaeebd-943e-440d-1e0e-69b96d809040" executionId="1f6c31be-4404-4929-86cf-9a8bbc90f2b2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1e682f09-19f1-ecba-2b63-c77172cc3bd8" executionId="5692b0d6-3514-415c-9f3b-c10062a9830c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7602f04b-943d-25e2-1f06-9b7443574e74" executionId="3b9700b5-d6a8-472e-af18-d0021357c7b6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3d4c4149-de37-bd45-41c8-8889b70d489f" executionId="b33a7a3d-45ff-4251-934e-baae3ea37efe" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="96453879-361b-9b42-acc7-e3c391a4070f" executionId="fac04640-ac29-4f25-a57b-7db5be85c683" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8538d350-cf3e-c5aa-a619-896a788a9c31" executionId="1aab183d-f10f-4b63-9b32-85cdd3ce077f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ee107669-0d9f-0a8e-0c8a-0e9b6a1c2b0a" executionId="7f05aa99-c301-4e18-999c-b5b02cb59b8e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b4006d2b-6ba3-3d1f-c4e1-7ab365a97eef" executionId="162d95dc-22c5-4342-833f-5b42304da6fc" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b9e9e12a-20ac-300f-50c5-fc881aef1fc7" executionId="0ad7c9e9-d332-441e-930f-bfa8dc0733ad" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="421582c0-b730-0705-3faa-34d09358aa68" executionId="71d5a1ab-5ec2-4ee6-aa4b-ecbcba01694e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="1473274a-840c-31c7-cfca-296150170d0f" executionId="e0514b35-b006-41b7-a5d6-d60d33f455da" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7e40a372-fd02-cf04-2bde-78bf86cc0b59" executionId="0d532a41-3ebb-4950-bd5a-1f0e46424fc6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7544080d-a7d2-269d-cb43-2f36093c6ee3" executionId="9c83deb6-d05b-41f4-b30e-539847637e76" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="bab3b33a-fb80-8856-51bb-35252766bb19" executionId="d9580fb9-7987-4657-bf4c-1888b0286681" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3ca18151-78df-882e-54eb-7ba018418ee4" executionId="62d4c2cd-73a1-41aa-ab6e-6d3bc7573f8d" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e3c6f28b-dff9-5cfb-8f6f-fd0a744cfba5" executionId="16b1db34-f0a0-4fef-a6a9-752ca71f18eb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="8e04fe63-e7d5-214e-a08d-dc4e351b5201" executionId="463a1383-8966-4523-97f2-300435656156" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d9822f46-b2e6-0f58-aeaf-7a3f284dd8b3" executionId="31ff48e0-0ca5-4e1d-8188-15bfa777fdf0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="28112537-427c-3687-de41-3d40e761f5b0" executionId="e1a1f701-2aad-4140-8396-4ca44041b58c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="abf14ef3-b192-33ed-09f4-84d6f4d9c367" executionId="500cfdee-35fe-4c12-953a-e1c3d9a73e70" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4031e711-ffd1-4e29-eb5f-0f6f04ca7f22" executionId="84652b16-ca5b-44f0-bb54-72271b001d8f" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7d5240e5-5e9a-2c80-39ec-8a3cf1b0641e" executionId="772f75bf-eb56-4251-979f-6a83a2a8ada5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="35" executed="35" passed="27" failed="8" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.3+b1b99bdeb3 (64-bit .NET 9.0.5)&#xD;
+[xUnit.net 00:00:00.45]   Discovering: GameGuild.API.Tests&#xD;
+[xUnit.net 00:00:00.62]   Discovered:  GameGuild.API.Tests&#xD;
+[xUnit.net 00:00:00.65]   Starting:    GameGuild.API.Tests&#xD;
+[11:48:31 INF] Starting GameGuild API&#xD;
+info: GameGuild.Core.Modules.ModuleBase[0]&#xD;
+      Configuring services for Authorization v1.0.0&#xD;
+info: GameGuild.Core.Modules.ModuleBase[0]&#xD;
+      Configuring services for Authorization v1.0.0&#xD;
+?? AddCoreInfrastructure called&#xD;
+? IDomainEventPublisher registered&#xD;
+? IUserContext registered&#xD;
+? ITenantContext registered&#xD;
+? IPermissionsContext registered&#xD;
+? IResourceContext registered&#xD;
+? ILocalizationContext registered&#xD;
+? HttpContextAccessor registered&#xD;
+?? AddCoreInfrastructure completed successfully&#xD;
+?? AddCoreServices called&#xD;
+? ITenantIsolationService registered&#xD;
+? IRoleTemplateService registered&#xD;
+? IUsernameNormalizationService registered&#xD;
+? IUserPrivacyService registered&#xD;
+?? AddCoreServices completed successfully&#xD;
+[xUnit.net 00:00:00.86]       System.InvalidOperationException : No service for type 'GameGuild.IPermissionService' has been registered.&#xD;
+[xUnit.net 00:00:00.86]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.86]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+[xUnit.net 00:00:00.86]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+[xUnit.net 00:00:00.86]         W:\repositories\game-guild\game-guild\apps\api\Source\Modules\Authorization\Attributes\RequireTenantPermissionAttribute.cs(16,0): at GameGuild.RequireTenantPermissionAttribute.OnAuthorizationAsync(AuthorizationFilterContext context)&#xD;
+[xUnit.net 00:00:00.86]         W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Unit\DACAuthorizationAttributeTests.cs(137,0): at GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_FallbackToLegacyService_ShouldWork()&#xD;
+[xUnit.net 00:00:00.86]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:00.87]       System.InvalidOperationException : No service for type 'GameGuild.IPermissionService' has been registered.&#xD;
+[xUnit.net 00:00:00.87]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.87]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+[xUnit.net 00:00:00.87]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+[xUnit.net 00:00:00.87]         W:\repositories\game-guild\game-guild\apps\api\Source\Modules\Authorization\Attributes\RequireTenantPermissionAttribute.cs(16,0): at GameGuild.RequireTenantPermissionAttribute.OnAuthorizationAsync(AuthorizationFilterContext context)&#xD;
+[xUnit.net 00:00:00.87]         W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Unit\DACAuthorizationAttributeTests.cs(70,0): at GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithValidPermission_ShouldAllow()&#xD;
+[xUnit.net 00:00:00.87]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:00.87]       System.InvalidOperationException : No service for type 'GameGuild.IPermissionService' has been registered.&#xD;
+[xUnit.net 00:00:00.87]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.87]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+[xUnit.net 00:00:00.87]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+[xUnit.net 00:00:00.87]         W:\repositories\game-guild\game-guild\apps\api\Source\Modules\Authorization\Attributes\RequireTenantPermissionAttribute.cs(16,0): at GameGuild.RequireTenantPermissionAttribute.OnAuthorizationAsync(AuthorizationFilterContext context)&#xD;
+[xUnit.net 00:00:00.87]         W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Unit\DACAuthorizationAttributeTests.cs(102,0): at GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithInvalidUserId_ShouldReturnUnauthorized()&#xD;
+[xUnit.net 00:00:00.87]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:00.87]       System.InvalidOperationException : No service for type 'GameGuild.IPermissionService' has been registered.&#xD;
+[xUnit.net 00:00:00.87]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.87]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+[xUnit.net 00:00:00.87]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+[xUnit.net 00:00:00.87]         W:\repositories\game-guild\game-guild\apps\api\Source\Modules\Authorization\Attributes\RequireTenantPermissionAttribute.cs(16,0): at GameGuild.RequireTenantPermissionAttribute.OnAuthorizationAsync(AuthorizationFilterContext context)&#xD;
+[xUnit.net 00:00:00.87]         W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Unit\DACAuthorizationAttributeTests.cs(84,0): at GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithoutPermission_ShouldDeny()&#xD;
+[xUnit.net 00:00:00.87]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:00.87]       System.InvalidOperationException : No service for type 'GameGuild.IPermissionService' has been registered.&#xD;
+[xUnit.net 00:00:00.87]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.87]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+[xUnit.net 00:00:00.87]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+[xUnit.net 00:00:00.87]         W:\repositories\game-guild\game-guild\apps\api\Source\Modules\Authorization\Attributes\RequireTenantPermissionAttribute.cs(16,0): at GameGuild.RequireTenantPermissionAttribute.OnAuthorizationAsync(AuthorizationFilterContext context)&#xD;
+[xUnit.net 00:00:00.87]         W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Unit\DACAuthorizationAttributeTests.cs(120,0): at GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithInvalidTenantId_ShouldReturnUnauthorized()&#xD;
+[xUnit.net 00:00:00.87]         --- End of stack trace from previous location ---&#xD;
+[xUnit.net 00:00:00.87]       System.InvalidOperationException : No service for type 'GameGuild.IPermissionService' has been registered.&#xD;
+[xUnit.net 00:00:00.87]       Stack Trace:&#xD;
+[xUnit.net 00:00:00.87]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService(IServiceProvider provider, Type serviceType)&#xD;
+[xUnit.net 00:00:00.87]            at Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService[T](IServiceProvider provider)&#xD;
+[xUnit.net 00:00:00.87]         W:\repositories\game-guild\game-guild\apps\api\Source\Modules\Authorization\Attributes\RequireTenantPermissionAttribute.cs(16,0): at GameGuild.RequireTenantPermissionAttribute.OnAuthorizationAsync(AuthorizationFilterContext context)&#xD;
+[xUnit.net 00:00:00.87]         W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Unit\DACAuthorizationAttributeTests.cs(152,0): at GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_ExceptionDuringCheck_ShouldDeny()&#xD;
+[xUnit.net 00:00:00.87]         --- End of stack trace from previous location ---&#xD;
+info: GameGuild.Core.Modules.ModuleBase[0]&#xD;
+      Configuring services for Authentication v2.0.0&#xD;
+info: GameGuild.Modules.Authentication.JwtOptions[0]&#xD;
+      JWT Configuration Debug: SecretKey from config = 'game-guild-super-secret-key-for-development-only-minimum-32-characters', Issuer = 'GameGuild.API', Audience = 'GameGuild.Users'&#xD;
+info: GameGuild.Modules.Authentication.JwtOptions[0]&#xD;
+      JWT SecretKey loaded from configuration: 70 characters&#xD;
+info: GameGuild.Core.Modules.ModuleBase[0]&#xD;
+      Configuring services for Programs v2.0.0&#xD;
+info: GameGuild.Core.Modules.ModuleBase[0]&#xD;
+      Configuring services for Billing v1.0.0&#xD;
+info: GameGuild.Core.Modules.ModuleBase[0]&#xD;
+      Configuring services for Payments v1.0.0&#xD;
+info: GameGuild.Core.Modules.ModuleBase[0]&#xD;
+      Configuring services for TestingLab v1.0.0&#xD;
+info: GameGuild.Core.Modules.ModuleBase[0]&#xD;
+      Configuring services for Posts v1.0.0&#xD;
+info: GameGuild.Core.Modules.ModuleBase[0]&#xD;
+      Configuring services for Authorization v1.0.0&#xD;
+[2025-09-22 11:48:32.261 -03:00 INF]  GameGuild API starting on Development &#xD;
+[11:48:32 INF] [] GameGuild API starting on Development {"EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 20, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:32.528 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request started: GET /payments &#xD;
+[11:48:32 INF] [Core] Request started: GET /payments {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7E", "RequestPath": "/payments", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "b3d4bcf4-0099-4154-9dbd-5ad4c83db121", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:32.538 -03:00 WRN] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware Failed to determine the https port for redirect. &#xD;
+[11:48:32 WRN] [System] Failed to determine the https port for redirect. {"EventId": {"Id": 3, "Name": "FailedToDeterminePort"}, "SourceContext": "Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware", "RequestId": "0HNFPSSCVLQ7E", "RequestPath": "/payments", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "b3d4bcf4-0099-4154-9dbd-5ad4c83db121", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:32.735 -03:00 WRN] GameGuild.Core.Middleware.RequestLoggingMiddleware Request completed: GET /payments responded 405 in 215.9261ms &#xD;
+[11:48:32 WRN] [Core] Request completed: GET /payments responded 405 in 215.9261ms {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7E", "RequestPath": "/payments", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "b3d4bcf4-0099-4154-9dbd-5ad4c83db121", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:32.752 -03:00 WRN] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /payments responded 405 in 233.0850 ms &#xD;
+[11:48:32 WRN] [System] HTTP GET /payments responded 405 in 233.0850 ms {"RequestHost": "localhost", "RequestScheme": "http", "UserAgent": null, "RemoteIP": null, "UserId": "b1586667-b905-47cf-8d8a-3d012e2b5468", "TenantId": "9bc982e6-6b6b-46a2-bad8-d5f4fe44c735", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "CorrelationId": "4809b467-ee36-4561-9174-16344ddcdfe8", "RequestId": "0HNFPSSCVLQ7E", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+Activity.TraceId:            49c14bcff70f2bc8521a813fec2ef34b&#xD;
+Activity.SpanId:             8bbc8bb5d2fcf1ed&#xD;
+Activity.TraceFlags:         Recorded&#xD;
+Activity.ActivitySourceName: Microsoft.AspNetCore&#xD;
+Activity.DisplayName:        GET&#xD;
+Activity.Kind:               Server&#xD;
+Activity.StartTime:          2025-09-22T14:48:32.5059639Z&#xD;
+Activity.Duration:           00:00:00.2536191&#xD;
+Activity.Tags:&#xD;
+    server.address: localhost&#xD;
+    http.request.method: GET&#xD;
+    url.scheme: http&#xD;
+    url.path: /payments&#xD;
+    network.protocol.version: 1.1&#xD;
+    http.response.status_code: 405&#xD;
+    http.response.correlation_id: b3d4bcf4-0099-4154-9dbd-5ad4c83db121&#xD;
+Resource associated with Activity:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+[2025-09-22 11:48:32.779 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request started: GET /tenants &#xD;
+[11:48:32 INF] [Core] Request started: GET /tenants {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7F", "RequestPath": "/tenants", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "609cb682-8a43-4770-97e0-bceec23be2f7", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:35.745 -03:00 WRN] Microsoft.EntityFrameworkCore.Model.Validation The foreign key property 'TenantSettings.TenantId1' was created in shadow state because a conflicting property with the simple name 'TenantId' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core. &#xD;
+[11:48:35 WRN] [System] The foreign key property 'TenantSettings.TenantId1' was created in shadow state because a conflicting property with the simple name 'TenantId' exists in the entity type, but is either not mapped, is already used for another relationship, or is incompatible with the associated primary key type. See https://aka.ms/efcore-relationships for information on mapping relationships in EF Core. {"EventId": {"Id": 10625, "Name": "Microsoft.EntityFrameworkCore.Model.Validation.ShadowForeignKeyPropertyCreated"}, "SourceContext": "Microsoft.EntityFrameworkCore.Model.Validation", "ActionId": "8db5419b-ace8-4174-8ffb-d1f2b11220cd", "ActionName": "GameGuild.Modules.Tenants.TenantsController.GetAllTenants (GameGuild.API)", "RequestId": "0HNFPSSCVLQ7F", "RequestPath": "/tenants", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "609cb682-8a43-4770-97e0-bceec23be2f7", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.109 -03:00 INF] GameGuild.Modules.Tenants.GetAllTenantsHandler Retrieved 0 tenants &#xD;
+[11:48:36 INF] [Tenants] Retrieved 0 tenants {"SourceContext": "GameGuild.Modules.Tenants.GetAllTenantsHandler", "ActionId": "8db5419b-ace8-4174-8ffb-d1f2b11220cd", "ActionName": "GameGuild.Modules.Tenants.TenantsController.GetAllTenants (GameGuild.API)", "RequestId": "0HNFPSSCVLQ7F", "RequestPath": "/tenants", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "609cb682-8a43-4770-97e0-bceec23be2f7", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Handler", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.219 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request completed: GET /tenants responded 200 in 3440.6689ms &#xD;
+[11:48:36 INF] [Core] Request completed: GET /tenants responded 200 in 3440.6689ms {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7F", "RequestPath": "/tenants", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "609cb682-8a43-4770-97e0-bceec23be2f7", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.220 -03:00 WRN] GameGuild.Core.Middleware.RequestLoggingMiddleware Slow request detected: GET /tenants took 3440.6689ms (threshold: 1000ms) &#xD;
+[11:48:36 WRN] [Core] Slow request detected: GET /tenants took 3440.6689ms (threshold: 1000ms) {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7F", "RequestPath": "/tenants", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "609cb682-8a43-4770-97e0-bceec23be2f7", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.223 -03:00 INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /tenants responded 200 in 3443.9825 ms &#xD;
+[11:48:36 INF] [System] HTTP GET /tenants responded 200 in 3443.9825 ms {"RequestHost": "localhost", "RequestScheme": "http", "UserAgent": null, "RemoteIP": null, "UserId": "1ddc3995-b1a4-4505-93e5-befe24e0ac54", "TenantId": "d36823d9-d67b-4ecd-8f16-c627f58844cb", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "CorrelationId": "96ac4212-20b6-4118-952e-d9644815c39f", "RequestId": "0HNFPSSCVLQ7F", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+Activity.TraceId:            dba50fbb21b2e4f0bfc93220389999c3&#xD;
+Activity.SpanId:             f886c356d0fcf20c&#xD;
+Activity.TraceFlags:         Recorded&#xD;
+Activity.ActivitySourceName: Microsoft.AspNetCore&#xD;
+Activity.DisplayName:        GET tenants&#xD;
+Activity.Kind:               Server&#xD;
+Activity.StartTime:          2025-09-22T14:48:32.7788519Z&#xD;
+Activity.Duration:           00:00:03.4478753&#xD;
+Activity.Tags:&#xD;
+    server.address: localhost&#xD;
+    http.request.method: GET&#xD;
+    url.scheme: http&#xD;
+    url.path: /tenants&#xD;
+    network.protocol.version: 1.1&#xD;
+    http.route: tenants&#xD;
+    http.response.status_code: 200&#xD;
+    http.response.correlation_id: 609cb682-8a43-4770-97e0-bceec23be2f7&#xD;
+Resource associated with Activity:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+[2025-09-22 11:48:36.228 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request started: GET /users &#xD;
+[11:48:36 INF] [Core] Request started: GET /users {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7G", "RequestPath": "/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "0dd8107c-5f83-4d5a-84a2-24ba8a4e633a", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.232 -03:00 WRN] GameGuild.Core.Middleware.RequestLoggingMiddleware Request completed: GET /users responded 404 in 3.8615ms &#xD;
+[11:48:36 WRN] [Core] Request completed: GET /users responded 404 in 3.8615ms {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7G", "RequestPath": "/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "0dd8107c-5f83-4d5a-84a2-24ba8a4e633a", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.233 -03:00 WRN] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /users responded 404 in 4.3231 ms &#xD;
+[11:48:36 WRN] [System] HTTP GET /users responded 404 in 4.3231 ms {"RequestHost": "localhost", "RequestScheme": "http", "UserAgent": null, "RemoteIP": null, "UserId": "58fdcb88-a650-4fb6-8125-21dea312d182", "TenantId": "6aa794fe-0954-49d7-b3c6-bc343f338858", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "CorrelationId": "e0b8d394-cc58-48fd-85e0-0f74b84b1213", "RequestId": "0HNFPSSCVLQ7G", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+Activity.TraceId:            7d299fc5651f082d914f8631d1fdec47&#xD;
+Activity.SpanId:             26d45bb4ab69e496&#xD;
+Activity.TraceFlags:         Recorded&#xD;
+Activity.ActivitySourceName: Microsoft.AspNetCore&#xD;
+Activity.DisplayName:        GET&#xD;
+Activity.Kind:               Server&#xD;
+Activity.StartTime:          2025-09-22T14:48:36.2284976Z&#xD;
+Activity.Duration:           00:00:00.0064146&#xD;
+Activity.Tags:&#xD;
+    server.address: localhost&#xD;
+    http.request.method: GET&#xD;
+    url.scheme: http&#xD;
+    url.path: /users&#xD;
+    network.protocol.version: 1.1&#xD;
+    http.response.status_code: 404&#xD;
+    http.response.correlation_id: 0dd8107c-5f83-4d5a-84a2-24ba8a4e633a&#xD;
+Resource associated with Activity:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+[2025-09-22 11:48:36.238 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request started: GET /api/users &#xD;
+[11:48:36 INF] [Core] Request started: GET /api/users {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7H", "RequestPath": "/api/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "5dc49036-4b85-4f7a-a38d-c2f68bfa207a", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.323 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request completed: GET /api/users responded 200 in 85.3704ms &#xD;
+[11:48:36 INF] [Core] Request completed: GET /api/users responded 200 in 85.3704ms {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7H", "RequestPath": "/api/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "5dc49036-4b85-4f7a-a38d-c2f68bfa207a", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.325 -03:00 INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /api/users responded 200 in 86.4882 ms &#xD;
+[11:48:36 INF] [System] HTTP GET /api/users responded 200 in 86.4882 ms {"RequestHost": "localhost", "RequestScheme": "http", "UserAgent": null, "RemoteIP": null, "UserId": "405b50f3-22b4-4b9b-ba67-c796b16093c2", "TenantId": "54410dbf-ffb2-43e1-ab99-b578ff27b253", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "CorrelationId": "8163a36b-d6d7-4968-8ecc-39ea5f09067a", "RequestId": "0HNFPSSCVLQ7H", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+Activity.TraceId:            ceb822ac530d022ebf891e96681b108e&#xD;
+Activity.SpanId:             c4f5e4137026f163&#xD;
+Activity.TraceFlags:         Recorded&#xD;
+Activity.ActivitySourceName: Microsoft.AspNetCore&#xD;
+Activity.DisplayName:        GET api/users&#xD;
+Activity.Kind:               Server&#xD;
+Activity.StartTime:          2025-09-22T14:48:36.2384028Z&#xD;
+Activity.Duration:           00:00:00.0875528&#xD;
+Activity.Tags:&#xD;
+    server.address: localhost&#xD;
+    http.request.method: GET&#xD;
+    url.scheme: http&#xD;
+    url.path: /api/users&#xD;
+    network.protocol.version: 1.1&#xD;
+    http.route: api/users&#xD;
+    http.response.status_code: 200&#xD;
+    http.response.correlation_id: 5dc49036-4b85-4f7a-a38d-c2f68bfa207a&#xD;
+Resource associated with Activity:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+[2025-09-22 11:48:36.330 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request started: GET /tenants &#xD;
+[11:48:36 INF] [Core] Request started: GET /tenants {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7I", "RequestPath": "/tenants", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "c3c0ea28-a720-4e05-81de-92975d40a021", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.385 -03:00 INF] GameGuild.Modules.Tenants.GetAllTenantsHandler Retrieved 0 tenants &#xD;
+[11:48:36 INF] [Tenants] Retrieved 0 tenants {"SourceContext": "GameGuild.Modules.Tenants.GetAllTenantsHandler", "ActionId": "8db5419b-ace8-4174-8ffb-d1f2b11220cd", "ActionName": "GameGuild.Modules.Tenants.TenantsController.GetAllTenants (GameGuild.API)", "RequestId": "0HNFPSSCVLQ7I", "RequestPath": "/tenants", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "c3c0ea28-a720-4e05-81de-92975d40a021", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Handler", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.386 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request completed: GET /tenants responded 200 in 55.822ms &#xD;
+[11:48:36 INF] [Core] Request completed: GET /tenants responded 200 in 55.822ms {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7I", "RequestPath": "/tenants", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "c3c0ea28-a720-4e05-81de-92975d40a021", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.387 -03:00 INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /tenants responded 200 in 56.5389 ms &#xD;
+[11:48:36 INF] [System] HTTP GET /tenants responded 200 in 56.5389 ms {"RequestHost": "localhost", "RequestScheme": "http", "UserAgent": null, "RemoteIP": null, "UserId": "14bfaacf-3ae2-45d3-8a60-e7678d1963a4", "TenantId": "9bd7a640-7e49-4459-b010-507983225eb0", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "CorrelationId": "b11b9dca-eb82-45dc-be5b-25c59907658f", "RequestId": "0HNFPSSCVLQ7I", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+Activity.TraceId:            aebcb8a63086ce3a5c5578c6159d7692&#xD;
+Activity.SpanId:             c8fc3d0d264922d8&#xD;
+Activity.TraceFlags:         Recorded&#xD;
+Activity.ActivitySourceName: Microsoft.AspNetCore&#xD;
+Activity.DisplayName:        GET tenants&#xD;
+Activity.Kind:               Server&#xD;
+Activity.StartTime:          2025-09-22T14:48:36.3303364Z&#xD;
+Activity.Duration:           00:00:00.0572902&#xD;
+Activity.Tags:&#xD;
+    server.address: localhost&#xD;
+    http.request.method: GET&#xD;
+    url.scheme: http&#xD;
+    url.path: /tenants&#xD;
+    network.protocol.version: 1.1&#xD;
+    http.route: tenants&#xD;
+    http.response.status_code: 200&#xD;
+    http.response.correlation_id: c3c0ea28-a720-4e05-81de-92975d40a021&#xD;
+Resource associated with Activity:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+[2025-09-22 11:48:36.392 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request started: GET /api/tenants &#xD;
+[11:48:36 INF] [Core] Request started: GET /api/tenants {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7J", "RequestPath": "/api/tenants", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "51bcf754-72f5-476d-8cca-10b5a0a9a66f", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.394 -03:00 WRN] GameGuild.Core.Middleware.RequestLoggingMiddleware Request completed: GET /api/tenants responded 404 in 2.5609ms &#xD;
+[11:48:36 WRN] [Core] Request completed: GET /api/tenants responded 404 in 2.5609ms {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7J", "RequestPath": "/api/tenants", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "51bcf754-72f5-476d-8cca-10b5a0a9a66f", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.395 -03:00 WRN] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /api/tenants responded 404 in 3.0435 ms &#xD;
+[11:48:36 WRN] [System] HTTP GET /api/tenants responded 404 in 3.0435 ms {"RequestHost": "localhost", "RequestScheme": "http", "UserAgent": null, "RemoteIP": null, "UserId": "a0f4032c-de1c-48f5-a1ba-3193ae318f4f", "TenantId": "98bf0607-0c2e-4761-a9e6-ddff9a2c41dc", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "CorrelationId": "c3c96cfb-b976-416a-bd33-016647a3d475", "RequestId": "0HNFPSSCVLQ7J", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+Activity.TraceId:            af916991447a8a2d0fea286276c94de7&#xD;
+Activity.SpanId:             f822a87f67c42137&#xD;
+Activity.TraceFlags:         Recorded&#xD;
+Activity.ActivitySourceName: Microsoft.AspNetCore&#xD;
+Activity.DisplayName:        GET&#xD;
+Activity.Kind:               Server&#xD;
+Activity.StartTime:          2025-09-22T14:48:36.3919746Z&#xD;
+Activity.Duration:           00:00:00.0039532&#xD;
+Activity.Tags:&#xD;
+    server.address: localhost&#xD;
+    http.request.method: GET&#xD;
+    url.scheme: http&#xD;
+    url.path: /api/tenants&#xD;
+    network.protocol.version: 1.1&#xD;
+    http.response.status_code: 404&#xD;
+    http.response.correlation_id: 51bcf754-72f5-476d-8cca-10b5a0a9a66f&#xD;
+Resource associated with Activity:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+[2025-09-22 11:48:36.400 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request started: GET /users &#xD;
+[11:48:36 INF] [Core] Request started: GET /users {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7K", "RequestPath": "/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "61949f04-ce11-466a-9679-bd0e67228490", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.401 -03:00 WRN] GameGuild.Core.Middleware.RequestLoggingMiddleware Request completed: GET /users responded 404 in 0.9054ms &#xD;
+[11:48:36 WRN] [Core] Request completed: GET /users responded 404 in 0.9054ms {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7K", "RequestPath": "/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "61949f04-ce11-466a-9679-bd0e67228490", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.401 -03:00 WRN] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /users responded 404 in 1.2746 ms &#xD;
+[11:48:36 WRN] [System] HTTP GET /users responded 404 in 1.2746 ms {"RequestHost": "localhost", "RequestScheme": "http", "UserAgent": null, "RemoteIP": null, "UserId": "2e4154fa-b48d-44bd-85bf-cb73bf00d98c", "TenantId": "32fae53e-cd30-4786-9d67-1a9c4a1286d0", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "CorrelationId": "e21008e8-289a-41ab-afde-ada6a5ef1b71", "RequestId": "0HNFPSSCVLQ7K", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+Activity.TraceId:            1e93a7b9061e51a118cd243c6214e7ea&#xD;
+Activity.SpanId:             71f4d12f8c92de99&#xD;
+Activity.TraceFlags:         Recorded&#xD;
+Activity.ActivitySourceName: Microsoft.AspNetCore&#xD;
+Activity.DisplayName:        GET&#xD;
+Activity.Kind:               Server&#xD;
+Activity.StartTime:          2025-09-22T14:48:36.4002717Z&#xD;
+Activity.Duration:           00:00:00.0021382&#xD;
+Activity.Tags:&#xD;
+    server.address: localhost&#xD;
+    http.request.method: GET&#xD;
+    url.scheme: http&#xD;
+    url.path: /users&#xD;
+    network.protocol.version: 1.1&#xD;
+    http.response.status_code: 404&#xD;
+    http.response.correlation_id: 61949f04-ce11-466a-9679-bd0e67228490&#xD;
+Resource associated with Activity:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+[2025-09-22 11:48:36.406 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request started: GET /api/users &#xD;
+[11:48:36 INF] [Core] Request started: GET /api/users {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7L", "RequestPath": "/api/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "72521044-5b95-4d18-bc7e-f80e1d80ac93", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.412 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request completed: GET /api/users responded 200 in 6.5134ms &#xD;
+[11:48:36 INF] [Core] Request completed: GET /api/users responded 200 in 6.5134ms {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7L", "RequestPath": "/api/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "72521044-5b95-4d18-bc7e-f80e1d80ac93", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.413 -03:00 INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /api/users responded 200 in 7.4597 ms &#xD;
+[11:48:36 INF] [System] HTTP GET /api/users responded 200 in 7.4597 ms {"RequestHost": "localhost", "RequestScheme": "http", "UserAgent": null, "RemoteIP": null, "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "CorrelationId": "1efa621a-6ed8-4439-9a18-6b8e69499fae", "RequestId": "0HNFPSSCVLQ7L", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+Activity.TraceId:            67c9c9766adfd55dfc095e4dce665078&#xD;
+Activity.SpanId:             1547a82e11ec072e&#xD;
+Activity.TraceFlags:         Recorded&#xD;
+Activity.ActivitySourceName: Microsoft.AspNetCore&#xD;
+Activity.DisplayName:        GET api/users&#xD;
+Activity.Kind:               Server&#xD;
+Activity.StartTime:          2025-09-22T14:48:36.4060300Z&#xD;
+Activity.Duration:           00:00:00.0083557&#xD;
+Activity.Tags:&#xD;
+    server.address: localhost&#xD;
+    http.request.method: GET&#xD;
+    url.scheme: http&#xD;
+    url.path: /api/users&#xD;
+    network.protocol.version: 1.1&#xD;
+    http.route: api/users&#xD;
+    http.response.status_code: 200&#xD;
+    http.response.correlation_id: 72521044-5b95-4d18-bc7e-f80e1d80ac93&#xD;
+Resource associated with Activity:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+[xUnit.net 00:00:05.80]       Expected Unauthorized or Forbidden, but got OK&#xD;
+[xUnit.net 00:00:05.80]       Stack Trace:&#xD;
+[xUnit.net 00:00:05.80]         W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Integration\AuthorizationIntegrationTests.cs(38,0): at GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ProtectedEndpoint_WithoutAuth_ShouldReturnUnauthorized()&#xD;
+[xUnit.net 00:00:05.80]         --- End of stack trace from previous location ---&#xD;
+[2025-09-22 11:48:36.419 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request started: GET /api/users &#xD;
+[11:48:36 INF] [Core] Request started: GET /api/users {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7M", "RequestPath": "/api/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "c91bfe66-a5e4-4996-bc15-8579d7558c8f", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.420 -03:00 WRN] Microsoft.AspNetCore.Authentication.JwtBearer.AuthenticationFailedContext JWT authentication failed: IDX14100: JWT is not well formed, there are no dots (.).&#xD;
+The token needs to be in JWS or JWE Compact Serialization Format. (JWS): 'EncodedHeader.EncodedPayload.EncodedSignature'. (JWE): 'EncodedProtectedHeader.EncodedEncryptedKey.EncodedInitializationVector.EncodedCiphertext.EncodedAuthenticationTag'. for path /api/users &#xD;
+[11:48:36 WRN] [System] JWT authentication failed: IDX14100: JWT is not well formed, there are no dots (.).&#xD;
+The token needs to be in JWS or JWE Compact Serialization Format. (JWS): 'EncodedHeader.EncodedPayload.EncodedSignature'. (JWE): 'EncodedProtectedHeader.EncodedEncryptedKey.EncodedInitializationVector.EncodedCiphertext.EncodedAuthenticationTag'. for path /api/users {"SourceContext": "Microsoft.AspNetCore.Authentication.JwtBearer.AuthenticationFailedContext", "RequestId": "0HNFPSSCVLQ7M", "RequestPath": "/api/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "c91bfe66-a5e4-4996-bc15-8579d7558c8f", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.424 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request completed: GET /api/users responded 200 in 5.6403ms &#xD;
+[11:48:36 INF] [Core] Request completed: GET /api/users responded 200 in 5.6403ms {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7M", "RequestPath": "/api/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "c91bfe66-a5e4-4996-bc15-8579d7558c8f", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.425 -03:00 INF] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /api/users responded 200 in 6.4459 ms &#xD;
+[11:48:36 INF] [System] HTTP GET /api/users responded 200 in 6.4459 ms {"RequestHost": "localhost", "RequestScheme": "http", "UserAgent": null, "RemoteIP": null, "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "CorrelationId": "bc018092-5ad7-43b5-9ee8-8a9d5f4031f6", "RequestId": "0HNFPSSCVLQ7M", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+Activity.TraceId:            84932e0a55cc91785355556191e55d98&#xD;
+Activity.SpanId:             9277f8c3f5dcf152&#xD;
+Activity.TraceFlags:         Recorded&#xD;
+Activity.ActivitySourceName: Microsoft.AspNetCore&#xD;
+Activity.DisplayName:        GET api/users&#xD;
+Activity.Kind:               Server&#xD;
+Activity.StartTime:          2025-09-22T14:48:36.4189801Z&#xD;
+Activity.Duration:           00:00:00.0072440&#xD;
+Activity.Tags:&#xD;
+    server.address: localhost&#xD;
+    http.request.method: GET&#xD;
+    url.scheme: http&#xD;
+    url.path: /api/users&#xD;
+    network.protocol.version: 1.1&#xD;
+    http.route: api/users&#xD;
+    http.response.status_code: 200&#xD;
+    http.response.correlation_id: c91bfe66-a5e4-4996-bc15-8579d7558c8f&#xD;
+Resource associated with Activity:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+[xUnit.net 00:00:05.81]       Expected Unauthorized or Forbidden, but got OK&#xD;
+[xUnit.net 00:00:05.81]       Stack Trace:&#xD;
+[xUnit.net 00:00:05.81]         W:\repositories\game-guild\game-guild\apps\api\Tests\Source\Modules\Authorization\Integration\AuthorizationIntegrationTests.cs(69,0): at GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ProtectedEndpoint_WithInvalidAuth_ShouldReturnUnauthorized()&#xD;
+[xUnit.net 00:00:05.81]         --- End of stack trace from previous location ---&#xD;
+[2025-09-22 11:48:36.430 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request started: GET /users &#xD;
+[11:48:36 INF] [Core] Request started: GET /users {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7N", "RequestPath": "/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "cbebc514-b7f6-45c9-ac7f-63acdc42202d", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.431 -03:00 WRN] GameGuild.Core.Middleware.RequestLoggingMiddleware Request completed: GET /users responded 404 in 1.0696ms &#xD;
+[11:48:36 WRN] [Core] Request completed: GET /users responded 404 in 1.0696ms {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7N", "RequestPath": "/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "cbebc514-b7f6-45c9-ac7f-63acdc42202d", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.431 -03:00 WRN] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /users responded 404 in 1.5613 ms &#xD;
+[11:48:36 WRN] [System] HTTP GET /users responded 404 in 1.5613 ms {"RequestHost": "localhost", "RequestScheme": "http", "UserAgent": null, "RemoteIP": null, "UserId": "b6de47d5-d693-4f54-8d8c-32f8c1dae686", "TenantId": "e8ac1017-7fd0-487c-a0db-046368a9f604", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "CorrelationId": "6f00f348-4cad-4f62-bed6-702757fdced0", "RequestId": "0HNFPSSCVLQ7N", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+Activity.TraceId:            f15b44c223d223e13a9bdca2421e9bac&#xD;
+Activity.SpanId:             c9c8e6d85c120358&#xD;
+Activity.TraceFlags:         Recorded&#xD;
+Activity.ActivitySourceName: Microsoft.AspNetCore&#xD;
+Activity.DisplayName:        GET&#xD;
+Activity.Kind:               Server&#xD;
+Activity.StartTime:          2025-09-22T14:48:36.4301897Z&#xD;
+Activity.Duration:           00:00:00.0026573&#xD;
+Activity.Tags:&#xD;
+    server.address: localhost&#xD;
+    http.request.method: GET&#xD;
+    url.scheme: http&#xD;
+    url.path: /users&#xD;
+    network.protocol.version: 1.1&#xD;
+    http.response.status_code: 404&#xD;
+    http.response.correlation_id: cbebc514-b7f6-45c9-ac7f-63acdc42202d&#xD;
+Resource associated with Activity:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+[2025-09-22 11:48:36.434 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request started: GET /users &#xD;
+[11:48:36 INF] [Core] Request started: GET /users {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7O", "RequestPath": "/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "24577bd6-acbb-4afd-ae3a-1ef29341d268", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.435 -03:00 WRN] GameGuild.Core.Middleware.RequestLoggingMiddleware Request completed: GET /users responded 404 in 1.1055ms &#xD;
+[11:48:36 WRN] [Core] Request completed: GET /users responded 404 in 1.1055ms {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7O", "RequestPath": "/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "24577bd6-acbb-4afd-ae3a-1ef29341d268", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.436 -03:00 WRN] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /users responded 404 in 1.5395 ms &#xD;
+[11:48:36 WRN] [System] HTTP GET /users responded 404 in 1.5395 ms {"RequestHost": "localhost", "RequestScheme": "http", "UserAgent": null, "RemoteIP": null, "UserId": "b6de47d5-d693-4f54-8d8c-32f8c1dae686", "TenantId": "e8ac1017-7fd0-487c-a0db-046368a9f604", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "CorrelationId": "d2408751-b243-482a-8637-b4e81dc25ed7", "RequestId": "0HNFPSSCVLQ7O", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+Activity.TraceId:            16c27ecbe396dd4facf713b2fd1d91b4&#xD;
+Activity.SpanId:             05dc963992c413f1&#xD;
+Activity.TraceFlags:         Recorded&#xD;
+Activity.ActivitySourceName: Microsoft.AspNetCore&#xD;
+Activity.DisplayName:        GET&#xD;
+Activity.Kind:               Server&#xD;
+Activity.StartTime:          2025-09-22T14:48:36.4345652Z&#xD;
+Activity.Duration:           00:00:00.0021441&#xD;
+Activity.Tags:&#xD;
+    server.address: localhost&#xD;
+    http.request.method: GET&#xD;
+    url.scheme: http&#xD;
+    url.path: /users&#xD;
+    network.protocol.version: 1.1&#xD;
+    http.response.status_code: 404&#xD;
+    http.response.correlation_id: 24577bd6-acbb-4afd-ae3a-1ef29341d268&#xD;
+Resource associated with Activity:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+[2025-09-22 11:48:36.437 -03:00 INF] GameGuild.Core.Middleware.RequestLoggingMiddleware Request started: GET /users &#xD;
+[11:48:36 INF] [Core] Request started: GET /users {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7P", "RequestPath": "/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "2aecccaf-18c8-4647-9cb2-452ec2bffeab", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.438 -03:00 WRN] GameGuild.Core.Middleware.RequestLoggingMiddleware Request completed: GET /users responded 404 in 1.151ms &#xD;
+[11:48:36 WRN] [Core] Request completed: GET /users responded 404 in 1.151ms {"SourceContext": "GameGuild.Core.Middleware.RequestLoggingMiddleware", "RequestId": "0HNFPSSCVLQ7P", "RequestPath": "/users", "UserAgent": "Unknown", "HttpMethod": "GET", "CorrelationId": "2aecccaf-18c8-4647-9cb2-452ec2bffeab", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+[2025-09-22 11:48:36.439 -03:00 WRN] Serilog.AspNetCore.RequestLoggingMiddleware HTTP GET /users responded 404 in 1.5514 ms &#xD;
+[11:48:36 WRN] [System] HTTP GET /users responded 404 in 1.5514 ms {"RequestHost": "localhost", "RequestScheme": "http", "UserAgent": null, "RemoteIP": null, "UserId": "b6de47d5-d693-4f54-8d8c-32f8c1dae686", "TenantId": "e8ac1017-7fd0-487c-a0db-046368a9f604", "SourceContext": "Serilog.AspNetCore.RequestLoggingMiddleware", "CorrelationId": "86943e80-e735-4f36-ab02-6e7d8d08178a", "RequestId": "0HNFPSSCVLQ7P", "EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 17, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "ComponentType": "Middleware", "Version": "1.0.0"}&#xD;
+Activity.TraceId:            8e0bda922b55dde0ef9a861affc617d9&#xD;
+Activity.SpanId:             98de4f09ce7fe4f4&#xD;
+Activity.TraceFlags:         Recorded&#xD;
+Activity.ActivitySourceName: Microsoft.AspNetCore&#xD;
+Activity.DisplayName:        GET&#xD;
+Activity.Kind:               Server&#xD;
+Activity.StartTime:          2025-09-22T14:48:36.4374829Z&#xD;
+Activity.Duration:           00:00:00.0045362&#xD;
+Activity.Tags:&#xD;
+    server.address: localhost&#xD;
+    http.request.method: GET&#xD;
+    url.scheme: http&#xD;
+    url.path: /users&#xD;
+    network.protocol.version: 1.1&#xD;
+    http.response.status_code: 404&#xD;
+    http.response.correlation_id: 2aecccaf-18c8-4647-9cb2-452ec2bffeab&#xD;
+Resource associated with Activity:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+[xUnit.net 00:00:05.84]   Finished:    GameGuild.API.Tests&#xD;
+Resource associated with Metric:&#xD;
+    service.instance.id: DESKTOP-H9DM97K&#xD;
+    service.namespace: GameGuild&#xD;
+    service.name: GameGuild.API&#xD;
+    telemetry.sdk.name: opentelemetry&#xD;
+    telemetry.sdk.language: dotnet&#xD;
+    telemetry.sdk.version: 1.9.0&#xD;
+Metric Name: http.server.active_requests, Number of active HTTP server requests., Unit: {request}, Meter: Microsoft.AspNetCore.Hosting&#xD;
+(2025-09-22T14:48:32.3346598Z, 2025-09-22T14:48:36.4578943Z] http.request.method: GET url.scheme: http LongSumNonMonotonic&#xD;
+Value: 0&#xD;
+Metric Name: http.server.request.duration, Duration of HTTP server requests., Unit: s, Meter: Microsoft.AspNetCore.Hosting&#xD;
+(2025-09-22T14:48:32.3350381Z, 2025-09-22T14:48:36.4580335Z] http.request.method: GET http.response.status_code: 405 network.protocol.version: 1.1 url.scheme: http Histogram&#xD;
+Value: Sum: 0.2595633 Count: 1 Min: 0.2595633 Max: 0.2595633 &#xD;
+(-Infinity,0.005]:0&#xD;
+(0.005,0.01]:0&#xD;
+(0.01,0.025]:0&#xD;
+(0.025,0.05]:0&#xD;
+(0.05,0.075]:0&#xD;
+(0.075,0.1]:0&#xD;
+(0.1,0.25]:0&#xD;
+(0.25,0.5]:1&#xD;
+(0.5,0.75]:0&#xD;
+(0.75,1]:0&#xD;
+(1,2.5]:0&#xD;
+(2.5,5]:0&#xD;
+(5,7.5]:0&#xD;
+(7.5,10]:0&#xD;
+(10,+Infinity]:0&#xD;
+(2025-09-22T14:48:32.3350381Z, 2025-09-22T14:48:36.4580335Z] http.request.method: GET http.response.status_code: 200 http.route: tenants network.protocol.version: 1.1 url.scheme: http Histogram&#xD;
+Value: Sum: 3.5050894 Count: 2 Min: 0.0572978 Max: 3.4477916 &#xD;
+(-Infinity,0.005]:0&#xD;
+(0.005,0.01]:0&#xD;
+(0.01,0.025]:0&#xD;
+(0.025,0.05]:0&#xD;
+(0.05,0.075]:1&#xD;
+(0.075,0.1]:0&#xD;
+(0.1,0.25]:0&#xD;
+(0.25,0.5]:0&#xD;
+(0.5,0.75]:0&#xD;
+(0.75,1]:0&#xD;
+(1,2.5]:0&#xD;
+(2.5,5]:1&#xD;
+(5,7.5]:0&#xD;
+(7.5,10]:0&#xD;
+(10,+Infinity]:0&#xD;
+(2025-09-22T14:48:32.3350381Z, 2025-09-22T14:48:36.4580335Z] aspnetcore.request.is_unhandled: true http.request.method: GET http.response.status_code: 404 network.protocol.version: 1.1 url.scheme: http Histogram&#xD;
+Value: Sum: 0.020960500000000003 Count: 6 Min: 0.0021455 Max: 0.0057051 &#xD;
+(-Infinity,0.005]:5&#xD;
+(0.005,0.01]:1&#xD;
+(0.01,0.025]:0&#xD;
+(0.025,0.05]:0&#xD;
+(0.05,0.075]:0&#xD;
+(0.075,0.1]:0&#xD;
+(0.1,0.25]:0&#xD;
+(0.25,0.5]:0&#xD;
+(0.5,0.75]:0&#xD;
+(0.75,1]:0&#xD;
+(1,2.5]:0&#xD;
+(2.5,5]:0&#xD;
+(5,7.5]:0&#xD;
+(7.5,10]:0&#xD;
+(10,+Infinity]:0&#xD;
+(2025-09-22T14:48:32.3350381Z, 2025-09-22T14:48:36.4580335Z] http.request.method: GET http.response.status_code: 200 http.route: api/users network.protocol.version: 1.1 url.scheme: http Histogram&#xD;
+Value: Sum: 0.1030579 Count: 3 Min: 0.0072284 Max: 0.0875236 &#xD;
+(-Infinity,0.005]:0&#xD;
+(0.005,0.01]:2&#xD;
+(0.01,0.025]:0&#xD;
+(0.025,0.05]:0&#xD;
+(0.05,0.075]:0&#xD;
+(0.075,0.1]:1&#xD;
+(0.1,0.25]:0&#xD;
+(0.25,0.5]:0&#xD;
+(0.5,0.75]:0&#xD;
+(0.75,1]:0&#xD;
+(1,2.5]:0&#xD;
+(2.5,5]:0&#xD;
+(5,7.5]:0&#xD;
+(7.5,10]:0&#xD;
+(10,+Infinity]:0&#xD;
+Metric Name: aspnetcore.routing.match_attempts, Number of requests that were attempted to be matched to an endpoint., Unit: {match_attempt}, Meter: Microsoft.AspNetCore.Routing&#xD;
+(2025-09-22T14:48:32.4250977Z, 2025-09-22T14:48:36.4580383Z] aspnetcore.routing.is_fallback: false aspnetcore.routing.match_status: success http.route: (missing) LongSum&#xD;
+Value: 1&#xD;
+(2025-09-22T14:48:32.4250977Z, 2025-09-22T14:48:36.4580383Z] aspnetcore.routing.is_fallback: false aspnetcore.routing.match_status: success http.route: tenants LongSum&#xD;
+Value: 2&#xD;
+(2025-09-22T14:48:32.4250977Z, 2025-09-22T14:48:36.4580383Z] aspnetcore.routing.match_status: failure LongSum&#xD;
+Value: 6&#xD;
+(2025-09-22T14:48:32.4250977Z, 2025-09-22T14:48:36.4580383Z] aspnetcore.routing.is_fallback: false aspnetcore.routing.match_status: success http.route: api/users LongSum&#xD;
+Value: 3&#xD;
+[2025-09-22 11:48:36.470 -03:00 INF]  GameGuild API shut down complete &#xD;
+[11:48:36 INF] [] GameGuild API shut down complete {"EnvironmentName": "Development", "ProcessId": 77016, "ThreadId": 12, "Application": "GameGuild.API", "MachineName": "DESKTOP-H9DM97K", "ProcessName": "testhost", "Version": "1.0.0"}&#xD;
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="DESKTOP-H9DM97K" outcome="Error" timestamp="2025-09-22T11:48:31.5204608-03:00">
+        <Text>[xUnit.net 00:00:00.86]     GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_FallbackToLegacyService_ShouldWork [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-H9DM97K" outcome="Error" timestamp="2025-09-22T11:48:31.5367909-03:00">
+        <Text>[xUnit.net 00:00:00.87]     GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithValidPermission_ShouldAllow [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-H9DM97K" outcome="Error" timestamp="2025-09-22T11:48:31.5371344-03:00">
+        <Text>[xUnit.net 00:00:00.87]     GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithInvalidUserId_ShouldReturnUnauthorized [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-H9DM97K" outcome="Error" timestamp="2025-09-22T11:48:31.5374673-03:00">
+        <Text>[xUnit.net 00:00:00.87]     GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithoutPermission_ShouldDeny [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-H9DM97K" outcome="Error" timestamp="2025-09-22T11:48:31.5376895-03:00">
+        <Text>[xUnit.net 00:00:00.87]     GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_WithInvalidTenantId_ShouldReturnUnauthorized [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-H9DM97K" outcome="Error" timestamp="2025-09-22T11:48:31.5379077-03:00">
+        <Text>[xUnit.net 00:00:00.87]     GameGuild.Tests.Modules.Authorization.Unit.DACAuthorizationAttributeTests.RequireTenantPermissionAttribute_ExceptionDuringCheck_ShouldDeny [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-H9DM97K" outcome="Error" timestamp="2025-09-22T11:48:36.4181196-03:00">
+        <Text>[xUnit.net 00:00:05.80]     GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ProtectedEndpoint_WithoutAuth_ShouldReturnUnauthorized [FAIL]</Text>
+      </RunInfo>
+      <RunInfo computerName="DESKTOP-H9DM97K" outcome="Error" timestamp="2025-09-22T11:48:36.4284041-03:00">
+        <Text>[xUnit.net 00:00:05.81]     GameGuild.Tests.Modules.Authorization.Integration.AuthorizationIntegrationTests.ProtectedEndpoint_WithInvalidAuth_ShouldReturnUnauthorized [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>
