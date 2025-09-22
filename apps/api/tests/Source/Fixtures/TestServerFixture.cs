@@ -2,6 +2,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using GameGuild;
+using GameGuild.Authorization.Identity;
+using GameGuild.Core.Domain.Identity;
+using GameGuild.Core.Domain.Permissions;
+using GameGuild.Core.Infrastructure.Permissions;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Credentials;
@@ -63,7 +67,7 @@ namespace GameGuild.Tests.Fixtures {
       // Configure test configuration - must match development API configuration
       var configData = new Dictionary<string, string?> {
         { "Jwt:SecretKey", _testSecret },
-        { "Jwt:Issuer", "GameGuild.CMS" },
+        { "Jwt:Issuer", "GameGuild.API" },
         { "Jwt:Audience", "GameGuild.Users" },
         { "Jwt:ExpiryInMinutes", "15" },
         { "Jwt:RefreshTokenExpiryInDays", "7" },
@@ -71,6 +75,7 @@ namespace GameGuild.Tests.Fixtures {
         { "OAuth:GitHub:ClientSecret", "test-github-secret" },
         { "OAuth:Google:ClientId", "test-google-client" },
         { "OAuth:Google:ClientSecret", "test-google-secret" },
+        { "HealthChecks:EnableRedisCheck", "false" },
       };
 
       var configuration = new ConfigurationBuilder()
@@ -97,7 +102,19 @@ namespace GameGuild.Tests.Fixtures {
         return factory.CreateDbContext();
       });
 
-      // Add application services (includes IDomainEventPublisher registration)
+      // Add infrastructure layer first (includes IDomainEventPublisher and context registrations)
+      // Disable database since we're using InMemory database configured above
+      // NOTE: The infrastructure layer already includes authentication modules, so we don't add them separately
+      var infrastructureOptions = new InfrastructureLayerOptions {
+        EnableDatabase = false,
+        EnableMessageQueue = false,
+        EnableExternalApis = false,
+        EnableFileStorage = false,
+        EnableMonitoring = false
+      };
+      services.AddInfrastructureLayer(configuration, infrastructureOptions);
+
+      // Add application services 
       services.AddApplicationLayer(configuration);
 
       // Add essential domain modules manually  
@@ -114,8 +131,7 @@ namespace GameGuild.Tests.Fixtures {
       // Add test module for infrastructure testing
       services = MockModules.TestModuleDependencyInjection.AddTestModule(services);
 
-      // Add authentication module
-      services = AuthModuleDependencyInjection.AddAuthModule(services, configuration);
+      // Authentication module is already added by AddInfrastructureLayer - no need to add again
 
       // Replace the IAuthService with a mock for testing (avoids complex dependency chain)
       services.AddScoped<IAuthService, MockAuthService>();
@@ -223,12 +239,4 @@ namespace GameGuild.Tests.Fixtures {
       Server?.Dispose();
     }
   }
-
-  // Test models, interfaces, and implementations
-
-  // Service interfaces and implementations
-
-  // Mock Tenant Service for testing
-
-  // GraphQL test types
 }
