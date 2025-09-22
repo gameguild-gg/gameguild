@@ -368,11 +368,8 @@ public class ComprehensiveUserHandlerTests : IDisposable {
     var handler = new UpdateUserBalanceHandler(_context, _balanceLogger.Object, _mediator.Object);
 
     // Act & Assert
-    // Since the handler doesn't validate negative balances, this test should pass
-    // The validation would happen at the controller/validation layer
-    var result = await handler.Handle(command, CancellationToken.None);
-    Assert.NotNull(result);
-    Assert.Equal(Money.FromDecimal(-50m), result.Balance);
+    // The Money value object should throw ArgumentException for negative amounts
+    await Assert.ThrowsAsync<ArgumentException>(async () => await handler.Handle(command, CancellationToken.None));
   }
 
   #endregion
