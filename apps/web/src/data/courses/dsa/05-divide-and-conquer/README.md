@@ -57,30 +57,9 @@ The algorthims will keep dividing the array (in red) until it reaches the base c
 #include <vector>
 #include <queue>
 
-// inplace merge without extra space
-template <typename T>
-requires std::is_arithmetic<T>::value // C++20
-void mergeInplace(std::vector<T>& arr, const size_t start, size_t mid,  const size_t end) {
-  size_t left = start;
-  size_t right = mid + 1;
-
-  while (left <= mid && right <= end) {
-    if (arr[left] <= arr[right]) {
-      left++;
-    } else {
-      T temp = arr[right];
-      for (size_t i = right; i > left; i--) {
-        arr[i] = arr[i - 1];
-      }
-      arr[left] = temp;
-      left++;
-      mid++;
-      right++;
-    }
-  }
-}
-
 // Merge two sorted halves
+// time complexity is O(n) for merging two subarrays
+// space complexity is O(n) for the temporary array
 template <typename T>
 requires std::is_arithmetic<T>::value // C++20
 void merge(std::vector<T>& arr, const size_t start, const size_t mid,  const size_t end) {
@@ -118,7 +97,34 @@ void merge(std::vector<T>& arr, const size_t start, const size_t mid,  const siz
   std::copy(temp.begin(), temp.end(), arr.begin() + start);
 }
 
-// recursive mergesort
+// inplace merge without extra space
+// this is less time efficient than the regular merge
+// but it is more space efficient
+// time complexity is O(n^2) in the worst case
+// space complexity is O(1)
+template <typename T>
+requires std::is_arithmetic<T>::value // C++20
+void mergeInplace(std::vector<T>& arr, const size_t start, size_t mid,  const size_t end) {
+  size_t left = start;
+  size_t right = mid + 1;
+
+  while (left <= mid && right <= end) {
+    if (arr[left] <= arr[right]) {
+      left++;
+    } else {
+      T temp = arr[right];
+      for (size_t i = right; i > left; i--) {
+        arr[i] = arr[i - 1];
+      }
+      arr[left] = temp;
+      left++;
+      mid++;
+      right++;
+    }
+  }
+}
+
+// recursive mergesort, it consumes more stack space
 template <typename T>
 requires std::is_arithmetic<T>::value // C++20
 void mergesortRecursive(std::vector<T>& arr,
@@ -135,6 +141,8 @@ void mergesortRecursive(std::vector<T>& arr,
 }
 
 // interactive mergesort
+// it is more space efficient than the recursive version
+// but it is more complex to understand
 template <typename T>
 requires std::is_arithmetic<T>::value // C++20
 void mergesortInteractive(std::vector<T>& arr) {
@@ -148,7 +156,6 @@ void mergesortInteractive(std::vector<T>& arr) {
     }
   }
 }
-
 
 int main() {
   std::vector<int> arr1;
@@ -170,6 +177,20 @@ int main() {
   return 0;
 }
 ```
+
+#### Merge vs Merge In-Place Performance Considerations
+
+**Merge Function:**
+- **Time**: `O(n)` - optimal linear time performance
+- **Space**: `O(n)` - requires temporary array allocation
+- **Performance**: Faster execution due to simple array copying operations
+
+**Merge In-Place Function:**
+- **Time**: `O(n^2)` worst case - due to element shifting when inserting from right subarray
+- **Space**: `O(1)` - no additional memory allocation needed
+- **Performance**: Slower because each insertion may require shifting multiple elements
+
+Regular merge is faster but uses more memory, while merge in-place uses constant space but can be significantly slower due to the nested shifting operations required when elements from the right subarray need to be inserted into the left portion.
 
 ### Mergesort space complexity
 
