@@ -9,5 +9,7 @@ public class CertificatePermission : ResourcePermission<Certificate> {
 
   // Public constructor for creating instances
   public CertificatePermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
-    : base(userId, tenantId, resourceId, permissions) { }
+    : base(userId, tenantId, resourceId) {
+    AddPermission(permissions);
+  }
 }

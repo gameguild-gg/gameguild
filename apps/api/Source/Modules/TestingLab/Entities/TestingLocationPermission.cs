@@ -6,5 +6,7 @@ namespace GameGuild.Modules.TestingLab;
 /// </summary>
 public class TestingLocationPermission : ResourcePermission<TestingLocation> {
   public TestingLocationPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
-    : base(userId, tenantId, resourceId, permissions) { }
+    : base(userId, tenantId, resourceId) {
+    AddPermission(permissions);
+  }
 }
