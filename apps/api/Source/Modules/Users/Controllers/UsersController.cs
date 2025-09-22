@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -6,7 +7,8 @@ namespace GameGuild.Modules.Users;
 
 /// <summary> REST API controller for managing users using CQRS pattern </summary>
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
+[Authorize]
 public class UsersController(IMediator mediator, ILogger<UsersController> logger) : ControllerBase {
   /// <summary> Get all users with optional filtering and pagination </summary>
   [HttpGet]

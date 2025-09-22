@@ -1,10 +1,11 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
-using System.Text.Json;
 using GameGuild.Tests.Fixtures;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Xunit.Abstractions;
 
 namespace GameGuild.Tests.Modules.Authorization.Integration;
@@ -28,7 +29,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     [Fact]
     public async Task ProtectedEndpoint_WithoutAuth_ShouldReturnUnauthorized() {
         // Arrange
-        var endpoint = "/users"; // Assuming this is a protected endpoint
+        var endpoint = "/api/users"; // Assuming this is a protected endpoint
 
         // Act
         var response = await _client.GetAsync(endpoint);
@@ -42,7 +43,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     [Fact]
     public async Task ProtectedEndpoint_WithValidAuth_ShouldSucceed() {
         // Arrange
-        var endpoint = "/users";
+        var endpoint = "/api/users";
         var token = GenerateValidJwtToken();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
@@ -58,7 +59,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     [Fact]
     public async Task ProtectedEndpoint_WithInvalidAuth_ShouldReturnUnauthorized() {
         // Arrange
-        var endpoint = "/users";
+        var endpoint = "/api/users";
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "invalid-token");
 
         // Act
@@ -89,7 +90,7 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     [Fact]
     public async Task AdminEndpoint_WithAdminRole_ShouldSucceed() {
         // Arrange
-        var endpoint = "/tenants";
+        var endpoint = "/api/tenants";
         var token = GenerateAdminJwtToken(); // Admin role token
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
@@ -205,10 +206,19 @@ public class AuthorizationIntegrationTests : IClassFixture<TestWebApplicationFac
     }
 
     private string GenerateJwtTokenWithClaims(Claim[] claims) {
-        // In a real implementation, this would generate a proper JWT token
-        // For testing purposes, we return a simple test token
-        var claimsData = string.Join(",", claims.Select(c => $"{c.Type}:{c.Value}"));
-        return Convert.ToBase64String(Encoding.UTF8.GetBytes($"test-jwt-{claimsData}"));
+        // Use the same secret as TestServerFixture
+        var testSecret = "game-guild-super-secret-key-for-development-only-minimum-32-characters";
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(testSecret);
+        var tokenDescriptor = new SecurityTokenDescriptor {
+            Subject = new ClaimsIdentity(claims),
+            Issuer = "GameGuild.API",
+            Audience = "GameGuild.Users",
+            Expires = DateTime.UtcNow.AddDays(1),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+        };
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
     }
 
     public void Dispose() {
