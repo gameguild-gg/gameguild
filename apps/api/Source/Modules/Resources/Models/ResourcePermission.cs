@@ -29,7 +29,7 @@ public abstract class ResourcePermission<T> : WithPermissions where T : EntityBa
   [GraphQLType(typeof(NonNullType<UuidType>))]
   [GraphQLDescription("The ID of the resource this permission applies to")]
   [Required]
-  public Guid ResourceId { get; init; }
+  public Guid ResourceId { get; set; }
 
   /// <summary>
   /// Navigation property to the resource entity
