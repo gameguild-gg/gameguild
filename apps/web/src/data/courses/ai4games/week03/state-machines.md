@@ -148,6 +148,11 @@ public:
 };
 ```
 
+## Performance Considerations
+
+- For the states: `O(1)` time complexity because we use switches or pointer to the state.
+- For transitions: `O(n)` time complexity where `n` is the number of transitions for the current state.
+
 ## Common Patterns
 
 ### Simple Toggle
