@@ -347,9 +347,39 @@ public class ModulePermissionService : IModulePermissionService {
 
   private async Task EnsureTestingLabDefaultRoles() {
     var testingLabRoles = new[] {
-      new { Name = "Tester", Description = "Can participate in testing sessions", Permissions = new[ ] { ModuleAction.Execute } },
-      new { Name = "TestLead", Description = "Can manage testing sessions", Permissions = new[ ] { ModuleAction.CreateSession, ModuleAction.Edit, ModuleAction.ManageTesters } },
-      new { Name = "TestAdmin", Description = "Full testing lab administration", Permissions = Enum.GetValues<ModuleAction>() },
+      new {
+        Name = "TestingLabAdmin",
+        Description = "Full testing lab administration",
+        Priority = 4,
+        Permissions = new[] {
+          ModuleAction.CreateSession, ModuleAction.DeleteSession, ModuleAction.ManageTesters,
+          ModuleAction.ViewReports, ModuleAction.ExportData, ModuleAction.Administer, ModuleAction.Edit
+        }
+      },
+      new {
+        Name = "TestingLabManager",
+        Description = "Can create/edit sessions and manage testers, view reports",
+        Priority = 3,
+        Permissions = new[] {
+          ModuleAction.CreateSession, ModuleAction.Edit, ModuleAction.ManageTesters, ModuleAction.ViewReports
+        }
+      },
+      new {
+        Name = "TestingLabCoordinator",
+        Description = "Can create sessions and manage testers",
+        Priority = 2,
+        Permissions = new[] {
+          ModuleAction.CreateSession, ModuleAction.ManageTesters
+        }
+      },
+      new {
+        Name = "TestingLabTester",
+        Description = "Can participate in testing sessions",
+        Priority = 1,
+        Permissions = new[] {
+          ModuleAction.Read
+        }
+      }
     };
 
     foreach (var roleInfo in testingLabRoles) {
@@ -363,9 +393,9 @@ public class ModulePermissionService : IModulePermissionService {
           Name = roleInfo.Name,
           Module = ModuleType.TestingLab,
           Description = roleInfo.Description,
-          Priority = roleInfo.Name == "TestAdmin" ? 1 : roleInfo.Name == "TestLead" ? 2 : 3,
+          Priority = roleInfo.Priority,
           CreatedAt = DateTime.UtcNow,
-          Permissions = permissions,
+          Permissions = permissions
         };
 
         _context.ModuleRoles.Add(role);

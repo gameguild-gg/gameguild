@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Comments;
@@ -16,7 +17,9 @@ public class CommentPermission : ResourcePermission<Comment> {
 
   // Public constructor for creating instances
   public CommentPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
-    : base(userId, tenantId, resourceId, permissions) { }
+    : base(userId, tenantId, resourceId) {
+    AddPermission(permissions);
+  }
   // Comment-specific computed properties
 
   /// <summary> Check if user can edit this specific comment </summary>

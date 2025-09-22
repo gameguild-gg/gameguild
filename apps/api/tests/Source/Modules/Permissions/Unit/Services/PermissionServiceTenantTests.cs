@@ -126,7 +126,7 @@ public class PermissionServiceTenantTests : IDisposable {
     var tenantId = Guid.NewGuid();
 
     // Act & Assert
-    await Assert.ThrowsAsync<ArgumentNullException>(() =>
+    await Assert.ThrowsAsync<ArgumentException>(() =>
                                                       _permissionService.GrantTenantPermissionAsync(userId, tenantId, null!)
     );
   }

@@ -31,9 +31,28 @@ public class ResourcePermissionController : ControllerBase {
     var userId = GetCurrentUserId();
     var tenantId = GetCurrentTenantId();
 
-    var permissions = await GetEffectivePermissionsByResourceType(resourceType, userId, tenantId, resourceId);
+    try {
+      var permissions = await GetEffectivePermissionsByResourceType(resourceType, userId, tenantId, resourceId);
+      
+      // If all permissions are from "None" source, it suggests a fundamental issue accessing the resource
+      if (permissions.Any() && permissions.All(p => p.Source == PermissionSource.None && !p.IsGranted)) {
+        return StatusCode(403, new { error = "You don't have access to this resource" });
+      }
 
-    return Ok(permissions);
+      return Ok(permissions);
+    }
+    catch (InvalidOperationException ex) when (ex.Message.Contains("DbSet") || ex.Message.Contains("not included in the model")) {
+      // Database model issues suggest the resource type or resource doesn't exist
+      _logger.LogWarning(ex, "Resource type {ResourceType} or resource {ResourceId} not found in model", resourceType, resourceId);
+      return StatusCode(403, new { error = "You don't have access to this resource" });
+    }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Error getting permissions for user {UserId} on resource {ResourceType}/{ResourceId}",
+        userId, resourceType, resourceId);
+
+      // Return Forbidden instead of exposing internal errors for security
+      return StatusCode(403, new { error = "You don't have access to this resource" });
+    }
   }
 
   /// <summary> Get all users with access to a resource and their permissions </summary>

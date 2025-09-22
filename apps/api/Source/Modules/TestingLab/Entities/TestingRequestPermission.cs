@@ -3,7 +3,9 @@ namespace GameGuild.Modules.TestingLab;
 /// <summary> Permission entity for testing request resource-level access control This entity manages permissions for specific testing request resources within the 3-layer DAC system </summary>
 public class TestingRequestPermission : ResourcePermission<TestingRequest> {
   public TestingRequestPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
-    : base(userId, tenantId, resourceId, permissions) { }
+    : base(userId, tenantId, resourceId) {
+    AddPermission(permissions);
+  }
 
   /// <summary> Check if user can view this testing request </summary>
   public bool CanView { get => HasPermission(PermissionType.Read); }

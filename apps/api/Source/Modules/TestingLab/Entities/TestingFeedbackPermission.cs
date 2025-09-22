@@ -5,7 +5,9 @@ namespace GameGuild.Modules.TestingLab;
 [Index(nameof(UserId), nameof(TenantId), nameof(ResourceId), Name = "IX_TestingFeedbackPermissions_User_Tenant_Resource")]
 public class TestingFeedbackPermission : ResourcePermission<TestingFeedback> {
   public TestingFeedbackPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
-    : base(userId, tenantId, resourceId, permissions) { }
+    : base(userId, tenantId, resourceId) {
+    AddPermission(permissions);
+  }
 
   /// <summary> Check if user can view this testing feedback </summary>
   public bool CanView { get => HasPermission(PermissionType.Read); }

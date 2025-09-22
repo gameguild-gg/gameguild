@@ -25,22 +25,17 @@ public class PermissionService : IPermissionService {
 
     if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
 
-    // Combine all permissions using bitwise OR
-    var combinedPermissions = permissions.Aggregate((current, next) => current | next);
-
     _logger.LogDebug("Granting tenant permissions: {Permissions}", string.Join(", ", permissions));
 
     // Check if permission already exists
     var existingPermission = await _context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null);
 
     if (existingPermission != null) {
-      // Clear existing permissions and set new ones
-      existingPermission.PermissionFlags1 = 0;
-      existingPermission.PermissionFlags2 = 0;
+      // Add new permissions to existing ones
       foreach (var permission in permissions) {
         existingPermission.AddPermission(permission);
       }
-      _logger.LogInformation("Updated tenant permissions: {Permissions}", combinedPermissions);
+      _logger.LogInformation("Added tenant permissions: {Permissions}", string.Join(", ", permissions));
     }
     else {
       existingPermission = new TenantPermission(userId, tenantId);
@@ -48,7 +43,7 @@ public class PermissionService : IPermissionService {
         existingPermission.AddPermission(permission);
       }
       _context.TenantPermissions.Add(existingPermission);
-      _logger.LogInformation("Granted new tenant permissions: {Permissions}", combinedPermissions);
+      _logger.LogInformation("Granted new tenant permissions: {Permissions}", string.Join(", ", permissions));
     }
 
     await _context.SaveChangesAsync();
@@ -62,7 +57,6 @@ public class PermissionService : IPermissionService {
 
     if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
 
-    var combinedPermissions = permissions.Aggregate((current, next) => current | next);
     var result = new List<TenantPermission>();
 
     // Get existing permissions for all users
@@ -72,9 +66,7 @@ public class PermissionService : IPermissionService {
       var existingPermission = existingPermissions.FirstOrDefault(ep => ep.UserId == userId);
 
       if (existingPermission != null) {
-        // Clear existing permissions and set new ones
-        existingPermission.PermissionFlags1 = 0;
-        existingPermission.PermissionFlags2 = 0;
+        // Add new permissions to existing ones
         foreach (var permission in permissions) {
           existingPermission.AddPermission(permission);
         }
@@ -85,9 +77,6 @@ public class PermissionService : IPermissionService {
         foreach (var permission in permissions) {
           newPermission.AddPermission(permission);
         }
-        foreach (var permission in permissions) {
-          newPermission.AddPermission(permission);
-        }
         _context.TenantPermissions.Add(newPermission);
         result.Add(newPermission);
       }
@@ -95,7 +84,7 @@ public class PermissionService : IPermissionService {
 
     await _context.SaveChangesAsync();
 
-    _logger.LogInformation("Bulk granted tenant permissions for {UserCount} users in Tenant:{TenantId}, Permissions:{Permissions}", userIds.Length, tenantId, combinedPermissions);
+    _logger.LogInformation("Bulk granted tenant permissions for {UserCount} users in Tenant:{TenantId}, Permissions:{Permissions}", userIds.Length, tenantId, string.Join(", ", permissions));
 
     return result;
   }
@@ -113,7 +102,8 @@ public class PermissionService : IPermissionService {
     }
 
     // 1. Check user-specific permissions first
-    var userPermission = await _context.TenantPermissions.AsNoTracking().FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null);
+    var userPermission = await _context.TenantPermissions.AsNoTracking()
+      .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null && (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow));
 
     if (userPermission?.HasPermission(permission) == true) {
       _logger.LogDebug("Permission {Permission} granted via user-specific tenant permissions", permission);
@@ -122,7 +112,8 @@ public class PermissionService : IPermissionService {
 
     // 2. Check tenant default permissions
     if (tenantId.HasValue) {
-      var tenantDefault = await _context.TenantPermissions.AsNoTracking().FirstOrDefaultAsync(tp => tp.UserId == null && tp.TenantId == tenantId && tp.DeletedAt == null);
+      var tenantDefault = await _context.TenantPermissions.AsNoTracking()
+        .FirstOrDefaultAsync(tp => tp.UserId == null && tp.TenantId == tenantId && tp.DeletedAt == null && (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow));
 
       if (tenantDefault?.HasPermission(permission) == true) {
         _logger.LogDebug("Permission {Permission} granted via tenant default permissions", permission);
@@ -131,7 +122,8 @@ public class PermissionService : IPermissionService {
     }
 
     // 3. Check global default permissions
-    var globalDefault = await _context.TenantPermissions.AsNoTracking().FirstOrDefaultAsync(tp => tp.UserId == null && tp.TenantId == null && tp.DeletedAt == null);
+    var globalDefault = await _context.TenantPermissions.AsNoTracking()
+      .FirstOrDefaultAsync(tp => tp.UserId == null && tp.TenantId == null && tp.DeletedAt == null && (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow));
 
     var hasGlobalPermission = globalDefault?.HasPermission(permission) == true;
 
@@ -184,8 +176,6 @@ public class PermissionService : IPermissionService {
   public async Task SetGlobalDefaultPermissionsAsync(PermissionType[] permissions) {
     if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
 
-    var combinedPermissions = permissions.Aggregate((current, next) => current | next);
-
     var existingPermission = await _context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == null && tp.TenantId == null && tp.DeletedAt == null);
 
     if (existingPermission != null) {
@@ -195,7 +185,7 @@ public class PermissionService : IPermissionService {
       foreach (var permission in permissions) {
         existingPermission.AddPermission(permission);
       }
-      _logger.LogInformation("Updated global default permissions: {Permissions}", combinedPermissions);
+      _logger.LogInformation("Updated global default permissions: {Permissions}", string.Join(", ", permissions));
     }
     else {
       var newPermission = new TenantPermission(null, null);
@@ -203,7 +193,7 @@ public class PermissionService : IPermissionService {
         newPermission.AddPermission(permission);
       }
       _context.TenantPermissions.Add(newPermission);
-      _logger.LogInformation("Created global default permissions: {Permissions}", combinedPermissions);
+      _logger.LogInformation("Created global default permissions: {Permissions}", string.Join(", ", permissions));
     }
 
     await _context.SaveChangesAsync();
@@ -230,9 +220,6 @@ public class PermissionService : IPermissionService {
     if (string.IsNullOrWhiteSpace(contentTypeName)) throw new ArgumentException("Content type name cannot be null or empty", nameof(contentTypeName));
     if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
 
-    // Combine all permissions using bitwise OR
-    var combinedPermissions = permissions.Aggregate((current, next) => current | next);
-
     _logger.LogDebug("Granting content type permissions for {ContentType}: {Permissions}", contentTypeName, string.Join(", ", permissions));
 
     // Check for existing permission
@@ -244,7 +231,7 @@ public class PermissionService : IPermissionService {
       foreach (var permission in permissions) {
         existingPermission.AddPermission(permission);
       }
-      _logger.LogInformation("Updated content type permissions for {ContentType}: {Permissions}", contentTypeName, combinedPermissions);
+      _logger.LogInformation("Updated content type permissions for {ContentType}: {Permissions}", contentTypeName, string.Join(", ", permissions));
     }
     else {
       // Create new permission
@@ -253,7 +240,7 @@ public class PermissionService : IPermissionService {
         existingPermission.AddPermission(permission);
       }
       _context.ContentTypePermissions.Add(existingPermission);
-      _logger.LogInformation("Granted new content type permissions for {ContentType}: {Permissions}", contentTypeName, combinedPermissions);
+      _logger.LogInformation("Granted new content type permissions for {ContentType}: {Permissions}", contentTypeName, string.Join(", ", permissions));
     }
 
     await _context.SaveChangesAsync();
@@ -342,13 +329,23 @@ public class PermissionService : IPermissionService {
     where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase {
     if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
 
-    var combinedPermissions = permissions.Aggregate((current, next) => current | next);
-
     var existingPermission = await _context.Set<TPermission>().FirstOrDefaultAsync(rp => rp.UserId == userId && rp.TenantId == tenantId && rp.ResourceId == resourceId && rp.DeletedAt == null);
 
-    if (existingPermission != null) { existingPermission.UpdatePermissions(combinedPermissions); }
+    if (existingPermission != null) { 
+      foreach (var permission in permissions) {
+        existingPermission.AddPermission(permission);
+      }
+    }
     else {
-      existingPermission = (TPermission)ResourcePermission<TResource>.Create(userId, tenantId, resourceId, combinedPermissions);
+      // Create using constructor with first permission, then add remaining permissions
+      var firstPermission = permissions[0];
+      existingPermission = (TPermission)Activator.CreateInstance(typeof(TPermission), userId, tenantId, resourceId, firstPermission)!;
+      
+      // Add remaining permissions one by one
+      for (int i = 1; i < permissions.Length; i++) {
+        existingPermission.AddPermission(permissions[i]);
+      }
+      
       _context.Set<TPermission>().Add(existingPermission);
     }
 
@@ -360,7 +357,7 @@ public class PermissionService : IPermissionService {
       tenantId,
       resourceId,
       typeof(TResource).Name,
-      combinedPermissions
+      string.Join(",", permissions)
     );
 
     return existingPermission;
@@ -377,7 +374,14 @@ public class PermissionService : IPermissionService {
 
     var resourcePermission = await _context.Set<TPermission>().AsNoTracking().FirstOrDefaultAsync(rp => rp.UserId == userId && rp.TenantId == tenantId && rp.ResourceId == resourceId && rp.DeletedAt == null);
 
-    if (resourcePermission != null) AddPermissionFlags(permissions, resourcePermission.Permissions);
+    if (resourcePermission != null) {
+      // Use the HasPermission method which implements the correct bit position logic
+      foreach (var permission in Enum.GetValues<PermissionType>()) {
+        if (resourcePermission.HasPermission(permission)) {
+          permissions.Add(permission);
+        }
+      }
+    }
 
     return permissions;
   }
@@ -388,16 +392,26 @@ public class PermissionService : IPermissionService {
 
     if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
 
-    var combinedPermissions = permissions.Aggregate((current, next) => current | next);
-
     var existingPermissions = await _context.Set<TPermission>().Where(rp => resourceIds.Contains(rp.ResourceId) && rp.UserId == userId && rp.TenantId == tenantId && rp.DeletedAt == null).ToListAsync();
 
     foreach (var resourceId in resourceIds) {
       var existingPermission = existingPermissions.FirstOrDefault(ep => ep.ResourceId == resourceId);
 
-      if (existingPermission != null) { existingPermission.UpdatePermissions(combinedPermissions); }
+      if (existingPermission != null) { 
+        // Add each permission individually using the new bit position logic
+        foreach (var permission in permissions) {
+          existingPermission.AddPermission(permission);
+        }
+      }
       else {
-        var newPermission = (TPermission)ResourcePermission<TResource>.Create(userId, tenantId, resourceId, combinedPermissions);
+        // Create new instance using the constructor without permissions parameter
+        var newPermission = (TPermission)Activator.CreateInstance(typeof(TPermission), userId, tenantId, resourceId)!;
+        
+        // Add each permission individually
+        foreach (var permission in permissions) {
+          newPermission.AddPermission(permission);
+        }
+        
         _context.Set<TPermission>().Add(newPermission);
       }
     }
@@ -410,7 +424,7 @@ public class PermissionService : IPermissionService {
       tenantId,
       resourceIds.Length,
       typeof(TResource).Name,
-      combinedPermissions
+      string.Join(",", permissions)
     );
   }
 
@@ -424,6 +438,43 @@ public class PermissionService : IPermissionService {
     }
 
     _logger.LogInformation("Shared resource {ResourceId} with User:{TargetUserId}, Permissions:{Permissions}, ExpiresAt:{ExpiresAt}", resourceId, targetUserId, permissions, expiresAt);
+  }
+
+  public async Task<TPermission?> RevokeResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType[] permissions)
+    where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase {
+    if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
+
+    var existingPermission = await _context.Set<TPermission>().FirstOrDefaultAsync(rp => rp.UserId == userId && rp.TenantId == tenantId && rp.ResourceId == resourceId && rp.DeletedAt == null);
+
+    if (existingPermission != null) {
+      // Remove the specified permissions
+      foreach (var permission in permissions) {
+        existingPermission.RemovePermission(permission);
+      }
+
+      // Check if any permissions remain
+      var hasAnyPermissions = Enum.GetValues<PermissionType>().Any(p => existingPermission.HasPermission(p));
+
+      // If no permissions remain, soft delete the record
+      if (!hasAnyPermissions) {
+        existingPermission.SoftDelete();
+      }
+
+      await _context.SaveChangesAsync();
+
+      _logger.LogInformation(
+        "Revoked resource permissions for User:{UserId}, Tenant:{TenantId}, Resource:{ResourceId}, Type:{ResourceType}, Permissions:{Permissions}",
+        userId,
+        tenantId,
+        resourceId,
+        typeof(TResource).Name,
+        permissions
+      );
+
+      return existingPermission;
+    }
+
+    return null;
   }
 
   public async Task RevokeResourceAccessAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId) where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase {
@@ -470,6 +521,10 @@ public class PermissionService : IPermissionService {
     }
     else {
       existingPermission = new TenantPermission(userId, tenantId);
+      // Grant minimal user permissions
+      foreach (var permission in TenantPermissionConstants.MinimalUserPermissions) {
+        existingPermission.AddPermission(permission);
+      }
       _context.TenantPermissions.Add(existingPermission);
     }
 
@@ -527,10 +582,9 @@ public class PermissionService : IPermissionService {
     return globalDefault?.HasPermission(permission) == true;
   }
 
-  private static void AddPermissionFlags(HashSet<PermissionType> permissions, PermissionType permissionFlags) {
-    foreach (var permission in Enum.GetValues<PermissionType>()) {
-      if ((permissionFlags & permission) == permission) permissions.Add(permission);
-    }
+  private static void AddPermissionFlags(HashSet<PermissionType> permissions, PermissionType permissionFlag) {
+    // Simply add the single permission to the set
+    permissions.Add(permissionFlag);
   }
 
   private static void AddPermissionsFromEntity(HashSet<PermissionType> permissions, GameGuild.Modules.Permissions.WithPermissions entity) {
@@ -652,9 +706,36 @@ public class PermissionService : IPermissionService {
     return permissions;
   }
 
-  public Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid[] resourceIds)
+  public async Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid[] resourceIds)
     where TPermission : ResourcePermission<TResource>, new()
     where TResource : EntityBase {
-    throw new NotImplementedException();
+    if (resourceIds == null || resourceIds.Length == 0) {
+      return new Dictionary<Guid, IEnumerable<PermissionType>>();
+    }
+
+    var result = new Dictionary<Guid, IEnumerable<PermissionType>>();
+
+    var resourcePermissions = await _context.Set<TPermission>()
+      .AsNoTracking()
+      .Where(rp => resourceIds.Contains(rp.ResourceId) && rp.UserId == userId && rp.TenantId == tenantId && rp.DeletedAt == null)
+      .ToListAsync();
+
+    foreach (var resourceId in resourceIds) {
+      var permissions = new HashSet<PermissionType>();
+      var resourcePermission = resourcePermissions.FirstOrDefault(rp => rp.ResourceId == resourceId);
+      
+      if (resourcePermission != null) {
+        // Use HasPermission method to check each permission
+        foreach (var permission in Enum.GetValues<PermissionType>()) {
+          if (resourcePermission.HasPermission(permission)) {
+            permissions.Add(permission);
+          }
+        }
+      }
+
+      result[resourceId] = permissions;
+    }
+
+    return result;
   }
 }

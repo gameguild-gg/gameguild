@@ -28,6 +28,9 @@ public class ModulePermissionIntegrationTests : IDisposable {
     _context = new ApplicationDbContext(options);
     var logger = new NullLogger<ModulePermissionService>();
     _modulePermissionService = new ModulePermissionService(_context, logger);
+    
+    // Ensure default roles exist in the test database
+    _modulePermissionService.EnsureDefaultRolesExistAsync().Wait();
   }
 
   [Fact]

@@ -250,10 +250,12 @@ public enum PermissionType {
 public abstract class PermissionBase : EntityBase {
   protected PermissionBase() { }
 
-  protected PermissionBase(Guid? userId, Guid? tenantId, PermissionType permissions) {
+  protected PermissionBase(Guid? userId, Guid? tenantId) {
     UserId = userId;
     TenantId = tenantId;
-    Permissions = permissions;
+    // Initialize with no permissions - they will be added later
+    PermissionFlags1 = 0;
+    PermissionFlags2 = 0;
     CreatedAt = DateTime.UtcNow;
     UpdatedAt = DateTime.UtcNow;
   }
@@ -264,8 +266,13 @@ public abstract class PermissionBase : EntityBase {
   /// <summary> Tenant ID (null means it's a global permission) </summary>
   public Guid? TenantId { get; protected set; }
 
-  /// <summary> Bitwise combination of permission types </summary>
-  public PermissionType Permissions { get; protected set; }
+  /// <summary> Permission flags for bits 0-63 </summary>
+  [Column(TypeName = "bigint")]
+  public ulong PermissionFlags1 { get; protected set; }
+
+  /// <summary> Permission flags for bits 64-127 </summary>
+  [Column(TypeName = "bigint")]
+  public ulong PermissionFlags2 { get; protected set; }
 
   /// <summary> When the permission was granted </summary>
   public override DateTime CreatedAt { get; set; }
@@ -279,9 +286,10 @@ public abstract class PermissionBase : EntityBase {
   /// <summary> Check if this permission has expired </summary>
   public virtual bool IsExpired { get => ExpiresAt.HasValue && ExpiresAt.Value <= DateTime.UtcNow; }
 
-  /// <summary> Update the permissions for this entity </summary>
-  public virtual void UpdatePermissions(PermissionType permissions) {
-    Permissions = permissions;
+  /// <summary> Clear all permissions for this entity </summary>
+  public virtual void ClearPermissions() {
+    PermissionFlags1 = 0;
+    PermissionFlags2 = 0;
     UpdatedAt = DateTime.UtcNow;
   }
 
@@ -292,11 +300,45 @@ public abstract class PermissionBase : EntityBase {
   }
 
   /// <summary> Check if this permission includes a specific permission type </summary>
-  public virtual bool HasPermission(PermissionType permission) { return !IsExpired && (Permissions & permission) == permission; }
+  public virtual bool HasPermission(PermissionType permission) {
+    if (IsExpired) return false;
+    var bitPos = (int) permission;
+    
+    if (bitPos < 64) return (PermissionFlags1 & 1UL << bitPos) != 0;
+    if (bitPos < 128) return (PermissionFlags2 & 1UL << bitPos - 64) != 0;
+    
+    return false;
+  }
 
-  /// <summary> Add a permission to this entity (compatibility method) </summary>
+  /// <summary> Add a permission to this entity </summary>
   public virtual void AddPermission(PermissionType permission) {
-    Permissions |= permission;
+    var bitPos = (int) permission;
+    
+    if (bitPos < 64) {
+      var mask = 1UL << bitPos;
+      PermissionFlags1 |= mask;
+    }
+    else if (bitPos < 128) {
+      var mask = 1UL << bitPos - 64;
+      PermissionFlags2 |= mask;
+    }
+    
+    UpdatedAt = DateTime.UtcNow;
+  }
+
+  /// <summary> Remove a permission from this entity </summary>
+  public virtual void RemovePermission(PermissionType permission) {
+    var bitPos = (int) permission;
+    
+    if (bitPos < 64) {
+      var mask = 1UL << bitPos;
+      PermissionFlags1 &= ~mask;
+    }
+    else if (bitPos < 128) {
+      var mask = 1UL << bitPos - 64;
+      PermissionFlags2 &= ~mask;
+    }
+    
     UpdatedAt = DateTime.UtcNow;
   }
 }
@@ -305,7 +347,7 @@ public abstract class PermissionBase : EntityBase {
 public class ResourcePermission<TResource> : PermissionBase where TResource : EntityBase {
   public ResourcePermission() { }
 
-  public ResourcePermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions) : base(userId, tenantId, permissions) { ResourceId = resourceId; }
+  public ResourcePermission(Guid userId, Guid? tenantId, Guid resourceId) : base(userId, tenantId) { ResourceId = resourceId; }
 
   /// <summary> ID of the specific resource </summary>
   public Guid ResourceId { get; private set; }
@@ -313,5 +355,5 @@ public class ResourcePermission<TResource> : PermissionBase where TResource : En
   /// <summary> Resource type name for querying purposes </summary>
   public string ResourceType { get => typeof(TResource).Name; }
 
-  public static ResourcePermission<TResource> Create(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions) { return new(userId, tenantId, resourceId, permissions); }
+  public static ResourcePermission<TResource> Create(Guid userId, Guid? tenantId, Guid resourceId) { return new(userId, tenantId, resourceId); }
 }

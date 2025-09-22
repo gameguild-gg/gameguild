@@ -8,7 +8,9 @@ namespace GameGuild.Modules.TestingLab;
 [Index(nameof(ExpiresAt), Name = "IX_TestingSessionPermissions_Expiration")]
 public class TestingSessionPermission : ResourcePermission<TestingSession> {
   public TestingSessionPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
-    : base(userId, tenantId, resourceId, permissions) { }
+    : base(userId, tenantId, resourceId) {
+    AddPermission(permissions);
+  }
 
   // TestingSession-specific computed properties
 
