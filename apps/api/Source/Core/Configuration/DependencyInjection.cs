@@ -20,6 +20,7 @@ using GameGuild.Modules.Subscriptions.Controllers;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.UserAchievements;
+using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using GameGuild.Source.Core.Services;
 using GameGuild.Source.Database;
@@ -164,6 +165,7 @@ public static class DependencyInjection {
       .AddApplicationPart(typeof(BillingWebhooksController).Assembly) // Billing module
       .AddApplicationPart(typeof(PaymentsController).Assembly) // Payments module
       .AddApplicationPart(typeof(SubscriptionsController).Assembly) // Subscriptions module
+      .AddApplicationPart(typeof(UserProfilesController).Assembly) // UserProfiles module
       .AddJsonOptions(jsonOptions => {
         jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         jsonOptions.JsonSerializerOptions.WriteIndented = true;
@@ -212,17 +214,21 @@ public static class DependencyInjection {
     ArgumentNullException.ThrowIfNull(services);
     ArgumentNullException.ThrowIfNull(configuration);
 
+    options ??= new InfrastructureLayerOptions();
+
     // Register core infrastructure services FIRST (required by modules)
     services.AddCoreInfrastructure();
 
     // Register core business services
     services.AddCoreServices();
 
-    // Register database context
-    ServiceCollectionExtensions.AddDatabaseContext(services, configuration);
-
-    // Register database seeder
-    services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
+    // Register database context only if enabled
+    if (options.EnableDatabase) {
+      ServiceCollectionExtensions.AddDatabaseContext(services, configuration);
+      
+      // Register database seeder
+      services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
+    }
 
     // Add OpenTelemetry observability
     services.AddOpenTelemetryObservability(configuration);
@@ -342,6 +348,16 @@ public static class DependencyInjection {
 
     services.AddScoped<ITenantContext, TenantContext>();
     Console.WriteLine("✅ ITenantContext registered");
+
+    // Register missing context services that are required by the ContextMiddleware
+    services.AddScoped<IPermissionsContext, PermissionsContext>();
+    Console.WriteLine("✅ IPermissionsContext registered");
+
+    services.AddScoped<IResourceContext, ResourceContext>();
+    Console.WriteLine("✅ IResourceContext registered");
+
+    services.AddScoped<ILocalizationContext, LocalizationContext>();
+    Console.WriteLine("✅ ILocalizationContext registered");
 
     services.AddHttpContextAccessor(); // Required by UserContext and TenantContext
     Console.WriteLine("✅ HttpContextAccessor registered");
