@@ -45,6 +45,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ListMenuComponent } from "./floating-text-components/list-menu-component"
 import { FontFamilyMenuComponent } from "./floating-text-components/font-family-menu-component"
 import { FontSizeMenuComponent } from "./floating-text-components/font-size-menu-component"
@@ -79,6 +80,7 @@ export function FloatingTextFormatToolbarPlugin() {
 
   const [showLinkDialog, setShowLinkDialog] = useState(false)
   const [linkUrl, setLinkUrl] = useState("")
+  const [linkProtocol, setLinkProtocol] = useState("https://")
   const [selectedText, setSelectedText] = useState("")
 
   const updateToolbar = useCallback(() => {
@@ -223,12 +225,29 @@ export function FloatingTextFormatToolbarPlugin() {
 
   const handleInsertLink = useCallback(() => {
     if (linkUrl.trim()) {
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, linkUrl.trim())
+      let finalUrl = linkUrl.trim()
+      
+      // Processar diferentes tipos de links
+      if (linkProtocol === "/") {
+        // Link local - garantir que comece com /
+        finalUrl = finalUrl.startsWith("/") ? finalUrl : `/${finalUrl}`
+      } else if (linkProtocol === "#/") {
+        // Link de âncora - garantir que comece com #
+        finalUrl = finalUrl.startsWith("#") ? finalUrl : `#${finalUrl}`
+      } else {
+        // Links HTTP/HTTPS - adicionar protocolo se não estiver presente
+        if (!finalUrl.match(/^https?:\/\//)) {
+          finalUrl = linkProtocol + finalUrl
+        }
+      }
+      
+      editor.dispatchCommand(TOGGLE_LINK_COMMAND, finalUrl)
       setShowLinkDialog(false)
       setLinkUrl("")
       setSelectedText("")
+      setLinkProtocol("https://") // Resetar para o padrão
     }
-  }, [editor, linkUrl])
+  }, [editor, linkUrl, linkProtocol])
 
   const handleLinkButtonClick = useCallback(() => {
     editor.getEditorState().read(() => {
@@ -240,6 +259,20 @@ export function FloatingTextFormatToolbarPlugin() {
       }
     })
   }, [editor])
+
+  // Função para validar se o link é válido baseado no tipo
+  const isLinkValid = useCallback(() => {
+    if (!linkUrl.trim()) return false
+    
+    // Para links locais e âncoras, aceitar qualquer coisa não vazia
+    if (linkProtocol === "/" || linkProtocol === "#/") {
+      return true
+    }
+    
+    // Para HTTP/HTTPS, validar formato básico de URL
+    const url = linkUrl.trim()
+    return url.length > 0 && !url.includes(" ")
+  }, [linkUrl, linkProtocol])
 
     const applyCaseFormat = useCallback(
     (caseType: "uppercase" | "lowercase" | "capitalize") => {
@@ -808,26 +841,54 @@ export function FloatingTextFormatToolbarPlugin() {
               <Input id="selected-text" value={selectedText} readOnly className="bg-muted" />
             </div>
             <div>
-              <Label htmlFor="link-url">URL</Label>
-              <Input
-                id="link-url"
-                type="url"
-                placeholder="https://example.com"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleInsertLink()
+              <Label htmlFor="link-protocol">Link Type</Label>
+              <Select value={linkProtocol} onValueChange={setLinkProtocol}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select protocol" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="https://">HTTPS (Secure)</SelectItem>
+                  <SelectItem value="http://">HTTP (Insecure)</SelectItem>
+                  <SelectItem value="/">Local Link</SelectItem>
+                  <SelectItem value="#/">Anchor Link</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="link-url">
+                {linkProtocol === "/" ? "Path" : linkProtocol === "#/" ? "Anchor" : "URL"}
+              </Label>
+              <div className="flex items-center space-x-2">
+                {linkProtocol !== "/" && linkProtocol !== "#/" && (
+                  <span className="text-sm text-muted-foreground min-w-fit">{linkProtocol}</span>
+                )}
+                <Input
+                  id="link-url"
+                  type="text"
+                  placeholder={
+                    linkProtocol === "/" 
+                      ? "/page-name" 
+                      : linkProtocol === "#/"
+                      ? "section-name"
+                      : "example.com"
                   }
-                }}
-              />
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleInsertLink()
+                    }
+                  }}
+                  className="flex-1"
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowLinkDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleInsertLink} disabled={!linkUrl.trim()}>
+            <Button onClick={handleInsertLink} disabled={!isLinkValid()}>
               Add Link
             </Button>
           </DialogFooter>
