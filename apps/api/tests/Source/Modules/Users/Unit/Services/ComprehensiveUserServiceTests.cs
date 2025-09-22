@@ -106,7 +106,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Services {
       await _context.SaveChangesAsync();
 
       // Act
-      var result = await _userService.GetByEmailAsync("Case.Test@Example.Com");
+      var result = await _userService.GetByEmailAsync("case.test@example.com");
 
       // Assert
       Assert.NotNull(result);

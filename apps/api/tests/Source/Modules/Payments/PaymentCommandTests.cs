@@ -280,7 +280,7 @@ public class PaymentCommandTests : IDisposable {
     var user = new User {
       Id = userId,
       Name = userName,
-      Email = $"{userName.ToLowerInvariant()}@test.com",
+      Email = $"{userName.ToLowerInvariant().Replace(" ", ".")}@test.com",
       CreatedAt = DateTime.UtcNow,
     };
 

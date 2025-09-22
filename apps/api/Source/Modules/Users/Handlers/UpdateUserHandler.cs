@@ -20,7 +20,8 @@ public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserH
 
     // Check for email uniqueness if email is being updated
     if (request.Email != null && request.Email != user.Email) {
-      var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Email == request.Email && u.Id != request.UserId, cancellationToken);
+      var normalizedEmail = request.Email.ToLowerInvariant();
+      var existingUser = await context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail && u.Id != request.UserId, cancellationToken);
 
       if (existingUser != null) throw new InvalidOperationException($"Email {request.Email} is already in use");
     }

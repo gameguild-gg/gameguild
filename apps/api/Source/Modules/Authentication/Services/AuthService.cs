@@ -20,7 +20,8 @@ namespace GameGuild.Modules.Authentication {
     ILogger<AuthService> logger
   ) : IAuthService {
     public async Task<SignInResponseDto> LocalSignInAsync(LocalSignInRequestDto request) {
-      var user = await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.Email == request.Email);
+      var normalizedEmail = request.Email.ToLowerInvariant();
+      var user = await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail);
 
       if (user == null) throw new UnauthorizedAccessException("Invalid credentials");
 
@@ -381,7 +382,8 @@ namespace GameGuild.Modules.Authentication {
 
     private async Task<(User User, bool IsNewUser)> FindOrCreateOAuthUserWithInfoAsync(string email, string name, string provider, string providerId) {
       // First try to find user by email
-      var user = await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.Email == email);
+      var normalizedEmail = email.ToLowerInvariant();
+      var user = await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail);
 
       var isNewUser = false;
 

@@ -197,7 +197,7 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
     }
 
     // Check if super admin already exists
-    var existingSuperAdmin = await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.Email == "admin@gameguild.gg");
+    var existingSuperAdmin = await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == "admin@gameguild.gg");
 
     User createdUser;
 

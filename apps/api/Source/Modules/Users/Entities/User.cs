@@ -16,13 +16,13 @@ public sealed class User : EntityBase, IUser {
   [Required][MaxLength(50)] public string Username { get; set; } = string.Empty;
 
   // Use EmailAddress value object for strong typing and validation
-  public EmailAddress EmailAddress { get; set; } = new("user@example.com");
+  public EmailAddress? EmailAddress { get; set; }
 
   // Legacy Email property for backwards compatibility (mapped to EmailAddress.Value)
   [NotMapped]
   public string Email {
-    get => EmailAddress.Value;
-    set => EmailAddress = new EmailAddress(value);
+    get => EmailAddress?.Value ?? string.Empty;
+    set => EmailAddress = string.IsNullOrEmpty(value) ? null : new EmailAddress(value);
   }
 
   public bool IsActive { get; set; } = true;

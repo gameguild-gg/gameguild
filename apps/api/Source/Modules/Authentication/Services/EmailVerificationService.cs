@@ -14,7 +14,8 @@ public class EmailVerificationService(ApplicationDbContext context, ILogger<Emai
 
   public async Task<EmailOperationResponseDto> SendEmailVerificationAsync(string email) {
     try {
-      var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+      var normalizedEmail = email.ToLowerInvariant();
+      var user = await context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail);
 
       if (user == null) return new EmailOperationResponseDto { Success = false, Message = "User not found" };
 
@@ -67,7 +68,8 @@ public class EmailVerificationService(ApplicationDbContext context, ILogger<Emai
 
   public async Task<EmailOperationResponseDto> SendPasswordResetAsync(string email) {
     try {
-      var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+      var normalizedEmail = email.ToLowerInvariant();
+      var user = await context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail);
 
       if (user == null)
         // Don't reveal if user exists or not for security
