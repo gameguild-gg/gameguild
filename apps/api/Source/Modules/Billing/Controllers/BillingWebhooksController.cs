@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Billing.Controllers;
 
 /// <summary> Controller for handling billing webhooks from external payment providers </summary>
 [ApiController]
-[Route("api/webhooks/billing")]
+[Route("[controller]")]
 public sealed class BillingWebhooksController : ControllerBase {
   private readonly ILogger<BillingWebhooksController> _logger;
 
@@ -149,19 +149,19 @@ public sealed class BillingWebhooksController : ControllerBase {
       return Ok(
         new {
           events = events.Select(e => new {
-                                   e.Id,
-                                   e.Provider,
-                                   e.EventType,
-                                   e.IsProcessed,
-                                   e.IsFailed,
-                                   e.ProcessingAttempts,
-                                   e.ProcessedAt,
-                                   e.CreatedAt,
-                                   e.TenantId,
-                                   e.SubscriptionId,
-                                   e.UserId,
-                                   e.ErrorMessage,
-                                 }
+            e.Id,
+            e.Provider,
+            e.EventType,
+            e.IsProcessed,
+            e.IsFailed,
+            e.ProcessingAttempts,
+            e.ProcessedAt,
+            e.CreatedAt,
+            e.TenantId,
+            e.SubscriptionId,
+            e.UserId,
+            e.ErrorMessage,
+          }
           ),
         }
       );
