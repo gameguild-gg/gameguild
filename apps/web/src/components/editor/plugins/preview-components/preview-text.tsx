@@ -72,7 +72,7 @@ export function PreviewText({ node }: PreviewTextProps) {
         </sub>
       )
     }
-    if (node.format & 16) {
+    if (node.format & 64) {
       // Superscript (format flag 16)
       textContent = (
         <sup key={`superscript-${node.version || Math.random()}`} style={inlineStyles}>
