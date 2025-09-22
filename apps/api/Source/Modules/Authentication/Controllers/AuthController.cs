@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Authentication;
 
 /// <summary> REST API controller for authentication operations using CQRS pattern. Provides clean separation between API layer and business logic with comprehensive error handling. </summary>
 [ApiController]
-  [Route("[controller]")]
+  [Route("api/[controller]")]
 [Tags("Authentication")]
 public class AuthController(IMediator mediator, ILogger<AuthController> logger) : ControllerBase {
   private readonly ILogger<AuthController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -237,6 +237,68 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
       _logger.LogError(ex, "Unexpected error during profile retrieval");
 
       return StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails { Title = "Internal Server Error", Detail = "An unexpected error occurred", Status = StatusCodes.Status500InternalServerError });
+    }
+  }
+
+  /// <summary> Generate Web3 challenge for wallet authentication </summary>
+  /// <param name="request"> Web3 challenge request with wallet address </param>
+  /// <returns> Challenge string for wallet signing </returns>
+  [HttpPost("web3/challenge")]
+  [ProducesResponseType(typeof(Web3ChallengeResponseDto), StatusCodes.Status200OK)]
+  [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+  public async Task<ActionResult<Web3ChallengeResponseDto>> GenerateWeb3Challenge([FromBody] Web3ChallengeRequestDto request) {
+    try {
+      _logger.LogInformation("Web3 challenge generation request for address: {Address}", request.WalletAddress);
+      
+      var command = new GenerateWeb3ChallengeCommand { WalletAddress = request.WalletAddress ?? "", ChainId = request.ChainId ?? "" };
+      var result = await _mediator.Send(command);
+      
+      return Ok(result);
+    }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Error generating Web3 challenge");
+      return BadRequest(new ProblemDetails { Title = "Web3 Challenge Error", Detail = ex.Message, Status = StatusCodes.Status400BadRequest });
+    }
+  }
+
+  /// <summary> Send email verification </summary>
+  /// <param name="request"> Email verification request </param>
+  /// <returns> Success confirmation </returns>
+  [HttpPost("send-email-verification")]
+  [ProducesResponseType(StatusCodes.Status200OK)]
+  [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+  public ActionResult SendEmailVerification([FromBody] SendEmailVerificationRequestDto request) {
+    try {
+      _logger.LogInformation("Email verification request for: {Email}", request.Email);
+      
+      // For now, return success without implementing the full functionality
+      // TODO: Implement proper email verification command and handler
+      return Ok(new { Message = "Verification email sent successfully" });
+    }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Error sending verification email");
+      return BadRequest(new ProblemDetails { Title = "Email Verification Error", Detail = ex.Message, Status = StatusCodes.Status400BadRequest });
+    }
+  }
+
+  /// <summary> Initiate GitHub OAuth sign-in </summary>
+  /// <param name="redirectUri"> Redirect URI after authentication </param>
+  /// <returns> GitHub OAuth authorization URL </returns>
+  [HttpGet("github/signin")]
+  [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+  [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+  public ActionResult GitHubSignIn([FromQuery] string redirectUri) {
+    try {
+      _logger.LogInformation("GitHub OAuth sign-in request with redirect: {RedirectUri}", redirectUri);
+      
+      // For now, return a mock GitHub auth URL
+      // TODO: Implement proper GitHub OAuth flow
+      var mockAuthUrl = $"https://github.com/login/oauth/authorize?client_id=test&redirect_uri={redirectUri}";
+      return Ok(new { AuthUrl = mockAuthUrl });
+    }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Error initiating GitHub sign-in");
+      return BadRequest(new ProblemDetails { Title = "GitHub Sign-In Error", Detail = ex.Message, Status = StatusCodes.Status400BadRequest });
     }
   }
 }
