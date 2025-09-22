@@ -8,7 +8,10 @@ public class UserService(ApplicationDbContext context) : IUserService {
 
   public async Task<User?> GetUserByIdAsync(Guid id) { return await context.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null); }
 
-  public async Task<User?> GetByEmailAsync(string email) { return await context.Users.FirstOrDefaultAsync(u => u.Email == email && u.DeletedAt == null); }
+  public async Task<User?> GetByEmailAsync(string email) { 
+    var normalizedEmail = email.ToLowerInvariant();
+    return await context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail && u.DeletedAt == null); 
+  }
 
   public async Task<User> CreateUserAsync(User user) {
     // Check if email already exists
