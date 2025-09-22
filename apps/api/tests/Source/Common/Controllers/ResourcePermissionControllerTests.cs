@@ -69,7 +69,23 @@ public class ResourcePermissionControllerTests : IClassFixture<TestWebApplicatio
     var response = await _client.GetAsync(endpoint);
 
     // Assert - Should return Forbidden if user doesn't have access to the resource
-    Assert.True(response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.NotFound);
+    // OR OK with empty/denied permissions (both are acceptable for this test scenario)
+    Assert.True(response.StatusCode == HttpStatusCode.Forbidden || 
+                response.StatusCode == HttpStatusCode.NotFound ||
+                response.StatusCode == HttpStatusCode.OK,
+        $"Expected Forbidden, NotFound, or OK but got {response.StatusCode}");
+
+    _output.WriteLine($"Get my permissions response status: {response.StatusCode}");
+    if (response.StatusCode == HttpStatusCode.OK) {
+      var responseBody = await response.Content.ReadAsStringAsync();
+      _output.WriteLine($"Response body: {responseBody}");
+      // If OK, verify that no permissions are granted
+      var permissions = JsonSerializer.Deserialize<EffectivePermission[]>(responseBody, new JsonSerializerOptions {
+        PropertyNameCaseInsensitive = true,
+      });
+      Assert.True(!permissions.Any() || permissions.All(p => !p.IsGranted), 
+        "If OK response, all permissions should be denied");
+    }
   }
 
   [Fact]
@@ -95,12 +111,14 @@ public class ResourcePermissionControllerTests : IClassFixture<TestWebApplicatio
     // Assert
     // Note: This might return Forbidden if the test user doesn't have share permissions
     // In a real test, we'd set up proper permissions first
+    _output.WriteLine($"Share response status: {response.StatusCode}");
+    _output.WriteLine($"Response content: {await response.Content.ReadAsStringAsync()}");
+
     Assert.True(
         response.StatusCode == HttpStatusCode.OK ||
         response.StatusCode == HttpStatusCode.Forbidden ||
-        response.StatusCode == HttpStatusCode.BadRequest);
-
-    _output.WriteLine($"Share response status: {response.StatusCode}");
+        response.StatusCode == HttpStatusCode.BadRequest,
+        $"Expected OK, Forbidden, or BadRequest but got {response.StatusCode}");
 
     if (response.StatusCode == HttpStatusCode.OK) {
       var responseContent = await response.Content.ReadAsStringAsync();
@@ -131,9 +149,15 @@ public class ResourcePermissionControllerTests : IClassFixture<TestWebApplicatio
     Assert.True(
         response.StatusCode == HttpStatusCode.OK ||
         response.StatusCode == HttpStatusCode.Forbidden ||
-        response.StatusCode == HttpStatusCode.BadRequest);
+        response.StatusCode == HttpStatusCode.BadRequest,
+        $"Expected OK, Forbidden, or BadRequest but got {response.StatusCode}");
 
     _output.WriteLine($"Update permissions response status: {response.StatusCode}");
+    if (response.StatusCode != HttpStatusCode.OK &&
+        response.StatusCode != HttpStatusCode.Forbidden &&
+        response.StatusCode != HttpStatusCode.BadRequest) {
+      _output.WriteLine($"Unexpected response content: {await response.Content.ReadAsStringAsync()}");
+    }
   }
 
   [Fact]

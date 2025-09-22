@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Projects;
@@ -15,7 +17,9 @@ public class ProjectPermission : ResourcePermission<Project> {
 
   // Public constructor for creating instances
   public ProjectPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
-    : base(userId, tenantId, resourceId, permissions) { }
+    : base(userId, tenantId, resourceId) {
+    AddPermission(permissions);
+  }
 
   // Project-specific computed properties
 

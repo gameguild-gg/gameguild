@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Products;
@@ -11,11 +13,12 @@ namespace GameGuild.Modules.Products;
 [Index(nameof(ExpiresAt), Name = "IX_ProductPermissions_Expiration")]
 public class ProductPermission : ResourcePermission<Product> {
   // Public parameterless constructor for EF and GraphQL
-  public ProductPermission() { }
+  public ProductPermission() : base() { }
 
   // Public constructor for creating instances
   public ProductPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
-    : base(userId, tenantId, resourceId, permissions) { }
+    : base(userId, tenantId, resourceId, permissions) {
+  }
   // Product-specific computed properties
 
   /// <summary> Check if user can edit this specific product </summary>

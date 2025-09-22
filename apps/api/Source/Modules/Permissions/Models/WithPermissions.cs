@@ -45,6 +45,23 @@ public abstract class WithPermissions : EntityBase {
   [GraphQLDescription("When this permission expires (null if it never expires)")]
   public DateTime? ExpiresAt { get; set; }
 
+  // Constructors
+
+  /// <summary>
+  /// Default parameterless constructor
+  /// </summary>
+  protected WithPermissions() { }
+
+  /// <summary>
+  /// Constructor for creating a permission with basic details
+  /// </summary>
+  protected WithPermissions(Guid? userId, Guid? tenantId) {
+    UserId = userId;
+    TenantId = tenantId;
+    PermissionFlags1 = 0;
+    PermissionFlags2 = 0;
+  }
+
   // Computed properties
 
   /// <summary> Check if the permission is expired based on ExpiresAt date </summary>

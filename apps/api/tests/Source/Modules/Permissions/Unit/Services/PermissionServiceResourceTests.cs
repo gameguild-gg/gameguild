@@ -323,10 +323,11 @@ public class PermissionServiceResourceTests : IDisposable {
     );
 
     // Act
-    await _permissionService.RevokeResourceAccessAsync<CommentPermission, Comment>(
+    await _permissionService.RevokeResourcePermissionAsync<CommentPermission, Comment>(
       userId,
       tenantId,
-      resourceId
+      resourceId,
+      revokePermissions
     );
 
     // Assert
