@@ -1,3 +1,10 @@
+## [2.21.2](https://github.com/gameguild-gg/gameguild/compare/v2.21.1...v2.21.2) (2025-09-22)
+
+
+### Bug Fixes
+
+* **web:** Adds content for AI for games week 3 and 5 ([4b0d2fe](https://github.com/gameguild-gg/gameguild/commit/4b0d2fe36905fdca92b833997cc5c885ebb11830))
+
 ## [2.21.1](https://github.com/gameguild-gg/gameguild/compare/v2.21.0...v2.21.1) (2025-09-20)
 
 
