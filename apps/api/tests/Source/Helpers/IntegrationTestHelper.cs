@@ -57,7 +57,7 @@ namespace GameGuild.Tests.Helpers {
           config.AddInMemoryCollection(
             new Dictionary<string, string?> {
                   { "Jwt:SecretKey", "game-guild-super-secret-key-for-development-only-minimum-32-characters" },
-                  { "Jwt:Issuer", "GameGuild.CMS" },
+                  { "Jwt:Issuer", "GameGuild.API" },
                   { "Jwt:Audience", "GameGuild.Users" },
                   { "Jwt:ExpiryInMinutes", "60" },
                   { "Jwt:RefreshTokenExpiryInDays", "7" },
@@ -189,7 +189,7 @@ namespace GameGuild.Tests.Helpers {
       var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
       var token = new JwtSecurityToken(
-        issuer: "GameGuild.CMS",
+        issuer: "GameGuild.API",
         audience: "GameGuild.Users",
         claims: claims,
         expires: DateTime.UtcNow.AddMinutes(60),

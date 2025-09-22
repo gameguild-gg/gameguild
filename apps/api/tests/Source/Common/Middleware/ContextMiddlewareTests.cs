@@ -1,4 +1,5 @@
-    using System.Security.Claims;
+using System.Globalization;
+using System.Security.Claims;
 using GameGuild.Authorization.Identity;
 using GameGuild.Authorization.Middleware;
 using GameGuild.Core.Domain.Identity;
@@ -44,8 +45,22 @@ public class ContextMiddlewareTests {
 
     // Create mock contexts for the additional parameters
     var permissionsContext = new Mock<IPermissionsContext>();
+    permissionsContext.Setup(x => x.IsSystemAdmin).Returns(false);
+    permissionsContext.Setup(x => x.IsTenantAdmin).Returns(false);
+    permissionsContext.Setup(x => x.IsAuthenticated).Returns(true);
+    permissionsContext.Setup(x => x.UserId).Returns(Guid.Parse(testUserId));
+    permissionsContext.Setup(x => x.TenantId).Returns((Guid?)null);
+
     var resourceContext = new Mock<IResourceContext>();
+    resourceContext.Setup(x => x.ResourceId).Returns((Guid?)null);
+    resourceContext.Setup(x => x.ResourceType).Returns((string?)null);
+    resourceContext.Setup(x => x.GetResourceIdentifier()).Returns("test-resource");
+
     var localizationContext = new Mock<ILocalizationContext>();
+    localizationContext.Setup(x => x.CurrentCulture).Returns(System.Globalization.CultureInfo.InvariantCulture);
+    localizationContext.Setup(x => x.TimeZoneId).Returns("UTC");
+    localizationContext.Setup(x => x.CurrentTimeZone).Returns(TimeZoneInfo.Utc);
+    localizationContext.Setup(x => x.GetCurrentLocalTime()).Returns(DateTime.UtcNow);
 
     // Act
     await middleware.InvokeAsync(httpContext, userContext, tenantContext, permissionsContext.Object, resourceContext.Object, localizationContext.Object);
@@ -54,7 +69,7 @@ public class ContextMiddlewareTests {
     Assert.True(userContext.IsAuthenticated);
     Assert.Equal(Guid.Parse(testUserId), userContext.UserId);
     Assert.Equal("test@example.com", userContext.Email);
-    Assert.NotNull(httpContext.Items["UsersContext"]);
+    Assert.NotNull(httpContext.Items["UserContext"]);
     Assert.NotNull(httpContext.Items["TenantContext"]);
   }
 
