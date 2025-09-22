@@ -79,14 +79,19 @@ void selection_sort(int arr[], int n) {
 
 ```c++
 void insertion_sort(int arr[], int n) {
-  for (int i = 1; i < n; i++) { // n - 1 passes
-    int key = arr[i]; // the key element to be inserted in the sorted part of the array
-    int j = i - 1; // the last element of the sorted part of the array
-    while (j >= 0 && arr[j] > key) { // shift the elements to the right to make space for the key
-      arr[j + 1] = arr[j];
-      j--;
+    // nothing to do here
+    if (n <=1)
+      return;
+    // outer loop goes from the left to the right. it marks the end of the sorted subarray
+    for (size_t lastSortedIdx = 1; lastSortedIdx<n; lastSortedIdx++) {
+      // inner loop starts from the last sorted index to 0, swapping to find the best place to stay
+      for (size_t i = lastSortedIdx; i>0; i--) {
+        if (arr[i-1] > arr[i])
+          swap(arr[i-1], arr[i]); // we swap until we find the best spot
+        else
+          break; // that's why it is faster! we break early
+      }
     }
-    arr[j + 1] = key; // insert the key in the right position
   }
 }
 ```
