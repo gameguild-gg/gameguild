@@ -193,7 +193,8 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
   #region Domain-based Auto-assignment
 
   public async Task<IEnumerable<TenantUserGroupMembership>> AutoAssignUserToGroupsAsync(string userEmail) {
-    var user = await context.Users.FirstOrDefaultAsync(u => u.Email == userEmail);
+    var normalizedEmail = userEmail.ToLowerInvariant();
+    var user = await context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail);
 
     if (user == null) return [];
 
@@ -247,7 +248,7 @@ public class TenantDomainService(ApplicationDbContext context) : ITenantDomainSe
 
     if (domainStrings.Count == 0) return 0;
 
-    var users = await context.Users.Where(u => u.DeletedAt == null && domainStrings.Any(domain => u.Email.ToLower().EndsWith("@" + domain))).ToListAsync();
+    var users = await context.Users.Where(u => u.DeletedAt == null && u.EmailAddress != null && domainStrings.Any(domain => u.EmailAddress.Value.EndsWith("@" + domain))).ToListAsync();
 
     var assignedCount = 0;
 

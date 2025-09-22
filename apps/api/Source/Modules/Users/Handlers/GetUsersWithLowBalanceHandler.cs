@@ -16,7 +16,7 @@ public class GetUsersWithLowBalanceHandler(ApplicationDbContext context) : IRequ
     query = query.Where(u => u.AvailableBalance.Amount <= request.ThresholdBalance);
 
     // Apply search term if provided
-    if (!string.IsNullOrWhiteSpace(request.SearchTerm)) query = query.Where(u => u.Name.Contains(request.SearchTerm) || u.Email.Contains(request.SearchTerm));
+    if (!string.IsNullOrWhiteSpace(request.SearchTerm)) query = query.Where(u => u.Name.Contains(request.SearchTerm) || (u.EmailAddress != null && u.EmailAddress.Value.Contains(request.SearchTerm)));
 
     // Get total count for pagination
     var totalCount = await query.CountAsync(cancellationToken);

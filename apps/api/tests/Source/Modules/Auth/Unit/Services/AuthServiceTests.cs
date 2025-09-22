@@ -99,7 +99,8 @@ public class AuthServiceTests : IDisposable {
     Assert.Equal("test@example.com", result.User.Email);
     Assert.Equal(tenantId, result.TenantId);
 
-    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+    var normalizedEmail = request.Email.ToLowerInvariant();
+    var user = await _context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail);
     Assert.NotNull(user);
 
     var credential = await _context.Credentials.FirstOrDefaultAsync(c => c.UserId == user.Id);

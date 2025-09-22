@@ -14,7 +14,8 @@ public class BulkCreateUsersHandler(ApplicationDbContext context, ILogger<BulkCr
     foreach (var userDto in request.Users) {
       try {
         // Check if user with email already exists
-        var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Email == userDto.Email, cancellationToken);
+        var normalizedEmail = userDto.Email.ToLowerInvariant();
+        var existingUser = await context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail, cancellationToken);
 
         if (existingUser != null) {
           errors.Add($"User with email {userDto.Email} already exists");
