@@ -296,10 +296,190 @@ public class EnhancedAuthService : IAuthService {
         throw new NotImplementedException("Enhanced Google sign-in not yet implemented");
     }
 
-    public Task<SignInResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request) {
-        // TODO: Implement with security enhancements  
-        throw new NotImplementedException("Enhanced refresh token not yet implemented");
+  public async Task<SignInResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request) {
+    // Light logging only (avoid dumping all tokens in production)
+    _logger.LogInformation("Processing refresh token (len={Len})", request.RefreshToken?.Length);
+
+    if (string.IsNullOrWhiteSpace(request.RefreshToken))
+      throw new UnauthorizedAccessException("Invalid refresh token");
+
+    // Security enhancement: Get IP address for anomaly detection
+    var ipAddress = GetClientIpAddress(_httpContextAccessor.HttpContext);
+
+    // We make refresh rotation idempotent: if two parallel calls try to rotate the same
+    // token, only the first will create a new token; the others will detect the existing
+    // replacement and return it instead of failing / creating multiple chains.
+    const int maxAttempts = 2; // initial try + one concurrency fallback
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        // Load existing token inside loop (may change after concurrency failure)
+        var existing = await _context.RefreshTokens
+          .Where(rt => rt.Token == request.RefreshToken)
+          .FirstOrDefaultAsync();
+
+        if (existing == null) {
+          _logger.LogWarning("Refresh token rejected (not found) from IP: {IpAddress}", ipAddress);
+
+          // Security enhancement: Record anomaly for token not found
+          await _anomalyService.RecordLoginAttemptAsync(new CreateLoginAttemptRequest {
+            Email = "unknown",
+            UserId = null,
+            IpAddress = ipAddress,
+            UserAgent = _httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString() ?? "unknown",
+            IsSuccessful = false,
+            FailureReason = "Invalid refresh token"
+          });
+
+          throw new UnauthorizedAccessException("Invalid refresh token");
+        }
+
+        // If already rotated by another request: return replacement if still active
+        if (existing.IsRevoked && existing.ReplacedByToken is not null) {
+          var replacement = await _context.RefreshTokens
+            .FirstOrDefaultAsync(rt => rt.Token == existing.ReplacedByToken);
+
+          if (replacement != null && !replacement.IsRevoked && replacement.ExpiresAt > DateTime.UtcNow) {
+            _logger.LogInformation("Refresh token already rotated by another request (attempt {Attempt})", attempt);
+
+            var userAlready = await _context.Users.FindAsync(existing.UserId)
+              ?? throw new UnauthorizedAccessException("User not found");
+            var userDtoAlready = new UserDto {
+              Id = userAlready.Id,
+              Username = userAlready.Name,
+              Email = userAlready.Email
+            };
+            var rolesAlready = new[] { "User" }; // TODO: actual roles
+
+            var accessMinutesAlready = int.Parse(_configuration["Jwt:ExpirationMinutes"]
+              ?? _configuration["Jwt:ExpiryInMinutes"] ?? "60");
+            var newAccessTokenAlready = _jwtTokenService.GenerateAccessToken(userDtoAlready, rolesAlready);
+            var newAccessTokenExpiresAtAlready = DateTime.UtcNow.AddMinutes(accessMinutesAlready);
+
+            var responseAlready = new SignInResponseDto {
+              AccessToken = newAccessTokenAlready,
+              RefreshToken = replacement.Token,
+              ExpiresAt = replacement.ExpiresAt,
+              AccessTokenExpiresAt = newAccessTokenExpiresAtAlready,
+              RefreshTokenExpiresAt = replacement.ExpiresAt,
+              User = userDtoAlready,
+            };
+            responseAlready = await _tenantAuthService.EnhanceWithTenantDataAsync(responseAlready, userAlready, request.TenantId);
+
+            return responseAlready;
+          }
+        }
+
+        if (existing.IsRevoked || existing.ExpiresAt <= DateTime.UtcNow) {
+          _logger.LogWarning("Refresh token rejected (revoked / expired) from IP: {IpAddress}", ipAddress);
+
+          // Security enhancement: Record anomaly for revoked/expired token
+          await _anomalyService.RecordLoginAttemptAsync(new CreateLoginAttemptRequest {
+            Email = "unknown",
+            UserId = existing.UserId,
+            IpAddress = ipAddress,
+            UserAgent = _httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString() ?? "unknown",
+            IsSuccessful = false,
+            FailureReason = existing.IsRevoked ? "Token revoked" : "Token expired"
+          });
+
+          throw new UnauthorizedAccessException("Invalid refresh token");
+        }
+
+        var user = await _context.Users.FindAsync(existing.UserId)
+          ?? throw new UnauthorizedAccessException("User not found");
+
+        var tenantId = request.TenantId; // optional override
+        IEnumerable<Claim>? tenantClaims = null;
+
+        if (tenantId.HasValue) {
+          var permittedTenants = await _tenantAuthService.GetUserTenantsAsync(user);
+
+          if (permittedTenants.Any(t => t.TenantId.HasValue && t.TenantId.Value == tenantId.Value)) {
+            tenantClaims = await _tenantAuthService.GetTenantClaimsAsync(user, tenantId.Value);
+          } else {
+            tenantId = null; // ignore inaccessible tenant
+          }
+        }
+
+        // Config
+        var accessMinutes = int.Parse(_configuration["Jwt:ExpirationMinutes"]
+          ?? _configuration["Jwt:ExpiryInMinutes"] ?? "60");
+        var refreshDays = int.Parse(_configuration["Jwt:RefreshTokenExpirationDays"]
+          ?? _configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+
+        var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
+        var roles = new[] { "User" }; // TODO: actual roles
+
+        var newAccessToken = _jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
+        var newRefreshTokenValue = _jwtTokenService.GenerateRefreshToken();
+        var newAccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessMinutes);
+        var newRefreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshDays);
+
+        // Rotate (mark revoked)
+        existing.IsRevoked = true;
+        existing.RevokedAt = DateTime.UtcNow;
+        existing.ReplacedByToken = newRefreshTokenValue;
+
+        // Persist new refresh token
+        var newRefreshTokenEntity = new RefreshToken {
+          UserId = user.Id,
+          Token = newRefreshTokenValue,
+          ExpiresAt = newRefreshTokenExpiresAt,
+          CreatedByIp = ipAddress,
+          IsRevoked = false
+        };
+        _context.RefreshTokens.Add(newRefreshTokenEntity);
+
+        // Maintenance
+        var cutoff = DateTime.UtcNow.AddDays(-30);
+        var stale = await _context.RefreshTokens
+          .Where(rt => rt.UserId == user.Id && rt.ExpiresAt < cutoff)
+          .ToListAsync();
+        if (stale.Count > 0)
+          _context.RefreshTokens.RemoveRange(stale);
+
+        await _context.SaveChangesAsync();
+
+        // Security enhancement: Record successful token refresh
+        await _anomalyService.RecordLoginAttemptAsync(new CreateLoginAttemptRequest {
+          Email = user.Email,
+          UserId = user.Id,
+          IpAddress = ipAddress,
+          UserAgent = _httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString() ?? "unknown",
+          IsSuccessful = true,
+          FailureReason = null
+        });
+
+        var signInResponse = new SignInResponseDto {
+          AccessToken = newAccessToken,
+          RefreshToken = newRefreshTokenValue,
+          ExpiresAt = newRefreshTokenExpiresAt,
+          AccessTokenExpiresAt = newAccessTokenExpiresAt,
+          RefreshTokenExpiresAt = newRefreshTokenExpiresAt,
+          User = userDto,
+          TenantId = tenantId,
+        };
+        signInResponse = await _tenantAuthService.EnhanceWithTenantDataAsync(signInResponse, user, tenantId);
+
+        return signInResponse;
+      }
+      catch (DbUpdateConcurrencyException ex) when (attempt < maxAttempts) {
+        _logger.LogWarning(ex, "Concurrency conflict rotating refresh token (attempt {Attempt}) - retrying", attempt);
+        // Clear tracked entities to avoid stale state before retry
+        foreach (var entry in _context.ChangeTracker.Entries().ToList())
+          entry.State = EntityState.Detached;
+        await Task.Delay(25); // small backoff
+
+        continue; // retry loop
+      }
     }
+
+    // If we reach here, concurrency did not resolve
+    _logger.LogError("Failed to rotate refresh token after {Attempts} attempts", maxAttempts);
+
+    throw new UnauthorizedAccessException("Could not refresh token at this time");
+  }
 
     public Task RevokeTokenAsync(RevokeTokenRequestDto request) {
         // TODO: Implement with security enhancements
@@ -316,10 +496,61 @@ public class EnhancedAuthService : IAuthService {
         throw new NotImplementedException("Enhanced password reset confirmation not yet implemented");
     }
 
-    public Task<Web3ChallengeResponseDto> GenerateWeb3ChallengeAsync(Web3ChallengeRequestDto request) {
-        // TODO: Implement with security enhancements
-        throw new NotImplementedException("Enhanced Web3 challenge not yet implemented");
+  public async Task<Web3ChallengeResponseDto> GenerateWeb3ChallengeAsync(Web3ChallengeRequestDto request) {
+    // Security enhancement: Get IP address for monitoring
+    var ipAddress = GetClientIpAddress(_httpContextAccessor.HttpContext);
+    var userAgent = _httpContextAccessor.HttpContext?.Request.Headers.UserAgent.ToString() ?? "unknown";
+
+    _logger.LogInformation("Web3 challenge request from IP: {IpAddress}, UserAgent: {UserAgent}, Address: {WalletAddress}", 
+      ipAddress, userAgent, request.WalletAddress);
+
+    try {
+      // Delegate to the Web3 service for challenge generation
+      var challengeResponse = await _web3Service.GenerateChallengeAsync(request);
+
+      // Security enhancement: Record successful challenge generation
+      await _anomalyService.RecordLoginAttemptAsync(new CreateLoginAttemptRequest {
+        Email = "web3-challenge",
+        UserId = null,
+        IpAddress = ipAddress,
+        UserAgent = userAgent,
+        IsSuccessful = true,
+        FailureReason = null
+      });
+
+      return challengeResponse;
     }
+    catch (ArgumentException ex) {
+      _logger.LogWarning("Invalid Web3 challenge request from IP: {IpAddress}, Error: {Error}", ipAddress, ex.Message);
+
+      // Security enhancement: Record failed challenge generation for invalid addresses
+      await _anomalyService.RecordLoginAttemptAsync(new CreateLoginAttemptRequest {
+        Email = "web3-challenge-invalid",
+        UserId = null,
+        IpAddress = ipAddress,
+        UserAgent = userAgent,
+        IsSuccessful = false,
+        FailureReason = ex.Message
+      });
+
+      throw; // Re-throw the original exception to maintain proper error handling
+    }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Error generating Web3 challenge from IP: {IpAddress}", ipAddress);
+
+      // Security enhancement: Record unexpected errors
+      await _anomalyService.RecordLoginAttemptAsync(new CreateLoginAttemptRequest {
+        Email = "web3-challenge-error",
+        UserId = null,
+        IpAddress = ipAddress,
+        UserAgent = userAgent,
+        IsSuccessful = false,
+        FailureReason = "Challenge generation error"
+      });
+
+      throw; // Re-throw the original exception
+    }
+  }
 
     public Task<SignInResponseDto> Web3SignInAsync(Web3SignInRequestDto request) {
         // TODO: Implement with security enhancements
