@@ -17,7 +17,8 @@ public class ProductPermission : ResourcePermission<Product> {
 
   // Public constructor for creating instances
   public ProductPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
-    : base(userId, tenantId, resourceId, permissions) {
+    : base(userId, tenantId, resourceId) {
+    AddPermission(permissions);
   }
   // Product-specific computed properties
 

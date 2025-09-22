@@ -1,10 +1,9 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
-using GameGuild;
+using System.Text.Json.Serialization;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants;
 using GameGuild.Tests.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -90,7 +89,11 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     var responseContent = await response.Content.ReadAsStringAsync();
     var result = JsonSerializer.Deserialize<TenantDomain>(
       responseContent,
-      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+      new JsonSerializerOptions 
+      { 
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+      }
     );
 
     Assert.NotNull(result);
@@ -129,7 +132,11 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     var responseContent = await response.Content.ReadAsStringAsync();
     var result = JsonSerializer.Deserialize<TenantDomain>(
       responseContent,
-      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+      new JsonSerializerOptions 
+      { 
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+      }
     );
 
     Assert.NotNull(result);
@@ -224,7 +231,11 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     var responseContent = await response.Content.ReadAsStringAsync();
     var result = JsonSerializer.Deserialize<TenantDomain>(
       responseContent,
-      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+      new JsonSerializerOptions 
+      { 
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+      }
     );
 
     Assert.NotNull(result);

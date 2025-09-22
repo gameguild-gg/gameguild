@@ -6,6 +6,7 @@ using System.Text.Json;
 using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
+using GameGuild.Modules.Contents; // Add this for AccessLevel
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants;
 using GameGuild.Tests.Helpers;
@@ -48,8 +49,11 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     var tenant = new Tenant {
       Id = tenantId,
       Name = "University of Technology",
+      Title = "University of Technology", // Add required Title
+      Slug = "university-of-technology", // Add required Slug
       Description = "A technology university",
       IsActive = true,
+      Visibility = AccessLevel.Public, // Set explicit visibility
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow,
     };
@@ -246,7 +250,12 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     await db.SaveChangesAsync();
 
     // Step 6: Test auto-assignment for general student
-    var autoAssignStudentDto = new AutoAssignUserDto { UserId = studentUser.Id, Email = studentUser.Email };
+    var autoAssignStudentDto = new AutoAssignUserDto { 
+      UserId = studentUser.Id, 
+      Email = studentUser.Email,
+      EmailDomain = "university.edu",
+      TenantId = tenantId
+    };
 
     json = JsonSerializer.Serialize(autoAssignStudentDto);
     content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -263,7 +272,12 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     Assert.True(studentMembershipResult.IsAutoAssigned);
 
     // Step 7: Test auto-assignment for CS student
-    var autoAssignCSStudentDto = new AutoAssignUserDto { UserId = csStudentUser.Id, Email = csStudentUser.Email };
+    var autoAssignCSStudentDto = new AutoAssignUserDto { 
+      UserId = csStudentUser.Id, 
+      Email = csStudentUser.Email,
+      EmailDomain = "cs.university.edu",
+      TenantId = tenantId
+    };
 
     json = JsonSerializer.Serialize(autoAssignCSStudentDto);
     content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -280,7 +294,12 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     Assert.True(csMembershipResult.IsAutoAssigned);
 
     // Step 8: Test auto-assignment for faculty
-    var autoAssignFacultyDto = new AutoAssignUserDto { UserId = professorUser.Id, Email = professorUser.Email };
+    var autoAssignFacultyDto = new AutoAssignUserDto { 
+      UserId = professorUser.Id, 
+      Email = professorUser.Email,
+      EmailDomain = "faculty.university.edu",
+      TenantId = tenantId
+    };
 
     json = JsonSerializer.Serialize(autoAssignFacultyDto);
     content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -297,7 +316,12 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     Assert.True(facultyMembershipResult.IsAutoAssigned);
 
     // Step 9: Test auto-assignment for outside user (should fail)
-    var autoAssignOutsideDto = new AutoAssignUserDto { UserId = outsideUser.Id, Email = outsideUser.Email };
+    var autoAssignOutsideDto = new AutoAssignUserDto { 
+      UserId = outsideUser.Id, 
+      Email = outsideUser.Email,
+      EmailDomain = "external.com",
+      TenantId = tenantId
+    };
 
     json = JsonSerializer.Serialize(autoAssignOutsideDto);
     content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -427,8 +451,11 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     var tenant = new Tenant {
       Id = tenantId,
       Name = "TechCorp Inc",
+      Title = "TechCorp Inc", // Add required Title
+      Slug = "techcorp-inc", // Add required Slug
       Description = "A technology corporation",
       IsActive = true,
+      Visibility = AccessLevel.Public, // Set explicit visibility
       CreatedAt = DateTime.UtcNow,
       UpdatedAt = DateTime.UtcNow,
     };
@@ -550,7 +577,12 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     await db.SaveChangesAsync();
 
     // Test employee auto-assignment
-    var autoAssignDevDto = new AutoAssignUserDto { UserId = devUser.Id, Email = devUser.Email };
+    var autoAssignDevDto = new AutoAssignUserDto { 
+      UserId = devUser.Id, 
+      Email = devUser.Email,
+      EmailDomain = "techcorp.com",
+      TenantId = tenantId
+    };
 
     json = JsonSerializer.Serialize(autoAssignDevDto);
     content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -558,7 +590,12 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-    var autoAssignHRDto = new AutoAssignUserDto { UserId = hrUser.Id, Email = hrUser.Email };
+    var autoAssignHRDto = new AutoAssignUserDto { 
+      UserId = hrUser.Id, 
+      Email = hrUser.Email,
+      EmailDomain = "partners.techcorp.com",
+      TenantId = tenantId
+    };
 
     json = JsonSerializer.Serialize(autoAssignHRDto);
     content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -567,7 +604,12 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
     // Test contractor auto-assignment
-    var autoAssignContractorDto = new AutoAssignUserDto { UserId = contractorUser.Id, Email = contractorUser.Email };
+    var autoAssignContractorDto = new AutoAssignUserDto { 
+      UserId = contractorUser.Id, 
+      Email = contractorUser.Email,
+      EmailDomain = "external.techcorp.com",
+      TenantId = tenantId
+    };
 
     json = JsonSerializer.Serialize(autoAssignContractorDto);
     content = new StringContent(json, Encoding.UTF8, "application/json");
