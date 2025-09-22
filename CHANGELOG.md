@@ -1,3 +1,10 @@
+## [2.21.4](https://github.com/gameguild-gg/gameguild/compare/v2.21.3...v2.21.4) (2025-09-22)
+
+
+### Bug Fixes
+
+* **web:** Adds week 5 content on game dev issues ([eddf87c](https://github.com/gameguild-gg/gameguild/commit/eddf87c81a6aad43175f50a004df031b89ee2eaa))
+
 ## [2.21.3](https://github.com/gameguild-gg/gameguild/compare/v2.21.2...v2.21.3) (2025-09-22)
 
 
