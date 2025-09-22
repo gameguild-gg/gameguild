@@ -51,6 +51,12 @@ public class PaymentCommandTests : IDisposable {
     services.AddSingleton(_mockTenantContext.Object);
     services.AddSingleton(_mockPaymentGateway.Object);
 
+    // Add payment handlers explicitly
+    services.AddScoped<CreatePaymentCommandHandler>();
+    services.AddScoped<ProcessPaymentCommandHandler>();
+    services.AddScoped<RefundPaymentCommandHandler>();
+    services.AddScoped<CancelPaymentCommandHandler>();
+
     _serviceProvider = services.BuildServiceProvider();
     _context = _serviceProvider.GetRequiredService<ApplicationDbContext>();
     _mediator = _serviceProvider.GetRequiredService<IMediator>();
