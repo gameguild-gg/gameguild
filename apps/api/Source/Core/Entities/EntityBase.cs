@@ -161,7 +161,7 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, IHasDomainEvents where T
 }
 
 /// <summary> Base entity class that provides common properties and functionality for all domain entities. Uses Guid as the default identifier type. </summary>
-public class EntityBase : EntityBase<Guid> {
+public class EntityBase : EntityBase<Guid>, IEntity {
   /// <summary> Default constructor </summary>
   protected EntityBase() {
     if (Id == Guid.Empty) { Id = Guid.NewGuid(); }
