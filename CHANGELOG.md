@@ -1,3 +1,10 @@
+## [2.21.3](https://github.com/gameguild-gg/gameguild/compare/v2.21.2...v2.21.3) (2025-09-22)
+
+
+### Bug Fixes
+
+* **dsa:** Refactors merge sort explanations ([0ed52dc](https://github.com/gameguild-gg/gameguild/commit/0ed52dc3dcbb60201e5154fba4ccff9a0153f511))
+
 ## [2.21.2](https://github.com/gameguild-gg/gameguild/compare/v2.21.1...v2.21.2) (2025-09-22)
 
 
