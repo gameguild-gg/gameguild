@@ -52,7 +52,7 @@ The algorthims will keep dividing the array (in red) until it reaches the base c
 
 ### Mergesort implementation
 
-```c++
+``` c++
 #include <iostream>
 #include <vector>
 #include <queue>
