@@ -23,6 +23,10 @@ public class AuthorizationModule : ModuleBase {
         services.AddScoped<IModulePermissionService, ModulePermissionService>();
         services.AddScoped<ISimplePermissionService, SimplePermissionService>();
 
+        // Register missing DAC and Resource Permission services
+        services.AddScoped<IDacPermissionResolver, DacPermissionResolver>();
+        services.AddScoped<IResourcePermissionService, ResourcePermissionService>();
+
         // CQRS handlers are automatically registered by assembly scanning
 
         return services;
