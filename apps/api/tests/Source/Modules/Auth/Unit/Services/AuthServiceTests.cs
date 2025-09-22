@@ -387,6 +387,10 @@ public class AuthServiceTests : IDisposable {
     _mockTenantAuthService.Setup(x => x.GetTenantClaimsAsync(It.IsAny<UserModel>(), tenantId))
         .ReturnsAsync(tenantClaims);
 
+    // Setup EnhanceWithTenantDataAsync to return the input response
+    _mockTenantAuthService.Setup(x => x.EnhanceWithTenantDataAsync(It.IsAny<SignInResponseDto>(), It.IsAny<UserModel>(), It.IsAny<Guid?>()))
+        .ReturnsAsync((SignInResponseDto response, UserModel user, Guid? tenantId) => response);
+
     // Act
     var result = await _authService.RefreshTokenAsync(request);
 
