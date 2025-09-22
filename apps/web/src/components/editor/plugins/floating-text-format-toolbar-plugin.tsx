@@ -40,7 +40,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
-import { TOGGLE_LINK_COMMAND } from "@lexical/link"
+import { TOGGLE_LINK_COMMAND, $isLinkNode } from "@lexical/link"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -82,6 +82,7 @@ export function FloatingTextFormatToolbarPlugin() {
   const [linkUrl, setLinkUrl] = useState("")
   const [linkProtocol, setLinkProtocol] = useState("https://")
   const [selectedText, setSelectedText] = useState("")
+  const [isEditingExistingLink, setIsEditingExistingLink] = useState(false)
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection()
@@ -105,6 +106,18 @@ export function FloatingTextFormatToolbarPlugin() {
     setIsSubscript(selection.hasFormat("subscript"))
     setIsSuperscript(selection.hasFormat("superscript"))
     setIsCode(selection.hasFormat("code"))
+
+    // Verificar se a seleção está dentro de um link
+    const nodes = selection.getNodes()
+    let isInLink = false
+    for (const node of nodes) {
+      const parent = node.getParent()
+      if ($isLinkNode(parent) || $isLinkNode(node)) {
+        isInLink = true
+        break
+      }
+    }
+    setIsLink(isInLink)
 
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
@@ -246,6 +259,7 @@ export function FloatingTextFormatToolbarPlugin() {
       setLinkUrl("")
       setSelectedText("")
       setLinkProtocol("https://") // Resetar para o padrão
+      setIsEditingExistingLink(false) // Resetar o estado de edição
     }
   }, [editor, linkUrl, linkProtocol])
 
@@ -255,6 +269,51 @@ export function FloatingTextFormatToolbarPlugin() {
       if ($isRangeSelection(selection)) {
         const text = selection.getTextContent()
         setSelectedText(text)
+        
+        // Verificar se o texto selecionado já é um link
+        const nodes = selection.getNodes()
+        let existingUrl = ""
+        let existingProtocol = "https://"
+        
+        // Procurar por nós de link na seleção
+        for (const node of nodes) {
+          const parent = node.getParent()
+          if ($isLinkNode(parent)) {
+            existingUrl = parent.getURL()
+            break
+          }
+          if ($isLinkNode(node)) {
+            existingUrl = node.getURL()
+            break
+          }
+        }
+        
+        // Se encontrou um link existente, extrair protocolo e URL
+        if (existingUrl) {
+          setIsEditingExistingLink(true)
+          if (existingUrl.startsWith("https://")) {
+            existingProtocol = "https://"
+            existingUrl = existingUrl.replace("https://", "")
+          } else if (existingUrl.startsWith("http://")) {
+            existingProtocol = "http://"
+            existingUrl = existingUrl.replace("http://", "")
+          } else if (existingUrl.startsWith("/")) {
+            existingProtocol = "/"
+            existingUrl = existingUrl
+          } else if (existingUrl.startsWith("#")) {
+            existingProtocol = "#/"
+            existingUrl = existingUrl.replace("#", "")
+          }
+          
+          setLinkProtocol(existingProtocol)
+          setLinkUrl(existingUrl)
+        } else {
+          // Resetar para valores padrão se não houver link existente
+          setIsEditingExistingLink(false)
+          setLinkProtocol("https://")
+          setLinkUrl("")
+        }
+        
         setShowLinkDialog(true)
       }
     })
@@ -830,10 +889,24 @@ export function FloatingTextFormatToolbarPlugin() {
           </DropdownMenu>
         </div>
       )}
-      <Dialog open={showLinkDialog} onOpenChange={setShowLinkDialog}>
+      <Dialog 
+        open={showLinkDialog} 
+        onOpenChange={(open) => {
+          setShowLinkDialog(open)
+          if (!open) {
+            // Resetar estados quando o diálogo é fechado
+            setLinkUrl("")
+            setSelectedText("")
+            setLinkProtocol("https://")
+            setIsEditingExistingLink(false)
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Link</DialogTitle>
+            <DialogTitle>
+              {isEditingExistingLink ? "Edit Link" : "Add Link"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -889,7 +962,7 @@ export function FloatingTextFormatToolbarPlugin() {
               Cancel
             </Button>
             <Button onClick={handleInsertLink} disabled={!isLinkValid()}>
-              Add Link
+              {isEditingExistingLink ? "Update Link" : "Add Link"}
             </Button>
           </DialogFooter>
         </DialogContent>
