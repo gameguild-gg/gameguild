@@ -81,9 +81,10 @@ public class EnhancedAuthService : IAuthService {
             }
 
             // Lookup user
+            var normalizedEmail = request.Email.ToLowerInvariant();
             user = await _context.Users
                 .Include(u => u.Credentials)
-                .FirstOrDefaultAsync(u => u.Email == request.Email);
+                .FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail);
 
             userExists = user != null;
 
