@@ -117,6 +117,7 @@ import intro2gproInterview from './intro2gpro/week01/interview-a-gamedev.md';
 import intro2gproGamedevTools from './intro2gpro/week02/gamedev-tools.md';
 import intro2gproGamedevCareers from './intro2gpro/week03/gamedev-careers.md';
 import intro2gproGamedevIssues from './intro2gpro/week04/gamedev-issues.md';
+import intro2gproGamedevIssuesPresentations from './intro2gpro/week05/gamedev-issues-presentations.md';
 
 // Game Publishing Course Imports
 import gamePublishingSyllabus from './game-publishing/syllabus.md';
@@ -276,6 +277,29 @@ export const intro2gproGamedevIssuesContent: ProgramContent = {
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
     slug: 'gamedev-issues',
+};
+
+export const intro2gproGamedevIssuesPresentationsContent: ProgramContent = {
+    id: 'intro2gpro-gamedev-issues-presentations',
+    programId: 'intro2gpro-program-1',
+    parentId: undefined,
+    title: 'Week 05: Game Development Issues Presentations',
+    description: 'Students present their research about game development issues in peer-evaluated presentations.',
+    type: 0, // Page
+    body: intro2gproGamedevIssuesPresentations,
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'gamedev-issues-presentations',
 };
 
 // Child content for gamedev-issues
@@ -3759,6 +3783,7 @@ intro2gproProgram.programContents = [
     intro2gproGamedevToolsContent,
     intro2gproGamedevCareersContent,
     intro2gproGamedevIssuesContent,
+    intro2gproGamedevIssuesPresentationsContent,
 ];
 
 gamePublishingProgram.programContents = [
@@ -3777,6 +3802,7 @@ intro2gproInterviewContent.program = intro2gproProgram;
 intro2gproGamedevToolsContent.program = intro2gproProgram;
 intro2gproGamedevCareersContent.program = intro2gproProgram;
 intro2gproGamedevIssuesContent.program = intro2gproProgram;
+intro2gproGamedevIssuesPresentationsContent.program = intro2gproProgram;
 intro2gproTechnicalChallengesContent.program = intro2gproProgram;
 intro2gproDesignChallengesContent.program = intro2gproProgram;
 intro2gproBusinessChallengesContent.program = intro2gproProgram;
@@ -3950,6 +3976,8 @@ export const mockProgramContents: ProgramContent[] = [
     intro2gproInterviewContent,
     intro2gproGamedevToolsContent,
     intro2gproGamedevCareersContent,
+    intro2gproGamedevIssuesContent,
+    intro2gproGamedevIssuesPresentationsContent,
     
     // Game Publishing content
     gamePublishingSyllabusContent,
