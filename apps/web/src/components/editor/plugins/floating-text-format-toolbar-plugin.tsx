@@ -469,18 +469,8 @@ export function FloatingTextFormatToolbarPlugin() {
                   )}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onSelect={(e) => e.preventDefault()}
-                onClick={() => {
-                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code")
-                  editor.getEditorState().read(() => updateToolbar())
-                }}
-              >
-                <Code className="mr-2 h-5 w-5" />
-                <span>Code</span>
-                {isCode && <Check className="ml-auto h-5 w-5" />}
-              </DropdownMenuItem>
+          
+              
             </DropdownMenuContent>
           </DropdownMenu>
 

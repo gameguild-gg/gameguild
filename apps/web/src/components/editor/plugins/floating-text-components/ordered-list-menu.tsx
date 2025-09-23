@@ -1,8 +1,9 @@
 "use client"
 
 import { useCallback } from "react"
-import { $getSelection, $isRangeSelection } from "lexical"
-import { INSERT_ORDERED_LIST_COMMAND } from "@lexical/list"
+import { $getSelection, $isRangeSelection, $createTextNode } from "lexical"
+import { $createListItemNode } from "@lexical/list"
+import { $createCustomListNode } from "@/components/editor/nodes/custom-list-node"
 import { Check } from "lucide-react"
 import {
   DropdownMenuSub,
@@ -23,23 +24,33 @@ interface OrderedListStyle {
 }
 
 const ORDERED_LIST_STYLES: OrderedListStyle[] = [
-  { icon: "1.", name: "Numbers (default)", style: "list-style-type: decimal;" },
+  { icon: "1.", name: "Numbers (default)", style: "decimal" },
+  { icon: "A.", name: "Uppercase Letters", style: "upper-alpha" },
+  { icon: "a.", name: "Lowercase Letters", style: "lower-alpha" },
 ]
 
 export function OrderedListMenu({ editor, currentListType }: OrderedListMenuProps) {
   const handleOrderedListClick = useCallback(
-    (style: string) => {
-      editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)
+    (listType: string) => {
       editor.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
-          const nodes = selection.getNodes()
-          nodes.forEach((node) => {
-            const listNode = node.getTopLevelElementOrThrow()
-            if (listNode.getType() === "list") {
-              listNode.setStyle(style)
-            }
-          })
+          // Criar uma nova lista customizada com o tipo de estilo especificado
+          const listNode = $createCustomListNode("number", 1, listType)
+          const listItemNode = $createListItemNode()
+          
+          // Obter o conteúdo selecionado
+          const selectedText = selection.getTextContent()
+          
+          if (selectedText) {
+            // Se há texto selecionado, criar item da lista com esse texto
+            listItemNode.append($createTextNode(selectedText))
+          }
+          
+          listNode.append(listItemNode)
+          
+          // Inserir a lista na posição da seleção
+          selection.insertNodes([listNode])
         }
       })
     },
@@ -52,7 +63,7 @@ export function OrderedListMenu({ editor, currentListType }: OrderedListMenuProp
         <span className="mr-2">1.</span>
         <span>Ordered Lists</span>
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent side="right" align="start" className="w-48">
+      <DropdownMenuSubContent className="w-48">
         {ORDERED_LIST_STYLES.map((listStyle, index) => (
           <DropdownMenuItem
             key={index}
