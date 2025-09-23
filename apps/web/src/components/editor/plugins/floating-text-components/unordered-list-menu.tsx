@@ -30,18 +30,21 @@ export function UnorderedListMenu({ editor, currentListType }: UnorderedListMenu
   const handleUnorderedListClick = useCallback(
     (style: string) => {
       editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)
-      editor.update(() => {
-        const selection = $getSelection()
-        if ($isRangeSelection(selection)) {
-          const nodes = selection.getNodes()
-          nodes.forEach((node) => {
-            const listNode = node.getTopLevelElementOrThrow()
-            if (listNode.getType() === "list") {
-              listNode.setStyle(style)
-            }
-          })
-        }
-      })
+      // Aplicar o estilo após criar a lista
+      setTimeout(() => {
+        editor.update(() => {
+          const selection = $getSelection()
+          if ($isRangeSelection(selection)) {
+            const nodes = selection.getNodes()
+            nodes.forEach((node) => {
+              const listNode = node.getTopLevelElementOrThrow()
+              if (listNode.getType() === "list" && 'setStyle' in listNode) {
+                (listNode as any).setStyle(style)
+              }
+            })
+          }
+        })
+      }, 0)
     },
     [editor],
   )
@@ -52,7 +55,7 @@ export function UnorderedListMenu({ editor, currentListType }: UnorderedListMenu
         <span className="mr-2">•</span>
         <span>Unordered Lists</span>
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent side="right" align="start" className="w-48">
+      <DropdownMenuSubContent className="w-48">
         {UNORDERED_LIST_STYLES.map((listStyle, index) => (
           <DropdownMenuItem
             key={index}
