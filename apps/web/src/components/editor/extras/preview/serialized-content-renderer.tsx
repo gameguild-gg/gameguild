@@ -149,6 +149,7 @@ export function SerializedContentRenderer({
             </PreviewQuote>
           )
         case "list":
+        case "custom-list":
           return (
             <PreviewList key={uniqueKey} node={node}>
               {children}
