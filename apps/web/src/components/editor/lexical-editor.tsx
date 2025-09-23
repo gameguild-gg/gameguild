@@ -80,6 +80,7 @@ import { SourceCodePlugin } from "./plugins/source-code-plugin"
 
 import { MermaidNode } from "./nodes/mermaid-node"
 import { MermaidPlugin } from "./plugins/mermaid-plugin"
+import { CustomListNode } from "./nodes/custom-list-node"
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import {
@@ -277,6 +278,7 @@ const initialConfig = {
     QuoteNode,
     ListItemNode,
     ListNode,
+    CustomListNode,
     // Remove CodeHighlightNode to avoid the prismjs dependency
     CodeNode,
     TableCellNode,
@@ -320,6 +322,7 @@ const initialConfig = {
     list: {
       ul: "list-disc list-inside",
       ol: "list-decimal list-inside",
+      listitem: "my-1",
     },
     quote: "border-l-4 border-muted pl-4 italic",
     code: "bg-muted p-1 rounded font-mono text-sm",
