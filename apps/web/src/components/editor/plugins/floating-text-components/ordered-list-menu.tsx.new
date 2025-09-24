@@ -1,0 +1,97 @@
+"use client"
+
+import { useCallback } from "react"
+import { $getSelection, $isRangeSelection } from "lexical"
+import { $createListItemNode, INSERT_ORDERED_LIST_COMMAND, $isListNode } from "@lexical/list"
+import { $createCustomListNode } from "@/components/editor/nodes/custom-list-node"
+import { Check } from "lucide-react"
+import {
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
+
+interface OrderedListMenuProps {
+  editor: any
+  currentListType: string
+}
+
+interface OrderedListStyle {
+  icon: string
+  name: string
+  style: string
+}
+
+const ORDERED_LIST_STYLES: OrderedListStyle[] = [
+  { icon: "1.", name: "Numbers (default)", style: "decimal" },
+  { icon: "A.", name: "Uppercase Letters", style: "upper-alpha" },
+  { icon: "a.", name: "Lowercase Letters", style: "lower-alpha" },
+]
+
+export function OrderedListMenu({ editor, currentListType }: OrderedListMenuProps) {
+  const handleOrderedListClick = useCallback(
+    (listType: string) => {
+      // Primeiro usa o comando padrão para compatibilidade com A-B-C
+      editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)
+      
+      // Depois substitui com o nó customizado e aplica estilos para persistir no JSON
+      setTimeout(() => {
+        editor.update(() => {
+          const selection = $getSelection()
+          if ($isRangeSelection(selection)) {
+            const nodes = selection.getNodes()
+            nodes.forEach((node) => {
+              const listNode = node.getTopLevelElementOrThrow()
+              if ($isListNode(listNode)) {
+                // Criar um novo nó customizado para substituir o nó padrão
+                const customListNode = $createCustomListNode("number", 1, listType)
+                
+                // Copiar todos os filhos do nó original
+                const children = listNode.getChildren()
+                children.forEach((child: any) => {
+                  customListNode.append(child)
+                })
+                
+                // Substituir o nó original pelo customizado
+                listNode.replace(customListNode)
+                
+                // Aplicar estilo CSS diretamente no DOM também
+                setTimeout(() => {
+                  const element = editor.getElementByKey(customListNode.getKey())
+                  if (element) {
+                    element.style.listStyleType = listType
+                    element.setAttribute('data-list-style-type', listType)
+                  }
+                }, 50)
+              }
+            })
+          }
+        })
+      }, 100)
+    },
+    [editor],
+  )
+
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>
+        <span className="mr-2">1.</span>
+        <span>Ordered Lists</span>
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="w-48">
+        {ORDERED_LIST_STYLES.map((listStyle, index) => (
+          <DropdownMenuItem
+            key={index}
+            onClick={() => handleOrderedListClick(listStyle.style)}
+            onSelect={(e) => e.preventDefault()}
+          >
+            <span className="mr-2">{listStyle.icon}</span>
+            <span>{listStyle.name}</span>
+            {currentListType === "number" && index === 0 && <Check className="ml-auto h-4 w-4" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  )
+}

@@ -277,7 +277,7 @@ const initialConfig = {
     HeadingNode,
     QuoteNode,
     ListItemNode,
-    ListNode,
+    // ListNode,  // Substituído pelo CustomListNode
     CustomListNode,
     // Remove CodeHighlightNode to avoid the prismjs dependency
     CodeNode,
