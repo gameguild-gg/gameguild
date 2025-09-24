@@ -47,16 +47,12 @@ public class ProgramQueries {
             var userId = claimsPrincipal.GetUserId();
             logger.LogInformation("GetUserId() result: {UserId}", userId);
 
-            if (string.IsNullOrEmpty(userId)) {
+            if (userId == null) {
                 logger.LogWarning("No valid user ID found in claims");
                 return Enumerable.Empty<ProgramEntity>();
             }
 
-            // Convert string userId to Guid
-            if (!Guid.TryParse(userId, out var userGuid)) {
-                logger.LogWarning("Invalid user ID format: {UserId}", userId);
-                return Enumerable.Empty<ProgramEntity>();
-            }
+            var userGuid = userId.Value;
 
             // Get programs for the user
             var programs = await programService.GetProgramsByCreatorAsync(userGuid, skip, take);
@@ -85,7 +81,7 @@ public class ProgramQueries {
       Guid id,
       [Service] IProgramService programService
     ) {
-        return await programService.GetByIdAsync(id);
+        return await programService.GetProgramByIdAsync(id);
     }
 
     /// <summary> Gets a program by slug (public access for published programs) </summary>
