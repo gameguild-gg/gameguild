@@ -55,6 +55,8 @@ public class ProductType : ObjectType<Product> {
 
     descriptor.Field(p => p.PromoCodes).Type<ListType<PromoCodeType>>().Description("Promotional codes associated with this product.");
 
+    descriptor.Field(p => p.ProductPrograms).Type<ListType<ProductProgramType>>().Description("Programs included in this product.");
+
     // Computed fields based on DAC permissions
     descriptor.Field("canEdit")
               .Type<BooleanType>()
