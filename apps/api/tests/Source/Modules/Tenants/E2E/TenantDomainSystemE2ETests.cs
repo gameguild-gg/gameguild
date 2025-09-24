@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
@@ -28,6 +29,13 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     _factory = IntegrationTestHelper.GetTestFactory(uniqueDbName);
     _client = _factory.CreateClient();
   }
+
+  private static readonly JsonSerializerOptions JsonOptions = new() {
+    PropertyNameCaseInsensitive = true,
+    Converters = { new JsonStringEnumConverter() }
+  };
+
+  private static T? DeserializeJson<T>(string json) => JsonSerializer.Deserialize<T>(json, JsonOptions);
 
   [Fact]
   public async Task CompleteUniversityScenario_CreateDomainGroupsAndAutoAssign_WorksEndToEnd() {
@@ -124,10 +132,7 @@ public class TenantDomainSystemE2ETests : IClassFixture<WebApplicationFactory<Pr
     if (response.StatusCode != HttpStatusCode.Created) throw new Exception($"Domain creation failed. Status: {response.StatusCode}, Content: {responseContent}");
 
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    var mainDomainResult = JsonSerializer.Deserialize<TenantDomain>(
-      await response.Content.ReadAsStringAsync(),
-      new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-    );
+    var mainDomainResult = DeserializeJson<TenantDomain>(await response.Content.ReadAsStringAsync());
     Assert.NotNull(mainDomainResult);
 
     // Step 2: Create CS subdomain
