@@ -28,30 +28,29 @@ public class ProgramMutations {
         logger.LogInformation("=== CreateProgram Debug ===");
 
         var userId = claimsPrincipal.GetUserId();
-        if (string.IsNullOrEmpty(userId)) {
+        if (userId == null) {
             throw new UnauthorizedAccessException("User ID not found in claims");
         }
 
         var command = new CreateProgramCommand(
           Title: input.Title,
-          Description: input.Description,
-          Category: input.Category,
-          Difficulty: input.Difficulty,
-          CreatorId: userId,
-          Visibility: input.Visibility ?? GameGuild.Modules.Contents.AccessLevel.Private,
-          EstimatedHours: input.EstimatedHours,
+          Description: input.Description ?? "",
           Thumbnail: input.Thumbnail,
-          VideoShowcaseUrl: input.VideoShowcaseUrl
+          EstimatedHours: input.EstimatedHours,
+          Category: input.Category ?? ProgramCategory.Other,
+          Difficulty: input.Difficulty ?? ProgramDifficulty.Beginner,
+          VideoShowcaseUrl: input.VideoShowcaseUrl,
+          CreatorId: userId?.ToString()
         );
 
-        var programId = await mediator.Send(command);
-        var program = await programService.GetByIdAsync(programId);
+        var program = await mediator.Send(command);
+        logger.LogInformation("Created program with ID: {ProgramId}", program.Id);
 
         if (program == null) {
             throw new InvalidOperationException("Failed to retrieve created program");
         }
 
-        logger.LogInformation("Successfully created program {ProgramId} for user {UserId}", programId, userId);
+        logger.LogInformation("Successfully created program {ProgramId} for user {UserId}", program.Id, userId);
         return program;
     }
 
@@ -70,14 +69,13 @@ public class ProgramMutations {
           Description: input.Description,
           Category: input.Category,
           Difficulty: input.Difficulty,
-          Visibility: input.Visibility,
           EstimatedHours: input.EstimatedHours,
           Thumbnail: input.Thumbnail,
           VideoShowcaseUrl: input.VideoShowcaseUrl
         );
 
         await mediator.Send(command);
-        var program = await programService.GetByIdAsync(id);
+        var program = await programService.GetProgramByIdAsync(id);
 
         if (program == null) {
             throw new InvalidOperationException("Failed to retrieve updated program");
@@ -109,7 +107,7 @@ public class ProgramMutations {
       [Service] ILogger<ProgramMutations> logger
     ) {
         await programService.PublishAsync(id);
-        var program = await programService.GetByIdAsync(id);
+        var program = await programService.GetProgramByIdAsync(id);
 
         if (program == null) {
             throw new InvalidOperationException("Failed to retrieve published program");
