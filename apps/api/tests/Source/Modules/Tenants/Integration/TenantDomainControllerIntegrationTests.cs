@@ -12,7 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using UserModel = GameGuild.Modules.Users.User;
 
 
-namespace GameGuild.Tests.Modules.Tenants.Integration;
+namespace GameGuild.Tests.Source.Modules.Tenants.Integration;
 
 public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable {
   private readonly WebApplicationFactory<Program> _factory;
@@ -89,8 +89,8 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     var responseContent = await response.Content.ReadAsStringAsync();
     var result = JsonSerializer.Deserialize<TenantDomain>(
       responseContent,
-      new JsonSerializerOptions 
-      { 
+      new JsonSerializerOptions
+      {
         PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() }
       }
@@ -132,8 +132,8 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     var responseContent = await response.Content.ReadAsStringAsync();
     var result = JsonSerializer.Deserialize<TenantDomain>(
       responseContent,
-      new JsonSerializerOptions 
-      { 
+      new JsonSerializerOptions
+      {
         PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() }
       }
@@ -231,8 +231,8 @@ public class TenantDomainControllerIntegrationTests : IClassFixture<WebApplicati
     var responseContent = await response.Content.ReadAsStringAsync();
     var result = JsonSerializer.Deserialize<TenantDomain>(
       responseContent,
-      new JsonSerializerOptions 
-      { 
+      new JsonSerializerOptions
+      {
         PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() }
       }
