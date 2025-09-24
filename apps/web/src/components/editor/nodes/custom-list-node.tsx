@@ -11,7 +11,7 @@ export class CustomListNode extends ListNode {
   __listStyleType: string
 
   static getType(): string {
-    return "custom-list"
+    return "list"  // Usar o tipo padrão para compatibilidade
   }
 
   constructor(listType: ListType, start: number, listStyleType?: string, key?: NodeKey) {
@@ -78,7 +78,7 @@ export class CustomListNode extends ListNode {
     return {
       ...super.exportJSON(),
       listStyleType: this.__listStyleType,
-      type: "custom-list",
+      type: "list",  // Manter compatibilidade com o tipo padrão
     }
   }
 }
