@@ -36,7 +36,18 @@ public class AuthMutations {
   public async Task<SignInResponseDto> LocalSignIn([GraphQLDescription("User login credentials")] LocalSignInRequestDto input, [Service] IMediator mediator) {
     var command = new LocalSignInCommand { Email = input.Email, Password = input.Password, TenantId = input.TenantId };
 
-    return await mediator.Send(command);
+    var result = await mediator.Send(command);
+
+    if (result.IsSuccess) {
+      return result.Value;
+    }
+
+    // Convert Result errors back to exceptions for GraphQL error handling
+    throw result.Error.Type switch {
+      ErrorType.Validation => new ValidationException(result.Error.Message),
+      ErrorType.Problem => new UnauthorizedAccessException(result.Error.Message),
+      _ => new InvalidOperationException(result.Error.Message)
+    };
   }
 
   /// <summary> Revoke refresh token using CQRS pattern. </summary>
@@ -80,7 +91,8 @@ public class AuthMutations {
   [Error<ValidationException>]
   public async Task<Web3ChallengeResponseDto> GenerateWeb3Challenge([GraphQLDescription("Web3 challenge request data")] Web3ChallengeRequestDto input, [Service] IMediator mediator) {
     var command = new GenerateWeb3ChallengeCommand {
-      WalletAddress = input.WalletAddress, ChainId = input.ChainId ?? "1", // Default to Ethereum mainnet
+      WalletAddress = input.WalletAddress,
+      ChainId = input.ChainId ?? "1", // Default to Ethereum mainnet
     };
 
     return await mediator.Send(command);
@@ -95,7 +107,10 @@ public class AuthMutations {
   [Error<ValidationException>]
   public async Task<SignInResponseDto> VerifyWeb3Signature([GraphQLDescription("Web3 signature verification data")] Web3VerifyRequestDto input, [Service] IMediator mediator) {
     var command = new VerifyWeb3SignatureCommand {
-      WalletAddress = input.WalletAddress, Signature = input.Signature, Nonce = input.Nonce, ChainId = input.ChainId ?? "1", // Default to Ethereum mainnet
+      WalletAddress = input.WalletAddress,
+      Signature = input.Signature,
+      Nonce = input.Nonce,
+      ChainId = input.ChainId ?? "1", // Default to Ethereum mainnet
     };
 
     return await mediator.Send(command);
