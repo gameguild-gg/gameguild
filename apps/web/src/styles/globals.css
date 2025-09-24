@@ -139,4 +139,40 @@
         overflow: visible !important;
         margin-right: 0 !important;
     }
+
+    /* Estilos para listas ordenadas com números circulados */
+    ol.circled-numbers {
+        counter-reset: circled-counter;
+    }
+    
+    ol.circled-numbers li {
+        counter-increment: circled-counter;
+        position: relative;
+    }
+    
+    ol.circled-numbers li::before {
+        content: "(" counter(circled-counter) ")";
+        font-weight: bold;
+        color: #2563eb;
+        margin-right: 0.5rem;
+        display: inline-block;
+    }
+    
+    /* Estilos para diferentes tipos de listas ordenadas no editor */
+    .lexical-editor ol[data-circled-list="true"] {
+        counter-reset: circled-counter;
+    }
+    
+    .lexical-editor ol[data-circled-list="true"] li {
+        counter-increment: circled-counter;
+        position: relative;
+    }
+    
+    .lexical-editor ol[data-circled-list="true"] li::before {
+        content: "(" counter(circled-counter) ")";
+        font-weight: bold;
+        color: #2563eb;
+        margin-right: 0.5rem;
+        display: inline-block;
+    }
 }
