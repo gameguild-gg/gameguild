@@ -33,6 +33,7 @@ public class PermissionSystemIntegrationTests : IClassFixture<TestWebApplication
     services.AddDbContext<ApplicationDbContext>(options =>
                                                   options.UseInMemoryDatabase(Guid.NewGuid().ToString())
     );
+    services.AddLogging(); // Add logging services
     services.AddScoped<IPermissionService, PermissionService>();
 
     var serviceProvider = services.BuildServiceProvider();
