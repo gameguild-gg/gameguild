@@ -39,7 +39,7 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration) :
     if (string.IsNullOrEmpty(user.Email)) {
       var emailResponse = await httpClient.GetAsync("https://api.github.com/user/emails");
       var emailContent = await emailResponse.Content.ReadAsStringAsync();
-      var emails = JsonSerializer.Deserialize<JsonElement[ ]>(emailContent);
+      var emails = JsonSerializer.Deserialize<JsonElement[]>(emailContent);
 
       if (emails != null)
         foreach (var email in emails) {
@@ -76,7 +76,7 @@ public class OAuthService(HttpClient httpClient, IConfiguration configuration) :
     var response = await httpClient.GetAsync("https://www.googleapis.com/oauth2/v2/userinfo");
     var content = await response.Content.ReadAsStringAsync();
 
-    return JsonSerializer.Deserialize<GoogleUserDto>(content, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }) ?? throw new InvalidOperationException("Failed to parse Google user");
+    return JsonSerializer.Deserialize<GoogleUserDto>(content, GameGuild.Core.Configuration.JsonSerializerConfiguration.StandardOptions) ?? throw new InvalidOperationException("Failed to parse Google user");
   }
 
   public async Task<GoogleUserDto> ValidateGoogleIdTokenAsync(string idToken) {

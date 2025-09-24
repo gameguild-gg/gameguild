@@ -83,7 +83,7 @@ public class UserSignUpPostHandler(IMediator mediator, ILogger<UserSignUpPostHan
       metadata = new { auto_generated = true, post_type = "user_signup", template_version = "1.0" },
     };
 
-    return System.Text.Json.JsonSerializer.Serialize(richContent, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
+    return System.Text.Json.JsonSerializer.Serialize(richContent, GameGuild.Core.Configuration.JsonSerializerConfiguration.StandardOptions);
   }
 
   /// <summary>

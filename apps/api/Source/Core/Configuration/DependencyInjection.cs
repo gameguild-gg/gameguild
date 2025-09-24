@@ -160,17 +160,17 @@ public static class DependencyInjection {
       options.Conventions.Add(new Microsoft.AspNetCore.Mvc.ApplicationModels.RouteTokenTransformerConvention(new GameGuild.KebabParameterTransformer()));
     })
       .AddApplicationPart(typeof(PresentationLayerOptions).Assembly)
+      .AddApplicationPart(typeof(AuthController).Assembly) // Authentication module
       .AddApplicationPart(typeof(UsersController).Assembly) // Users module
       .AddApplicationPart(typeof(TenantsController).Assembly) // Tenants module
       .AddApplicationPart(typeof(BillingWebhooksController).Assembly) // Billing module
       .AddApplicationPart(typeof(PaymentsController).Assembly) // Payments module
       .AddApplicationPart(typeof(SubscriptionsController).Assembly) // Subscriptions module
       .AddApplicationPart(typeof(UserProfilesController).Assembly) // UserProfiles module
-      .AddJsonOptions(jsonOptions => {
-        jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-        jsonOptions.JsonSerializerOptions.WriteIndented = true;
-        jsonOptions.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-      });
+      .AddJsonOptions(JsonSerializerConfiguration.ConfigureMvcJsonOptions);
+
+    // Configure global JSON options for HttpClient and other components
+    JsonSerializerConfiguration.ConfigureHttpClientJsonOptions(services);
 
     // 19. GraphQL server configuration
     if (options.EnableGraphQl) {

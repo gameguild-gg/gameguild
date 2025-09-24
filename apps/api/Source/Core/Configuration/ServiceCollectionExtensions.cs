@@ -383,8 +383,15 @@ public static class ServiceCollectionExtensions {
       signalROptions.KeepAliveInterval = options.KeepAliveInterval;
       signalROptions.ClientTimeoutInterval = options.ClientTimeoutInterval;
       signalROptions.MaximumReceiveMessageSize = options.MaximumReceiveMessageSize;
-    }
-    );
+    })
+    .AddJsonProtocol(jsonOptions => {
+      // Configure SignalR JSON options to match application-wide settings
+      jsonOptions.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+      jsonOptions.PayloadSerializerOptions.DictionaryKeyPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+      jsonOptions.PayloadSerializerOptions.PropertyNameCaseInsensitive = true;
+      jsonOptions.PayloadSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+      jsonOptions.PayloadSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter(System.Text.Json.JsonNamingPolicy.CamelCase));
+    });
 
     return services;
   }
