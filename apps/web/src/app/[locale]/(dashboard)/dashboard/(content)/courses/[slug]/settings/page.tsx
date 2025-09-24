@@ -1,10 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ModulesContentsContentStatus } from '@/lib/api/generated/types.gen';
+import { archiveProgram, publishProgram, restoreProgram, unpublishProgram } from '@/lib/content-management/programs/programs.actions';
 import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
-import { publishProgram, unpublishProgram, archiveProgram, restoreProgram } from '@/lib/content-management/programs/programs.actions';
 import { redirect } from 'next/navigation';
-import type { ContentStatus } from '@/lib/api/generated/types.gen';
 
 interface PageProps {
   params: Promise<{ slug: string; locale: string }>;
@@ -43,9 +43,9 @@ export default async function CourseSettingsPage({ params }: PageProps) {
     redirect(`/dashboard/courses/${slug}/settings`);
   }
 
-  const status = (program?.status ?? 0) as ContentStatus;
-  const isPublished = status === 2; // ContentStatus.PUBLISHED
-  const isArchived = status === 3; // ContentStatus.ARCHIVED
+  const status = (program?.status ?? 0) as ModulesContentsContentStatus;
+  const isPublished = status === ModulesContentsContentStatus.PUBLISHED;
+  const isArchived = status === ModulesContentsContentStatus.ARCHIVED;
 
   return (
     <div className="flex-1 flex flex-col min-h-0 p-6">
