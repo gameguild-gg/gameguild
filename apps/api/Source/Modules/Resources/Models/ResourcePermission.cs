@@ -14,6 +14,15 @@ public abstract class ResourcePermission<T> : WithPermissions where T : EntityBa
   public ResourcePermission() : base() { }
 
   /// <summary>
+  /// Constructor for creating a resource permission without permissions (will be added separately)
+  /// </summary>
+  public ResourcePermission(Guid userId, Guid? tenantId, Guid resourceId) : base() {
+    UserId = userId;
+    TenantId = tenantId;
+    ResourceId = resourceId;
+  }
+
+  /// <summary>
   /// Constructor for creating a resource permission
   /// </summary>
   public ResourcePermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions) : base() {
