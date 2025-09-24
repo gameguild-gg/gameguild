@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Authentication;
 
 /// <summary> REST API controller for authentication operations using CQRS pattern. Provides clean separation between API layer and business logic with comprehensive error handling. </summary>
 [ApiController]
-  [Route("api/[controller]")]
+[Route("api/auth")]
 [Tags("Authentication")]
 public class AuthController(IMediator mediator, ILogger<AuthController> logger) : ControllerBase {
   private readonly ILogger<AuthController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -70,9 +70,34 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
 
       var result = await _mediator.Send(command);
 
-      _logger.LogInformation("Local sign-in successful for email: {Email}", request.Email);
+      if (result.IsSuccess) {
+        _logger.LogInformation("Local sign-in successful for email: {Email}", request.Email);
+        return Ok(result.Value);
+      }
 
-      return Ok(result);
+      // Handle different error types from Result
+      return result.Error.Type switch {
+        ErrorType.Validation => BadRequest(new ProblemDetails {
+          Title = "Validation Error",
+          Detail = result.Error.Message,
+          Status = StatusCodes.Status400BadRequest
+        }),
+        ErrorType.Problem => Unauthorized(new ProblemDetails {
+          Title = "Authentication Failed",
+          Detail = result.Error.Message,
+          Status = StatusCodes.Status401Unauthorized
+        }),
+        ErrorType.NotFound => NotFound(new ProblemDetails {
+          Title = "Not Found",
+          Detail = result.Error.Message,
+          Status = StatusCodes.Status404NotFound
+        }),
+        _ => StatusCode(StatusCodes.Status500InternalServerError, new ProblemDetails {
+          Title = "Internal Server Error",
+          Detail = result.Error.Message,
+          Status = StatusCodes.Status500InternalServerError
+        })
+      };
     }
     catch (ValidationException ex) {
       _logger.LogWarning("Validation failed for sign-in: {ValidationErrors}", string.Join(", ", ex.Errors));
@@ -249,10 +274,10 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
   public async Task<ActionResult<Web3ChallengeResponseDto>> GenerateWeb3Challenge([FromBody] Web3ChallengeRequestDto request) {
     try {
       _logger.LogInformation("Web3 challenge generation request for address: {Address}", request.WalletAddress);
-      
+
       var command = new GenerateWeb3ChallengeCommand { WalletAddress = request.WalletAddress ?? "", ChainId = request.ChainId ?? "" };
       var result = await _mediator.Send(command);
-      
+
       return Ok(result);
     }
     catch (Exception ex) {
@@ -270,7 +295,7 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
   public ActionResult SendEmailVerification([FromBody] SendEmailVerificationRequestDto request) {
     try {
       _logger.LogInformation("Email verification request for: {Email}", request.Email);
-      
+
       // For now, return success without implementing the full functionality
       // TODO: Implement proper email verification command and handler
       return Ok(new { Message = "Verification email sent successfully" });
@@ -290,7 +315,7 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
   public ActionResult GitHubSignIn([FromQuery] string redirectUri) {
     try {
       _logger.LogInformation("GitHub OAuth sign-in request with redirect: {RedirectUri}", redirectUri);
-      
+
       // For now, return a mock GitHub auth URL
       // TODO: Implement proper GitHub OAuth flow
       var mockAuthUrl = $"https://github.com/login/oauth/authorize?client_id=test&redirect_uri={redirectUri}";
