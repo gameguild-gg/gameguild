@@ -647,6 +647,17 @@ export type CreateProductInput = {
   type: ProductType;
 };
 
+export type CreateProgramInput = {
+  category?: InputMaybe<ProgramCategory>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  difficulty?: InputMaybe<ProgramDifficulty>;
+  estimatedHours?: InputMaybe<Scalars['Float']['input']>;
+  thumbnail?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+  videoShowcaseUrl?: InputMaybe<Scalars['String']['input']>;
+  visibility?: InputMaybe<AccessLevel>;
+};
+
 export type CreatePromoCodeInput = {
   code: Scalars['String']['input'];
   discountPercentage: Scalars['Decimal']['input'];
@@ -838,16 +849,19 @@ export type Mutation = {
   createAchievement: Achievement;
   createContent: ProgramContent;
   createProduct: Product;
+  createProgram: Program;
   createPromoCode: PromoCode;
   deleteAchievement: Scalars['Boolean']['output'];
   deleteContent: Scalars['Boolean']['output'];
   deleteProduct: Scalars['Boolean']['output'];
+  deleteProgram: Scalars['Boolean']['output'];
   deletePromoCode: Scalars['Boolean']['output'];
   grantUserAccess: UserProduct;
   healthMutation: Scalars['String']['output'];
   markAchievementNotified: Scalars['Boolean']['output'];
   moveContent: Scalars['Boolean']['output'];
   publishProduct?: Maybe<Product>;
+  publishProgram: Program;
   removeFromBundle?: Maybe<Product>;
   reorderContent: Scalars['Boolean']['output'];
   revokeAchievement: Scalars['Boolean']['output'];
@@ -863,6 +877,7 @@ export type Mutation = {
   updateContentProgress: ContentInteractionResult;
   updateProduct?: Maybe<Product>;
   updateProductPricing?: Maybe<ProductPricing>;
+  updateProgram: Program;
   updatePromoCode?: Maybe<PromoCode>;
   updateTimeSpent: ContentInteractionResult;
   usePromoCode: PromoCodeUse;
@@ -921,6 +936,11 @@ export type MutationCreateProductArgs = {
 };
 
 
+export type MutationCreateProgramArgs = {
+  input: CreateProgramInput;
+};
+
+
 export type MutationCreatePromoCodeArgs = {
   input: CreatePromoCodeInput;
 };
@@ -938,6 +958,11 @@ export type MutationDeleteContentArgs = {
 
 
 export type MutationDeleteProductArgs = {
+  id: Scalars['UUID']['input'];
+};
+
+
+export type MutationDeleteProgramArgs = {
   id: Scalars['UUID']['input'];
 };
 
@@ -966,6 +991,11 @@ export type MutationMoveContentArgs = {
 
 
 export type MutationPublishProductArgs = {
+  id: Scalars['UUID']['input'];
+};
+
+
+export type MutationPublishProgramArgs = {
   id: Scalars['UUID']['input'];
 };
 
@@ -1060,6 +1090,12 @@ export type MutationUpdateProductArgs = {
 
 export type MutationUpdateProductPricingArgs = {
   input: UpdateProductPricingInput;
+};
+
+
+export type MutationUpdateProgramArgs = {
+  id: Scalars['UUID']['input'];
+  input: UpdateProgramInput;
 };
 
 
@@ -1260,7 +1296,8 @@ export type Product = {
   name: Scalars['String']['output'];
   /** Pricing information for this product. */
   productPricings?: Maybe<Array<Maybe<ProductPricing>>>;
-  productPrograms: Array<ProductProgram>;
+  /** Programs included in this product. */
+  productPrograms?: Maybe<Array<Maybe<ProductProgram>>>;
   /** Promotional codes associated with this product. */
   promoCodes?: Maybe<Array<Maybe<PromoCode>>>;
   referralCommissionPercentage: Scalars['Decimal']['output'];
@@ -1343,19 +1380,25 @@ export type ProductPricing = {
   version: Scalars['Int']['output'];
 };
 
+/** Represents a program included in a product */
 export type ProductProgram = {
   __typename?: 'ProductProgram';
+  /** When this program was added to the product */
   createdAt: Scalars['DateTime']['output'];
   deletedAt?: Maybe<Scalars['DateTime']['output']>;
   domainEvents: Array<IDomainEvent>;
+  /** The unique identifier for this product-program relationship */
   id: Scalars['UUID']['output'];
   isDeleted: Scalars['Boolean']['output'];
   isGlobal: Scalars['Boolean']['output'];
   isNew: Scalars['Boolean']['output'];
-  product: Product;
+  /** The product that contains this program */
+  product?: Maybe<Product>;
   productId: Scalars['UUID']['output'];
-  program: Program;
+  /** The program included in the product */
+  program?: Maybe<Program>;
   programId: Scalars['UUID']['output'];
+  /** The display order of this program within the product */
   sortOrder: Scalars['Int']['output'];
   tenant?: Maybe<Tenant>;
   toDictionary: Array<KeyValuePairOfStringAndObject>;
@@ -1404,25 +1447,34 @@ export enum ProductType {
   Workshop = 'WORKSHOP'
 }
 
+/** Represents a learning program with structured educational content */
 export type Program = {
   __typename?: 'Program';
   addLocalization: ResourceLocalization;
   averageRating: Scalars['Decimal']['output'];
   calculateEstimatedWeeks?: Maybe<Scalars['Float']['output']>;
-  category: ProgramCategory;
+  /** The category/domain of the program */
+  category?: Maybe<ProgramCategory>;
   certificates: Array<Certificate>;
+  /** When the program was created */
   createdAt: Scalars['DateTime']['output'];
   currentEnrollments: Scalars['Int']['output'];
+  /** When the program was soft deleted (null if not deleted) */
   deletedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Detailed description of the program */
   description?: Maybe<Scalars['String']['output']>;
-  difficulty: ProgramDifficulty;
+  /** The difficulty level of the program */
+  difficulty?: Maybe<ProgramDifficulty>;
   domainEvents: Array<IDomainEvent>;
   enrollmentDeadline?: Maybe<Scalars['DateTime']['output']>;
   enrollmentStatus: EnrollmentStatus;
+  /** Estimated time in hours required to complete the program */
   estimatedHours?: Maybe<Scalars['Float']['output']>;
   estimatedWeeks?: Maybe<Scalars['Float']['output']>;
   feedbackSubmissions: Array<ProgramFeedbackSubmission>;
+  /** The unique identifier for the program */
   id: Scalars['UUID']['output'];
+  /** Whether the program has been soft deleted */
   isDeleted: Scalars['Boolean']['output'];
   isEnrollmentOpen: Scalars['Boolean']['output'];
   isGlobal: Scalars['Boolean']['output'];
@@ -1440,20 +1492,30 @@ export type Program = {
   requiredSkills: Array<TagProficiency>;
   skillsProvided: Array<CertificateTag>;
   skillsRequired: Array<CertificateTag>;
+  /** URL-friendly identifier for the program */
   slug: Scalars['String']['output'];
+  /** The publication status of the program */
   status: ContentStatus;
+  /** The tenant this program belongs to */
   tenant?: Maybe<Tenant>;
+  /** Thumbnail image URL for program display */
   thumbnail?: Maybe<Scalars['String']['output']>;
+  /** The title of the program */
   title: Scalars['String']['output'];
   toDictionary: Array<KeyValuePairOfStringAndObject>;
   totalRatings: Scalars['Int']['output'];
-  updatedAt: Scalars['DateTime']['output'];
+  /** When the program was last updated */
+  updatedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** Version control for optimistic concurrency */
   version: Scalars['Int']['output'];
+  /** Video showcase URL for program preview */
   videoShowcaseUrl?: Maybe<Scalars['String']['output']>;
+  /** The access level of the program */
   visibility: AccessLevel;
 };
 
 
+/** Represents a learning program with structured educational content */
 export type ProgramAddLocalizationArgs = {
   content: Scalars['String']['input'];
   fieldName: Scalars['String']['input'];
@@ -1462,11 +1524,13 @@ export type ProgramAddLocalizationArgs = {
 };
 
 
+/** Represents a learning program with structured educational content */
 export type ProgramCalculateEstimatedWeeksArgs = {
   hoursPerWeek: Scalars['Int']['input'];
 };
 
 
+/** Represents a learning program with structured educational content */
 export type ProgramEstimatedWeeksArgs = {
   hoursPerWeek: Scalars['Int']['input'];
 };
@@ -1760,6 +1824,8 @@ export type Query = {
   /** Health check query to ensure GraphQL is working */
   health: Scalars['String']['output'];
   isPromoCodeValid: Scalars['Boolean']['output'];
+  myProducts: Array<Product>;
+  myPrograms: Array<Program>;
   popularProducts: Array<Product>;
   pricingHistory: Array<ProductPricing>;
   productById?: Maybe<Product>;
@@ -1768,16 +1834,20 @@ export type Query = {
   productsByCreator: Array<Product>;
   productsByType: Array<Product>;
   productsInPriceRange: Array<Product>;
+  programById?: Maybe<Program>;
+  programBySlug?: Maybe<Program>;
   programContentById?: Maybe<ProgramContent>;
   programContents: Array<ProgramContent>;
   promoCode?: Maybe<PromoCode>;
   publishedProducts: Array<Product>;
+  publishedPrograms: Array<Program>;
   recentProducts: Array<Product>;
   requiredContent: Array<ProgramContent>;
   requiredContentCount: Scalars['Int']['output'];
   rootContent: Array<ProgramContent>;
   searchProducts: Array<Product>;
   searchProgramContent: Array<ProgramContent>;
+  testAuth: Scalars['String']['output'];
   totalRevenueForProduct: Scalars['Decimal']['output'];
   userAchievementProgress: Array<AchievementProgressDto>;
   userAchievementSummary: UserAchievementSummaryDto;
@@ -1906,6 +1976,18 @@ export type QueryIsPromoCodeValidArgs = {
 };
 
 
+export type QueryMyProductsArgs = {
+  skip?: Scalars['Int']['input'];
+  take?: Scalars['Int']['input'];
+};
+
+
+export type QueryMyProgramsArgs = {
+  skip?: Scalars['Int']['input'];
+  take?: Scalars['Int']['input'];
+};
+
+
 export type QueryPopularProductsArgs = {
   count?: Scalars['Int']['input'];
 };
@@ -1963,6 +2045,16 @@ export type QueryProductsInPriceRangeArgs = {
 };
 
 
+export type QueryProgramByIdArgs = {
+  id: Scalars['UUID']['input'];
+};
+
+
+export type QueryProgramBySlugArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
 export type QueryProgramContentByIdArgs = {
   id: Scalars['UUID']['input'];
   programId: Scalars['UUID']['input'];
@@ -1980,6 +2072,12 @@ export type QueryPromoCodeArgs = {
 
 
 export type QueryPublishedProductsArgs = {
+  skip?: Scalars['Int']['input'];
+  take?: Scalars['Int']['input'];
+};
+
+
+export type QueryPublishedProgramsArgs = {
   skip?: Scalars['Int']['input'];
   take?: Scalars['Int']['input'];
 };
@@ -2229,15 +2327,20 @@ export enum TagType {
   Topic = 'TOPIC'
 }
 
+/** A tenant represents an organization or group within the system */
 export type Tenant = {
   __typename?: 'Tenant';
   addLocalization: ResourceLocalization;
   adminEmail?: Maybe<Scalars['String']['output']>;
+  /** The date and time when the tenant was created */
   createdAt: Scalars['DateTime']['output'];
   deletedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The description of the tenant */
   description?: Maybe<Scalars['String']['output']>;
   domainEvents: Array<IDomainEvent>;
+  /** The unique identifier of the tenant */
   id: Scalars['UUID']['output'];
+  /** Whether the tenant is active */
   isActive: Scalars['Boolean']['output'];
   isDefault: Scalars['Boolean']['output'];
   isDeleted: Scalars['Boolean']['output'];
@@ -2245,19 +2348,24 @@ export type Tenant = {
   isNew: Scalars['Boolean']['output'];
   localizations: Array<ResourceLocalization>;
   metadata?: Maybe<ResourceMetadata>;
+  /** The name of the tenant */
   name: Scalars['String']['output'];
   settings?: Maybe<TenantSettings>;
   slug: Scalars['String']['output'];
   tenant?: Maybe<Tenant>;
-  tenantPermissions: Array<TenantPermission>;
+  /** The users and their permissions associated with this tenant */
+  tenantPermissions?: Maybe<Array<Maybe<TenantPermission>>>;
   title: Scalars['String']['output'];
   toDictionary: Array<KeyValuePairOfStringAndObject>;
-  updatedAt: Scalars['DateTime']['output'];
+  /** The date and time when the tenant was last updated */
+  updatedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The version number for optimistic concurrency control */
   version: Scalars['Int']['output'];
   visibility: AccessLevel;
 };
 
 
+/** A tenant represents an organization or group within the system */
 export type TenantAddLocalizationArgs = {
   content: Scalars['String']['input'];
   fieldName: Scalars['String']['input'];
@@ -2286,16 +2394,19 @@ export type TenantInput = {
   visibility: AccessLevel;
 };
 
+/** Represents the permissions and relationship between a user and a tenant */
 export type TenantPermission = {
   __typename?: 'TenantPermission';
+  /** The date and time when the user joined the tenant */
   createdAt: Scalars['DateTime']['output'];
   deletedAt?: Maybe<Scalars['DateTime']['output']>;
   domainEvents: Array<IDomainEvent>;
-  /** When this permission expires (null if it never expires) */
+  /** The date and time when the permission expires */
   expiresAt?: Maybe<Scalars['DateTime']['output']>;
   hasAllPermissions: Scalars['Boolean']['output'];
   hasAnyPermission: Scalars['Boolean']['output'];
   hasPermission: Scalars['Boolean']['output'];
+  /** The unique identifier of the tenant permission */
   id: Scalars['UUID']['output'];
   isActiveMembership: Scalars['Boolean']['output'];
   /** Whether this is a default permission for a specific tenant */
@@ -2315,26 +2426,33 @@ export type TenantPermission = {
   permissionFlags1: Scalars['Long']['output'];
   /** Permission flags for bits 64-127 */
   permissionFlags2: Scalars['Long']['output'];
-  /** The tenant ID this permission applies to (null for global defaults) */
-  tenantId?: Maybe<Scalars['UUID']['output']>;
+  /** The tenant in this relationship */
+  tenant?: Maybe<Tenant>;
+  /** The tenant identifier */
+  tenantId: Scalars['UUID']['output'];
   toDictionary: Array<KeyValuePairOfStringAndObject>;
   updatedAt: Scalars['DateTime']['output'];
-  /** The user ID this permission applies to (null for default permissions) */
-  userId?: Maybe<Scalars['UUID']['output']>;
+  /** The user in this relationship */
+  user?: Maybe<User>;
+  /** The user identifier */
+  userId: Scalars['UUID']['output'];
   version: Scalars['Int']['output'];
 };
 
 
+/** Represents the permissions and relationship between a user and a tenant */
 export type TenantPermissionHasAllPermissionsArgs = {
   permissions: Array<PermissionType>;
 };
 
 
+/** Represents the permissions and relationship between a user and a tenant */
 export type TenantPermissionHasAnyPermissionArgs = {
   permissions: Array<PermissionType>;
 };
 
 
+/** Represents the permissions and relationship between a user and a tenant */
 export type TenantPermissionHasPermissionArgs = {
   permission: PermissionType;
 };
@@ -2527,6 +2645,17 @@ export type UpdateProductPricingInput = {
   pricingId: Scalars['UUID']['input'];
 };
 
+export type UpdateProgramInput = {
+  category?: InputMaybe<ProgramCategory>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  difficulty?: InputMaybe<ProgramDifficulty>;
+  estimatedHours?: InputMaybe<Scalars['Float']['input']>;
+  thumbnail?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+  videoShowcaseUrl?: InputMaybe<Scalars['String']['input']>;
+  visibility?: InputMaybe<AccessLevel>;
+};
+
 export type UpdateProgressInput = {
   completionPercentage: Scalars['Decimal']['input'];
   interactionId: Scalars['UUID']['input'];
@@ -2549,28 +2678,41 @@ export type UpdateTimeSpentInput = {
   interactionId: Scalars['UUID']['input'];
 };
 
+/** Represents a user in the CMS system with full EntityBase support. */
 export type User = {
   __typename?: 'User';
   availableBalance: Money;
   balance: Money;
+  /** The date and time when the user was created. */
   createdAt: Scalars['DateTime']['output'];
   credentials: Array<Credential>;
+  /** The date and time when the user was soft deleted (null if not deleted). */
   deletedAt?: Maybe<Scalars['DateTime']['output']>;
   domainEvents: Array<IDomainEvent>;
+  /** The email address of the user. */
   email: Scalars['String']['output'];
-  emailAddress: EmailAddress;
-  id: Scalars['UUID']['output'];
+  emailAddress?: Maybe<EmailAddress>;
+  /** The unique identifier for the user (UUID). */
+  id?: Maybe<Scalars['ID']['output']>;
+  /** Indicates whether the user is active. */
   isActive: Scalars['Boolean']['output'];
+  /** Indicates whether the user has been soft deleted. */
   isDeleted: Scalars['Boolean']['output'];
   isGlobal: Scalars['Boolean']['output'];
   isNew: Scalars['Boolean']['output'];
   lastSeenAt?: Maybe<Scalars['DateTime']['output']>;
+  /** The name of the user. */
   name: Scalars['String']['output'];
   phoneNumber?: Maybe<PhoneNumber>;
+  /** The user's profile information. */
+  profile?: Maybe<UserProfile>;
   tenant?: Maybe<Tenant>;
   toDictionary: Array<KeyValuePairOfStringAndObject>;
+  /** The date and time when the user was last updated. */
   updatedAt: Scalars['DateTime']['output'];
+  /** The unique username/handle of the user. */
   username: Scalars['String']['output'];
+  /** Version control for optimistic concurrency. */
   version: Scalars['Int']['output'];
 };
 
@@ -2768,6 +2910,61 @@ export type UserProduct = {
   user?: Maybe<User>;
   userId: Scalars['UUID']['output'];
   version: Scalars['Int']['output'];
+};
+
+/** Represents a user profile with personal information and settings */
+export type UserProfile = {
+  __typename?: 'UserProfile';
+  addLocalization: ResourceLocalization;
+  /** User's avatar URL */
+  avatarUrl?: Maybe<Scalars['String']['output']>;
+  /** User's biography (alias for description) */
+  bio?: Maybe<Scalars['String']['output']>;
+  /** The date and time when the user profile was created */
+  createdAt: Scalars['DateTime']['output'];
+  /** The date and time when the user profile was soft deleted */
+  deletedAt?: Maybe<Scalars['DateTime']['output']>;
+  /** A description of the user profile */
+  description?: Maybe<Scalars['String']['output']>;
+  /** The user's preferred display name */
+  displayName?: Maybe<Scalars['String']['output']>;
+  domainEvents: Array<IDomainEvent>;
+  /** The user's family (last) name */
+  familyName?: Maybe<Scalars['String']['output']>;
+  /** The user's given (first) name */
+  givenName?: Maybe<Scalars['String']['output']>;
+  /** The unique identifier for the user profile */
+  id: Scalars['UUID']['output'];
+  /** Indicates whether the user profile has been soft deleted */
+  isDeleted: Scalars['Boolean']['output'];
+  isGlobal: Scalars['Boolean']['output'];
+  isNew: Scalars['Boolean']['output'];
+  /** Localized versions of this user profile */
+  localizations: Array<ResourceLocalization>;
+  /** User's location */
+  location?: Maybe<Scalars['String']['output']>;
+  /** Metadata associated with this user profile resource */
+  metadata?: Maybe<ResourceMetadata>;
+  /** The tenant this profile belongs to (null for global profiles) */
+  tenant?: Maybe<Tenant>;
+  /** The title of the user profile */
+  title: Scalars['String']['output'];
+  toDictionary: Array<KeyValuePairOfStringAndObject>;
+  /** The date and time when the user profile was last updated */
+  updatedAt: Scalars['DateTime']['output'];
+  /** The version number for optimistic concurrency control */
+  version: Scalars['Int']['output'];
+  /** The visibility status of the user profile */
+  visibility: AccessLevel;
+};
+
+
+/** Represents a user profile with personal information and settings */
+export type UserProfileAddLocalizationArgs = {
+  content: Scalars['String']['input'];
+  fieldName: Scalars['String']['input'];
+  language: LanguageInput;
+  status?: LocalizationStatus;
 };
 
 export type UserSubscription = {
