@@ -435,6 +435,7 @@ public static class ServiceCollectionExtensions {
       // .AddPostsGraphQL()  // DISABLED: Extension method doesn't exist
       .AddUserAchievementsGraphQL()
       .AddProductGraphQl()
+      .AddProgramGraphQL()
       .AddProgramContentGraphQL()
       .AddContentInteractionGraphQL();
 
