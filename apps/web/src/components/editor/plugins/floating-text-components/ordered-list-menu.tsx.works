@@ -1,9 +1,8 @@
 "use client"
 
 import { useCallback } from "react"
-import { $getSelection, $isRangeSelection, $createTextNode } from "lexical"
-import { $createListItemNode } from "@lexical/list"
-import { $createCustomListNode } from "@/components/editor/nodes/custom-list-node"
+import { $getSelection, $isRangeSelection } from "lexical"
+import { INSERT_ORDERED_LIST_COMMAND } from "@lexical/list"
 import { Check } from "lucide-react"
 import {
   DropdownMenuSub,
@@ -32,34 +31,29 @@ const ORDERED_LIST_STYLES: OrderedListStyle[] = [
 export function OrderedListMenu({ editor, currentListType }: OrderedListMenuProps) {
   const handleOrderedListClick = useCallback(
     (listType: string) => {
-      editor.update(() => {
-        const selection = $getSelection()
-        if ($isRangeSelection(selection)) {
-          // Criar diretamente um CustomListNode
-          const customListNode = $createCustomListNode("number", 1, listType)
-          const listItemNode = $createListItemNode()
-          
-          // Se há texto selecionado, usar esse texto no item da lista
-          const selectedText = selection.getTextContent()
-          if (selectedText) {
-            // Criar um novo nó de texto com o conteúdo selecionado
-            const textNode = $createTextNode(selectedText)
-            listItemNode.append(textNode)
-            // Remover o texto selecionado
-            selection.removeText()
+      editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)
+      
+      // Aplicar o estilo e um atributo personalizado após criar a lista
+      setTimeout(() => {
+        editor.update(() => {
+          const selection = $getSelection()
+          if ($isRangeSelection(selection)) {
+            const nodes = selection.getNodes()
+            nodes.forEach((node) => {
+              const listNode = node.getTopLevelElementOrThrow()
+              if (listNode.getType() === "list") {
+                // Aplicar estilo CSS diretamente
+                const element = editor.getElementByKey(listNode.getKey())
+                if (element) {
+                  element.style.listStyleType = listType
+                  // Adicionar um atributo personalizado para preservar o tipo
+                  element.setAttribute('data-list-style-type', listType)
+                }
+              }
+            })
           }
-          
-          customListNode.append(listItemNode)
-          
-          // Inserir a lista customizada na posição atual
-          selection.insertNodes([customListNode])
-          
-          // Focar no item da lista para permitir edição
-          setTimeout(() => {
-            listItemNode.selectEnd()
-          }, 0)
-        }
-      })
+        })
+      }, 100)
     },
     [editor],
   )
