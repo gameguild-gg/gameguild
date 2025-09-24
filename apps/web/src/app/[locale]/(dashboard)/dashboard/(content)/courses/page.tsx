@@ -1,59 +1,46 @@
 "use client"
 
-import * as React from "react"
-import { Search, Grid3X3, List, BookOpen, Plus } from "lucide-react"
+import { CourseCard } from "@/components/courses/course-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CourseCard } from "@/components/courses/course-card"
-import type { Course } from "@/lib/types"
-import { getAllProgramsService } from "@/lib/content-management/programs/programs.service"
-import { transformProgramToCourse } from "@/lib/content-management/programs/programs.utils"
+import { useTestAuth } from "@/hooks/use-programs-graphql"
+import { BookOpen, Grid3X3, List, Plus, Search } from "lucide-react"
 import Link from "next/link"
+import * as React from "react"
 
 export default function CoursesPage() {
-  const [courses, setCourses] = React.useState<Course[]>([])
   const [searchQuery, setSearchQuery] = React.useState("")
   const [levelFilter, setLevelFilter] = React.useState<string>("all")
   const [statusFilter, setStatusFilter] = React.useState<string>("all")
   const [categoryFilter, setCategoryFilter] = React.useState<string>("all")
   const [sortBy, setSortBy] = React.useState<string>("title")
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid")
-  const [loading, setLoading] = React.useState(true)
-  const [error, setError] = React.useState<string | null>(null)
 
-  React.useEffect(() => {
-    const loadCourses = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        
-        const result = await getAllProgramsService()
-        
-        if (result.success && result.data) {
-          const transformedCourses = result.data.map(program => transformProgramToCourse(program))
-          setCourses(transformedCourses)
-        } else {
-          setError(result.error || 'Failed to load courses')
-        }
-      } catch (err) {
-        console.error('Error loading courses:', err)
-        setError('An unexpected error occurred')
-      } finally {
-        setLoading(false)
-      }
-    }
+  // For testing - use the simple testAuth query first
+  const { result: testResult, error: testError, refetch: testRefetch } = useTestAuth()
 
-    loadCourses()
-  }, [])
+  // Use GraphQL hook to fetch user's programs (courses)
+  // const { courses, loading, error, refetch } = useMyPrograms()
+
+  // For now, let's use empty data to test the UI
+  const courses: any[] = []
+  const loading = false
+  const error = testError
+  const refetch = testRefetch
+
+  // Handle retry function
+  const handleRetry = () => {
+    refetch()
+  }
 
   const filteredCourses = React.useMemo(() => {
     return courses.filter((course) => {
-      const matchesSearch = searchQuery === "" || 
+      const matchesSearch = searchQuery === "" ||
         course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         course.instructor.toLowerCase().includes(searchQuery.toLowerCase())
-      
+
       const matchesLevel = levelFilter === "all" || course.level === levelFilter
       const matchesStatus = statusFilter === "all" || course.status === statusFilter
       const matchesCategory = categoryFilter === "all" || course.category === categoryFilter
@@ -92,7 +79,7 @@ export default function CoursesPage() {
             </Button>
           </Link>
         </div>
-        
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="animate-pulse">
@@ -122,14 +109,36 @@ export default function CoursesPage() {
             </Button>
           </Link>
         </div>
-        
+
         <div className="text-center py-12">
           <BookOpen className="mx-auto h-12 w-12 text-gray-400 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Courses</h3>
-          <p className="text-gray-500 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
+          <p className="text-gray-500 mb-4">{error?.message || 'An error occurred while loading courses'}</p>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={handleRetry}>
+              Try Again
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                console.log('Test Auth Result:', testResult);
+                testRefetch();
+              }}
+            >
+              Test Auth
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                const { debugGraphQLAuth } = await import('./debug-auth');
+                const result = await debugGraphQLAuth();
+                console.log('Debug result:', result);
+                alert('Debug info logged to console. Check browser dev tools.');
+              }}
+            >
+              Debug Auth
+            </Button>
+          </div>
         </div>
       </div>
     )
@@ -162,7 +171,7 @@ export default function CoursesPage() {
               className="pl-10"
             />
           </div>
-          
+
           <div className="flex gap-2">
             <Button
               variant={viewMode === "grid" ? "default" : "outline"}
