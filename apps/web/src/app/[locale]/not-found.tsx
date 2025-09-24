@@ -3,11 +3,11 @@ import { GitHubIssueProvider } from '@/components/providers/github-issue-provide
 import React from 'react';
 
 interface Params {
-  params: { locale: string };
+  params?: { locale?: string };
 }
 
 export default function Page({ params }: Params): React.JSX.Element {
-  const { locale } = params;
+  const { locale } = params || { locale: 'en' };
   return (
     <html lang={locale}>
       <body>

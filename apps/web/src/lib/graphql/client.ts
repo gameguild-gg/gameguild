@@ -1,8 +1,9 @@
-import { ApolloClient, InMemoryCache, ApolloLink, from, NormalizedCacheObject } from '@apollo/client';
-import { onError } from '@apollo/client/link/error';
+import { auth } from '@/auth';
+import { environment } from '@/configs/environment';
+import { ApolloClient, ApolloLink, from, InMemoryCache, NormalizedCacheObject } from '@apollo/client';
 import { BatchHttpLink } from '@apollo/client/link/batch-http';
 import { setContext } from '@apollo/client/link/context';
-import { environment } from '@/configs/environment';
+import { onError } from '@apollo/client/link/error';
 
 // Endpoint (HotChocolate default is /graphql)
 const GRAPHQL_ENDPOINT = (process.env.NEXT_PUBLIC_GRAPHQL_URL?.trim() || `${environment.apiBaseUrl.replace(/\/$/, '')}/graphql`);
@@ -23,19 +24,24 @@ function createClient() {
   });
 
   const authLink = setContext(async (_, { headers }) => {
-    // Inject JWT from cookies on the server, or localStorage on the client.
+    // Inject JWT from NextAuth session on the server, or localStorage on the client.
     let token: string | null = null;
-  if (typeof window === 'undefined') {
+    if (typeof window === 'undefined') {
       try {
-        // Import only on server to avoid bundling for client.
-    const { cookies } = await import('next/headers');
-    const cookieStore = await cookies();
-    token = cookieStore.get('access_token')?.value ?? null;
-      } catch {
+        // Get token from NextAuth session on server side
+        const session = await auth();
+        token = session?.api?.accessToken ?? null;
+        if (!token) {
+          console.warn('No access token found in NextAuth session');
+        }
+      } catch (error) {
+        console.error('Failed to get NextAuth session:', error);
         token = null;
       }
     } else {
       try {
+        // For client-side, we still need to get the token from session storage or similar
+        // This would need to be handled by the client-side session provider
         token = localStorage.getItem('access_token');
       } catch {
         token = null;
@@ -49,7 +55,7 @@ function createClient() {
     };
   });
 
-  const httpLink = new BatchHttpLink({ uri: GRAPHQL_ENDPOINT, credentials: 'include' });
+  const httpLink = new BatchHttpLink({ uri: GRAPHQL_ENDPOINT, credentials: 'same-origin' }); // Changed from 'include' to 'same-origin' to test CORS
 
   return new ApolloClient({
     name: 'game-guild-web',
@@ -76,3 +82,4 @@ export function getApolloClient() {
 }
 
 export { GRAPHQL_ENDPOINT };
+
