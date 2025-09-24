@@ -27,6 +27,11 @@ const ORDERED_LIST_STYLES: OrderedListStyle[] = [
   { icon: "1.", name: "Numbers (default)", style: "decimal" },
   { icon: "A.", name: "Uppercase Letters", style: "upper-alpha" },
   { icon: "a.", name: "Lowercase Letters", style: "lower-alpha" },
+  { icon: "I.", name: "Uppercase Roman", style: "upper-roman" },
+  { icon: "i.", name: "Lowercase Roman", style: "lower-roman" },
+  { icon: "01.", name: "Zero-padded Numbers", style: "decimal-leading-zero" },
+  { icon: "Α.", name: "Greek Uppercase", style: "upper-greek" },
+  { icon: "(1)", name: "Circled Numbers", style: "circled" },
 ]
 
 export function OrderedListMenu({ editor, currentListType }: OrderedListMenuProps) {
