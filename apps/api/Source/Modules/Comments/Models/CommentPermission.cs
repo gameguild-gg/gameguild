@@ -15,10 +15,9 @@ public class CommentPermission : ResourcePermission<Comment> {
   // Public parameterless constructor for EF and GraphQL
   public CommentPermission() { }
 
-  // Public constructor for creating instances
-  public CommentPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
+  // Public constructor for creating instances (permissions added separately)
+  public CommentPermission(Guid userId, Guid? tenantId, Guid resourceId)
     : base(userId, tenantId, resourceId) {
-    AddPermission(permissions);
   }
   // Comment-specific computed properties
 
