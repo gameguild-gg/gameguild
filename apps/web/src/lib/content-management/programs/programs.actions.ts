@@ -2,27 +2,10 @@
 
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
-  deleteApiProgramById,
-  deleteApiProgramByIdContentByContentId,
-  deleteApiProgramByIdLinkProductByProductId,
-  deleteApiProgramByIdUsersByUserId,
-  getApiProgram,
-  getApiProgramById,
-  getApiProgramByIdAnalytics,
-  getApiProgramByIdAnalyticsCompletionRates,
-  getApiProgramByIdAnalyticsEngagement,
-  getApiProgramByIdAnalyticsRevenue,
-  getApiProgramByIdPricing,
-  getApiProgramByIdProducts,
-  getApiProgramByIdUsers,
-  getApiProgramByIdUsersByUserIdProgress,
-  getApiProgramByIdWithContent,
-  getApiProgramCategoryByCategory,
-  getApiProgramCreatorByCreatorId,
-  getApiProgramDifficultyByDifficulty,
-  getApiProgramPopular,
-  getApiProgramPublished,
-  getApiProgramRecent,
+  deleteProgramById,
+  deleteProgramByIdContentByContentId,
+  deleteProgramByIdLinkProductByProductId,
+  deleteProgramByIdUsersByUserId,
   getApiProgramsByProgramIdContent,
   getApiProgramsByProgramIdContentById,
   getApiProgramsByProgramIdContentByParentIdChildren,
@@ -31,65 +14,82 @@ import {
   getApiProgramsByProgramIdContentRequired,
   getApiProgramsByProgramIdContentStats,
   getApiProgramsByProgramIdContentTopLevel,
-  getApiProgramSearch,
-  getApiProgramSlugBySlug,
-  postApiProgram,
-  postApiProgramByIdApprove,
-  postApiProgramByIdArchive,
-  postApiProgramByIdClone,
-  postApiProgramByIdContent,
-  postApiProgramByIdContentReorder,
-  postApiProgramByIdCreateProduct,
-  postApiProgramByIdDisableMonetization,
-  postApiProgramByIdLinkProductByProductId,
-  postApiProgramByIdMonetize,
-  postApiProgramByIdPublish,
-  postApiProgramByIdReject,
-  postApiProgramByIdRestore,
-  postApiProgramByIdSchedule,
-  postApiProgramByIdSubmit,
-  postApiProgramByIdUnpublish,
-  postApiProgramByIdUsersByUserId,
-  postApiProgramByIdUsersByUserIdContentByContentIdComplete,
-  postApiProgramByIdUsersByUserIdReset,
-  postApiProgramByIdWithdraw,
+  getProgram,
+  getProgramByIdAnalytics,
+  getProgramByIdAnalyticsCompletionRates,
+  getProgramByIdAnalyticsEngagement,
+  getProgramByIdAnalyticsRevenue,
+  getProgramById as getProgramByIdFromApi,
+  getProgramByIdPricing,
+  getProgramByIdProducts,
+  getProgramByIdUsers,
+  getProgramByIdUsersByUserIdProgress,
+  getProgramByIdWithContent,
+  getProgramCategoryByCategory,
+  getProgramCreatorByCreatorId,
+  getProgramDifficultyByDifficulty,
+  getProgramPopular,
+  getProgramPublished,
+  getProgramRecent,
+  getProgramSearch,
+  getProgramSlugBySlug,
   postApiProgramsByProgramIdContentSearch,
-  putApiProgramById,
-  putApiProgramByIdContentByContentId,
-  putApiProgramByIdPricing,
-  putApiProgramByIdUsersByUserIdProgress,
+  postProgram,
+  postProgramByIdApprove,
+  postProgramByIdArchive,
+  postProgramByIdClone,
+  postProgramByIdContent,
+  postProgramByIdContentReorder,
+  postProgramByIdCreateProduct,
+  postProgramByIdDisableMonetization,
+  postProgramByIdLinkProductByProductId,
+  postProgramByIdMonetize,
+  postProgramByIdPublish,
+  postProgramByIdReject,
+  postProgramByIdRestore,
+  postProgramByIdSchedule,
+  postProgramByIdSubmit,
+  postProgramByIdUnpublish,
+  postProgramByIdUsersByUserId,
+  postProgramByIdUsersByUserIdContentByContentIdComplete,
+  postProgramByIdUsersByUserIdReset,
+  postProgramByIdWithdraw,
+  putProgramById,
+  putProgramByIdContentByContentId,
+  putProgramByIdPricing,
+  putProgramByIdUsersByUserIdProgress,
 } from '@/lib/api/generated/sdk.gen';
 import type {
-  DeleteApiProgramByIdContentByContentIdData,
-  DeleteApiProgramByIdData,
-  DeleteApiProgramByIdUsersByUserIdData,
-  GetApiProgramByIdData,
-  GetApiProgramByIdUsersByUserIdProgressData,
-  GetApiProgramByIdUsersData,
-  GetApiProgramByIdWithContentData,
-  GetApiProgramCategoryByCategoryData,
-  GetApiProgramCreatorByCreatorIdData,
-  GetApiProgramData,
-  GetApiProgramDifficultyByDifficultyData,
-  GetApiProgramPopularData,
-  GetApiProgramPublishedData,
-  GetApiProgramRecentData,
+  DeleteProgramByIdContentByContentIdData,
+  DeleteProgramByIdData,
+  DeleteProgramByIdUsersByUserIdData,
   GetApiProgramsByProgramIdContentByIdData,
   GetApiProgramsByProgramIdContentByParentIdChildrenData,
   GetApiProgramsByProgramIdContentData,
   GetApiProgramsByProgramIdContentRequiredData,
   GetApiProgramsByProgramIdContentTopLevelData,
-  GetApiProgramSearchData,
-  GetApiProgramSlugBySlugData,
-  PostApiProgramByIdCloneData,
-  PostApiProgramByIdContentData,
-  PostApiProgramByIdContentReorderData,
-  PostApiProgramByIdUsersByUserIdData,
-  PostApiProgramData,
-  ProgramContentType,
-  PutApiProgramByIdContentByContentIdData,
-  PutApiProgramByIdData,
-  SearchContentDto,
+  GetProgramByIdData,
+  GetProgramByIdUsersByUserIdProgressData,
+  GetProgramByIdUsersData,
+  GetProgramByIdWithContentData,
+  GetProgramCategoryByCategoryData,
+  GetProgramCreatorByCreatorIdData,
+  GetProgramData,
+  GetProgramDifficultyByDifficultyData,
+  GetProgramPopularData,
+  GetProgramPublishedData,
+  GetProgramRecentData,
+  GetProgramSearchData,
+  GetProgramSlugBySlugData,
+  ModulesProgramsSearchContentDto,
+  PostProgramByIdCloneData,
+  PostProgramByIdContentData,
+  PostProgramByIdContentReorderData,
+  PostProgramByIdUsersByUserIdData,
+  PostProgramData,
+  PutProgramByIdContentByContentIdData,
+  PutProgramByIdData,
+  SourceModulesProgramsModelsProgramContentType,
   Visibility,
 } from '@/lib/api/generated/types.gen';
 import { revalidateTag } from 'next/cache';
@@ -101,11 +101,11 @@ import { revalidateTag } from 'next/cache';
 /**
  * Get all programs with optional filtering
  */
-export async function getPrograms(data?: GetApiProgramData) {
+export async function getPrograms(data?: GetProgramData) {
   try {
     await configureAuthenticatedClient();
 
-    return getApiProgram({
+    return getProgram({
       query: data?.query,
     });
   } catch (error) {
@@ -128,7 +128,7 @@ export async function getPrograms(data?: GetApiProgramData) {
 /**
  * Create a new program
  */
-export async function createProgram(data?: Omit<PostApiProgramData, 'url'>) {
+export async function createProgram(data?: Omit<PostProgramData, 'url'>) {
   try {
     console.log('createProgram called with data:', data?.body);
 
@@ -137,7 +137,7 @@ export async function createProgram(data?: Omit<PostApiProgramData, 'url'>) {
 
     console.log('Creating program with data:', data?.body);
 
-    const result = await postApiProgram({
+    const result = await postProgram({
       body: data?.body,
     });
 
@@ -232,10 +232,10 @@ export async function createProgram(data?: Omit<PostApiProgramData, 'url'>) {
 /**
  * Delete a program by ID
  */
-export async function deleteProgram(data: DeleteApiProgramByIdData) {
+export async function deleteProgram(data: DeleteProgramByIdData) {
   await configureAuthenticatedClient();
 
-  const result = await deleteApiProgramById({
+  const result = await deleteProgramById({
     path: data.path,
   });
 
@@ -248,10 +248,10 @@ export async function deleteProgram(data: DeleteApiProgramByIdData) {
 /**
  * Get a specific program by ID
  */
-export async function getProgramById(data: Omit<GetApiProgramByIdData, 'url'>) {
+export async function getProgramById(data: Omit<GetProgramByIdData, 'url'>) {
   await configureAuthenticatedClient();
 
-  return getApiProgramById({
+  return getProgramByIdFromApi({
     path: data.path,
   });
 }
@@ -259,10 +259,10 @@ export async function getProgramById(data: Omit<GetApiProgramByIdData, 'url'>) {
 /**
  * Update a program by ID
  */
-export async function updateProgram(data: Omit<PutApiProgramByIdData, 'url'>) {
+export async function updateProgram(data: Omit<PutProgramByIdData, 'url'>) {
   await configureAuthenticatedClient();
 
-  const result = await putApiProgramById({
+  const result = await putProgramById({
     path: data.path,
     body: data.body,
   });
@@ -276,10 +276,10 @@ export async function updateProgram(data: Omit<PutApiProgramByIdData, 'url'>) {
 /**
  * Get a program with its content
  */
-export async function getProgramWithContent(data: Omit<GetApiProgramByIdWithContentData, 'url'>) {
+export async function getProgramWithContent(data: Omit<GetProgramByIdWithContentData, 'url'>) {
   await configureAuthenticatedClient();
 
-  return getApiProgramByIdWithContent({
+  return getProgramByIdWithContent({
     path: data.path,
   });
 }
@@ -287,10 +287,10 @@ export async function getProgramWithContent(data: Omit<GetApiProgramByIdWithCont
 /**
  * Clone a program
  */
-export async function cloneProgram(data: PostApiProgramByIdCloneData) {
+export async function cloneProgram(data: PostProgramByIdCloneData) {
   await configureAuthenticatedClient();
 
-  const result = await postApiProgramByIdClone({
+  const result = await postProgramByIdClone({
     path: data.path,
   });
 
@@ -307,10 +307,10 @@ export async function cloneProgram(data: PostApiProgramByIdCloneData) {
 /**
  * Get published programs
  */
-export async function getPublishedPrograms(data?: GetApiProgramPublishedData) {
+export async function getPublishedPrograms(data?: GetProgramPublishedData) {
   await configureAuthenticatedClient();
 
-  return getApiProgramPublished({
+  return getProgramPublished({
     query: data?.query,
   });
 }
@@ -318,10 +318,10 @@ export async function getPublishedPrograms(data?: GetApiProgramPublishedData) {
 /**
  * Search programs
  */
-export async function searchPrograms(data?: GetApiProgramSearchData) {
+export async function searchPrograms(data?: GetProgramSearchData) {
   await configureAuthenticatedClient();
 
-  return getApiProgramSearch({
+  return getProgramSearch({
     query: data?.query,
   });
 }
@@ -329,10 +329,10 @@ export async function searchPrograms(data?: GetApiProgramSearchData) {
 /**
  * Get program by slug
  */
-export async function getProgramBySlug(data: Omit<GetApiProgramSlugBySlugData, 'url'>) {
+export async function getProgramBySlug(data: Omit<GetProgramSlugBySlugData, 'url'>) {
   await configureAuthenticatedClient();
 
-  return getApiProgramSlugBySlug({
+  return getProgramSlugBySlug({
     path: data.path,
   });
 }
@@ -340,10 +340,10 @@ export async function getProgramBySlug(data: Omit<GetApiProgramSlugBySlugData, '
 /**
  * Get programs by category
  */
-export async function getProgramsByCategory(data: GetApiProgramCategoryByCategoryData) {
+export async function getProgramsByCategory(data: GetProgramCategoryByCategoryData) {
   await configureAuthenticatedClient();
 
-  return getApiProgramCategoryByCategory({
+  return getProgramCategoryByCategory({
     path: data.path,
   });
 }
@@ -351,10 +351,10 @@ export async function getProgramsByCategory(data: GetApiProgramCategoryByCategor
 /**
  * Get programs by difficulty
  */
-export async function getProgramsByDifficulty(data: GetApiProgramDifficultyByDifficultyData) {
+export async function getProgramsByDifficulty(data: GetProgramDifficultyByDifficultyData) {
   await configureAuthenticatedClient();
 
-  return getApiProgramDifficultyByDifficulty({
+  return getProgramDifficultyByDifficulty({
     path: data.path,
   });
 }
@@ -362,10 +362,10 @@ export async function getProgramsByDifficulty(data: GetApiProgramDifficultyByDif
 /**
  * Get programs by creator
  */
-export async function getProgramsByCreator(data: GetApiProgramCreatorByCreatorIdData) {
+export async function getProgramsByCreator(data: GetProgramCreatorByCreatorIdData) {
   await configureAuthenticatedClient();
 
-  return getApiProgramCreatorByCreatorId({
+  return getProgramCreatorByCreatorId({
     path: data.path,
   });
 }
@@ -373,10 +373,10 @@ export async function getProgramsByCreator(data: GetApiProgramCreatorByCreatorId
 /**
  * Get popular programs
  */
-export async function getPopularPrograms(data?: GetApiProgramPopularData) {
+export async function getPopularPrograms(data?: GetProgramPopularData) {
   await configureAuthenticatedClient();
 
-  return getApiProgramPopular({
+  return getProgramPopular({
     query: data?.query,
   });
 }
@@ -384,10 +384,10 @@ export async function getPopularPrograms(data?: GetApiProgramPopularData) {
 /**
  * Get recent programs
  */
-export async function getRecentPrograms(data?: GetApiProgramRecentData) {
+export async function getRecentPrograms(data?: GetProgramRecentData) {
   await configureAuthenticatedClient();
 
-  return getApiProgramRecent({
+  return getProgramRecent({
     query: data?.query,
   });
 }
@@ -399,10 +399,10 @@ export async function getRecentPrograms(data?: GetApiProgramRecentData) {
 /**
  * Create program content
  */
-export async function createProgramContent(data: Omit<PostApiProgramByIdContentData, 'url'>) {
+export async function createProgramContent(data: Omit<PostProgramByIdContentData, 'url'>) {
   await configureAuthenticatedClient();
 
-  const result = await postApiProgramByIdContent({
+  const result = await postProgramByIdContent({
     path: data.path,
     body: data.body,
   });
@@ -416,10 +416,10 @@ export async function createProgramContent(data: Omit<PostApiProgramByIdContentD
 /**
  * Delete program content
  */
-export async function deleteProgramContent(data: Omit<DeleteApiProgramByIdContentByContentIdData, 'url'>) {
+export async function deleteProgramContent(data: Omit<DeleteProgramByIdContentByContentIdData, 'url'>) {
   await configureAuthenticatedClient();
 
-  const result = await deleteApiProgramByIdContentByContentId({
+  const result = await deleteProgramByIdContentByContentId({
     path: data.path,
   });
 
@@ -432,10 +432,10 @@ export async function deleteProgramContent(data: Omit<DeleteApiProgramByIdConten
 /**
  * Update program content
  */
-export async function updateProgramContent(data: PutApiProgramByIdContentByContentIdData) {
+export async function updateProgramContent(data: PutProgramByIdContentByContentIdData) {
   await configureAuthenticatedClient();
 
-  const result = await putApiProgramByIdContentByContentId({
+  const result = await putProgramByIdContentByContentId({
     path: data.path,
     body: data.body,
   });
@@ -449,10 +449,10 @@ export async function updateProgramContent(data: PutApiProgramByIdContentByConte
 /**
  * Reorder program content
  */
-export async function reorderProgramContent(data: Omit<PostApiProgramByIdContentReorderData, 'url'>) {
+export async function reorderProgramContent(data: Omit<PostProgramByIdContentReorderData, 'url'>) {
   await configureAuthenticatedClient();
 
-  const result = await postApiProgramByIdContentReorder({
+  const result = await postProgramByIdContentReorder({
     path: data.path,
     body: data.body,
   });
@@ -525,10 +525,10 @@ export async function getRequiredProgramContent(data: GetApiProgramsByProgramIdC
 /**
  * Enroll user in program
  */
-export async function enrollUserInProgram(data: PostApiProgramByIdUsersByUserIdData) {
+export async function enrollUserInProgram(data: PostProgramByIdUsersByUserIdData) {
   await configureAuthenticatedClient();
 
-  const result = await postApiProgramByIdUsersByUserId({
+  const result = await postProgramByIdUsersByUserId({
     path: data.path,
   });
 
@@ -541,10 +541,10 @@ export async function enrollUserInProgram(data: PostApiProgramByIdUsersByUserIdD
 /**
  * Remove user from program
  */
-export async function removeUserFromProgram(data: DeleteApiProgramByIdUsersByUserIdData) {
+export async function removeUserFromProgram(data: DeleteProgramByIdUsersByUserIdData) {
   await configureAuthenticatedClient();
 
-  const result = await deleteApiProgramByIdUsersByUserId({
+  const result = await deleteProgramByIdUsersByUserId({
     path: data.path,
   });
 
@@ -557,10 +557,10 @@ export async function removeUserFromProgram(data: DeleteApiProgramByIdUsersByUse
 /**
  * Get program users
  */
-export async function getProgramUsers(data: GetApiProgramByIdUsersData) {
+export async function getProgramUsers(data: GetProgramByIdUsersData) {
   await configureAuthenticatedClient();
 
-  return getApiProgramByIdUsers({
+  return getProgramByIdUsers({
     path: data.path,
   });
 }
@@ -568,10 +568,10 @@ export async function getProgramUsers(data: GetApiProgramByIdUsersData) {
 /**
  * Get user progress in program
  */
-export async function getUserProgramProgress(data: GetApiProgramByIdUsersByUserIdProgressData) {
+export async function getUserProgramProgress(data: GetProgramByIdUsersByUserIdProgressData) {
   await configureAuthenticatedClient();
 
-  return getApiProgramByIdUsersByUserIdProgress({
+  return getProgramByIdUsersByUserIdProgress({
     path: data.path,
   });
 }
@@ -586,7 +586,7 @@ export async function getUserProgramProgress(data: GetApiProgramByIdUsersByUserI
 export async function approveProgram(programId: string) {
   await configureAuthenticatedClient();
 
-  const response = await postApiProgramByIdApprove({
+  const response = await postProgramByIdApprove({
     path: { id: programId },
   });
 
@@ -601,7 +601,7 @@ export async function approveProgram(programId: string) {
 export async function rejectProgram(programId: string, reason?: string) {
   await configureAuthenticatedClient();
 
-  const response = await postApiProgramByIdReject({
+  const response = await postProgramByIdReject({
     path: { id: programId },
     body: reason ? { reason } : undefined,
   });
@@ -617,7 +617,7 @@ export async function rejectProgram(programId: string, reason?: string) {
 export async function archiveProgram(programId: string) {
   await configureAuthenticatedClient();
 
-  const response = await postApiProgramByIdArchive({
+  const response = await postProgramByIdArchive({
     path: { id: programId },
   });
 
@@ -632,7 +632,7 @@ export async function archiveProgram(programId: string) {
 export async function restoreProgram(programId: string) {
   await configureAuthenticatedClient();
 
-  const response = await postApiProgramByIdRestore({
+  const response = await postProgramByIdRestore({
     path: { id: programId },
   });
 
@@ -647,7 +647,7 @@ export async function restoreProgram(programId: string) {
 export async function publishProgram(programId: string) {
   await configureAuthenticatedClient();
 
-  const response = await postApiProgramByIdPublish({
+  const response = await postProgramByIdPublish({
     path: { id: programId },
   });
 
@@ -663,7 +663,7 @@ export async function publishProgram(programId: string) {
 export async function scheduleProgram(programId: string, publishAt: string) {
   await configureAuthenticatedClient();
 
-  const response = await postApiProgramByIdSchedule({
+  const response = await postProgramByIdSchedule({
     path: { id: programId },
     body: { publishAt },
   });
@@ -683,7 +683,7 @@ export async function scheduleProgram(programId: string, publishAt: string) {
 export async function monetizeProgram(programId: string) {
   await configureAuthenticatedClient();
 
-  const response = await postApiProgramByIdMonetize({
+  const response = await postProgramByIdMonetize({
     path: { id: programId },
   });
 
@@ -698,7 +698,7 @@ export async function monetizeProgram(programId: string) {
 export async function disableProgramMonetization(programId: string) {
   await configureAuthenticatedClient();
 
-  const response = await postApiProgramByIdDisableMonetization({
+  const response = await postProgramByIdDisableMonetization({
     path: { id: programId },
   });
 
@@ -713,7 +713,7 @@ export async function disableProgramMonetization(programId: string) {
 export async function getProgramPricing(programId: string) {
   await configureAuthenticatedClient();
 
-  return getApiProgramByIdPricing({
+  return getProgramByIdPricing({
     path: { id: programId },
   });
 }
@@ -728,7 +728,7 @@ export async function getProgramPricing(programId: string) {
 export async function getProgramAnalytics(programId: string) {
   await configureAuthenticatedClient();
 
-  return getApiProgramByIdAnalytics({
+  return getProgramByIdAnalytics({
     path: { id: programId },
   });
 }
@@ -739,7 +739,7 @@ export async function getProgramAnalytics(programId: string) {
 export async function getProgramCompletionRates(programId: string) {
   await configureAuthenticatedClient();
 
-  return getApiProgramByIdAnalyticsCompletionRates({
+  return getProgramByIdAnalyticsCompletionRates({
     path: { id: programId },
   });
 }
@@ -750,7 +750,7 @@ export async function getProgramCompletionRates(programId: string) {
 export async function getProgramEngagement(programId: string) {
   await configureAuthenticatedClient();
 
-  return getApiProgramByIdAnalyticsEngagement({
+  return getProgramByIdAnalyticsEngagement({
     path: { id: programId },
   });
 }
@@ -761,7 +761,7 @@ export async function getProgramEngagement(programId: string) {
 export async function getProgramRevenue(programId: string) {
   await configureAuthenticatedClient();
 
-  return getApiProgramByIdAnalyticsRevenue({
+  return getProgramByIdAnalyticsRevenue({
     path: { id: programId },
   });
 }
@@ -776,7 +776,7 @@ export async function getProgramRevenue(programId: string) {
 export async function getProgramProducts(programId: string) {
   await configureAuthenticatedClient();
 
-  return getApiProgramByIdProducts({
+  return getProgramByIdProducts({
     path: { id: programId },
   });
 }
@@ -787,7 +787,7 @@ export async function getProgramProducts(programId: string) {
 export async function createProgramProduct(programId: string, productData: object) {
   await configureAuthenticatedClient();
 
-  const response = await postApiProgramByIdCreateProduct({
+  const response = await postProgramByIdCreateProduct({
     path: { id: programId },
     body: productData,
   });
@@ -804,7 +804,7 @@ export async function createProgramProduct(programId: string, productData: objec
 export async function linkProductToProgram(programId: string, productId: string) {
   await configureAuthenticatedClient();
 
-  const response = await postApiProgramByIdLinkProductByProductId({
+  const response = await postProgramByIdLinkProductByProductId({
     path: { id: programId, productId },
   });
 
@@ -820,7 +820,7 @@ export async function linkProductToProgram(programId: string, productId: string)
 export async function unlinkProductFromProgram(programId: string, productId: string) {
   await configureAuthenticatedClient();
 
-  const response = await deleteApiProgramByIdLinkProductByProductId({
+  const response = await deleteProgramByIdLinkProductByProductId({
     path: { id: programId, productId },
   });
 
@@ -837,7 +837,7 @@ export async function unlinkProductFromProgram(programId: string, productId: str
 /**
  * Get program content by type
  */
-export async function getProgramContentByType(programId: string, type: ProgramContentType) {
+export async function getProgramContentByType(programId: string, type: SourceModulesProgramsModelsProgramContentType) {
   await configureAuthenticatedClient();
 
   return getApiProgramsByProgramIdContentByTypeByType({
@@ -870,7 +870,7 @@ export async function getProgramContentStats(programId: string) {
 /**
  * Search content in a program
  */
-export async function searchContentInProgram(programId: string, searchTerm: string, searchData?: Partial<SearchContentDto>) {
+export async function searchContentInProgram(programId: string, searchTerm: string, searchData?: Partial<ModulesProgramsSearchContentDto>) {
   await configureAuthenticatedClient();
 
   const result = await postApiProgramsByProgramIdContentSearch({
@@ -891,7 +891,7 @@ export async function searchContentInProgram(programId: string, searchTerm: stri
 export async function submitProgram(programId: string) {
   await configureAuthenticatedClient();
 
-  const result = await postApiProgramByIdSubmit({
+  const result = await postProgramByIdSubmit({
     path: { id: programId },
   });
 
@@ -908,7 +908,7 @@ export async function submitProgram(programId: string) {
 export async function unpublishProgram(programId: string) {
   await configureAuthenticatedClient();
 
-  const result = await postApiProgramByIdUnpublish({
+  const result = await postProgramByIdUnpublish({
     path: { id: programId },
   });
 
@@ -925,7 +925,7 @@ export async function unpublishProgram(programId: string) {
 export async function completeUserContent(programId: string, userId: string, contentId: string) {
   await configureAuthenticatedClient();
 
-  const result = await postApiProgramByIdUsersByUserIdContentByContentIdComplete({
+  const result = await postProgramByIdUsersByUserIdContentByContentIdComplete({
     path: {
       id: programId,
       userId,
@@ -946,7 +946,7 @@ export async function completeUserContent(programId: string, userId: string, con
 export async function resetUserProgress(programId: string, userId: string) {
   await configureAuthenticatedClient();
 
-  const result = await postApiProgramByIdUsersByUserIdReset({
+  const result = await postProgramByIdUsersByUserIdReset({
     path: {
       id: programId,
       userId,
@@ -966,7 +966,7 @@ export async function resetUserProgress(programId: string, userId: string) {
 export async function withdrawFromProgram(programId: string) {
   await configureAuthenticatedClient();
 
-  const result = await postApiProgramByIdWithdraw({
+  const result = await postProgramByIdWithdraw({
     path: { id: programId },
   });
 
@@ -983,7 +983,7 @@ export async function withdrawFromProgram(programId: string) {
 export async function updateProgramPricing(programId: string, pricingData: object) {
   await configureAuthenticatedClient();
 
-  const result = await putApiProgramByIdPricing({
+  const result = await putProgramByIdPricing({
     path: { id: programId },
     body: pricingData,
   });
@@ -1001,7 +1001,7 @@ export async function updateProgramPricing(programId: string, pricingData: objec
 export async function updateUserProgress(programId: string, userId: string, progressData: object) {
   await configureAuthenticatedClient();
 
-  const result = await putApiProgramByIdUsersByUserIdProgress({
+  const result = await putProgramByIdUsersByUserIdProgress({
     path: {
       id: programId,
       userId,
