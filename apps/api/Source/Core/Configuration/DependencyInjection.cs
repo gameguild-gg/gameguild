@@ -225,13 +225,15 @@ public static class DependencyInjection {
     // Register database context only if enabled
     if (options.EnableDatabase) {
       ServiceCollectionExtensions.AddDatabaseContext(services, configuration);
-      
+
       // Register database seeder
       services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
     }
 
     // Add OpenTelemetry observability
-    services.AddOpenTelemetryObservability(configuration);
+    var telemetryOptions = new OpenTelemetryOptions();
+    configuration.GetSection("OpenTelemetry").Bind(telemetryOptions);
+    services.AddOpenTelemetryObservability(configuration, telemetryOptions);
 
     // Add health checks
     services.AddApplicationHealthChecks(configuration);
