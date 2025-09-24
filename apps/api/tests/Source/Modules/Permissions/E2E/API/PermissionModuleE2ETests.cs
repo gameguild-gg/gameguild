@@ -450,7 +450,7 @@ public class PermissionModuleE2ETests : IClassFixture<TestServerFixture>, IDispo
   private async Task<HttpResponseMessage> PostGraphQlAsync(object request) {
     var json = JsonSerializer.Serialize(
       request,
-      new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
+      GameGuild.Core.Configuration.JsonSerializerConfiguration.StandardOptions
     );
 
     var content = new StringContent(json, Encoding.UTF8, "application/json");
