@@ -115,8 +115,21 @@ public class GraphQLSecurityMiddleware {
 
                 if (context.Request.ContentType?.Contains("application/json") == true) {
                     var jsonDoc = System.Text.Json.JsonDocument.Parse(body);
-                    if (jsonDoc.RootElement.TryGetProperty("query", out var queryElement)) {
-                        return queryElement.GetString() ?? string.Empty;
+
+                    // Handle single query object: { "query": "...", "variables": {...} }
+                    if (jsonDoc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object) {
+                        if (jsonDoc.RootElement.TryGetProperty("query", out var queryElement)) {
+                            return queryElement.GetString() ?? string.Empty;
+                        }
+                    }
+                    // Handle batched query array: [{ "query": "...", "variables": {...} }]
+                    else if (jsonDoc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array) {
+                        // For batched queries, analyze the first query in the batch
+                        var firstElement = jsonDoc.RootElement.EnumerateArray().FirstOrDefault();
+                        if (firstElement.ValueKind == System.Text.Json.JsonValueKind.Object &&
+                            firstElement.TryGetProperty("query", out var batchQueryElement)) {
+                            return batchQueryElement.GetString() ?? string.Empty;
+                        }
                     }
                 }
 
