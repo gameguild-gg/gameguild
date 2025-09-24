@@ -22,6 +22,19 @@ export function PreviewList({ node, children }: PreviewListProps) {
                          (node.style && node.style.includes('upper-alpha') ? 'upper-alpha' :
                           node.style && node.style.includes('lower-alpha') ? 'lower-alpha' : 'decimal')
     
+    if (listStyleType === "upper-alpha") {
+      listClass = "list-inside"
+      customStyle = { listStyleType: 'upper-alpha' }
+    } else if (listStyleType === "lower-alpha") {
+      listClass = "list-inside"
+      customStyle = { listStyleType: 'lower-alpha' }
+  } else {
+    // Para listas ordenadas, verificar se há atributos customizados
+    const listStyleType = node.listStyleType || 
+                         node['data-list-style-type'] || 
+                         (node.style && node.style.includes('upper-alpha') ? 'upper-alpha' :
+                          node.style && node.style.includes('lower-alpha') ? 'lower-alpha' : 'decimal')
+    
     listClass = "list-inside"
     
     switch (listStyleType) {
