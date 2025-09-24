@@ -93,8 +93,9 @@ internal static class WebApplicationExtensions {
     // Map controller endpoints
     app.MapControllers();
 
-    // Map GraphQL endpoint
-    app.MapGraphQL("/graphql");
+    // Map GraphQL endpoint with CORS configuration
+    app.MapGraphQL("/graphql")
+       .RequireCors(); // Explicitly require CORS policy
 
     // Additional minimal endpoints would be mapped here when implemented via IEndpoint.
 

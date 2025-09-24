@@ -103,12 +103,28 @@ public static class ServiceCollectionExtensions {
     options ??= CorsOptionsBuilder.Create(configuration);
     options.Validate();
 
+    // Debug logging to see what CORS options are being applied
+    Console.WriteLine($"CORS Configuration - AllowedOrigins: [{string.Join(", ", options.AllowedOrigins)}]");
+    Console.WriteLine($"CORS Configuration - AllowCredentials: {options.AllowCredentials}");
+    Console.WriteLine($"CORS Configuration - AllowedOrigins Length: {options.AllowedOrigins.Length}");
+
     services.AddCors(corsOptions => {
       corsOptions.AddDefaultPolicy(policyBuilder => {
-        if (options.AllowedOrigins.Length > 0)
+        if (options.AllowedOrigins.Length > 0 && !options.AllowedOrigins.Contains("*")) {
+          Console.WriteLine("CORS: Using specific origins with credentials");
           policyBuilder.WithOrigins(options.AllowedOrigins);
-        else
+          if (options.AllowCredentials) {
+            policyBuilder.AllowCredentials();
+          }
+        }
+        else if (options.AllowedOrigins.Length > 0 && options.AllowedOrigins.Contains("*")) {
+          Console.WriteLine("CORS: Using AllowAnyOrigin (no credentials)");
           policyBuilder.AllowAnyOrigin();
+        }
+        else {
+          Console.WriteLine("CORS: No origins configured, using AllowAnyOrigin (no credentials)");
+          policyBuilder.AllowAnyOrigin();
+        }
 
         if (options.AllowedMethods.Length > 0)
           policyBuilder.WithMethods(options.AllowedMethods);
