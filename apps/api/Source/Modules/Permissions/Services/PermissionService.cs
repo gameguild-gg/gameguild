@@ -270,12 +270,12 @@ public class PermissionService : IPermissionService {
 
       if (userPermission != null) {
         var hasUserPermission = userPermission.HasPermission(permission);
-        _logger.LogDebug("User-specific permission found: {HasPermission}", hasUserPermission);
+        _logger.LogDebug("User-specific content-type permission found: {HasPermission}", hasUserPermission);
         if (hasUserPermission) return true;
       }
     }
 
-    // Check tenant default permissions
+    // Check tenant default content-type permissions
     if (tenantId.HasValue) {
       var tenantPermission = await _context.ContentTypePermissions.AsNoTracking()
         .FirstOrDefaultAsync(ctp =>
@@ -287,12 +287,12 @@ public class PermissionService : IPermissionService {
 
       if (tenantPermission != null) {
         var hasTenantPermission = tenantPermission.HasPermission(permission);
-        _logger.LogDebug("Tenant default permission found: {HasPermission}", hasTenantPermission);
+        _logger.LogDebug("Tenant default content-type permission found: {HasPermission}", hasTenantPermission);
         if (hasTenantPermission) return true;
       }
     }
 
-    // Check global default permissions
+    // Check global default content-type permissions
     var globalPermission = await _context.ContentTypePermissions.AsNoTracking()
       .FirstOrDefaultAsync(ctp =>
         ctp.UserId == null &&
@@ -303,12 +303,13 @@ public class PermissionService : IPermissionService {
 
     if (globalPermission != null) {
       var hasGlobalPermission = globalPermission.HasPermission(permission);
-      _logger.LogDebug("Global default permission found: {HasPermission}", hasGlobalPermission);
-      return hasGlobalPermission;
+      _logger.LogDebug("Global default content-type permission found: {HasPermission}", hasGlobalPermission);
+      if (hasGlobalPermission) return hasGlobalPermission;
     }
 
-    _logger.LogDebug("No permissions found for content type {ContentType}", contentTypeName);
-    return false;
+    // Fall back to tenant-level permissions if no content-type specific permissions grant the permission
+    _logger.LogDebug("No content-type specific permissions found, falling back to tenant-level permissions");
+    return await HasTenantPermissionAsync(userId, tenantId, permission);
   }
 
   public async Task<IEnumerable<PermissionType>> GetContentTypePermissionsAsync(Guid? userId, Guid? tenantId, string contentTypeName) {
@@ -404,7 +405,7 @@ public class PermissionService : IPermissionService {
         }
       }
       else {
-        // Create new instance using the constructor without permissions parameter
+        // Create new instance using the 3-parameter constructor
         var newPermission = (TPermission)Activator.CreateInstance(typeof(TPermission), userId, tenantId, resourceId)!;
         
         // Add each permission individually
@@ -515,9 +516,16 @@ public class PermissionService : IPermissionService {
       .FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId);
 
     if (existingPermission != null) {
-      // Reactivate existing membership
+      // Reactivate existing membership but reset to minimal permissions
       existingPermission.ExpiresAt = null;
       existingPermission.Restore();
+      
+      // Reset to minimal permissions only (clear previous additional permissions)
+      existingPermission.PermissionFlags1 = 0; // Clear all permissions
+      existingPermission.PermissionFlags2 = 0; // Clear all permissions
+      foreach (var permission in TenantPermissionConstants.MinimalUserPermissions) {
+        existingPermission.AddPermission(permission);
+      }
     }
     else {
       existingPermission = new TenantPermission(userId, tenantId);
@@ -731,9 +739,12 @@ public class PermissionService : IPermissionService {
             permissions.Add(permission);
           }
         }
+        
+        // Only add to result if user has any permissions for this resource
+        if (permissions.Count > 0) {
+          result[resourceId] = permissions;
+        }
       }
-
-      result[resourceId] = permissions;
     }
 
     return result;

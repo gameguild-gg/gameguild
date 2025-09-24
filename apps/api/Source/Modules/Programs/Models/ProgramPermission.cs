@@ -21,6 +21,13 @@ public class ProgramPermission : ResourcePermission<Program> {
   /// </summary>
   public ProgramPermission() : base() { }
 
+  /// <summary>
+  /// Constructor for creating instances (permissions added separately)
+  /// </summary>
+  public ProgramPermission(Guid userId, Guid? tenantId, Guid programId)
+    : base(userId, tenantId, programId) {
+  }
+
   public ProgramPermission(Guid userId, Guid? tenantId, Guid programId, PermissionType permissions)
     : base(userId, tenantId, programId) {
     AddPermission(permissions);

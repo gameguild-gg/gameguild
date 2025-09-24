@@ -15,6 +15,11 @@ public class ProjectPermission : ResourcePermission<Project> {
   // Public parameterless constructor for EF and GraphQL
   public ProjectPermission() : base() { }
 
+  // Public constructor for creating instances (permissions added separately)
+  public ProjectPermission(Guid userId, Guid? tenantId, Guid resourceId)
+    : base(userId, tenantId, resourceId) {
+  }
+
   // Public constructor for creating instances
   public ProjectPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
     : base(userId, tenantId, resourceId) {
