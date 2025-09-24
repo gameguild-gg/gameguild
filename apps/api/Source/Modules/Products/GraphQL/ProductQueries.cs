@@ -1,6 +1,9 @@
+using System.Security.Claims;
+using GameGuild.Authorization.Identity;
 using GameGuild.CQRS;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Contents;
+using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 using ProductEntity = GameGuild.Modules.Products.Product;
 using ProductTypeEnum = GameGuild.ProductType;
 
@@ -41,6 +44,59 @@ public class ProductQueries {
 
   /// <summary> Gets products by creator </summary>
   public async Task<IEnumerable<ProductEntity>> GetProductsByCreator(Guid creatorId, [Service] IProductService productService, int skip = 0, int take = 50) { return await productService.GetProductsByCreatorAsync(creatorId, skip, take); }
+
+  /// <summary> Test resolver without authorization to check if auth pipeline is the issue </summary>
+  public Task<string> TestAuth(ClaimsPrincipal claimsPrincipal, [Service] ILogger<ProductQueries> logger) {
+    logger.LogInformation("=== TestAuth Debug ===");
+    logger.LogInformation("Claims Principal is null: {IsNull}", claimsPrincipal == null);
+    logger.LogInformation("Claims Principal Identity Authenticated: {IsAuthenticated}", claimsPrincipal?.Identity?.IsAuthenticated);
+    return Task.FromResult($"Auth test - Authenticated: {claimsPrincipal?.Identity?.IsAuthenticated}, Claims: {claimsPrincipal?.Claims?.Count() ?? 0}");
+  }
+
+  /// <summary> Gets the current user's products (owned/editable) </summary>
+  [Authorize] // Requires authentication
+  public async Task<IEnumerable<ProductEntity>> GetMyProducts(ClaimsPrincipal claimsPrincipal, [Service] IProductService productService, [Service] ILogger<ProductQueries> logger, int skip = 0, int take = 50) {
+    try {
+      // Debug: Log all claims to understand the token structure
+      logger.LogInformation("=== MyProducts Debug ===");
+      logger.LogInformation("Claims Principal Identity Authenticated: {IsAuthenticated}", claimsPrincipal?.Identity?.IsAuthenticated);
+      logger.LogInformation("Total Claims Count: {ClaimsCount}", claimsPrincipal?.Claims?.Count() ?? 0);
+
+      if (claimsPrincipal?.Claims != null) {
+        foreach (var claim in claimsPrincipal.Claims) {
+          logger.LogInformation("Claim Type: '{Type}', Value: '{Value}'", claim.Type, claim.Value);
+        }
+      }
+
+      // Try multiple ways to get user ID
+      var subClaim = claimsPrincipal?.FindFirst("sub")?.Value;
+      var nameIdentifierClaim = claimsPrincipal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var userIdClaim = claimsPrincipal?.FindFirst("user_id")?.Value;
+
+      logger.LogInformation("sub claim: {SubClaim}", subClaim);
+      logger.LogInformation("NameIdentifier claim: {NameIdentifierClaim}", nameIdentifierClaim);
+      logger.LogInformation("user_id claim: {UserIdClaim}", userIdClaim);
+
+      // Use extension method
+      var userId = claimsPrincipal?.GetUserId();
+      logger.LogInformation("GetUserId() result: {UserId}", userId);
+
+      if (userId == null) {
+        logger.LogError("User ID not found in token - throwing UnauthorizedAccessException");
+        throw new UnauthorizedAccessException("User ID not found in token");
+      }
+
+      logger.LogInformation("Getting products for user: {UserId}", userId);
+      var result = await productService.GetProductsByCreatorAsync(userId.Value, skip, take);
+      logger.LogInformation("Found {ProductCount} products for user {UserId}", result?.Count() ?? 0, userId);
+
+      return result ?? [];
+    }
+    catch (Exception ex) {
+      logger.LogError(ex, "Error in GetMyProducts: {Message}", ex.Message);
+      throw;
+    }
+  }
 
   /// <summary> Searches products by term </summary>
   public async Task<IEnumerable<ProductEntity>> SearchProducts(string searchTerm, [Service] IProductService productService, int skip = 0, int take = 50) { return await productService.SearchProductsAsync(searchTerm, skip, take); }
