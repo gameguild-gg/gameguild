@@ -13,7 +13,6 @@ public class AutoAssignUserDto {
 
   /// <summary> Email domain to use for auto-assignment logic </summary>
   [Required]
-  [EmailAddress]
   public string EmailDomain { get; set; } = string.Empty;
 
   /// <summary> ID of the tenant to auto-assign the user to </summary>
