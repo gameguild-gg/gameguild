@@ -42,12 +42,10 @@ export class CustomListNode extends ListNode {
     if (this.getListType() === "number") {
       // Limpar todas as classes CSS do tema
       element.className = ""
-      // Aplicar apenas os estilos necessários
-      element.style.listStyleType = this.__listStyleType || "decimal"
-      element.style.listStylePosition = "inside"
-      element.style.paddingLeft = "1rem"
-      element.style.marginTop = "1rem"
-      element.style.marginBottom = "1rem"
+      
+      // Aplicar estilos baseado no tipo de lista
+      this.applyListStyles(element)
+      
       element.setAttribute("data-list-style-type", this.__listStyleType || "decimal")
     }
     return element
@@ -58,15 +56,70 @@ export class CustomListNode extends ListNode {
     if (this.getListType() === "number") {
       // Limpar todas as classes CSS do tema
       dom.className = ""
-      // Aplicar apenas os estilos necessários
-      dom.style.listStyleType = this.__listStyleType || "decimal"
-      dom.style.listStylePosition = "inside"
-      dom.style.paddingLeft = "1rem"
-      dom.style.marginTop = "1rem"
-      dom.style.marginBottom = "1rem"
+      
+      // Aplicar estilos baseado no tipo de lista
+      this.applyListStyles(dom)
+      
       dom.setAttribute("data-list-style-type", this.__listStyleType || "decimal")
     }
     return result
+  }
+
+  private applyListStyles(element: HTMLElement): void {
+    const listType = this.__listStyleType || "decimal"
+    
+    // Estilos básicos para todas as listas
+    element.style.listStylePosition = "inside"
+    element.style.paddingLeft = "1rem"
+    element.style.marginTop = "1rem"
+    element.style.marginBottom = "1rem"
+    
+    // Estilos específicos por tipo
+    switch (listType) {
+      case "decimal":
+      case "upper-alpha":
+      case "lower-alpha":
+      case "upper-roman":
+      case "lower-roman":
+      case "decimal-leading-zero":
+      case "upper-greek":
+        element.style.listStyleType = listType
+        break
+      case "circled":
+        // Números circulados customizados
+        element.style.listStyleType = "none"
+        element.style.counterReset = "circled-counter"
+        element.setAttribute("data-circled-list", "true")
+        // Adicionar CSS para números circulados
+        this.addCircledNumberStyles(element)
+        break
+      default:
+        element.style.listStyleType = "decimal"
+    }
+  }
+
+  private addCircledNumberStyles(element: HTMLElement): void {
+    // Criar estilos CSS para números circulados se ainda não existirem
+    if (!document.querySelector('#circled-numbers-style')) {
+      const style = document.createElement('style')
+      style.id = 'circled-numbers-style'
+      style.textContent = `
+        ol[data-circled-list="true"] {
+          counter-reset: circled-counter;
+        }
+        ol[data-circled-list="true"] li {
+          counter-increment: circled-counter;
+          position: relative;
+        }
+        ol[data-circled-list="true"] li::before {
+          content: "\\24" counter(circled-counter) ";
+          font-weight: bold;
+          color: #2563eb;
+          margin-right: 0.5rem;
+        }
+      `
+      document.head.appendChild(style)
+    }
   }
 
   static importJSON(serializedNode: SerializedCustomListNode): CustomListNode {
