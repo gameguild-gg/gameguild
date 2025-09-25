@@ -154,7 +154,59 @@
     .lexical-editor ol[data-circled-list="true"] li::before {
         content: "(" counter(circled-counter) ")";
         font-weight: bold;
-        color: #2563eb;
+        color: oklch(0.488 0.243 264.376);
+        margin-right: 0.5rem;
+        display: inline-block;
+    }
+
+    /* Estilos para listas não ordenadas customizadas */
+    
+    /* Listas com setas */
+    ul.arrow-list, ol.arrow-list {
+        list-style: none;
+    }
+    
+    ul.arrow-list li::before, ol.arrow-list li::before {
+        content: "▶";
+        font-weight: bold;
+        color: oklch(0.488 0.243 264.376);
+        margin-right: 0.5rem;
+        display: inline-block;
+    }
+    
+    .lexical-editor ul[data-arrow-list="true"], .lexical-editor ol[data-arrow-list="true"] {
+        list-style: none;
+    }
+    
+    .lexical-editor ul[data-arrow-list="true"] li::before, .lexical-editor ol[data-arrow-list="true"] li::before {
+        content: "▶";
+        font-weight: bold;
+        color: oklch(0.488 0.243 264.376);
+        margin-right: 0.5rem;
+        display: inline-block;
+    }
+    
+    /* Listas com estrelas */
+    ul.star-list, ol.star-list {
+        list-style: none;
+    }
+    
+    ul.star-list li::before, ol.star-list li::before {
+        content: "★";
+        font-weight: bold;
+        color: oklch(0.488 0.243 264.376);
+        margin-right: 0.5rem;
+        display: inline-block;
+    }
+    
+    .lexical-editor ul[data-star-list="true"], .lexical-editor ol[data-star-list="true"] {
+        list-style: none;
+    }
+    
+    .lexical-editor ul[data-star-list="true"] li::before, .lexical-editor ol[data-star-list="true"] li::before {
+        content: "★";
+        font-weight: bold;
+        color: oklch(0.488 0.243 264.376);
         margin-right: 0.5rem;
         display: inline-block;
     }
