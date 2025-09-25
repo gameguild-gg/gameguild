@@ -17,11 +17,6 @@ export const GET_MY_PROGRAMS = gql`
       status
       createdAt
       updatedAt
-      creator {
-        id
-        displayName
-        avatar
-      }
     }
   }
 `;
@@ -49,11 +44,6 @@ export const GET_PUBLISHED_PROGRAMS = gql`
       status
       createdAt
       updatedAt
-      creator {
-        id
-        displayName
-        avatar
-      }
     }
   }
 `;
@@ -75,11 +65,6 @@ export const GET_PROGRAM_BY_ID = gql`
       status
       createdAt
       updatedAt
-      creator {
-        id
-        displayName
-        avatar
-      }
     }
   }
 `;
@@ -101,11 +86,6 @@ export const GET_PROGRAM_BY_SLUG = gql`
       status
       createdAt
       updatedAt
-      creator {
-        id
-        displayName
-        avatar
-      }
     }
   }
 `;
