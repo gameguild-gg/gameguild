@@ -1,7 +1,7 @@
 "use client"
 
-import { useCallback, useState } from "react"
-import { $getSelection, $isRangeSelection } from "lexical"
+import { useCallback, useState, useEffect } from "react"
+import { $getSelection, $isRangeSelection, SELECTION_CHANGE_COMMAND } from "lexical"
 import { $isListNode } from "@lexical/list"
 import { $isCustomListNode } from "@/components/editor/nodes/custom-list-node"
 import { Palette, Check } from "lucide-react"
@@ -38,25 +38,46 @@ export function ListColorMenuComponent({ editor }: ListColorMenuComponentProps) 
       editor.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
-          // Encontrar o nó de lista pai
-          const anchorNode = selection.anchor.getNode()
+          // Encontrar o nó de lista pai - buscar em todos os nós selecionados
+          const nodes = selection.getNodes()
           let listNode = null
           
-          // Buscar o nó de lista subindo na árvore
-          let currentNode: any = anchorNode
-          while (currentNode) {
-            if ($isListNode(currentNode) || $isCustomListNode(currentNode)) {
-              listNode = currentNode
-              break
+          // Tentar encontrar lista a partir de qualquer nó selecionado
+          for (const node of nodes) {
+            let currentNode: any = node
+            while (currentNode) {
+              if ($isListNode(currentNode) || $isCustomListNode(currentNode)) {
+                listNode = currentNode
+                break
+              }
+              const parent = currentNode.getParent()
+              currentNode = parent
             }
-            const parent = currentNode.getParent()
-            currentNode = parent
+            if (listNode) break
+          }
+          
+          // Se não encontrou, tentar a partir do anchor node
+          if (!listNode) {
+            const anchorNode = selection.anchor.getNode()
+            let currentNode: any = anchorNode
+            while (currentNode) {
+              if ($isListNode(currentNode) || $isCustomListNode(currentNode)) {
+                listNode = currentNode
+                break
+              }
+              const parent = currentNode.getParent()
+              currentNode = parent
+            }
           }
           
           if (listNode && $isCustomListNode(listNode)) {
             // Atualizar a cor do marcador na lista customizada
             listNode.setMarkerColor(color)
             setCurrentListColor(color)
+            
+            // Forçar re-renderização do DOM
+            const writable = listNode.getWritable()
+            writable.__markerColor = color
           }
         }
       })
@@ -69,25 +90,63 @@ export function ListColorMenuComponent({ editor }: ListColorMenuComponentProps) 
     editor.getEditorState().read(() => {
       const selection = $getSelection()
       if ($isRangeSelection(selection)) {
-        const anchorNode = selection.anchor.getNode()
-        let currentNode: any = anchorNode
+        const nodes = selection.getNodes()
+        let foundColor = ""
         
-        while (currentNode) {
-          if ($isCustomListNode(currentNode)) {
-            setCurrentListColor(currentNode.getMarkerColor())
-            break
+        // Tentar encontrar lista a partir de qualquer nó selecionado
+        for (const node of nodes) {
+          let currentNode: any = node
+          while (currentNode) {
+            if ($isCustomListNode(currentNode)) {
+              foundColor = currentNode.getMarkerColor()
+              break
+            }
+            const parent = currentNode.getParent()
+            currentNode = parent
           }
-          const parent = currentNode.getParent()
-          currentNode = parent
+          if (foundColor) break
         }
+        
+        // Se não encontrou, tentar a partir do anchor node
+        if (!foundColor) {
+          const anchorNode = selection.anchor.getNode()
+          let currentNode: any = anchorNode
+          while (currentNode) {
+            if ($isCustomListNode(currentNode)) {
+              foundColor = currentNode.getMarkerColor()
+              break
+            }
+            const parent = currentNode.getParent()
+            currentNode = parent
+          }
+        }
+        
+        setCurrentListColor(foundColor)
       }
     })
   }, [editor])
 
-  // Detectar cor atual quando o componente é renderizado
-  useState(() => {
+  // Detectar cor atual quando a seleção muda
+  useEffect(() => {
+    const removeListener = editor.registerCommand(
+      SELECTION_CHANGE_COMMAND,
+      () => {
+        detectCurrentListColor()
+        return false
+      },
+      1
+    )
+    
+    // Detectar cor inicial
     detectCurrentListColor()
-  })
+    
+    return removeListener
+  }, [editor, detectCurrentListColor])
+
+  // Remover o useState incorreto e substituir
+  // useState(() => {
+  //   detectCurrentListColor()
+  // })
 
   return (
     <DropdownMenuSub>
