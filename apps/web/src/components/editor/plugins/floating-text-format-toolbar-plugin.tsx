@@ -45,6 +45,7 @@ import { FontFamilyMenuComponent } from "./floating-text-components/font-family-
 import { FontSizeMenuComponent } from "./floating-text-components/font-size-menu-component"
 import { TextColorMenuComponent } from "./floating-text-components/text-color-menu-component"
 import { BackgroundColorMenuComponent } from "./floating-text-components/background-color-menu-component"
+import { ListColorMenuComponent } from "./floating-text-components/list-color-menu-component"
 import { LinkMenuComponent } from "./floating-text-components/link-menu-component"
 import { Button } from "@/components/ui/button"
 import { $createParagraphNode } from "lexical"
@@ -507,6 +508,8 @@ export function FloatingTextFormatToolbarPlugin() {
                 currentBackgroundColor={currentBackgroundColor}
                 setCurrentBackgroundColor={setCurrentBackgroundColor}
               />
+
+              <ListColorMenuComponent editor={editor} />
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -740,7 +743,6 @@ export function FloatingTextFormatToolbarPlugin() {
                 editor={editor}
                 currentListType={currentListType}
                 updateToolbar={updateToolbar}
-                showCurrentType={true}
               />
               <DropdownMenuSeparator />
               <DropdownMenuItem
