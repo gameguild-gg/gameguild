@@ -19,7 +19,7 @@ export class CustomListNode extends ListNode {
   constructor(listType: ListType, start: number, listStyleType?: string, markerColor?: string, key?: NodeKey) {
     super(listType, start, key)
     this.__listStyleType = listStyleType || "decimal"
-    this.__markerColor = markerColor || "oklch(0.488 0.243 264.376)" // Sempre definir cor padrão
+    this.__markerColor = markerColor || "#3b82f6" // Sempre definir cor padrão
   }
 
   getListStyleType(): string {
@@ -107,7 +107,7 @@ export class CustomListNode extends ListNode {
   private applyMarkerColor(element: HTMLElement): void {
     // Aplicar cor especificamente aos marcadores após o DOM estar pronto
     const listType = this.__listStyleType || "decimal"
-    const markerColor = this.__markerColor || "oklch(0.488 0.243 264.376)"
+    const markerColor = this.__markerColor || "#3b82f6"
     
     // Remover instância anterior se existir
     const oldInstanceId = element.getAttribute("data-list-instance")
@@ -154,7 +154,7 @@ export class CustomListNode extends ListNode {
 
   private applyListStyles(element: HTMLElement): void {
     const listType = this.__listStyleType || "decimal"
-    const markerColor = this.__markerColor || "oklch(0.488 0.243 264.376)"
+    const markerColor = this.__markerColor || "#3b82f6"
     
     // Estilos básicos para todas as listas
     element.style.listStylePosition = "inside"
@@ -452,7 +452,7 @@ export class CustomListNode extends ListNode {
     
     // IMPORTANTE: Sempre definir a cor, incluindo a padrão
     // Se não há cor salva, usar a padrão
-    const finalColor = markerColor || "oklch(0.488 0.243 264.376)"
+    const finalColor = markerColor || "#3b82f6"
     node.__markerColor = finalColor
     
     return node
@@ -462,7 +462,7 @@ export class CustomListNode extends ListNode {
     return {
       ...super.exportJSON(),
       listStyleType: this.__listStyleType,
-      markerColor: this.__markerColor || "oklch(0.488 0.243 264.376)", // Sempre salvar cor, incluindo padrão
+      markerColor: this.__markerColor || "#3b82f6", // Sempre salvar cor, incluindo padrão
       type: "list",  // Manter compatibilidade com o tipo padrão
     }
   }
@@ -472,7 +472,7 @@ export function $createCustomListNode(
   listType: ListType,
   start = 1,
   listStyleType = "decimal",
-  markerColor = "oklch(0.488 0.243 264.376)" // Sempre definir cor padrão
+  markerColor = "#3b82f6" // Sempre definir cor padrão
 ): CustomListNode {
   return new CustomListNode(listType, start, listStyleType, markerColor)
 }
