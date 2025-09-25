@@ -1,4 +1,4 @@
-using System.Security.Claims;
+ using System.Security.Claims;
 using GameGuild.Core.Domain.Permissions;
 using GameGuild.Modules.Authentication;
 using Microsoft.AspNetCore.Mvc;
@@ -27,13 +27,17 @@ public class RequireDacPermissionAttribute : Attribute, IAsyncAuthorizationFilte
 
   public async Task OnAuthorizationAsync(AuthorizationFilterContext context) {
     var resolver = context.HttpContext.RequestServices.GetRequiredService<IDacPermissionResolver>();
+    var logger = context.HttpContext.RequestServices.GetService<ILogger<RequireDacPermissionAttribute>>();
+
+    var requestPath = context.HttpContext.Request.Path.Value ?? "unknown";
+    var requestMethod = context.HttpContext.Request.Method;
 
     // Extract user ID and tenant ID from JWT token
     var userIdClaim = context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
     if (!Guid.TryParse(userIdClaim, out var userId)) {
+      logger?.LogWarning("🚫 [REST-AUTH] {Method} {Path} | User not authenticated or invalid UserId claim", requestMethod, requestPath);
       context.Result = new UnauthorizedResult();
-
       return;
     }
 
@@ -49,12 +53,18 @@ public class RequireDacPermissionAttribute : Attribute, IAsyncAuthorizationFilte
       if (Guid.TryParse(resourceIdValue, out var parsedResourceId)) { resourceId = parsedResourceId; }
     }
 
+    // Log comprehensive request context
+    logger?.LogInformation("🎯 [REST] {Method} {Path} | User: {UserId} | Tenant: {TenantId} | ResourceId: {ResourceId} | Permission: {RequiredPermission}",
+      requestMethod, requestPath, userId, tenantId, resourceId, RequiredPermission);
+
     try {
       // Check DAC permission
       var permissionResult = await resolver.ResolvePermissionAsync<EntityBase>(userId, tenantId, RequiredPermission, resourceId, ContentTypeName);
 
       if (permissionResult.IsGranted) {
         // Permission granted through DAC
+        logger?.LogInformation("✅ [REST-ALLOWED] {Method} {Path} | User: {UserId} | Tenant: {TenantId} | ResourceId: {ResourceId} | Permission: {RequiredPermission}",
+          requestMethod, requestPath, userId, tenantId, resourceId, RequiredPermission);
         return;
       }
 
@@ -62,24 +72,30 @@ public class RequireDacPermissionAttribute : Attribute, IAsyncAuthorizationFilte
       if (AllowOwnerOverride && resourceId.HasValue && !string.IsNullOrEmpty(ResourceOwnerIdProperty)) {
         var isOwner = await CheckResourceOwnership(context, userId, resourceId.Value);
 
-        if (isOwner) { return; }
+        if (isOwner) {
+          logger?.LogInformation("✅ [REST-OWNER-ALLOWED] {Method} {Path} | User: {UserId} | Tenant: {TenantId} | ResourceId: {ResourceId} | Owner override",
+            requestMethod, requestPath, userId, tenantId, resourceId);
+          return;
+        }
       }
 
       // Permission denied
+      logger?.LogWarning("🚫 [REST-DENIED] {Method} {Path} | User: {UserId} | Tenant: {TenantId} | ResourceId: {ResourceId} | Missing: {RequiredPermission}",
+        requestMethod, requestPath, userId, tenantId, resourceId, RequiredPermission);
       context.Result = new PermissionDeniedResult(RequiredPermission.ToString());
     }
     catch (Exception ex) {
-      var logger = context.HttpContext.RequestServices.GetService<ILogger<RequireDacPermissionAttribute>>();
-      logger?.LogError(ex, "Error checking DAC permission {Permission} for user {UserId}", RequiredPermission, userId);
+      logger?.LogError(ex, "❌ [REST-ERROR] {Method} {Path} | User: {UserId} | Error checking DAC permission {Permission}",
+        requestMethod, requestPath, userId, RequiredPermission);
 
       context.Result = new StatusCodeResult(500);
     }
   }
 
-  private async Task<bool> CheckResourceOwnership(AuthorizationFilterContext context, Guid userId, Guid resourceId) {
+  private Task<bool> CheckResourceOwnership(AuthorizationFilterContext context, Guid userId, Guid resourceId) {
     // This would need to be implemented based on your resource ownership logic
     // For now, returning false - implement based on your specific resource models
-    return false;
+    return Task.FromResult(false);
   }
 }
 

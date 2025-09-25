@@ -1,7 +1,7 @@
 using System.Security.Claims;
 
 
-namespace GameGuild.Authorization.Identity;
+namespace GameGuild.Source.Modules.Authorization.Identity;
 
 /// <summary> Extension methods for ClaimsPrincipal to extract common user information </summary>
 public static class ClaimsPrincipalExtensions {
@@ -9,11 +9,16 @@ public static class ClaimsPrincipalExtensions {
   /// <param name="user"> The claims principal </param>
   /// <returns> User ID if found and valid, otherwise null </returns>
   public static Guid? GetUserId(this ClaimsPrincipal user) {
-    if (user?.Identity?.IsAuthenticated != true) return null;
+    if (user?.Identity?.IsAuthenticated != true) {
+      return null;
+    }
 
-    var userIdClaim = user.FindFirst("sub") ?? user.FindFirst(ClaimTypes.NameIdentifier);
+    // Prioritize "user_id" claim, then "sub", then NameIdentifier
+    var userIdClaim = user.FindFirst("user_id") ?? user.FindFirst("sub") ?? user.FindFirst(ClaimTypes.NameIdentifier);
 
-    if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId)) return userId;
+    if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out var userId)) {
+      return userId;
+    }
 
     return null;
   }
@@ -22,11 +27,15 @@ public static class ClaimsPrincipalExtensions {
   /// <param name="user"> The claims principal </param>
   /// <returns> Tenant ID if found and valid, otherwise null </returns>
   public static Guid? GetTenantId(this ClaimsPrincipal user) {
-    if (user?.Identity?.IsAuthenticated != true) return null;
+    if (user?.Identity?.IsAuthenticated != true) {
+      return null;
+    }
 
     var tenantIdClaim = user.FindFirst("tenant_id") ?? user.FindFirst("tid") ?? user.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid");
 
-    if (tenantIdClaim != null && Guid.TryParse(tenantIdClaim.Value, out var tenantId)) return tenantId;
+    if (tenantIdClaim != null && Guid.TryParse(tenantIdClaim.Value, out var tenantId)) {
+      return tenantId;
+    }
 
     return null;
   }
