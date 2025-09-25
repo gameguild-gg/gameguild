@@ -1,8 +1,9 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents;
+using GameGuild.Source.Modules.Products.Models;
 
 
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Source.Modules.Products.Commands;
 
 /// <summary> Command to create a new product </summary>
 public record CreateProductCommand : IRequest<CreateProductResult> {
@@ -14,7 +15,7 @@ public record CreateProductCommand : IRequest<CreateProductResult> {
 
   public string? ImageUrl { get; init; }
 
-  public GameGuild.ProductType Type { get; init; } = GameGuild.ProductType.Program;
+  public ProductType Type { get; init; } = ProductType.Program;
 
   public bool IsBundle { get; init; }
 
@@ -47,7 +48,7 @@ public record UpdateProductCommand : IRequest<UpdateProductResult> {
 
   public string? ImageUrl { get; init; }
 
-  public GameGuild.ProductType? Type { get; init; }
+  public ProductType? Type { get; init; }
 
   public bool? IsBundle { get; init; }
 

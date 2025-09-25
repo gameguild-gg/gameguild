@@ -1,10 +1,12 @@
 using GameGuild.CQRS;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Contents;
-using ProductEntity = GameGuild.Modules.Products.Product;
+using GameGuild.Source.Modules.Products.Commands;
+using GameGuild.Source.Modules.Products.Models;
+using ProductEntity = GameGuild.Source.Modules.Products.Models.Product;
 
 
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Source.Modules.Products.GraphQL;
 
 /// <summary> GraphQL mutations for Product module using CQRS pattern </summary>
 [ExtendObjectType<Mutation>]
@@ -27,7 +29,14 @@ public class ProductMutations {
   /// <summary> Updates an existing product </summary>
   public async Task<ProductEntity?> UpdateProduct(UpdateProductInput input, [Service] IMediator mediator) {
     var command = new UpdateProductCommand {
-      ProductId = input.Id, Name = input.Name, ShortDescription = input.ShortDescription, Description = input.ShortDescription, Type = input.Type, IsBundle = input.IsBundle, Status = input.Status, Visibility = input.Visibility,
+      ProductId = input.Id,
+      Name = input.Name,
+      ShortDescription = input.ShortDescription,
+      Description = input.ShortDescription,
+      Type = input.Type,
+      IsBundle = input.IsBundle,
+      Status = input.Status,
+      Visibility = input.Visibility,
     };
 
     var result = await mediator.Send(command);
@@ -117,7 +126,13 @@ public class ProductMutations {
   /// <summary> Grants user access to a product </summary>
   public async Task<UserProduct> GrantUserAccess(GrantProductAccessInput input, [Service] IMediator mediator) {
     var command = new GrantUserProductAccessCommand {
-      UserId = input.UserId, ProductId = input.ProductId, AcquisitionType = input.AcquisitionType, PurchasePrice = input.PurchasePrice, Currency = input.Currency ?? "USD", ExpiresAt = input.ExpiresAt, GrantedBy = Guid.Empty,
+      UserId = input.UserId,
+      ProductId = input.ProductId,
+      AcquisitionType = input.AcquisitionType,
+      PurchasePrice = input.PurchasePrice,
+      Currency = input.Currency ?? "USD",
+      ExpiresAt = input.ExpiresAt,
+      GrantedBy = Guid.Empty,
     };
     var result = await mediator.Send(command);
 
