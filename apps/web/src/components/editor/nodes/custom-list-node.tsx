@@ -98,8 +98,8 @@ export class CustomListNode extends ListNode {
     element.style.marginTop = "1rem"
     element.style.marginBottom = "1rem"
     
-    // Aplicar cor aos marcadores padrão (para disc, circle, square, etc.)
-    element.style.color = markerColor
+    // IMPORTANTE: NÃO aplicar cor ao elemento da lista inteira
+    // A cor será aplicada apenas aos marcadores através de CSS
     
     // Estilos específicos por tipo
     switch (listType) {
@@ -110,6 +110,8 @@ export class CustomListNode extends ListNode {
       case "lower-roman":
       case "decimal-leading-zero":
         element.style.listStyleType = listType
+        // Para listas padrão, aplicar cor apenas aos marcadores via CSS
+        this.addStandardListMarkerStyles(element, listType, markerColor)
         break
       case "greek-upper":
         // Numeração grega customizada
@@ -127,6 +129,8 @@ export class CustomListNode extends ListNode {
       case "circle":
       case "square":
         element.style.listStyleType = listType
+        // Para listas padrão, aplicar cor apenas aos marcadores via CSS
+        this.addStandardListMarkerStyles(element, listType, markerColor)
         break
       case "arrow":
         element.style.listStyleType = "none"
@@ -142,17 +146,48 @@ export class CustomListNode extends ListNode {
         // Determinar estilo padrão baseado no tipo de lista
         if (this.getListType() === "bullet") {
           element.style.listStyleType = "disc"
+          this.addStandardListMarkerStyles(element, "disc", markerColor)
         } else {
           element.style.listStyleType = "decimal"
+          this.addStandardListMarkerStyles(element, "decimal", markerColor)
         }
+    }
+  }
+
+  private addStandardListMarkerStyles(element: HTMLElement, listType: string, markerColor: string): void {
+    // Criar ID único baseado no tipo da lista e cor
+    const styleId = `standard-list-${listType}-${markerColor.replace(/[^\w]/g, '')}`
+    
+    // Criar estilos CSS para marcadores padrão se ainda não existirem
+    if (!document.querySelector(`#${styleId}`)) {
+      const style = document.createElement('style')
+      style.id = styleId
+      
+      // Gerar seletor baseado no tipo de lista
+      const listTag = this.getListType() === "bullet" ? "ul" : "ol"
+      const selector = `${listTag}[data-list-style-type="${listType}"]`
+      
+      style.textContent = `
+        ${selector} {
+          list-style-type: ${listType};
+        }
+        ${selector} li::marker {
+          color: ${markerColor};
+        }
+        ${selector} li {
+          color: inherit; /* Manter cor do texto normal */
+        }
+      `
+      document.head.appendChild(style)
     }
   }
 
   private addGreekNumberStyles(element: HTMLElement, markerColor: string): void {
     // Criar estilos CSS para numeração grega se ainda não existirem
-    if (!document.querySelector('#greek-number-style')) {
+    const styleId = `greek-number-${markerColor.replace(/[^\w]/g, '')}`
+    if (!document.querySelector(`#${styleId}`)) {
       const style = document.createElement('style')
-      style.id = 'greek-number-style'
+      style.id = styleId
       style.textContent = `
         ol[data-list-style-type="greek-upper"] {
           counter-reset: greek-counter;
@@ -165,6 +200,9 @@ export class CustomListNode extends ListNode {
           margin-right: 0.5rem;
           display: inline-block;
         }
+        ol[data-list-style-type="greek-upper"] li {
+          color: inherit; /* Manter cor do texto normal */
+        }
       `
       document.head.appendChild(style)
     }
@@ -172,9 +210,10 @@ export class CustomListNode extends ListNode {
 
   private addCircledNumberStyles(element: HTMLElement, markerColor: string): void {
     // Criar estilos CSS para números circulados se ainda não existirem
-    if (!document.querySelector('#circled-number-style')) {
+    const styleId = `circled-number-${markerColor.replace(/[^\w]/g, '')}`
+    if (!document.querySelector(`#${styleId}`)) {
       const style = document.createElement('style')
-      style.id = 'circled-number-style'
+      style.id = styleId
       style.textContent = `
         ol[data-list-style-type="circled"] {
           counter-reset: circled-counter;
@@ -187,6 +226,9 @@ export class CustomListNode extends ListNode {
           margin-right: 0.5rem;
           display: inline-block;
         }
+        ol[data-list-style-type="circled"] li {
+          color: inherit; /* Manter cor do texto normal */
+        }
       `
       document.head.appendChild(style)
     }
@@ -194,9 +236,10 @@ export class CustomListNode extends ListNode {
 
   private addArrowListStyles(element: HTMLElement, markerColor: string): void {
     // Criar estilos CSS para setas se ainda não existirem
-    if (!document.querySelector('#arrow-list-style')) {
+    const styleId = `arrow-list-${markerColor.replace(/[^\w]/g, '')}`
+    if (!document.querySelector(`#${styleId}`)) {
       const style = document.createElement('style')
-      style.id = 'arrow-list-style'
+      style.id = styleId
       style.textContent = `
         ol[data-arrow-list="true"], ul[data-arrow-list="true"] {
           list-style: none;
@@ -208,6 +251,9 @@ export class CustomListNode extends ListNode {
           margin-right: 0.5rem;
           display: inline-block;
         }
+        ol[data-arrow-list="true"] li, ul[data-arrow-list="true"] li {
+          color: inherit; /* Manter cor do texto normal */
+        }
       `
       document.head.appendChild(style)
     }
@@ -215,9 +261,10 @@ export class CustomListNode extends ListNode {
 
   private addStarListStyles(element: HTMLElement, markerColor: string): void {
     // Criar estilos CSS para estrelas se ainda não existirem
-    if (!document.querySelector('#star-list-style')) {
+    const styleId = `star-list-${markerColor.replace(/[^\w]/g, '')}`
+    if (!document.querySelector(`#${styleId}`)) {
       const style = document.createElement('style')
-      style.id = 'star-list-style'
+      style.id = styleId
       style.textContent = `
         ol[data-star-list="true"], ul[data-star-list="true"] {
           list-style: none;
@@ -228,6 +275,9 @@ export class CustomListNode extends ListNode {
           color: ${markerColor};
           margin-right: 0.5rem;
           display: inline-block;
+        }
+        ol[data-star-list="true"] li, ul[data-star-list="true"] li {
+          color: inherit; /* Manter cor do texto normal */
         }
       `
       document.head.appendChild(style)
