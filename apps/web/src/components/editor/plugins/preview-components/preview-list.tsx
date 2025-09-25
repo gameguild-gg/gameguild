@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { useEffect } from "react"
 
 interface PreviewListProps {
   node: any
@@ -13,6 +14,41 @@ export function PreviewList({ node, children }: PreviewListProps) {
   let listClass = ""
   let customStyle = {}
   let customProps = {}
+  
+  // Detectar cor personalizada se existe
+  const markerColor = node.markerColor || node.__markerColor || "oklch(0.488 0.243 264.376)"
+  const instanceId = `preview-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  
+  // Injetar CSS para aplicar cor aos marcadores
+  useEffect(() => {
+    const styleId = `preview-instance-${instanceId}`
+    // SEMPRE aplicar cor, incluindo a padrão - isso garante consistência
+    if (!document.querySelector(`#${styleId}`)) {
+      const style = document.createElement('style')
+      style.id = styleId
+      const listTypeSelector = node.listType === "bullet" ? "ul" : "ol"
+      style.textContent = `
+        ${listTypeSelector}[data-preview-instance="${instanceId}"] li::marker {
+          color: ${markerColor} !important;
+        }
+        ${listTypeSelector}[data-preview-instance="${instanceId}"] li::before {
+          color: ${markerColor} !important;
+        }
+        ${listTypeSelector}[data-preview-instance="${instanceId}"] li {
+          color: inherit;
+        }
+      `
+      document.head.appendChild(style)
+      
+      // Cleanup quando o componente for desmontado
+      return () => {
+        const existingStyle = document.querySelector(`#${styleId}`)
+        if (existingStyle) {
+          existingStyle.remove()
+        }
+      }
+    }
+  }, [instanceId, markerColor, node.listType])
   
   if (node.listType === "bullet") {
     // Para listas não ordenadas (bullet)
@@ -74,6 +110,13 @@ export function PreviewList({ node, children }: PreviewListProps) {
         customStyle = { listStyleType: 'decimal' }
         break
     }
+  }
+
+  // Adicionar props para aplicar cores
+  customProps = { 
+    ...customProps, 
+    'data-preview-instance': instanceId,
+    'data-marker-color': markerColor
   }
 
   return (
