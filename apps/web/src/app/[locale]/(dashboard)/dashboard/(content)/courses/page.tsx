@@ -4,7 +4,7 @@ import { CourseCard } from "@/components/courses/course-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useTestAuth } from "@/hooks/use-programs-graphql"
+import { useMyPrograms } from "@/hooks/use-programs-graphql"
 import { BookOpen, Grid3X3, List, Plus, Search } from "lucide-react"
 import Link from "next/link"
 import * as React from "react"
@@ -17,17 +17,8 @@ export default function CoursesPage() {
   const [sortBy, setSortBy] = React.useState<string>("title")
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid")
 
-  // For testing - use the simple testAuth query first
-  const { result: testResult, error: testError, refetch: testRefetch } = useTestAuth()
-
   // Use GraphQL hook to fetch user's programs (courses)
-  // const { courses, loading, error, refetch } = useMyPrograms()
-
-  // For now, let's use empty data to test the UI
-  const courses: any[] = []
-  const loading = false
-  const error = testError
-  const refetch = testRefetch
+  const { courses, loading, error, refetch } = useMyPrograms()
 
   // Handle retry function
   const handleRetry = () => {
@@ -36,10 +27,14 @@ export default function CoursesPage() {
 
   const filteredCourses = React.useMemo(() => {
     return courses.filter((course) => {
+      const courseTitle = course.title || ""
+      const courseDescription = course.description || ""
+      const courseInstructor = course.instructor || ""
+
       const matchesSearch = searchQuery === "" ||
-        course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        course.instructor.toLowerCase().includes(searchQuery.toLowerCase())
+        courseTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        courseDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        courseInstructor.toLowerCase().includes(searchQuery.toLowerCase())
 
       const matchesLevel = levelFilter === "all" || course.level === levelFilter
       const matchesStatus = statusFilter === "all" || course.status === statusFilter
@@ -49,15 +44,15 @@ export default function CoursesPage() {
     }).sort((a, b) => {
       switch (sortBy) {
         case "title":
-          return a.title.localeCompare(b.title)
+          return (a.title || "").localeCompare(b.title || "")
         case "level":
-          return a.level.localeCompare(b.level)
+          return (a.level || "").localeCompare(b.level || "")
         case "duration":
-          return a.duration - b.duration
+          return (a.duration || 0) - (b.duration || 0)
         case "rating":
-          return b.averageRating - a.averageRating
+          return (b.averageRating || 0) - (a.averageRating || 0)
         case "students":
-          return b.totalStudents - a.totalStudents
+          return (b.totalStudents || 0) - (a.totalStudents || 0)
         default:
           return 0
       }
@@ -117,26 +112,6 @@ export default function CoursesPage() {
           <div className="flex gap-2 justify-center">
             <Button onClick={handleRetry}>
               Try Again
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                console.log('Test Auth Result:', testResult);
-                testRefetch();
-              }}
-            >
-              Test Auth
-            </Button>
-            <Button
-              variant="outline"
-              onClick={async () => {
-                const { debugGraphQLAuth } = await import('./debug-auth');
-                const result = await debugGraphQLAuth();
-                console.log('Debug result:', result);
-                alert('Debug info logged to console. Check browser dev tools.');
-              }}
-            >
-              Debug Auth
             </Button>
           </div>
         </div>
