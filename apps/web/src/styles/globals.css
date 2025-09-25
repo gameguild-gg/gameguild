@@ -161,6 +161,11 @@
 
     /* Estilos para listas não ordenadas customizadas */
     
+    /* Reset para garantir que apenas os marcadores recebam cor */
+    ol, ul {
+        color: inherit; /* Texto mantém cor normal */
+    }
+    
     /* Listas com setas */
     ul.arrow-list, ol.arrow-list {
         list-style: none;
@@ -174,6 +179,10 @@
         display: inline-block;
     }
     
+    ul.arrow-list li, ol.arrow-list li {
+        color: inherit; /* Manter cor do texto normal */
+    }
+    
     .lexical-editor ul[data-arrow-list="true"], .lexical-editor ol[data-arrow-list="true"] {
         list-style: none;
     }
@@ -184,6 +193,10 @@
         color: oklch(0.488 0.243 264.376);
         margin-right: 0.5rem;
         display: inline-block;
+    }
+    
+    .lexical-editor ul[data-arrow-list="true"] li, .lexical-editor ol[data-arrow-list="true"] li {
+        color: inherit; /* Manter cor do texto normal */
     }
     
     /* Listas com estrelas */
@@ -199,6 +212,10 @@
         display: inline-block;
     }
     
+    ul.star-list li, ol.star-list li {
+        color: inherit; /* Manter cor do texto normal */
+    }
+    
     .lexical-editor ul[data-star-list="true"], .lexical-editor ol[data-star-list="true"] {
         list-style: none;
     }
@@ -209,5 +226,18 @@
         color: oklch(0.488 0.243 264.376);
         margin-right: 0.5rem;
         display: inline-block;
+    }
+    
+    .lexical-editor ul[data-star-list="true"] li, .lexical-editor ol[data-star-list="true"] li {
+        color: inherit; /* Manter cor do texto normal */
+    }
+    
+    /* Suporte a marcadores padrão com cores customizadas */
+    .lexical-editor ol li::marker, .lexical-editor ul li::marker {
+        color: inherit; /* Será sobrescrito por estilos específicos */
+    }
+    
+    .lexical-editor ol li, .lexical-editor ul li {
+        color: inherit; /* Garantir que o texto mantenha cor normal */
     }
 }
