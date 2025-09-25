@@ -40,16 +40,6 @@ export function PreviewList({ node, children }: PreviewListProps) {
       case "decimal-leading-zero":
         customStyle = { listStyleType: 'decimal-leading-zero' }
         break
-      case "upper-greek":
-        customStyle = { listStyleType: 'upper-greek' }
-        break
-      case "circled":
-        customStyle = { 
-          listStyleType: 'none',
-          counterReset: 'circled-counter'
-        }
-        listClass += " circled-numbers"
-        break
       case "decimal":
       default:
         customStyle = { listStyleType: 'decimal' }
