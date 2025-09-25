@@ -39,29 +39,39 @@ export class CustomListNode extends ListNode {
 
   createDOM(config: EditorConfig): HTMLElement {
     const element = super.createDOM(config)
+    
+    // Limpar todas as classes CSS do tema
+    element.className = ""
+    
+    // Aplicar estilos baseado no tipo de lista (tanto ordered quanto unordered)
+    this.applyListStyles(element)
+    
+    // Definir atributo apropriado baseado no tipo
     if (this.getListType() === "number") {
-      // Limpar todas as classes CSS do tema
-      element.className = ""
-      
-      // Aplicar estilos baseado no tipo de lista
-      this.applyListStyles(element)
-      
       element.setAttribute("data-list-style-type", this.__listStyleType || "decimal")
+    } else {
+      element.setAttribute("data-list-style-type", this.__listStyleType || "disc")
     }
+    
     return element
   }
 
   updateDOM(prevNode: CustomListNode, dom: HTMLElement, config: EditorConfig): boolean {
     const result = super.updateDOM(prevNode as this, dom, config)
+    
+    // Limpar todas as classes CSS do tema
+    dom.className = ""
+    
+    // Aplicar estilos baseado no tipo de lista (tanto ordered quanto unordered)
+    this.applyListStyles(dom)
+    
+    // Definir atributo apropriado baseado no tipo
     if (this.getListType() === "number") {
-      // Limpar todas as classes CSS do tema
-      dom.className = ""
-      
-      // Aplicar estilos baseado no tipo de lista
-      this.applyListStyles(dom)
-      
       dom.setAttribute("data-list-style-type", this.__listStyleType || "decimal")
+    } else {
+      dom.setAttribute("data-list-style-type", this.__listStyleType || "disc")
     }
+    
     return result
   }
 
@@ -82,11 +92,73 @@ export class CustomListNode extends ListNode {
       case "upper-roman":
       case "lower-roman":
       case "decimal-leading-zero":
-      case "upper-greek":
         element.style.listStyleType = listType
         break
+      // Estilos para listas não ordenadas (bullet)
+      case "disc":
+      case "circle":
+      case "square":
+        element.style.listStyleType = listType
+        break
+      case "arrow":
+        element.style.listStyleType = "none"
+        element.setAttribute("data-arrow-list", "true")
+        this.addArrowListStyles(element)
+        break
+      case "star":
+        element.style.listStyleType = "none"
+        element.setAttribute("data-star-list", "true")
+        this.addStarListStyles(element)
+        break
       default:
-        element.style.listStyleType = "decimal"
+        // Determinar estilo padrão baseado no tipo de lista
+        if (this.getListType() === "bullet") {
+          element.style.listStyleType = "disc"
+        } else {
+          element.style.listStyleType = "decimal"
+        }
+    }
+  }
+
+  private addArrowListStyles(element: HTMLElement): void {
+    // Criar estilos CSS para setas se ainda não existirem
+    if (!document.querySelector('#arrow-list-style')) {
+      const style = document.createElement('style')
+      style.id = 'arrow-list-style'
+      style.textContent = `
+        ol[data-arrow-list="true"], ul[data-arrow-list="true"] {
+          list-style: none;
+        }
+        ol[data-arrow-list="true"] li::before, ul[data-arrow-list="true"] li::before {
+          content: "▶";
+          font-weight: bold;
+          color: oklch(0.488 0.243 264.376);
+          margin-right: 0.5rem;
+          display: inline-block;
+        }
+      `
+      document.head.appendChild(style)
+    }
+  }
+
+  private addStarListStyles(element: HTMLElement): void {
+    // Criar estilos CSS para estrelas se ainda não existirem
+    if (!document.querySelector('#star-list-style')) {
+      const style = document.createElement('style')
+      style.id = 'star-list-style'
+      style.textContent = `
+        ol[data-star-list="true"], ul[data-star-list="true"] {
+          list-style: none;
+        }
+        ol[data-star-list="true"] li::before, ul[data-star-list="true"] li::before {
+          content: "★";
+          font-weight: bold;
+          color: oklch(0.488 0.243 264.376);
+          margin-right: 0.5rem;
+          display: inline-block;
+        }
+      `
+      document.head.appendChild(style)
     }
   }
 
