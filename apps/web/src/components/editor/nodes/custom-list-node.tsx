@@ -85,40 +85,8 @@ export class CustomListNode extends ListNode {
       case "upper-greek":
         element.style.listStyleType = listType
         break
-      case "circled":
-        // Números circulados customizados
-        element.style.listStyleType = "none"
-        element.style.counterReset = "circled-counter"
-        element.setAttribute("data-circled-list", "true")
-        // Adicionar CSS para números circulados
-        this.addCircledNumberStyles(element)
-        break
       default:
         element.style.listStyleType = "decimal"
-    }
-  }
-
-  private addCircledNumberStyles(element: HTMLElement): void {
-    // Criar estilos CSS para números circulados se ainda não existirem
-    if (!document.querySelector('#circled-numbers-style')) {
-      const style = document.createElement('style')
-      style.id = 'circled-numbers-style'
-      style.textContent = `
-        ol[data-circled-list="true"] {
-          counter-reset: circled-counter;
-        }
-        ol[data-circled-list="true"] li {
-          counter-increment: circled-counter;
-          position: relative;
-        }
-        ol[data-circled-list="true"] li::before {
-          content: "\\24" counter(circled-counter) ";
-          font-weight: bold;
-          color: #2563eb;
-          margin-right: 0.5rem;
-        }
-      `
-      document.head.appendChild(style)
     }
   }
 
