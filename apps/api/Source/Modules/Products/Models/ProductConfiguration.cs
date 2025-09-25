@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Products;
+﻿namespace GameGuild.Source.Modules.Products.Models;
 
 /// <summary> EntityBase Framework configuration for Product entity </summary>
 internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product> {

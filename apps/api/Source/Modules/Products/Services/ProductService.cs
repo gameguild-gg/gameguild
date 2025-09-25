@@ -1,11 +1,13 @@
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
+using GameGuild.Source.Modules.Products.Interfaces;
+using GameGuild.Source.Modules.Products.Models;
 using Microsoft.EntityFrameworkCore;
-using ProductEntity = GameGuild.Modules.Products.Product;
+using ProductEntity = GameGuild.Source.Modules.Products.Models.Product;
 using ProductType = GameGuild.ProductType;
 
 
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Source.Modules.Products.Services;
 
 /// <summary>
 /// Service implementation for Product business logic
@@ -30,7 +32,7 @@ public class ProductService(ApplicationDbContext context) : IProductService {
     return await context.Products.Include(p => p.Creator).Include(p => p.ProductPricings).Where(p => p.DeletedAt == null).OrderBy(p => p.Name).Skip(skip).Take(take).ToListAsync();
   }
 
-  public async Task<IEnumerable<ProductEntity>> GetProductsByTypeAsync(GameGuild.ProductType type, int skip = 0, int take = 50) {
+  public async Task<IEnumerable<ProductEntity>> GetProductsByTypeAsync(ProductType type, int skip = 0, int take = 50) {
     return await context.Products.Include(p => p.Creator).Include(p => p.ProductPricings).Where(p => p.DeletedAt == null && p.Type == type).OrderBy(p => p.Name).Skip(skip).Take(take).ToListAsync();
   }
 

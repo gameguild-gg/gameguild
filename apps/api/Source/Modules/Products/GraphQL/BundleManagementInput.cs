@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Products;
+﻿namespace GameGuild.Source.Modules.Products.GraphQL;
 
 public class BundleManagementInput {
   public Guid BundleId { get; set; }

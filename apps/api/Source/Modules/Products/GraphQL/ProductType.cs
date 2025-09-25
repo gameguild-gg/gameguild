@@ -1,12 +1,15 @@
 using System.Security.Claims;
+using GameGuild.Core.Authorization;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
-using ProductEntity = GameGuild.Modules.Products.Product;
+using GameGuild.Source.Modules.Products.Models;
+using GameGuild.Source.Modules.Products.Services;
+using ProductEntity = GameGuild.Source.Modules.Products.Models.Product;
 using ProductTypeEnum = GameGuild.ProductType;
 
 
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Source.Modules.Products.GraphQL;
 
 /// <summary> GraphQL type definition for Product entity with DAC permission integration </summary>
 public class ProductType : ObjectType<Product> {

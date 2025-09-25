@@ -7,7 +7,7 @@ using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using PromoCodeTypeEnum = GameGuild.PromoCodeType;
 
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Source.Modules.Products.Models;
 
 /// <summary> EntityBase representing promotional codes for discounts Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality </summary>
 [Table("promo_codes")]

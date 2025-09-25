@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Products;
+﻿namespace GameGuild.Source.Modules.Products.GraphQL;
 
 public class GrantProductAccessInput {
   public required Guid ProductId { get; set; }

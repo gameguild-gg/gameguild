@@ -1,6 +1,6 @@
 ﻿using PromoCodeTypeEnum = GameGuild.PromoCodeType;
 
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Source.Modules.Products.GraphQL;
 
 public class CreatePromoCodeInput {
   public required Guid ProductId { get; set; }

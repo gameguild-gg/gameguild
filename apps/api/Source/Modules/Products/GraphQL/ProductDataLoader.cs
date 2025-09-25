@@ -1,7 +1,8 @@
 using GameGuild.Database;
+using GameGuild.Source.Modules.Products.Models;
 
 
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Source.Modules.Products.GraphQL;
 
 /// <summary> DataLoader interface for efficiently loading Product entities </summary>
 public interface IProductDataLoader : IDataLoader<Guid, Product?> { }
@@ -18,6 +19,6 @@ public class ProductDataLoader : BatchDataLoader<Guid, Product?>, IProductDataLo
 
     var products = await context.Products.Where(p => keys.Contains(p.Id)).ToListAsync(cancellationToken);
 
-    return products.ToDictionary(p => p.Id, p => (Product?) p);
+    return products.ToDictionary(p => p.Id, p => (Product?)p);
   }
 }

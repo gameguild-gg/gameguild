@@ -1,7 +1,7 @@
 using GameGuild.Modules.Subscriptions.Models;
 
 
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Source.Modules.Products.Models;
 
 /// <summary> EntityBase representing subscription plans for products Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality </summary>
 [Table("product_subscription_plans")]

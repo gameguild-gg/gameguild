@@ -1,8 +1,9 @@
 using GameGuild.Modules.Contents;
-using ProductEntity = GameGuild.Modules.Products.Product;
+using GameGuild.Source.Modules.Products.Models;
+using ProductEntity = GameGuild.Source.Modules.Products.Models.Product;
 
 
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Source.Modules.Products.Services;
 
 /// <summary> Service interface for Product business logic Provides operations for managing products, pricing, subscriptions, and access control </summary>
 public interface IProductService {
