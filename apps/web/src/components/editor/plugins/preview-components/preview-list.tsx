@@ -12,11 +12,40 @@ export function PreviewList({ node, children }: PreviewListProps) {
   
   let listClass = ""
   let customStyle = {}
+  let customProps = {}
   
   if (node.listType === "bullet") {
-    listClass = "list-disc list-inside"
+    // Para listas não ordenadas (bullet)
+    const listStyleType = node.listStyleType || 
+                         node['data-list-style-type'] ||
+                         'disc'
+                         
+    switch (listStyleType) {
+      case "disc":
+        listClass = "list-disc list-inside"
+        break
+      case "circle":
+        customStyle = { listStyleType: 'circle' }
+        listClass = "list-inside"
+        break
+      case "square":
+        customStyle = { listStyleType: 'square' }
+        listClass = "list-inside"
+        break
+      case "arrow":
+        listClass = "arrow-list my-4"
+        customProps = { 'data-arrow-list': 'true' }
+        break
+      case "star":
+        listClass = "star-list my-4"
+        customProps = { 'data-star-list': 'true' }
+        break
+      default:
+        listClass = "list-disc list-inside"
+        break
+    }
   } else {
-    // Para listas ordenadas, verificar se há atributos customizados
+    // Para listas ordenadas
     const listStyleType = node.listStyleType || 
                          node['data-list-style-type'] || 
                          (node.style && node.style.includes('upper-alpha') ? 'upper-alpha' :
@@ -51,6 +80,7 @@ export function PreviewList({ node, children }: PreviewListProps) {
     <ListTag 
       className={`${listClass} my-4`}
       style={customStyle}
+      {...customProps}
     >
       {children}
     </ListTag>
