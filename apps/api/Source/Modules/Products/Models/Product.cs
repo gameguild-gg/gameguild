@@ -1,14 +1,13 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Users;
+using GameGuild.Source.Modules.Products.Models;
 using Microsoft.EntityFrameworkCore;
 using ProductType = GameGuild.ProductType;
 
 
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Source.Modules.Products.Models;
 
 [Table("Products")]
 [Index(nameof(Name))]

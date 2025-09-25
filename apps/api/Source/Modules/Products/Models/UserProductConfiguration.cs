@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Products;
+﻿namespace GameGuild.Source.Modules.Products.Models;
 
 /// <summary> EntityBase Framework configuration for UserProduct entity </summary>
 public class UserProductConfiguration : IEntityTypeConfiguration<UserProduct> {

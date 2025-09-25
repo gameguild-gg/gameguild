@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Source.Modules.Products.Models;
 
 /// <summary> Junction entity representing the relationship between a Product and a Program Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality </summary>
 [Table("product_programs")]
