@@ -19,7 +19,7 @@ export class CustomListNode extends ListNode {
   constructor(listType: ListType, start: number, listStyleType?: string, markerColor?: string, key?: NodeKey) {
     super(listType, start, key)
     this.__listStyleType = listStyleType || "decimal"
-    this.__markerColor = markerColor || "oklch(0.488 0.243 264.376)"
+    this.__markerColor = markerColor || "oklch(0.488 0.243 264.376)" // Sempre definir cor padrão
   }
 
   getListStyleType(): string {
@@ -38,6 +38,16 @@ export class CustomListNode extends ListNode {
   setMarkerColor(markerColor: string): void {
     const writable = this.getWritable()
     writable.__markerColor = markerColor
+    
+    // Forçar re-aplicação da cor imediatamente
+    setTimeout(() => {
+      const latestNode = this.getLatest()
+      const element = (latestNode as any).__dom
+      if (element) {
+        // Aplicar cor usando o nó mais recente
+        (latestNode as CustomListNode).applyMarkerColor(element)
+      }
+    }, 0)
   }
 
   static clone(node: CustomListNode): CustomListNode {
@@ -66,6 +76,9 @@ export class CustomListNode extends ListNode {
       element.setAttribute("data-list-style-type", this.__listStyleType || "disc")
     }
     
+    // IMPORTANTE: Aplicar cor imediatamente após a criação do DOM
+    this.applyMarkerColor(element)
+    
     return element
   }
 
@@ -85,7 +98,58 @@ export class CustomListNode extends ListNode {
       dom.setAttribute("data-list-style-type", this.__listStyleType || "disc")
     }
     
+    // IMPORTANTE: Reaplicar cor após atualização do DOM
+    this.applyMarkerColor(dom)
+    
     return result
+  }
+
+  private applyMarkerColor(element: HTMLElement): void {
+    // Aplicar cor especificamente aos marcadores após o DOM estar pronto
+    const listType = this.__listStyleType || "decimal"
+    const markerColor = this.__markerColor || "oklch(0.488 0.243 264.376)"
+    
+    // Remover instância anterior se existir
+    const oldInstanceId = element.getAttribute("data-list-instance")
+    if (oldInstanceId) {
+      // Remover estilos antigos
+      const oldStyle = document.querySelector(`#instance-${oldInstanceId}`)
+      if (oldStyle) {
+        oldStyle.remove()
+      }
+    }
+    
+    // Adicionar um identificador único para essa instância específica
+    const instanceId = `list-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    element.setAttribute("data-list-instance", instanceId)
+    
+    // SEMPRE aplicar estilos de cor, incluindo a cor padrão
+    // Isso garante que a deserialização funcione corretamente
+    switch (listType) {
+      case "decimal":
+      case "upper-alpha":
+      case "lower-alpha":
+      case "upper-roman":
+      case "lower-roman":
+      case "decimal-leading-zero":
+      case "disc":
+      case "circle":
+      case "square":
+        this.addStandardListMarkerStyles(element, listType, markerColor)
+        break
+      case "greek-upper":
+        this.addGreekNumberStyles(element, markerColor)
+        break
+      case "circled":
+        this.addCircledNumberStyles(element, markerColor)
+        break
+      case "arrow":
+        this.addArrowListStyles(element, markerColor)
+        break
+      case "star":
+        this.addStarListStyles(element, markerColor)
+        break
+    }
   }
 
   private applyListStyles(element: HTMLElement): void {
@@ -155,36 +219,56 @@ export class CustomListNode extends ListNode {
   }
 
   private addStandardListMarkerStyles(element: HTMLElement, listType: string, markerColor: string): void {
-    // Criar ID único baseado no tipo da lista e cor
-    const styleId = `standard-list-${listType}-${markerColor.replace(/[^\w]/g, '')}`
+    const instanceId = element.getAttribute("data-list-instance")
     
-    // Criar estilos CSS para marcadores padrão se ainda não existirem
-    if (!document.querySelector(`#${styleId}`)) {
-      const style = document.createElement('style')
-      style.id = styleId
+    if (instanceId) {
+      const specificStyleId = `instance-${instanceId}`
+      // Remover estilo anterior se existir
+      const oldStyle = document.querySelector(`#${specificStyleId}`)
+      if (oldStyle) {
+        oldStyle.remove()
+      }
       
-      // Gerar seletor baseado no tipo de lista
+      const instanceStyle = document.createElement('style')
+      instanceStyle.id = specificStyleId
       const listTag = this.getListType() === "bullet" ? "ul" : "ol"
-      const selector = `${listTag}[data-list-style-type="${listType}"]`
       
-      style.textContent = `
-        ${selector} {
+      // Criar seletores mais específicos e poderosos
+      instanceStyle.textContent = `
+        /* Seletores específicos para a instância */
+        ${listTag}[data-list-instance="${instanceId}"] {
           list-style-type: ${listType};
         }
-        ${selector} li::marker {
-          color: ${markerColor};
+        ${listTag}[data-list-instance="${instanceId}"] li::marker {
+          color: ${markerColor} !important;
+          font-weight: inherit;
         }
-        ${selector} li {
-          color: inherit; /* Manter cor do texto normal */
+        ${listTag}[data-list-instance="${instanceId}"] li {
+          color: inherit !important;
+        }
+        
+        /* Seletores para o editor Lexical */
+        .lexical-editor ${listTag}[data-list-instance="${instanceId}"] li::marker {
+          color: ${markerColor} !important;
+        }
+        .lexical-editor ${listTag}[data-list-instance="${instanceId}"] li {
+          color: inherit !important;
+        }
+        
+        /* Fallback genérico */
+        ${listTag}[data-list-style-type="${listType}"][data-list-instance="${instanceId}"] li::marker {
+          color: ${markerColor} !important;
         }
       `
-      document.head.appendChild(style)
+      document.head.appendChild(instanceStyle)
     }
   }
 
   private addGreekNumberStyles(element: HTMLElement, markerColor: string): void {
     // Criar estilos CSS para numeração grega se ainda não existirem
     const styleId = `greek-number-${markerColor.replace(/[^\w]/g, '')}`
+    const instanceId = element.getAttribute("data-list-instance")
+    
     if (!document.querySelector(`#${styleId}`)) {
       const style = document.createElement('style')
       style.id = styleId
@@ -196,7 +280,7 @@ export class CustomListNode extends ListNode {
           counter-increment: greek-counter;
           content: attr(data-greek-number);
           font-weight: bold;
-          color: ${markerColor};
+          color: ${markerColor} !important;
           margin-right: 0.5rem;
           display: inline-block;
         }
@@ -206,11 +290,39 @@ export class CustomListNode extends ListNode {
       `
       document.head.appendChild(style)
     }
+    
+    // Aplicar estilo específico para a instância
+    if (instanceId) {
+      const specificStyleId = `greek-instance-${instanceId}`
+      if (!document.querySelector(`#${specificStyleId}`)) {
+        const instanceStyle = document.createElement('style')
+        instanceStyle.id = specificStyleId
+        instanceStyle.textContent = `
+          ol[data-list-instance="${instanceId}"] li::before {
+            counter-increment: greek-counter;
+            content: attr(data-greek-number);
+            font-weight: bold;
+            color: ${markerColor} !important;
+            margin-right: 0.5rem;
+            display: inline-block;
+          }
+          ol[data-list-instance="${instanceId}"] {
+            counter-reset: greek-counter;
+          }
+          ol[data-list-instance="${instanceId}"] li {
+            color: inherit;
+          }
+        `
+        document.head.appendChild(instanceStyle)
+      }
+    }
   }
 
   private addCircledNumberStyles(element: HTMLElement, markerColor: string): void {
     // Criar estilos CSS para números circulados se ainda não existirem
     const styleId = `circled-number-${markerColor.replace(/[^\w]/g, '')}`
+    const instanceId = element.getAttribute("data-list-instance")
+    
     if (!document.querySelector(`#${styleId}`)) {
       const style = document.createElement('style')
       style.id = styleId
@@ -222,7 +334,7 @@ export class CustomListNode extends ListNode {
           counter-increment: circled-counter;
           content: "(" counter(circled-counter) ")";
           font-weight: bold;
-          color: ${markerColor};
+          color: ${markerColor} !important;
           margin-right: 0.5rem;
           display: inline-block;
         }
@@ -232,68 +344,125 @@ export class CustomListNode extends ListNode {
       `
       document.head.appendChild(style)
     }
+    
+    // Aplicar estilo específico para a instância
+    if (instanceId) {
+      const specificStyleId = `circled-instance-${instanceId}`
+      if (!document.querySelector(`#${specificStyleId}`)) {
+        const instanceStyle = document.createElement('style')
+        instanceStyle.id = specificStyleId
+        instanceStyle.textContent = `
+          ol[data-list-instance="${instanceId}"] li::before {
+            counter-increment: circled-counter;
+            content: "(" counter(circled-counter) ")";
+            font-weight: bold;
+            color: ${markerColor} !important;
+            margin-right: 0.5rem;
+            display: inline-block;
+          }
+          ol[data-list-instance="${instanceId}"] {
+            counter-reset: circled-counter;
+          }
+          ol[data-list-instance="${instanceId}"] li {
+            color: inherit;
+          }
+        `
+        document.head.appendChild(instanceStyle)
+      }
+    }
   }
 
   private addArrowListStyles(element: HTMLElement, markerColor: string): void {
-    // Criar estilos CSS para setas se ainda não existirem
-    const styleId = `arrow-list-${markerColor.replace(/[^\w]/g, '')}`
-    if (!document.querySelector(`#${styleId}`)) {
-      const style = document.createElement('style')
-      style.id = styleId
-      style.textContent = `
-        ol[data-arrow-list="true"], ul[data-arrow-list="true"] {
+    const instanceId = element.getAttribute("data-list-instance")
+    
+    if (instanceId) {
+      const specificStyleId = `arrow-instance-${instanceId}`
+      // Remover estilo anterior se existir
+      const oldStyle = document.querySelector(`#${specificStyleId}`)
+      if (oldStyle) {
+        oldStyle.remove()
+      }
+      
+      const instanceStyle = document.createElement('style')
+      instanceStyle.id = specificStyleId
+      const listTag = this.getListType() === "bullet" ? "ul" : "ol"
+      
+      instanceStyle.textContent = `
+        ${listTag}[data-list-instance="${instanceId}"] {
           list-style: none;
         }
-        ol[data-arrow-list="true"] li::before, ul[data-arrow-list="true"] li::before {
+        ${listTag}[data-list-instance="${instanceId}"] li::before {
           content: "▶";
           font-weight: bold;
-          color: ${markerColor};
+          color: ${markerColor} !important;
           margin-right: 0.5rem;
           display: inline-block;
         }
-        ol[data-arrow-list="true"] li, ul[data-arrow-list="true"] li {
-          color: inherit; /* Manter cor do texto normal */
+        ${listTag}[data-list-instance="${instanceId}"] li {
+          color: inherit !important;
+        }
+        .lexical-editor ${listTag}[data-list-instance="${instanceId}"] li::before {
+          color: ${markerColor} !important;
         }
       `
-      document.head.appendChild(style)
+      document.head.appendChild(instanceStyle)
     }
   }
 
   private addStarListStyles(element: HTMLElement, markerColor: string): void {
-    // Criar estilos CSS para estrelas se ainda não existirem
-    const styleId = `star-list-${markerColor.replace(/[^\w]/g, '')}`
-    if (!document.querySelector(`#${styleId}`)) {
-      const style = document.createElement('style')
-      style.id = styleId
-      style.textContent = `
-        ol[data-star-list="true"], ul[data-star-list="true"] {
+    const instanceId = element.getAttribute("data-list-instance")
+    
+    if (instanceId) {
+      const specificStyleId = `star-instance-${instanceId}`
+      // Remover estilo anterior se existir
+      const oldStyle = document.querySelector(`#${specificStyleId}`)
+      if (oldStyle) {
+        oldStyle.remove()
+      }
+      
+      const instanceStyle = document.createElement('style')
+      instanceStyle.id = specificStyleId
+      const listTag = this.getListType() === "bullet" ? "ul" : "ol"
+      
+      instanceStyle.textContent = `
+        ${listTag}[data-list-instance="${instanceId}"] {
           list-style: none;
         }
-        ol[data-star-list="true"] li::before, ul[data-star-list="true"] li::before {
+        ${listTag}[data-list-instance="${instanceId}"] li::before {
           content: "★";
           font-weight: bold;
-          color: ${markerColor};
+          color: ${markerColor} !important;
           margin-right: 0.5rem;
           display: inline-block;
         }
-        ol[data-star-list="true"] li, ul[data-star-list="true"] li {
-          color: inherit; /* Manter cor do texto normal */
+        ${listTag}[data-list-instance="${instanceId}"] li {
+          color: inherit !important;
+        }
+        .lexical-editor ${listTag}[data-list-instance="${instanceId}"] li::before {
+          color: ${markerColor} !important;
         }
       `
-      document.head.appendChild(style)
+      document.head.appendChild(instanceStyle)
     }
   }
 
   static importJSON(serializedNode: SerializedCustomListNode): CustomListNode {
     const { listType, start, listStyleType, markerColor } = serializedNode
-    return new CustomListNode(listType as ListType, start, listStyleType, markerColor)
+    const node = new CustomListNode(listType as ListType, start, listStyleType, markerColor)
+    
+    // IMPORTANTE: Sempre definir a cor, incluindo a padrão
+    // Se não há cor salva, usar a padrão
+    const finalColor = markerColor || "oklch(0.488 0.243 264.376)"
+    node.__markerColor = finalColor
+    
+    return node
   }
 
   exportJSON(): SerializedCustomListNode {
     return {
       ...super.exportJSON(),
       listStyleType: this.__listStyleType,
-      markerColor: this.__markerColor,
+      markerColor: this.__markerColor || "oklch(0.488 0.243 264.376)", // Sempre salvar cor, incluindo padrão
       type: "list",  // Manter compatibilidade com o tipo padrão
     }
   }
@@ -303,7 +472,7 @@ export function $createCustomListNode(
   listType: ListType,
   start = 1,
   listStyleType = "decimal",
-  markerColor = "oklch(0.488 0.243 264.376)"
+  markerColor = "oklch(0.488 0.243 264.376)" // Sempre definir cor padrão
 ): CustomListNode {
   return new CustomListNode(listType, start, listStyleType, markerColor)
 }
