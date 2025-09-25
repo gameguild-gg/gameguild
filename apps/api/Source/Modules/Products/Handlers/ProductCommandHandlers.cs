@@ -1,10 +1,18 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
+using GameGuild.Source.Modules.Products.Commands;
+using GameGuild.Source.Modules.Products.Models;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Source.Modules.Products.Handlers;
 
 /// <summary>
 /// Command handlers for product operations
