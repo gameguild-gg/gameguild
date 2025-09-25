@@ -1,3 +1,4 @@
+using GameGuild.Authorization.Middleware;
 using GameGuild.Core.Configuration;
 using GameGuild.Core.Domain.Services;
 using GameGuild.Core.GraphQL;
@@ -61,6 +62,9 @@ internal static class WebApplicationExtensions {
     app.UseRouting();
     app.UseCors();
     app.UseAuthentication();
+
+    // Add context middleware to extract and log user/tenant/permission context
+    app.UseContextMiddleware();
 
     // Use cookie policy for secure cookie configuration
     app.UseCookiePolicy();
