@@ -3,7 +3,7 @@
 import { useCallback } from "react"
 import { $getSelection, $isRangeSelection, $createTextNode } from "lexical"
 import { $createListItemNode } from "@lexical/list"
-import { $createCustomListNode } from "@/components/editor/nodes/custom-list-node"
+import { $createCustomListNode, $isCustomListNode } from "@/components/editor/nodes/custom-list-node"
 import { Check } from "lucide-react"
 import {
   DropdownMenuSub,
@@ -38,8 +38,22 @@ export function OrderedListMenu({ editor, currentListType }: OrderedListMenuProp
       editor.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
+          // Detectar cor atual se já estamos em uma lista
+          let currentColor = "oklch(0.488 0.243 264.376)" // cor padrão
+          const anchorNode = selection.anchor.getNode()
+          let currentNode: any = anchorNode
+          
+          while (currentNode) {
+            if ($isCustomListNode(currentNode)) {
+              currentColor = currentNode.getMarkerColor()
+              break
+            }
+            const parent = currentNode.getParent()
+            currentNode = parent
+          }
+          
           // Criar diretamente um CustomListNode
-          const customListNode = $createCustomListNode("number", 1, listType)
+          const customListNode = $createCustomListNode("number", 1, listType, currentColor)
           const listItemNode = $createListItemNode()
           
           // Se há texto selecionado, usar esse texto no item da lista
