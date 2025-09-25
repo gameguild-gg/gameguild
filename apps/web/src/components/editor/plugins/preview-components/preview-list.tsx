@@ -16,7 +16,7 @@ export function PreviewList({ node, children }: PreviewListProps) {
   let customProps = {}
   
   // Detectar cor personalizada se existe
-  const markerColor = node.markerColor || node.__markerColor || "oklch(0.488 0.243 264.376)"
+  const markerColor = node.markerColor || node.__markerColor || "#3b82f6"
   const instanceId = `preview-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
   
   // Injetar CSS para aplicar cor aos marcadores

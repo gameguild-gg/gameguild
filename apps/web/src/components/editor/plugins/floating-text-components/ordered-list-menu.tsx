@@ -39,7 +39,7 @@ export function OrderedListMenu({ editor, currentListType }: OrderedListMenuProp
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
           // Detectar cor atual se já estamos em uma lista
-          let currentColor = "oklch(0.488 0.243 264.376)" // cor padrão
+          let currentColor = "#3b82f6" // cor padrão
           const anchorNode = selection.anchor.getNode()
           let currentNode: any = anchorNode
           
