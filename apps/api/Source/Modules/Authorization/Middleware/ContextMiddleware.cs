@@ -23,26 +23,43 @@ public class ContextMiddleware {
         _logger.LogDebug("Processing request with JWT token (length: {TokenLength})", token.Length);
       }
 
-      // Log context information for debugging
-      if (userContext.IsAuthenticated) {
-        _logger.LogDebug("User context: UserId={UserId}, Email={Email}, TenantId={TenantId}, IsAuthenticated={IsAuthenticated}", userContext.UserId, userContext.Email, tenantContext.TenantId, userContext.IsAuthenticated);
+      // Log comprehensive context information for debugging - using Information level to ensure visibility
+      var requestPath = context.Request.Path.Value ?? "unknown";
+      var requestMethod = context.Request.Method;
 
-        // Log permissions context
-        _logger.LogDebug("Permissions context: IsSystemAdmin={IsSystemAdmin}, IsTenantAdmin={IsTenantAdmin}", permissionsContext.IsSystemAdmin, permissionsContext.IsTenantAdmin);
+      if (userContext.IsAuthenticated) {
+        // Log main context information at Information level for better visibility
+        _logger.LogInformation("🔍 [CONTEXT] {Method} {Path} | User: {UserId} ({Email}) | Tenant: {TenantId} | Auth: {IsAuthenticated}",
+          requestMethod, requestPath, userContext.UserId, userContext.Email, tenantContext.TenantId, userContext.IsAuthenticated);
+
+        // Log permissions context with role information
+        _logger.LogInformation("🔐 [PERMISSIONS] User: {UserId} | SystemAdmin: {IsSystemAdmin} | TenantAdmin: {IsTenantAdmin} | Tenant: {TenantId}",
+          userContext.UserId, permissionsContext.IsSystemAdmin, permissionsContext.IsTenantAdmin, tenantContext.TenantId);
 
         // Log resource context if available
-        if (resourceContext.ResourceId.HasValue) { _logger.LogDebug("Resource context: ResourceId={ResourceId}, ResourceType={ResourceType}", resourceContext.ResourceId, resourceContext.ResourceType); }
+        if (resourceContext.ResourceId.HasValue) {
+          _logger.LogInformation("📋 [RESOURCE] User: {UserId} | ResourceId: {ResourceId} | ResourceType: {ResourceType} | Identifier: {ResourceIdentifier}",
+            userContext.UserId, resourceContext.ResourceId, resourceContext.ResourceType, resourceContext.GetResourceIdentifier());
+        }
+        else {
+          _logger.LogInformation("📋 [RESOURCE] User: {UserId} | No specific resource context", userContext.UserId);
+        }
 
-        // Log localization context
-        _logger.LogDebug("Localization context: Culture={Culture}, TimeZone={TimeZone}", localizationContext.CurrentCulture.Name, localizationContext.TimeZoneId);
+        // Log tenant information if available
+        if (tenantContext.TenantId.HasValue) {
+          _logger.LogInformation("🏢 [TENANT] User: {UserId} | TenantId: {TenantId} | TenantName: {TenantName}",
+            userContext.UserId, tenantContext.TenantId, tenantContext.TenantName ?? "Unknown");
+        }
 
-        // Log all user claims for debugging (in debug builds only)
+        // Log user claims at debug level for detailed troubleshooting
         if (_logger.IsEnabled(LogLevel.Debug)) {
           var claims = string.Join(", ", userContext.Claims.Select(kvp => $"{kvp.Key}={kvp.Value}"));
-          _logger.LogDebug("User claims: {Claims}", claims);
+          _logger.LogDebug("👤 [CLAIMS] User: {UserId} | Claims: {Claims}", userContext.UserId, claims);
         }
       }
-      else { _logger.LogDebug("Request with no authenticated user context"); }
+      else {
+        _logger.LogInformation("🔍 [CONTEXT] {Method} {Path} | User: UNAUTHENTICATED | No user context", requestMethod, requestPath);
+      }
 
       // Add context information to HttpContext items for easy access
       context.Items["UserContext"] = userContext;
