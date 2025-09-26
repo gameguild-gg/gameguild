@@ -1,6 +1,5 @@
 using FluentValidation;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Credentials;
 
@@ -35,7 +34,7 @@ public class UpdateCredentialCommandValidator : AbstractValidator<UpdateCredenti
 
     private async Task<bool> HaveUniqueTypeForUser(UpdateCredentialCommand command, CancellationToken cancellationToken)
     {
-        var credential = await _context.Credentials.AsNoTracking().FirstOrDefaultAsync(c => c.Id == command.Id, cancellationToken);
+        Credential? credential = await _context.Credentials.AsNoTracking().FirstOrDefaultAsync(c => c.Id == command.Id, cancellationToken);
 
         if (credential == null) return false;
 

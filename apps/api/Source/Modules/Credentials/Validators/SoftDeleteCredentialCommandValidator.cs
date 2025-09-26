@@ -1,6 +1,5 @@
 using FluentValidation;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Credentials;
 
@@ -29,7 +28,7 @@ public class SoftDeleteCredentialCommandValidator : AbstractValidator<SoftDelete
 
     private async Task<bool> IsNotSoftDeleted(Guid credentialId, CancellationToken cancellationToken)
     {
-        var credential = await _context.Credentials.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == credentialId, cancellationToken);
+        Credential? credential = await _context.Credentials.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == credentialId, cancellationToken);
 
         return credential is { DeletedAt: null };
     }
