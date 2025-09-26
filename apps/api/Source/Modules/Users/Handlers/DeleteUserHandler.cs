@@ -1,8 +1,4 @@
-﻿using GameGuild.CQRS;
-using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-
+﻿using GameGuild.Database;
 
 namespace GameGuild.Modules.Users;
 

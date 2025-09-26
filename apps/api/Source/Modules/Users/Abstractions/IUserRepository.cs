@@ -63,8 +63,6 @@ public interface IUserRepository : IRepository<User>
     /// <returns>List of matching users</returns>
     Task<IEnumerable<User>> SearchAsync(string searchTerm, bool includeDeleted = false, CancellationToken cancellationToken = default);
 
-
-
     /// <summary>
     /// Get user statistics
     /// </summary>
@@ -118,8 +116,12 @@ public interface IUserRepository : IRepository<User>
     /// Bulk operations for multiple users
     /// </summary>
     Task<int> BulkActivateAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
+
     Task<int> BulkDeactivateAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
+
     Task<int> BulkSoftDeleteAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
+
     Task<int> BulkRestoreAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
+
     Task<int> BulkHardDeleteAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
 }

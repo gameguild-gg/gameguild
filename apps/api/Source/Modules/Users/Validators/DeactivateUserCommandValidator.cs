@@ -2,7 +2,7 @@
 using GameGuild.Database;
 
 
-namespace GameGuild.Modules.Users.Validators;
+namespace GameGuild.Modules.Users;
 
 /// <summary> FluentValidation validator for DeactivateUserCommand </summary>
 public class DeactivateUserCommandValidator : AbstractValidator<DeactivateUserCommand> {

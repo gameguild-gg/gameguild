@@ -1,6 +1,7 @@
 namespace GameGuild.Modules.Users;
 
-public interface IUserService {
+public interface IUserService
+{
   Task<IEnumerable<User>> GetAllUsersAsync();
 
   Task<User?> GetUserByIdAsync(Guid id);
@@ -8,6 +9,8 @@ public interface IUserService {
   Task<User?> GetByEmailAsync(string email);
 
   Task<User> CreateUserAsync(User user);
+
+  Task<User> CreateUserAsync(string name, string email, bool isActive = true, CancellationToken cancellationToken = default);
 
   Task<User?> UpdateUserAsync(Guid id, User user);
 

@@ -12,7 +12,7 @@ public sealed class User : EntityBase, IUser
 
     [Required]
     [MaxLength(50)]
-    public string Username { get; init; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
 
     // Use EmailAddress value object for strong typing and validation
     public EmailAddress? EmailAddress { get; set; }
@@ -27,21 +27,6 @@ public sealed class User : EntityBase, IUser
     /// Phone number as value object with validation and formatting
     /// </summary>
     public PhoneNumber? PhoneNumber { get; set; }
-
-    // /// <summary>
-    // /// Date and time when the user was last seen/logged in
-    // /// </summary>
-    // public DateTime? LastSeenAt { get; set; }
-
-    // /// <summary>
-    // /// Total wallet balance including pending/frozen funds
-    // /// </summary>
-    // public Money Balance { get; set; } = Money.Zero();
-
-    // /// <summary>
-    // /// Available balance that can be spent (excludes frozen/pending funds)
-    // /// </summary>
-    // public Money AvailableBalance { get; set; } = Money.Zero();
 
     /// <summary>
     /// Navigation property to user credentials
@@ -82,7 +67,7 @@ public sealed class User : EntityBase, IUser
     /// </summary>
     /// <param name="name">New name</param>
     /// <param name="phoneNumber">New phone number</param>
-    public void UpdateInfo(string name, string? phoneNumber = null)
+    public void Update(string name, string? phoneNumber = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
 

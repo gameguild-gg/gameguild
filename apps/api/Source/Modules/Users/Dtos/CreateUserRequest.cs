@@ -1,6 +1,6 @@
 namespace GameGuild.Modules.Users;
 
-public class CreateUserDto
+public class CreateUserRequest
 {
     [Required]
     [StringLength(100, MinimumLength = 1)]

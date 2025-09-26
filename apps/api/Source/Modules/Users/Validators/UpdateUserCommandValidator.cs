@@ -2,7 +2,7 @@
 using GameGuild.Database;
 
 
-namespace GameGuild.Modules.Users.Validators;
+namespace GameGuild.Modules.Users;
 
 /// <summary> FluentValidation validator for UpdateUserCommand </summary>
 public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand> {
