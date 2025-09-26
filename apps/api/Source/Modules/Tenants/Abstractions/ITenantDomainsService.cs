@@ -28,10 +28,10 @@ public interface ITenantDomainsService
     /// <param name="tenantId">The tenant ID</param>
     /// <param name="topLevelDomain">The top-level domain</param>
     /// <param name="subdomain">Optional subdomain</param>
-    /// <param name="isPrimary">Whether this is the primary domain</param>
+    /// <param name="isMainDomain">Whether this is the main domain</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The created tenant domain</returns>
-    Task<TenantDomain> CreateTenantDomainAsync(Guid tenantId, string topLevelDomain, string? subdomain = null, bool isPrimary = false, CancellationToken cancellationToken = default);
+    Task<TenantDomain> CreateTenantDomainAsync(Guid tenantId, string topLevelDomain, string? subdomain = null, bool isMainDomain = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Update an existing tenant domain
@@ -39,10 +39,10 @@ public interface ITenantDomainsService
     /// <param name="domainId">The domain ID</param>
     /// <param name="topLevelDomain">The top-level domain</param>
     /// <param name="subdomain">Optional subdomain</param>
-    /// <param name="isPrimary">Whether this is the primary domain</param>
+    /// <param name="isMainDomain">Whether this is the main domain</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>The updated tenant domain</returns>
-    Task<TenantDomain> UpdateTenantDomainAsync(Guid domainId, string topLevelDomain, string? subdomain = null, bool isPrimary = false, CancellationToken cancellationToken = default);
+    Task<TenantDomain> UpdateTenantDomainAsync(Guid domainId, string topLevelDomain, string? subdomain = null, bool isMainDomain = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Delete a tenant domain
@@ -121,9 +121,9 @@ public class DomainValidationResult
 {
     public bool IsValid { get; set; }
     public bool IsAvailable { get; set; }
-    public List<string> Errors { get; set; } = new();
+    public List<string> Errors { get; set; } = [];
 
     public static DomainValidationResult Success() => new() { IsValid = true, IsAvailable = true };
     public static DomainValidationResult Failure(params string[] errors) => new() { IsValid = false, IsAvailable = false, Errors = errors.ToList() };
-    public static DomainValidationResult Unavailable(string message = "Domain is not available") => new() { IsValid = true, IsAvailable = false, Errors = new List<string> { message } };
+    public static DomainValidationResult Unavailable(string message = "Domain is not available") => new() { IsValid = true, IsAvailable = false, Errors = [message] };
 }

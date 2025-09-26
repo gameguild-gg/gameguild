@@ -6,11 +6,7 @@ namespace GameGuild.Modules.Tenants;
 ///     Service implementation for tenant settings management operations
 ///     Follows hexagonal architecture principles as an adapter (implementation)
 /// </summary>
-public class TenantSettingsService(
-    ITenantSettingsRepository repository,
-    ITenantCacheService cacheService,
-    ILanguageRepository languageRepository,
-    ILogger<TenantSettingsService> logger) : ITenantSettingsService
+public class TenantSettingsService(ITenantSettingsRepository repository, ITenantCacheService cacheService, ILanguageRepository languageRepository, ILogger<TenantSettingsService> logger) : ITenantSettingsService
 {
     public async Task<TenantSettings?> GetTenantSettingsAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
@@ -18,23 +14,18 @@ public class TenantSettingsService(
 
         // Try cache first
         TenantSettings? cachedSettings = cacheService.GetTenantSettings(tenantId);
+
         if (cachedSettings != null)
         {
             logger.LogDebug("Found tenant settings in cache for tenant: {TenantId}", tenantId);
+
             return cachedSettings;
         }
 
         // Fallback to database
         TenantSettings? settings = await repository.GetTenantSettingsAsync(tenantId, cancellationToken);
 
-        if (settings != null)
-        {
-            logger.LogDebug("Found tenant settings in database for tenant: {TenantId}", tenantId);
-        }
-        else
-        {
-            logger.LogDebug("Tenant settings not found for tenant: {TenantId}", tenantId);
-        }
+        logger.LogDebug(settings != null ? "Found tenant settings in database for tenant: {TenantId}" : "Tenant settings not found for tenant: {TenantId}", tenantId);
 
         return settings;
     }
@@ -45,9 +36,11 @@ public class TenantSettingsService(
 
         // Validate settings
         ValidationResult validationResult = await ValidateTenantSettingsAsync(settings);
+
         if (!validationResult.IsValid)
         {
             string errors = string.Join(", ", validationResult.Errors);
+
             throw new ArgumentException($"Invalid tenant settings: {errors}");
         }
 
@@ -71,7 +64,7 @@ public class TenantSettingsService(
         Guid defaultLanguageId = defaultLanguage?.Id ?? Guid.Empty;
 
         // Create default settings
-        TenantSettings defaultSettings = TenantSettings.CreateDefault(tenantId, defaultLanguageId);
+        var defaultSettings = TenantSettings.CreateDefault(tenantId, defaultLanguageId);
 
         // Save settings
         TenantSettings createdSettings = await repository.CreateTenantSettingsAsync(defaultSettings, cancellationToken);
@@ -92,14 +85,11 @@ public class TenantSettingsService(
 
         if (deleted)
         {
-            // Clear cache
-            cacheService.ClearTenantSettings(tenantId);
+            // Refresh cache (invalidate specific tenant)
+            cacheService.InvalidateTenant(tenantId);
             logger.LogInformation("Deleted tenant settings for tenant: {TenantId}", tenantId);
         }
-        else
-        {
-            logger.LogDebug("Tenant settings not found for deletion, tenant: {TenantId}", tenantId);
-        }
+        else { logger.LogDebug("Tenant settings not found for deletion, tenant: {TenantId}", tenantId); }
 
         return deleted;
     }
@@ -121,41 +111,24 @@ public class TenantSettingsService(
 
     public async Task<ValidationResult> ValidateTenantSettingsAsync(TenantSettings settings)
     {
-        List<string> errors = new();
+        List<string> errors = [];
 
         // Validate required fields
-        if (settings.TenantId == Guid.Empty)
-        {
-            errors.Add("TenantId is required");
-        }
+        if (settings.TenantId == Guid.Empty) { errors.Add("TenantId is required"); }
 
         // Validate default language exists
         if (settings.DefaultLanguageId != Guid.Empty)
         {
             Language? language = await languageRepository.GetByIdAsync(settings.DefaultLanguageId);
-            if (language == null)
-            {
-                errors.Add("Default language does not exist");
-            }
+
+            if (language == null) { errors.Add("Default language does not exist"); }
         }
 
         // Validate timezone
-        if (!string.IsNullOrWhiteSpace(settings.TimeZone))
+        if (!string.IsNullOrWhiteSpace(settings.DefaultTimezone))
         {
-            try
-            {
-                TimeZoneInfo.FindSystemTimeZoneById(settings.TimeZone);
-            }
-            catch (TimeZoneNotFoundException)
-            {
-                errors.Add("Invalid timezone");
-            }
-        }
-
-        // Validate MaxUsersLimit
-        if (settings.MaxUsersLimit.HasValue && settings.MaxUsersLimit <= 0)
-        {
-            errors.Add("MaxUsersLimit must be greater than 0 if specified");
+            try { TimeZoneInfo.FindSystemTimeZoneById(settings.DefaultTimezone); }
+            catch (TimeZoneNotFoundException) { errors.Add("Invalid timezone"); }
         }
 
         return errors.Count == 0 ? ValidationResult.Success() : ValidationResult.Failure(errors.ToArray());
@@ -165,7 +138,7 @@ public class TenantSettingsService(
     {
         logger.LogDebug("Getting all tenant settings");
 
-        IReadOnlyList<TenantSettings> allSettings = await repository.GetAllTenantSettingsAsync(cancellationToken);
+        var allSettings = await repository.GetAllTenantSettingsAsync(cancellationToken);
 
         logger.LogDebug("Retrieved {Count} tenant settings", allSettings.Count);
 
