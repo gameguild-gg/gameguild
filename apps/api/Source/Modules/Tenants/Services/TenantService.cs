@@ -105,20 +105,13 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         logger.LogInformation("Creating tenant: {TenantName} with slug: {TenantSlug}", name, slug);
 
         // Check if slug is available
-        var isAvailable = await IsSlugAvailableAsync(slug, cancellationToken: cancellationToken);
+        var isAvailable = await IsSlugAvailableAsync(slug, cancellationToken : cancellationToken);
 
         if (!isAvailable) { throw new BusinessException($"Tenant slug '{slug}' is already in use"); }
 
         var tenant = new Tenant
         {
-            Id = Guid.NewGuid(),
-            Name = name,
-            Slug = slug.ToLowerInvariant(),
-            Description = description,
-            IsActive = true,
-            IsDefault = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Id = Guid.NewGuid(), Name = name, Slug = slug.ToLowerInvariant(), Description = description, IsActive = true, IsDefault = false, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
         };
 
         tenant = await repository.CreateAsync(tenant, cancellationToken);
@@ -359,10 +352,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         var tenantDomain = await repository.FindTenantDomainByMatchAsync(topLevelDomain, subdomain, cancellationToken);
 
         // If no exact match, try with just the top-level domain
-        if (tenantDomain == null && subdomain != null)
-        {
-            tenantDomain = await repository.FindTenantDomainByMatchAsync(domain, null, cancellationToken);
-        }
+        if (tenantDomain == null && subdomain != null) { tenantDomain = await repository.FindTenantDomainByMatchAsync(domain, null, cancellationToken); }
 
         if (tenantDomain != null) { logger.LogDebug("Found tenant domain in database for email: {Email}", email); }
 

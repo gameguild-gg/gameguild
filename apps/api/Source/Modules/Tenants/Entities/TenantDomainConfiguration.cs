@@ -14,40 +14,25 @@ public class TenantDomainConfiguration : IEntityTypeConfiguration<TenantDomain>
         builder.HasKey(td => td.Id);
 
         // Properties
-        builder.Property(td => td.TopLevelDomain)
-            .IsRequired()
-            .HasMaxLength(255);
+        builder.Property(td => td.TopLevelDomain).IsRequired().HasMaxLength(255);
 
-        builder.Property(td => td.Subdomain)
-            .HasMaxLength(100);
+        builder.Property(td => td.Subdomain).HasMaxLength(100);
 
-        builder.Property(td => td.IsMainDomain)
-            .HasDefaultValue(false);
+        builder.Property(td => td.IsMainDomain).HasDefaultValue(false);
 
-        builder.Property(td => td.IsSecondaryDomain)
-            .HasDefaultValue(false);
+        builder.Property(td => td.IsSecondaryDomain).HasDefaultValue(false);
 
-        builder.Property(td => td.TenantId)
-            .IsRequired();
+        builder.Property(td => td.TenantId).IsRequired();
 
         // Indexes
-        builder.HasIndex(td => new { td.TopLevelDomain, td.Subdomain })
-            .IsUnique()
-            .HasDatabaseName("ix_tenant_domains_toplevel_subdomain");
+        builder.HasIndex(td => new { td.TopLevelDomain, td.Subdomain }).IsUnique().HasDatabaseName("ix_tenant_domains_toplevel_subdomain");
 
-        builder.HasIndex(td => new { td.TenantId, td.IsMainDomain })
-            .HasDatabaseName("ix_tenant_domains_tenant_main");
+        builder.HasIndex(td => new { td.TenantId, td.IsMainDomain }).HasDatabaseName("ix_tenant_domains_tenant_main");
 
         // Unique constraint for main domain per tenant
-        builder.HasIndex(td => new { td.TenantId, td.IsMainDomain })
-            .IsUnique()
-            .HasFilter("is_main_domain = true")
-            .HasDatabaseName("ix_tenant_domains_unique_main");
+        builder.HasIndex(td => new { td.TenantId, td.IsMainDomain }).IsUnique().HasFilter("is_main_domain = true").HasDatabaseName("ix_tenant_domains_unique_main");
 
         // Relationships
-        builder.HasOne(td => td.Tenant)
-            .WithMany()
-            .HasForeignKey(td => td.TenantId)
-            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne(td => td.Tenant).WithMany().HasForeignKey(td => td.TenantId).OnDelete(DeleteBehavior.Cascade);
     }
 }
