@@ -1,12 +1,10 @@
 using GameGuild.CQRS;
 
-
-namespace GameGuild.Modules.Credentials.Commands;
+namespace GameGuild.Modules.Credentials;
 
 /// <summary> Command to deactivate a credential using CQRS pattern </summary>
-public class DeactivateCredentialCommand : IRequest<bool> {
-  public DeactivateCredentialCommand(Guid id) { Id = id; }
-
-  /// <summary> Credential ID to deactivate </summary>
-  public Guid Id { get; set; }
+public class DeactivateCredentialCommand(Guid id) : IRequest<bool>
+{
+    /// <summary> Credential ID to deactivate </summary>
+    public Guid Id { get; set; } = id;
 }
