@@ -69,7 +69,7 @@ public interface IUserProfileRepository
     /// <summary>
     /// Get user profile statistics
     /// </summary>
-    Task<UserProfileStatistics> GetStatisticsAsync(CancellationToken cancellationToken = default);
+    Task<UserProfileStatistics> GetStatisticsAsync(DateTime? fromDate = null, DateTime? toDate = null, Guid? tenantId = null, bool includeDeleted = false, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Bulk operations
