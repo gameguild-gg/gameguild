@@ -10,14 +10,14 @@ public class UpdateTenantHandler(ApplicationDbContext context, ILogger<UpdateTen
     {
         try
         {
-            var tenant = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
+            Tenant? tenant = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
 
             if (tenant == null) return Result.Failure<Tenant>(Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found"));
 
             // Check if new name conflicts with another tenant
             if (!string.IsNullOrEmpty(request.Name) && tenant.Name != request.Name)
             {
-                var existingTenant = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Name == request.Name && t.Id != request.Id && t.DeletedAt == null, cancellationToken);
+                Tenant? existingTenant = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Name == request.Name && t.Id != request.Id && t.DeletedAt == null, cancellationToken);
 
                 if (existingTenant != null) return Result.Failure<Tenant>(Error.Conflict("Tenant.NameExists", $"Tenant with name '{request.Name}' already exists"));
             }
@@ -25,7 +25,7 @@ public class UpdateTenantHandler(ApplicationDbContext context, ILogger<UpdateTen
             // Check if new slug conflicts with another tenant
             if (!string.IsNullOrEmpty(request.Slug) && tenant.Slug != request.Slug)
             {
-                var existingSlug = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Slug == request.Slug && t.Id != request.Id && t.DeletedAt == null, cancellationToken);
+                Tenant? existingSlug = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Slug == request.Slug && t.Id != request.Id && t.DeletedAt == null, cancellationToken);
 
                 if (existingSlug != null) return Result.Failure<Tenant>(Error.Conflict("Tenant.SlugExists", $"Tenant with slug '{request.Slug}' already exists"));
             }

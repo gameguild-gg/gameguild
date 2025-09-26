@@ -1,7 +1,7 @@
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// Entity Framework configuration for the TenantDomain entity
+///     Entity Framework configuration for the TenantDomain entity
 /// </summary>
 public class TenantDomainConfiguration : IEntityTypeConfiguration<TenantDomain>
 {

@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Modules.Users;
 
 /// <summary>
-/// Handler for getting user statistics
+///     Handler for getting user statistics
 /// </summary>
 public class GetUserStatisticsHandler(IUserRepository userRepository) : IQueryHandler<GetUserStatisticsQuery, UserStatistics>
 {

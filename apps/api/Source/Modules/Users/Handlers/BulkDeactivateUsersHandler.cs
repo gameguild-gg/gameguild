@@ -12,11 +12,11 @@ public class BulkDeactivateUsersHandler(ApplicationDbContext context, ILogger<Bu
         var errors = new List<string>();
         var successfulCount = 0;
 
-        foreach (var userId in request.UserIds)
+        foreach (Guid userId in request.UserIds)
         {
             try
             {
-                var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null, cancellationToken);
+                User? user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null, cancellationToken);
 
                 if (user == null)
                 {
@@ -49,12 +49,12 @@ public class BulkDeactivateUsersHandler(ApplicationDbContext context, ILogger<Bu
             await context.SaveChangesAsync(cancellationToken);
 
             // Publish domain events for deactivated users
-            foreach (var user in deactivatedUsers) await mediator.Publish(new UserDeactivatedEvent(user.Id), cancellationToken);
+            foreach (User user in deactivatedUsers) await mediator.Publish(new UserDeactivatedEvent(user.Id), cancellationToken);
         }
 
         var result = new BulkOperationResult(request.UserIds.Count, successfulCount, errors.Count);
 
-        foreach (var error in errors) result.AddError(error);
+        foreach (string error in errors) result.AddError(error);
 
         logger.LogInformation("Bulk deactivate completed: {Successful}/{Total} users deactivated. Reason: {Reason}", successfulCount, request.UserIds.Count, request.Reason ?? "Not specified");
 

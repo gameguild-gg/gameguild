@@ -15,7 +15,7 @@ public class GetCredentialByIdQueryHandler(ICredentialService credentialService,
 
         try
         {
-            var credential = await _credentialService.GetCredentialByIdAsync(request.Id);
+            Credential? credential = await _credentialService.GetCredentialByIdAsync(request.Id);
 
             if (credential != null) { _logger.LogInformation("Found credential {CredentialId}", request.Id); }
             else { _logger.LogWarning("Credential {CredentialId} not found", request.Id); }

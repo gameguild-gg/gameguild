@@ -8,7 +8,7 @@ public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserH
 {
     public async Task<User> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
+        User? user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
 
         if (user == null) { throw new InvalidOperationException($"User with ID {request.UserId} not found"); }
 
@@ -19,8 +19,8 @@ public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserH
         // Check for email uniqueness if email is being updated
         if (request.Email != null && request.Email != user.Email)
         {
-            var normalizedEmail = request.Email.ToLowerInvariant();
-            var existingUser = await context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail && u.Id != request.UserId, cancellationToken);
+            string normalizedEmail = request.Email.ToLowerInvariant();
+            User? existingUser = await context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail && u.Id != request.UserId, cancellationToken);
 
             if (existingUser != null) throw new InvalidOperationException($"Email {request.Email} is already in use");
         }
@@ -37,10 +37,10 @@ public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserH
             // Regenerate username when name changes (only if Username is not explicitly provided)
             if (request.Username == null)
             {
-                var baseUsername = request.Name.ToSlugCase();
+                string baseUsername = request.Name.ToSlugCase();
                 var existingUsernames = await context.Users.Where(u => u.Username.StartsWith(baseUsername) && u.Id != user.Id).Select(u => u.Username).ToListAsync(cancellationToken);
 
-                var uniqueUsername = SlugCase.GenerateUnique(request.Name, existingUsernames, 50);
+                string uniqueUsername = SlugCase.GenerateUnique(request.Name, existingUsernames, 50);
                 changes["Username"] = new { From = user.Username, To = uniqueUsername };
                 user.Username = uniqueUsername;
             }
@@ -50,7 +50,7 @@ public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserH
         if (request.Username != null && user.Username != request.Username)
         {
             // Check for username uniqueness
-            var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Username == request.Username && u.Id != request.UserId, cancellationToken);
+            User? existingUser = await context.Users.FirstOrDefaultAsync(u => u.Username == request.Username && u.Id != request.UserId, cancellationToken);
 
             if (existingUser != null) { throw new InvalidOperationException($"Username {request.Username} is already in use"); }
 
@@ -71,7 +71,7 @@ public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserH
         if (request.Username != null && user.Username != request.Username)
         {
             // Check for username uniqueness
-            var existingUserWithUsername = await context.Users.FirstOrDefaultAsync(u => u.Username == request.Username && u.Id != request.UserId, cancellationToken);
+            User? existingUserWithUsername = await context.Users.FirstOrDefaultAsync(u => u.Username == request.Username && u.Id != request.UserId, cancellationToken);
 
             if (existingUserWithUsername != null) { throw new InvalidOperationException($"Username {request.Username} is already in use"); }
 

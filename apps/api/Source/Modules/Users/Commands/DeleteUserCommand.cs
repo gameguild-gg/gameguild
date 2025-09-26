@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Modules.Users;
 
 /// <summary>
-/// Command to delete a user
+///     Command to delete a user
 /// </summary>
 public sealed class DeleteUserCommand : ICommand<bool>
 {
@@ -13,7 +13,7 @@ public sealed class DeleteUserCommand : ICommand<bool>
     public bool SoftDelete { get; set; } = true;
 
     /// <summary>
-    /// Reason for deletion (for audit purposes)
+    ///     Reason for deletion (for audit purposes)
     /// </summary>
     public string? Reason { get; set; }
 }

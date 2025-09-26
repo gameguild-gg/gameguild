@@ -1,8 +1,9 @@
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-///   Represents a domain (top-level or subdomain) associated with a tenant for automatic user grouping. Each tenant can have multiple domains with one designated as the main/principal domain. Domains can be top-level (e.g.,
-///   "champlain.edu") or subdomains (e.g., "student.champlain.edu").
+///     Represents a domain (top-level or subdomain) associated with a tenant for automatic user grouping. Each tenant can
+///     have multiple domains with one designated as the main/principal domain. Domains can be top-level (e.g.,
+///     "champlain.edu") or subdomains (e.g., "student.champlain.edu").
 /// </summary>
 [Table("TenantDomains")]
 [Index(nameof(TopLevelDomain), nameof(Subdomain), IsUnique = true)]
@@ -25,7 +26,10 @@ public class TenantDomain : EntityBase
     [MaxLength(255)]
     public string TopLevelDomain { get => _topLevelDomain; set => _topLevelDomain = value.ToLowerInvariant(); }
 
-    /// <summary> Optional subdomain prefix (e.g., "student" for "student.champlain.edu", "faculty" for "faculty.champlain.edu") </summary>
+    /// <summary>
+    ///     Optional subdomain prefix (e.g., "student" for "student.champlain.edu", "faculty" for
+    ///     "faculty.champlain.edu")
+    /// </summary>
     [MaxLength(100)]
     public string? Subdomain { get => _subdomain; set => _subdomain = value?.ToLowerInvariant(); }
 
@@ -69,7 +73,7 @@ public class TenantDomain : EntityBase
     {
         if (string.IsNullOrEmpty(email) || !email.Contains('@')) return false;
 
-        var emailDomain = email.Split('@')[1].ToLowerInvariant();
+        string emailDomain = email.Split('@')[1].ToLowerInvariant();
 
         return emailDomain == FullDomainName;
     }

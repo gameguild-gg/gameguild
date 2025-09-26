@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Modules.Credentials;
 
 /// <summary>
-/// Handler for getting all credentials query using CQRS pattern
+///     Handler for getting all credentials query using CQRS pattern
 /// </summary>
 public class GetAllCredentialsQueryHandler(ICredentialService credentialService, ILogger<GetAllCredentialsQueryHandler> logger) : IRequestHandler<GetAllCredentialsQuery, IEnumerable<Credential>>
 {

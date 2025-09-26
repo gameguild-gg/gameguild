@@ -14,7 +14,7 @@ public class GetTenantByIdHandler(ApplicationDbContext context, ILogger<GetTenan
 
             if (!request.IncludeDeleted) query = query.Where(t => t.DeletedAt == null);
 
-            var tenant = await query.FirstOrDefaultAsync(cancellationToken);
+            Tenant? tenant = await query.FirstOrDefaultAsync(cancellationToken);
 
             logger.LogInformation("Retrieved tenant {TenantId}: {Found}", request.Id, tenant != null ? "Found" : "Not Found");
 

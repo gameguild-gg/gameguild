@@ -4,7 +4,7 @@ using GameGuild.Database;
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// Handler for deactivating a tenant
+///     Handler for deactivating a tenant
 /// </summary>
 public class DeactivateTenantHandler(ApplicationDbContext context, ILogger<DeactivateTenantHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<DeactivateTenantCommand, Result<bool>>
 {
@@ -12,7 +12,7 @@ public class DeactivateTenantHandler(ApplicationDbContext context, ILogger<Deact
     {
         try
         {
-            var tenant = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
+            Tenant? tenant = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
 
             if (tenant == null) return Result.Failure<bool>(Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found"));
 

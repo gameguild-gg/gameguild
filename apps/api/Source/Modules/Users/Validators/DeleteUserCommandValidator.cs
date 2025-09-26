@@ -4,7 +4,7 @@ using GameGuild.Database;
 namespace GameGuild.Modules.Users;
 
 /// <summary>
-/// FluentValidation validator for DeleteUserCommand
+///     FluentValidation validator for DeleteUserCommand
 /// </summary>
 public class DeleteUserCommandValidator : AbstractValidator<DeleteUserCommand>
 {

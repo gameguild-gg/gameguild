@@ -1,13 +1,13 @@
 namespace GameGuild.Modules.Users;
 
 /// <summary>
-/// Repository interface for user data access operations
-/// Follows hexagonal architecture principles as a port (interface)
+///     Repository interface for user data access operations
+///     Follows hexagonal architecture principles as a port (interface)
 /// </summary>
 public interface IUserRepository : IRepository<User>
 {
     /// <summary>
-    /// Get user by email address
+    ///     Get user by email address
     /// </summary>
     /// <param name="email">Email address</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -15,7 +15,7 @@ public interface IUserRepository : IRepository<User>
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get user by username
+    ///     Get user by username
     /// </summary>
     /// <param name="username">Username</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -23,7 +23,7 @@ public interface IUserRepository : IRepository<User>
     Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get user by ID with credentials included
+    ///     Get user by ID with credentials included
     /// </summary>
     /// <param name="id">User ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -31,7 +31,7 @@ public interface IUserRepository : IRepository<User>
     Task<User?> GetByIdWithCredentialsAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get user by ID with option to include deleted users
+    ///     Get user by ID with option to include deleted users
     /// </summary>
     /// <param name="id">User ID</param>
     /// <param name="includeDeleted">Whether to include soft-deleted users</param>
@@ -40,7 +40,7 @@ public interface IUserRepository : IRepository<User>
     Task<User?> GetByIdAsync(Guid id, bool includeDeleted, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get all users with optional deleted inclusion
+    ///     Get all users with optional deleted inclusion
     /// </summary>
     /// <param name="includeDeleted">Whether to include soft-deleted users</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -48,14 +48,14 @@ public interface IUserRepository : IRepository<User>
     Task<IEnumerable<User>> GetAllAsync(bool includeDeleted, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get only soft-deleted users
+    ///     Get only soft-deleted users
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>List of soft-deleted users</returns>
     Task<IEnumerable<User>> GetDeletedAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Search users by name or email
+    ///     Search users by name or email
     /// </summary>
     /// <param name="searchTerm">Search term</param>
     /// <param name="includeDeleted">Whether to include soft-deleted users</param>
@@ -64,14 +64,14 @@ public interface IUserRepository : IRepository<User>
     Task<IEnumerable<User>> SearchAsync(string searchTerm, bool includeDeleted = false, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get user statistics
+    ///     Get user statistics
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>User statistics</returns>
     Task<UserStatistics> GetUserStatisticsAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Check if username exists
+    ///     Check if username exists
     /// </summary>
     /// <param name="username">Username to check</param>
     /// <param name="excludeUserId">User ID to exclude from check</param>
@@ -80,7 +80,7 @@ public interface IUserRepository : IRepository<User>
     Task<bool> UsernameExistsAsync(string username, Guid? excludeUserId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Check if email exists
+    ///     Check if email exists
     /// </summary>
     /// <param name="email">Email to check</param>
     /// <param name="excludeUserId">User ID to exclude from check</param>
@@ -89,7 +89,7 @@ public interface IUserRepository : IRepository<User>
     Task<bool> EmailExistsAsync(string email, Guid? excludeUserId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Get usernames starting with a prefix (for unique username generation)
+    ///     Get usernames starting with a prefix (for unique username generation)
     /// </summary>
     /// <param name="prefix">Username prefix</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -97,7 +97,7 @@ public interface IUserRepository : IRepository<User>
     Task<IEnumerable<string>> GetUsernamesStartingWithAsync(string prefix, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Activate a user
+    ///     Activate a user
     /// </summary>
     /// <param name="id">User ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -105,7 +105,7 @@ public interface IUserRepository : IRepository<User>
     Task<bool> ActivateAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deactivate a user
+    ///     Deactivate a user
     /// </summary>
     /// <param name="id">User ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -113,7 +113,7 @@ public interface IUserRepository : IRepository<User>
     Task<bool> DeactivateAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Bulk operations for multiple users
+    ///     Bulk operations for multiple users
     /// </summary>
     Task<int> BulkActivateAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
 

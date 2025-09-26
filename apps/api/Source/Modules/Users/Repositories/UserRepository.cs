@@ -4,8 +4,8 @@ using GameGuild.Database;
 namespace GameGuild.Modules.Users;
 
 /// <summary>
-/// Repository implementation for user data access operations
-/// Adapter implementation following hexagonal architecture principles
+///     Repository implementation for user data access operations
+///     Adapter implementation following hexagonal architecture principles
 /// </summary>
 public class UserRepository(ApplicationDbContext context) : IUserRepository
 {
@@ -38,7 +38,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        var normalizedEmail = email.ToLowerInvariant();
+        string normalizedEmail = email.ToLowerInvariant();
 
         return await _context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail && u.DeletedAt == null, cancellationToken);
     }
@@ -52,15 +52,15 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     {
         var query = includeDeleted ? _context.Users.IgnoreQueryFilters() : _context.Users.Where(u => u.DeletedAt == null);
 
-        return await query.Where(u => u.Name.Contains(searchTerm) || (u.EmailAddress != null && u.EmailAddress.Value.Contains(searchTerm)) || u.Username.Contains(searchTerm)).ToListAsync(cancellationToken);
+        return await query.Where(u => u.Name.Contains(searchTerm) || u.EmailAddress != null && u.EmailAddress.Value.Contains(searchTerm) || u.Username.Contains(searchTerm)).ToListAsync(cancellationToken);
     }
 
     public async Task<UserStatistics> GetUserStatisticsAsync(CancellationToken cancellationToken = default)
     {
-        var totalUsers = await _context.Users.CountAsync(u => u.DeletedAt == null, cancellationToken);
-        var activeUsers = await _context.Users.CountAsync(u => u.DeletedAt == null && u.IsActive, cancellationToken);
-        var inactiveUsers = totalUsers - activeUsers;
-        var deletedUsers = await _context.Users.IgnoreQueryFilters().CountAsync(u => u.DeletedAt != null, cancellationToken);
+        int totalUsers = await _context.Users.CountAsync(u => u.DeletedAt == null, cancellationToken);
+        int activeUsers = await _context.Users.CountAsync(u => u.DeletedAt == null && u.IsActive, cancellationToken);
+        int inactiveUsers = totalUsers - activeUsers;
+        int deletedUsers = await _context.Users.IgnoreQueryFilters().CountAsync(u => u.DeletedAt != null, cancellationToken);
 
         return new UserStatistics { TotalUsers = totalUsers, ActiveUsers = activeUsers, InactiveUsers = inactiveUsers, DeletedUsers = deletedUsers };
     }
@@ -76,7 +76,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
 
     public async Task<bool> EmailExistsAsync(string email, Guid? excludeUserId = null, CancellationToken cancellationToken = default)
     {
-        var normalizedEmail = email.ToLowerInvariant();
+        string normalizedEmail = email.ToLowerInvariant();
         var query = _context.Users.Where(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail && u.DeletedAt == null);
 
         if (excludeUserId.HasValue) { query = query.Where(u => u.Id != excludeUserId.Value); }
@@ -92,7 +92,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     public async Task<(IEnumerable<User> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var query = _context.Users.Where(u => u.DeletedAt == null);
-        var totalCount = await query.CountAsync(cancellationToken);
+        int totalCount = await query.CountAsync(cancellationToken);
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
 
         return (items, totalCount);
@@ -156,7 +156,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
 
     public async Task RemoveAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+        User? user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
         if (user != null)
         {
@@ -173,7 +173,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
 
     public async Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null, cancellationToken);
+        User? user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null, cancellationToken);
 
         if (user != null)
         {
@@ -184,7 +184,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
 
     public async Task RestoreAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt != null, cancellationToken);
+        User? user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt != null, cancellationToken);
 
         if (user != null)
         {
@@ -195,7 +195,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
 
     public async Task<bool> ActivateAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null, cancellationToken);
+        User? user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null, cancellationToken);
 
         if (user == null) return false;
 
@@ -208,7 +208,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
 
     public async Task<bool> DeactivateAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null, cancellationToken);
+        User? user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null, cancellationToken);
 
         if (user == null) return false;
 
@@ -224,7 +224,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     {
         var users = await _context.Users.Where(u => userIds.Contains(u.Id) && u.DeletedAt == null).ToListAsync(cancellationToken);
 
-        foreach (var user in users)
+        foreach (User user in users)
         {
             user.IsActive = true;
             user.Touch();
@@ -239,7 +239,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     {
         var users = await _context.Users.Where(u => userIds.Contains(u.Id) && u.DeletedAt == null).ToListAsync(cancellationToken);
 
-        foreach (var user in users)
+        foreach (User user in users)
         {
             user.IsActive = false;
             user.Touch();
@@ -254,7 +254,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     {
         var users = await _context.Users.Where(u => userIds.Contains(u.Id) && u.DeletedAt == null).ToListAsync(cancellationToken);
 
-        foreach (var user in users) user.SoftDelete();
+        foreach (User user in users) user.SoftDelete();
 
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -265,7 +265,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     {
         var users = await _context.Users.IgnoreQueryFilters().Where(u => userIds.Contains(u.Id) && u.DeletedAt != null).ToListAsync(cancellationToken);
 
-        foreach (var user in users) user.Restore();
+        foreach (User user in users) user.Restore();
 
         await _context.SaveChangesAsync(cancellationToken);
 

@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// Domain event fired when a tenant is created
+///     Domain event fired when a tenant is created
 /// </summary>
 public class TenantCreatedEvent(Guid tenantId, string name, string? description, bool isActive, string slug) : DomainEventBase(tenantId, nameof(Tenant))
 {

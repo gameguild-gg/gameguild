@@ -1,6 +1,10 @@
 namespace GameGuild.Modules.Tenants;
 
-/// <summary> Represents a tenant in a multi-tenant system Inherits from EntityBase to provide UUID IDs, version control, timestamps, and soft delete functionality A tenant is a standalone entity that doesn't belong to another tenant (no circular reference) </summary>
+/// <summary>
+///     Represents a tenant in a multi-tenant system Inherits from EntityBase to provide UUID IDs, version control,
+///     timestamps, and soft delete functionality A tenant is a standalone entity that doesn't belong to another tenant (no
+///     circular reference)
+/// </summary>
 [Table("tenants")]
 [Index(nameof(Name), IsUnique = true)]
 [Index(nameof(Slug), IsUnique = true)]
@@ -22,7 +26,10 @@ public class Tenant : EntityBase
     /// <summary> Whether this tenant is currently active </summary>
     public bool IsActive { get; set; } = true;
 
-    /// <summary> Whether this is the default tenant (for null tenant scenarios) PostgreSQL filtered unique index ensures only one tenant can be default </summary>
+    /// <summary>
+    ///     Whether this is the default tenant (for null tenant scenarios) PostgreSQL filtered unique index ensures only
+    ///     one tenant can be default
+    /// </summary>
     public bool IsDefault { get; set; } = false;
 
     /// <summary> Slug for the tenant (URL-friendly unique identifier) </summary>

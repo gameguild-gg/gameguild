@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Modules.Users;
 
 /// <summary>
-/// Event raised when a user is deactivated
+///     Event raised when a user is deactivated
 /// </summary>
 public sealed class UserDeactivatedEvent(Guid userId) : DomainEventBase(userId, nameof(User))
 {

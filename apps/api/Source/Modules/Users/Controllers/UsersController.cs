@@ -31,7 +31,7 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
                     CreatedAt = u.CreatedAt,
                     UpdatedAt = u.UpdatedAt,
                     DeletedAt = u.DeletedAt,
-                    IsDeleted = u.DeletedAt != null,
+                    IsDeleted = u.DeletedAt != null
                 }
             )
             .ToList();
@@ -49,7 +49,7 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
         logger.LogDebug("Getting user with ID {UserId}", id);
         var query = new GetUserByIdQuery { UserId = id, IncludeDeleted = includeDeleted };
 
-        var user = await mediator.Send(query);
+        User? user = await mediator.Send(query);
 
         if (user == null) return NotFound($"User with ID {id} not found");
 
@@ -64,7 +64,7 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt,
             DeletedAt = user.DeletedAt,
-            IsDeleted = user.DeletedAt != null,
+            IsDeleted = user.DeletedAt != null
         };
 
         return Ok(userDto);
@@ -83,7 +83,7 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
         logger.LogDebug("Creating user with email {Email}", createRequest.Email);
         var command = new CreateUserCommand { Name = createRequest.Name, Email = createRequest.Email, IsActive = createRequest.IsActive };
 
-        var user = await mediator.Send(command);
+        User user = await mediator.Send(command);
 
         logger.LogInformation("Successfully created user {UserId} with email {Email}", user.Id, user.Email);
 
@@ -98,7 +98,7 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt,
             DeletedAt = user.DeletedAt,
-            IsDeleted = user.DeletedAt != null,
+            IsDeleted = user.DeletedAt != null
         };
 
         return CreatedAtAction(nameof(GetUser), new { id = user.Id }, userDto);
@@ -113,7 +113,7 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
             UserId = id, Name = updateRequest.Name, Username = updateRequest.Username, Email = updateRequest.Email, IsActive = updateRequest.IsActive, ExpectedVersion = updateRequest.ExpectedVersion
         };
 
-        var user = await mediator.Send(command);
+        User user = await mediator.Send(command);
 
         var userDto = new UserResponse
         {
@@ -126,7 +126,7 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt,
             DeletedAt = user.DeletedAt,
-            IsDeleted = user.DeletedAt != null,
+            IsDeleted = user.DeletedAt != null
         };
 
         return Ok(userDto);
@@ -142,7 +142,7 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
         logger.LogDebug("Deleting user with ID {UserId}, softDelete={SoftDelete}", id, softDelete);
         var command = new DeleteUserCommand { UserId = id, SoftDelete = softDelete, Reason = reason };
 
-        var result = await mediator.Send(command);
+        bool result = await mediator.Send(command);
 
         if (!result) return NotFound($"User with ID {id} not found or already deleted");
 
@@ -155,7 +155,7 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
     {
         var command = new RestoreUserCommand { UserId = id, Reason = reason };
 
-        var result = await mediator.Send(command);
+        bool result = await mediator.Send(command);
 
         if (!result) return NotFound($"User with ID {id} not found or not deleted");
 
@@ -198,7 +198,7 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
     {
         var query = new GetUserStatisticsQuery { FromDate = fromDate, ToDate = toDate, IncludeDeleted = includeDeleted };
 
-        var statistics = await mediator.Send(query);
+        UserStatistics statistics = await mediator.Send(query);
 
         return Ok(statistics);
     }

@@ -3,7 +3,7 @@ using GameGuild.Database;
 namespace GameGuild.Modules.Localization;
 
 /// <summary>
-/// Entity Framework implementation for <see cref="ILanguageRepository"/>.
+///     Entity Framework implementation for <see cref="ILanguageRepository" />.
 /// </summary>
 public sealed class LanguageRepository(ApplicationDbContext context) : ILanguageRepository
 {
@@ -25,7 +25,7 @@ public sealed class LanguageRepository(ApplicationDbContext context) : ILanguage
 
     public async Task<IReadOnlyList<Language>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
-        List<Language> languages = await _context.Languages.AsNoTracking().Where(language => language.IsActive).OrderBy(language => language.Name).ToListAsync(cancellationToken);
+        var languages = await _context.Languages.AsNoTracking().Where(language => language.IsActive).OrderBy(language => language.Name).ToListAsync(cancellationToken);
 
         return languages.AsReadOnly();
     }

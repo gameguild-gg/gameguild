@@ -13,7 +13,7 @@ public class BulkDeleteUsersHandler(ApplicationDbContext context, ILogger<BulkDe
         var successCount = 0;
         var errors = new List<string>();
 
-        foreach (var user in users)
+        foreach (User user in users)
         {
             try
             {
@@ -38,15 +38,15 @@ public class BulkDeleteUsersHandler(ApplicationDbContext context, ILogger<BulkDe
         var foundUserIds = users.Select(u => u.Id).ToHashSet();
         var notFoundIds = request.UserIds.Where(id => !foundUserIds.Contains(id));
 
-        foreach (var notFoundId in notFoundIds) errors.Add($"User {notFoundId} not found");
+        foreach (Guid notFoundId in notFoundIds) errors.Add($"User {notFoundId} not found");
 
         await context.SaveChangesAsync(cancellationToken);
 
-        var failedCount = request.UserIds.Count - successCount;
+        int failedCount = request.UserIds.Count - successCount;
         var result = new BulkOperationResult(request.UserIds.Count, successCount, failedCount);
 
         // Add all errors to the result
-        foreach (var error in errors) result.AddError(error);
+        foreach (string error in errors) result.AddError(error);
 
         logger.LogInformation(
             "Bulk delete completed: {SuccessCount}/{TotalCount} users {DeleteType}. Reason: {Reason}",

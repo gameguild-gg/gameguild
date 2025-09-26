@@ -7,9 +7,9 @@ public class RestoreCredentialCommandHandler(ICredentialService credentialServic
 {
     private readonly ICredentialService _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService));
 
-    private readonly IMediator _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-
     private readonly ILogger<RestoreCredentialCommandHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    private readonly IMediator _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 
     public async Task<bool> Handle(RestoreCredentialCommand request, CancellationToken cancellationToken)
     {

@@ -10,7 +10,7 @@ public class GetUserByIdResultHandler(ApplicationDbContext context, ILogger<GetU
     {
         try
         {
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
+            User? user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
             if (user == null)
             {

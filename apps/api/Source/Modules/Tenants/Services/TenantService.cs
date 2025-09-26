@@ -3,9 +3,9 @@ using GameGuild.Core.Exceptions;
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// Service for tenant management operations
-/// Implements hexagonal architecture as an adapter (implementation)
-/// Follows SOLID principles and DRY patterns
+///     Service for tenant management operations
+///     Implements hexagonal architecture as an adapter (implementation)
+///     Follows SOLID principles and DRY patterns
 /// </summary>
 public class TenantService(ITenantRepository repository, ITenantCacheService cacheService, ILogger<TenantService> logger) : ITenantService
 {
@@ -27,7 +27,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         logger.LogDebug("Getting tenant by ID: {TenantId}", tenantId);
 
         // Try cache first
-        var cachedTenant = cacheService.GetTenantById(tenantId);
+        Tenant? cachedTenant = cacheService.GetTenantById(tenantId);
 
         if (cachedTenant != null)
         {
@@ -37,7 +37,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         }
 
         // Fallback to database
-        var tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
+        Tenant? tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
 
         if (tenant != null) { logger.LogDebug("Found tenant in database: {TenantSlug}", tenant.Slug); }
         else { logger.LogDebug("Tenant not found: {TenantId}", tenantId); }
@@ -53,7 +53,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         logger.LogDebug("Getting tenant by slug: {TenantSlug}", slug);
 
         // Try cache first
-        var cachedTenant = cacheService.GetTenantBySlug(slug);
+        Tenant? cachedTenant = cacheService.GetTenantBySlug(slug);
 
         if (cachedTenant != null)
         {
@@ -63,7 +63,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         }
 
         // Fallback to database
-        var tenant = await repository.GetBySlugAsync(slug, cancellationToken);
+        Tenant? tenant = await repository.GetBySlugAsync(slug, cancellationToken);
 
         if (tenant != null) { logger.LogDebug("Found tenant in database: {TenantSlug}", tenant.Slug); }
         else { logger.LogDebug("Tenant not found: {TenantSlug}", slug); }
@@ -77,7 +77,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         logger.LogDebug("Getting default tenant");
 
         // Try cache first
-        var cachedTenant = cacheService.GetDefaultTenant();
+        Tenant? cachedTenant = cacheService.GetDefaultTenant();
 
         if (cachedTenant != null)
         {
@@ -87,7 +87,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         }
 
         // Fallback to database
-        var tenant = await repository.GetDefaultAsync(cancellationToken);
+        Tenant? tenant = await repository.GetDefaultAsync(cancellationToken);
 
         if (tenant != null) { logger.LogDebug("Found default tenant in database: {TenantSlug}", tenant.Slug); }
         else { logger.LogWarning("No default tenant found"); }
@@ -105,7 +105,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         logger.LogInformation("Creating tenant: {TenantName} with slug: {TenantSlug}", name, slug);
 
         // Check if slug is available
-        var isAvailable = await IsSlugAvailableAsync(slug, cancellationToken : cancellationToken);
+        bool isAvailable = await IsSlugAvailableAsync(slug, cancellationToken : cancellationToken);
 
         if (!isAvailable) { throw new BusinessException($"Tenant slug '{slug}' is already in use"); }
 
@@ -131,7 +131,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
 
         logger.LogInformation("Updating tenant: {TenantId}", tenantId);
 
-        var tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
+        Tenant? tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
 
         if (tenant == null) { throw new NotFoundException($"Tenant with ID {tenantId} not found"); }
 
@@ -152,7 +152,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
     {
         logger.LogInformation("Activating tenant: {TenantId}", tenantId);
 
-        var tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
+        Tenant? tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
 
         if (tenant == null) { throw new NotFoundException($"Tenant with ID {tenantId} not found"); }
 
@@ -180,7 +180,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
     {
         logger.LogInformation("Deactivating tenant: {TenantId}", tenantId);
 
-        var tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
+        Tenant? tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
 
         if (tenant == null) { throw new NotFoundException($"Tenant with ID {tenantId} not found"); }
 
@@ -210,7 +210,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
     {
         logger.LogInformation("Deleting tenant: {TenantId}", tenantId);
 
-        var tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
+        Tenant? tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
 
         if (tenant == null) { throw new NotFoundException($"Tenant with ID {tenantId} not found"); }
 
@@ -230,7 +230,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         logger.LogDebug("Getting tenant settings: {TenantId}", tenantId);
 
         // Try cache first
-        var cachedSettings = cacheService.GetTenantSettings(tenantId);
+        TenantSettings? cachedSettings = cacheService.GetTenantSettings(tenantId);
 
         if (cachedSettings != null)
         {
@@ -240,7 +240,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         }
 
         // Fallback to database
-        var settings = await repository.GetTenantSettingsAsync(tenantId, cancellationToken);
+        TenantSettings? settings = await repository.GetTenantSettingsAsync(tenantId, cancellationToken);
 
         if (settings != null) { logger.LogDebug("Found tenant settings in database: {TenantId}", tenantId); }
 
@@ -292,12 +292,12 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
     {
         if (string.IsNullOrWhiteSpace(topLevelDomain)) throw new ArgumentException("Top-level domain cannot be null or empty", nameof(topLevelDomain));
 
-        var domain = string.IsNullOrWhiteSpace(subdomain) ? topLevelDomain : $"{subdomain}.{topLevelDomain}";
+        string domain = string.IsNullOrWhiteSpace(subdomain) ? topLevelDomain : $"{subdomain}.{topLevelDomain}";
 
         logger.LogInformation("Adding tenant domain: {TenantId} - {Domain}", tenantId, domain);
 
         // Check if domain already exists for this tenant
-        var existingDomain = await repository.FindTenantDomainByMatchAsync(topLevelDomain, subdomain, cancellationToken);
+        TenantDomain? existingDomain = await repository.FindTenantDomainByMatchAsync(topLevelDomain, subdomain, cancellationToken);
 
         if (existingDomain != null && existingDomain.TenantId == tenantId) { throw new BusinessException($"Domain '{domain}' already exists for this tenant"); }
 
@@ -321,7 +321,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         logger.LogDebug("Finding tenant by domain match: {Email}", email);
 
         // Try cache first
-        var cachedDomain = cacheService.FindTenantByDomainMatch(email);
+        TenantDomain? cachedDomain = cacheService.FindTenantByDomainMatch(email);
 
         if (cachedDomain != null)
         {
@@ -331,14 +331,14 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         }
 
         // Extract domain from email
-        var atIndex = email.LastIndexOf('@');
+        int atIndex = email.LastIndexOf('@');
 
         if (atIndex <= 0 || atIndex >= email.Length - 1) { return null; }
 
-        var domain = email.Substring(atIndex + 1).ToLowerInvariant();
+        string domain = email.Substring(atIndex + 1).ToLowerInvariant();
 
         // Check if it's a subdomain (contains dots)
-        var parts = domain.Split('.');
+        string[ ] parts = domain.Split('.');
         string? subdomain = null;
         string topLevelDomain = domain;
 
@@ -349,7 +349,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
         }
 
         // Fallback to database - try exact match first
-        var tenantDomain = await repository.FindTenantDomainByMatchAsync(topLevelDomain, subdomain, cancellationToken);
+        TenantDomain? tenantDomain = await repository.FindTenantDomainByMatchAsync(topLevelDomain, subdomain, cancellationToken);
 
         // If no exact match, try with just the top-level domain
         if (tenantDomain == null && subdomain != null) { tenantDomain = await repository.FindTenantDomainByMatchAsync(domain, null, cancellationToken); }
@@ -366,7 +366,7 @@ public class TenantService(ITenantRepository repository, ITenantCacheService cac
 
         logger.LogDebug("Checking slug availability: {TenantSlug}", slug);
 
-        var isAvailable = await repository.IsSlugAvailableAsync(slug, excludeTenantId, cancellationToken);
+        bool isAvailable = await repository.IsSlugAvailableAsync(slug, excludeTenantId, cancellationToken);
 
         logger.LogDebug("Slug {TenantSlug} availability: {IsAvailable}", slug, isAvailable);
 

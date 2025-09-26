@@ -1,18 +1,23 @@
+using GameGuild.Modules.Localization;
+
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// Dependency injection configuration for Tenant Module
-/// Clean Architecture - Dependency Inversion Principle
+///     Dependency injection configuration for Tenant Module
+///     Clean Architecture - Dependency Inversion Principle
 /// </summary>
 public static class TenantModuleExtensions
 {
     /// <summary>
-    /// Registers tenant services with the dependency injection container
+    ///     Registers tenant services with the dependency injection container
     /// </summary>
     /// <param name="services">The service collection</param>
     /// <returns>The service collection for chaining</returns>
     public static IServiceCollection AddTenantServices(this IServiceCollection services)
     {
+        // Register localization services (required by tenant repository)
+        services.AddLocalizationServices();
+
         // Register tenant repository
         services.AddScoped<ITenantRepository, TenantRepository>();
 
@@ -27,7 +32,7 @@ public static class TenantModuleExtensions
     }
 
     /// <summary>
-    /// Adds tenant middleware to the application pipeline
+    ///     Adds tenant middleware to the application pipeline
     /// </summary>
     /// <param name="app">The application builder</param>
     /// <returns>The application builder for chaining</returns>

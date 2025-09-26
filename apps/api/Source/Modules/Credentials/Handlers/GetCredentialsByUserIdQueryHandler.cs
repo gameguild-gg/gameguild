@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Modules.Credentials;
 
 /// <summary>
-/// Handler for getting credentials by user ID query using CQRS pattern
+///     Handler for getting credentials by user ID query using CQRS pattern
 /// </summary>
 public class GetCredentialsByUserIdQueryHandler(ICredentialService credentialService, ILogger<GetCredentialsByUserIdQueryHandler> logger) : IRequestHandler<GetCredentialsByUserIdQuery, IEnumerable<Credential>>
 {

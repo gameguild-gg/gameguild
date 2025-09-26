@@ -8,7 +8,7 @@ public class RestoreUserHandler(ApplicationDbContext context, ILogger<RestoreUse
 {
     public async Task<bool> Handle(RestoreUserCommand request, CancellationToken cancellationToken)
     {
-        var user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
+        User? user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken);
 
         if (user?.DeletedAt == null) return false;
 

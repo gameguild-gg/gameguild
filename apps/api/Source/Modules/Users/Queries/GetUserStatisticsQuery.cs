@@ -3,7 +3,7 @@
 namespace GameGuild.Modules.Users;
 
 /// <summary>
-/// Query to get user statistics
+///     Query to get user statistics
 /// </summary>
 public sealed class GetUserStatisticsQuery : IQuery<UserStatistics>
 {

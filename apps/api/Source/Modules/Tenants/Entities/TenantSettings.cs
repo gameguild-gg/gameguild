@@ -3,7 +3,10 @@ using GameGuild.Modules.Resources;
 
 namespace GameGuild.Modules.Tenants;
 
-/// <summary> Tenant-specific settings and configuration Provides tenant-level customization for features, UI, localization, and business logic </summary>
+/// <summary>
+///     Tenant-specific settings and configuration Provides tenant-level customization for features, UI,
+///     localization, and business logic
+/// </summary>
 [Table("TenantSettings")]
 [Index(nameof(TenantId), IsUnique = true)]
 public class TenantSettings : Resource
@@ -32,7 +35,7 @@ public class TenantSettings : Resource
     public bool RequireRegistrationApproval { get; set; }
 
     /// <summary>
-    /// Creates default tenant settings for a given tenant
+    ///     Creates default tenant settings for a given tenant
     /// </summary>
     /// <param name="tenantId">The tenant ID</param>
     /// <param name="defaultLanguageId">The default language identifier</param>

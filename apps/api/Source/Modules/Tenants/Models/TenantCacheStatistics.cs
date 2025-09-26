@@ -1,7 +1,7 @@
 ﻿namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// Statistics about the tenant cache
+///     Statistics about the tenant cache
 /// </summary>
 public record TenantCacheStatistics
 {
