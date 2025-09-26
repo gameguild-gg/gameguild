@@ -18,12 +18,16 @@ public static class TenantModuleExtensions
         // Register localization services (required by tenant repository)
         services.AddLocalizationServices();
 
-        // Register tenant repository
+        // Register tenant repositories
         services.AddScoped<ITenantRepository, TenantRepository>();
+        services.AddScoped<ITenantSettingsRepository, TenantSettingsRepository>();
+        services.AddScoped<ITenantDomainsRepository, TenantDomainsRepository>();
 
         // Register tenant services
         services.AddSingleton<ITenantCacheService, TenantCacheService>();
         services.AddScoped<ITenantService, TenantService>();
+        services.AddScoped<ITenantSettingsService, TenantSettingsService>();
+        services.AddScoped<ITenantDomainsService, TenantDomainsService>();
 
         // Register tenant context as scoped (per request)
         services.AddScoped<ITenantContext, TenantContext>();

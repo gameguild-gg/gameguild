@@ -68,49 +68,7 @@ public interface ITenantRepository
     /// <returns>True if the slug is available</returns>
     Task<bool> IsSlugAvailableAsync(string slug, Guid? excludeId = null, CancellationToken cancellationToken = default);
 
-    // === TENANT SETTINGS OPERATIONS ===
 
-    /// <summary>
-    ///     Get tenant settings by tenant ID
-    /// </summary>
-    /// <param name="tenantId">The tenant ID</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The tenant settings or null if not found</returns>
-    Task<TenantSettings?> GetTenantSettingsAsync(Guid tenantId, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    ///     Create or update tenant settings
-    /// </summary>
-    /// <param name="tenantId">The tenant ID</param>
-    /// <param name="settings">The settings to create or update</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The created or updated tenant settings</returns>
-    Task<TenantSettings> CreateOrUpdateTenantSettingsAsync(Guid tenantId, TenantSettings settings, CancellationToken cancellationToken = default);
 
-    // === TENANT DOMAINS OPERATIONS ===
-
-    /// <summary>
-    ///     Get all domains for a tenant
-    /// </summary>
-    /// <param name="tenantId">The tenant ID</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>List of tenant domains</returns>
-    Task<IReadOnlyList<TenantDomain>> GetTenantDomainsAsync(Guid tenantId, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    ///     Create a new tenant domain
-    /// </summary>
-    /// <param name="tenantDomain">The tenant domain to create</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The created tenant domain</returns>
-    Task<TenantDomain> CreateTenantDomainAsync(TenantDomain tenantDomain, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    ///     Find tenant domain by domain match
-    /// </summary>
-    /// <param name="topLevelDomain">The top-level domain</param>
-    /// <param name="subdomain">Optional subdomain</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>The matching tenant domain or null if not found</returns>
-    Task<TenantDomain?> FindTenantDomainByMatchAsync(string topLevelDomain, string? subdomain = null, CancellationToken cancellationToken = default);
 }
