@@ -37,7 +37,7 @@ public class ResourceLimitCheckResponse
     public DateTime? NextReset { get; set; }
 
     /// <summary> Additional metadata </summary>
-    public Dictionary<string, object> Metadata { get; set; } = new Dictionary<string, object>();
+    public Dictionary<string, object> Metadata { get; set; } = [];
 
     /// <summary> Create a successful limit check response </summary>
     public static ResourceLimitCheckResponse Success(ResourceUsageType type, long current, long? softLimit, long? hardLimit, string? message = null)

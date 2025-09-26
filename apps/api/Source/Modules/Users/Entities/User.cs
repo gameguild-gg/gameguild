@@ -30,11 +30,13 @@ public sealed class User : EntityBase, IUser
     /// <summary>
     ///     Navigation property to user credentials
     /// </summary>
-    public ICollection<Credential> Credentials { get; set; } = new List<Credential>();
+    public ICollection<Credential> Credentials { get; set; } = [];
 
-    [Required]
     [MaxLength(100)]
-    public string Name { get; set; } = string.Empty;
+    public string? GivenName { get; set; }
+
+    [MaxLength(100)]
+    public string? FamilyName { get; set; }
 
     [Required]
     [MaxLength(50)]
@@ -65,13 +67,13 @@ public sealed class User : EntityBase, IUser
     /// <summary>
     ///     Update user information
     /// </summary>
-    /// <param name="name">New name</param>
+    /// <param name="givenName">New given name</param>
+    /// <param name="familyName">New family name</param>
     /// <param name="phoneNumber">New phone number</param>
-    public void Update(string name, string? phoneNumber = null)
+    public void Update(string? givenName, string? familyName, string? phoneNumber = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-
-        Name = name;
+        GivenName = givenName;
+        FamilyName = familyName;
         PhoneNumber = !string.IsNullOrWhiteSpace(phoneNumber) ? new PhoneNumber(phoneNumber) : null;
         Touch();
     }
@@ -89,27 +91,28 @@ public sealed class User : EntityBase, IUser
     ///     Static factory method to create a new user
     /// </summary>
     /// <param name="email">User's email address</param>
-    /// <param name="name">User's full name</param>
+    /// <param name="givenName">User's given name</param>
+    /// <param name="familyName">User's family name</param>
     /// <param name="username">User's username</param>
     /// <param name="phoneNumber">Optional phone number</param>
     /// <returns>New User instance</returns>
-    public static User Create(string email, string name, string username, string? phoneNumber = null)
+    public static User Create(string email, string? givenName, string? familyName, string username, string? phoneNumber = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
         ArgumentException.ThrowIfNullOrWhiteSpace(username);
 
-        return new User { Email = email, Name = name, Username = username, PhoneNumber = !string.IsNullOrWhiteSpace(phoneNumber) ? new PhoneNumber(phoneNumber) : null, IsActive = true };
+        return new User { Email = email, GivenName = givenName, FamilyName = familyName, Username = username, PhoneNumber = !string.IsNullOrWhiteSpace(phoneNumber) ? new PhoneNumber(phoneNumber) : null, IsActive = true };
     }
 
     /// <summary>
-    ///     Update the user's name
+    ///     Update the user's names
     /// </summary>
-    /// <param name="name">New name</param>
-    public void UpdateName(string name)
+    /// <param name="givenName">New given name</param>
+    /// <param name="familyName">New family name</param>
+    public void UpdateNames(string? givenName, string? familyName)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-        Name = name;
+        GivenName = givenName;
+        FamilyName = familyName;
         Touch();
     }
 

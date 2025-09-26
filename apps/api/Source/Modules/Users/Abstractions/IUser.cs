@@ -5,7 +5,9 @@ public interface IUser
 {
     Guid Id { get; }
 
-    string Name { get; }
+    string? GivenName { get; }
+
+    string? FamilyName { get; }
 
     string Username { get; }
 

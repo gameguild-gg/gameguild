@@ -14,7 +14,8 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(user => user.UpdatedAt);
 
         // Property configurations
-        builder.Property(user => user.Name).HasMaxLength(100).IsRequired();
+        builder.Property(user => user.GivenName).HasMaxLength(100).IsRequired(false);
+        builder.Property(user => user.FamilyName).HasMaxLength(100).IsRequired(false);
         builder.Property(user => user.Username).HasMaxLength(50).IsRequired();
 
         // Configure EmailAddress as converted value object (single column)

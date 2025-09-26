@@ -20,7 +20,7 @@ public class UserService(IUserRepository userRepository) : IUserService
         return await _userRepository.AddAsync(user);
     }
 
-    public async Task<User> CreateUserAsync(string name, string email, bool isActive = true, CancellationToken cancellationToken = default)
+    public async Task<User> CreateUserAsync(string? givenName, string? familyName, string email, bool isActive = true, CancellationToken cancellationToken = default)
     {
         // Check if email already exists
         User? existingUser = await GetByEmailAsync(email);
@@ -28,12 +28,13 @@ public class UserService(IUserRepository userRepository) : IUserService
         if (existingUser != null) throw new InvalidOperationException($"A user with email '{email}' already exists.");
 
         // Generate unique username from name using slugify
-        string baseUsername = name.ToSlugCase();
+        string fullName = $"{givenName ?? ""} {familyName ?? ""}".Trim();
+        string baseUsername = string.IsNullOrWhiteSpace(fullName) ? email.Split('@')[0] : fullName.ToSlugCase();
         var existingUsernames = await _userRepository.GetUsernamesStartingWithAsync(baseUsername, cancellationToken);
 
-        string uniqueUsername = SlugCase.GenerateUnique(name, existingUsernames, 50);
+        string uniqueUsername = SlugCase.GenerateUnique(string.IsNullOrWhiteSpace(fullName) ? email : fullName, existingUsernames, 50);
 
-        var user = new User { Name = name, Username = uniqueUsername, Email = email, IsActive = isActive };
+        var user = new User { GivenName = givenName, FamilyName = familyName, Username = uniqueUsername, Email = email, IsActive = isActive };
 
         return await _userRepository.AddAsync(user);
     }
@@ -44,7 +45,8 @@ public class UserService(IUserRepository userRepository) : IUserService
 
         if (existingUser == null) return null;
 
-        existingUser.Name = user.Name;
+        existingUser.GivenName = user.GivenName;
+        existingUser.FamilyName = user.FamilyName;
         existingUser.Email = user.Email;
         existingUser.IsActive = user.IsActive;
 

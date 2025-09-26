@@ -2,9 +2,11 @@ namespace GameGuild.Modules.Users;
 
 public class CreateUserRequest
 {
-    [Required]
-    [StringLength(100, MinimumLength = 1)]
-    public string Name { get; set; } = string.Empty;
+    [StringLength(100)]
+    public string? GivenName { get; set; }
+
+    [StringLength(100)]
+    public string? FamilyName { get; set; }
 
     [Required]
     [EmailAddress]

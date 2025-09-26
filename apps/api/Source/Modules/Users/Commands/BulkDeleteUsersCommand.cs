@@ -9,7 +9,7 @@ public sealed class BulkDeleteUsersCommand : IResultCommand<BulkOperationResult>
 {
     [Required]
     [MinLength(1)]
-    public IList<Guid> UserIds { get; set; } = new List<Guid>();
+    public IList<Guid> UserIds { get; set; } = [];
 
     public bool SoftDelete { get; set; } = true;
 

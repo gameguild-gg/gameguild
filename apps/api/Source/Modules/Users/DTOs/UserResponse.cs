@@ -6,7 +6,9 @@ public class UserResponse
 
     public int Version { get; set; }
 
-    public string Name { get; set; } = string.Empty;
+    public string? GivenName { get; set; }
+
+    public string? FamilyName { get; set; }
 
     public string Username { get; set; } = string.Empty;
 
