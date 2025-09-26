@@ -55,11 +55,6 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
         return await query.Where(u => u.Name.Contains(searchTerm) || (u.EmailAddress != null && u.EmailAddress.Value.Contains(searchTerm)) || u.Username.Contains(searchTerm)).ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<User>> GetUsersWithLowBalanceAsync(decimal threshold, CancellationToken cancellationToken = default)
-    {
-        return await _context.Users.Where(u => u.DeletedAt == null && u.Balance.Amount < threshold).ToListAsync(cancellationToken);
-    }
-
     public async Task<UserStatistics> GetUserStatisticsAsync(CancellationToken cancellationToken = default)
     {
         var totalUsers = await _context.Users.CountAsync(u => u.DeletedAt == null, cancellationToken);
@@ -259,7 +254,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     {
         var users = await _context.Users.Where(u => userIds.Contains(u.Id) && u.DeletedAt == null).ToListAsync(cancellationToken);
 
-        foreach (var user in users) { user.SoftDelete(); }
+        foreach (var user in users) user.SoftDelete();
 
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -270,7 +265,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
     {
         var users = await _context.Users.IgnoreQueryFilters().Where(u => userIds.Contains(u.Id) && u.DeletedAt != null).ToListAsync(cancellationToken);
 
-        foreach (var user in users) { user.Restore(); }
+        foreach (var user in users) user.Restore();
 
         await _context.SaveChangesAsync(cancellationToken);
 
