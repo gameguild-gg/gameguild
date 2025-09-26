@@ -20,10 +20,7 @@ public static class DatabaseExtensions
         // Always seed data (seeder will check if data already exists)
         await context.SeedAsync(serviceProvider, cancellationToken);
 
-        if (created)
-        {
-            await context.SaveChangesAsync(cancellationToken);
-        }
+        if (created) { await context.SaveChangesAsync(cancellationToken); }
     }
 
     /// <summary>

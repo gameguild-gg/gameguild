@@ -1,4 +1,6 @@
 using GameGuild.Modules.Resources;
+using GameGuild.Modules.Localization;
+using GameGuild.Modules.Resources;
 
 namespace GameGuild.Modules.Tenants;
 
@@ -13,9 +15,12 @@ public class TenantSettings : Resource
     /// <summary> Navigation property to the tenant </summary>
     public new virtual Tenant? Tenant { get; set; }
 
-    /// <summary> Default language/culture for the tenant (e.g., "en-US", "pt-BR") </summary>
-    [MaxLength(10)]
-    public string DefaultLanguage { get; set; } = "en-US";
+    /// <summary> Default language identifier for the tenant </summary>
+    [Required]
+    public Guid DefaultLanguageId { get; set; }
+
+    /// <summary> Navigation reference to the default language </summary>
+    public virtual Language? DefaultLanguage { get; set; }
 
     /// <summary> Default timezone for the tenant (e.g., "UTC", "America/New_York") </summary>
     [MaxLength(50)]
@@ -32,13 +37,13 @@ public class TenantSettings : Resource
     /// </summary>
     /// <param name="tenantId">The tenant ID</param>
     /// <returns>TenantSettings with default values</returns>
-    public static TenantSettings CreateDefault(Guid tenantId)
+    public static TenantSettings CreateDefault(Guid tenantId, Guid defaultLanguageId)
     {
         return new TenantSettings
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            DefaultLanguage = "en-US",
+            DefaultLanguageId = defaultLanguageId,
             DefaultTimezone = "UTC",
             AllowUserRegistration = true,
             RequireRegistrationApproval = false,

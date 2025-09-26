@@ -1,372 +1,205 @@
-using System.Reflection;
-using GameGuild.Modules.Authentication;
-using GameGuild.Modules.Authentication.Models;
-using GameGuild.Modules.Billing.Models;
-using GameGuild.Modules.Certificates;
-using GameGuild.Modules.Comments;
-using GameGuild.Modules.Contents;
+using GameGuild.CQRS;
 using GameGuild.Modules.Credentials;
-using GameGuild.Modules.Features.Models;
-using GameGuild.Modules.Feedbacks;
-using GameGuild.Modules.Kyc.Models;
 using GameGuild.Modules.Localization;
-using GameGuild.Modules.Payments;
-using GameGuild.Modules.Permissions;
-using GameGuild.Modules.Posts;
-using GameGuild.Modules.Posts.Models;
-using GameGuild.Modules.Programs;
-using GameGuild.Modules.Projects;
-using GameGuild.Modules.Reputations;
 using GameGuild.Modules.Resources;
-using GameGuild.Modules.Resources.Models;
-using GameGuild.Modules.Subscriptions.Models;
-using GameGuild.Modules.Tags.Models;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.TestingLab;
-using GameGuild.Modules.UserAchievements;
-using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
-using GameGuild.Source.Core.Services;
-using GameGuild.Source.Core.Tenants;
-using GameGuild.Source.Core.Users;
-using GameGuild.Source.Modules.Products.Models;
-using GameGuild.Source.Modules.Programs.Models;
-using Tag = GameGuild.Modules.Tags.Models.Tag;
-using UserRoleAssignment = GameGuild.Modules.Permissions.UserRoleAssignment;
-
+using GameGuild.Source.Database.Seeding;
 
 namespace GameGuild.Database;
 
-// NOTE: do not add fluent api configurations here, they should be in the same file of the entity. On the entity, use notations for simple configurations, and fluent API for complex ones.
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options) {
-  // DbSets
-  public DbSet<User> Users { get; set; }
+/// <summary>
+/// Main application database context for GameGuild
+/// Manages all entities and provides unified data access
+/// </summary>
+public class ApplicationDbContext : DbContext
+{
+    /// <summary>
+    /// Constructor for dependency injection
+    /// </summary>
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-  public DbSet<UserProfile> UserProfiles { get; set; }
+    #region DbSets
 
-  public DbSet<Credential> Credentials { get; set; }
+    // Core Entities
+    public DbSet<User> Users => Set<User>();
 
-  public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Credential> Credentials => Set<Credential>();
 
-  // MFA and Session Management DbSets
-  public DbSet<UserMfaConfiguration> UserMfaConfigurations { get; set; }
+    public DbSet<Tenant> Tenants => Set<Tenant>();
 
-  public DbSet<UserSession> UserSessions { get; set; }
+    public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
 
-  public DbSet<MfaAttempt> MfaAttempts { get; set; }
+    public DbSet<TenantDomain> TenantDomains => Set<TenantDomain>();
 
-  public DbSet<TrustedDevice> TrustedDevices { get; set; }
+    // Localization
+    public DbSet<Language> Languages => Set<Language>();
 
-  // Audit Logging DbSet
-  public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<ResourceLocalization> ResourceLocalizations => Set<ResourceLocalization>();
 
-  // Authentication Security DbSets
-  public DbSet<LoginAttempt> LoginAttempts { get; set; }
+    // Feature Flags
+    // public DbSet<FeatureFlag> FeatureFlags => Set<FeatureFlag>();
 
-  public DbSet<Tenant> Tenants { get; set; }
+    // public DbSet<FeatureFlagTarget> FeatureFlagTargets => Set<FeatureFlagTarget>();
 
-  public DbSet<GameGuild.Modules.Tenants.TenantPermission> TenantPermissions { get; set; } = null!;
+    // public DbSet<FeatureFlagUsage> FeatureFlagUsage => Set<FeatureFlagUsage>();
 
-  public DbSet<TenantDomain> TenantDomains { get; set; } = null!;
+    #endregion
 
-  public DbSet<TenantUserGroup> TenantUserGroups { get; set; } = null!;
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
 
-  public DbSet<TenantUserGroupMembership> TenantUserGroupMemberships { get; set; } = null!;
+        // Configure base entities (timestamps, soft delete, etc.)
+        modelBuilder.ConfigureBaseEntities();
+        modelBuilder.ConfigureSoftDelete();
+        modelBuilder.ConfigureTimestamps();
 
-  public DbSet<TenantSettings> TenantSettings { get; set; } = null!;
+        // Apply all entity configurations from current assembly
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
-  // Resource hierarchy DbSet - Required for proper inheritance configuration
-  public DbSet<Resource> Resources { get; set; }
+        // Configure Tenant entity to not have a circular self-reference
+        // Tenant entities should be global and not belong to other tenants
+        modelBuilder.Entity<Tenant>().Ignore(t => t.Tenant);
 
-  // Resource and Localization DbSets
-  public DbSet<Language> Languages { get; set; }
+        // Configure filtered unique index for PostgreSQL to ensure only one default tenant
+        // PostgreSQL supports partial indexes with WHERE clauses
+        modelBuilder.Entity<Tenant>().HasIndex(t => t.IsDefault).IsUnique().HasFilter("is_default = true").HasDatabaseName("ix_tenant_unique_default");
 
-  // Content hierarchy DbSets - Required for TPC inheritance configuration
-  public DbSet<ContentLicense> ContentLicenses { get; set; }
+        // Configure filtered unique index to guarantee a single default language
+        modelBuilder.Entity<Language>().HasIndex(language => language.IsDefault)
+            .IsUnique()
+            .HasFilter("is_default = true")
+            .HasDatabaseName("ix_language_unique_default");
 
-  public DbSet<ResourceMetadata> ResourceMetadata { get; set; }
+        // Configure snake_case naming for ALL database objects AFTER configurations are applied
+        // This ensures that even explicitly set names in configurations get transformed to snake_case
+        var snakeTransformer = CaseTransformerFactory.Snake;
 
-  public DbSet<GameGuild.Modules.Permissions.ContentTypePermission> ContentTypePermissions { get; set; }
+        foreach (var entity in modelBuilder.Model.GetEntityTypes())
+        {
+            // Transform table names to snake_case
+            var tableName = entity.GetTableName();
 
-  public DbSet<ResourceLocalization> ResourceLocalizations { get; set; }
+            if (!string.IsNullOrEmpty(tableName)) { entity.SetTableName(snakeTransformer.Transform(tableName)); }
 
-  // Simplified Permission System DbSets
-  public DbSet<GameGuild.Source.Core.Tenants.RoleTemplate> RoleTemplates { get; set; }
+            // Transform column names to snake_case (including those set by configurations)
+            foreach (var property in entity.GetProperties())
+            {
+                var columnName = property.GetColumnName();
 
-  public DbSet<UserRoleAssignment> UserRoleAssignments { get; set; }
+                if (!string.IsNullOrEmpty(columnName)) { property.SetColumnName(snakeTransformer.Transform(columnName)); }
+            }
 
-  public DbSet<UserPermission> UserPermissions { get; set; }
+            // Transform index names to snake_case
+            foreach (var index in entity.GetIndexes())
+            {
+                var indexName = index.GetDatabaseName();
 
-  // Module Permission System DbSets
-  public DbSet<ModuleRole> ModuleRoles { get; set; }
+                if (!string.IsNullOrEmpty(indexName)) { index.SetDatabaseName(snakeTransformer.Transform(indexName)); }
+            }
 
-  // Resource Permission DbSets
-  public DbSet<ProjectPermission> ProjectPermissions { get; set; }
+            // Transform foreign key names to snake_case
+            foreach (var foreignKey in entity.GetForeignKeys())
+            {
+                var foreignKeyName = foreignKey.GetConstraintName();
 
-  public DbSet<CommentPermission> CommentPermissions { get; set; }
+                if (!string.IsNullOrEmpty(foreignKeyName)) { foreignKey.SetConstraintName(snakeTransformer.Transform(foreignKeyName)); }
+            }
 
-  // Reputation Management DbSets
-  public DbSet<UserReputation> UserReputations { get; set; }
+            // Transform primary key name to snake_case
+            var primaryKey = entity.FindPrimaryKey();
 
-  public DbSet<UserTenantReputation> UserTenantReputations { get; set; }
+            if (primaryKey == null) continue;
 
-  public DbSet<ReputationTier> ReputationTiers { get; set; }
+            var primaryKeyName = primaryKey.GetName();
 
-  public DbSet<ReputationAction> ReputationActions { get; set; }
-
-  public DbSet<UserReputationHistory> UserReputationHistory { get; set; }
-
-  // Product Management DbSets
-  public DbSet<Product> Products { get; set; }
-
-  public DbSet<ProductPricing> ProductPricings { get; set; }
-
-  public DbSet<ProductProgram> ProductPrograms { get; set; }
-
-  public DbSet<ProductSubscriptionPlan> ProductSubscriptionPlans { get; set; }
-
-  public DbSet<UserProduct> UserProducts { get; set; }
-
-  public DbSet<PromoCode> PromoCodes { get; set; }
-
-  public DbSet<PromoCodeUse> PromoCodeUses { get; set; }
-
-  // Posts Management DbSets
-  public DbSet<Post> Posts { get; set; }
-
-  public DbSet<PostComment> PostComments { get; set; }
-
-  public DbSet<PostLike> PostLikes { get; set; }
-
-  public DbSet<PostContentReference> PostContentReferences { get; set; }
-
-  public DbSet<PostStatistics> PostStatistics { get; set; }
-
-  public DbSet<PostFollower> PostFollowers { get; set; }
-
-  public DbSet<PostTag> PostTags { get; set; }
-
-  public DbSet<PostTagAssignment> PostTagAssignments { get; set; }
-
-  public DbSet<PostView> PostViews { get; set; }
-
-  // Project Management DbSets
-  public DbSet<Project> Projects { get; set; }
-
-  public DbSet<ProjectCollaborator> ProjectCollaborators { get; set; }
-
-  public DbSet<ProjectRelease> ProjectReleases { get; set; }
-
-  public DbSet<ProjectTeam> ProjectTeams { get; set; }
-
-  public DbSet<ProjectFollower> ProjectFollowers { get; set; }
-
-  public DbSet<ProjectFeedback> ProjectFeedbacks { get; set; }
-
-  public DbSet<ProjectJamSubmission> ProjectJamSubmissions { get; set; } // Test Module DbSets
-
-  public DbSet<TestingRequest> TestingRequests { get; set; }
-
-  public DbSet<TestingSession> TestingSessions { get; set; }
-
-  public DbSet<SessionProject> SessionProjects { get; set; }
-
-  public DbSet<TestingParticipant> TestingParticipants { get; set; }
-
-  public DbSet<TestingFeedback> TestingFeedback { get; set; }
-
-  public DbSet<TestingFeedbackForm> TestingFeedbackForms { get; set; }
-
-  public DbSet<TestingLocation> TestingLocations { get; set; }
-
-  public DbSet<TestingLabSettings> TestingLabSettings { get; set; }
-
-  public DbSet<SessionRegistration> SessionRegistrations { get; set; }
-
-  public DbSet<SessionWaitlist> SessionWaitlists { get; set; } // Program Management DbSets
-
-  public DbSet<Modules.Programs.Program> Programs { get; set; }
-
-  public DbSet<ProgramContent> ProgramContents { get; set; }
-
-  public DbSet<ProgramUser> ProgramUsers { get; set; }
-
-  public DbSet<ContentInteraction> ContentInteractions { get; set; }
-
-  public DbSet<ActivityGrade> ActivityGrades { get; set; }
-
-  // Program Enrollment and Progress DbSets
-  public DbSet<ProgramEnrollment> ProgramEnrollments { get; set; }
-
-  public DbSet<ContentProgress> ContentProgress { get; set; }
-
-  // Peer Review System DbSets
-  public DbSet<PeerReview> PeerReviews { get; set; }
-
-  // Reporting System DbSets
-  public DbSet<ContentReport> ContentReports { get; set; }
-
-  // Certificate Management DbSets
-  public DbSet<Certificate> Certificates { get; set; }
-
-  public DbSet<UserCertificate> UserCertificates { get; set; }
-
-  public DbSet<CertificateTag> CertificateTags { get; set; }
-
-  public DbSet<CertificateBlockchainAnchor> CertificateBlockchainAnchors { get; set; }
-
-  // Tag Management DbSets
-  public DbSet<Tag> Tags { get; set; }
-
-  public DbSet<TagRelationship> TagRelationships { get; set; }
-
-  public DbSet<TagProficiency> TagProficiencies { get; set; }
-
-  // Subscription Management DbSets
-  public DbSet<UserSubscription> UserSubscriptions { get; set; }
-
-  // Payment Management DbSets
-  public DbSet<Payment> Payments { get; set; }
-
-  public DbSet<PaymentRefund> PaymentRefunds { get; set; }
-
-  public DbSet<DiscountCode> DiscountCodes { get; set; }
-
-  public DbSet<UserFinancialMethod> UserFinancialMethods { get; set; }
-
-  public DbSet<FinancialTransaction> FinancialTransactions { get; set; }
-
-  // Billing Management DbSets
-  public DbSet<BillingWebhookEvent> BillingWebhookEvents { get; set; }
-
-  // Feature Flags Management DbSets
-  public DbSet<FeatureFlag> FeatureFlags { get; set; }
-
-  public DbSet<FeatureFlagTarget> FeatureFlagTargets { get; set; }
-
-  public DbSet<FeatureFlagUsage> FeatureFlagUsage { get; set; }
-
-  // Resource Management DbSets
-  public DbSet<ResourceQuota> ResourceQuotas { get; set; }
-
-  public DbSet<ResourceUsageRecord> ResourceUsageRecords { get; set; }
-
-  // User Achievements Management DbSets
-  public DbSet<Achievement> Achievements { get; set; }
-
-  public DbSet<UserAchievement> UserAchievements { get; set; }
-
-  public DbSet<AchievementLevel> AchievementLevels { get; set; }
-
-  public DbSet<AchievementPrerequisite> AchievementPrerequisites { get; set; }
-
-  public DbSet<AchievementProgress> AchievementProgress { get; set; }
-
-  // Notifications Management DbSets
-  public DbSet<GameGuild.Modules.Notifications.Notification> Notifications { get; set; }
-
-  public DbSet<GameGuild.Modules.Notifications.NotificationPreferences> NotificationPreferences { get; set; }
-
-  // KYC Management DbSets
-  public DbSet<UserKycVerification> UserKycVerifications { get; set; }
-
-  // Feedback Management DbSets
-  public DbSet<ProgramFeedbackSubmission> ProgramFeedbackSubmissions { get; set; }
-
-  public DbSet<ProgramRating> ProgramRatings { get; set; }
-
-  public DbSet<ProgramWishlist> ProgramWishlists { get; set; }
-
-  // Tenant Management Enhancement DbSets
-  public DbSet<TenantRoleApplication> TenantRoleApplications { get; set; }
-
-  public DbSet<UserTenantRole> UserTenantRoles { get; set; }
-
-  // Privacy Management DbSets
-  public DbSet<UserPrivacySettings> UserPrivacySettings { get; set; }
-
-  public DbSet<UserPrivacyAuditLog> UserPrivacyAuditLog { get; set; }
-
-  protected override void OnModelCreating(ModelBuilder modelBuilder) {
-    base.OnModelCreating(modelBuilder);
-
-    // Ignore alternative permission models from PermissionEntities.cs (GameGuild namespace)
-    // These conflict with the real permission entities in GameGuild.Modules.Permissions
-    modelBuilder.Ignore<GameGuild.PermissionBase>();
-
-    // Apply all entity configurations from the assembly
-    modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
-    // NOTE: do not add fluent api configurations here, they should be in the same file of the entity. On the entity, use notations for simple configurations, and fluent API for complex ones.
-
-    // Configure ITenantable entities (this logic needs to stay in OnModelCreating)
-    foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(t => typeof(ITenantable).IsAssignableFrom(t.ClrType))) {
-      modelBuilder.Entity(entityType.ClrType).HasOne(typeof(Tenant).Name).WithMany().HasForeignKey("TenantId").IsRequired(false).OnDelete(DeleteBehavior.SetNull);
+            if (!string.IsNullOrEmpty(primaryKeyName)) { primaryKey.SetName(snakeTransformer.Transform(primaryKeyName)); }
+        }
     }
 
-    // Configure base entity properties for all entities
-    modelBuilder.ConfigureBaseEntities();
+    /// <summary>
+    /// Override SaveChanges to handle timestamps and domain events
+    /// </summary>
+    public override int SaveChanges()
+    {
+        UpdateTimestamps();
 
-    // Configure soft delete global query filters
-    modelBuilder.ConfigureSoftDelete();
-
-    // Configure owned value objects for improved domain modeling
-    modelBuilder.ConfigureValueObjects();
-
-    // Configure inheritance strategies for content hierarchy
-    ConfigureInheritanceStrategies(modelBuilder);
-  }
-
-  /// <summary> Automatically update timestamps when saving changes </summary>
-  public override int SaveChanges() {
-    UpdateTimestamps();
-
-    return base.SaveChanges();
-  }
-
-  /// <summary> Automatically update timestamps when saving changes asynchronously </summary>
-  public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) {
-    UpdateTimestamps();
-
-    return await base.SaveChangesAsync(cancellationToken);
-  }
-
-  /// <summary> Updates CreatedAt and UpdatedAt timestamps for entities that inherit from BaseEntity Also handles Version incrementing for optimistic concurrency control </summary>
-  private void UpdateTimestamps() {
-    var entries = ChangeTracker.Entries().Where(e => e is { Entity: IEntity, State: EntityState.Added or EntityState.Modified });
-
-    foreach (var entry in entries) {
-      var entity = (IEntity)entry.Entity;
-
-      if (entry.State == EntityState.Added) {
-        entity.CreatedAt = DateTime.UtcNow;
-        entity.UpdatedAt = DateTime.UtcNow;
-        entity.Version = 1;
-      }
-      else if (entry.State == EntityState.Modified) {
-        // Don't update CreatedAt on modifications
-        entry.Property(nameof(IEntity.CreatedAt)).IsModified = false;
-        entity.UpdatedAt = DateTime.UtcNow;
-        entity.Version++;
-      }
+        return base.SaveChanges();
     }
-  }
 
-  /// <summary> Include soft-deleted entities in queries </summary>
-  /// <returns> DbContext with soft-deleted entities included </returns>
-  public ApplicationDbContext IncludeDeleted() {
-    ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+    /// <summary>
+    /// Override SaveChangesAsync to handle timestamps and domain events
+    /// </summary>
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        UpdateTimestamps();
 
-    return this;
-  }
+        return await base.SaveChangesAsync(cancellationToken);
+    }
 
-  /// <summary> Configure inheritance strategies for the content and resource hierarchies </summary>
-  private static void ConfigureInheritanceStrategies(ModelBuilder modelBuilder) {
-    // Configure Table-Per-Concrete-Type (TPC) for ResourceBase inheritance
-    // Each concrete entity that inherits from ResourceBase gets its own complete table
-    // with all inherited properties included
-    modelBuilder.Entity<Resource>().UseTpcMappingStrategy();
+    /// <summary>
+    /// Updates timestamps and version numbers for tracked entities
+    /// </summary>
+    private void UpdateTimestamps()
+    {
+        var entries = ChangeTracker.Entries().Where(entry => entry is { Entity: EntityBase, State: EntityState.Added or EntityState.Modified });
 
-    // Additional inheritance configurations can be added here as needed
-  }
+        foreach (var entry in entries)
+        {
+            var entity = (EntityBase)entry.Entity;
+            DateTime now = DateTime.UtcNow;
+
+            switch (entry.State)
+            {
+                case EntityState.Added:
+                    entity.CreatedAt = now;
+                    entity.UpdatedAt = now;
+                    entity.Version = 1;
+
+                    break;
+
+                case EntityState.Modified:
+                    entity.UpdatedAt = now;
+                    entity.Version++;
+
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets entities with pending domain events
+    /// </summary>
+    public IEnumerable<IHasDomainEvents> GetEntitiesWithDomainEvents() { return ChangeTracker.Entries<IHasDomainEvents>().Where(e => e.Entity.DomainEvents.Any()).Select(e => e.Entity); }
+
+    /// <summary>
+    /// Clears domain events from all tracked entities
+    /// </summary>
+    public void ClearDomainEvents()
+    {
+        var entitiesWithEvents = GetEntitiesWithDomainEvents().ToList();
+
+        foreach (var entity in entitiesWithEvents) { entity.ClearDomainEvents(); }
+    }
+
+    /// <summary>
+    /// Seeds the database with initial data and initializes tenant cache
+    /// </summary>
+    /// <param name="serviceProvider">Service provider for dependency injection</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    public async Task SeedAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
+    {
+    ILogger<LanguageSeeder> languageSeederLogger = serviceProvider.GetRequiredService<ILogger<LanguageSeeder>>();
+    var languageSeeder = new LanguageSeeder(languageSeederLogger);
+    await languageSeeder.SeedAsync(this, cancellationToken);
+
+    ILogger<TenantSeeder> logger = serviceProvider.GetRequiredService<ILogger<TenantSeeder>>();
+    var tenantSeeder = new TenantSeeder(logger);
+        await tenantSeeder.SeedAsync(this, cancellationToken);
+
+        // Initialize tenant cache after seeding
+        var tenantCacheService = serviceProvider.GetRequiredService<ITenantCacheService>();
+        await tenantCacheService.InitializeCacheAsync(cancellationToken);
+    }
 }
