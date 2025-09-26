@@ -18,6 +18,7 @@ public class HardDeleteCredentialCommandHandler(ICredentialService credentialSer
         if (!deleted)
         {
             _logger.LogWarning("Credential {CredentialId} hard delete failed", request.Id);
+
             return false;
         }
 

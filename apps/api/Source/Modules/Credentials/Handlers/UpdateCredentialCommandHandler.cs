@@ -55,6 +55,7 @@ public class UpdateCredentialCommandHandler(ICredentialService credentialService
             if (changes.Count == 0)
             {
                 _logger.LogInformation("No changes detected for credential {CredentialId}", request.Id);
+
                 return existingCredential;
             }
 

@@ -18,6 +18,7 @@ public class ActivateCredentialCommandHandler(ICredentialService credentialServi
         if (!activated)
         {
             _logger.LogWarning("Credential {CredentialId} activation failed or credential already active", request.Id);
+
             return false;
         }
 

@@ -13,13 +13,7 @@ public class DeactivateCredentialCommandValidator : AbstractValidator<Deactivate
     {
         _context = context;
 
-        RuleFor(x => x.Id)
-            .NotEmpty()
-            .WithMessage("Credential ID is required")
-            .MustAsync(CredentialExists)
-            .WithMessage("Credential not found")
-            .MustAsync(CredentialIsActive)
-            .WithMessage("Credential is already inactive");
+        RuleFor(x => x.Id).NotEmpty().WithMessage("Credential ID is required").MustAsync(CredentialExists).WithMessage("Credential not found").MustAsync(CredentialIsActive).WithMessage("Credential is already inactive");
     }
 
     private async Task<bool> CredentialExists(Guid credentialId, CancellationToken cancellationToken)

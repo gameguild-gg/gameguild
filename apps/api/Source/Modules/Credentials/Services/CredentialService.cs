@@ -43,15 +43,9 @@ public class CredentialService(ICredentialRepository credentialRepository) : ICr
     {
         Credential? credential = await _credentialRepository.GetByIdAsync(id);
 
-        if (credential == null)
-        {
-            return false;
-        }
+        if (credential == null) { return false; }
 
-        if (credential.DeletedAt != null)
-        {
-            return false;
-        }
+        if (credential.DeletedAt != null) { return false; }
 
         await _credentialRepository.SoftDeleteAsync(id);
 
@@ -65,15 +59,9 @@ public class CredentialService(ICredentialRepository credentialRepository) : ICr
     {
         Credential? credential = await _credentialRepository.GetByIdIncludingDeletedAsync(id);
 
-        if (credential == null)
-        {
-            return false;
-        }
+        if (credential == null) { return false; }
 
-        if (credential.DeletedAt == null)
-        {
-            return false;
-        }
+        if (credential.DeletedAt == null) { return false; }
 
         await _credentialRepository.RestoreAsync(id);
 
@@ -87,10 +75,7 @@ public class CredentialService(ICredentialRepository credentialRepository) : ICr
     {
         Credential? credential = await _credentialRepository.GetByIdIncludingDeletedAsync(id);
 
-        if (credential == null)
-        {
-            return false;
-        }
+        if (credential == null) { return false; }
 
         await _credentialRepository.RemoveAsync(id);
 
@@ -109,20 +94,11 @@ public class CredentialService(ICredentialRepository credentialRepository) : ICr
     {
         Credential? credential = await _credentialRepository.GetByIdAsync(id);
 
-        if (credential == null)
-        {
-            return false;
-        }
+        if (credential == null) { return false; }
 
-        if (credential.DeletedAt != null)
-        {
-            return false;
-        }
+        if (credential.DeletedAt != null) { return false; }
 
-        if (credential.IsActive)
-        {
-            return await _credentialRepository.DeactivateAsync(id);
-        }
+        if (credential.IsActive) { return await _credentialRepository.DeactivateAsync(id); }
 
         return false;
     }
@@ -134,20 +110,11 @@ public class CredentialService(ICredentialRepository credentialRepository) : ICr
     {
         Credential? credential = await _credentialRepository.GetByIdAsync(id);
 
-        if (credential == null)
-        {
-            return false;
-        }
+        if (credential == null) { return false; }
 
-        if (credential.DeletedAt != null)
-        {
-            return false;
-        }
+        if (credential.DeletedAt != null) { return false; }
 
-        if (!credential.IsActive)
-        {
-            return await _credentialRepository.ActivateAsync(id);
-        }
+        if (!credential.IsActive) { return await _credentialRepository.ActivateAsync(id); }
 
         return false;
     }

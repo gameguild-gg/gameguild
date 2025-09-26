@@ -13,13 +13,7 @@ public class RestoreCredentialCommandValidator : AbstractValidator<RestoreCreden
     {
         _context = context;
 
-        RuleFor(x => x.Id)
-            .NotEmpty()
-            .WithMessage("Credential ID is required")
-            .MustAsync(CredentialExists)
-            .WithMessage("Credential not found")
-            .MustAsync(IsSoftDeleted)
-            .WithMessage("Credential is not soft-deleted");
+        RuleFor(x => x.Id).NotEmpty().WithMessage("Credential ID is required").MustAsync(CredentialExists).WithMessage("Credential not found").MustAsync(IsSoftDeleted).WithMessage("Credential is not soft-deleted");
     }
 
     private async Task<bool> CredentialExists(Guid credentialId, CancellationToken cancellationToken)

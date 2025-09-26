@@ -13,11 +13,7 @@ public class HardDeleteCredentialCommandValidator : AbstractValidator<HardDelete
     {
         _context = context;
 
-        RuleFor(x => x.Id)
-            .NotEmpty()
-            .WithMessage("Credential ID is required")
-            .MustAsync(CredentialExists)
-            .WithMessage("Credential not found");
+        RuleFor(x => x.Id).NotEmpty().WithMessage("Credential ID is required").MustAsync(CredentialExists).WithMessage("Credential not found");
     }
 
     private async Task<bool> CredentialExists(Guid credentialId, CancellationToken cancellationToken)

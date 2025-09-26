@@ -14,17 +14,18 @@ public class TenantSettingsConfiguration : IEntityTypeConfiguration<TenantSettin
         builder.HasKey(ts => ts.Id);
 
         // Properties
-        builder.Property(ts => ts.DefaultLanguage).IsRequired().HasMaxLength(10).HasDefaultValue("en-US");
+        _ = builder.Property(ts => ts.DefaultLanguageId).IsRequired();
 
-        builder.Property(ts => ts.DefaultTimezone).IsRequired().HasMaxLength(50).HasDefaultValue("UTC");
+        _ = builder.Property(ts => ts.DefaultTimezone).IsRequired().HasMaxLength(50).HasDefaultValue("UTC");
 
         // Foreign key
-        builder.Property(ts => ts.TenantId).IsRequired(false);
+        _ = builder.Property(ts => ts.TenantId).IsRequired(false);
 
         // Indexes
-        builder.HasIndex(ts => ts.TenantId).IsUnique().HasDatabaseName("ix_tenant_settings_tenant_id");
+        _ = builder.HasIndex(ts => ts.TenantId).IsUnique().HasDatabaseName("ix_tenant_settings_tenant_id");
 
         // Relationships
-        builder.HasOne(ts => ts.Tenant).WithMany().HasForeignKey(ts => ts.TenantId).OnDelete(DeleteBehavior.Cascade);
+        _ = builder.HasOne(ts => ts.Tenant).WithMany().HasForeignKey(ts => ts.TenantId).OnDelete(DeleteBehavior.Cascade);
+        _ = builder.HasOne(ts => ts.DefaultLanguage).WithMany().HasForeignKey(ts => ts.DefaultLanguageId).OnDelete(DeleteBehavior.Restrict);
     }
 }
