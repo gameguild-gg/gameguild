@@ -3,6 +3,7 @@
 import { useCallback, useState, useEffect } from "react"
 import { $getSelection, $isRangeSelection, FORMAT_TEXT_COMMAND, SELECTION_CHANGE_COMMAND } from "lexical"
 import { $isTextNode } from "lexical"
+import { $patchStyleText } from "@lexical/selection"
 import { Underline, Minus, Strikethrough, Check } from "lucide-react"
 import {
   DropdownMenuSub,
@@ -54,14 +55,14 @@ export function FormattingMenuComponent({
     injectDecorationStyles()
   }, [])
 
-  // Função para aplicar underline usando CSS inline (para compatibilidade com overline)
+  // Função para aplicar underline usando CSS inline apenas no texto selecionado
   const handleUnderlineToggle = useCallback(() => {
     editor.update(() => {
       const selection = $getSelection()
       if ($isRangeSelection(selection)) {
+        // Verificar se já tem underline na seleção
         const nodes = selection.getNodes()
-        
-        // Verificar se já tem underline via CSS (usando border-bottom)
+        const hasUnderlineFormat = selection.hasFormat("underline")
         const hasUnderlineCss = nodes.some(node => {
           if ($isTextNode(node)) {
             const style = node.getStyle()
@@ -72,109 +73,48 @@ export function FormattingMenuComponent({
           return false
         })
         
-        // Verificar se já tem underline via formato nativo
-        const hasUnderlineFormat = selection.hasFormat("underline")
-        
-        const hasUnderline = hasUnderlineCss || hasUnderlineFormat
+        const hasUnderline = hasUnderlineFormat || hasUnderlineCss
 
-        // Aplicar ou remover underline
-        nodes.forEach(node => {
-          if ($isTextNode(node)) {
-            const currentStyle = node.getStyle()
-            let newStyle = currentStyle
-            
-            if (hasUnderline) {
-              // Remover underline do CSS mas preservar outras decorações
-              const hasOverline = currentStyle.includes('overline')
-              const hasStrikethrough = currentStyle.includes('line-through')
-              
-              if (hasOverline && hasStrikethrough) {
-                // Manter overline e strikethrough
-                newStyle = currentStyle
-                  .replace(/text-decoration-line:\s*[^;]*underline[^;]*(;|$)/g, 'text-decoration-line: overline line-through;')
-                  .replace(/text-decoration:\s*underline[^;]*(;|$)/g, '')
-                  .replace(/;;/g, ';')
-                  .replace(/^;|;$/g, '')
-              } else if (hasOverline) {
-                // Manter apenas overline
-                newStyle = currentStyle
-                  .replace(/text-decoration-line:\s*[^;]*underline[^;]*(;|$)/g, 'text-decoration-line: overline;')
-                  .replace(/text-decoration:\s*underline[^;]*(;|$)/g, '')
-                  .replace(/;;/g, ';')
-                  .replace(/^;|;$/g, '')
-              } else if (hasStrikethrough) {
-                // Manter apenas strikethrough
-                newStyle = currentStyle
-                  .replace(/text-decoration-line:\s*[^;]*underline[^;]*(;|$)/g, 'text-decoration-line: line-through;')
-                  .replace(/text-decoration:\s*underline[^;]*(;|$)/g, '')
-                  .replace(/;;/g, ';')
-                  .replace(/^;|;$/g, '')
-              } else {
-                // Remover apenas underline (incluindo border-bottom)
-                newStyle = currentStyle
-                  .replace(/border-bottom:\s*[^;]*(;|$)/g, '')
-                  .replace(/text-decoration-line:\s*underline[^;]*(;|$)/g, '')
-                  .replace(/text-decoration:\s*underline[^;]*(;|$)/g, '')
-                  .replace(/;;/g, ';')
-                  .replace(/^;|;$/g, '')
-              }
-                
-              // Também remover formato nativo se existir
-              if (hasUnderlineFormat) {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")
-              }
-            } else {
-              // Adicionar underline via CSS para compatibilidade com outras decorações
-              const hasOverline = currentStyle.includes('overline')
-              const hasStrikethrough = currentStyle.includes('line-through')
-              
-              if (hasOverline && hasStrikethrough) {
-                // Combinar com overline e strikethrough existentes
-                newStyle = currentStyle.replace(
-                  /text-decoration-line:\s*[^;]*(?:overline|line-through)[^;]*(;|$)/g, 
-                  'text-decoration-line: underline overline line-through$1'
-                )
-              } else if (hasOverline) {
-                // Combinar com overline existente
-                newStyle = currentStyle.replace(
-                  /text-decoration-line:\s*overline([^;]*)(;|$)/g, 
-                  'text-decoration-line: underline overline$1$2'
-                )
-              } else if (hasStrikethrough) {
-                // Combinar com strikethrough existente
-                newStyle = currentStyle.replace(
-                  /text-decoration-line:\s*line-through([^;]*)(;|$)/g, 
-                  'text-decoration-line: underline line-through$1$2'
-                )
-              } else {
-                // Adicionar underline usando border-bottom para linha contínua
-                const borderStyle = 'border-bottom: 1px solid currentColor'
-                
-                if (currentStyle.trim()) {
-                  newStyle = currentStyle + '; ' + borderStyle
-                } else {
-                  newStyle = borderStyle
-                }
-              }
-            }
-            
-            node.setStyle(newStyle)
+        if (hasUnderline) {
+          // Remover underline da seleção
+          // Primeiro remover formato nativo se existir
+          if (hasUnderlineFormat) {
+            editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")
           }
-        })
+          
+          // Remover estilos CSS de underline apenas da seleção
+          $patchStyleText(selection, {
+            'border-bottom': null,
+            'text-decoration': (currentValue: string | null) => {
+              if (!currentValue) return ''
+              const newValue = currentValue.replace(/underline/g, '').trim()
+              return newValue || ''
+            },
+            'text-decoration-line': (currentValue: string | null) => {
+              if (!currentValue) return ''
+              const newValue = currentValue.replace(/underline/g, '').replace(/\s+/g, ' ').trim()
+              return newValue || ''
+            }
+          })
+        } else {
+          // Adicionar underline apenas à seleção usando border-bottom
+          $patchStyleText(selection, {
+            'border-bottom': '1px solid currentColor'
+          })
+        }
         
         setIsUnderline(!hasUnderline)
       }
     })
   }, [editor])
 
-  // Função para aplicar overline usando CSS inline
+  // Função para aplicar overline usando CSS inline apenas no texto selecionado
   const handleOverlineToggle = useCallback(() => {
     editor.update(() => {
       const selection = $getSelection()
       if ($isRangeSelection(selection)) {
+        // Verificar se já tem overline na seleção
         const nodes = selection.getNodes()
-        
-        // Verificar se já tem overline
         const hasOverline = nodes.some(node => {
           if ($isTextNode(node)) {
             const style = node.getStyle()
@@ -185,96 +125,44 @@ export function FormattingMenuComponent({
           return false
         })
 
-        // Aplicar ou remover overline
-        nodes.forEach(node => {
-          if ($isTextNode(node)) {
-            const currentStyle = node.getStyle()
-            let newStyle = currentStyle
-            
-            if (hasOverline) {
-              // Remover overline mas preservar outras decorações
-              const hasUnderline = currentStyle.includes('underline')
-              const hasStrikethrough = currentStyle.includes('line-through')
-              
-              if (hasUnderline && hasStrikethrough) {
-                // Manter underline e strikethrough
-                newStyle = currentStyle
-                  .replace(/text-decoration-line:\s*[^;]*overline[^;]*(;|$)/g, 'text-decoration-line: underline line-through;')
-                  .replace(/text-decoration:\s*overline[^;]*(;|$)/g, '')
-                  .replace(/;;/g, ';')
-                  .replace(/^;|;$/g, '')
-              } else if (hasUnderline) {
-                // Manter apenas underline
-                newStyle = currentStyle
-                  .replace(/text-decoration-line:\s*[^;]*overline[^;]*(;|$)/g, 'text-decoration-line: underline;')
-                  .replace(/text-decoration:\s*overline[^;]*(;|$)/g, '')
-                  .replace(/;;/g, ';')
-                  .replace(/^;|;$/g, '')
-              } else if (hasStrikethrough) {
-                // Manter apenas strikethrough
-                newStyle = currentStyle
-                  .replace(/text-decoration-line:\s*[^;]*overline[^;]*(;|$)/g, 'text-decoration-line: line-through;')
-                  .replace(/text-decoration:\s*overline[^;]*(;|$)/g, '')
-                  .replace(/;;/g, ';')
-                  .replace(/^;|;$/g, '')
-              } else {
-                // Remover apenas overline
-                newStyle = currentStyle
-                  .replace(/text-decoration-line:\s*overline[^;]*(;|$)/g, '')
-                  .replace(/text-decoration:\s*overline[^;]*(;|$)/g, '')
-                  .replace(/;;/g, ';')
-                  .replace(/^;|;$/g, '')
-              }
-            } else {
-              // Adicionar overline
-              const hasUnderline = currentStyle.includes('underline')
-              const hasStrikethrough = currentStyle.includes('line-through')
-              
-              if (hasUnderline && hasStrikethrough) {
-                // Combinar com underline e strikethrough existentes
-                newStyle = currentStyle.replace(
-                  /text-decoration-line:\s*[^;]*(?:underline|line-through)[^;]*(;|$)/g, 
-                  'text-decoration-line: underline overline line-through$1'
-                )
-              } else if (hasUnderline) {
-                // Combinar com underline existente
-                newStyle = currentStyle.replace(
-                  /text-decoration-line:\s*underline([^;]*)(;|$)/g, 
-                  'text-decoration-line: underline overline$1$2'
-                )
-              } else if (hasStrikethrough) {
-                // Combinar com strikethrough existente
-                newStyle = currentStyle.replace(
-                  /text-decoration-line:\s*line-through([^;]*)(;|$)/g, 
-                  'text-decoration-line: overline line-through$1$2'
-                )
-              } else {
-                // Adicionar apenas overline
-                if (currentStyle.trim()) {
-                  newStyle = currentStyle + '; text-decoration-line: overline'
-                } else {
-                  newStyle = 'text-decoration-line: overline'
-                }
-              }
+        if (hasOverline) {
+          // Remover overline apenas da seleção
+          $patchStyleText(selection, {
+            'text-decoration': (currentValue: string | null) => {
+              if (!currentValue) return ''
+              const newValue = currentValue.replace(/overline/g, '').trim()
+              return newValue || ''
+            },
+            'text-decoration-line': (currentValue: string | null) => {
+              if (!currentValue) return ''
+              const newValue = currentValue.replace(/overline/g, '').replace(/\s+/g, ' ').trim()
+              return newValue || ''
             }
-            
-            node.setStyle(newStyle)
-          }
-        })
+          })
+        } else {
+          // Adicionar overline apenas à seleção
+          $patchStyleText(selection, {
+            'text-decoration-line': (currentValue: string | null) => {
+              if (!currentValue) return 'overline'
+              if (currentValue.includes('overline')) return currentValue
+              return currentValue + ' overline'
+            }
+          })
+        }
         
         setIsOverline(!hasOverline)
       }
     })
   }, [editor])
 
-  // Função para aplicar strikethrough usando CSS inline
+  // Função para aplicar strikethrough usando CSS inline apenas no texto selecionado
   const handleStrikethroughToggle = useCallback(() => {
     editor.update(() => {
       const selection = $getSelection()
       if ($isRangeSelection(selection)) {
+        // Verificar se já tem strikethrough na seleção
         const nodes = selection.getNodes()
-        
-        // Verificar se já tem strikethrough via CSS
+        const hasStrikethroughFormat = selection.hasFormat("strikethrough")
         const hasStrikethroughCss = nodes.some(node => {
           if ($isTextNode(node)) {
             const style = node.getStyle()
@@ -285,92 +173,38 @@ export function FormattingMenuComponent({
           return false
         })
         
-        // Verificar se já tem strikethrough via formato nativo
-        const hasStrikethroughFormat = selection.hasFormat("strikethrough")
-        
         const hasStrikethrough = hasStrikethroughCss || hasStrikethroughFormat
 
-        // Aplicar ou remover strikethrough
-        nodes.forEach(node => {
-          if ($isTextNode(node)) {
-            const currentStyle = node.getStyle()
-            let newStyle = currentStyle
-            
-            if (hasStrikethrough) {
-              // Remover strikethrough do CSS mas preservar outras decorações
-              const hasUnderline = currentStyle.includes('underline')
-              const hasOverline = currentStyle.includes('overline')
-              
-              if (hasUnderline && hasOverline) {
-                // Manter underline e overline
-                newStyle = currentStyle
-                  .replace(/text-decoration-line:\s*[^;]*line-through[^;]*(;|$)/g, 'text-decoration-line: underline overline;')
-                  .replace(/text-decoration:\s*line-through[^;]*(;|$)/g, '')
-                  .replace(/;;/g, ';')
-                  .replace(/^;|;$/g, '')
-              } else if (hasUnderline) {
-                // Manter apenas underline
-                newStyle = currentStyle
-                  .replace(/text-decoration-line:\s*[^;]*line-through[^;]*(;|$)/g, 'text-decoration-line: underline;')
-                  .replace(/text-decoration:\s*line-through[^;]*(;|$)/g, '')
-                  .replace(/;;/g, ';')
-                  .replace(/^;|;$/g, '')
-              } else if (hasOverline) {
-                // Manter apenas overline
-                newStyle = currentStyle
-                  .replace(/text-decoration-line:\s*[^;]*line-through[^;]*(;|$)/g, 'text-decoration-line: overline;')
-                  .replace(/text-decoration:\s*line-through[^;]*(;|$)/g, '')
-                  .replace(/;;/g, ';')
-                  .replace(/^;|;$/g, '')
-              } else {
-                // Remover apenas strikethrough
-                newStyle = currentStyle
-                  .replace(/text-decoration-line:\s*line-through[^;]*(;|$)/g, '')
-                  .replace(/text-decoration:\s*line-through[^;]*(;|$)/g, '')
-                  .replace(/;;/g, ';')
-                  .replace(/^;|;$/g, '')
-              }
-                
-              // Também remover formato nativo se existir
-              if (hasStrikethroughFormat) {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")
-              }
-            } else {
-              // Adicionar strikethrough via CSS para compatibilidade com outras decorações
-              const hasUnderline = currentStyle.includes('underline')
-              const hasOverline = currentStyle.includes('overline')
-              
-              if (hasUnderline && hasOverline) {
-                // Combinar com underline e overline existentes
-                newStyle = currentStyle.replace(
-                  /text-decoration-line:\s*(underline\s+overline|overline\s+underline)([^;]*)(;|$)/g, 
-                  'text-decoration-line: underline overline line-through$2$3'
-                )
-              } else if (hasUnderline) {
-                // Combinar com underline existente
-                newStyle = currentStyle.replace(
-                  /text-decoration-line:\s*underline([^;]*)(;|$)/g, 
-                  'text-decoration-line: underline line-through$1$2'
-                )
-              } else if (hasOverline) {
-                // Combinar com overline existente
-                newStyle = currentStyle.replace(
-                  /text-decoration-line:\s*overline([^;]*)(;|$)/g, 
-                  'text-decoration-line: overline line-through$1$2'
-                )
-              } else {
-                // Adicionar apenas strikethrough
-                if (currentStyle.trim()) {
-                  newStyle = currentStyle + '; text-decoration-line: line-through'
-                } else {
-                  newStyle = 'text-decoration-line: line-through'
-                }
-              }
-            }
-            
-            node.setStyle(newStyle)
+        if (hasStrikethrough) {
+          // Remover strikethrough da seleção
+          // Primeiro remover formato nativo se existir
+          if (hasStrikethroughFormat) {
+            editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")
           }
-        })
+          
+          // Remover estilos CSS de strikethrough apenas da seleção
+          $patchStyleText(selection, {
+            'text-decoration': (currentValue: string | null) => {
+              if (!currentValue) return ''
+              const newValue = currentValue.replace(/line-through/g, '').trim()
+              return newValue || ''
+            },
+            'text-decoration-line': (currentValue: string | null) => {
+              if (!currentValue) return ''
+              const newValue = currentValue.replace(/line-through/g, '').replace(/\s+/g, ' ').trim()
+              return newValue || ''
+            }
+          })
+        } else {
+          // Adicionar strikethrough apenas à seleção
+          $patchStyleText(selection, {
+            'text-decoration-line': (currentValue: string | null) => {
+              if (!currentValue) return 'line-through'
+              if (currentValue.includes('line-through')) return currentValue
+              return currentValue + ' line-through'
+            }
+          })
+        }
         
         setIsStrikethrough(!hasStrikethrough)
       }
