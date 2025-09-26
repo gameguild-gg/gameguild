@@ -1,11 +1,11 @@
 ﻿using GameGuild.CQRS;
 
-
 namespace GameGuild.Modules.Tenants;
 
 /// <summary> Query to get a tenant by name </summary>
-public class GetTenantByNameQuery(string name, bool includeDeleted = false) : IQuery<Result<Tenant?>> {
-  public string Name { get; init; } = name;
+public class GetTenantByNameQuery(string name, bool includeDeleted = false) : IQuery<Result<Tenant?>>
+{
+    public string Name { get; init; } = name;
 
-  public bool IncludeDeleted { get; init; } = includeDeleted;
+    public bool IncludeDeleted { get; init; } = includeDeleted;
 }
