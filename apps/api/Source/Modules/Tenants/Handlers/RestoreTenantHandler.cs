@@ -1,33 +1,36 @@
 using GameGuild.CQRS;
 using GameGuild.Database;
 
-
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Handler for restoring a soft-deleted tenant
 /// </summary>
-public class RestoreTenantHandler(ApplicationDbContext context, ILogger<RestoreTenantHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<RestoreTenantCommand, Result<bool>> {
-  public async Task<Result<bool>> Handle(RestoreTenantCommand request, CancellationToken cancellationToken) {
-    try {
-      var tenant = await context.Resources.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt != null, cancellationToken);
+public class RestoreTenantHandler(ApplicationDbContext context, ILogger<RestoreTenantHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<RestoreTenantCommand, Result<bool>>
+{
+    public async Task<Result<bool>> Handle(RestoreTenantCommand request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var tenant = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt != null, cancellationToken);
 
-      if (tenant == null) return Result.Failure<bool>(Error.NotFound("Tenant.NotFound", $"Deleted tenant with ID {request.Id} not found"));
+            if (tenant == null) return Result.Failure<bool>(Error.NotFound("Tenant.NotFound", $"Deleted tenant with ID {request.Id} not found"));
 
-      tenant.Restore();
-      await context.SaveChangesAsync(cancellationToken);
+            tenant.Restore();
+            await context.SaveChangesAsync(cancellationToken);
 
-      logger.LogInformation("Tenant {TenantId} restored successfully", tenant.Id);
+            logger.LogInformation("Tenant {TenantId} restored successfully", tenant.Id);
 
-      // Publish domain event
-      await eventPublisher.PublishAsync(new TenantRestoredEvent(tenant.Id, tenant.Name), cancellationToken);
+            // Publish domain event
+            await eventPublisher.PublishAsync(new TenantRestoredEvent(tenant.Id, tenant.Name), cancellationToken);
 
-      return Result.Success(true);
+            return Result.Success(true);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error restoring tenant {TenantId}", request.Id);
+
+            return Result.Failure<bool>(Error.Failure("Tenant.RestoreFailed", "Failed to restore tenant"));
+        }
     }
-    catch (Exception ex) {
-      logger.LogError(ex, "Error restoring tenant {TenantId}", request.Id);
-
-      return Result.Failure<bool>(Error.Failure("Tenant.RestoreFailed", "Failed to restore tenant"));
-    }
-  }
 }
