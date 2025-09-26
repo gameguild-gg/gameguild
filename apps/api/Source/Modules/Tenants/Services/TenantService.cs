@@ -1,303 +1,385 @@
-using GameGuild.Database;
-using GameGuild.Modules.Permissions;
-using Microsoft.EntityFrameworkCore;
-using TenantPermissionEntity = GameGuild.Modules.Tenants.TenantPermission;
-
+using GameGuild.Core.Exceptions;
 
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// Service implementation for managing tenants
+/// Service for tenant management operations
+/// Implements hexagonal architecture as an adapter (implementation)
+/// Follows SOLID principles and DRY patterns
 /// </summary>
-public class TenantService(ApplicationDbContext context) : ITenantService {
-  /// <summary>
-  /// Get all tenants
-  /// </summary>
-  /// <returns>List of tenants</returns>
-  public async Task<IEnumerable<Tenant>> GetAllTenantsAsync() { return await context.Tenants.Include(t => t.TenantPermissions).ToListAsync(); }
+public class TenantService(ITenantRepository repository, ITenantCacheService cacheService, ILogger<TenantService> logger) : ITenantService
+{
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Tenant>> GetActiveTenantsAsync(CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("Getting all active tenants");
 
-  /// <summary>
-  /// Get a specific tenant by ID
-  /// </summary>
-  /// <param name="id">Tenant ID</param>
-  /// <returns>Tenant or null if not found</returns>
-  public async Task<Tenant?> GetTenantByIdAsync(Guid id) { return await context.Tenants.Include(t => t.TenantPermissions).ThenInclude(tp => tp.User).FirstOrDefaultAsync(t => t.Id == id); }
+        var tenants = await repository.GetActiveTenantsAsync(cancellationToken);
 
-  /// <summary>
-  /// Get a tenant by name
-  /// </summary>
-  /// <param name="name">Tenant name</param>
-  /// <returns>Tenant or null if not found</returns>
-  public async Task<Tenant?> GetTenantByNameAsync(string name) { return await context.Tenants.Include(t => t.TenantPermissions).FirstOrDefaultAsync(t => t.Name == name); }
+        logger.LogDebug("Retrieved {Count} active tenants", tenants.Count);
 
-  /// <summary>
-  /// Create a new tenant
-  /// </summary>
-  /// <param name="tenant">Tenant to create</param>
-  /// <returns>Created tenant</returns>
-  public async Task<Tenant> CreateTenantAsync(Tenant tenant) {
-    context.Tenants.Add(tenant);
-    await context.SaveChangesAsync();
-
-    return tenant;
-  }
-
-  /// <summary>
-  /// Update an existing tenant
-  /// </summary>
-  /// <param name="tenant">Tenant to update</param>
-  /// <returns>Updated tenant</returns>
-  public async Task<Tenant> UpdateTenantAsync(Tenant tenant) {
-    var existingTenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenant.Id);
-
-    if (existingTenant == null) throw new InvalidOperationException($"Tenant with ID {tenant.Id} not found");
-
-    // Update properties
-    existingTenant.Name = tenant.Name;
-    existingTenant.Description = tenant.Description;
-    existingTenant.IsActive = tenant.IsActive;
-    existingTenant.Touch(); // Update timestamp
-
-    await context.SaveChangesAsync();
-
-    return existingTenant;
-  }
-
-  /// <summary>
-  /// Soft delete a tenant
-  /// </summary>
-  /// <param name="id">Tenant ID to delete</param>
-  /// <returns>True if deleted successfully</returns>
-  public async Task<bool> SoftDeleteTenantAsync(Guid id) {
-    var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
-
-    if (tenant == null) return false;
-
-    tenant.SoftDelete();
-    await context.SaveChangesAsync();
-
-    return true;
-  }
-
-  /// <summary>
-  /// Restore a soft-deleted tenant
-  /// </summary>
-  /// <param name="id">Tenant ID to restore</param>
-  /// <returns>True if restored successfully</returns>
-  public async Task<bool> RestoreTenantAsync(Guid id) {
-    var tenant = await context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id && t.DeletedAt != null);
-
-    if (tenant == null) return false;
-
-    tenant.Restore();
-    await context.SaveChangesAsync();
-
-    return true;
-  }
-
-  /// <summary>
-  /// Permanently delete a tenant
-  /// </summary>
-  /// <param name="id">Tenant ID to delete</param>
-  /// <returns>True if deleted successfully</returns>
-  public async Task<bool> HardDeleteTenantAsync(Guid id) {
-    var tenant = await context.Tenants.IgnoreQueryFilters().FirstOrDefaultAsync(t => t.Id == id);
-
-    if (tenant == null) return false;
-
-    context.Tenants.Remove(tenant);
-    await context.SaveChangesAsync();
-
-    return true;
-  }
-
-  /// <summary>
-  /// Activate a tenant
-  /// </summary>
-  /// <param name="id">Tenant ID</param>
-  /// <returns>True if activated successfully</returns>
-  public async Task<bool> ActivateTenantAsync(Guid id) {
-    var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
-
-    if (tenant == null) return false;
-
-    tenant.Activate();
-    await context.SaveChangesAsync();
-
-    return true;
-  }
-
-  /// <summary>
-  /// Deactivate a tenant
-  /// </summary>
-  /// <param name="id">Tenant ID</param>
-  /// <returns>True if deactivated successfully</returns>
-  public async Task<bool> DeactivateTenantAsync(Guid id) {
-    var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == id);
-
-    if (tenant == null) return false;
-
-    tenant.Deactivate();
-    await context.SaveChangesAsync();
-
-    return true;
-  }
-
-  /// <summary>
-  /// Get soft-deleted tenants
-  /// </summary>
-  /// <returns>List of soft-deleted tenants</returns>
-  public async Task<IEnumerable<Tenant>> GetDeletedTenantsAsync() { return await context.Tenants.IgnoreQueryFilters().Where(t => t.DeletedAt != null).Include(t => t.TenantPermissions).ToListAsync(); }
-
-  /// <summary>
-  /// Add a user to a tenant
-  /// </summary>
-  /// <param name="userId">User ID</param>
-  /// <param name="tenantId">Tenant ID</param>
-  /// <returns>Created TenantPermission relationship</returns>
-  public async Task<TenantPermissionEntity> AddUserToTenantAsync(Guid userId, Guid tenantId) {
-    // Check if tenant exists and is active
-    var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId && t.DeletedAt == null && t.IsActive);
-    if (tenant == null) {
-      throw new InvalidOperationException($"Active tenant with ID {tenantId} not found");
+        return tenants;
     }
 
-    // Check if user already has a membership
-    var existingMembership = await context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId);
+    /// <inheritdoc />
+    public async Task<Tenant?> GetTenantByIdAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("Getting tenant by ID: {TenantId}", tenantId);
 
-    if (existingMembership != null) {
-      // Reactivate if needed
-      if (existingMembership.DeletedAt != null) {
-        existingMembership.Restore();
-        _ = await context.SaveChangesAsync();
-      }
-      return existingMembership;
+        // Try cache first
+        var cachedTenant = cacheService.GetTenantById(tenantId);
+
+        if (cachedTenant != null)
+        {
+            logger.LogDebug("Found tenant in cache: {TenantSlug}", cachedTenant.Slug);
+
+            return cachedTenant;
+        }
+
+        // Fallback to database
+        var tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
+
+        if (tenant != null) { logger.LogDebug("Found tenant in database: {TenantSlug}", tenant.Slug); }
+        else { logger.LogDebug("Tenant not found: {TenantId}", tenantId); }
+
+        return tenant;
     }
 
-    // Create new membership with basic permissions
-    var membership = new TenantPermissionEntity(userId, tenantId);
-    membership.AddPermission(PermissionType.Read);
+    /// <inheritdoc />
+    public async Task<Tenant?> GetTenantBySlugAsync(string slug, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(slug)) { return null; }
 
-    context.TenantPermissions.Add(membership);
-    _ = await context.SaveChangesAsync();
+        logger.LogDebug("Getting tenant by slug: {TenantSlug}", slug);
 
-    return membership;
-  }
+        // Try cache first
+        var cachedTenant = cacheService.GetTenantBySlug(slug);
 
-  /// <summary>
-  /// Remove a user from a tenant
-  /// </summary>
-  /// <param name="userId">User ID</param>
-  /// <param name="tenantId">Tenant ID</param>
-  /// <returns>True if removed successfully</returns>
-  public async Task<bool> RemoveUserFromTenantAsync(Guid userId, Guid tenantId) {
-    var membership = await context.TenantPermissions.FirstOrDefaultAsync(tp => tp.UserId == userId && tp.TenantId == tenantId && tp.DeletedAt == null);
+        if (cachedTenant != null)
+        {
+            logger.LogDebug("Found tenant in cache: {TenantSlug}", cachedTenant.Slug);
 
-    if (membership == null) {
-      return false;
+            return cachedTenant;
+        }
+
+        // Fallback to database
+        var tenant = await repository.GetBySlugAsync(slug, cancellationToken);
+
+        if (tenant != null) { logger.LogDebug("Found tenant in database: {TenantSlug}", tenant.Slug); }
+        else { logger.LogDebug("Tenant not found: {TenantSlug}", slug); }
+
+        return tenant;
     }
 
-    membership.SoftDelete();
-    _ = await context.SaveChangesAsync();
+    /// <inheritdoc />
+    public async Task<Tenant?> GetDefaultTenantAsync(CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("Getting default tenant");
 
-    return true;
-  }
+        // Try cache first
+        var cachedTenant = cacheService.GetDefaultTenant();
 
-  /// <summary>
-  /// Get users in a tenant
-  /// </summary>
-  /// <param name="tenantId">Tenant ID</param>
-  /// <returns>List of TenantPermission relationships</returns>
-  public async Task<IEnumerable<TenantPermissionEntity>> GetUsersInTenantAsync(Guid tenantId) {
-    return await context.TenantPermissions
-      .Where(tp => tp.TenantId == tenantId && tp.UserId != null && tp.DeletedAt == null)
-      .ToListAsync();
-  }
+        if (cachedTenant != null)
+        {
+            logger.LogDebug("Found default tenant in cache: {TenantSlug}", cachedTenant.Slug);
 
-  /// <summary>
-  /// Get tenants for a user
-  /// </summary>
-  /// <param name="userId">User ID</param>
-  /// <returns>List of TenantPermission relationships</returns>
-  public async Task<IEnumerable<TenantPermissionEntity>> GetTenantsForUserAsync(Guid userId) {
-    return await context.TenantPermissions
-      .Where(tp => tp.UserId == userId && tp.DeletedAt == null && tp.TenantId != null)
-      .ToListAsync();
-  }
+            return cachedTenant;
+        }
 
-  // === DEFAULT TENANT FUNCTIONALITY ===
+        // Fallback to database
+        var tenant = await repository.GetDefaultAsync(cancellationToken);
 
-  /// <summary>
-  /// Get the default tenant (creates one if none exists)
-  /// </summary>
-  /// <returns>Default tenant</returns>
-  public async Task<Tenant> GetOrCreateDefaultTenantAsync() {
-    var defaultTenant = await context.Tenants.FirstOrDefaultAsync(t => t.IsDefault && t.DeletedAt == null);
+        if (tenant != null) { logger.LogDebug("Found default tenant in database: {TenantSlug}", tenant.Slug); }
+        else { logger.LogWarning("No default tenant found"); }
 
-    if (defaultTenant != null) { return defaultTenant; }
-
-    // No default tenant exists, create one
-    defaultTenant = new Tenant { Name = "Default Organization", Description = "Default tenant for users without specific tenant assignment", Slug = "default", AdminEmail = "admin@default.local", IsActive = true, IsDefault = true };
-
-    context.Tenants.Add(defaultTenant);
-    await context.SaveChangesAsync();
-
-    return defaultTenant;
-  }
-
-  /// <summary>
-  /// Get the current default tenant
-  /// </summary>
-  /// <returns>Default tenant or null if none exists</returns>
-  public async Task<Tenant?> GetDefaultTenantAsync() { return await context.Tenants.FirstOrDefaultAsync(t => t.IsDefault && t.DeletedAt == null); }
-
-  /// <summary>
-  /// Set a tenant as the default tenant
-  /// </summary>
-  /// <param name="tenantId">Tenant ID to set as default</param>
-  /// <returns>Updated tenant</returns>
-  public async Task<Tenant> SetDefaultTenantAsync(Guid tenantId) {
-    // First, unset any existing default tenant
-    var currentDefault = await context.Tenants.FirstOrDefaultAsync(t => t.IsDefault && t.DeletedAt == null);
-
-    if (currentDefault != null) {
-      currentDefault.IsDefault = false;
-      currentDefault.Touch();
+        return tenant;
     }
 
-    // Set the new default tenant
-    var newDefault = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId && t.DeletedAt == null);
+    /// <inheritdoc />
+    public async Task<Tenant> CreateTenantAsync(string name, string slug, string? description = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Tenant name cannot be null or empty", nameof(name));
 
-    if (newDefault == null) { throw new InvalidOperationException($"Tenant with ID {tenantId} not found"); }
+        if (string.IsNullOrWhiteSpace(slug)) throw new ArgumentException("Tenant slug cannot be null or empty", nameof(slug));
 
-    newDefault.IsDefault = true;
-    newDefault.Touch();
+        logger.LogInformation("Creating tenant: {TenantName} with slug: {TenantSlug}", name, slug);
 
-    await context.SaveChangesAsync();
+        // Check if slug is available
+        var isAvailable = await IsSlugAvailableAsync(slug, cancellationToken: cancellationToken);
 
-    return newDefault;
-  }
+        if (!isAvailable) { throw new BusinessException($"Tenant slug '{slug}' is already in use"); }
 
-  /// <summary>
-  /// Check if a tenant is the default tenant
-  /// </summary>
-  /// <param name="tenantId">Tenant ID to check</param>
-  /// <returns>True if this is the default tenant</returns>
-  public async Task<bool> IsDefaultTenantAsync(Guid tenantId) { return await context.Tenants.AnyAsync(t => t.Id == tenantId && t.IsDefault && t.DeletedAt == null); }
+        var tenant = new Tenant
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            Slug = slug.ToLowerInvariant(),
+            Description = description,
+            IsActive = true,
+            IsDefault = false,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
 
-  /// <summary>
-  /// Get effective tenant (returns specified tenant or default if null)
-  /// </summary>
-  /// <param name="tenantId">Tenant ID (null to get default)</param>
-  /// <returns>Effective tenant</returns>
-  public async Task<Tenant> GetEffectiveTenantAsync(Guid? tenantId) {
-    if (tenantId.HasValue) {
-      var tenant = await GetTenantByIdAsync(tenantId.Value);
+        tenant = await repository.CreateAsync(tenant, cancellationToken);
 
-      if (tenant != null) { return tenant; }
+        logger.LogInformation("Created tenant: {TenantId} - {TenantSlug}", tenant.Id, tenant.Slug);
+
+        // Refresh cache to include new tenant
+        await cacheService.RefreshTenantAsync(tenant.Id, cancellationToken);
+
+        return tenant;
     }
 
-    // Fall back to default tenant
-    return await GetOrCreateDefaultTenantAsync();
-  }
+    /// <inheritdoc />
+    public async Task<Tenant> UpdateTenantAsync(Guid tenantId, string name, string? description = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Tenant name cannot be null or empty", nameof(name));
+
+        logger.LogInformation("Updating tenant: {TenantId}", tenantId);
+
+        var tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
+
+        if (tenant == null) { throw new NotFoundException($"Tenant with ID {tenantId} not found"); }
+
+        tenant.Update(name, description);
+
+        tenant = await repository.UpdateAsync(tenant, cancellationToken);
+
+        logger.LogInformation("Updated tenant: {TenantId} - {TenantSlug}", tenant.Id, tenant.Slug);
+
+        // Refresh cache with updated tenant
+        await cacheService.RefreshTenantAsync(tenantId, cancellationToken);
+
+        return tenant;
+    }
+
+    /// <inheritdoc />
+    public async Task<Tenant> ActivateTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Activating tenant: {TenantId}", tenantId);
+
+        var tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
+
+        if (tenant == null) { throw new NotFoundException($"Tenant with ID {tenantId} not found"); }
+
+        if (tenant.IsActive)
+        {
+            logger.LogDebug("Tenant is already active: {TenantId}", tenantId);
+
+            return tenant;
+        }
+
+        tenant.Activate();
+
+        tenant = await repository.UpdateAsync(tenant, cancellationToken);
+
+        logger.LogInformation("Activated tenant: {TenantId} - {TenantSlug}", tenant.Id, tenant.Slug);
+
+        // Refresh cache with updated tenant
+        await cacheService.RefreshTenantAsync(tenantId, cancellationToken);
+
+        return tenant;
+    }
+
+    /// <inheritdoc />
+    public async Task<Tenant> DeactivateTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Deactivating tenant: {TenantId}", tenantId);
+
+        var tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
+
+        if (tenant == null) { throw new NotFoundException($"Tenant with ID {tenantId} not found"); }
+
+        if (tenant.IsDefault) { throw new BusinessException("Cannot deactivate the default tenant"); }
+
+        if (!tenant.IsActive)
+        {
+            logger.LogDebug("Tenant is already inactive: {TenantId}", tenantId);
+
+            return tenant;
+        }
+
+        tenant.Deactivate();
+
+        tenant = await repository.UpdateAsync(tenant, cancellationToken);
+
+        logger.LogInformation("Deactivated tenant: {TenantId} - {TenantSlug}", tenant.Id, tenant.Slug);
+
+        // Refresh cache with updated tenant
+        await cacheService.RefreshTenantAsync(tenantId, cancellationToken);
+
+        return tenant;
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Deleting tenant: {TenantId}", tenantId);
+
+        var tenant = await repository.GetByIdAsync(tenantId, cancellationToken);
+
+        if (tenant == null) { throw new NotFoundException($"Tenant with ID {tenantId} not found"); }
+
+        if (tenant.IsDefault) { throw new BusinessException("Cannot delete the default tenant"); }
+
+        await repository.DeleteAsync(tenantId, cancellationToken);
+
+        logger.LogInformation("Deleted tenant: {TenantId} - {TenantSlug}", tenant.Id, tenant.Slug);
+
+        // Remove from cache
+        cacheService.InvalidateTenant(tenantId);
+    }
+
+    /// <inheritdoc />
+    public async Task<TenantSettings?> GetTenantSettingsAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("Getting tenant settings: {TenantId}", tenantId);
+
+        // Try cache first
+        var cachedSettings = cacheService.GetTenantSettings(tenantId);
+
+        if (cachedSettings != null)
+        {
+            logger.LogDebug("Found tenant settings in cache: {TenantId}", tenantId);
+
+            return cachedSettings;
+        }
+
+        // Fallback to database
+        var settings = await repository.GetTenantSettingsAsync(tenantId, cancellationToken);
+
+        if (settings != null) { logger.LogDebug("Found tenant settings in database: {TenantId}", tenantId); }
+
+        return settings;
+    }
+
+    /// <inheritdoc />
+    public async Task<TenantSettings> UpdateTenantSettingsAsync(Guid tenantId, TenantSettings settings, CancellationToken cancellationToken = default)
+    {
+        if (settings == null) throw new ArgumentNullException(nameof(settings));
+
+        logger.LogInformation("Updating tenant settings: {TenantId}", tenantId);
+
+        settings = await repository.CreateOrUpdateTenantSettingsAsync(tenantId, settings, cancellationToken);
+
+        logger.LogInformation("Updated tenant settings: {TenantId}", tenantId);
+
+        // Refresh cache with updated settings
+        await cacheService.RefreshTenantSettingsAsync(tenantId, cancellationToken);
+
+        return settings;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<TenantDomain>> GetTenantDomainsAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("Getting tenant domains: {TenantId}", tenantId);
+
+        // Try cache first
+        var cachedDomains = cacheService.GetTenantDomains(tenantId);
+
+        if (cachedDomains.Any())
+        {
+            logger.LogDebug("Found {Count} tenant domains in cache: {TenantId}", cachedDomains.Count, tenantId);
+
+            return cachedDomains;
+        }
+
+        // Fallback to database
+        var domains = await repository.GetTenantDomainsAsync(tenantId, cancellationToken);
+
+        logger.LogDebug("Found {Count} tenant domains in database: {TenantId}", domains.Count, tenantId);
+
+        return domains;
+    }
+
+    /// <inheritdoc />
+    public async Task<TenantDomain> AddTenantDomainAsync(Guid tenantId, string topLevelDomain, string? subdomain = null, bool isMainDomain = false, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(topLevelDomain)) throw new ArgumentException("Top-level domain cannot be null or empty", nameof(topLevelDomain));
+
+        var domain = string.IsNullOrWhiteSpace(subdomain) ? topLevelDomain : $"{subdomain}.{topLevelDomain}";
+
+        logger.LogInformation("Adding tenant domain: {TenantId} - {Domain}", tenantId, domain);
+
+        // Check if domain already exists for this tenant
+        var existingDomain = await repository.FindTenantDomainByMatchAsync(topLevelDomain, subdomain, cancellationToken);
+
+        if (existingDomain != null && existingDomain.TenantId == tenantId) { throw new BusinessException($"Domain '{domain}' already exists for this tenant"); }
+
+        var tenantDomain = new TenantDomain { TenantId = tenantId, Subdomain = subdomain, TopLevelDomain = topLevelDomain, IsMainDomain = isMainDomain };
+
+        tenantDomain = await repository.CreateTenantDomainAsync(tenantDomain, cancellationToken);
+
+        logger.LogInformation("Added tenant domain: {TenantId} - {Domain}", tenantId, domain);
+
+        // Refresh cache with new domain
+        await cacheService.RefreshTenantDomainsAsync(tenantId, cancellationToken);
+
+        return tenantDomain;
+    }
+
+    /// <inheritdoc />
+    public async Task<TenantDomain?> FindTenantByDomainMatchAsync(string email, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(email)) { return null; }
+
+        logger.LogDebug("Finding tenant by domain match: {Email}", email);
+
+        // Try cache first
+        var cachedDomain = cacheService.FindTenantByDomainMatch(email);
+
+        if (cachedDomain != null)
+        {
+            logger.LogDebug("Found tenant domain in cache for email: {Email}", email);
+
+            return cachedDomain;
+        }
+
+        // Extract domain from email
+        var atIndex = email.LastIndexOf('@');
+
+        if (atIndex <= 0 || atIndex >= email.Length - 1) { return null; }
+
+        var domain = email.Substring(atIndex + 1).ToLowerInvariant();
+
+        // Check if it's a subdomain (contains dots)
+        var parts = domain.Split('.');
+        string? subdomain = null;
+        string topLevelDomain = domain;
+
+        if (parts.Length > 2)
+        {
+            subdomain = string.Join(".", parts.Take(parts.Length - 2));
+            topLevelDomain = string.Join(".", parts.Skip(parts.Length - 2));
+        }
+
+        // Fallback to database - try exact match first
+        var tenantDomain = await repository.FindTenantDomainByMatchAsync(topLevelDomain, subdomain, cancellationToken);
+
+        // If no exact match, try with just the top-level domain
+        if (tenantDomain == null && subdomain != null)
+        {
+            tenantDomain = await repository.FindTenantDomainByMatchAsync(domain, null, cancellationToken);
+        }
+
+        if (tenantDomain != null) { logger.LogDebug("Found tenant domain in database for email: {Email}", email); }
+
+        return tenantDomain;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> IsSlugAvailableAsync(string slug, Guid? excludeTenantId = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(slug)) { return false; }
+
+        logger.LogDebug("Checking slug availability: {TenantSlug}", slug);
+
+        var isAvailable = await repository.IsSlugAvailableAsync(slug, excludeTenantId, cancellationToken);
+
+        logger.LogDebug("Slug {TenantSlug} availability: {IsAvailable}", slug, isAvailable);
+
+        return isAvailable;
+    }
 }

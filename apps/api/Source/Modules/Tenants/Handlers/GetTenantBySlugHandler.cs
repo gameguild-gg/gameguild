@@ -1,29 +1,32 @@
 ﻿using GameGuild.CQRS;
 using GameGuild.Database;
 
-
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Handler for getting a tenant by slug
 /// </summary>
-public class GetTenantBySlugHandler(ApplicationDbContext context, ILogger<GetTenantBySlugHandler> logger) : IQueryHandler<GetTenantBySlugQuery, Result<Tenant?>> {
-  public async Task<Result<Tenant?>> Handle(GetTenantBySlugQuery request, CancellationToken cancellationToken) {
-    try {
-      var query = context.Resources.OfType<Tenant>().Where(t => t.Slug == request.Slug);
+public class GetTenantBySlugHandler(ApplicationDbContext context, ILogger<GetTenantBySlugHandler> logger) : IQueryHandler<GetTenantBySlugQuery, Result<Tenant?>>
+{
+    public async Task<Result<Tenant?>> Handle(GetTenantBySlugQuery request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var query = context.Tenants.OfType<Tenant>().Where(t => t.Slug == request.Slug);
 
-      if (!request.IncludeDeleted) query = query.Where(t => t.DeletedAt == null);
+            if (!request.IncludeDeleted) query = query.Where(t => t.DeletedAt == null);
 
-      var tenant = await query.FirstOrDefaultAsync(cancellationToken);
+            var tenant = await query.FirstOrDefaultAsync(cancellationToken);
 
-      logger.LogInformation("Retrieved tenant by slug '{TenantSlug}': {Found}", request.Slug, tenant != null ? "Found" : "Not Found");
+            logger.LogInformation("Retrieved tenant by slug '{TenantSlug}': {Found}", request.Slug, tenant != null ? "Found" : "Not Found");
 
-      return Result.Success(tenant);
+            return Result.Success(tenant);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving tenant by slug '{TenantSlug}'", request.Slug);
+
+            return Result.Failure<Tenant?>(Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant by slug"));
+        }
     }
-    catch (Exception ex) {
-      logger.LogError(ex, "Error retrieving tenant by slug '{TenantSlug}'", request.Slug);
-
-      return Result.Failure<Tenant?>(Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant by slug"));
-    }
-  }
 }
