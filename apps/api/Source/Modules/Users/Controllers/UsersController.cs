@@ -21,18 +21,19 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
         var users = await mediator.Send(query);
 
         var userDtos = users.Select(u => new UserResponse
-                {
-                    Id = u.Id,
-                    Version = u.Version,
-                    Name = u.Name,
-                    Username = u.Username,
-                    Email = u.Email,
-                    IsActive = u.IsActive,
-                    CreatedAt = u.CreatedAt,
-                    UpdatedAt = u.UpdatedAt,
-                    DeletedAt = u.DeletedAt,
-                    IsDeleted = u.DeletedAt != null
-                }
+        {
+            Id = u.Id,
+            Version = u.Version,
+            GivenName = u.GivenName,
+            FamilyName = u.FamilyName,
+            Username = u.Username,
+            Email = u.Email,
+            IsActive = u.IsActive,
+            CreatedAt = u.CreatedAt,
+            UpdatedAt = u.UpdatedAt,
+            DeletedAt = u.DeletedAt,
+            IsDeleted = u.DeletedAt != null
+        }
             )
             .ToList();
 
@@ -57,7 +58,8 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
         {
             Id = user.Id,
             Version = user.Version,
-            Name = user.Name,
+            GivenName = user.GivenName,
+            FamilyName = user.FamilyName,
             Username = user.Username,
             Email = user.Email,
             IsActive = user.IsActive,
@@ -81,7 +83,7 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
     public async Task<ActionResult<UserResponse>> CreateUser([FromBody] CreateUserRequest createRequest)
     {
         logger.LogDebug("Creating user with email {Email}", createRequest.Email);
-        var command = new CreateUserCommand { Name = createRequest.Name, Email = createRequest.Email, IsActive = createRequest.IsActive };
+        var command = new CreateUserCommand { GivenName = createRequest.GivenName, FamilyName = createRequest.FamilyName, Email = createRequest.Email, IsActive = createRequest.IsActive };
 
         User user = await mediator.Send(command);
 
@@ -91,7 +93,8 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
         {
             Id = user.Id,
             Version = user.Version,
-            Name = user.Name,
+            GivenName = user.GivenName,
+            FamilyName = user.FamilyName,
             Username = user.Username,
             Email = user.Email,
             IsActive = user.IsActive,
@@ -110,7 +113,13 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
     {
         var command = new UpdateUserCommand
         {
-            UserId = id, Name = updateRequest.Name, Username = updateRequest.Username, Email = updateRequest.Email, IsActive = updateRequest.IsActive, ExpectedVersion = updateRequest.ExpectedVersion
+            UserId = id,
+            GivenName = updateRequest.GivenName,
+            FamilyName = updateRequest.FamilyName,
+            Username = updateRequest.Username,
+            Email = updateRequest.Email,
+            IsActive = updateRequest.IsActive,
+            ExpectedVersion = updateRequest.ExpectedVersion
         };
 
         User user = await mediator.Send(command);
@@ -119,7 +128,8 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
         {
             Id = user.Id,
             Version = user.Version,
-            Name = user.Name,
+            GivenName = user.GivenName,
+            FamilyName = user.FamilyName,
             Username = user.Username,
             Email = user.Email,
             IsActive = user.IsActive,

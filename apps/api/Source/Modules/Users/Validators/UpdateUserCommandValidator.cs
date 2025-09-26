@@ -14,12 +14,19 @@ public class UpdateUserCommandValidator : AbstractValidator<UpdateUserCommand>
 
         RuleFor(x => x.UserId).NotEmpty().WithMessage("User ID is required").MustAsync(UserExists).WithMessage("User not found");
 
-        RuleFor(x => x.Name)
+        RuleFor(x => x.GivenName)
             .Length(1, 100)
-            .WithMessage("Name must be between 1 and 100 characters")
+            .WithMessage("Given name must be between 1 and 100 characters")
             .Matches(@"^[a-zA-Z\s\-'\.]+$")
-            .WithMessage("Name can only contain letters, spaces, hyphens, apostrophes, and periods")
-            .When(x => !string.IsNullOrEmpty(x.Name));
+            .WithMessage("Given name can only contain letters, spaces, hyphens, apostrophes, and periods")
+            .When(x => !string.IsNullOrEmpty(x.GivenName));
+
+        RuleFor(x => x.FamilyName)
+            .Length(1, 100)
+            .WithMessage("Family name must be between 1 and 100 characters")
+            .Matches(@"^[a-zA-Z\s\-'\.]+$")
+            .WithMessage("Family name can only contain letters, spaces, hyphens, apostrophes, and periods")
+            .When(x => !string.IsNullOrEmpty(x.FamilyName));
 
         RuleFor(x => x.Email)
             .EmailAddress()
