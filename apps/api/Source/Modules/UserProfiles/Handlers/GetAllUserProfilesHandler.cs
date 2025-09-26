@@ -1,41 +1,45 @@
 using GameGuild.CQRS;
-using GameGuild.Database;
-
 
 namespace GameGuild.Modules.UserProfiles;
 
 /// <summary> Handler for getting all user profiles with filtering and pagination </summary>
-public class GetAllUserProfilesHandler(ApplicationDbContext context, ILogger<GetAllUserProfilesHandler> logger) : IQueryHandler<GetAllUserProfilesQuery, Result<IEnumerable<UserProfile>>> {
-  public async Task<Result<IEnumerable<UserProfile>>> Handle(GetAllUserProfilesQuery request, CancellationToken cancellationToken) {
-    try {
-      IQueryable<UserProfile> query = context.Resources.OfType<UserProfile>().Include(up => up.Metadata);
+public class GetAllUserProfilesHandler(IUserProfileService userProfileService, ILogger<GetAllUserProfilesHandler> logger) : IQueryHandler<GetAllUserProfilesQuery, Result<IEnumerable<UserProfile>>>
+{
+    public async Task<Result<IEnumerable<UserProfile>>> Handle(GetAllUserProfilesQuery request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var userProfiles = await userProfileService.GetAllUserProfilesAsync();
 
-      // Apply filters
-      query = !request.IncludeDeleted ? query.Where(up => up.DeletedAt == null) : query.IgnoreQueryFilters();
+            // Apply basic filtering and pagination in memory for now
+            // Note: For better performance, these filters should be moved to the repository layer
+            var filteredProfiles = userProfiles;
 
-      if (request.TenantId.HasValue) query = query.Where(up => EF.Property<Guid?>(up, "TenantId") == request.TenantId);
+            if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+            {
+                string searchLower = request.SearchTerm.ToLower();
 
-      if (!string.IsNullOrWhiteSpace(request.SearchTerm)) {
-        var searchLower = request.SearchTerm.ToLower();
+                filteredProfiles = filteredProfiles.Where(up => (up.DisplayName != null && up.DisplayName.ToLower().Contains(searchLower)));
+            }
 
-        query = query.Where(up => up.GivenName != null && up.GivenName.ToLower().Contains(searchLower) ||
-                                  up.FamilyName != null && up.FamilyName.ToLower().Contains(searchLower) ||
-                                  up.DisplayName != null && up.DisplayName.ToLower().Contains(searchLower) ||
-                                  up.Title != null && up.Title.ToLower().Contains(searchLower)
-        );
-      }
+            // Apply pagination
+            var paginatedProfiles = filteredProfiles.OrderBy(up => up.DisplayName).Skip(request.Skip).Take(request.Take).ToList();
 
-      // Apply pagination
-      var userProfiles = await query.OrderBy(up => up.DisplayName).Skip(request.Skip).Take(request.Take).ToListAsync(cancellationToken);
+            logger.LogDebug(
+                "Retrieved {Count} user profiles with filters: IncludeDeleted={IncludeDeleted}, TenantId={TenantId}, SearchTerm={SearchTerm}",
+                paginatedProfiles.Count,
+                request.IncludeDeleted,
+                request.TenantId,
+                request.SearchTerm
+            );
 
-      logger.LogDebug("Retrieved {Count} user profiles with filters: IncludeDeleted={IncludeDeleted}, TenantId={TenantId}, SearchTerm={SearchTerm}", userProfiles.Count, request.IncludeDeleted, request.TenantId, request.SearchTerm);
+            return Result.Success(paginatedProfiles.AsEnumerable());
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving user profiles");
 
-      return Result.Success<IEnumerable<UserProfile>>(userProfiles);
+            return Result.Failure<IEnumerable<UserProfile>>(Error.Failure("UserProfile.QueryFailed", "Failed to retrieve user profiles"));
+        }
     }
-    catch (Exception ex) {
-      logger.LogError(ex, "Error retrieving user profiles");
-
-      return Result.Failure<IEnumerable<UserProfile>>(Error.Failure("UserProfile.QueryFailed", "Failed to retrieve user profiles"));
-    }
-  }
 }

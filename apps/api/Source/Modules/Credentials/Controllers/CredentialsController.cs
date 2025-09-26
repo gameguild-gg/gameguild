@@ -343,7 +343,8 @@ public class CredentialsController(IMediator mediator, ILogger<CredentialsContro
             User = new UserResponse
             {
                 Id = credential.User.Id,
-                Name = credential.User.Name,
+                GivenName = credential.User.GivenName,
+                FamilyName = credential.User.FamilyName,
                 Email = credential.User.Email,
                 IsActive = credential.User.IsActive,
                 Version = credential.User.Version,

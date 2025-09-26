@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Localization;
 public abstract class LocalizableResource : EntityBase
 {
     /// <summary> Collection of localizations for this resource </summary>
-    public virtual ICollection<ResourceLocalization> Localizations { get; set; } = new List<ResourceLocalization>();
+    public virtual ICollection<ResourceLocalization> Localizations { get; set; } = [];
 
     /// <summary> Default language code for this resource </summary>
     public string? DefaultLanguageCode { get; set; } = "en-US";
