@@ -1,6 +1,5 @@
 using FluentValidation;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Credentials;
 
@@ -23,7 +22,7 @@ public class DeactivateCredentialCommandValidator : AbstractValidator<Deactivate
 
     private async Task<bool> CredentialIsActive(Guid credentialId, CancellationToken cancellationToken)
     {
-        var credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == credentialId && c.DeletedAt == null, cancellationToken);
+        Credential? credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == credentialId && c.DeletedAt == null, cancellationToken);
 
         return credential is { IsActive: true };
     }
