@@ -1,4 +1,3 @@
-using GameGuild.Modules.Resources;
 using GameGuild.Modules.Localization;
 using GameGuild.Modules.Resources;
 
@@ -36,6 +35,7 @@ public class TenantSettings : Resource
     /// Creates default tenant settings for a given tenant
     /// </summary>
     /// <param name="tenantId">The tenant ID</param>
+    /// <param name="defaultLanguageId">The default language identifier</param>
     /// <returns>TenantSettings with default values</returns>
     public static TenantSettings CreateDefault(Guid tenantId, Guid defaultLanguageId)
     {

@@ -18,6 +18,7 @@ public class SoftDeleteCredentialCommandHandler(ICredentialService credentialSer
         if (!softDeleted)
         {
             _logger.LogWarning("Credential {CredentialId} soft delete failed or credential already soft deleted", request.Id);
+
             return false;
         }
 
