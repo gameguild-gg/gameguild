@@ -47,6 +47,7 @@ import { TextColorMenuComponent } from "./floating-text-components/text-color-me
 import { BackgroundColorMenuComponent } from "./floating-text-components/background-color-menu-component"
 import { ListColorMenuComponent } from "./floating-text-components/list-color-menu-component"
 import { LinkMenuComponent } from "./floating-text-components/link-menu-component"
+import { FormattingMenuComponent } from "./floating-text-components/formatting-menu-component"
 import { Button } from "@/components/ui/button"
 import { $createParagraphNode } from "lexical"
 
@@ -58,6 +59,7 @@ export function FloatingTextFormatToolbarPlugin() {
   const [isBold, setIsBold] = useState(false)
   const [isItalic, setIsItalic] = useState(false)
   const [isUnderline, setIsUnderline] = useState(false)
+  const [isOverline, setIsOverline] = useState(false)
   const [isStrikethrough, setIsStrikethrough] = useState(false)
   const [isSubscript, setIsSubscript] = useState(false)
   const [isSuperscript, setIsSuperscript] = useState(false)
@@ -85,6 +87,7 @@ export function FloatingTextFormatToolbarPlugin() {
       setIsSuperscript(false)
       setIsCode(false)
       setIsUnderline(false)
+      setIsOverline(false)
       setIsStrikethrough(false)
       setCurrentCaseFormat(null)
       return
@@ -346,32 +349,14 @@ export function FloatingTextFormatToolbarPlugin() {
                 <span>Italic</span>
                 {isItalic && <Check className="ml-auto h-5 w-5" />}
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={(e) => e.preventDefault()}
-                onClick={() => {
-                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")
-                  setTimeout(() => {
-                    editor.getEditorState().read(() => updateToolbar())
-                  }, 0)
-                }}
-              >
-                <Underline className="mr-2 h-5 w-5" />
-                <span>Underline</span>
-                {isUnderline && <Check className="ml-auto h-5 w-5" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={(e) => e.preventDefault()}
-                onClick={() => {
-                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")
-                  setTimeout(() => {
-                    editor.getEditorState().read(() => updateToolbar())
-                  }, 0)
-                }}
-              >
-                <Strikethrough className="mr-2 h-5 w-5" />
-                <span>Strikethrough</span>
-                {isStrikethrough && <Check className="ml-auto h-5 w-5" />}
-              </DropdownMenuItem>
+              
+              <FormattingMenuComponent 
+                editor={editor}
+                isUnderline={isUnderline}
+                setIsUnderline={setIsUnderline}
+                isStrikethrough={isStrikethrough}
+                setIsStrikethrough={setIsStrikethrough}
+              />
               <DropdownMenuSeparator />
 
               <DropdownMenuSub>
