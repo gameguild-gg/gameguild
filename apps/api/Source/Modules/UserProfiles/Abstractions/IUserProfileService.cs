@@ -19,4 +19,6 @@ public interface IUserProfileService
     Task<bool> RestoreUserProfileAsync(Guid id);
 
     Task<IEnumerable<UserProfile>> GetDeletedUserProfilesAsync();
+
+    Task<UserProfileStatistics> GetStatisticsAsync(DateTime? fromDate = null, DateTime? toDate = null, Guid? tenantId = null, bool includeDeleted = false);
 }

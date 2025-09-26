@@ -22,8 +22,8 @@ public class UserProfileStatistics
     public double AverageNewUserProfilesPerDay { get; set; }
 
     /// <summary> Most common display name patterns </summary>
-    public Dictionary<string, int> DisplayNamePatterns { get; set; } = new Dictionary<string, int>();
+    public Dictionary<string, int> DisplayNamePatterns { get; set; } = [];
 
     /// <summary> Distribution by tenant (if multi-tenant) </summary>
-    public Dictionary<string, int> TenantDistribution { get; set; } = new Dictionary<string, int>();
+    public Dictionary<string, int> TenantDistribution { get; set; } = [];
 }

@@ -1,70 +1,38 @@
-using GameGuild.Database;
-
-
 namespace GameGuild.Modules.UserProfiles;
 
-public class UserProfileService(ApplicationDbContext context) : IUserProfileService {
-  public async Task<IEnumerable<UserProfile>> GetAllUserProfilesAsync() { return await context.UserProfiles.Where(up => up.DeletedAt == null).ToListAsync(); }
+public class UserProfileService(IUserProfileRepository repository) : IUserProfileService
+{
+    private readonly IUserProfileRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
 
-  public async Task<UserProfile?> GetUserProfileByIdAsync(Guid id) { return await context.UserProfiles.FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt == null); }
+    public async Task<IEnumerable<UserProfile>> GetAllUserProfilesAsync() { return await _repository.GetAllAsync(); }
 
-  public async Task<UserProfile?> GetUserProfileByUserIdAsync(Guid userId) { return await context.UserProfiles.FirstOrDefaultAsync(up => up.Id == userId && up.DeletedAt == null); }
+    public async Task<UserProfile?> GetUserProfileByIdAsync(Guid id) { return await _repository.GetByIdAsync(id); }
 
-  public async Task<UserProfile> CreateUserProfileAsync(UserProfile userProfile) {
-    context.UserProfiles.Add(userProfile);
-    await context.SaveChangesAsync();
+    public async Task<UserProfile?> GetUserProfileByUserIdAsync(Guid userId) { return await _repository.GetByUserIdAsync(userId); }
 
-    return userProfile;
-  }
+    public async Task<UserProfile> CreateUserProfileAsync(UserProfile userProfile) { return await _repository.CreateAsync(userProfile); }
 
-  public async Task<UserProfile?> UpdateUserProfileAsync(Guid id, UserProfile userProfile) {
-    var existingProfile = await context.UserProfiles.FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt == null);
+    public async Task<UserProfile?> UpdateUserProfileAsync(Guid id, UserProfile userProfile)
+    {
+        UserProfile? existingProfile = await _repository.GetByIdAsync(id);
 
-    if (existingProfile == null) return null;
+        if (existingProfile == null) return null;
 
-    existingProfile.GivenName = userProfile.GivenName;
-    existingProfile.FamilyName = userProfile.FamilyName;
-    existingProfile.DisplayName = userProfile.DisplayName;
-    existingProfile.Title = userProfile.Title;
-    existingProfile.Description = userProfile.Description;
+        existingProfile.DisplayName = userProfile.DisplayName;
 
-    await context.SaveChangesAsync();
+        return await _repository.UpdateAsync(existingProfile);
+    }
 
-    return existingProfile;
-  }
+    public async Task<bool> DeleteUserProfileAsync(Guid id) { return await _repository.DeleteAsync(id); }
 
-  public async Task<bool> DeleteUserProfileAsync(Guid id) {
-    var userProfile = await context.UserProfiles.FirstOrDefaultAsync(up => up.Id == id);
+    public async Task<bool> SoftDeleteUserProfileAsync(Guid id) { return await _repository.SoftDeleteAsync(id); }
 
-    if (userProfile == null) return false;
+    public async Task<bool> RestoreUserProfileAsync(Guid id) { return await _repository.RestoreAsync(id); }
 
-    context.UserProfiles.Remove(userProfile);
-    await context.SaveChangesAsync();
+    public async Task<IEnumerable<UserProfile>> GetDeletedUserProfilesAsync() { return await _repository.GetDeletedAsync(); }
 
-    return true;
-  }
-
-  public async Task<bool> SoftDeleteUserProfileAsync(Guid id) {
-    var userProfile = await context.UserProfiles.FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt == null);
-
-    if (userProfile == null) return false;
-
-    userProfile.SoftDelete();
-    await context.SaveChangesAsync();
-
-    return true;
-  }
-
-  public async Task<bool> RestoreUserProfileAsync(Guid id) {
-    var userProfile = await context.UserProfiles.IgnoreQueryFilters().FirstOrDefaultAsync(up => up.Id == id && up.DeletedAt != null);
-
-    if (userProfile == null) return false;
-
-    userProfile.Restore();
-    await context.SaveChangesAsync();
-
-    return true;
-  }
-
-  public async Task<IEnumerable<UserProfile>> GetDeletedUserProfilesAsync() { return await context.UserProfiles.IgnoreQueryFilters().Where(up => up.DeletedAt != null).ToListAsync(); }
+    public async Task<UserProfileStatistics> GetStatisticsAsync(DateTime? fromDate = null, DateTime? toDate = null, Guid? tenantId = null, bool includeDeleted = false)
+    {
+        return await _repository.GetStatisticsAsync(fromDate, toDate, tenantId, includeDeleted);
+    }
 }
