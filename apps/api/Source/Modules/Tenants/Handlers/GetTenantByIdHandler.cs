@@ -1,27 +1,30 @@
 ﻿using GameGuild.CQRS;
 using GameGuild.Database;
 
-
 namespace GameGuild.Modules.Tenants;
 
 /// <summary> Handler for getting a tenant by ID </summary>
-public class GetTenantByIdHandler(ApplicationDbContext context, ILogger<GetTenantByIdHandler> logger) : IQueryHandler<GetTenantByIdQuery, Result<Tenant?>> {
-  public async Task<Result<Tenant?>> Handle(GetTenantByIdQuery request, CancellationToken cancellationToken) {
-    try {
-      var query = context.Resources.OfType<Tenant>().Where(t => t.Id == request.Id);
+public class GetTenantByIdHandler(ApplicationDbContext context, ILogger<GetTenantByIdHandler> logger) : IQueryHandler<GetTenantByIdQuery, Result<Tenant?>>
+{
+    public async Task<Result<Tenant?>> Handle(GetTenantByIdQuery request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var query = context.Tenants.OfType<Tenant>().Where(t => t.Id == request.Id);
 
-      if (!request.IncludeDeleted) query = query.Where(t => t.DeletedAt == null);
+            if (!request.IncludeDeleted) query = query.Where(t => t.DeletedAt == null);
 
-      var tenant = await query.FirstOrDefaultAsync(cancellationToken);
+            var tenant = await query.FirstOrDefaultAsync(cancellationToken);
 
-      logger.LogInformation("Retrieved tenant {TenantId}: {Found}", request.Id, tenant != null ? "Found" : "Not Found");
+            logger.LogInformation("Retrieved tenant {TenantId}: {Found}", request.Id, tenant != null ? "Found" : "Not Found");
 
-      return Result.Success(tenant);
+            return Result.Success(tenant);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving tenant {TenantId}", request.Id);
+
+            return Result.Failure<Tenant?>(Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant"));
+        }
     }
-    catch (Exception ex) {
-      logger.LogError(ex, "Error retrieving tenant {TenantId}", request.Id);
-
-      return Result.Failure<Tenant?>(Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve tenant"));
-    }
-  }
 }
