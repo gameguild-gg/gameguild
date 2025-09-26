@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Modules.Users;
 
 /// <summary>
-/// Command to bulk restore users
+///     Command to bulk restore users
 /// </summary>
 public sealed class BulkRestoreUsersCommand : IResultCommand<BulkOperationResult>
 {

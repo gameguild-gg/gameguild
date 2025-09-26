@@ -13,7 +13,7 @@ public class UserService(IUserRepository userRepository) : IUserService
     public async Task<User> CreateUserAsync(User user)
     {
         // Check if email already exists
-        var existingUser = await GetByEmailAsync(user.Email);
+        User? existingUser = await GetByEmailAsync(user.Email);
 
         if (existingUser != null) throw new InvalidOperationException($"A user with email '{user.Email}' already exists.");
 
@@ -23,15 +23,15 @@ public class UserService(IUserRepository userRepository) : IUserService
     public async Task<User> CreateUserAsync(string name, string email, bool isActive = true, CancellationToken cancellationToken = default)
     {
         // Check if email already exists
-        var existingUser = await GetByEmailAsync(email);
+        User? existingUser = await GetByEmailAsync(email);
 
         if (existingUser != null) throw new InvalidOperationException($"A user with email '{email}' already exists.");
 
         // Generate unique username from name using slugify
-        var baseUsername = name.ToSlugCase();
+        string baseUsername = name.ToSlugCase();
         var existingUsernames = await _userRepository.GetUsernamesStartingWithAsync(baseUsername, cancellationToken);
 
-        var uniqueUsername = SlugCase.GenerateUnique(name, existingUsernames, 50);
+        string uniqueUsername = SlugCase.GenerateUnique(name, existingUsernames, 50);
 
         var user = new User { Name = name, Username = uniqueUsername, Email = email, IsActive = isActive };
 
@@ -40,7 +40,7 @@ public class UserService(IUserRepository userRepository) : IUserService
 
     public async Task<User?> UpdateUserAsync(Guid id, User user)
     {
-        var existingUser = await _userRepository.GetByIdAsync(id);
+        User? existingUser = await _userRepository.GetByIdAsync(id);
 
         if (existingUser == null) return null;
 
@@ -53,7 +53,7 @@ public class UserService(IUserRepository userRepository) : IUserService
 
     public async Task<bool> DeleteUserAsync(Guid id)
     {
-        var user = await _userRepository.GetByIdAsync(id, includeDeleted : true);
+        User? user = await _userRepository.GetByIdAsync(id, true);
 
         if (user == null) return false;
 
@@ -64,7 +64,7 @@ public class UserService(IUserRepository userRepository) : IUserService
 
     public async Task<bool> SoftDeleteUserAsync(Guid id)
     {
-        var user = await _userRepository.GetByIdAsync(id);
+        User? user = await _userRepository.GetByIdAsync(id);
 
         if (user == null) return false;
 
@@ -76,7 +76,7 @@ public class UserService(IUserRepository userRepository) : IUserService
     public async Task<bool> RestoreUserAsync(Guid id)
     {
         var deletedUsers = await _userRepository.GetDeletedAsync();
-        var user = deletedUsers.FirstOrDefault(u => u.Id == id);
+        User? user = deletedUsers.FirstOrDefault(u => u.Id == id);
 
         if (user == null) return false;
 

@@ -4,7 +4,7 @@ using GameGuild.Database;
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// Handler for restoring a soft-deleted tenant
+///     Handler for restoring a soft-deleted tenant
 /// </summary>
 public class RestoreTenantHandler(ApplicationDbContext context, ILogger<RestoreTenantHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<RestoreTenantCommand, Result<bool>>
 {
@@ -12,7 +12,7 @@ public class RestoreTenantHandler(ApplicationDbContext context, ILogger<RestoreT
     {
         try
         {
-            var tenant = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt != null, cancellationToken);
+            Tenant? tenant = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt != null, cancellationToken);
 
             if (tenant == null) return Result.Failure<bool>(Error.NotFound("Tenant.NotFound", $"Deleted tenant with ID {request.Id} not found"));
 

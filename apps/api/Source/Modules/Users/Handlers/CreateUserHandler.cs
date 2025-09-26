@@ -9,7 +9,7 @@ public class CreateUserHandler(IUserService userService, ILogger<CreateUserHandl
     {
         logger.LogDebug("Creating user with email {Email}", request.Email);
 
-        var user = await userService.CreateUserAsync(request.Name, request.Email, request.IsActive, cancellationToken);
+        User user = await userService.CreateUserAsync(request.Name, request.Email, request.IsActive, cancellationToken);
 
         logger.LogInformation("User {UserId} created with email {Email}", user.Id, user.Email);
 

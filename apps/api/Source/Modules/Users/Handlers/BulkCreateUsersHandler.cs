@@ -12,13 +12,13 @@ public class BulkCreateUsersHandler(ApplicationDbContext context, ILogger<BulkCr
         var errors = new List<string>();
         var successfulCount = 0;
 
-        foreach (var userDto in request.Users)
+        foreach (CreateUserRequest userDto in request.Users)
         {
             try
             {
                 // Check if user with email already exists
-                var normalizedEmail = userDto.Email.ToLowerInvariant();
-                var existingUser = await context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail, cancellationToken);
+                string normalizedEmail = userDto.Email.ToLowerInvariant();
+                User? existingUser = await context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail, cancellationToken);
 
                 if (existingUser != null)
                 {
@@ -28,10 +28,10 @@ public class BulkCreateUsersHandler(ApplicationDbContext context, ILogger<BulkCr
                 }
 
                 // Generate unique username from name using slugify
-                var baseUsername = userDto.Name.ToSlugCase();
+                string baseUsername = userDto.Name.ToSlugCase();
                 var existingUsernames = await context.Users.Where(u => u.Username.StartsWith(baseUsername)).Select(u => u.Username).ToListAsync(cancellationToken);
 
-                var uniqueUsername = SlugCase.GenerateUnique(userDto.Name, existingUsernames, 50);
+                string uniqueUsername = SlugCase.GenerateUnique(userDto.Name, existingUsernames, 50);
 
                 var user = new User { Name = userDto.Name, Username = uniqueUsername, Email = userDto.Email, IsActive = userDto.IsActive };
 
@@ -51,12 +51,12 @@ public class BulkCreateUsersHandler(ApplicationDbContext context, ILogger<BulkCr
             await context.SaveChangesAsync(cancellationToken);
 
             // Publish domain events for created users
-            foreach (var user in createdUsers) await mediator.Publish(new UserCreatedEvent(user.Id, user.Email, user.Name, user.CreatedAt), cancellationToken);
+            foreach (User user in createdUsers) await mediator.Publish(new UserCreatedEvent(user.Id, user.Email, user.Name, user.CreatedAt), cancellationToken);
         }
 
         var result = new BulkOperationResult(request.Users.Count, successfulCount, errors.Count);
 
-        foreach (var error in errors) result.AddError(error);
+        foreach (string error in errors) result.AddError(error);
 
         logger.LogInformation("Bulk create completed: {Successful}/{Total} users created. Reason: {Reason}", successfulCount, request.Users.Count, request.Reason ?? "Not specified");
 

@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Users;

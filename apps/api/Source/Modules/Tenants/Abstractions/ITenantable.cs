@@ -6,6 +6,9 @@ public interface ITenantable
     /// <summary> Navigation property to the tenant EntityBase Framework will automatically create the TenantId foreign key </summary>
     Tenant? Tenant { get; set; }
 
-    /// <summary> Indicates whether this resource is accessible across all tenants (when Tenant is null) or only within a specific tenant </summary>
+    /// <summary>
+    ///     Indicates whether this resource is accessible across all tenants (when Tenant is null) or only within a
+    ///     specific tenant
+    /// </summary>
     bool IsGlobal { get; }
 }

@@ -2,7 +2,10 @@ using GameGuild.Modules.Resources;
 
 namespace GameGuild.Modules.Localization;
 
-/// <summary> Base resource that can be localized Provides localization capabilities for resources Mirrors the TypeScript LocalizableResourceBase functionality </summary>
+/// <summary>
+///     Base resource that can be localized Provides localization capabilities for resources Mirrors the TypeScript
+///     LocalizableResourceBase functionality
+/// </summary>
 public abstract class LocalizableResource : EntityBase
 {
     /// <summary> Collection of localizations for this resource </summary>
