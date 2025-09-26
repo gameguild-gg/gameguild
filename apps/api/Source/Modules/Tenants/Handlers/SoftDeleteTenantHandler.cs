@@ -10,17 +10,17 @@ public class SoftDeleteTenantHandler(ApplicationDbContext context, ILogger<SoftD
     {
         try
         {
-            var tenant = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
+            Tenant? tenant = await context.Tenants.OfType<Tenant>().FirstOrDefaultAsync(t => t.Id == request.Id && t.DeletedAt == null, cancellationToken);
 
-            if (tenant == null) return Result.Failure<bool>(Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found"));
+            if (tenant == null) { return Result.Failure<bool>(Error.NotFound("Tenant.NotFound", $"Tenant with ID {request.Id} not found")); }
 
             tenant.SoftDelete();
-            await context.SaveChangesAsync(cancellationToken);
+            _ = await context.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("Tenant {TenantId} soft deleted successfully", tenant.Id);
 
             // Publish domain event
-            await eventPublisher.PublishAsync(new TenantDeletedEvent(tenant.Id, tenant.Name), cancellationToken);
+            await eventPublisher.PublishAsync(new TenantDeletedEvent(tenant.Id, tenant.Name, true), cancellationToken);
 
             return Result.Success(true);
         }

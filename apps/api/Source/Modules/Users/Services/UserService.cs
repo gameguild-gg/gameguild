@@ -8,10 +8,7 @@ public class UserService(IUserRepository userRepository) : IUserService
 
     public async Task<User?> GetUserByIdAsync(Guid id) { return await _userRepository.GetByIdAsync(id); }
 
-    public async Task<User?> GetByEmailAsync(string email)
-    {
-        return await _userRepository.GetByEmailAsync(email);
-    }
+    public async Task<User?> GetByEmailAsync(string email) { return await _userRepository.GetByEmailAsync(email); }
 
     public async Task<User> CreateUserAsync(User user)
     {
@@ -36,13 +33,7 @@ public class UserService(IUserRepository userRepository) : IUserService
 
         var uniqueUsername = SlugCase.GenerateUnique(name, existingUsernames, 50);
 
-        var user = new User
-        {
-            Name = name,
-            Username = uniqueUsername,
-            Email = email,
-            IsActive = isActive
-        };
+        var user = new User { Name = name, Username = uniqueUsername, Email = email, IsActive = isActive };
 
         return await _userRepository.AddAsync(user);
     }
@@ -62,11 +53,12 @@ public class UserService(IUserRepository userRepository) : IUserService
 
     public async Task<bool> DeleteUserAsync(Guid id)
     {
-        var user = await _userRepository.GetByIdAsync(id, includeDeleted: true);
+        var user = await _userRepository.GetByIdAsync(id, includeDeleted : true);
 
         if (user == null) return false;
 
         await _userRepository.RemoveAsync(id);
+
         return true;
     }
 
@@ -77,6 +69,7 @@ public class UserService(IUserRepository userRepository) : IUserService
         if (user == null) return false;
 
         await _userRepository.SoftDeleteAsync(id);
+
         return true;
     }
 
@@ -88,6 +81,7 @@ public class UserService(IUserRepository userRepository) : IUserService
         if (user == null) return false;
 
         await _userRepository.RestoreAsync(id);
+
         return true;
     }
 
