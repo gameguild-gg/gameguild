@@ -1,8 +1,8 @@
 namespace GameGuild.Modules.Credentials;
 
 /// <summary>
-/// EntityBase Framework configuration for Credential entity
-/// Fixes relationship configuration to focus on types rather than GUID properties
+///     EntityBase Framework configuration for Credential entity
+///     Fixes relationship configuration to focus on types rather than GUID properties
 /// </summary>
 public class CredentialConfiguration : IEntityTypeConfiguration<Credential>
 {
