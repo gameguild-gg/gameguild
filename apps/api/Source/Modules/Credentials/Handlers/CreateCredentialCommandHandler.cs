@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Credentials;
 
@@ -40,10 +41,11 @@ public class CreateCredentialCommandHandler(ICredentialService credentialService
 
             _logger.LogInformation("Created credential {CredentialId} for user {UserId}", createdCredential.Id, request.UserId);
 
+            // TODO: Event not notification;
             // Publish notification for domain events
-            var notification = new CredentialCreatedNotification { CredentialId = createdCredential.Id, UserId = createdCredential.UserId, Type = createdCredential.Type };
+            // var notification = new CredentialCreatedNotification { CredentialId = createdCredential.Id, UserId = createdCredential.UserId, Type = createdCredential.Type };
 
-            await _mediator.Publish(notification, cancellationToken);
+            // await _mediator.Publish(notification, cancellationToken);
 
             return createdCredential;
         }
