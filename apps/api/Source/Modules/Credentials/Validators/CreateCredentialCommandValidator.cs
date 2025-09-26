@@ -12,35 +12,17 @@ public class CreateCredentialCommandValidator : AbstractValidator<CreateCredenti
     {
         _context = context;
 
-        RuleFor(x => x.UserId)
-            .NotEmpty()
-            .WithMessage("User ID is required")
-            .MustAsync(UserExists)
-            .WithMessage("User not found");
+        RuleFor(x => x.UserId).NotEmpty().WithMessage("User ID is required").MustAsync(UserExists).WithMessage("User not found");
 
-        RuleFor(x => x.Type)
-            .NotEmpty()
-            .WithMessage("Credential type is required")
-            .MaximumLength(50)
-            .WithMessage("Credential type must be 50 characters or fewer");
+        RuleFor(x => x.Type).NotEmpty().WithMessage("Credential type is required").MaximumLength(50).WithMessage("Credential type must be 50 characters or fewer");
 
-        RuleFor(x => x.Value)
-            .NotEmpty()
-            .WithMessage("Credential value is required")
-            .MaximumLength(1000)
-            .WithMessage("Credential value must be 1000 characters or fewer");
+        RuleFor(x => x.Value).NotEmpty().WithMessage("Credential value is required").MaximumLength(1000).WithMessage("Credential value must be 1000 characters or fewer");
 
-        RuleFor(x => x.Metadata)
-            .MaximumLength(2000)
-            .WithMessage("Metadata must be 2000 characters or fewer");
+        RuleFor(x => x.Metadata).MaximumLength(2000).WithMessage("Metadata must be 2000 characters or fewer");
 
-        RuleFor(x => x.ExpiresAt)
-            .Must(BeInTheFuture)
-            .WithMessage("Expiration date must be in the future");
+        RuleFor(x => x.ExpiresAt).Must(BeInTheFuture).WithMessage("Expiration date must be in the future");
 
-        RuleFor(x => x)
-            .MustAsync(BeUniqueCredentialForUser)
-            .WithMessage("A credential with this type already exists for the user");
+        RuleFor(x => x).MustAsync(BeUniqueCredentialForUser).WithMessage("A credential with this type already exists for the user");
     }
 
     private async Task<bool> UserExists(Guid userId, CancellationToken cancellationToken) { return await _context.Users.AnyAsync(user => user.Id == userId && user.DeletedAt == null, cancellationToken); }
