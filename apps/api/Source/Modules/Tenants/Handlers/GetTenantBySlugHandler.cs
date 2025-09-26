@@ -4,7 +4,7 @@ using GameGuild.Database;
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// Handler for getting a tenant by slug
+///     Handler for getting a tenant by slug
 /// </summary>
 public class GetTenantBySlugHandler(ApplicationDbContext context, ILogger<GetTenantBySlugHandler> logger) : IQueryHandler<GetTenantBySlugQuery, Result<Tenant?>>
 {
@@ -16,7 +16,7 @@ public class GetTenantBySlugHandler(ApplicationDbContext context, ILogger<GetTen
 
             if (!request.IncludeDeleted) query = query.Where(t => t.DeletedAt == null);
 
-            var tenant = await query.FirstOrDefaultAsync(cancellationToken);
+            Tenant? tenant = await query.FirstOrDefaultAsync(cancellationToken);
 
             logger.LogInformation("Retrieved tenant by slug '{TenantSlug}': {Found}", request.Slug, tenant != null ? "Found" : "Not Found");
 

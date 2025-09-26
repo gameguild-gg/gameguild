@@ -32,7 +32,7 @@ public class CreateUserCommandValidator : AbstractValidator<CreateUserCommand>
 
     private async Task<bool> BeUniqueEmail(string email, CancellationToken cancellationToken)
     {
-        var existingUser = await _userService.GetByEmailAsync(email);
+        User? existingUser = await _userService.GetByEmailAsync(email);
 
         return existingUser == null;
     }

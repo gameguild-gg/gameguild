@@ -8,7 +8,7 @@ public class DeactivateUserHandler(ApplicationDbContext context, ILogger<Deactiv
 {
     public async Task<bool> Handle(DeactivateUserCommand request, CancellationToken cancellationToken)
     {
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
+        User? user = await context.Users.FirstOrDefaultAsync(u => u.Id == request.UserId && u.DeletedAt == null, cancellationToken);
 
         if (user == null) return false;
 

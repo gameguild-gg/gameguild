@@ -14,7 +14,7 @@ public class GetTenantByNameHandler(ApplicationDbContext context, ILogger<GetTen
 
             if (!request.IncludeDeleted) query = query.Where(t => t.DeletedAt == null);
 
-            var tenant = await query.FirstOrDefaultAsync(cancellationToken);
+            Tenant? tenant = await query.FirstOrDefaultAsync(cancellationToken);
 
             logger.LogInformation("Retrieved tenant by name '{TenantName}': {Found}", request.Name, tenant != null ? "Found" : "Not Found");
 

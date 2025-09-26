@@ -1,6 +1,5 @@
 ﻿using FluentValidation;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Tenants;
 
@@ -20,7 +19,7 @@ public class ActivateTenantCommandValidator : AbstractValidator<ActivateTenantCo
 
     private async Task<bool> TenantIsInactive(Guid tenantId, CancellationToken cancellationToken)
     {
-        var tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId && t.DeletedAt == null, cancellationToken);
+        Tenant? tenant = await _context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId && t.DeletedAt == null, cancellationToken);
 
         return tenant is { IsActive: false };
     }

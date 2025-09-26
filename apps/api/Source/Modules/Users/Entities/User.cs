@@ -6,6 +6,32 @@ namespace GameGuild.Modules.Users;
 [Index(nameof(Username), IsUnique = true)]
 public sealed class User : EntityBase, IUser
 {
+    /// <summary>
+    ///     Default constructor
+    /// </summary>
+    public User() { }
+
+    /// <summary>
+    ///     Constructor for partial initialization
+    /// </summary>
+    /// <param name="partial">Partial user data</param>
+    public User(object partial) : base(partial) { }
+
+    // Use EmailAddress value object for strong typing and validation
+    public EmailAddress? EmailAddress { get; set; }
+
+    public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    ///     Phone number as value object with validation and formatting
+    /// </summary>
+    public PhoneNumber? PhoneNumber { get; set; }
+
+    /// <summary>
+    ///     Navigation property to user credentials
+    /// </summary>
+    public ICollection<Credential> Credentials { get; set; } = new List<Credential>();
+
     [Required]
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
@@ -14,38 +40,12 @@ public sealed class User : EntityBase, IUser
     [MaxLength(50)]
     public string Username { get; set; } = string.Empty;
 
-    // Use EmailAddress value object for strong typing and validation
-    public EmailAddress? EmailAddress { get; set; }
-
     // Legacy Email property for backwards compatibility (mapped to EmailAddress.Value)
     [NotMapped]
     public string Email { get => EmailAddress?.Value ?? string.Empty; set => EmailAddress = string.IsNullOrEmpty(value) ? null : new EmailAddress(value); }
 
-    public bool IsActive { get; set; } = true;
-
     /// <summary>
-    /// Phone number as value object with validation and formatting
-    /// </summary>
-    public PhoneNumber? PhoneNumber { get; set; }
-
-    /// <summary>
-    /// Navigation property to user credentials
-    /// </summary>
-    public ICollection<Credential> Credentials { get; set; } = new List<Credential>();
-
-    /// <summary>
-    /// Default constructor
-    /// </summary>
-    public User() { }
-
-    /// <summary>
-    /// Constructor for partial initialization
-    /// </summary>
-    /// <param name="partial">Partial user data</param>
-    public User(object partial) : base(partial) { }
-
-    /// <summary>
-    /// Activate the user
+    ///     Activate the user
     /// </summary>
     public void Activate()
     {
@@ -54,7 +54,7 @@ public sealed class User : EntityBase, IUser
     }
 
     /// <summary>
-    /// Deactivate the user
+    ///     Deactivate the user
     /// </summary>
     public void Deactivate()
     {
@@ -63,7 +63,7 @@ public sealed class User : EntityBase, IUser
     }
 
     /// <summary>
-    /// Update user information
+    ///     Update user information
     /// </summary>
     /// <param name="name">New name</param>
     /// <param name="phoneNumber">New phone number</param>
@@ -77,7 +77,7 @@ public sealed class User : EntityBase, IUser
     }
 
     /// <summary>
-    /// Record user activity (last seen)
+    ///     Record user activity (last seen)
     /// </summary>
     public void RecordActivity()
     {
@@ -86,7 +86,7 @@ public sealed class User : EntityBase, IUser
     }
 
     /// <summary>
-    /// Static factory method to create a new user
+    ///     Static factory method to create a new user
     /// </summary>
     /// <param name="email">User's email address</param>
     /// <param name="name">User's full name</param>
@@ -103,7 +103,7 @@ public sealed class User : EntityBase, IUser
     }
 
     /// <summary>
-    /// Update the user's name
+    ///     Update the user's name
     /// </summary>
     /// <param name="name">New name</param>
     public void UpdateName(string name)
@@ -114,7 +114,7 @@ public sealed class User : EntityBase, IUser
     }
 
     /// <summary>
-    /// Update the user's phone number
+    ///     Update the user's phone number
     /// </summary>
     /// <param name="phoneNumber">New phone number</param>
     public void UpdatePhoneNumber(string? phoneNumber)

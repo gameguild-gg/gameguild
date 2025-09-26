@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Credentials;

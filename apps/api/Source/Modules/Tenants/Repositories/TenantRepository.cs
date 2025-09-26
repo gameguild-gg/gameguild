@@ -4,7 +4,7 @@ using GameGuild.Modules.Localization;
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// Simple repository implementation for tenant CRUD operations.
+///     Simple repository implementation for tenant CRUD operations.
 /// </summary>
 public class TenantRepository(ApplicationDbContext context, ILanguageRepository? languageRepository = null) : ITenantRepository
 {
@@ -14,7 +14,7 @@ public class TenantRepository(ApplicationDbContext context, ILanguageRepository?
 
     public async Task<IReadOnlyList<Tenant>> GetActiveTenantsAsync(CancellationToken cancellationToken = default)
     {
-        List<Tenant> tenants = await _context.Tenants.Where(tenant => tenant.IsActive && !tenant.IsDeleted).AsNoTracking().OrderBy(tenant => tenant.Name).ToListAsync(cancellationToken);
+        var tenants = await _context.Tenants.Where(tenant => tenant.IsActive && !tenant.IsDeleted).AsNoTracking().OrderBy(tenant => tenant.Name).ToListAsync(cancellationToken);
 
         return tenants.AsReadOnly();
     }
@@ -63,7 +63,7 @@ public class TenantRepository(ApplicationDbContext context, ILanguageRepository?
     {
         string normalizedSlug = slug.ToLowerInvariant();
 
-        IQueryable<Tenant> query = _context.Tenants.Where(tenant => tenant.Slug.ToLower() == normalizedSlug && !tenant.IsDeleted);
+        var query = _context.Tenants.Where(tenant => tenant.Slug.ToLower() == normalizedSlug && !tenant.IsDeleted);
 
         if (excludeId.HasValue) { query = query.Where(tenant => tenant.Id != excludeId.Value); }
 
@@ -112,7 +112,7 @@ public class TenantRepository(ApplicationDbContext context, ILanguageRepository?
 
     public async Task<IReadOnlyList<TenantDomain>> GetTenantDomainsAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
-        List<TenantDomain> domains = await _context.TenantDomains.Where(domain => domain.TenantId == tenantId).ToListAsync(cancellationToken);
+        var domains = await _context.TenantDomains.Where(domain => domain.TenantId == tenantId).ToListAsync(cancellationToken);
 
         return domains.AsReadOnly();
     }

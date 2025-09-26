@@ -19,7 +19,7 @@ public class ActivateUserCommandValidator : AbstractValidator<ActivateUserComman
 
     private async Task<bool> UserIsDeactivated(Guid userId, CancellationToken cancellationToken)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId && x.DeletedAt == null, cancellationToken);
+        User? user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId && x.DeletedAt == null, cancellationToken);
 
         return user?.IsActive == false;
     }

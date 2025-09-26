@@ -4,7 +4,7 @@ using GameGuild.Database;
 namespace GameGuild.Modules.Users;
 
 /// <summary>
-/// Handler for bulk restoring users
+///     Handler for bulk restoring users
 /// </summary>
 public class BulkRestoreUsersHandler(ApplicationDbContext context, ILogger<BulkRestoreUsersHandler> logger, IMediator mediator) : IResultCommandHandler<BulkRestoreUsersCommand, BulkOperationResult>
 {
@@ -15,7 +15,7 @@ public class BulkRestoreUsersHandler(ApplicationDbContext context, ILogger<BulkR
         var successCount = 0;
         var errors = new List<string>();
 
-        foreach (var user in users)
+        foreach (User user in users)
         {
             try
             {
@@ -37,15 +37,15 @@ public class BulkRestoreUsersHandler(ApplicationDbContext context, ILogger<BulkR
         var foundUserIds = users.Select(u => u.Id).ToHashSet();
         var notFoundIds = request.UserIds.Where(id => !foundUserIds.Contains(id));
 
-        foreach (var notFoundId in notFoundIds) errors.Add($"User {notFoundId} not found or not deleted");
+        foreach (Guid notFoundId in notFoundIds) errors.Add($"User {notFoundId} not found or not deleted");
 
         await context.SaveChangesAsync(cancellationToken);
 
-        var failedCount = request.UserIds.Count - successCount;
+        int failedCount = request.UserIds.Count - successCount;
         var result = new BulkOperationResult(request.UserIds.Count, successCount, notFoundIds.Count());
 
         // Add all errors to the result
-        foreach (var error in errors) result.AddError(error);
+        foreach (string error in errors) result.AddError(error);
 
         logger.LogInformation("Bulk restore completed: {SuccessCount}/{TotalCount} users restored. Reason: {Reason}", successCount, request.UserIds.Count, request.Reason ?? "Not specified");
 
