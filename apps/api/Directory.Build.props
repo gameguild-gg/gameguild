@@ -1,37 +1,37 @@
 <Project>
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
 
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <Deterministic>true</Deterministic>
-    <AnalysisLevel>latest</AnalysisLevel>
-    <!-- Temporarily disable aggressive analyzer mode to unblock build; will re-enable after
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Deterministic>true</Deterministic>
+        <AnalysisLevel>latest</AnalysisLevel>
+        <!-- Temporarily disable aggressive analyzer mode to unblock build; will re-enable after
     refactor -->
-    <AnalysisMode>AllDisabledByDefault</AnalysisMode>
-    <EnableNETAnalyzers>false</EnableNETAnalyzers>
-    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+        <AnalysisMode>AllDisabledByDefault</AnalysisMode>
+        <EnableNETAnalyzers>false</EnableNETAnalyzers>
+        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
 
 
-    <!--    <EnableNETAnalyzers>true</EnableNETAnalyzers>-->
-    <!--    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>-->
-    <!--    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>-->
-    <!--    <RunCodeAnalysis>true</RunCodeAnalysis>-->
-    <!--    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>-->
-    <!--    <WarningsAsErrors/>-->
-    <!--    <WarningsNotAsErrors/>-->
-  </PropertyGroup>
-  <!-- Opt-in flag for Sonar analyzers. Disabled by default to unblock current build. -->
-  <PropertyGroup>
-    <IncludeSonarAnalyzers>false</IncludeSonarAnalyzers>
-  </PropertyGroup>
+        <!--    <EnableNETAnalyzers>true</EnableNETAnalyzers>-->
+        <!--    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>-->
+        <!--    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>-->
+        <!--    <RunCodeAnalysis>true</RunCodeAnalysis>-->
+        <!--    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>-->
+        <!--    <WarningsAsErrors/>-->
+        <!--    <WarningsNotAsErrors/>-->
+    </PropertyGroup>
+    <!-- Opt-in flag for Sonar analyzers. Disabled by default to unblock current build. -->
+    <PropertyGroup>
+        <IncludeSonarAnalyzers>false</IncludeSonarAnalyzers>
+    </PropertyGroup>
 
-  <ItemGroup
-    Condition="'$(MSBuildProjectExtension)' != '.dcproj' AND '$(IncludeSonarAnalyzers)' == 'true'">
-    <PackageReference Include="SonarAnalyzer.CSharp">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
+    <ItemGroup
+        Condition="'$(MSBuildProjectExtension)' != '.dcproj' AND '$(IncludeSonarAnalyzers)' == 'true'">
+        <PackageReference Include="SonarAnalyzer.CSharp">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
 </Project>
