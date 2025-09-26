@@ -14,8 +14,5 @@ public class TenantContext : ITenantContext
     public Guid? CurrentTenantId => _currentTenant?.Id;
 
     /// <inheritdoc />
-    public void SetCurrentTenant(Tenant? tenant)
-    {
-        _currentTenant = tenant;
-    }
+    public void SetCurrentTenant(Tenant? tenant) { _currentTenant = tenant; }
 }
