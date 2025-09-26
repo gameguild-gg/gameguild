@@ -1,7 +1,8 @@
 namespace GameGuild.Modules.Credentials;
 
 /// <summary> Service interface for managing user credentials </summary>
-public interface ICredentialService {
+public interface ICredentialService
+{
   /// <summary> Get all credentials for a user </summary>
   /// <param name="userId"> User ID </param>
   /// <returns> List of credentials </returns>
@@ -11,6 +12,11 @@ public interface ICredentialService {
   /// <param name="id"> Credential ID </param>
   /// <returns> Credential or null if not found </returns>
   Task<Credential?> GetCredentialByIdAsync(Guid id);
+
+  /// <summary> Get a credential by ID including soft-deleted entries </summary>
+  /// <param name="id"> Credential ID </param>
+  /// <returns> Credential or null if not found </returns>
+  Task<Credential?> GetCredentialIncludingDeletedAsync(Guid id);
 
   /// <summary> Get a credential by user ID and type </summary>
   /// <param name="userId"> User ID </param>
