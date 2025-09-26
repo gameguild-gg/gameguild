@@ -1,77 +1,95 @@
-using GameGuild.Database;
-
-
 namespace GameGuild.Modules.Users;
 
-public class UserService(ApplicationDbContext context) : IUserService {
-  public async Task<IEnumerable<User>> GetAllUsersAsync() { return await context.Users.Where(u => u.DeletedAt == null).ToListAsync(); }
+public class UserService(IUserRepository userRepository) : IUserService
+{
+    private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
 
-  public async Task<User?> GetUserByIdAsync(Guid id) { return await context.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null); }
+    public async Task<IEnumerable<User>> GetAllUsersAsync() { return await _userRepository.GetAllAsync(); }
 
-  public async Task<User?> GetByEmailAsync(string email) { 
-    var normalizedEmail = email.ToLowerInvariant();
-    return await context.Users.FirstOrDefaultAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail && u.DeletedAt == null); 
-  }
+    public async Task<User?> GetUserByIdAsync(Guid id) { return await _userRepository.GetByIdAsync(id); }
 
-  public async Task<User> CreateUserAsync(User user) {
-    // Check if email already exists
-    var existingUser = await GetByEmailAsync(user.Email);
+    public async Task<User?> GetByEmailAsync(string email)
+    {
+        return await _userRepository.GetByEmailAsync(email);
+    }
 
-    if (existingUser != null) throw new InvalidOperationException($"A user with email '{user.Email}' already exists.");
+    public async Task<User> CreateUserAsync(User user)
+    {
+        // Check if email already exists
+        var existingUser = await GetByEmailAsync(user.Email);
 
-    context.Users.Add(user);
-    await context.SaveChangesAsync();
+        if (existingUser != null) throw new InvalidOperationException($"A user with email '{user.Email}' already exists.");
 
-    return user;
-  }
+        return await _userRepository.AddAsync(user);
+    }
 
-  public async Task<User?> UpdateUserAsync(Guid id, User user) {
-    var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null);
+    public async Task<User> CreateUserAsync(string name, string email, bool isActive = true, CancellationToken cancellationToken = default)
+    {
+        // Check if email already exists
+        var existingUser = await GetByEmailAsync(email);
 
-    if (existingUser == null) return null;
+        if (existingUser != null) throw new InvalidOperationException($"A user with email '{email}' already exists.");
 
-    existingUser.Name = user.Name;
-    existingUser.Email = user.Email;
-    existingUser.IsActive = user.IsActive;
+        // Generate unique username from name using slugify
+        var baseUsername = name.ToSlugCase();
+        var existingUsernames = await _userRepository.GetUsernamesStartingWithAsync(baseUsername, cancellationToken);
 
-    await context.SaveChangesAsync();
+        var uniqueUsername = SlugCase.GenerateUnique(name, existingUsernames, 50);
 
-    return existingUser;
-  }
+        var user = new User
+        {
+            Name = name,
+            Username = uniqueUsername,
+            Email = email,
+            IsActive = isActive
+        };
 
-  public async Task<bool> DeleteUserAsync(Guid id) {
-    var user = await context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        return await _userRepository.AddAsync(user);
+    }
 
-    if (user == null) return false;
+    public async Task<User?> UpdateUserAsync(Guid id, User user)
+    {
+        var existingUser = await _userRepository.GetByIdAsync(id);
 
-    context.Users.Remove(user);
-    await context.SaveChangesAsync();
+        if (existingUser == null) return null;
 
-    return true;
-  }
+        existingUser.Name = user.Name;
+        existingUser.Email = user.Email;
+        existingUser.IsActive = user.IsActive;
 
-  public async Task<bool> SoftDeleteUserAsync(Guid id) {
-    var user = await context.Users.FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt == null);
+        return await _userRepository.UpdateAsync(existingUser);
+    }
 
-    if (user == null) return false;
+    public async Task<bool> DeleteUserAsync(Guid id)
+    {
+        var user = await _userRepository.GetByIdAsync(id, includeDeleted: true);
 
-    user.SoftDelete();
-    await context.SaveChangesAsync();
+        if (user == null) return false;
 
-    return true;
-  }
+        await _userRepository.RemoveAsync(id);
+        return true;
+    }
 
-  public async Task<bool> RestoreUserAsync(Guid id) {
-    // Need to include deleted entities to find soft-deleted user
-    var user = await context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == id && u.DeletedAt != null);
+    public async Task<bool> SoftDeleteUserAsync(Guid id)
+    {
+        var user = await _userRepository.GetByIdAsync(id);
 
-    if (user == null) return false;
+        if (user == null) return false;
 
-    user.Restore();
-    await context.SaveChangesAsync();
+        await _userRepository.SoftDeleteAsync(id);
+        return true;
+    }
 
-    return true;
-  }
+    public async Task<bool> RestoreUserAsync(Guid id)
+    {
+        var deletedUsers = await _userRepository.GetDeletedAsync();
+        var user = deletedUsers.FirstOrDefault(u => u.Id == id);
 
-  public async Task<IEnumerable<User>> GetDeletedUsersAsync() { return await context.Users.IgnoreQueryFilters().Where(u => u.DeletedAt != null).ToListAsync(); }
+        if (user == null) return false;
+
+        await _userRepository.RestoreAsync(id);
+        return true;
+    }
+
+    public async Task<IEnumerable<User>> GetDeletedUsersAsync() { return await _userRepository.GetDeletedAsync(); }
 }
