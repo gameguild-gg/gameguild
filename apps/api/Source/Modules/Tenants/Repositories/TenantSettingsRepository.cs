@@ -10,12 +10,12 @@ namespace GameGuild.Modules.Tenants;
 public class TenantSettingsRepository(ApplicationDbContext context, ILanguageRepository? languageRepository = null) : ITenantSettingsRepository
 {
     private readonly ApplicationDbContext _context = context;
+
     private readonly ILanguageRepository _languageRepository = languageRepository ?? new LanguageRepository(context);
 
     public async Task<TenantSettings?> GetTenantSettingsAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
-        return await _context.TenantSettings
-            .FirstOrDefaultAsync(settings => settings.TenantId == tenantId, cancellationToken);
+        return await _context.TenantSettings.FirstOrDefaultAsync(settings => settings.TenantId == tenantId, cancellationToken);
     }
 
     public async Task<TenantSettings> CreateTenantSettingsAsync(TenantSettings settings, CancellationToken cancellationToken = default)
@@ -24,10 +24,8 @@ public class TenantSettingsRepository(ApplicationDbContext context, ILanguageRep
         if (settings.DefaultLanguageId == Guid.Empty)
         {
             Language? defaultLanguage = await _languageRepository.GetDefaultAsync(cancellationToken);
-            if (defaultLanguage != null)
-            {
-                settings.DefaultLanguageId = defaultLanguage.Id;
-            }
+
+            if (defaultLanguage != null) { settings.DefaultLanguageId = defaultLanguage.Id; }
         }
 
         settings.Id = Guid.NewGuid();
@@ -46,10 +44,8 @@ public class TenantSettingsRepository(ApplicationDbContext context, ILanguageRep
         if (settings.DefaultLanguageId == Guid.Empty)
         {
             Language? defaultLanguage = await _languageRepository.GetDefaultAsync(cancellationToken);
-            if (defaultLanguage != null)
-            {
-                settings.DefaultLanguageId = defaultLanguage.Id;
-            }
+
+            if (defaultLanguage != null) { settings.DefaultLanguageId = defaultLanguage.Id; }
         }
 
         settings.UpdatedAt = DateTime.UtcNow;
@@ -70,15 +66,9 @@ public class TenantSettingsRepository(ApplicationDbContext context, ILanguageRep
         {
             // Update existing settings
             existingSettings.DefaultLanguageId = settings.DefaultLanguageId;
-            existingSettings.TimeZone = settings.TimeZone;
-            existingSettings.DateFormat = settings.DateFormat;
-            existingSettings.TimeFormat = settings.TimeFormat;
-            existingSettings.Currency = settings.Currency;
-            existingSettings.EnableRegistration = settings.EnableRegistration;
-            existingSettings.RequireEmailVerification = settings.RequireEmailVerification;
-            existingSettings.MaxUsersLimit = settings.MaxUsersLimit;
-            existingSettings.IsMaintenanceMode = settings.IsMaintenanceMode;
-            existingSettings.MaintenanceMessage = settings.MaintenanceMessage;
+            existingSettings.DefaultTimezone = settings.DefaultTimezone;
+            existingSettings.AllowUserRegistration = settings.AllowUserRegistration;
+            existingSettings.RequireRegistrationApproval = settings.RequireRegistrationApproval;
 
             return await UpdateTenantSettingsAsync(existingSettings, cancellationToken);
         }
@@ -93,10 +83,7 @@ public class TenantSettingsRepository(ApplicationDbContext context, ILanguageRep
     {
         TenantSettings? settings = await GetTenantSettingsAsync(tenantId, cancellationToken);
 
-        if (settings == null)
-        {
-            return false;
-        }
+        if (settings == null) { return false; }
 
         _ = _context.TenantSettings.Remove(settings);
         int changesCount = await _context.SaveChangesAsync(cancellationToken);
@@ -106,10 +93,7 @@ public class TenantSettingsRepository(ApplicationDbContext context, ILanguageRep
 
     public async Task<IReadOnlyList<TenantSettings>> GetAllTenantSettingsAsync(CancellationToken cancellationToken = default)
     {
-        List<TenantSettings> settings = await _context.TenantSettings
-            .AsNoTracking()
-            .OrderBy(s => s.CreatedAt)
-            .ToListAsync(cancellationToken);
+        var settings = await _context.TenantSettings.AsNoTracking().OrderBy(s => s.CreatedAt).ToListAsync(cancellationToken);
 
         return settings.AsReadOnly();
     }

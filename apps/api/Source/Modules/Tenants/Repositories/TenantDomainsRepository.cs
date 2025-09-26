@@ -12,7 +12,7 @@ public class TenantDomainsRepository(ApplicationDbContext context) : ITenantDoma
 
     public async Task<IReadOnlyList<TenantDomain>> GetTenantDomainsAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
-        List<TenantDomain> domains = await _context.TenantDomains
+        var domains = await _context.TenantDomains
             .Where(domain => domain.TenantId == tenantId)
             .AsNoTracking()
             .OrderBy(domain => domain.TopLevelDomain)
@@ -96,7 +96,7 @@ public class TenantDomainsRepository(ApplicationDbContext context) : ITenantDoma
         string normalizedTopLevel = topLevelDomain.ToLowerInvariant();
         string? normalizedSubdomain = subdomain?.ToLowerInvariant();
 
-        IQueryable<TenantDomain> query = _context.TenantDomains
+        var query = _context.TenantDomains
             .Where(domain =>
                 domain.TopLevelDomain == normalizedTopLevel &&
                 domain.Subdomain == normalizedSubdomain);
@@ -111,7 +111,7 @@ public class TenantDomainsRepository(ApplicationDbContext context) : ITenantDoma
 
     public async Task<IReadOnlyList<TenantDomain>> GetAllTenantDomainsAsync(CancellationToken cancellationToken = default)
     {
-        List<TenantDomain> domains = await _context.TenantDomains
+        var domains = await _context.TenantDomains
             .AsNoTracking()
             .OrderBy(d => d.TopLevelDomain)
             .ThenBy(d => d.Subdomain)
