@@ -1,16 +1,13 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Credentials.Commands;
 
-
-namespace GameGuild.Modules.Credentials.Handlers;
+namespace GameGuild.Modules.Credentials;
 
 /// <summary>
 /// Handler for RestoreCredentialCommand using CQRS pattern
 /// </summary>
-public class RestoreCredentialCommandHandler : IRequestHandler<RestoreCredentialCommand, bool> {
-  private readonly ICredentialService _credentialService;
+public class RestoreCredentialCommandHandler(ICredentialService credentialService) : IRequestHandler<RestoreCredentialCommand, bool>
+{
+    private readonly ICredentialService _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService));
 
-  public RestoreCredentialCommandHandler(ICredentialService credentialService) { _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService)); }
-
-  public async Task<bool> Handle(RestoreCredentialCommand request, CancellationToken cancellationToken) { return await _credentialService.RestoreCredentialAsync(request.Id); }
+    public async Task<bool> Handle(RestoreCredentialCommand request, CancellationToken cancellationToken) { return await _credentialService.RestoreCredentialAsync(request.Id); }
 }
