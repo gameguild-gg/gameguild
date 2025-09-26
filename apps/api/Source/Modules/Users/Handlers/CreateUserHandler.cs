@@ -1,34 +1,15 @@
 using GameGuild.CQRS;
-using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-
 
 namespace GameGuild.Modules.Users;
 
 /// <summary> Handler for creating a new user with validation and business logic </summary>
-public class CreateUserHandler(ApplicationDbContext context, ILogger<CreateUserHandler> logger, IMediator mediator) : IRequestHandler<CreateUserCommand, User> {
-  public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken) {
-    // Check if email already exists
-    var existingUser = await context.Users.FirstOrDefaultAsync(user => user.Email == request.Email, cancellationToken);
+public class CreateUserHandler(IUserService userService, ILogger<CreateUserHandler> logger, IMediator mediator) : IRequestHandler<CreateUserCommand, User>
+{
+  public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken)
+  {
+    logger.LogDebug("Creating user with email {Email}", request.Email);
 
-    if (existingUser != null) {
-      throw new InvalidOperationException($"User with email {request.Email} already exists");
-    }
-
-    // Generate unique username from name using slugify
-    var baseUsername = request.Name.ToSlugCase();
-    var existingUsernames = await context.Users.Where(u => u.Username.StartsWith(baseUsername)).Select(u => u.Username).ToListAsync(cancellationToken);
-
-    var uniqueUsername = SlugCase.GenerateUnique(request.Name, existingUsernames, 50);
-
-    // Normalize negative balance to zero - business rule
-    var normalizedBalance = Math.Max(0, request.InitialBalance);
-
-    var user = new User { Name = request.Name, Username = uniqueUsername, Email = request.Email, IsActive = request.IsActive, Balance = Money.FromDecimal(normalizedBalance), AvailableBalance = Money.FromDecimal(normalizedBalance) };
-
-    _ = context.Users.Add(user);
-    _ = await context.SaveChangesAsync(cancellationToken);
+    var user = await userService.CreateUserAsync(request.Name, request.Email, request.IsActive, cancellationToken);
 
     logger.LogInformation("User {UserId} created with email {Email}", user.Id, user.Email);
 
