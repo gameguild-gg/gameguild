@@ -18,6 +18,7 @@ public class DeactivateCredentialCommandHandler(ICredentialService credentialSer
         if (!deactivated)
         {
             _logger.LogWarning("Credential {CredentialId} deactivation failed or credential already inactive", request.Id);
+
             return false;
         }
 

@@ -18,6 +18,7 @@ public class RestoreCredentialCommandHandler(ICredentialService credentialServic
         if (!restored)
         {
             _logger.LogWarning("Credential {CredentialId} restore failed or credential is not soft deleted", request.Id);
+
             return false;
         }
 
