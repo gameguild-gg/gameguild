@@ -71,7 +71,7 @@ public class CredentialsController(IMediator mediator, ILogger<CredentialsContro
             _logger.LogInformation("Getting credential {CredentialId}", id);
 
             var query = new GetCredentialByIdQuery(id);
-            var credential = await _mediator.Send(query);
+            Credential? credential = await _mediator.Send(query);
 
             if (credential == null) return NotFound($"Credential with ID {id} not found");
 
@@ -97,7 +97,7 @@ public class CredentialsController(IMediator mediator, ILogger<CredentialsContro
             _logger.LogInformation("Getting credential of type {Type} for user {UserId}", type, userId);
 
             var query = new GetCredentialByUserIdAndTypeQuery(userId, type);
-            var credential = await _mediator.Send(query);
+            Credential? credential = await _mediator.Send(query);
 
             if (credential == null) return NotFound($"Credential of type '{type}' for user {userId} not found");
 
@@ -128,8 +128,8 @@ public class CredentialsController(IMediator mediator, ILogger<CredentialsContro
                 UserId = createRequest.UserId, Type = createRequest.Type, Value = createRequest.Value, Metadata = createRequest.Metadata, ExpiresAt = createRequest.ExpiresAt, IsActive = createRequest.IsActive
             };
 
-            var createdCredential = await _mediator.Send(command);
-            var response = MapToResponseDto(createdCredential);
+            Credential createdCredential = await _mediator.Send(command);
+            CredentialResponse response = MapToResponseDto(createdCredential);
 
             return CreatedAtAction(nameof(GetCredential), new { id = createdCredential.Id }, response);
         }
@@ -159,8 +159,8 @@ public class CredentialsController(IMediator mediator, ILogger<CredentialsContro
                 Id = id, Type = updateRequest.Type, Value = updateRequest.Value, Metadata = updateRequest.Metadata, ExpiresAt = updateRequest.ExpiresAt, IsActive = updateRequest.IsActive
             };
 
-            var updatedCredential = await _mediator.Send(command);
-            var response = MapToResponseDto(updatedCredential);
+            Credential updatedCredential = await _mediator.Send(command);
+            CredentialResponse response = MapToResponseDto(updatedCredential);
 
             return Ok(response);
         }
@@ -184,7 +184,7 @@ public class CredentialsController(IMediator mediator, ILogger<CredentialsContro
             _logger.LogInformation("Soft deleting credential {CredentialId}", id);
 
             var command = new SoftDeleteCredentialCommand(id);
-            var result = await _mediator.Send(command);
+            bool result = await _mediator.Send(command);
 
             if (!result) return NotFound($"Credential with ID {id} not found");
 
@@ -209,7 +209,7 @@ public class CredentialsController(IMediator mediator, ILogger<CredentialsContro
             _logger.LogInformation("Restoring credential {CredentialId}", id);
 
             var command = new RestoreCredentialCommand(id);
-            var result = await _mediator.Send(command);
+            bool result = await _mediator.Send(command);
 
             if (!result) return NotFound($"Deleted credential with ID {id} not found");
 
@@ -234,7 +234,7 @@ public class CredentialsController(IMediator mediator, ILogger<CredentialsContro
             _logger.LogInformation("Hard deleting credential {CredentialId}", id);
 
             var command = new HardDeleteCredentialCommand(id);
-            var result = await _mediator.Send(command);
+            bool result = await _mediator.Send(command);
 
             if (!result) return NotFound($"Credential with ID {id} not found");
 
@@ -259,7 +259,7 @@ public class CredentialsController(IMediator mediator, ILogger<CredentialsContro
             _logger.LogInformation("Deactivating credential {CredentialId}", id);
 
             var command = new DeactivateCredentialCommand(id);
-            var result = await _mediator.Send(command);
+            bool result = await _mediator.Send(command);
 
             if (!result) return NotFound($"Credential with ID {id} not found");
 
@@ -284,7 +284,7 @@ public class CredentialsController(IMediator mediator, ILogger<CredentialsContro
             _logger.LogInformation("Activating credential {CredentialId}", id);
 
             var command = new ActivateCredentialCommand(id);
-            var result = await _mediator.Send(command);
+            bool result = await _mediator.Send(command);
 
             if (!result) return NotFound($"Credential with ID {id} not found");
 
@@ -349,8 +349,8 @@ public class CredentialsController(IMediator mediator, ILogger<CredentialsContro
                 Version = credential.User.Version,
                 CreatedAt = credential.User.CreatedAt,
                 UpdatedAt = credential.User.UpdatedAt,
-                DeletedAt = credential.User.DeletedAt,
-            },
+                DeletedAt = credential.User.DeletedAt
+            }
         };
     }
 }

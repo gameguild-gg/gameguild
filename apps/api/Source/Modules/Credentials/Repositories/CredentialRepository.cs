@@ -4,8 +4,8 @@ using GameGuild.Database;
 namespace GameGuild.Modules.Credentials;
 
 /// <summary>
-/// Repository implementation for credential data access operations
-/// Adapter implementation following hexagonal architecture principles
+///     Repository implementation for credential data access operations
+///     Adapter implementation following hexagonal architecture principles
 /// </summary>
 public class CredentialRepository(ApplicationDbContext context) : ICredentialRepository
 {
@@ -38,7 +38,7 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
     public async Task<(IEnumerable<Credential> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
     {
         var query = _context.Credentials.Include(c => c.User);
-        var totalCount = await query.CountAsync(cancellationToken);
+        int totalCount = await query.CountAsync(cancellationToken);
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
 
         return (items, totalCount);
@@ -90,7 +90,7 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
 
     public async Task<Credential> UpdateAsync(Credential entity, CancellationToken cancellationToken = default)
     {
-        var existingCredential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == entity.Id, cancellationToken);
+        Credential? existingCredential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == entity.Id, cancellationToken);
 
         if (existingCredential == null) throw new InvalidOperationException($"Credential with ID {entity.Id} not found");
 
@@ -125,7 +125,7 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
     public async Task RemoveAsync(Guid id, CancellationToken cancellationToken = default)
     {
         // Include deleted entities to allow hard deletion of soft-deleted credentials
-        var credential = await _context.Credentials.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        Credential? credential = await _context.Credentials.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
         if (credential != null)
         {
@@ -142,7 +142,7 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
 
     public async Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        Credential? credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
         if (credential != null)
         {
@@ -154,7 +154,7 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
     public async Task RestoreAsync(Guid id, CancellationToken cancellationToken = default)
     {
         // Need to include deleted entities to find soft-deleted credentials
-        var credential = await _context.Credentials.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt != null, cancellationToken);
+        Credential? credential = await _context.Credentials.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt != null, cancellationToken);
 
         if (credential != null)
         {
@@ -165,7 +165,7 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
 
     public async Task<bool> MarkAsUsedAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        Credential? credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
         if (credential == null) return false;
 
@@ -177,7 +177,7 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
 
     public async Task<bool> ActivateAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        Credential? credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
         if (credential == null) return false;
 
@@ -189,7 +189,7 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
 
     public async Task<bool> DeactivateAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        Credential? credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
         if (credential == null) return false;
 
