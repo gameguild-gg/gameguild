@@ -29,21 +29,31 @@ public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserH
         var changes = new Dictionary<string, object>();
 
         // Update user properties
-        if (request.Name != null && user.Name != request.Name)
+        bool nameChanged = false;
+        if (request.GivenName != null && user.GivenName != request.GivenName)
         {
-            changes["Name"] = new { From = user.Name, To = request.Name };
-            user.Name = request.Name;
+            changes["GivenName"] = new { From = user.GivenName, To = request.GivenName };
+            user.GivenName = request.GivenName;
+            nameChanged = true;
+        }
 
-            // Regenerate username when name changes (only if Username is not explicitly provided)
-            if (request.Username == null)
-            {
-                string baseUsername = request.Name.ToSlugCase();
-                var existingUsernames = await context.Users.Where(u => u.Username.StartsWith(baseUsername) && u.Id != user.Id).Select(u => u.Username).ToListAsync(cancellationToken);
+        if (request.FamilyName != null && user.FamilyName != request.FamilyName)
+        {
+            changes["FamilyName"] = new { From = user.FamilyName, To = request.FamilyName };
+            user.FamilyName = request.FamilyName;
+            nameChanged = true;
+        }
 
-                string uniqueUsername = SlugCase.GenerateUnique(request.Name, existingUsernames, 50);
-                changes["Username"] = new { From = user.Username, To = uniqueUsername };
-                user.Username = uniqueUsername;
-            }
+        // Regenerate username when name changes (only if Username is not explicitly provided)
+        if (nameChanged && request.Username == null)
+        {
+            string fullName = $"{user.GivenName ?? ""} {user.FamilyName ?? ""}".Trim();
+            string baseUsername = string.IsNullOrWhiteSpace(fullName) ? user.Email.Split('@')[0] : fullName.ToSlugCase();
+            var existingUsernames = await context.Users.Where(u => u.Username.StartsWith(baseUsername) && u.Id != user.Id).Select(u => u.Username).ToListAsync(cancellationToken);
+
+            string uniqueUsername = SlugCase.GenerateUnique(string.IsNullOrWhiteSpace(fullName) ? user.Email : fullName, existingUsernames, 50);
+            changes["Username"] = new { From = user.Username, To = uniqueUsername };
+            user.Username = uniqueUsername;
         }
 
         // Handle explicit username updates

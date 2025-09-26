@@ -5,10 +5,13 @@ namespace GameGuild.Modules.Users;
 /// <summary> Command for creating a new user </summary>
 public sealed class CreateUserCommand : ICommand<User>
 {
-    /// <summary> The name of the user </summary>
-    [Required]
-    [StringLength(100, MinimumLength = 1)]
-    public string Name { get; init; } = string.Empty;
+    /// <summary> The given name of the user </summary>
+    [StringLength(100)]
+    public string? GivenName { get; init; }
+
+    /// <summary> The family name of the user </summary>
+    [StringLength(100)]
+    public string? FamilyName { get; init; }
 
     /// <summary> The email address of the user </summary>
     [Required]

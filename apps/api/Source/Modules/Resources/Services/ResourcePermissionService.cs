@@ -14,7 +14,7 @@ public class ResourcePermissionService : IResourcePermissionService
     {
         _logger.LogWarning("ResourcePermissionService.ShareResourceAsync is not implemented - returning stub response");
 
-        return Task.FromResult(new ShareResult { Success = false, ErrorMessage = "ResourcePermissionService not implemented", ShareId = null, UserResults = new List<UserShareResult>() });
+        return Task.FromResult(new ShareResult { Success = false, ErrorMessage = "ResourcePermissionService not implemented", ShareId = null, UserResults = [] });
     }
 
     public Task<IEnumerable<ResourceUserPermission>> GetResourceUsersAsync(string resourceType, Guid resourceId, Guid requestingUserId)

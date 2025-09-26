@@ -9,7 +9,7 @@ public sealed class BulkRestoreUsersCommand : IResultCommand<BulkOperationResult
 {
     [Required]
     [MinLength(1)]
-    public IList<Guid> UserIds { get; set; } = new List<Guid>();
+    public IList<Guid> UserIds { get; set; } = [];
 
     public string? Reason { get; set; }
 }
