@@ -1,58 +1,109 @@
-using DotNetEnv;
 using Microsoft.EntityFrameworkCore.Design;
-
 
 namespace GameGuild.Database;
 
-public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext> {
-  public ApplicationDbContext CreateDbContext(string[ ] args) {
-    var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+/// <summary>
+/// Factory for creating ApplicationDbContext instances
+/// Required for Entity Framework migrations and design-time operations
+/// </summary>
+public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
+{
+    /// <summary>
+    /// Creates a new instance of ApplicationDbContext for design-time operations
+    /// </summary>
+    public ApplicationDbContext CreateDbContext(string[] args)
+    {
+        var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
-    // Load environment variables from .env file
-    Env.Load();
+        // Build configuration from multiple sources
+        var configuration = BuildConfiguration();
 
-    // Get PostgreSQL connection string from environment variables or build it from components
-    var connectionString = GetPostgreSqlConnectionString();
+        // Configure the database connection
+        var connectionString = GetConnectionString(configuration);
+        optionsBuilder.UseNpgsql(connectionString, options => { options.MigrationsHistoryTable("migrations_history", Schemas.Default); });
 
-    // Configure PostgreSQL only - no SQLite fallback
-    optionsBuilder.UseNpgsql(connectionString);
+        // Enable sensitive data logging in development
+        if (!IsDevelopment()) return new ApplicationDbContext(optionsBuilder.Options);
 
-    return new ApplicationDbContext(optionsBuilder.Options);
-  }
+        optionsBuilder.EnableSensitiveDataLogging();
+        optionsBuilder.EnableDetailedErrors();
 
-  private static string GetPostgreSqlConnectionString() {
-    // Try environment variable first
-    var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
-
-    // If not found, try to build from individual components (for Docker)
-    if (string.IsNullOrEmpty(connectionString)) {
-      var host = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
-      var port = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
-      var database = Environment.GetEnvironmentVariable("DB_DATABASE") ?? "postgres";
-      var username = Environment.GetEnvironmentVariable("DB_USERNAME") ?? "postgres";
-      var password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "postgres";
-
-      connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};";
+        return new ApplicationDbContext(optionsBuilder.Options);
     }
 
-    // Final fallback for development
-    if (string.IsNullOrEmpty(connectionString)) {
-      var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+    /// <summary>
+    /// Builds configuration from multiple sources
+    /// </summary>
+    private static IConfiguration BuildConfiguration()
+    {
+        var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile($"appsettings.{GetEnvironment()}.json", optional: true, reloadOnChange: true)
+            .AddEnvironmentVariables();
 
-      if (environment.Equals("Development", StringComparison.OrdinalIgnoreCase)) {
-        connectionString = "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres;";
-        Console.WriteLine("⚠️  No database connection string found. Using default development connection string with postgres/postgres/postgres.");
-        Console.WriteLine("   To customize, set DB_CONNECTION_STRING environment variable or configure in appsettings.Development.json");
-      }
-      else {
-        throw new InvalidOperationException(
-          "PostgreSQL database connection string not found. Please set DB_CONNECTION_STRING environment variable " +
-          "or configure individual DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD environment variables. " +
-          "SQLite is not supported - PostgreSQL only."
-        );
-      }
+        return builder.Build();
     }
 
-    return connectionString;
-  }
+    /// <summary>
+    /// Gets the database connection string from configuration or environment variables
+    /// </summary>
+    private static string GetConnectionString(IConfiguration configuration)
+    {
+        // Try environment variable first (production security best practice)
+        var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+
+        // If not found, try to build PostgreSQL connection string from individual components
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            var host = Environment.GetEnvironmentVariable("DB_HOST") ?? configuration["DB_HOST"] ?? configuration["Database:Host"] ?? "localhost";
+
+            var port = Environment.GetEnvironmentVariable("DB_PORT") ?? configuration["DB_PORT"] ?? configuration["Database:Port"] ?? "5432";
+
+            var database = Environment.GetEnvironmentVariable("DB_DATABASE") ?? configuration["DB_DATABASE"] ?? configuration["Database:Database"] ?? "gameguild";
+
+            var username = Environment.GetEnvironmentVariable("DB_USERNAME") ?? configuration["DB_USERNAME"] ?? configuration["Database:Username"] ?? "postgres";
+
+            var password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? configuration["DB_PASSWORD"] ?? configuration["Database:Password"] ?? "postgres";
+
+            connectionString = $"Host={host};Port={port};Database={database};Username={username};Password={password};";
+        }
+
+        // Fallback to configuration connection strings
+        connectionString ??= configuration.GetConnectionString("DB_CONNECTION_STRING");
+        connectionString ??= configuration.GetConnectionString("DefaultConnection");
+
+        // Final fallback for development
+        if (!string.IsNullOrEmpty(connectionString)) return connectionString;
+
+        if (IsDevelopment())
+        {
+            // Use localhost for native development, postgres for Docker
+            var defaultHost = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true" ? "postgres" : "localhost";
+
+            connectionString = $"Host={defaultHost};Port=5432;Database=gameguild;Username=postgres;Password=postgres;";
+
+            Console.WriteLine($"⚠️  Using default development connection string: {defaultHost}/gameguild");
+            Console.WriteLine("   To customize, set DB_CONNECTION_STRING environment variable");
+        }
+        else
+        {
+            throw new InvalidOperationException(
+                "PostgreSQL database connection string not found. Please set DB_CONNECTION_STRING environment variable " +
+                "or configure individual DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD environment variables " +
+                "or configure 'ConnectionStrings:DB_CONNECTION_STRING' in appsettings.json."
+            );
+        }
+
+        return connectionString;
+    }
+
+    /// <summary>
+    /// Gets the current environment name
+    /// </summary>
+    private static string GetEnvironment() { return Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"; }
+
+    /// <summary>
+    /// Checks if running in development environment
+    /// </summary>
+    private static bool IsDevelopment() { return GetEnvironment().Equals("Development", StringComparison.OrdinalIgnoreCase); }
 }
