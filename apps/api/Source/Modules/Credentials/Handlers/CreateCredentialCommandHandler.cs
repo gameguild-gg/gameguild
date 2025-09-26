@@ -18,10 +18,10 @@ public class CreateCredentialCommandHandler(ICredentialService credentialService
 
         try
         {
-            GetUserByIdQuery getUserQuery = new GetUserByIdQuery { UserId = request.UserId };
+            var getUserQuery = new GetUserByIdQuery { UserId = request.UserId };
             User user = await _mediator.Send(getUserQuery, cancellationToken) ?? throw new ArgumentException($"User with ID {request.UserId} not found");
 
-            Credential credential = new Credential
+            var credential = new Credential
             {
                 Id = Guid.NewGuid(),
                 UserId = user.Id,

@@ -1,45 +1,57 @@
 using GameGuild.CQRS;
-using GameGuild.Database;
-
+using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.UserProfiles;
 
 /// <summary> Handler for creating user profile with business logic and validation </summary>
-public class CreateUserProfileHandler(ApplicationDbContext context, ILogger<CreateUserProfileHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<CreateUserProfileCommand, Result<UserProfile>> {
-  public async Task<Result<UserProfile>> Handle(CreateUserProfileCommand request, CancellationToken cancellationToken) {
-    try {
-      // Check if user profile already exists for this user
-      var existingProfile = await context.Resources.OfType<UserProfile>().FirstOrDefaultAsync(up => up.Id == request.UserId && up.DeletedAt == null, cancellationToken);
+public class CreateUserProfileHandler(IUserProfileService userProfileService, IUserService userService, ILogger<CreateUserProfileHandler> logger, IDomainEventPublisher eventPublisher)
+    : ICommandHandler<CreateUserProfileCommand, Result<UserProfile>>
+{
+    public async Task<Result<UserProfile>> Handle(CreateUserProfileCommand request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Check if user profile already exists for this user
+            UserProfile? existingProfile = await userProfileService.GetUserProfileByUserIdAsync(request.UserId);
 
-      if (existingProfile != null) return Result.Failure<UserProfile>(Error.Conflict("UserProfile.AlreadyExists", $"User profile already exists for user {request.UserId}"));
+            if (existingProfile != null) return Result.Failure<UserProfile>(Error.Conflict("UserProfile.AlreadyExists", $"User profile already exists for user {request.UserId}"));
 
-      // Create new user profile
-      var userProfile = new UserProfile {
-        Id = request.UserId, // UserProfile ID should match User ID for 1:1 relationship
-        GivenName = request.GivenName,
-        FamilyName = request.FamilyName,
-        DisplayName = request.DisplayName,
-        Title = request.Title ?? string.Empty,
-        Description = request.Description,
-      };
+            // Create new user profile
+            var userProfile = new UserProfile
+            {
+                Id = request.UserId, // UserProfile ID should match User ID for 1:1 relationship
+                DisplayName = request.DisplayName,
+            };
 
-      context.Resources.Add(userProfile);
-      await context.SaveChangesAsync(cancellationToken);
+            UserProfile createdProfile = await userProfileService.CreateUserProfileAsync(userProfile);
 
-      logger.LogInformation("User profile created for user {UserId}", request.UserId);
+            logger.LogInformation("User profile created for user {UserId}", request.UserId);
 
-      // Publish domain event
-      await eventPublisher.PublishAsync(
-        new UserProfileCreatedEvent(userProfile.Id, request.UserId, userProfile.DisplayName ?? string.Empty, userProfile.GivenName ?? string.Empty, userProfile.FamilyName ?? string.Empty, userProfile.CreatedAt),
-        cancellationToken
-      );
+            // Get user data for domain event
+            User? user = await userService.GetUserByIdAsync(request.UserId);
+            string givenName = user?.GivenName ?? string.Empty;
+            string familyName = user?.FamilyName ?? string.Empty;
 
-      return Result.Success(userProfile);
+            // Publish domain event
+            await eventPublisher.PublishAsync(
+                new UserProfileCreatedEvent(
+                    createdProfile.Id,
+                    request.UserId,
+                    createdProfile.DisplayName ?? string.Empty,
+                    givenName,
+                    familyName,
+                    createdProfile.CreatedAt
+                ),
+                cancellationToken
+            );
+
+            return Result.Success(createdProfile);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error creating user profile for user {UserId}", request.UserId);
+
+            return Result.Failure<UserProfile>(Error.Failure("UserProfile.CreateFailed", "Failed to create user profile"));
+        }
     }
-    catch (Exception ex) {
-      logger.LogError(ex, "Error creating user profile for user {UserId}", request.UserId);
-
-      return Result.Failure<UserProfile>(Error.Failure("UserProfile.CreateFailed", "Failed to create user profile"));
-    }
-  }
 }

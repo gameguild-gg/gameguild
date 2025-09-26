@@ -1,6 +1,6 @@
 ﻿namespace GameGuild.Modules.UserProfiles;
 
-public class UserProfileResponseDto
+public class UserProfileResponse
 {
     public Guid Id { get; set; }
 
@@ -8,13 +8,7 @@ public class UserProfileResponseDto
 
     public string? DisplayName { get; set; }
 
-    public string? Description { get; set; }
-
-    public string? Slug { get; set; }
-
     public Guid? TenantId { get; set; }
-
-    public Guid? CreatedBy { get; set; }
 
     public DateTime CreatedAt { get; set; }
 

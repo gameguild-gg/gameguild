@@ -1,74 +1,58 @@
 using GameGuild.CQRS;
-using GameGuild.Database;
-
 
 namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Handler for updating user profile with business logic and optimistic concurrency control
 /// </summary>
-public class UpdateUserProfileHandler(ApplicationDbContext context, ILogger<UpdateUserProfileHandler> logger, IDomainEventPublisher eventPublisher) : ICommandHandler<UpdateUserProfileCommand, Result<UserProfile>> {
-  public async Task<Result<UserProfile>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken) {
-    try {
-      var userProfile = await context.Resources.OfType<UserProfile>().FirstOrDefaultAsync(up => up.Id == request.UserProfileId && up.DeletedAt == null, cancellationToken);
+public class UpdateUserProfileHandler(IUserProfileService userProfileService, ILogger<UpdateUserProfileHandler> logger, IDomainEventPublisher eventPublisher)
+    : ICommandHandler<UpdateUserProfileCommand, Result<UserProfile>>
+{
+    public async Task<Result<UserProfile>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            UserProfile? userProfile = await userProfileService.GetUserProfileByIdAsync(request.UserProfileId);
 
-      if (userProfile == null) return Result.Failure<UserProfile>(Error.NotFound("UserProfile.NotFound", $"User profile with ID {request.UserProfileId} not found"));
+            if (userProfile == null) return Result.Failure<UserProfile>(Error.NotFound("UserProfile.NotFound", $"User profile with ID {request.UserProfileId} not found"));
 
-      // Track changes for notification
-      var changes = new Dictionary<string, object>();
+            // Track changes for notification
+            var changes = new Dictionary<string, object>();
 
-      // Update profile properties - only the ones that are provided
-      if (request.GivenName != null && userProfile.GivenName != request.GivenName) {
-        changes["GivenName"] = new { From = userProfile.GivenName, To = request.GivenName };
-        userProfile.GivenName = request.GivenName;
-      }
+            // Update profile properties - only the ones that are provided
+            if (request.DisplayName != null && userProfile.DisplayName != request.DisplayName)
+            {
+                changes["DisplayName"] = new { From = userProfile.DisplayName, To = request.DisplayName };
+                userProfile.DisplayName = request.DisplayName;
+            }
 
-      if (request.FamilyName != null && userProfile.FamilyName != request.FamilyName) {
-        changes["FamilyName"] = new { From = userProfile.FamilyName, To = request.FamilyName };
-        userProfile.FamilyName = request.FamilyName;
-      }
+            // Only update if there are actual changes
+            if (changes.Count == 0) return Result.Success(userProfile);
 
-      if (request.DisplayName != null && userProfile.DisplayName != request.DisplayName) {
-        changes["DisplayName"] = new { From = userProfile.DisplayName, To = request.DisplayName };
-        userProfile.DisplayName = request.DisplayName;
-      }
+            UserProfile? updatedProfile = await userProfileService.UpdateUserProfileAsync(userProfile.Id, userProfile);
 
-      if (request.Title != null && userProfile.Title != request.Title) {
-        changes["Title"] = new { From = userProfile.Title, To = request.Title };
-        userProfile.Title = request.Title;
-      }
+            if (updatedProfile == null) { return Result.Failure<UserProfile>(Error.Failure("UserProfile.UpdateFailed", "Failed to update user profile")); }
 
-      if (request.Description != null && userProfile.Description != request.Description) {
-        changes["Description"] = new { From = userProfile.Description, To = request.Description };
-        userProfile.Description = request.Description;
-      }
+            logger.LogInformation("User profile {UserProfileId} updated successfully with {ChangeCount} changes", request.UserProfileId, changes.Count);
 
-      // Only save if there are actual changes
-      if (changes.Count != 0) {
-        // Update timestamps and version
-        userProfile.Touch();
-        await context.SaveChangesAsync(cancellationToken);
+            // Publish domain event with changes
+            await eventPublisher.PublishAsync(
+                new UserProfileUpdatedEvent(
+                    updatedProfile.Id,
+                    updatedProfile.Id, // Assuming 1:1 relationship
+                    changes,
+                    updatedProfile.UpdatedAt
+                ),
+                cancellationToken
+            );
 
-        logger.LogInformation("User profile {UserProfileId} updated successfully with {ChangeCount} changes", request.UserProfileId, changes.Count);
+            return Result.Success(updatedProfile);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating user profile {UserProfileId}", request.UserProfileId);
 
-        // Publish domain event with changes
-        await eventPublisher.PublishAsync(
-          new UserProfileUpdatedEvent(
-            userProfile.Id,
-            userProfile.Id, // Assuming 1:1 relationship
-            changes,
-            userProfile.UpdatedAt
-          ),
-          cancellationToken
-        );
-      }
-
-      return Result.Success(userProfile);
+            return Result.Failure<UserProfile>(Error.Failure("UserProfile.UpdateFailed", "Failed to update user profile"));
+        }
     }
-    catch (Exception ex) {
-      logger.LogError(ex, "Error updating user profile {UserProfileId}", request.UserProfileId);
-
-      return Result.Failure<UserProfile>(Error.Failure("UserProfile.UpdateFailed", "Failed to update user profile"));
-    }
-  }
 }

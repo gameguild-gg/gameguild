@@ -1,20 +1,18 @@
 ﻿using FluentValidation;
-using GameGuild.Database;
-
 
 namespace GameGuild.Modules.UserProfiles;
 
 /// <summary> FluentValidation validator for RestoreUserProfileCommand </summary>
-public class RestoreUserProfileCommandValidator : AbstractValidator<RestoreUserProfileCommand> {
-  private readonly ApplicationDbContext _context;
+public class RestoreUserProfileCommandValidator : AbstractValidator<RestoreUserProfileCommand>
+{
+    private readonly IUserProfileRepository _userProfileRepository;
 
-  public RestoreUserProfileCommandValidator(ApplicationDbContext context) {
-    _context = context;
+    public RestoreUserProfileCommandValidator(IUserProfileRepository userProfileRepository)
+    {
+        _userProfileRepository = userProfileRepository;
 
-    RuleFor(x => x.UserProfileId).NotEmpty().WithMessage("User profile ID is required").MustAsync(DeletedUserProfileExists).WithMessage("Deleted user profile not found");
-  }
+        RuleFor(x => x.UserProfileId).NotEmpty().WithMessage("User profile ID is required").MustAsync(DeletedUserProfileExists).WithMessage("Deleted user profile not found");
+    }
 
-  private async Task<bool> DeletedUserProfileExists(Guid userProfileId, CancellationToken cancellationToken) {
-    return await _context.Resources.OfType<UserProfile>().AnyAsync(x => x.Id == userProfileId && x.DeletedAt != null, cancellationToken);
-  }
+    private async Task<bool> DeletedUserProfileExists(Guid userProfileId, CancellationToken cancellationToken) { return await _userProfileRepository.DeletedExistsAsync(userProfileId, cancellationToken); }
 }

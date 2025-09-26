@@ -1,17 +1,17 @@
 using GameGuild.CQRS;
 
-
 namespace GameGuild.Modules.UserProfiles;
 
 /// <summary>
 /// Query to get user profile statistics
 /// </summary>
-public sealed class GetUserProfileStatisticsQuery : IQuery<Result<UserProfileStatistics>> {
-  public DateTime? FromDate { get; set; }
+public sealed class GetUserProfileStatisticsQuery : IQuery<Result<UserProfileStatistics>>
+{
+    public DateTime? FromDate { get; set; }
 
-  public DateTime? ToDate { get; set; }
+    public DateTime? ToDate { get; set; }
 
-  public bool IncludeDeleted { get; set; } = false;
+    public bool IncludeDeleted { get; set; } = false;
 
-  public Guid? TenantId { get; set; }
+    public Guid? TenantId { get; set; }
 }
