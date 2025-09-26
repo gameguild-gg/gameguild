@@ -1,4 +1,6 @@
-﻿namespace GameGuild.Modules.Credentials;
+﻿using GameGuild.Modules.Users;
+
+namespace GameGuild.Modules.Credentials;
 
 /// <summary> DTO for credential response </summary>
 public class CredentialResponse
@@ -49,5 +51,5 @@ public class CredentialResponse
     public bool IsDeleted { get => DeletedAt.HasValue; }
 
     /// <summary> Associated user information </summary>
-    public UserResponseDto? User { get; set; }
+    public UserResponse? User { get; set; }
 }
