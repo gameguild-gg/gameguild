@@ -20,7 +20,7 @@ public class SoftDeleteTenantHandler(ApplicationDbContext context, ILogger<SoftD
             logger.LogInformation("Tenant {TenantId} soft deleted successfully", tenant.Id);
 
             // Publish domain event
-            await eventPublisher.PublishAsync(new TenantDeletedEvent(tenant.Id, tenant.Name, true), cancellationToken);
+            await eventPublisher.PublishAsync(new TenantDeletedEvent(tenant.Id, tenant.Name), cancellationToken);
 
             return Result.Success(true);
         }

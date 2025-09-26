@@ -3,7 +3,10 @@ using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Credentials;
 
-/// <summary> Represents a user credential (password, API key, OAuth token, etc.) Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality </summary>
+/// <summary>
+///     Represents a user credential (password, API key, OAuth token, etc.) Inherits from BaseEntity to provide UUID
+///     IDs, version control, timestamps, and soft delete functionality
+/// </summary>
 [Table("Credentials")]
 [Index(nameof(UserId), nameof(Type))]
 public sealed class Credential : EntityBase, ITenantable

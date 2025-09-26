@@ -4,31 +4,31 @@ using GameGuild.Database;
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// Implementation of tenant caching service for high performance access to tenant data
-/// Includes cache refresh functionality (merged from TenantCacheRefreshService)
+///     Implementation of tenant caching service for high performance access to tenant data
+///     Includes cache refresh functionality (merged from TenantCacheRefreshService)
 /// </summary>
 public class TenantCacheService : ITenantCacheService
 {
-    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly ConcurrentDictionary<string, TenantDomain> _domainMatchCache = new ConcurrentDictionary<string, TenantDomain>();
+
+    private readonly object _initializationLock = new object();
 
     private readonly ILogger<TenantCacheService> _logger;
 
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+
     // Thread-safe caches
-    private readonly ConcurrentDictionary<Guid, Tenant> _tenantCache = new();
+    private readonly ConcurrentDictionary<Guid, Tenant> _tenantCache = new ConcurrentDictionary<Guid, Tenant>();
 
-    private readonly ConcurrentDictionary<string, Tenant> _tenantSlugCache = new();
+    private readonly ConcurrentDictionary<Guid, List<TenantDomain>> _tenantDomainsCache = new ConcurrentDictionary<Guid, List<TenantDomain>>();
 
-    private readonly ConcurrentDictionary<Guid, TenantSettings> _tenantSettingsCache = new();
+    private readonly ConcurrentDictionary<Guid, TenantSettings> _tenantSettingsCache = new ConcurrentDictionary<Guid, TenantSettings>();
 
-    private readonly ConcurrentDictionary<Guid, List<TenantDomain>> _tenantDomainsCache = new();
+    private readonly ConcurrentDictionary<string, Tenant> _tenantSlugCache = new ConcurrentDictionary<string, Tenant>();
 
-    private readonly ConcurrentDictionary<string, TenantDomain> _domainMatchCache = new();
-
-    private volatile bool _isInitialized = false;
+    private volatile bool _isInitialized;
 
     private DateTime _lastRefreshTime = DateTime.MinValue;
-
-    private readonly object _initializationLock = new();
 
     public TenantCacheService(IServiceScopeFactory serviceScopeFactory, ILogger<TenantCacheService> logger)
     {
@@ -49,7 +49,7 @@ public class TenantCacheService : ITenantCacheService
 
         try
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
             await LoadTenantsAsync(context, cancellationToken);
@@ -59,7 +59,7 @@ public class TenantCacheService : ITenantCacheService
             _isInitialized = true;
             _lastRefreshTime = DateTime.UtcNow;
 
-            var stats = GetCacheStatistics();
+            TenantCacheStatistics stats = GetCacheStatistics();
 
             _logger.LogInformation(
                 "Tenant cache initialized successfully - {TenantCount} tenants, {SettingsCount} settings, {DomainsCount} domains",
@@ -79,7 +79,7 @@ public class TenantCacheService : ITenantCacheService
     public Tenant? GetTenantById(Guid tenantId)
     {
         EnsureInitialized();
-        _tenantCache.TryGetValue(tenantId, out var tenant);
+        _tenantCache.TryGetValue(tenantId, out Tenant? tenant);
 
         return tenant;
     }
@@ -89,7 +89,7 @@ public class TenantCacheService : ITenantCacheService
         if (string.IsNullOrWhiteSpace(slug)) return null;
 
         EnsureInitialized();
-        _tenantSlugCache.TryGetValue(slug.ToLowerInvariant(), out var tenant);
+        _tenantSlugCache.TryGetValue(slug.ToLowerInvariant(), out Tenant? tenant);
 
         return tenant;
     }
@@ -104,7 +104,7 @@ public class TenantCacheService : ITenantCacheService
     public TenantSettings? GetTenantSettings(Guid tenantId)
     {
         EnsureInitialized();
-        _tenantSettingsCache.TryGetValue(tenantId, out var settings);
+        _tenantSettingsCache.TryGetValue(tenantId, out TenantSettings? settings);
 
         return settings;
     }
@@ -130,11 +130,11 @@ public class TenantCacheService : ITenantCacheService
 
         EnsureInitialized();
 
-        var domain = ExtractDomainFromEmail(email);
+        string domain = ExtractDomainFromEmail(email);
 
         if (string.IsNullOrEmpty(domain)) return null;
 
-        _domainMatchCache.TryGetValue(domain, out var tenantDomain);
+        _domainMatchCache.TryGetValue(domain, out TenantDomain? tenantDomain);
 
         return tenantDomain;
     }
@@ -152,7 +152,7 @@ public class TenantCacheService : ITenantCacheService
 
         try
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
             await LoadTenantsAsync(context, cancellationToken);
@@ -161,7 +161,7 @@ public class TenantCacheService : ITenantCacheService
 
             _lastRefreshTime = DateTime.UtcNow;
 
-            var stats = GetCacheStatistics();
+            TenantCacheStatistics stats = GetCacheStatistics();
             _logger.LogInformation("Tenant cache refreshed successfully - {TenantCount} tenants, {SettingsCount} settings, {DomainsCount} domains", stats.TenantCount, stats.TenantSettingsCount, stats.TenantDomainsCount);
         }
         catch (Exception ex)
@@ -176,7 +176,7 @@ public class TenantCacheService : ITenantCacheService
     {
         _logger.LogDebug("Invalidating tenant {TenantId} from cache", tenantId);
 
-        if (_tenantCache.TryRemove(tenantId, out var tenant))
+        if (_tenantCache.TryRemove(tenantId, out Tenant? tenant))
         {
             // Also remove from slug cache
             if (!string.IsNullOrEmpty(tenant.Slug)) { _tenantSlugCache.TryRemove(tenant.Slug.ToLowerInvariant(), out _); }
@@ -219,10 +219,10 @@ public class TenantCacheService : ITenantCacheService
 
         try
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            var tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken);
+            Tenant? tenant = await context.Tenants.FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken);
 
             if (tenant != null)
             {
@@ -250,10 +250,10 @@ public class TenantCacheService : ITenantCacheService
 
         try
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            var settings = await context.TenantSettings.FirstOrDefaultAsync(s => s.TenantId == tenantId, cancellationToken);
+            TenantSettings? settings = await context.TenantSettings.FirstOrDefaultAsync(s => s.TenantId == tenantId, cancellationToken);
 
             if (settings != null)
             {
@@ -280,7 +280,7 @@ public class TenantCacheService : ITenantCacheService
 
         try
         {
-            using var scope = _serviceScopeFactory.CreateScope();
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
             var domains = await context.TenantDomains.Where(d => d.TenantId == tenantId).ToListAsync(cancellationToken);
@@ -288,9 +288,9 @@ public class TenantCacheService : ITenantCacheService
             _tenantDomainsCache[tenantId] = domains;
 
             // Update domain match cache
-            foreach (var domain in domains)
+            foreach (TenantDomain domain in domains)
             {
-                var fullDomain = string.IsNullOrEmpty(domain.Subdomain) ? domain.TopLevelDomain : $"{domain.Subdomain}.{domain.TopLevelDomain}";
+                string fullDomain = string.IsNullOrEmpty(domain.Subdomain) ? domain.TopLevelDomain : $"{domain.Subdomain}.{domain.TopLevelDomain}";
                 _domainMatchCache[fullDomain] = domain;
             }
 
@@ -319,7 +319,7 @@ public class TenantCacheService : ITenantCacheService
         _tenantCache.Clear();
         _tenantSlugCache.Clear();
 
-        foreach (var tenant in tenants)
+        foreach (Tenant tenant in tenants)
         {
             _tenantCache[tenant.Id] = tenant;
             _tenantSlugCache[tenant.Slug.ToLowerInvariant()] = tenant;
@@ -336,7 +336,7 @@ public class TenantCacheService : ITenantCacheService
 
         _tenantSettingsCache.Clear();
 
-        foreach (var setting in settings)
+        foreach (TenantSettings setting in settings)
         {
             if (setting.TenantId.HasValue) { _tenantSettingsCache[setting.TenantId.Value] = setting; }
         }
@@ -359,9 +359,9 @@ public class TenantCacheService : ITenantCacheService
         {
             _tenantDomainsCache[group.Key] = group.ToList();
 
-            foreach (var domain in group)
+            foreach (TenantDomain domain in group)
             {
-                var fullDomain = string.IsNullOrEmpty(domain.Subdomain) ? domain.TopLevelDomain : $"{domain.Subdomain}.{domain.TopLevelDomain}";
+                string fullDomain = string.IsNullOrEmpty(domain.Subdomain) ? domain.TopLevelDomain : $"{domain.Subdomain}.{domain.TopLevelDomain}";
                 _domainMatchCache[fullDomain] = domain;
             }
         }
@@ -378,7 +378,7 @@ public class TenantCacheService : ITenantCacheService
     {
         if (string.IsNullOrWhiteSpace(email)) return string.Empty;
 
-        var atIndex = email.LastIndexOf('@');
+        int atIndex = email.LastIndexOf('@');
 
         return atIndex > 0 && atIndex < email.Length - 1 ? email.Substring(atIndex + 1).ToLowerInvariant() : string.Empty;
     }

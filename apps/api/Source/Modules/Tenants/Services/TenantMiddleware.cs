@@ -1,14 +1,17 @@
+using System.Net;
+using Microsoft.Extensions.Primitives;
+
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>
-/// Middleware that resolves the current tenant for each request
-/// Uses cached tenant data and defaults to the default tenant if none is specified
+///     Middleware that resolves the current tenant for each request
+///     Uses cached tenant data and defaults to the default tenant if none is specified
 /// </summary>
 public class TenantMiddleware
 {
-    private readonly RequestDelegate _next;
-
     private readonly ILogger<TenantMiddleware> _logger;
+
+    private readonly RequestDelegate _next;
 
     public TenantMiddleware(RequestDelegate next, ILogger<TenantMiddleware> logger)
     {
@@ -20,7 +23,7 @@ public class TenantMiddleware
     {
         try
         {
-            var tenant = await ResolveTenantAsync(context, tenantService);
+            Tenant? tenant = await ResolveTenantAsync(context, tenantService);
             tenantContext.SetCurrentTenant(tenant);
 
             _logger.LogDebug("Resolved tenant: {TenantId} - {TenantSlug}", tenant?.Id, tenant?.Slug ?? "default");
@@ -34,7 +37,7 @@ public class TenantMiddleware
             // Try to set default tenant as fallback
             try
             {
-                var defaultTenant = await tenantService.GetDefaultTenantAsync();
+                Tenant? defaultTenant = await tenantService.GetDefaultTenantAsync();
                 tenantContext.SetCurrentTenant(defaultTenant);
                 _logger.LogWarning("Fallback to default tenant: {TenantId}", defaultTenant?.Id);
 
@@ -52,7 +55,7 @@ public class TenantMiddleware
     private async Task<Tenant?> ResolveTenantAsync(HttpContext context, ITenantService tenantService)
     {
         // 1. Try to resolve tenant from subdomain
-        var tenant = await ResolveTenantFromSubdomain(context, tenantService);
+        Tenant? tenant = await ResolveTenantFromSubdomain(context, tenantService);
 
         if (tenant != null)
         {
@@ -92,16 +95,16 @@ public class TenantMiddleware
 
     private async Task<Tenant?> ResolveTenantFromSubdomain(HttpContext context, ITenantService tenantService)
     {
-        var host = context.Request.Host.Host;
+        string host = context.Request.Host.Host;
 
         if (string.IsNullOrEmpty(host)) return null;
 
         // Check if it's a subdomain (contains dots and isn't localhost or IP)
-        var parts = host.Split('.');
+        string[ ] parts = host.Split('.');
 
         if (parts.Length < 2 || host == "localhost" || IsIpAddress(host)) return null;
 
-        var subdomain = parts[0];
+        string subdomain = parts[0];
 
         return await tenantService.GetTenantBySlugAsync(subdomain);
     }
@@ -109,7 +112,7 @@ public class TenantMiddleware
     private async Task<Tenant?> ResolveTenantFromHeader(HttpContext context, ITenantService tenantService)
     {
         // Check for X-Tenant-Slug header
-        if (context.Request.Headers.TryGetValue("X-Tenant-Slug", out var tenantSlugHeader))
+        if (context.Request.Headers.TryGetValue("X-Tenant-Slug", out StringValues tenantSlugHeader))
         {
             var slug = tenantSlugHeader.ToString();
 
@@ -117,11 +120,11 @@ public class TenantMiddleware
         }
 
         // Check for X-Tenant-Id header
-        if (!context.Request.Headers.TryGetValue("X-Tenant-Id", out var tenantIdHeader)) return null;
+        if (!context.Request.Headers.TryGetValue("X-Tenant-Id", out StringValues tenantIdHeader)) return null;
 
         var idString = tenantIdHeader.ToString();
 
-        if (Guid.TryParse(idString, out var tenantId)) { return await tenantService.GetTenantByIdAsync(tenantId); }
+        if (Guid.TryParse(idString, out Guid tenantId)) { return await tenantService.GetTenantByIdAsync(tenantId); }
 
         return null;
     }
@@ -129,7 +132,7 @@ public class TenantMiddleware
     private async Task<Tenant?> ResolveTenantFromRoute(HttpContext context, ITenantService tenantService)
     {
         // Check for tenant slug in route values
-        if (context.Request.RouteValues.TryGetValue("tenant", out var tenantRoute))
+        if (context.Request.RouteValues.TryGetValue("tenant", out object? tenantRoute))
         {
             var slug = tenantRoute?.ToString();
 
@@ -137,7 +140,7 @@ public class TenantMiddleware
         }
 
         // Check for tenant slug in query parameters
-        if (!context.Request.Query.TryGetValue("tenant", out var tenantQuery)) return null;
+        if (!context.Request.Query.TryGetValue("tenant", out StringValues tenantQuery)) return null;
 
         {
             var slug = tenantQuery.ToString();
@@ -148,5 +151,5 @@ public class TenantMiddleware
         return null;
     }
 
-    private static bool IsIpAddress(string host) { return System.Net.IPAddress.TryParse(host, out _); }
+    private static bool IsIpAddress(string host) { return IPAddress.TryParse(host, out _); }
 }

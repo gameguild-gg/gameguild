@@ -16,5 +16,5 @@ public enum LocalizationStatus
     Archived = 3,
 
     /// <summary> Machine-translated content, may need human review </summary>
-    MachineTranslated = 4,
+    MachineTranslated = 4
 }
