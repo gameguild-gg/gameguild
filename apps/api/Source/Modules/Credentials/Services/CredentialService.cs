@@ -15,6 +15,11 @@ public class CredentialService(ICredentialRepository credentialRepository) : ICr
     /// <returns> Credential or null if not found </returns>
     public async Task<Credential?> GetCredentialByIdAsync(Guid id) { return await _credentialRepository.GetByIdWithUserAsync(id); }
 
+    /// <summary> Get a credential by ID including soft-deleted entries </summary>
+    /// <param name="id"> Credential ID </param>
+    /// <returns> Credential or null if not found </returns>
+    public async Task<Credential?> GetCredentialIncludingDeletedAsync(Guid id) { return await _credentialRepository.GetByIdIncludingDeletedAsync(id); }
+
     /// <summary> Get a credential by user ID and type </summary>
     /// <param name="userId"> User ID </param>
     /// <param name="type"> Credential type </param>
@@ -36,6 +41,18 @@ public class CredentialService(ICredentialRepository credentialRepository) : ICr
     /// <returns> True if deleted successfully </returns>
     public async Task<bool> SoftDeleteCredentialAsync(Guid id)
     {
+        Credential? credential = await _credentialRepository.GetByIdAsync(id);
+
+        if (credential == null)
+        {
+            return false;
+        }
+
+        if (credential.DeletedAt != null)
+        {
+            return false;
+        }
+
         await _credentialRepository.SoftDeleteAsync(id);
 
         return true;
@@ -46,6 +63,18 @@ public class CredentialService(ICredentialRepository credentialRepository) : ICr
     /// <returns> True if restored successfully </returns>
     public async Task<bool> RestoreCredentialAsync(Guid id)
     {
+        Credential? credential = await _credentialRepository.GetByIdIncludingDeletedAsync(id);
+
+        if (credential == null)
+        {
+            return false;
+        }
+
+        if (credential.DeletedAt == null)
+        {
+            return false;
+        }
+
         await _credentialRepository.RestoreAsync(id);
 
         return true;
@@ -56,6 +85,13 @@ public class CredentialService(ICredentialRepository credentialRepository) : ICr
     /// <returns> True if deleted successfully </returns>
     public async Task<bool> HardDeleteCredentialAsync(Guid id)
     {
+        Credential? credential = await _credentialRepository.GetByIdIncludingDeletedAsync(id);
+
+        if (credential == null)
+        {
+            return false;
+        }
+
         await _credentialRepository.RemoveAsync(id);
 
         return true;
@@ -69,12 +105,52 @@ public class CredentialService(ICredentialRepository credentialRepository) : ICr
     /// <summary> Deactivate a credential </summary>
     /// <param name="id"> Credential ID </param>
     /// <returns> True if deactivated successfully </returns>
-    public async Task<bool> DeactivateCredentialAsync(Guid id) { return await _credentialRepository.DeactivateAsync(id); }
+    public async Task<bool> DeactivateCredentialAsync(Guid id)
+    {
+        Credential? credential = await _credentialRepository.GetByIdAsync(id);
+
+        if (credential == null)
+        {
+            return false;
+        }
+
+        if (credential.DeletedAt != null)
+        {
+            return false;
+        }
+
+        if (credential.IsActive)
+        {
+            return await _credentialRepository.DeactivateAsync(id);
+        }
+
+        return false;
+    }
 
     /// <summary> Activate a credential </summary>
     /// <param name="id"> Credential ID </param>
     /// <returns> True if activated successfully </returns>
-    public async Task<bool> ActivateCredentialAsync(Guid id) { return await _credentialRepository.ActivateAsync(id); }
+    public async Task<bool> ActivateCredentialAsync(Guid id)
+    {
+        Credential? credential = await _credentialRepository.GetByIdAsync(id);
+
+        if (credential == null)
+        {
+            return false;
+        }
+
+        if (credential.DeletedAt != null)
+        {
+            return false;
+        }
+
+        if (!credential.IsActive)
+        {
+            return await _credentialRepository.ActivateAsync(id);
+        }
+
+        return false;
+    }
 
     /// <summary> Get all credentials including soft-deleted ones </summary>
     /// <returns> List of all credentials </returns>

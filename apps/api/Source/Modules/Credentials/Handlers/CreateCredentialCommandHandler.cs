@@ -18,16 +18,13 @@ public class CreateCredentialCommandHandler(ICredentialService credentialService
 
         try
         {
-            // Verify that the user exists
-            var getUserQuery = new GetUserByIdQuery { UserId = request.UserId };
-            var user = await _mediator.Send(getUserQuery, cancellationToken);
+            GetUserByIdQuery getUserQuery = new() { UserId = request.UserId };
+            User user = await _mediator.Send(getUserQuery, cancellationToken) ?? throw new ArgumentException($"User with ID {request.UserId} not found");
 
-            if (user == null) { throw new ArgumentException($"User with ID {request.UserId} not found"); }
-
-            var credential = new Credential
+            Credential credential = new()
             {
                 Id = Guid.NewGuid(),
-                UserId = request.UserId,
+                UserId = user.Id,
                 Type = request.Type,
                 Value = request.Value,
                 Metadata = request.Metadata,
@@ -37,15 +34,11 @@ public class CreateCredentialCommandHandler(ICredentialService credentialService
                 UpdatedAt = DateTime.UtcNow,
             };
 
-            var createdCredential = await _credentialService.CreateCredentialAsync(credential);
+            Credential createdCredential = await _credentialService.CreateCredentialAsync(credential);
 
             _logger.LogInformation("Created credential {CredentialId} for user {UserId}", createdCredential.Id, request.UserId);
 
-            // TODO: Event not notification;
-            // Publish notification for domain events
-            // var notification = new CredentialCreatedNotification { CredentialId = createdCredential.Id, UserId = createdCredential.UserId, Type = createdCredential.Type };
-
-            // await _mediator.Publish(notification, cancellationToken);
+            await _mediator.Publish(new CredentialCreatedEvent(createdCredential.Id, createdCredential.UserId, createdCredential.Type, createdCredential.CreatedAt), cancellationToken);
 
             return createdCredential;
         }

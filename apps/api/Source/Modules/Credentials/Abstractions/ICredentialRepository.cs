@@ -32,6 +32,14 @@ public interface ICredentialRepository : IRepository<Credential>
     Task<Credential?> GetByIdWithUserAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Get a credential by ID including soft-deleted entries
+    /// </summary>
+    /// <param name="id">Credential ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Credential including soft-deleted entries or null if not found</returns>
+    Task<Credential?> GetByIdIncludingDeletedAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Get all credentials including soft-deleted ones
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>

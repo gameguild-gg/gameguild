@@ -18,6 +18,11 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
         return await _context.Credentials.Include(c => c.User).FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
 
+    public async Task<Credential?> GetByIdIncludingDeletedAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Credentials.IgnoreQueryFilters().Include(c => c.User).FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+    }
+
     public async Task<IEnumerable<Credential>> GetAllAsync(CancellationToken cancellationToken = default) { return await _context.Credentials.Include(c => c.User).ToListAsync(cancellationToken); }
 
     public async Task<IEnumerable<Credential>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken = default)
