@@ -1,12 +1,10 @@
 using GameGuild.CQRS;
 
-
-namespace GameGuild.Modules.Credentials.Commands;
+namespace GameGuild.Modules.Credentials;
 
 /// <summary> Command to hard delete a credential using CQRS pattern </summary>
-public class HardDeleteCredentialCommand : IRequest<bool> {
-  public HardDeleteCredentialCommand(Guid id) { Id = id; }
-
-  /// <summary> Credential ID to permanently delete </summary>
-  public Guid Id { get; set; }
+public class HardDeleteCredentialCommand(Guid id) : IRequest<bool>
+{
+    /// <summary> Credential ID to permanently delete </summary>
+    public Guid Id { get; set; } = id;
 }

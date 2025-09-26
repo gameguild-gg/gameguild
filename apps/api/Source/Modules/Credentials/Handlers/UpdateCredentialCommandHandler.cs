@@ -1,46 +1,43 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Credentials.Commands;
 
-
-namespace GameGuild.Modules.Credentials.Handlers;
+namespace GameGuild.Modules.Credentials;
 
 /// <summary> Handler for UpdateCredentialCommand using CQRS pattern </summary>
-public class UpdateCredentialCommandHandler : IRequestHandler<UpdateCredentialCommand, Credential> {
-  private readonly ICredentialService _credentialService;
+public class UpdateCredentialCommandHandler(ICredentialService credentialService, ILogger<UpdateCredentialCommandHandler> logger) : IRequestHandler<UpdateCredentialCommand, Credential>
+{
+    private readonly ICredentialService _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService));
 
-  private readonly ILogger<UpdateCredentialCommandHandler> _logger;
+    private readonly ILogger<UpdateCredentialCommandHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-  public UpdateCredentialCommandHandler(ICredentialService credentialService, ILogger<UpdateCredentialCommandHandler> logger) {
-    _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService));
-    _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-  }
+    public async Task<Credential> Handle(UpdateCredentialCommand request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Updating credential {CredentialId}", request.Id);
 
-  public async Task<Credential> Handle(UpdateCredentialCommand request, CancellationToken cancellationToken) {
-    _logger.LogInformation("Updating credential {CredentialId}", request.Id);
+        try
+        {
+            var existingCredential = await _credentialService.GetCredentialByIdAsync(request.Id);
 
-    try {
-      var existingCredential = await _credentialService.GetCredentialByIdAsync(request.Id);
+            if (existingCredential == null) { throw new ArgumentException($"Credential with ID {request.Id} not found"); }
 
-      if (existingCredential == null) { throw new ArgumentException($"Credential with ID {request.Id} not found"); }
+            // Update the credential properties
+            existingCredential.Type = request.Type;
+            existingCredential.Value = request.Value;
+            existingCredential.Metadata = request.Metadata;
+            existingCredential.ExpiresAt = request.ExpiresAt;
+            existingCredential.IsActive = request.IsActive;
+            existingCredential.UpdatedAt = DateTime.UtcNow;
 
-      // Update the credential properties
-      existingCredential.Type = request.Type;
-      existingCredential.Value = request.Value;
-      existingCredential.Metadata = request.Metadata;
-      existingCredential.ExpiresAt = request.ExpiresAt;
-      existingCredential.IsActive = request.IsActive;
-      existingCredential.UpdatedAt = DateTime.UtcNow;
+            var updatedCredential = await _credentialService.UpdateCredentialAsync(existingCredential);
 
-      var updatedCredential = await _credentialService.UpdateCredentialAsync(existingCredential);
+            _logger.LogInformation("Updated credential {CredentialId}", updatedCredential.Id);
 
-      _logger.LogInformation("Updated credential {CredentialId}", updatedCredential.Id);
+            return updatedCredential;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update credential {CredentialId}", request.Id);
 
-      return updatedCredential;
+            throw;
+        }
     }
-    catch (Exception ex) {
-      _logger.LogError(ex, "Failed to update credential {CredentialId}", request.Id);
-
-      throw;
-    }
-  }
 }

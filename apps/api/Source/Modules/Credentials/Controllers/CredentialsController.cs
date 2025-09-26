@@ -1,6 +1,5 @@
 using GameGuild.Modules.Credentials.Commands;
 using GameGuild.Modules.Credentials.Queries;
-using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Mvc;
 using IMediator = GameGuild.CQRS.IMediator;
 
@@ -23,7 +22,7 @@ public class CredentialsController : ControllerBase {
   /// <summary> Get all credentials using CQRS pattern </summary>
   /// <returns> List of credentials </returns>
   [HttpGet]
-  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentials() {
+  public async Task<ActionResult<IEnumerable<CredentialResponse>>> GetCredentials() {
     try {
       _logger.LogInformation("Getting all credentials");
 
@@ -44,7 +43,7 @@ public class CredentialsController : ControllerBase {
   /// <param name="userId"> User ID </param>
   /// <returns> List of user credentials </returns>
   [HttpGet("user/{userId:guid}")]
-  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetCredentialsByUserId(Guid userId) {
+  public async Task<ActionResult<IEnumerable<CredentialResponse>>> GetCredentialsByUserId(Guid userId) {
     try {
       _logger.LogInformation("Getting credentials for user {UserId}", userId);
 
@@ -65,7 +64,7 @@ public class CredentialsController : ControllerBase {
   /// <param name="id"> Credential ID </param>
   /// <returns> Credential details </returns>
   [HttpGet("{id:guid}")]
-  public async Task<ActionResult<CredentialResponseDto>> GetCredential(Guid id) {
+  public async Task<ActionResult<CredentialResponse>> GetCredential(Guid id) {
     try {
       _logger.LogInformation("Getting credential {CredentialId}", id);
 
@@ -88,7 +87,7 @@ public class CredentialsController : ControllerBase {
   /// <param name="type"> Credential type </param>
   /// <returns> Credential details </returns>
   [HttpGet("user/{userId}/type/{type}")]
-  public async Task<ActionResult<CredentialResponseDto>> GetCredentialByUserIdAndType(Guid userId, string type) {
+  public async Task<ActionResult<CredentialResponse>> GetCredentialByUserIdAndType(Guid userId, string type) {
     try {
       _logger.LogInformation("Getting credential of type {Type} for user {UserId}", type, userId);
 
@@ -107,16 +106,16 @@ public class CredentialsController : ControllerBase {
   }
 
   /// <summary> Create a new credential using CQRS pattern </summary>
-  /// <param name="createDto"> Credential data </param>
+  /// <param name="createRequest"> Credential data </param>
   /// <returns> Created credential </returns>
   [HttpPost]
-  public async Task<ActionResult<CredentialResponseDto>> CreateCredential([FromBody] CreateCredentialDto createDto) {
+  public async Task<ActionResult<CredentialResponse>> CreateCredential([FromBody] CreateCredentialRequest createRequest) {
     try {
       if (!ModelState.IsValid) return BadRequest(ModelState);
 
-      _logger.LogInformation("Creating credential for user {UserId}", createDto.UserId);
+      _logger.LogInformation("Creating credential for user {UserId}", createRequest.UserId);
 
-      var command = new CreateCredentialCommand { UserId = createDto.UserId, Type = createDto.Type, Value = createDto.Value, Metadata = createDto.Metadata, ExpiresAt = createDto.ExpiresAt, IsActive = createDto.IsActive };
+      var command = new CreateCredentialCommand { UserId = createRequest.UserId, Type = createRequest.Type, Value = createRequest.Value, Metadata = createRequest.Metadata, ExpiresAt = createRequest.ExpiresAt, IsActive = createRequest.IsActive };
 
       var createdCredential = await _mediator.Send(command);
       var response = MapToResponseDto(createdCredential);
@@ -124,7 +123,7 @@ public class CredentialsController : ControllerBase {
       return CreatedAtAction(nameof(GetCredential), new { id = createdCredential.Id }, response);
     }
     catch (Exception ex) {
-      _logger.LogError(ex, "Failed to create credential for user {UserId}", createDto.UserId);
+      _logger.LogError(ex, "Failed to create credential for user {UserId}", createRequest.UserId);
 
       return StatusCode(500, "Internal server error");
     }
@@ -132,16 +131,16 @@ public class CredentialsController : ControllerBase {
 
   /// <summary> Update an existing credential using CQRS pattern </summary>
   /// <param name="id"> Credential ID </param>
-  /// <param name="updateDto"> Updated credential data </param>
+  /// <param name="updateRequest"> Updated credential data </param>
   /// <returns> Updated credential </returns>
   [HttpPut("{id}")]
-  public async Task<ActionResult<CredentialResponseDto>> UpdateCredential(Guid id, [FromBody] UpdateCredentialDto updateDto) {
+  public async Task<ActionResult<CredentialResponse>> UpdateCredential(Guid id, [FromBody] UpdateCredentialRequest updateRequest) {
     try {
       if (!ModelState.IsValid) return BadRequest(ModelState);
 
       _logger.LogInformation("Updating credential {CredentialId}", id);
 
-      var command = new UpdateCredentialCommand { Id = id, Type = updateDto.Type, Value = updateDto.Value, Metadata = updateDto.Metadata, ExpiresAt = updateDto.ExpiresAt, IsActive = updateDto.IsActive };
+      var command = new UpdateCredentialCommand { Id = id, Type = updateRequest.Type, Value = updateRequest.Value, Metadata = updateRequest.Metadata, ExpiresAt = updateRequest.ExpiresAt, IsActive = updateRequest.IsActive };
 
       var updatedCredential = await _mediator.Send(command);
       var response = MapToResponseDto(updatedCredential);
@@ -291,7 +290,7 @@ public class CredentialsController : ControllerBase {
   /// <summary> Get soft-deleted credentials using CQRS pattern </summary>
   /// <returns> List of soft-deleted credentials </returns>
   [HttpGet("deleted")]
-  public async Task<ActionResult<IEnumerable<CredentialResponseDto>>> GetDeletedCredentials() {
+  public async Task<ActionResult<IEnumerable<CredentialResponse>>> GetDeletedCredentials() {
     try {
       _logger.LogInformation("Getting deleted credentials");
 
@@ -311,8 +310,8 @@ public class CredentialsController : ControllerBase {
   /// <summary> Map Credential entity to response DTO </summary>
   /// <param name="credential"> Credential entity </param>
   /// <returns> Credential response DTO </returns>
-  private static CredentialResponseDto MapToResponseDto(Credential credential) {
-    return new CredentialResponseDto {
+  private static CredentialResponse MapToResponseDto(Credential credential) {
+    return new CredentialResponse {
       Id = credential.Id,
       UserId = credential.UserId,
       Type = credential.Type,

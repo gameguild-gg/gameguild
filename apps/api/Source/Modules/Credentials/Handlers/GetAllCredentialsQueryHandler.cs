@@ -1,37 +1,33 @@
 using GameGuild.CQRS;
-using GameGuild.Database;
-using GameGuild.Modules.Credentials.Queries;
 
-
-namespace GameGuild.Modules.Credentials.Handlers;
+namespace GameGuild.Modules.Credentials;
 
 /// <summary>
 /// Handler for getting all credentials query using CQRS pattern
 /// </summary>
-public class GetAllCredentialsQueryHandler : IRequestHandler<GetAllCredentialsQuery, IEnumerable<Credential>> {
-  private readonly ApplicationDbContext _context;
+public class GetAllCredentialsQueryHandler(ICredentialService credentialService, ILogger<GetAllCredentialsQueryHandler> logger) : IRequestHandler<GetAllCredentialsQuery, IEnumerable<Credential>>
+{
+    private readonly ICredentialService _credentialService = credentialService ?? throw new ArgumentNullException(nameof(credentialService));
 
-  private readonly ILogger<GetAllCredentialsQueryHandler> _logger;
+    private readonly ILogger<GetAllCredentialsQueryHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-  public GetAllCredentialsQueryHandler(ApplicationDbContext context, ILogger<GetAllCredentialsQueryHandler> logger) {
-    _context = context ?? throw new ArgumentNullException(nameof(context));
-    _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-  }
+    public async Task<IEnumerable<Credential>> Handle(GetAllCredentialsQuery request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Retrieving all credentials");
 
-  public async Task<IEnumerable<Credential>> Handle(GetAllCredentialsQuery request, CancellationToken cancellationToken) {
-    _logger.LogInformation("Retrieving all credentials");
+        try
+        {
+            var credentials = await _credentialService.GetAllCredentialsAsync();
 
-    try {
-      var credentials = await _context.Credentials.Include(c => c.User).ToListAsync(cancellationToken);
+            _logger.LogInformation("Retrieved {Count} credentials", credentials.Count());
 
-      _logger.LogInformation("Retrieved {Count} credentials", credentials.Count);
+            return credentials;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to retrieve credentials");
 
-      return credentials;
+            throw;
+        }
     }
-    catch (Exception ex) {
-      _logger.LogError(ex, "Failed to retrieve credentials");
-
-      throw;
-    }
-  }
 }
