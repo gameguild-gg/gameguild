@@ -2,8 +2,11 @@
 
 public class UpdateUserRequest
 {
-    [StringLength(100, MinimumLength = 1)]
-    public string? Name { get; set; }
+    [StringLength(100)]
+    public string? GivenName { get; set; }
+
+    [StringLength(100)]
+    public string? FamilyName { get; set; }
 
     [StringLength(50, MinimumLength = 1)]
     public string? Username { get; set; }
