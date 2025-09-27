@@ -1,8 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using GameGuild.Database;
-using GameGuild.Modules.Authentication.Models;
 using Microsoft.Extensions.Options;
 using UAParser;
 
