@@ -36,8 +36,8 @@ public class UserProfileDto {
   public DateTime? UpdatedAt { get; set; }
 
   /// <summary> Current tenant information </summary>
-  public TenantInfoDto? CurrentTenant { get; set; }
+  public TenantInfo? CurrentTenant { get; set; }
 
   /// <summary> List of available tenants for the user </summary>
-  public IEnumerable<TenantInfoDto> AvailableTenants { get; set; } = new List<TenantInfoDto>();
+  public IEnumerable<TenantInfo> AvailableTenants { get; set; } = new List<TenantInfo>();
 }

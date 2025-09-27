@@ -167,7 +167,7 @@ public class DacPermissionResolver : IDacPermissionResolver {
     catch (Exception ex) {
       _logger.LogError(ex, "Error in bulk permission resolution for user {UserId} in tenant {TenantId}", userId, tenantId);
 
-      return new Dictionary<Guid, Dictionary<PermissionType, PermissionResult>>();
+      return [];
     }
   }
 
