@@ -1,6 +1,9 @@
-namespace GameGuild.Modules.Authentication;
+﻿namespace GameGuild.Modules.Authentication.Models;
 
-/// <summary> Request DTO for sending email verification </summary>
+/// <summary>
+/// DTO for email verification requests
+/// </summary>
 public class SendEmailVerificationRequestDto {
-  [Required] [EmailAddress] public string Email { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? RedirectUrl { get; set; }
 }

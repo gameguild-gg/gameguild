@@ -19,7 +19,7 @@ public class ModuleRole : EntityBase {
   /// <summary> Permissions defined in this module role </summary>
   [NotMapped]
   public List<ModulePermissionDefinition> Permissions {
-    get => string.IsNullOrEmpty(PermissionsJson) ? new List<ModulePermissionDefinition>() : JsonSerializer.Deserialize<List<ModulePermissionDefinition>>(PermissionsJson) ?? new List<ModulePermissionDefinition>();
+    get => string.IsNullOrEmpty(PermissionsJson) ? [] : JsonSerializer.Deserialize<List<ModulePermissionDefinition>>(PermissionsJson) ?? [];
     set => PermissionsJson = JsonSerializer.Serialize(value);
   }
 
@@ -31,16 +31,5 @@ public class ModuleRole : EntityBase {
   public Guid? TenantId { get; set; }
 
   // Navigation properties
-  public virtual ICollection<UserRoleAssignment> UserRoleAssignments { get; } = new List<UserRoleAssignment>();
-}
-
-/// <summary> Configuration for ModuleRole entity </summary>
-public class ModuleRoleConfiguration : IEntityTypeConfiguration<ModuleRole> {
-  public void Configure(EntityTypeBuilder<ModuleRole> builder) {
-    ArgumentNullException.ThrowIfNull(builder);
-
-    builder.HasIndex(x => new { x.Name, x.Module, x.TenantId }).IsUnique();
-
-    builder.HasMany(x => x.UserRoleAssignments).WithOne(x => x.Role).HasForeignKey(x => x.RoleId).OnDelete(DeleteBehavior.SetNull);
-  }
+  public virtual ICollection<UserRoleAssignment> UserRoleAssignments { get; } = [];
 }

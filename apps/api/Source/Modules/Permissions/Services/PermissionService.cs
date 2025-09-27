@@ -1,9 +1,6 @@
-using GameGuild;
 using GameGuild.Core.Logging;
 using GameGuild.Database;
 using GameGuild.Modules.Permissions;
-using GameGuild.Modules.Tenants;
-
 
 namespace GameGuild.Core.Infrastructure.Permissions;
 
@@ -343,7 +340,7 @@ public class PermissionService : IPermissionService {
       existingPermission = (TPermission)Activator.CreateInstance(typeof(TPermission), userId, tenantId, resourceId, firstPermission)!;
       
       // Add remaining permissions one by one
-      for (int i = 1; i < permissions.Length; i++) {
+      for (var i = 1; i < permissions.Length; i++) {
         existingPermission.AddPermission(permissions[i]);
       }
       
@@ -718,7 +715,7 @@ public class PermissionService : IPermissionService {
     where TPermission : ResourcePermission<TResource>, new()
     where TResource : EntityBase {
     if (resourceIds == null || resourceIds.Length == 0) {
-      return new Dictionary<Guid, IEnumerable<PermissionType>>();
+      return [];
     }
 
     var result = new Dictionary<Guid, IEnumerable<PermissionType>>();
