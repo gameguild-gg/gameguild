@@ -9,7 +9,7 @@ namespace GameGuild.Modules.Authentication;
 /// <summary>
 /// Service for detecting authentication anomalies and preventing abuse
 /// </summary>
-public class AuthenticationAnomalyDetectionService(ApplicationDbContext context, IAuditService auditService, ILogger<AuthenticationAnomalyDetectionService> logger, IConfiguration configuration)
+public class AuthenticationAnomalyDetectionService(IAuthenticationAttemptRepository authAttemptRepository, IAuditService auditService, ILogger<AuthenticationAnomalyDetectionService> logger, IConfiguration configuration)
     : IAuthenticationAnomalyDetectionService
 {
     private readonly IAuditService _auditService = auditService;
@@ -59,8 +59,7 @@ public class AuthenticationAnomalyDetectionService(ApplicationDbContext context,
             loginAttempt.RiskScore = analysis.RiskScore;
 
             // Save the attempt
-            context.AuthenticationAttempts.Add(loginAttempt);
-            await context.SaveChangesAsync();
+            await authAttemptRepository.CreateAsync(loginAttempt);
 
             // Log suspicious activity
             if (analysis.IsSuspicious) { await LogSuspiciousActivityAsync(loginAttempt, analysis); }
@@ -97,7 +96,7 @@ public class AuthenticationAnomalyDetectionService(ApplicationDbContext context,
         var oneDayAgo = now.AddDays(-1);
 
         // Check IP-based throttling
-        var ipAttempts = await context.AuthenticationAttempts.Where(la => la.IpAddress == ipAddress && la.AttemptedAt >= oneHourAgo).CountAsync();
+        var ipAttempts = await authAttemptRepository.CountFailedAttemptsByIpAsync(ipAddress, oneHourAgo);
 
         var maxIpAttempts = configuration.GetValue("Authentication:Anomaly:MaxAttemptsPerIpPerHour", DefaultMaxAttemptsPerIpPerHour);
 
@@ -113,7 +112,7 @@ public class AuthenticationAnomalyDetectionService(ApplicationDbContext context,
         }
 
         // Check email-based throttling for failed attempts
-        var emailFailedAttempts = await context.AuthenticationAttempts.Where(la => la.Email == email.ToLowerInvariant() && !la.IsSuccessful && la.AttemptedAt >= oneHourAgo).CountAsync();
+        var emailFailedAttempts = await authAttemptRepository.CountFailedAttemptsAsync(email.ToLowerInvariant(), oneHourAgo);
 
         var maxFailedPerHour = configuration.GetValue("Authentication:Anomaly:MaxFailedAttemptsPerHour", DefaultMaxFailedAttemptsPerHour);
 
@@ -129,7 +128,7 @@ public class AuthenticationAnomalyDetectionService(ApplicationDbContext context,
         }
 
         // Check daily limits
-        var dailyFailedAttempts = await context.AuthenticationAttempts.Where(la => la.Email == email.ToLowerInvariant() && !la.IsSuccessful && la.AttemptedAt >= oneDayAgo).CountAsync();
+        var dailyFailedAttempts = await authAttemptRepository.CountFailedAttemptsAsync(email.ToLowerInvariant(), oneDayAgo);
 
         var maxFailedPerDay = configuration.GetValue("Authentication:Anomaly:MaxFailedAttemptsPerDay", DefaultMaxFailedAttemptsPerDay);
 
@@ -160,7 +159,7 @@ public class AuthenticationAnomalyDetectionService(ApplicationDbContext context,
     {
         var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
 
-        var recentAttempts = await context.AuthenticationAttempts.Where(la => la.UserId == userId && la.AttemptedAt >= thirtyDaysAgo && la.IsSuccessful).OrderByDescending(la => la.AttemptedAt).Take(50).ToListAsync();
+        var recentAttempts = await authAttemptRepository.GetByUserIdAsync(userId, 50);
 
         var analysis = new UserSignInAnalysis { UserId = userId, IsNewLocation = false, IsNewDevice = false, IsUnusualTime = false, RecentSuccessfulLogins = recentAttempts.Count, UniqueLocations = 0, UniqueDevices = 0 };
 
@@ -207,24 +206,27 @@ public class AuthenticationAnomalyDetectionService(ApplicationDbContext context,
     {
         var cutoff = DateTime.UtcNow.Subtract(timeWindow ?? TimeSpan.FromHours(24));
 
-        var suspiciousAttempts = await context.AuthenticationAttempts.Where(la => la.IsSuspicious && la.AttemptedAt >= cutoff)
+        var suspiciousAttempts = await authAttemptRepository.GetSuspiciousAttemptsAsync(cutoff);
+
+        // Group and analyze suspicious attempts in memory
+        var groupedSuspicious = suspiciousAttempts
             .GroupBy(la => new { la.IpAddress, la.Email })
             .Select(g => new SuspiciousActivity
-                {
-                    IpAddress = g.Key.IpAddress,
-                    Email = g.Key.Email,
-                    AttemptCount = g.Count(),
-                    FirstAttempt = g.Min(la => la.AttemptedAt),
-                    LastAttempt = g.Max(la => la.AttemptedAt),
-                    MaxRiskScore = g.Max(la => la.RiskScore),
-                    UniqueUserAgents = g.Select(la => la.UserAgent).Distinct().Count(),
-                    SuccessfulAttempts = g.Count(la => la.IsSuccessful)
-                }
+            {
+                IpAddress = g.Key.IpAddress,
+                Email = g.Key.Email,
+                AttemptCount = g.Count(),
+                FirstAttempt = g.Min(la => la.AttemptedAt),
+                LastAttempt = g.Max(la => la.AttemptedAt),
+                MaxRiskScore = g.Max(la => la.RiskScore),
+                UniqueUserAgents = g.Select(la => la.UserAgent).Distinct().Count(),
+                SuccessfulAttempts = g.Count(la => la.IsSuccessful)
+            }
             )
             .OrderByDescending(sa => sa.MaxRiskScore)
-            .ToListAsync();
+            .ToList();
 
-        return suspiciousAttempts;
+        return groupedSuspicious;
     }
 
     private async Task<AuthenticationAttemptAnalysis> AnalyzeLoginAttemptAsync(AuthenticationAttempt attempt)
@@ -233,7 +235,7 @@ public class AuthenticationAnomalyDetectionService(ApplicationDbContext context,
         var riskFactors = new List<string>();
 
         // Analyze recent failed attempts from same IP
-        var recentFailedFromIp = await context.AuthenticationAttempts.Where(la => la.IpAddress == attempt.IpAddress && !la.IsSuccessful && la.AttemptedAt >= DateTime.UtcNow.AddHours(-1)).CountAsync();
+        var recentFailedFromIp = await authAttemptRepository.CountFailedAttemptsByIpAsync(attempt.IpAddress, DateTime.UtcNow.AddHours(-1));
 
         if (recentFailedFromIp >= 3)
         {
@@ -242,7 +244,7 @@ public class AuthenticationAnomalyDetectionService(ApplicationDbContext context,
         }
 
         // Analyze recent failed attempts for same email
-        var recentFailedForEmail = await context.AuthenticationAttempts.Where(la => la.Email == attempt.Email && !la.IsSuccessful && la.AttemptedAt >= DateTime.UtcNow.AddMinutes(-15)).CountAsync();
+        var recentFailedForEmail = await authAttemptRepository.CountFailedAttemptsAsync(attempt.Email, DateTime.UtcNow.AddMinutes(-15));
 
         if (recentFailedForEmail >= 2)
         {
@@ -253,9 +255,8 @@ public class AuthenticationAnomalyDetectionService(ApplicationDbContext context,
         // Check for user existence patterns (potential enumeration)
         if (attempt is { IsSuccessful: false, FailureReason: AuthenticationFailureReasons.InvalidCredentials })
         {
-            var recentEnumerationAttempts = await context.AuthenticationAttempts
-                .Where(la => la.IpAddress == attempt.IpAddress && la.FailureReason == AuthenticationFailureReasons.InvalidCredentials && la.AttemptedAt >= DateTime.UtcNow.AddMinutes(-30))
-                .CountAsync();
+            var recentIpAttempts = await authAttemptRepository.GetByIpAddressAsync(attempt.IpAddress, DateTime.UtcNow.AddMinutes(-30));
+            var recentEnumerationAttempts = recentIpAttempts.Count(la => la.FailureReason == AuthenticationFailureReasons.InvalidCredentials);
 
             if (recentEnumerationAttempts >= 5)
             {

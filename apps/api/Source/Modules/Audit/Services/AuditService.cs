@@ -1,6 +1,5 @@
 using System.Text.Json;
 using GameGuild.Database;
-using GameGuild.Modules.Authentication.Models;
 
 namespace GameGuild.Modules.Audit;
 

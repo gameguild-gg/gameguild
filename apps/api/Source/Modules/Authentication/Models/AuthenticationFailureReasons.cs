@@ -26,4 +26,6 @@ public static class AuthenticationFailureReasons
     public const string TenantAccess = "TenantAccess";
 
     public const string ValidationError = "ValidationError";
+
+    public const string SystemError = "SystemError";
 }

@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using GameGuild.Modules.Authentication.Services;
 using GameGuild.Modules.Core.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
@@ -76,7 +75,7 @@ public class SessionController(ISessionManagementService sessionService, ILogger
     /// <summary>
     /// Terminate a specific session
     /// </summary>
-    [HttpDelete("{sessionId}")]
+    [HttpDelete("{sessionId:guid}")]
     public async Task<ActionResult> TerminateSession(Guid sessionId)
     {
         try
