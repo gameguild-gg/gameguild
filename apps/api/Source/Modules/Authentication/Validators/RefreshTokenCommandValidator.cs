@@ -1,7 +1,7 @@
 using FluentValidation;
 
 
-namespace GameGuild.Modules.Authentication.Validators;
+namespace GameGuild.Modules.Authentication;
 
 /// <summary> Validator for RefreshTokenCommand following CQRS and DRY principles </summary>
 public class RefreshTokenCommandValidator : AbstractValidator<RefreshTokenCommand> {

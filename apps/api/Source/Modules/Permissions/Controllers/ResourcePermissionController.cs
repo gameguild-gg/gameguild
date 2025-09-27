@@ -1,7 +1,5 @@
 using System.Security.Claims;
 using GameGuild.Core.Domain.Permissions;
-using GameGuild.Modules.Projects;
-using GameGuild.Services;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
@@ -243,11 +241,4 @@ public class ResourcePermissionController : ControllerBase {
   }
 
   #endregion
-}
-
-/// <summary> Request to update user permissions </summary>
-public class UpdatePermissionsRequest {
-  public PermissionType[] Permissions { get; set; } = [];
-
-  public DateTime? ExpiresAt { get; set; }
 }
