@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using GameGuild.Database;
 using Microsoft.Extensions.Options;
 using OtpNet;
 using QRCoder;
