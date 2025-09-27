@@ -81,5 +81,5 @@ public class TenantAuthService(ITenantService tenantService, ITenantContextServi
     }
 
     /// <summary> Get all available tenants for a user </summary>
-    public async Task<IEnumerable<GameGuild.Modules.Tenants.TenantPermission>> GetUserTenantsAsync(User user) { return await tenantService.GetTenantsForUserAsync(user.Id); }
+    public async Task<IEnumerable<Tenants.TenantPermission>> GetUserTenantsAsync(User user) { return await tenantService.GetTenantsForUserAsync(user.Id); }
 }

@@ -111,8 +111,7 @@ namespace GameGuild.Modules.Authentication
 
                 var refreshTokenEntity = new RefreshToken { UserId = user.Id, Token = refreshToken, ExpiresAt = refreshTokenExpiresAt, IsRevoked = false, CreatedByIp = ipAddress };
 
-                context.RefreshTokens.Add(refreshTokenEntity);
-                await context.SaveChangesAsync();
+                await refreshTokenRepository.CreateAsync(refreshTokenEntity);
 
                 // Record successful login attempt
                 await RecordSuccessfulAttempt(request.Email, user.Id, ipAddress, userAgent, stopwatch.Elapsed, correlationId, request.TenantId);
@@ -199,8 +198,7 @@ namespace GameGuild.Modules.Authentication
 
                 var refreshTokenEntity = new RefreshToken { UserId = user.Id, Token = refreshToken, ExpiresAt = refreshTokenExpiresAt, IsRevoked = false, CreatedByIp = ipAddress };
 
-                context.RefreshTokens.Add(refreshTokenEntity);
-                await context.SaveChangesAsync();
+                await refreshTokenRepository.CreateAsync(refreshTokenEntity);
 
                 // Record successful registration as login attempt
                 await RecordSuccessfulAttempt(request.Email, user.Id, ipAddress, userAgent, stopwatch.Elapsed, correlationId, request.TenantId);

@@ -208,19 +208,18 @@ public class AuthenticationAnomalyDetectionService(IAuthenticationAttemptReposit
         var suspiciousAttempts = await authAttemptRepository.GetSuspiciousAttemptsAsync(cutoff);
 
         // Group and analyze suspicious attempts in memory
-        var groupedSuspicious = suspiciousAttempts
-            .GroupBy(la => new { la.IpAddress, la.Email })
+        var groupedSuspicious = suspiciousAttempts.GroupBy(la => new { la.IpAddress, la.Email })
             .Select(g => new SuspiciousActivity
-            {
-                IpAddress = g.Key.IpAddress,
-                Email = g.Key.Email,
-                AttemptCount = g.Count(),
-                FirstAttempt = g.Min(la => la.AttemptedAt),
-                LastAttempt = g.Max(la => la.AttemptedAt),
-                MaxRiskScore = g.Max(la => la.RiskScore),
-                UniqueUserAgents = g.Select(la => la.UserAgent).Distinct().Count(),
-                SuccessfulAttempts = g.Count(la => la.IsSuccessful)
-            }
+                {
+                    IpAddress = g.Key.IpAddress,
+                    Email = g.Key.Email,
+                    AttemptCount = g.Count(),
+                    FirstAttempt = g.Min(la => la.AttemptedAt),
+                    LastAttempt = g.Max(la => la.AttemptedAt),
+                    MaxRiskScore = g.Max(la => la.RiskScore),
+                    UniqueUserAgents = g.Select(la => la.UserAgent).Distinct().Count(),
+                    SuccessfulAttempts = g.Count(la => la.IsSuccessful)
+                }
             )
             .OrderByDescending(sa => sa.MaxRiskScore)
             .ToList();

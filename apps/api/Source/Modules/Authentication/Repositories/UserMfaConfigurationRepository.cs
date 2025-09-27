@@ -9,10 +9,7 @@ public class UserMfaConfigurationRepository(ApplicationDbContext context) : IUse
 {
     private readonly ApplicationDbContext _context = context;
 
-    public async Task<UserMfaConfiguration?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        return await _context.UserMfaConfigurations.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-    }
+    public async Task<UserMfaConfiguration?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) { return await _context.UserMfaConfigurations.FirstOrDefaultAsync(c => c.Id == id, cancellationToken); }
 
     public async Task<UserMfaConfiguration?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
@@ -21,15 +18,12 @@ public class UserMfaConfigurationRepository(ApplicationDbContext context) : IUse
 
     public async Task<IReadOnlyList<UserMfaConfiguration>> GetEnabledConfigurationsAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.UserMfaConfigurations
-            .Where(c => c.IsEnabled && c.IsSetupComplete)
-            .ToListAsync(cancellationToken);
+        return await _context.UserMfaConfigurations.Where(c => c.IsEnabled && c.IsSetupComplete).ToListAsync(cancellationToken);
     }
 
     public async Task<bool> IsMfaEnabledAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await _context.UserMfaConfigurations
-            .AnyAsync(c => c.UserId == userId && c.IsEnabled && c.IsSetupComplete, cancellationToken);
+        return await _context.UserMfaConfigurations.AnyAsync(c => c.UserId == userId && c.IsEnabled && c.IsSetupComplete, cancellationToken);
     }
 
     public async Task<UserMfaConfiguration> CreateAsync(UserMfaConfiguration configuration, CancellationToken cancellationToken = default)
@@ -57,40 +51,39 @@ public class UserMfaConfigurationRepository(ApplicationDbContext context) : IUse
     public async Task<bool> EnableMfaAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         UserMfaConfiguration? configuration = await GetByUserIdAsync(userId, cancellationToken);
-        if (configuration == null)
-            return false;
+
+        if (configuration == null) return false;
 
         configuration.IsEnabled = true;
         configuration.EnabledAt = DateTime.UtcNow;
         configuration.UpdatedAt = DateTime.UtcNow;
 
         await UpdateAsync(configuration, cancellationToken);
+
         return true;
     }
 
     public async Task<bool> DisableMfaAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         UserMfaConfiguration? configuration = await GetByUserIdAsync(userId, cancellationToken);
-        if (configuration == null)
-            return false;
+
+        if (configuration == null) return false;
 
         configuration.IsEnabled = false;
         configuration.UpdatedAt = DateTime.UtcNow;
 
         await UpdateAsync(configuration, cancellationToken);
+
         return true;
     }
 
     public async Task<int> UpdateFailedAttemptsAsync(Guid userId, bool increment, CancellationToken cancellationToken = default)
     {
         UserMfaConfiguration? configuration = await GetByUserIdAsync(userId, cancellationToken);
-        if (configuration == null)
-            return 0;
 
-        if (increment)
-        {
-            configuration.FailedAttempts++;
-        }
+        if (configuration == null) return 0;
+
+        if (increment) { configuration.FailedAttempts++; }
         else
         {
             configuration.FailedAttempts = 0;
@@ -106,35 +99,37 @@ public class UserMfaConfigurationRepository(ApplicationDbContext context) : IUse
     public async Task<bool> LockoutUserAsync(Guid userId, DateTime lockoutUntil, CancellationToken cancellationToken = default)
     {
         UserMfaConfiguration? configuration = await GetByUserIdAsync(userId, cancellationToken);
-        if (configuration == null)
-            return false;
+
+        if (configuration == null) return false;
 
         configuration.LockedOutUntil = lockoutUntil;
         configuration.UpdatedAt = DateTime.UtcNow;
 
         await UpdateAsync(configuration, cancellationToken);
+
         return true;
     }
 
     public async Task<bool> ClearLockoutAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         UserMfaConfiguration? configuration = await GetByUserIdAsync(userId, cancellationToken);
-        if (configuration == null)
-            return false;
+
+        if (configuration == null) return false;
 
         configuration.LockedOutUntil = null;
         configuration.FailedAttempts = 0;
         configuration.UpdatedAt = DateTime.UtcNow;
 
         await UpdateAsync(configuration, cancellationToken);
+
         return true;
     }
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         UserMfaConfiguration? configuration = await GetByIdAsync(id, cancellationToken);
-        if (configuration == null)
-            return false;
+
+        if (configuration == null) return false;
 
         _context.UserMfaConfigurations.Remove(configuration);
         int changes = await _context.SaveChangesAsync(cancellationToken);
@@ -145,8 +140,8 @@ public class UserMfaConfigurationRepository(ApplicationDbContext context) : IUse
     public async Task<bool> DeleteByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         UserMfaConfiguration? configuration = await GetByUserIdAsync(userId, cancellationToken);
-        if (configuration == null)
-            return false;
+
+        if (configuration == null) return false;
 
         _context.UserMfaConfigurations.Remove(configuration);
         int changes = await _context.SaveChangesAsync(cancellationToken);

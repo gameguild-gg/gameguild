@@ -9,10 +9,7 @@ public class UserSessionRepository(ApplicationDbContext context) : IUserSessionR
 {
     private readonly ApplicationDbContext _context = context;
 
-    public async Task<UserSession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        return await _context.UserSessions.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-    }
+    public async Task<UserSession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) { return await _context.UserSessions.FirstOrDefaultAsync(s => s.Id == id, cancellationToken); }
 
     public async Task<UserSession?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
     {
@@ -21,31 +18,21 @@ public class UserSessionRepository(ApplicationDbContext context) : IUserSessionR
 
     public async Task<IReadOnlyList<UserSession>> GetActiveByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await _context.UserSessions
-            .Where(s => s.UserId == userId && s.IsValid)
-            .OrderByDescending(s => s.LastUsedAt)
-            .ToListAsync(cancellationToken);
+        return await _context.UserSessions.Where(s => s.UserId == userId && s.IsValid).OrderByDescending(s => s.LastUsedAt).ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<UserSession>> GetAllByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await _context.UserSessions
-            .Where(s => s.UserId == userId)
-            .OrderByDescending(s => s.LastUsedAt)
-            .ToListAsync(cancellationToken);
+        return await _context.UserSessions.Where(s => s.UserId == userId).OrderByDescending(s => s.LastUsedAt).ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<UserSession>> GetByDeviceFingerprintAsync(string deviceFingerprint, bool activeOnly = true, CancellationToken cancellationToken = default)
     {
-        IQueryable<UserSession> query = _context.UserSessions
-            .Where(s => s.DeviceFingerprint == deviceFingerprint);
+        IQueryable<UserSession> query = _context.UserSessions.Where(s => s.DeviceFingerprint == deviceFingerprint);
 
-        if (activeOnly)
-            query = query.Where(s => s.IsValid);
+        if (activeOnly) query = query.Where(s => s.IsValid);
 
-        return await query
-            .OrderByDescending(s => s.LastUsedAt)
-            .ToListAsync(cancellationToken);
+        return await query.OrderByDescending(s => s.LastUsedAt).ToListAsync(cancellationToken);
     }
 
     public async Task<UserSession> CreateAsync(UserSession session, CancellationToken cancellationToken = default)
@@ -74,21 +61,22 @@ public class UserSessionRepository(ApplicationDbContext context) : IUserSessionR
     public async Task<bool> UpdateLastUsedAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
         UserSession? session = await GetByIdAsync(sessionId, cancellationToken);
-        if (session == null || !session.IsValid)
-            return false;
+
+        if (session == null || !session.IsValid) return false;
 
         session.LastUsedAt = DateTime.UtcNow;
         session.UpdatedAt = DateTime.UtcNow;
 
         await UpdateAsync(session, cancellationToken);
+
         return true;
     }
 
     public async Task<bool> TerminateSessionAsync(Guid sessionId, string reason, CancellationToken cancellationToken = default)
     {
         UserSession? session = await GetByIdAsync(sessionId, cancellationToken);
-        if (session == null)
-            return false;
+
+        if (session == null) return false;
 
         session.IsActive = false;
         session.TerminationReason = reason;
@@ -96,21 +84,18 @@ public class UserSessionRepository(ApplicationDbContext context) : IUserSessionR
         session.UpdatedAt = DateTime.UtcNow;
 
         await UpdateAsync(session, cancellationToken);
+
         return true;
     }
 
     public async Task<int> TerminateAllUserSessionsAsync(Guid userId, string reason, Guid? excludeSessionId = null, CancellationToken cancellationToken = default)
     {
-        List<UserSession> activeSessions = await _context.UserSessions
-            .Where(s => s.UserId == userId &&
-                       s.IsActive &&
-                       (excludeSessionId == null || s.Id != excludeSessionId.Value))
-            .ToListAsync(cancellationToken);
+        List<UserSession> activeSessions = await _context.UserSessions.Where(s => s.UserId == userId && s.IsActive && (excludeSessionId == null || s.Id != excludeSessionId.Value)).ToListAsync(cancellationToken);
 
-        if (activeSessions.Count == 0)
-            return 0;
+        if (activeSessions.Count == 0) return 0;
 
         DateTime now = DateTime.UtcNow;
+
         foreach (UserSession session in activeSessions)
         {
             session.IsActive = false;
@@ -128,8 +113,8 @@ public class UserSessionRepository(ApplicationDbContext context) : IUserSessionR
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         UserSession? session = await GetByIdAsync(id, cancellationToken);
-        if (session == null)
-            return false;
+
+        if (session == null) return false;
 
         _context.UserSessions.Remove(session);
         int changes = await _context.SaveChangesAsync(cancellationToken);
@@ -140,13 +125,9 @@ public class UserSessionRepository(ApplicationDbContext context) : IUserSessionR
     public async Task<int> CleanupExpiredSessionsAsync(CancellationToken cancellationToken = default)
     {
         DateTime now = DateTime.UtcNow;
-        List<UserSession> expiredSessions = await _context.UserSessions
-            .Where(s => s.ExpiresAt < now ||
-                       (!s.IsActive && s.TerminatedAt.HasValue && s.TerminatedAt.Value.AddDays(30) < now))
-            .ToListAsync(cancellationToken);
+        List<UserSession> expiredSessions = await _context.UserSessions.Where(s => s.ExpiresAt < now || (!s.IsActive && s.TerminatedAt.HasValue && s.TerminatedAt.Value.AddDays(30) < now)).ToListAsync(cancellationToken);
 
-        if (expiredSessions.Count == 0)
-            return 0;
+        if (expiredSessions.Count == 0) return 0;
 
         _context.UserSessions.RemoveRange(expiredSessions);
         await _context.SaveChangesAsync(cancellationToken);
@@ -157,14 +138,15 @@ public class UserSessionRepository(ApplicationDbContext context) : IUserSessionR
     public async Task<bool> MarkDeviceAsTrustedAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
         UserSession? session = await GetByIdAsync(sessionId, cancellationToken);
-        if (session == null)
-            return false;
+
+        if (session == null) return false;
 
         session.IsTrustedDevice = true;
         session.TrustedAt = DateTime.UtcNow;
         session.UpdatedAt = DateTime.UtcNow;
 
         await UpdateAsync(session, cancellationToken);
+
         return true;
     }
 }

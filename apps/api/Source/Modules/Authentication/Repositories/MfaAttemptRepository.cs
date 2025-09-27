@@ -9,44 +9,27 @@ public class MfaAttemptRepository(ApplicationDbContext context) : IMfaAttemptRep
 {
     private readonly ApplicationDbContext _context = context;
 
-    public async Task<MfaAttempt?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        return await _context.MfaAttempts.FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
-    }
+    public async Task<MfaAttempt?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) { return await _context.MfaAttempts.FirstOrDefaultAsync(m => m.Id == id, cancellationToken); }
 
     public async Task<IReadOnlyList<MfaAttempt>> GetByUserIdAsync(Guid userId, int limit = 100, CancellationToken cancellationToken = default)
     {
-        return await _context.MfaAttempts
-            .Where(m => m.UserId == userId)
-            .OrderByDescending(m => m.CreatedAt)
-            .Take(limit)
-            .ToListAsync(cancellationToken);
+        return await _context.MfaAttempts.Where(m => m.UserId == userId).OrderByDescending(m => m.CreatedAt).Take(limit).ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<MfaAttempt>> GetByMethodAsync(MfaMethod method, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
-        IQueryable<MfaAttempt> query = _context.MfaAttempts
-            .Where(m => m.Method == method);
+        IQueryable<MfaAttempt> query = _context.MfaAttempts.Where(m => m.Method == method);
 
-        if (fromDate.HasValue)
-            query = query.Where(m => m.CreatedAt >= fromDate.Value);
+        if (fromDate.HasValue) query = query.Where(m => m.CreatedAt >= fromDate.Value);
 
-        if (toDate.HasValue)
-            query = query.Where(m => m.CreatedAt <= toDate.Value);
+        if (toDate.HasValue) query = query.Where(m => m.CreatedAt <= toDate.Value);
 
-        return await query
-            .OrderByDescending(m => m.CreatedAt)
-            .ToListAsync(cancellationToken);
+        return await query.OrderByDescending(m => m.CreatedAt).ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<MfaAttempt>> GetFailedAttemptsByUserAsync(Guid userId, DateTime fromDate, CancellationToken cancellationToken = default)
     {
-        return await _context.MfaAttempts
-            .Where(m => m.UserId == userId &&
-                       !m.IsSuccessful &&
-                       m.CreatedAt >= fromDate)
-            .OrderByDescending(m => m.CreatedAt)
-            .ToListAsync(cancellationToken);
+        return await _context.MfaAttempts.Where(m => m.UserId == userId && !m.IsSuccessful && m.CreatedAt >= fromDate).OrderByDescending(m => m.CreatedAt).ToListAsync(cancellationToken);
     }
 
     public async Task<MfaAttempt> CreateAsync(MfaAttempt attempt, CancellationToken cancellationToken = default)
@@ -74,8 +57,8 @@ public class MfaAttemptRepository(ApplicationDbContext context) : IMfaAttemptRep
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         MfaAttempt? attempt = await GetByIdAsync(id, cancellationToken);
-        if (attempt == null)
-            return false;
+
+        if (attempt == null) return false;
 
         _context.MfaAttempts.Remove(attempt);
         int changes = await _context.SaveChangesAsync(cancellationToken);
@@ -85,21 +68,14 @@ public class MfaAttemptRepository(ApplicationDbContext context) : IMfaAttemptRep
 
     public async Task<int> CountFailedAttemptsAsync(Guid userId, DateTime fromDate, CancellationToken cancellationToken = default)
     {
-        return await _context.MfaAttempts
-            .Where(m => m.UserId == userId &&
-                       !m.IsSuccessful &&
-                       m.CreatedAt >= fromDate)
-            .CountAsync(cancellationToken);
+        return await _context.MfaAttempts.Where(m => m.UserId == userId && !m.IsSuccessful && m.CreatedAt >= fromDate).CountAsync(cancellationToken);
     }
 
     public async Task<int> CleanupOldAttemptsAsync(DateTime olderThan, CancellationToken cancellationToken = default)
     {
-        List<MfaAttempt> oldAttempts = await _context.MfaAttempts
-            .Where(m => m.CreatedAt < olderThan)
-            .ToListAsync(cancellationToken);
+        List<MfaAttempt> oldAttempts = await _context.MfaAttempts.Where(m => m.CreatedAt < olderThan).ToListAsync(cancellationToken);
 
-        if (oldAttempts.Count == 0)
-            return 0;
+        if (oldAttempts.Count == 0) return 0;
 
         _context.MfaAttempts.RemoveRange(oldAttempts);
         await _context.SaveChangesAsync(cancellationToken);
