@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
-using GameGuild.Database;
-using GameGuild.Database.Seeding;
 using GameGuild.Modules.Localization;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Source.Database.Seeding;
+namespace GameGuild.Database;
 
 /// <summary>
 /// Seeds supported languages for the application, ensuring a single default entry exists.
@@ -61,7 +55,7 @@ public class LanguageSeeder(ILogger<LanguageSeeder> logger) : IDataSeeder
 
             if (isDefault)
             {
-                List<Language> otherDefaults = await context.Languages
+                var otherDefaults = await context.Languages
                     .Where(language => language.Code != code && language.IsDefault)
                     .ToListAsync(cancellationToken);
 

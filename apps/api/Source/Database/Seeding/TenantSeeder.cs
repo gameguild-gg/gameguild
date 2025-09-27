@@ -1,5 +1,5 @@
 using GameGuild.Database;
-using GameGuild.Database.Seeding;
+using GameGuild.Modules.Localization;
 using GameGuild.Modules.Tenants;
 
 namespace GameGuild.Source.Database.Seeding;
@@ -8,9 +8,11 @@ namespace GameGuild.Source.Database.Seeding;
 /// Seeds initial tenant data into the database
 /// </summary>
 /// <param name="logger">The logger to use for this seeder</param>
-public class TenantSeeder(ILogger<TenantSeeder> logger) : IDataSeeder
+/// <param name="languageRepository">Repository for language operations</param>
+public class TenantSeeder(ILogger<TenantSeeder> logger, ILanguageRepository languageRepository) : IDataSeeder
 {
     private readonly ILogger<TenantSeeder> _logger = logger;
+    private readonly ILanguageRepository _languageRepository = languageRepository;
 
     /// <summary>
     /// Seeds the initial tenant data
@@ -40,7 +42,7 @@ public class TenantSeeder(ILogger<TenantSeeder> logger) : IDataSeeder
             {
                 _logger.LogInformation("Setting GameGuild tenant as default...");
                 gameGuildTenant.IsDefault = true;
-                context.Tenants.Update(gameGuildTenant);
+                _ = context.Tenants.Update(gameGuildTenant);
             }
         }
         else
@@ -48,7 +50,7 @@ public class TenantSeeder(ILogger<TenantSeeder> logger) : IDataSeeder
             _logger.LogInformation("Creating new default GameGuild tenant...");
             gameGuildTenant = new Tenant { Name = "GameGuild", Description = "The default GameGuild tenant for the application", Slug = "gameguild", IsActive = true, IsDefault = true };
 
-            context.Tenants.Add(gameGuildTenant);
+            _ = context.Tenants.Add(gameGuildTenant);
             _logger.LogInformation("Added new GameGuild tenant to context");
         }
 
@@ -76,19 +78,41 @@ public class TenantSeeder(ILogger<TenantSeeder> logger) : IDataSeeder
     {
         _logger.LogInformation("Checking for existing TenantSettings for tenant {TenantId}...", tenant.Id);
 
+        Language? defaultLanguage = await _languageRepository.GetDefaultAsync(cancellationToken);
+
+        if (defaultLanguage is null)
+        {
+            _logger.LogWarning("Default language not found. Skipping tenant settings seeding for tenant {TenantId}", tenant.Id);
+
+            return;
+        }
+
+        Guid defaultLanguageId = defaultLanguage.Id;
+
         TenantSettings? existingSettings = await context.TenantSettings.FirstOrDefaultAsync(ts => ts.TenantId == tenant.Id, cancellationToken);
 
         if (existingSettings != null)
         {
-            _logger.LogInformation("TenantSettings already exist for tenant {TenantId}", tenant.Id);
+            if (existingSettings.DefaultLanguageId == Guid.Empty)
+            {
+                existingSettings.DefaultLanguageId = defaultLanguageId;
+                _ = context.TenantSettings.Update(existingSettings);
+                int updatedRecords = await context.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Updated TenantSettings default language for tenant {TenantId} (records affected: {ChangeCount})", tenant.Id, updatedRecords);
+            }
+            else
+            {
+                _logger.LogInformation("TenantSettings already exist for tenant {TenantId}", tenant.Id);
+            }
 
             return;
         }
 
         _logger.LogInformation("Creating default TenantSettings for tenant {TenantId}...", tenant.Id);
-        TenantSettings defaultSettings = TenantSettings.CreateDefault(tenant.Id);
 
-        context.TenantSettings.Add(defaultSettings);
+        var defaultSettings = TenantSettings.CreateDefault(tenant.Id, defaultLanguageId);
+
+        _ = context.TenantSettings.Add(defaultSettings);
 
         int settingsChangesSaved = await context.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Successfully saved {ChangeCount} TenantSettings changes to database", settingsChangesSaved);
@@ -122,7 +146,7 @@ public class TenantSeeder(ILogger<TenantSeeder> logger) : IDataSeeder
             _ => "example.com"
         };
 
-        var defaultDomain = new TenantDomain
+        TenantDomain defaultDomain = new()
         {
             TenantId = tenant.Id,
             TopLevelDomain = domainName,
@@ -131,7 +155,7 @@ public class TenantSeeder(ILogger<TenantSeeder> logger) : IDataSeeder
             IsSecondaryDomain = false
         };
 
-        context.TenantDomains.Add(defaultDomain);
+        _ = context.TenantDomains.Add(defaultDomain);
 
         int domainChangesSaved = await context.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Successfully saved {ChangeCount} TenantDomain changes to database for domain: {DomainName}", domainChangesSaved, defaultDomain.FullDomainName);
@@ -154,7 +178,7 @@ public class TenantSeeder(ILogger<TenantSeeder> logger) : IDataSeeder
             _logger.LogInformation("Creating Champlain College tenant...");
             champlainTenant = new Tenant { Name = "Champlain College", Description = "Champlain College educational institution tenant", Slug = "champlain", IsActive = true, IsDefault = false };
 
-            context.Tenants.Add(champlainTenant);
+            _ = context.Tenants.Add(champlainTenant);
             _logger.LogInformation("Added Champlain College tenant to context");
         }
 
@@ -176,7 +200,7 @@ public class TenantSeeder(ILogger<TenantSeeder> logger) : IDataSeeder
     /// <param name="cancellationToken">The cancellation token</param>
     private async Task SeedChamplainSubdomainsAsync(ApplicationDbContext context, Tenant tenant, CancellationToken cancellationToken)
     {
-        var subdomains = new[ ] { "student", "faculty", "staff", "alumni" };
+        string[] subdomains = ["student", "faculty", "staff", "alumni"];
 
         foreach (string subdomain in subdomains)
         {
@@ -189,9 +213,16 @@ public class TenantSeeder(ILogger<TenantSeeder> logger) : IDataSeeder
                 continue;
             }
 
-            var tenantSubdomain = new TenantDomain { TenantId = tenant.Id, TopLevelDomain = "champlain.edu", Subdomain = subdomain, IsMainDomain = false, IsSecondaryDomain = true };
+            TenantDomain tenantSubdomain = new()
+            {
+                TenantId = tenant.Id,
+                TopLevelDomain = "champlain.edu",
+                Subdomain = subdomain,
+                IsMainDomain = false,
+                IsSecondaryDomain = true
+            };
 
-            context.TenantDomains.Add(tenantSubdomain);
+            _ = context.TenantDomains.Add(tenantSubdomain);
             _logger.LogInformation("Added subdomain: {SubdomainName}.champlain.edu", subdomain);
         }
 
