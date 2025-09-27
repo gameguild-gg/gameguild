@@ -3,8 +3,8 @@ namespace GameGuild.Modules.Authentication;
 /// <summary>
 /// Tracks authentication attempts for anomaly detection and security monitoring
 /// </summary>
-public class AuthenticationAttempt : EntityBase {
-
+public class AuthenticationAttempt : EntityBase
+{
     /// <summary>
     /// Email address used in the login attempt (normalized)
     /// </summary>

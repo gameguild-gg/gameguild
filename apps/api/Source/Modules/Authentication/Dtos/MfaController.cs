@@ -9,11 +9,14 @@ namespace GameGuild.Modules.Authentication.Controllers;
 [ApiController]
 [Route("api/auth/mfa")]
 [Authorize]
-public class MfaController : BaseController {
+public class MfaController : BaseController
+{
     private readonly IMfaService _mfaService;
+
     private readonly ILogger<MfaController> _logger;
 
-    public MfaController(IMfaService mfaService, ILogger<MfaController> logger) {
+    public MfaController(IMfaService mfaService, ILogger<MfaController> logger)
+    {
         _mfaService = mfaService;
         _logger = logger;
     }
@@ -22,48 +25,48 @@ public class MfaController : BaseController {
     /// Get current user's MFA configuration
     /// </summary>
     [HttpGet("configuration")]
-    public async Task<ActionResult<MfaConfigurationResponse>> GetMfaConfiguration() {
+    public async Task<ActionResult<MfaConfigurationResponse>> GetMfaConfiguration()
+    {
         // TODO: Implement when GetMfaConfigurationAsync is available in IMfaService
         var userId = GetCurrentUserId();
-        if (userId == null) {
-            return Unauthorized("User ID not found in token");
-        }
+
+        if (userId == null) { return Unauthorized("User ID not found in token"); }
 
         var isMfaEnabled = await _mfaService.IsMfaEnabledAsync(userId.Value);
 
-        return Ok(new MfaConfigurationResponse {
-            IsEnabled = isMfaEnabled,
-            AvailableMethods = isMfaEnabled ? [MfaMethod.Totp] : [],
-            BackupCodesRemaining = 0
-        });
+        return Ok(new MfaConfigurationResponse { IsEnabled = isMfaEnabled, AvailableMethods = isMfaEnabled ? [MfaMethod.Totp] : [], BackupCodesRemaining = 0 });
     }
 
     /// <summary>
     /// Initiate TOTP MFA setup
     /// </summary>
     [HttpPost("setup/totp")]
-    public async Task<ActionResult<MfaSetupResponse>> InitiateTotpSetup() {
-        try {
+    public async Task<ActionResult<MfaSetupResponse>> InitiateTotpSetup()
+    {
+        try
+        {
             var userId = GetCurrentUserId();
-            if (userId == null) {
-                return Unauthorized("User ID not found in token");
-            }
+
+            if (userId == null) { return Unauthorized("User ID not found in token"); }
 
             var result = await _mfaService.InitiateMfaSetupAsync(userId.Value);
 
-            if (!result.IsSuccess) {
-                return BadRequest(new { error = result.ErrorMessage });
-            }
+            if (!result.IsSuccess) { return BadRequest(new { error = result.ErrorMessage }); }
 
-            return Ok(new MfaSetupResponse {
-                SetupId = Guid.NewGuid().ToString(), // Temporary setup ID
-                SecretKey = result.SecretKey!,
-                QrCodeUrl = result.QrCodeData!,
-                BackupCodes = [] // Empty list for initial setup
-            });
+            return Ok(
+                new MfaSetupResponse
+                {
+                    SetupId = Guid.NewGuid().ToString(), // Temporary setup ID
+                    SecretKey = result.SecretKey!,
+                    QrCodeUrl = result.QrCodeData!,
+                    BackupCodes = [] // Empty list for initial setup
+                }
+            );
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Failed to initiate TOTP setup for user {UserId}", GetCurrentUserId());
+
             return StatusCode(500, "Failed to initiate MFA setup");
         }
     }
@@ -72,24 +75,26 @@ public class MfaController : BaseController {
     /// Complete TOTP MFA setup by verifying the code
     /// </summary>
     [HttpPost("setup/totp/complete")]
-    public async Task<ActionResult> CompleteTotpSetup([FromBody] CompleteMfaSetupRequest request) {
-        try {
+    public async Task<ActionResult> CompleteTotpSetup([FromBody] CompleteMfaSetupRequest request)
+    {
+        try
+        {
             var userId = GetCurrentUserId();
-            if (userId == null) {
-                return Unauthorized("User ID not found in token");
-            }
+
+            if (userId == null) { return Unauthorized("User ID not found in token"); }
 
             var result = await _mfaService.CompleteMfaSetupAsync(userId.Value, request.Code);
 
-            if (!result.IsSuccess) {
-                return BadRequest(new { error = result.Message });
-            }
+            if (!result.IsSuccess) { return BadRequest(new { error = result.Message }); }
 
             _logger.LogInformation("User {UserId} successfully completed TOTP setup", userId);
+
             return Ok(new { message = "MFA setup completed successfully" });
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Failed to complete TOTP setup for user {UserId}", GetCurrentUserId());
+
             return StatusCode(500, "Failed to complete MFA setup");
         }
     }
@@ -99,25 +104,32 @@ public class MfaController : BaseController {
     /// </summary>
     [HttpPost("verify")]
     [AllowAnonymous] // This endpoint is used during login flow
-    public async Task<ActionResult<MfaVerificationResponse>> VerifyMfa([FromBody] VerifyMfaRequest request) {
-        try {
+    public async Task<ActionResult<MfaVerificationResponse>> VerifyMfa([FromBody] VerifyMfaRequest request)
+    {
+        try
+        {
             var result = await _mfaService.VerifyMfaAsync(request.UserId, request.Code, request.Method);
 
-            if (!result.IsSuccess) {
-                _logger.LogWarning("Failed MFA verification for user {UserId} from IP {IpAddress}",
-                  request.UserId, HttpContext.Connection.RemoteIpAddress);
+            if (!result.IsSuccess)
+            {
+                _logger.LogWarning("Failed MFA verification for user {UserId} from IP {IpAddress}", request.UserId, HttpContext.Connection.RemoteIpAddress);
 
                 return BadRequest(new { error = result.Message });
             }
 
-            return Ok(new MfaVerificationResponse {
-                IsValid = result.IsSuccess,
-                IsBackupCode = false, // MfaVerificationResult doesn't track this
-                RemainingBackupCodes = null // MfaVerificationResult doesn't track this
-            });
+            return Ok(
+                new MfaVerificationResponse
+                {
+                    IsValid = result.IsSuccess,
+                    IsBackupCode = false, // MfaVerificationResult doesn't track this
+                    RemainingBackupCodes = null // MfaVerificationResult doesn't track this
+                }
+            );
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Error during MFA verification for user {UserId}", request.UserId);
+
             return StatusCode(500, "MFA verification failed");
         }
     }
@@ -126,23 +138,24 @@ public class MfaController : BaseController {
     /// Generate new backup codes (invalidates existing ones)
     /// </summary>
     [HttpPost("backup-codes/regenerate")]
-    public async Task<ActionResult<BackupCodesResponse>> RegenerateBackupCodes() {
-        try {
+    public async Task<ActionResult<BackupCodesResponse>> RegenerateBackupCodes()
+    {
+        try
+        {
             var userId = GetCurrentUserId();
-            if (userId == null) {
-                return Unauthorized("User ID not found in token");
-            }
+
+            if (userId == null) { return Unauthorized("User ID not found in token"); }
 
             var backupCodes = await _mfaService.GenerateBackupCodesAsync(userId.Value);
 
             _logger.LogInformation("User {UserId} regenerated backup codes", userId);
 
-            return Ok(new BackupCodesResponse {
-                BackupCodes = [.. backupCodes]
-            });
+            return Ok(new BackupCodesResponse { BackupCodes = [.. backupCodes] });
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Failed to regenerate backup codes for user {UserId}", GetCurrentUserId());
+
             return StatusCode(500, "Failed to regenerate backup codes");
         }
     }
@@ -151,31 +164,31 @@ public class MfaController : BaseController {
     /// Disable MFA for the current user
     /// </summary>
     [HttpPost("disable")]
-    public async Task<ActionResult> DisableMfa([FromBody] DisableMfaRequest request) {
-        try {
+    public async Task<ActionResult> DisableMfa([FromBody] DisableMfaRequest request)
+    {
+        try
+        {
             var userId = GetCurrentUserId();
-            if (userId == null) {
-                return Unauthorized("User ID not found in token");
-            }
+
+            if (userId == null) { return Unauthorized("User ID not found in token"); }
 
             // Verify current MFA code before disabling
             var verificationResult = await _mfaService.VerifyMfaAsync(userId.Value, request.Code, MfaMethod.Totp);
 
-            if (!verificationResult.IsSuccess) {
-                return BadRequest(new { error = "Invalid MFA code" });
-            }
+            if (!verificationResult.IsSuccess) { return BadRequest(new { error = "Invalid MFA code" }); }
 
             var result = await _mfaService.DisableMfaAsync(userId.Value, request.Code);
 
-            if (!result) {
-                return BadRequest(new { error = "Failed to disable MFA" });
-            }
+            if (!result) { return BadRequest(new { error = "Failed to disable MFA" }); }
 
             _logger.LogInformation("User {UserId} disabled MFA", userId);
+
             return Ok(new { message = "MFA disabled successfully" });
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Failed to disable MFA for user {UserId}", GetCurrentUserId());
+
             return StatusCode(500, "Failed to disable MFA");
         }
     }
