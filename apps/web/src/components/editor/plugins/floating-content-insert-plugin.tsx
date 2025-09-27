@@ -34,6 +34,7 @@ import {
   Video,
   Youtube,
   GitBranch,
+  Table,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -63,6 +64,7 @@ import { extractYouTubeVideoId } from "../nodes/youtube-node"
 import type { SpotifyData } from "../nodes/spotify-node"
 import { extractSpotifyInfo } from "../nodes/spotify-node"
 import type { MermaidData } from "../nodes/mermaid-node"
+import type { TableData } from "../nodes/table-node"
 
 // Image insertion mode: 0 = both upload and URL, 1 = only upload, 2 = only URL
 const IMAGE_INSERTION_MODE = 0
@@ -100,6 +102,7 @@ export const INSERT_YOUTUBE_COMMAND = createCommand<YouTubeData>("INSERT_YOUTUBE
 export const INSERT_SPOTIFY_COMMAND = createCommand<SpotifyData>("INSERT_SPOTIFY_COMMAND")
 export const INSERT_SOURCE_CODE_COMMAND = createCommand("INSERT_SOURCE_CODE_COMMAND")
 export const INSERT_MERMAID_COMMAND = createCommand<MermaidData>("INSERT_MERMAID_COMMAND")
+export const INSERT_TABLE_COMMAND = createCommand<Partial<TableData>>("INSERT_TABLE_COMMAND")
 
 export function FloatingContentInsertPlugin() {
   const [editor] = useLexicalComposerContext()
@@ -264,7 +267,7 @@ export function FloatingContentInsertPlugin() {
       } else {
         // Try to parse as MM:SS format
         const timeMatch = youtubeStartAt.match(/^(\d+):(\d+)$/)
-        if (timeMatch) {
+        if (timeMatch && timeMatch[1] && timeMatch[2]) {
           const minutes = Number.parseInt(timeMatch[1], 10)
           const seconds = Number.parseInt(timeMatch[2], 10)
           if (!isNaN(minutes) && !isNaN(seconds) && seconds < 60) {
@@ -462,6 +465,22 @@ export function FloatingContentInsertPlugin() {
           title: "",
           caption: "",
           size: 100,
+        })
+        setShowMenu(false)
+      },
+    },
+    {
+      icon: Table,
+      label: "Table",
+      action: () => {
+        editor.dispatchCommand(INSERT_TABLE_COMMAND, {
+          rows: 3,
+          columns: 3,
+          style: "default",
+          showHeader: true,
+          showBorders: true,
+          cells: [],
+          isNew: true,
         })
         setShowMenu(false)
       },
