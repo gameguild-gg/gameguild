@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
-using GameGuild.Database;
 using GameGuild.Modules.Audit;
 
 namespace GameGuild.Modules.Authentication;
