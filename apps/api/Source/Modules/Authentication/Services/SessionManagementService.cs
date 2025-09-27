@@ -6,7 +6,12 @@ using UAParser;
 
 namespace GameGuild.Modules.Authentication;
 
-public class SessionManagementService(IUserSessionRepository userSessionRepository, ITrustedDeviceRepository trustedDeviceRepository, ILogger<SessionManagementService> logger, IOptions<SessionOptions> options) : ISessionManagementService
+public class SessionManagementService(
+    IUserSessionRepository userSessionRepository,
+    ITrustedDeviceRepository trustedDeviceRepository,
+    ILogger<SessionManagementService> logger,
+    IOptions<SessionOptions> options
+) : ISessionManagementService
 {
     private readonly SessionOptions _options = options.Value;
 
@@ -58,12 +63,14 @@ public class SessionManagementService(IUserSessionRepository userSessionReposito
     public async Task<UserSession?> GetSessionAsync(Guid sessionId)
     {
         var session = await userSessionRepository.GetByIdAsync(sessionId);
+
         return session?.IsActive == true ? session : null;
     }
 
     public async Task<UserSession?> GetSessionByRefreshTokenAsync(string refreshToken)
     {
         var session = await userSessionRepository.GetByRefreshTokenAsync(refreshToken);
+
         return session?.IsActive == true ? session : null;
     }
 
@@ -72,11 +79,13 @@ public class SessionManagementService(IUserSessionRepository userSessionReposito
         if (includeInactive)
         {
             var allSessions = await userSessionRepository.GetAllByUserIdAsync(userId);
+
             return allSessions.ToList();
         }
         else
         {
             var activeSessions = await userSessionRepository.GetActiveByUserIdAsync(userId);
+
             return activeSessions.ToList();
         }
     }
@@ -154,10 +163,9 @@ public class SessionManagementService(IUserSessionRepository userSessionReposito
             var sessions = await userSessionRepository.GetActiveByUserIdAsync(userId);
 
             var sessionList = sessions.ToList();
-            if (exceptSessionId.HasValue)
-            {
-                sessionList = sessionList.Where(s => s.Id != exceptSessionId.Value).ToList();
-            }
+
+            if (exceptSessionId.HasValue) { sessionList = sessionList.Where(s => s.Id != exceptSessionId.Value).ToList(); }
+
             foreach (var session in sessionList)
             {
                 session.IsActive = false;
@@ -220,14 +228,12 @@ public class SessionManagementService(IUserSessionRepository userSessionReposito
         }
     }
 
-    public async Task<bool> IsDeviceTrustedAsync(Guid userId, string deviceFingerprint)
-    {
-        return await trustedDeviceRepository.IsDeviceTrustedAsync(userId, deviceFingerprint);
-    }
+    public async Task<bool> IsDeviceTrustedAsync(Guid userId, string deviceFingerprint) { return await trustedDeviceRepository.IsDeviceTrustedAsync(userId, deviceFingerprint); }
 
     public async Task<List<TrustedDevice>> GetTrustedDevicesAsync(Guid userId)
     {
-        var devices = await trustedDeviceRepository.GetByUserIdAsync(userId, activeOnly: true);
+        var devices = await trustedDeviceRepository.GetByUserIdAsync(userId, activeOnly : true);
+
         return devices.ToList();
     }
 
@@ -335,9 +341,7 @@ public class SessionManagementService(IUserSessionRepository userSessionReposito
 
             return new DeviceInfo
             {
-                Browser = $"{clientInfo.UA.Family} {clientInfo.UA.Major}",
-                Os = $"{clientInfo.OS.Family} {clientInfo.OS.Major}",
-                Device = clientInfo.Device.Family != "Other" ? clientInfo.Device.Family : "Desktop"
+                Browser = $"{clientInfo.UA.Family} {clientInfo.UA.Major}", Os = $"{clientInfo.OS.Family} {clientInfo.OS.Major}", Device = clientInfo.Device.Family != "Other" ? clientInfo.Device.Family : "Desktop"
             };
         }
         catch (Exception ex)

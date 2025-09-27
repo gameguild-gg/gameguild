@@ -1,6 +1,5 @@
 ﻿namespace GameGuild.Modules.Authentication;
 
-
 /// <summary>
 /// DTO for Web3 sign-in requests
 /// </summary>
