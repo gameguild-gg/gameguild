@@ -81,6 +81,8 @@ import { SourceCodePlugin } from "./plugins/source-code-plugin"
 import { MermaidNode } from "./nodes/mermaid-node"
 import { MermaidPlugin } from "./plugins/mermaid-plugin"
 import { CustomListNode } from "./nodes/custom-list-node"
+import { TableNode as CustomTableNode } from "./nodes/table-node"
+import { TablePlugin } from "./plugins/table-plugin"
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import {
@@ -141,7 +143,8 @@ function StructureDeleteConfirmPlugin() {
           node.getType() === "admonition" ||
           node.getType() === "divider" ||
           node.getType() === "header" ||
-          node.getType() === "mermaid",
+          node.getType() === "mermaid" ||
+          node.getType() === "table",
       )
 
       if (hasStructuralNodes) {
@@ -227,7 +230,8 @@ function StructureDeleteConfirmPlugin() {
                   node.getType() === "admonition" ||
                   node.getType() === "divider" ||
                   node.getType() === "header" ||
-                  node.getType() === "mermaid"
+                  node.getType() === "mermaid" ||
+                  node.getType() === "table"
                 ) {
                   node.remove()
                 }
@@ -303,6 +307,7 @@ const initialConfig = {
     SpotifyNode,
     SourceCodeNode,
     MermaidNode,
+    CustomTableNode,
   ],
   theme: {
     text: {
@@ -449,6 +454,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             <CodePlugin />
             <SourceCodePlugin />
             <MermaidPlugin />
+            <TablePlugin />
             <OnChangePlugin
               onChange={(editorState) => {
                 if (onChange) {
