@@ -1,6 +1,4 @@
-﻿using GameGuild.Modules.Authentication.Models;
-
-namespace GameGuild.Modules.Audit;
+﻿namespace GameGuild.Modules.Audit;
 
 /// <summary>
 /// Service for creating and managing audit logs

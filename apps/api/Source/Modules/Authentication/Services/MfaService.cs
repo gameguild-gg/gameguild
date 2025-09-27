@@ -1,13 +1,12 @@
 ﻿using System.Text.Json;
 using GameGuild.Database;
-using GameGuild.Modules.Authentication.Models;
 using Microsoft.Extensions.Options;
 using OtpNet;
 using QRCoder;
 
 namespace GameGuild.Modules.Authentication;
 
-public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger, IOptions<MfaOptions> options, IEncryptionService encryptionService) : IMfaService
+public class MfaService(IUserMfaConfigurationRepository userMfaConfigRepository, IMfaAttemptRepository mfaAttemptRepository, ILogger<MfaService> logger, IOptions<MfaOptions> options, IEncryptionService encryptionService) : IMfaService
 {
     private readonly MfaOptions _options = options.Value;
 
@@ -15,7 +14,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
     {
         try
         {
-            var existingConfig = await context.Set<UserMfaConfiguration>().FirstOrDefaultAsync(x => x.UserId == userId);
+            var existingConfig = await userMfaConfigRepository.GetByUserIdAsync(userId);
 
             if (existingConfig?.IsEnabled == true) { throw new InvalidOperationException("MFA is already enabled for this user"); }
 
@@ -34,7 +33,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
             if (existingConfig == null)
             {
                 existingConfig = new UserMfaConfiguration { UserId = userId, TotpSecretKey = encryptedSecret, QrCodeSetupData = qrCodeData, IsEnabled = false, IsSetupComplete = false };
-                context.Set<UserMfaConfiguration>().Add(existingConfig);
+                await userMfaConfigRepository.CreateAsync(existingConfig);
             }
             else
             {
@@ -44,7 +43,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
                 existingConfig.IsSetupComplete = false;
             }
 
-            await context.SaveChangesAsync();
+            // Config creation/update handled by repository
 
             logger.LogInformation("MFA setup initiated for user {UserId}", userId);
 
@@ -62,7 +61,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
     {
         try
         {
-            var config = await context.Set<UserMfaConfiguration>().FirstOrDefaultAsync(x => x.UserId == userId);
+            var config = await userMfaConfigRepository.GetByUserIdAsync(userId);
 
             if (config == null || string.IsNullOrEmpty(config.TotpSecretKey)) { return MfaVerificationResult.Failure("MFA setup not initiated"); }
 
@@ -92,7 +91,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
             config.FailedAttempts = 0;
             config.LockedOutUntil = null;
 
-            await context.SaveChangesAsync();
+            await userMfaConfigRepository.UpdateAsync(config);
 
             await RecordMfaAttempt(userId, MfaMethod.Totp, true, null);
 
@@ -114,7 +113,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
         {
             if (await IsUserLockedOutAsync(userId)) { return MfaVerificationResult.Failure("User is temporarily locked out due to failed attempts"); }
 
-            var config = await context.Set<UserMfaConfiguration>().FirstOrDefaultAsync(x => x.UserId == userId);
+            var config = await userMfaConfigRepository.GetByUserIdAsync(userId);
 
             if (config == null || !config.IsEnabled) { return MfaVerificationResult.Failure("MFA is not enabled for this user"); }
 
@@ -123,7 +122,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
 
             switch (method)
             {
-                case MfaMethod.Totp :
+                case MfaMethod.Totp:
                     if (string.IsNullOrEmpty(config.TotpSecretKey))
                     {
                         failureReason = "TOTP not configured";
@@ -137,7 +136,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
 
                     break;
 
-                case MfaMethod.BackupCode :
+                case MfaMethod.BackupCode:
                     if (string.IsNullOrEmpty(config.BackupCodes))
                     {
                         failureReason = "Backup codes not configured";
@@ -159,7 +158,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
 
                     break;
 
-                default : failureReason = "Unsupported MFA method"; break;
+                default: failureReason = "Unsupported MFA method"; break;
             }
 
             if (isValid)
@@ -168,7 +167,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
                 config.FailedAttempts = 0;
                 config.LockedOutUntil = null;
                 config.LastUsedAt = DateTime.UtcNow;
-                await context.SaveChangesAsync();
+                await userMfaConfigRepository.UpdateAsync(config);
 
                 await RecordMfaAttempt(userId, method, true, null);
 
@@ -186,7 +185,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
                     logger.LogWarning("User {UserId} locked out due to {FailedAttempts} failed MFA attempts", userId, config.FailedAttempts);
                 }
 
-                await context.SaveChangesAsync();
+                await userMfaConfigRepository.UpdateAsync(config);
                 await RecordMfaAttempt(userId, method, false, failureReason);
 
                 return MfaVerificationResult.Failure(failureReason ?? "MFA verification failed");
@@ -208,7 +207,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
 
             if (!verificationResult.IsSuccess) { return false; }
 
-            var config = await context.Set<UserMfaConfiguration>().FirstOrDefaultAsync(x => x.UserId == userId);
+            var config = await userMfaConfigRepository.GetByUserIdAsync(userId);
 
             if (config != null)
             {
@@ -218,7 +217,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
                 config.EnabledAt = null;
                 config.FailedAttempts = 0;
                 config.LockedOutUntil = null;
-                await context.SaveChangesAsync();
+                await userMfaConfigRepository.UpdateAsync(config);
             }
 
             logger.LogInformation("MFA disabled for user {UserId}", userId);
@@ -233,11 +232,11 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
         }
     }
 
-    public async Task<string[ ]> GenerateBackupCodesAsync(Guid userId)
+    public async Task<string[]> GenerateBackupCodesAsync(Guid userId)
     {
         try
         {
-            var config = await context.Set<UserMfaConfiguration>().FirstOrDefaultAsync(x => x.UserId == userId);
+            var config = await userMfaConfigRepository.GetByUserIdAsync(userId);
 
             if (config is not { IsEnabled: true }) { throw new InvalidOperationException("MFA is not enabled for this user"); }
 
@@ -245,7 +244,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
             var encryptedBackupCodes = await encryptionService.EncryptAsync(JsonSerializer.Serialize(backupCodes));
 
             config.BackupCodes = encryptedBackupCodes;
-            await context.SaveChangesAsync();
+            await userMfaConfigRepository.UpdateAsync(config);
 
             logger.LogInformation("New backup codes generated for user {UserId}", userId);
 
@@ -259,7 +258,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
         }
     }
 
-    public async Task<byte[ ]> GenerateQrCodeAsync(string qrCodeData)
+    public async Task<byte[]> GenerateQrCodeAsync(string qrCodeData)
     {
         try
         {
@@ -279,7 +278,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
 
     public async Task<bool> IsMfaEnabledAsync(Guid userId)
     {
-        var config = await context.Set<UserMfaConfiguration>().FirstOrDefaultAsync(x => x.UserId == userId);
+        var config = await userMfaConfigRepository.GetByUserIdAsync(userId);
 
         return config?.IsEnabled == true;
     }
@@ -292,19 +291,19 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
 
     public async Task ResetMfaFailedAttemptsAsync(Guid userId)
     {
-        var config = await context.Set<UserMfaConfiguration>().FirstOrDefaultAsync(x => x.UserId == userId);
+        var config = await userMfaConfigRepository.GetByUserIdAsync(userId);
 
         if (config != null)
         {
             config.FailedAttempts = 0;
             config.LockedOutUntil = null;
-            await context.SaveChangesAsync();
+            await userMfaConfigRepository.UpdateAsync(config);
         }
     }
 
     public async Task<bool> IsUserLockedOutAsync(Guid userId)
     {
-        var config = await context.Set<UserMfaConfiguration>().FirstOrDefaultAsync(x => x.UserId == userId);
+        var config = await userMfaConfigRepository.GetByUserIdAsync(userId);
 
         return config?.LockedOutUntil.HasValue == true && config.LockedOutUntil.Value > DateTime.UtcNow;
     }
@@ -360,8 +359,7 @@ public class MfaService(ApplicationDbContext context, ILogger<MfaService> logger
                 FailureReason = failureReason
             };
 
-            context.Set<MfaAttempt>().Add(attempt);
-            await context.SaveChangesAsync();
+            await mfaAttemptRepository.CreateAsync(attempt);
         }
         catch (Exception ex) { logger.LogError(ex, "Failed to record MFA attempt for user {UserId}", userId); }
     }

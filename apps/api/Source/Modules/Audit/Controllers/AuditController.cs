@@ -1,6 +1,4 @@
 using System.Security.Claims;
-using GameGuild.Modules.Authentication.Models;
-using GameGuild.Modules.Authentication.Services;
 using GameGuild.Modules.Core.Controllers;
 using Microsoft.AspNetCore.Mvc;
 

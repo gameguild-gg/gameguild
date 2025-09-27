@@ -8,7 +8,7 @@ using UAParser;
 
 namespace GameGuild.Modules.Authentication;
 
-public class SessionManagementService(ApplicationDbContext context, ILogger<SessionManagementService> logger, IOptions<SessionOptions> options) : ISessionManagementService
+public class SessionManagementService(IUserSessionRepository userSessionRepository, ITrustedDeviceRepository trustedDeviceRepository, ILogger<SessionManagementService> logger, IOptions<SessionOptions> options) : ISessionManagementService
 {
     private readonly SessionOptions _options = options.Value;
 
@@ -43,12 +43,11 @@ public class SessionManagementService(ApplicationDbContext context, ILogger<Sess
 
             if (session.IsTrustedDevice) { session.TrustedAt = DateTime.UtcNow; }
 
-            context.Set<UserSession>().Add(session);
-            await context.SaveChangesAsync();
+            var createdSession = await userSessionRepository.CreateAsync(session);
 
-            logger.LogInformation("Created session {SessionId} for user {UserId} from {IpAddress}", session.Id, userId, ipAddress);
+            logger.LogInformation("Created session {SessionId} for user {UserId} from {IpAddress}", createdSession.Id, userId, ipAddress);
 
-            return session;
+            return createdSession;
         }
         catch (Exception ex)
         {
@@ -58,17 +57,30 @@ public class SessionManagementService(ApplicationDbContext context, ILogger<Sess
         }
     }
 
-    public async Task<UserSession?> GetSessionAsync(Guid sessionId) { return await context.Set<UserSession>().FirstOrDefaultAsync(s => s.Id == sessionId && s.IsActive); }
-
-    public async Task<UserSession?> GetSessionByRefreshTokenAsync(string refreshToken) { return await context.Set<UserSession>().FirstOrDefaultAsync(s => s.RefreshToken == refreshToken && s.IsActive); }
-
-    public async Task<List<UserSession>> GetUserSessionsAsync(Guid userId, bool activeOnly = true)
+    public async Task<UserSession?> GetSessionAsync(Guid sessionId)
     {
-        var query = context.Set<UserSession>().Where(s => s.UserId == userId);
+        var session = await userSessionRepository.GetByIdAsync(sessionId);
+        return session?.IsActive == true ? session : null;
+    }
 
-        if (activeOnly) { query = query.Where(s => s.IsActive && s.ExpiresAt > DateTime.UtcNow); }
+    public async Task<UserSession?> GetSessionByRefreshTokenAsync(string refreshToken)
+    {
+        var session = await userSessionRepository.GetByRefreshTokenAsync(refreshToken);
+        return session?.IsActive == true ? session : null;
+    }
 
-        return await query.OrderByDescending(s => s.LastUsedAt).ToListAsync();
+    public async Task<List<UserSession>> GetUserSessionsAsync(Guid userId, bool includeInactive = false)
+    {
+        if (includeInactive)
+        {
+            var allSessions = await userSessionRepository.GetAllByUserIdAsync(userId);
+            return allSessions.ToList();
+        }
+        else
+        {
+            var activeSessions = await userSessionRepository.GetActiveByUserIdAsync(userId);
+            return activeSessions.ToList();
+        }
     }
 
     public async Task<bool> ValidateSessionAsync(Guid sessionId)
@@ -79,7 +91,7 @@ public class SessionManagementService(ApplicationDbContext context, ILogger<Sess
 
         // Update last used time
         session.LastUsedAt = DateTime.UtcNow;
-        await context.SaveChangesAsync();
+        await userSessionRepository.UpdateAsync(session);
 
         return true;
     }
@@ -97,7 +109,7 @@ public class SessionManagementService(ApplicationDbContext context, ILogger<Sess
             session.LastUsedAt = DateTime.UtcNow;
             session.RefreshToken = GenerateRefreshToken(); // Generate new refresh token for security
 
-            await context.SaveChangesAsync();
+            await userSessionRepository.UpdateAsync(session);
 
             logger.LogDebug("Refreshed session {SessionId} for user {UserId}", sessionId, session.UserId);
 
@@ -123,7 +135,7 @@ public class SessionManagementService(ApplicationDbContext context, ILogger<Sess
             session.TerminatedAt = DateTime.UtcNow;
             session.TerminationReason = reason.ToString();
 
-            await context.SaveChangesAsync();
+            await userSessionRepository.UpdateAsync(session);
 
             logger.LogInformation("Terminated session {SessionId} for user {UserId} with reason {Reason}", sessionId, session.UserId, reason);
 
@@ -141,20 +153,20 @@ public class SessionManagementService(ApplicationDbContext context, ILogger<Sess
     {
         try
         {
-            var query = context.Set<UserSession>().Where(s => s.UserId == userId && s.IsActive);
+            var sessions = await userSessionRepository.GetActiveByUserIdAsync(userId);
 
-            if (exceptSessionId.HasValue) { query = query.Where(s => s.Id != exceptSessionId.Value); }
-
-            var sessions = await query.ToListAsync();
-
-            foreach (var session in sessions)
+            var sessionList = sessions.ToList();
+            if (exceptSessionId.HasValue)
+            {
+                sessionList = sessionList.Where(s => s.Id != exceptSessionId.Value).ToList();
+            }
+            foreach (var session in sessionList)
             {
                 session.IsActive = false;
                 session.TerminatedAt = DateTime.UtcNow;
                 session.TerminationReason = reason.ToString();
+                await userSessionRepository.UpdateAsync(session);
             }
-
-            await context.SaveChangesAsync();
 
             logger.LogInformation("Terminated {Count} sessions for user {UserId} with reason {Reason}", sessions.Count, userId, reason);
 
@@ -172,13 +184,14 @@ public class SessionManagementService(ApplicationDbContext context, ILogger<Sess
     {
         try
         {
-            var existingDevice = await context.Set<TrustedDevice>().FirstOrDefaultAsync(d => d.UserId == userId && d.DeviceFingerprint == deviceFingerprint);
+            var existingDevice = await trustedDeviceRepository.GetByUserAndFingerprintAsync(userId, deviceFingerprint);
 
             if (existingDevice != null)
             {
                 existingDevice.IsActive = true;
                 existingDevice.TrustedAt = DateTime.UtcNow;
                 existingDevice.DeviceName = deviceName;
+                await trustedDeviceRepository.UpdateAsync(existingDevice);
             }
             else
             {
@@ -194,10 +207,8 @@ public class SessionManagementService(ApplicationDbContext context, ILogger<Sess
                     ExpiresAt = _options.TrustedDeviceLifetime.HasValue ? DateTime.UtcNow.Add(_options.TrustedDeviceLifetime.Value) : null
                 };
 
-                context.Set<TrustedDevice>().Add(trustedDevice);
+                await trustedDeviceRepository.CreateAsync(trustedDevice);
             }
-
-            await context.SaveChangesAsync();
 
             logger.LogInformation("Trusted device {DeviceFingerprint} for user {UserId}", deviceFingerprint, userId);
 
@@ -213,26 +224,25 @@ public class SessionManagementService(ApplicationDbContext context, ILogger<Sess
 
     public async Task<bool> IsDeviceTrustedAsync(Guid userId, string deviceFingerprint)
     {
-        var trustedDevice = await context.Set<TrustedDevice>().FirstOrDefaultAsync(d => d.UserId == userId && d.DeviceFingerprint == deviceFingerprint && d.IsActive);
-
-        return trustedDevice?.IsValid == true;
+        return await trustedDeviceRepository.IsDeviceTrustedAsync(userId, deviceFingerprint);
     }
 
     public async Task<List<TrustedDevice>> GetTrustedDevicesAsync(Guid userId)
     {
-        return await context.Set<TrustedDevice>().Where(d => d.UserId == userId && d.IsActive).OrderByDescending(d => d.LastUsedAt).ToListAsync();
+        var devices = await trustedDeviceRepository.GetByUserIdAsync(userId, activeOnly: true);
+        return devices.ToList();
     }
 
-    public async Task<bool> RevokeTrustedDeviceAsync(Guid userId, Guid deviceId)
+    public async Task<bool> RevokeTrustedDeviceAsync(Guid deviceId, Guid userId)
     {
         try
         {
-            var device = await context.Set<TrustedDevice>().FirstOrDefaultAsync(d => d.Id == deviceId && d.UserId == userId);
+            var device = await trustedDeviceRepository.GetByIdAsync(deviceId);
 
-            if (device == null) { return false; }
+            if (device == null || device.UserId != userId) { return false; }
 
             device.IsActive = false;
-            await context.SaveChangesAsync();
+            await trustedDeviceRepository.UpdateAsync(device);
 
             logger.LogInformation("Revoked trusted device {DeviceId} for user {UserId}", deviceId, userId);
 
@@ -250,18 +260,9 @@ public class SessionManagementService(ApplicationDbContext context, ILogger<Sess
     {
         try
         {
-            var expiredSessions = await context.Set<UserSession>().Where(s => s.IsActive && s.ExpiresAt <= DateTime.UtcNow).ToListAsync();
+            var expiredCount = await userSessionRepository.CleanupExpiredSessionsAsync();
 
-            foreach (var session in expiredSessions)
-            {
-                session.IsActive = false;
-                session.TerminatedAt = DateTime.UtcNow;
-                session.TerminationReason = SessionTerminationReason.Expired.ToString();
-            }
-
-            await context.SaveChangesAsync();
-
-            if (expiredSessions.Count > 0) { logger.LogInformation("Cleaned up {Count} expired sessions", expiredSessions.Count); }
+            if (expiredCount > 0) { logger.LogInformation("Cleaned up {Count} expired sessions", expiredCount); }
         }
         catch (Exception ex) { logger.LogError(ex, "Failed to cleanup expired sessions"); }
     }
@@ -270,7 +271,8 @@ public class SessionManagementService(ApplicationDbContext context, ILogger<Sess
     {
         try
         {
-            var recentSessions = await context.Set<UserSession>().Where(s => s.UserId == userId && s.CreatedAt >= DateTime.UtcNow.AddDays(-30)).ToListAsync();
+            var allSessions = await userSessionRepository.GetAllByUserIdAsync(userId);
+            var recentSessions = allSessions.Where(s => s.CreatedAt >= DateTime.UtcNow.AddDays(-30)).ToList();
 
             var analysis = new SessionSecurityAnalysis
             {
@@ -335,7 +337,9 @@ public class SessionManagementService(ApplicationDbContext context, ILogger<Sess
 
             return new DeviceInfo
             {
-                Browser = $"{clientInfo.UA.Family} {clientInfo.UA.Major}", Os = $"{clientInfo.OS.Family} {clientInfo.OS.Major}", Device = clientInfo.Device.Family != "Other" ? clientInfo.Device.Family : "Desktop"
+                Browser = $"{clientInfo.UA.Family} {clientInfo.UA.Major}",
+                Os = $"{clientInfo.OS.Family} {clientInfo.OS.Major}",
+                Device = clientInfo.Device.Family != "Other" ? clientInfo.Device.Family : "Desktop"
             };
         }
         catch (Exception ex)

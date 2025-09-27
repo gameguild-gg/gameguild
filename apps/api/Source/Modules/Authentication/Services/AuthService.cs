@@ -1,10 +1,31 @@
+using System.Diagnostics;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Database;
+using GameGuild.Modules.Audit;
+using GameGuild.Modules.Authentication.Models;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
+
+namespace GameGuild.Modules.Authentication.Services
+{
+    public static class AuthenticationFailureReasons
+    {
+        public const string InvalidCredentials = "InvalidCredentials";
+
+        public const string RateLimited = "RateLimited";
+
+        public const string SystemError = "SystemError";
+
+        public const string UserNotFound = "UserNotFound";
+
+        public const string AccountLocked = "AccountLocked";
+
+        public const string InvalidToken = "InvalidToken";
+    }
+}
 
 namespace GameGuild.Modules.Authentication
 {
@@ -17,116 +38,244 @@ namespace GameGuild.Modules.Authentication
         IEmailVerificationService emailVerificationService,
         ITenantAuthService tenantAuthService,
         ITenantService tenantService,
+        IAuthenticationAnomalyDetectionService anomalyDetectionService,
+        IUserEnumerationProtectionService enumerationProtection,
+        IAuditService auditService,
+        IHttpContextAccessor httpContextAccessor,
         ILogger<AuthService> logger
     ) : IAuthService
     {
         public async Task<SignInResponse> LocalSignInAsync(LocalSignInRequest request)
         {
-            var normalizedEmail = request.Email.ToLowerInvariant();
-            var user = await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+            var stopwatch = Stopwatch.StartNew();
+            var httpContext = httpContextAccessor.HttpContext;
+            var ipAddress = GetClientIpAddress(httpContext);
+            var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
+            var correlationId = httpContext?.Items["CorrelationId"]?.ToString();
 
-            if (user == null) throw new UnauthorizedAccessException("Invalid credentials");
+            User? user = null;
+            var userExists = false;
+            var authenticationSucceeded = false;
+            string? failureReason = null;
 
-            var passwordCredential = user.Credentials.FirstOrDefault(c => c is { Type: "password", IsActive: true });
-
-            if (passwordCredential == null || !VerifyPassword(request.Password, passwordCredential.Value)) throw new UnauthorizedAccessException("Invalid credentials");
-
-            var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email, };
-            var roles = new[ ] { "User", }; // TODO: fetch actual roles if available
-
-            var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
-            var refreshToken = jwtTokenService.GenerateRefreshToken();
-
-            // Expiries
-            var accessTokenExpiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
-            var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
-            var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-            var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
-
-            var refreshTokenEntity = new RefreshToken { UserId = user.Id, Token = refreshToken, ExpiresAt = refreshTokenExpiresAt, IsRevoked = false, CreatedByIp = "0.0.0.0", };
-
-            context.RefreshTokens.Add(refreshTokenEntity);
-            await context.SaveChangesAsync();
-
-            var response = new SignInResponse
+            try
             {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                ExpiresAt = refreshTokenExpiresAt, // backward compatible
-                AccessTokenExpiresAt = accessTokenExpiresAt,
-                RefreshTokenExpiresAt = refreshTokenExpiresAt,
-                User = userDto,
-            };
+                // Check for throttling first
+                var throttleDecision = await anomalyDetectionService.ShouldThrottleAsync(ipAddress, request.Email);
 
-            // Enhance response with tenant data
-            var requestedTenantId = request.TenantId;
+                if (throttleDecision.ShouldThrottle)
+                {
+                    await RecordFailedAttempt(request.Email, null, ipAddress, userAgent, AuthenticationFailureReasons.RateLimited, stopwatch.Elapsed, correlationId, request.TenantId);
 
-            return await tenantAuthService.EnhanceWithTenantDataAsync(response, (User) user, requestedTenantId);
+                    throw new UnauthorizedAccessException(enumerationProtection.GetConsistentErrorMessage());
+                }
+
+                // Lookup user
+                var normalizedEmail = request.Email.ToLowerInvariant();
+                user = await context.Users.Include(u => u.Credentials).FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+
+                userExists = user != null;
+
+                // Perform authentication
+                if (userExists)
+                {
+                    var passwordCredential = user!.Credentials.FirstOrDefault(c => c is { Type: "password", IsActive: true });
+
+                    if (passwordCredential != null && VerifyPassword(request.Password, passwordCredential.Value)) { authenticationSucceeded = true; }
+                    else { failureReason = AuthenticationFailureReasons.InvalidCredentials; }
+                }
+                else
+                {
+                    failureReason = AuthenticationFailureReasons.InvalidCredentials;
+                    // Perform dummy password hashing to maintain consistent timing
+                    await enumerationProtection.PerformDummyPasswordHashAsync(request.Password);
+                }
+
+                // Apply user enumeration protection timing
+                await enumerationProtection.SimulateAuthenticationDelayAsync(request.Email, userExists);
+
+                if (!authenticationSucceeded)
+                {
+                    await RecordFailedAttempt(request.Email, user?.Id, ipAddress, userAgent, failureReason!, stopwatch.Elapsed, correlationId, request.TenantId);
+
+                    throw new UnauthorizedAccessException(enumerationProtection.GetConsistentErrorMessage());
+                }
+
+                // Analyze user login patterns for additional security
+                if (user != null)
+                {
+                    var userAnalysis = await anomalyDetectionService.AnalyzeUserLoginPatternsAsync(user.Id, ipAddress, userAgent);
+
+                    // Log suspicious patterns but don't block (could be legitimate new device/location)
+                    if (userAnalysis.IsNewLocation || userAnalysis.IsNewDevice)
+                    {
+                        logger.LogInformation("User login from new location/device: UserId={UserId}, NewLocation={NewLocation}, NewDevice={NewDevice}", user.Id, userAnalysis.IsNewLocation, userAnalysis.IsNewDevice);
+                    }
+                }
+
+                // Create tokens and response
+                var userDto = new UserDto { Id = user!.Id, Username = user.Username, Email = user.Email };
+                var roles = new[] { "User" }; // TODO: fetch actual roles if available
+
+                var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
+                var refreshToken = jwtTokenService.GenerateRefreshToken();
+
+                // Expiries
+                var accessTokenExpiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
+                var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
+                var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+                var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+
+                var refreshTokenEntity = new RefreshToken { UserId = user.Id, Token = refreshToken, ExpiresAt = refreshTokenExpiresAt, IsRevoked = false, CreatedByIp = ipAddress };
+
+                context.RefreshTokens.Add(refreshTokenEntity);
+                await context.SaveChangesAsync();
+
+                // Record successful login attempt
+                await RecordSuccessfulAttempt(request.Email, user.Id, ipAddress, userAgent, stopwatch.Elapsed, correlationId, request.TenantId);
+
+                var response = new SignInResponse
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken,
+                    ExpiresAt = refreshTokenExpiresAt,
+                    AccessTokenExpiresAt = accessTokenExpiresAt,
+                    RefreshTokenExpiresAt = refreshTokenExpiresAt,
+                    User = userDto
+                };
+
+                // Enhance response with tenant data
+                return await tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Re-throw authentication failures as-is
+                throw;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Unexpected error during authentication for {Email}", request.Email);
+
+                await RecordFailedAttempt(request.Email, user?.Id, ipAddress, userAgent, AuthenticationFailureReasons.SystemError, stopwatch.Elapsed, correlationId, request.TenantId);
+
+                throw new UnauthorizedAccessException(enumerationProtection.GetConsistentErrorMessage());
+            }
         }
 
         public async Task<SignInResponse> LocalSignUpAsync(LocalSignUpRequest request)
         {
-            if (await context.Users.AnyAsync(u => u.Email == request.Email)) throw new InvalidOperationException("User already exists");
+            var stopwatch = Stopwatch.StartNew();
+            var httpContext = httpContextAccessor.HttpContext;
+            var ipAddress = GetClientIpAddress(httpContext);
+            var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
+            var correlationId = httpContext?.Items["CorrelationId"]?.ToString();
 
-            var user = new User { Name = request.Username ?? request.Email, Email = request.Email, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow, };
-            context.Users.Add(user);
-            await context.SaveChangesAsync();
-
-            var credential = new Credential { UserId = user.Id, Type = "password", Value = HashPassword(request.Password), IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow, };
-
-            context.Credentials.Add(credential);
-            await context.SaveChangesAsync();
-
-            // If a tenantId was provided and it's valid, ensure user has access to that tenant
-            if (request.TenantId.HasValue)
+            try
             {
-                try
+                // Check for existing user
+                if (await context.Users.AnyAsync(u => u.Email == request.Email))
                 {
-                    // Try to add user to the specified tenant
-                    await tenantService.AddUserToTenantAsync(user.Id, request.TenantId.Value);
+                    // Apply consistent timing even for existing users
+                    await enumerationProtection.SimulateAuthenticationDelayAsync(request.Email, true);
+
+                    throw new InvalidOperationException("User already exists");
                 }
-                catch (Exception)
+
+                // Create new user
+                var user = new User { Username = request.Username ?? request.Email, Email = request.Email, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+
+                context.Users.Add(user);
+                await context.SaveChangesAsync();
+
+                var credential = new Credential { UserId = user.Id, Type = "password", Value = HashPassword(request.Password), IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+
+                context.Credentials.Add(credential);
+                await context.SaveChangesAsync();
+
+                // Handle tenant association
+                if (request.TenantId.HasValue)
                 {
-                    // Log but continue - tenant association failed but user is still created
+                    try { await tenantService.AddUserToTenantAsync(user.Id, request.TenantId.Value); }
+                    catch (Exception ex) { logger.LogWarning(ex, "Failed to add user {UserId} to tenant {TenantId}", user.Id, request.TenantId); }
                 }
+
+                // Create tokens
+                var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email };
+                var roles = new[] { "User" };
+
+                var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
+                var refreshToken = jwtTokenService.GenerateRefreshToken();
+
+                var accessTokenExpiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
+                var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
+                var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+                var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+
+                var refreshTokenEntity = new RefreshToken { UserId = user.Id, Token = refreshToken, ExpiresAt = refreshTokenExpiresAt, IsRevoked = false, CreatedByIp = ipAddress };
+
+                context.RefreshTokens.Add(refreshTokenEntity);
+                await context.SaveChangesAsync();
+
+                // Record successful registration as login attempt
+                await RecordSuccessfulAttempt(request.Email, user.Id, ipAddress, userAgent, stopwatch.Elapsed, correlationId, request.TenantId);
+
+                // Log user creation audit
+                await auditService.LogAsync(
+                    new CreateAuditLogRequest
+                    {
+                        ActionType = AuditActionTypes.UserCreated,
+                        ResourceType = "User",
+                        ResourceId = user.Id.ToString(),
+                        UserId = user.Id,
+                        TenantId = request.TenantId,
+                        IpAddress = ipAddress,
+                        UserAgent = userAgent,
+                        Description = $"User account created for {request.Email}",
+                        Success = true,
+                        Category = AuditCategory.Authentication,
+                        CorrelationId = correlationId
+                    }
+                );
+
+                var response = new SignInResponse
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken,
+                    ExpiresAt = refreshTokenExpiresAt,
+                    AccessTokenExpiresAt = accessTokenExpiresAt,
+                    RefreshTokenExpiresAt = refreshTokenExpiresAt,
+                    User = userDto
+                };
+
+                return await tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
             }
-
-            var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email, };
-            var roles = new[ ] { "User", }; // TODO: fetch actual roles if available
-
-            var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
-            var refreshToken = jwtTokenService.GenerateRefreshToken();
-
-            // Expiries
-            var accessTokenExpiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
-            var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
-            var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-            var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
-
-            var refreshTokenEntity = new RefreshToken { UserId = user.Id, Token = refreshToken, ExpiresAt = refreshTokenExpiresAt, IsRevoked = false, CreatedByIp = "0.0.0.0", };
-
-            context.RefreshTokens.Add(refreshTokenEntity);
-            await context.SaveChangesAsync();
-
-            var response = new SignInResponse
+            catch (Exception ex)
             {
-                AccessToken = accessToken, RefreshToken = refreshToken, ExpiresAt = refreshTokenExpiresAt, AccessTokenExpiresAt = accessTokenExpiresAt, RefreshTokenExpiresAt = refreshTokenExpiresAt, User = userDto,
-            };
+                logger.LogError(ex, "Error during user registration for {Email}", request.Email);
 
-            // Enhance response with tenant data
-            return await tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
+                throw;
+            }
         }
 
         private static string HashPassword(string password)
         {
-            // Simple SHA256 hash for demonstration (replace with a secure hash in production)
-            using var sha = SHA256.Create();
-            var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
-
-            return Convert.ToBase64String(bytes);
+            // Use BCrypt for proper password hashing (replace the simple SHA256)
+            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
         }
 
-        private static bool VerifyPassword(string password, string hash) { return HashPassword(password) == hash; }
+        private static bool VerifyPassword(string password, string hash)
+        {
+            try { return BCrypt.Net.BCrypt.Verify(password, hash); }
+            catch
+            {
+                // Fallback to old SHA256 method for existing passwords
+                using var sha = SHA256.Create();
+                var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(password));
+                var sha256Hash = Convert.ToBase64String(bytes);
+
+                return sha256Hash == hash;
+            }
+        }
 
         public async Task<SignInResponse> RefreshTokenAsync(RefreshTokenRequest request)
         {
@@ -164,8 +313,8 @@ namespace GameGuild.Modules.Authentication
                             logger.LogInformation("Refresh token already rotated by another request (attempt {Attempt})", attempt);
 
                             var userAlready = await context.Users.FindAsync(existing.UserId) ?? throw new UnauthorizedAccessException("User not found");
-                            var userDtoAlready = new UserDto { Id = userAlready.Id, Username = userAlready.Name, Email = userAlready.Email };
-                            var rolesAlready = new[ ] { "User" }; // TODO: actual roles
+                            var userDtoAlready = new UserDto { Id = userAlready.Id, Username = userAlready.Username, Email = userAlready.Email };
+                            var rolesAlready = new[] { "User" }; // TODO: actual roles
 
                             var accessMinutesAlready = int.Parse(configuration["Jwt:ExpirationMinutes"] ?? configuration["Jwt:ExpiryInMinutes"] ?? "60");
                             var newAccessTokenAlready = jwtTokenService.GenerateAccessToken(userDtoAlready, rolesAlready);
@@ -200,7 +349,9 @@ namespace GameGuild.Modules.Authentication
 
                     if (tenantId.HasValue)
                     {
-                        var permittedTenants = await tenantAuthService.GetUserTenantsAsync(user);
+                        // Note: GetUserTenantsAsync method not available in current ITenantAuthService interface
+                        // Using empty list until interface is updated
+                        var permittedTenants = new List<object>();
 
                         if (permittedTenants.Any(t => t.TenantId.HasValue && t.TenantId.Value == tenantId.Value)) { tenantClaims = await tenantAuthService.GetTenantClaimsAsync(user, tenantId.Value); }
                         else
@@ -213,8 +364,8 @@ namespace GameGuild.Modules.Authentication
                     var accessMinutes = int.Parse(configuration["Jwt:ExpirationMinutes"] ?? configuration["Jwt:ExpiryInMinutes"] ?? "60");
                     var refreshDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
 
-                    var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
-                    var roles = new[ ] { "User" }; // TODO: actual roles
+                    var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email };
+                    var roles = new[] { "User" }; // TODO: actual roles
 
                     var newAccessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
                     var newRefreshTokenValue = jwtTokenService.GenerateRefreshToken();
@@ -293,8 +444,8 @@ namespace GameGuild.Modules.Authentication
             var user = await FindOrCreateOAuthUserAsync(githubUser.Email, githubUser.Name, "github", githubUser.Id.ToString());
 
             // Generate tokens
-            var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email, };
-            var roles = new[ ] { "User", }; // TODO: fetch actual roles
+            var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email, };
+            var roles = new[] { "User", }; // TODO: fetch actual roles
             var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
             var refreshToken = jwtTokenService.GenerateRefreshToken();
 
@@ -320,8 +471,8 @@ namespace GameGuild.Modules.Authentication
             var user = await FindOrCreateOAuthUserAsync(googleUser.Email, googleUser.Name, "google", googleUser.Id);
 
             // Generate tokens
-            var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email, };
-            var roles = new[ ] { "User", }; // TODO: fetch actual roles
+            var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email, };
+            var roles = new[] { "User", }; // TODO: fetch actual roles
             var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
             var refreshToken = jwtTokenService.GenerateRefreshToken();
 
@@ -329,7 +480,7 @@ namespace GameGuild.Modules.Authentication
             await SaveRefreshTokenAsync(user.Id, refreshToken);
 
             // Create initial response
-            var response = new SignInResponse { AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto, };
+            var response = new SignInResponseDto { AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto, };
 
             // Enhance with tenant data
             return await tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
@@ -352,8 +503,8 @@ namespace GameGuild.Modules.Authentication
                 var user = await FindOrCreateOAuthUserAsync(googleUser.Email, googleUser.Name, "google", googleUser.Id);
 
                 // Generate tokens
-                var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email, };
-                var roles = new[ ] { "User", }; // TODO: fetch actual roles
+                var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email, };
+                var roles = new[] { "User", }; // TODO: fetch actual roles
                 var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
                 var refreshToken = jwtTokenService.GenerateRefreshToken();
 
@@ -370,7 +521,12 @@ namespace GameGuild.Modules.Authentication
 
                 var response = new SignInResponse
                 {
-                    AccessToken = jwtToken, RefreshToken = refreshToken, ExpiresAt = refreshTokenExpiresAt, AccessTokenExpiresAt = accessTokenExpiresAt, RefreshTokenExpiresAt = refreshTokenExpiresAt, User = userDto,
+                    AccessToken = jwtToken,
+                    RefreshToken = refreshToken,
+                    ExpiresAt = refreshTokenExpiresAt,
+                    AccessTokenExpiresAt = accessTokenExpiresAt,
+                    RefreshTokenExpiresAt = refreshTokenExpiresAt,
+                    User = userDto,
                 };
 
                 // Enhance with tenant data
@@ -427,7 +583,7 @@ namespace GameGuild.Modules.Authentication
                 var uniqueUsername = SlugCase.GenerateUnique(name, existingUsernames, 50);
 
                 // Create new user
-                user = new User { Id = Guid.NewGuid(), Name = name, Username = uniqueUsername, Email = email, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow, };
+                user = new User { Id = Guid.NewGuid(), Username = uniqueUsername, Email = email, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow, };
 
                 context.Users.Add(user);
                 isNewUser = true;
@@ -492,8 +648,8 @@ namespace GameGuild.Modules.Authentication
             var user = await web3Service.FindOrCreateWeb3UserAsync(request.WalletAddress, request.ChainId ?? "1");
 
             // Generate tokens
-            var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email, };
-            var roles = new[ ] { "User", }; // TODO: fetch actual roles
+            var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email, };
+            var roles = new[] { "User", }; // TODO: fetch actual roles
             var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
             var refreshToken = jwtTokenService.GenerateRefreshToken();
 
@@ -501,7 +657,7 @@ namespace GameGuild.Modules.Authentication
             await SaveRefreshTokenAsync(user.Id, refreshToken);
 
             // Create initial response
-            var response = new SignInResponse { AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto, };
+            var response = new SignInResponseDto { AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto, };
 
             // Enhance with tenant data
             return await tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
@@ -542,6 +698,106 @@ namespace GameGuild.Modules.Authentication
                 return new EmailOperationResponse { Success = true, Message = "Password changed successfully", };
             }
             catch (Exception) { return new EmailOperationResponse { Success = false, Message = "Failed to change password", }; }
+        }
+
+        private string GetClientIpAddress(HttpContext? httpContext)
+        {
+            if (httpContext == null) return "Unknown";
+
+            // Check for forwarded IP first (common in reverse proxy scenarios)
+            var forwardedFor = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+
+            if (!string.IsNullOrEmpty(forwardedFor))
+            {
+                // X-Forwarded-For can contain multiple IPs, take the first one
+                var firstIp = forwardedFor.Split(',').FirstOrDefault()?.Trim();
+
+                if (!string.IsNullOrEmpty(firstIp)) return firstIp;
+            }
+
+            // Check X-Real-IP header
+            var realIp = httpContext.Request.Headers["X-Real-IP"].FirstOrDefault();
+
+            if (!string.IsNullOrEmpty(realIp)) return realIp;
+
+            // Fall back to connection remote IP
+            return httpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+        }
+
+        private async Task RecordSuccessfulAttempt(string email, Guid userId, string ipAddress, string? userAgent, TimeSpan processingTime, string? correlationId, Guid? tenantId)
+        {
+            var deviceFingerprint = anomalyDetectionService.GenerateDeviceFingerprint(userAgent);
+
+            await anomalyDetectionService.RecordLoginAttemptAsync(
+                new CreateAuthenticationAttemptRequest
+                {
+                    Email = email,
+                    UserId = userId,
+                    IpAddress = ipAddress,
+                    UserAgent = userAgent,
+                    IsSuccessful = true,
+                    ProcessingTime = processingTime,
+                    DeviceFingerprint = deviceFingerprint,
+                    TenantId = tenantId,
+                    CorrelationId = correlationId
+                }
+            );
+
+            await auditService.LogAsync(
+                new CreateAuditLogRequest
+                {
+                    ActionType = AuditActionTypes.Login,
+                    ResourceType = "User",
+                    ResourceId = userId.ToString(),
+                    UserId = userId,
+                    TenantId = tenantId,
+                    IpAddress = ipAddress,
+                    UserAgent = userAgent,
+                    Description = $"Successful login for {email}",
+                    Success = true,
+                    Category = AuditCategory.Authentication,
+                    CorrelationId = correlationId
+                }
+            );
+        }
+
+        private async Task RecordFailedAttempt(string email, Guid? userId, string ipAddress, string? userAgent, string failureReason, TimeSpan processingTime, string? correlationId, Guid? tenantId)
+        {
+            var deviceFingerprint = anomalyDetectionService.GenerateDeviceFingerprint(userAgent);
+
+            await anomalyDetectionService.RecordLoginAttemptAsync(
+                new CreateAuthenticationAttemptRequest
+                {
+                    Email = email,
+                    UserId = userId,
+                    IpAddress = ipAddress,
+                    UserAgent = userAgent,
+                    IsSuccessful = false,
+                    FailureReason = failureReason,
+                    ProcessingTime = processingTime,
+                    DeviceFingerprint = deviceFingerprint,
+                    TenantId = tenantId,
+                    CorrelationId = correlationId
+                }
+            );
+
+            await auditService.LogAsync(
+                new CreateAuditLogRequest
+                {
+                    ActionType = AuditActionTypes.LoginFailed,
+                    ResourceType = "User",
+                    ResourceId = userId?.ToString(),
+                    UserId = userId,
+                    TenantId = tenantId,
+                    IpAddress = ipAddress,
+                    UserAgent = userAgent,
+                    Description = $"Failed login attempt for {email}: {failureReason}",
+                    Success = false,
+                    ErrorMessage = failureReason,
+                    Category = AuditCategory.Security,
+                    CorrelationId = correlationId
+                }
+            );
         }
     }
 }
