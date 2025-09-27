@@ -1,4 +1,4 @@
-namespace GameGuild.Database.Seeding;
+namespace GameGuild.Database;
 
 /// <summary>
 /// Interface for database data seeders

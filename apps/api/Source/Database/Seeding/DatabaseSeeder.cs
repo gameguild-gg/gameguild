@@ -1,20 +1,11 @@
-namespace GameGuild.Database.Seeding;
+namespace GameGuild.Database;
 
 /// <summary>
 /// Central database seeder that orchestrates all individual seeders
 /// </summary>
-public class DatabaseSeeder : IDataSeeder
+public class DatabaseSeeder(IEnumerable<IDataSeeder> seeders) : IDataSeeder
 {
-    private readonly IEnumerable<IDataSeeder> _seeders;
-
-    /// <summary>
-    /// Initializes a new instance of the DatabaseSeeder
-    /// </summary>
-    /// <param name="seeders">Collection of individual data seeders</param>
-    public DatabaseSeeder(IEnumerable<IDataSeeder> seeders)
-    {
-        _seeders = seeders;
-    }
+    private readonly IEnumerable<IDataSeeder> _seeders = seeders;
 
     /// <summary>
     /// Seeds all data using registered seeders
