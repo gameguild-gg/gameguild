@@ -12,7 +12,8 @@ public class TenantService(
     ITenantSettingsService tenantSettingsService,
     ITenantDomainsService tenantDomainsService,
     ITenantCacheService cacheService,
-    ILogger<TenantService> logger) : ITenantService
+    ILogger<TenantService> logger
+) : ITenantService
 {
     /// <inheritdoc />
     public async Task<IReadOnlyList<Tenant>> GetActiveTenantsAsync(CancellationToken cancellationToken = default)
@@ -110,20 +111,13 @@ public class TenantService(
         logger.LogInformation("Creating tenant: {TenantName} with slug: {TenantSlug}", name, slug);
 
         // Check if slug is available
-        bool isAvailable = await IsSlugAvailableAsync(slug, cancellationToken: cancellationToken);
+        bool isAvailable = await IsSlugAvailableAsync(slug, cancellationToken : cancellationToken);
 
         if (!isAvailable) { throw new BusinessException($"Tenant slug '{slug}' is already in use"); }
 
         var tenant = new Tenant
         {
-            Id = Guid.NewGuid(),
-            Name = name,
-            Slug = slug.ToLowerInvariant(),
-            Description = description,
-            IsActive = true,
-            IsDefault = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Id = Guid.NewGuid(), Name = name, Slug = slug.ToLowerInvariant(), Description = description, IsActive = true, IsDefault = false, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow
         };
 
         tenant = await repository.CreateAsync(tenant, cancellationToken);
@@ -237,10 +231,7 @@ public class TenantService(
     }
 
     /// <inheritdoc />
-    public async Task<TenantSettings?> GetTenantSettingsAsync(Guid tenantId, CancellationToken cancellationToken = default)
-    {
-        return await tenantSettingsService.GetTenantSettingsAsync(tenantId, cancellationToken);
-    }
+    public async Task<TenantSettings?> GetTenantSettingsAsync(Guid tenantId, CancellationToken cancellationToken = default) { return await tenantSettingsService.GetTenantSettingsAsync(tenantId, cancellationToken); }
 
     /// <inheritdoc />
     public async Task<TenantSettings> UpdateTenantSettingsAsync(Guid tenantId, TenantSettings settings, CancellationToken cancellationToken = default)
@@ -263,27 +254,19 @@ public class TenantService(
     /// <inheritdoc />
     public async Task<TenantDomain?> FindTenantByDomainMatchAsync(string email, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            return null;
-        }
+        if (string.IsNullOrWhiteSpace(email)) { return null; }
 
         logger.LogDebug("Finding tenant by domain match: {Email}", email);
 
         // Extract domain from email
         int atIndex = email.IndexOf('@');
-        if (atIndex == -1)
-        {
-            return null;
-        }
+
+        if (atIndex == -1) { return null; }
 
         string domain = email[(atIndex + 1)..].ToLowerInvariant();
-        string[] parts = domain.Split('.');
+        string[ ] parts = domain.Split('.');
 
-        if (parts.Length < 2)
-        {
-            return null;
-        }
+        if (parts.Length < 2) { return null; }
 
         // Try with subdomain first (if more than 2 parts)
         string? subdomain = parts.Length > 2 ? parts[0] : null;
@@ -294,19 +277,10 @@ public class TenantService(
         TenantDomain? tenantDomain = await tenantDomainsService.FindTenantDomainByMatchAsync(topLevelDomain, subdomain, cancellationToken);
 
         // If not found with subdomain, try without subdomain
-        if (tenantDomain == null && subdomain != null)
-        {
-            tenantDomain = await tenantDomainsService.FindTenantDomainByMatchAsync(domain, null, cancellationToken);
-        }
+        if (tenantDomain == null && subdomain != null) { tenantDomain = await tenantDomainsService.FindTenantDomainByMatchAsync(domain, null, cancellationToken); }
 
-        if (tenantDomain != null)
-        {
-            logger.LogDebug("Found tenant domain: {TenantId}", tenantDomain.TenantId);
-        }
-        else
-        {
-            logger.LogDebug("No tenant domain found for: {Domain}", domain);
-        }
+        if (tenantDomain != null) { logger.LogDebug("Found tenant domain: {TenantId}", tenantDomain.TenantId); }
+        else { logger.LogDebug("No tenant domain found for: {Domain}", domain); }
 
         return tenantDomain;
     }
