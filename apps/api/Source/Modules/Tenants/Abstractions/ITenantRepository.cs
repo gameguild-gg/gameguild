@@ -67,8 +67,4 @@ public interface ITenantRepository
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if the slug is available</returns>
     Task<bool> IsSlugAvailableAsync(string slug, Guid? excludeId = null, CancellationToken cancellationToken = default);
-
-
-
-
 }
