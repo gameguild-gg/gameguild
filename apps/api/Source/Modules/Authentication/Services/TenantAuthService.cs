@@ -1,17 +1,18 @@
 using System.Security.Claims;
+using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Authentication;
 
 /// <summary> Implementation of tenant auth service </summary>
-public class TenantAuthService(ITenantService tenantService, ITenantContextService tenantContextService, IJwtTokenService jwtTokenService) : ITenantAuthService
+public class TenantAuthService(ITenantService tenantService, IPermissionService permissionService, ITenantContext tenantContext, IJwtTokenService jwtTokenService) : ITenantAuthService
 {
     /// <summary> Enhance authentication result with tenant data </summary>
     public async Task<SignInResponse> EnhanceWithTenantDataAsync(SignInResponse authResult, User user, Guid? tenantId = null)
     {
         // Get available tenants for the user
-        var tenantPermissions = await tenantService.GetTenantsForUserAsync(user.Id);
+        var tenantPermissions = await permissionService.GetUserTenantsAsync(user.Id);
         var availableTenants = tenantPermissions.Where(tp => !tp.IsExpired).ToList();
 
         // If no tenants available, return original result
@@ -43,12 +44,16 @@ public class TenantAuthService(ITenantService tenantService, ITenantContextServi
                 return authResult;
         }
 
+        // Set current tenant in context for this request
+        var tenant = await tenantService.GetTenantByIdAsync(selectedTenantId);
+        tenantContext.SetCurrentTenant(tenant);
+
         // Get tenant claims
         var tenantClaims = await GetTenantClaimsAsync(user, selectedTenantId);
 
         // Generate new token with tenant claims
         var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email };
-        var roles = new[ ] { "User" }; // TODO: fetch actual tenant-specific roles
+        var roles = new[] { "User" }; // TODO: fetch actual tenant-specific roles
         var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
 
         // Update response with new token and tenant info
@@ -67,8 +72,9 @@ public class TenantAuthService(ITenantService tenantService, ITenantContextServi
     {
         var claims = new List<Claim> { new Claim(JwtClaimTypes.TenantId, tenantId.ToString()) };
 
-        // Get tenant permission for additional claims
-        var tenantPermission = await tenantContextService.GetTenantPermissionAsync(user.Id, tenantId);
+        // Get tenant permissions for the user
+        var userTenants = await permissionService.GetUserTenantsAsync(user.Id);
+        var tenantPermission = userTenants.FirstOrDefault(tp => tp.TenantId == tenantId && !tp.IsExpired);
 
         // Add permission flags if available
         if (tenantPermission != null)
@@ -81,5 +87,5 @@ public class TenantAuthService(ITenantService tenantService, ITenantContextServi
     }
 
     /// <summary> Get all available tenants for a user </summary>
-    public async Task<IEnumerable<Tenants.TenantPermission>> GetUserTenantsAsync(User user) { return await tenantService.GetTenantsForUserAsync(user.Id); }
+    public async Task<IEnumerable<TenantPermission>> GetUserTenantsAsync(User user) { return await permissionService.GetUserTenantsAsync(user.Id); }
 }
