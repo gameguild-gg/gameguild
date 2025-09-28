@@ -11,26 +11,38 @@ public class GoogleIdTokenSignInHandler(IAuthService authService, IMediator medi
 
         var result = await authService.GoogleIdTokenSignInAsync(signInRequest);
 
-        // For now, we'll check if a UserProfile exists to determine if this was a new user
-        // This is a simple heuristic - if no profile exists, we assume it's a new user
-
         if (result?.User == null) return result ?? throw new InvalidOperationException("Authentication service returned null result");
 
         try
         {
-            // Always publish the notification - the UserProfile handler will check if profile already exists
+            // Publish sign-in event
+            await mediator.Publish(new UserSignedInEvent(
+                result.User.Id,
+                result.User.Email,
+                "Google",
+                null, // IP address would need to be passed from context
+                null, // User agent would need to be passed from context
+                DateTime.UtcNow
+            ), cancellationToken);
+
+            // For now, we'll check if a UserProfile exists to determine if this was a new user
+            // This is a simple heuristic - if no profile exists, we assume it's a new user
+            // Always publish the notification - the handler will check if it's actually a new user
             var notification = new UserSignedUpNotification
             {
-                UserId = result.User.Id, Email = result.User.Email, Username = result.User.Username ?? result.User.Email, TenantId = request.TenantId, SignUpTime = DateTime.UtcNow
+                UserId = result.User.Id,
+                Email = result.User.Email,
+                Username = result.User.Username ?? result.User.Email,
+                TenantId = request.TenantId
             };
 
             await mediator.Publish(notification, cancellationToken);
 
-            logger.LogInformation("Published UserSignedUpNotification for Google OAuth user {UserId}", result.User.Id);
+            logger.LogInformation("Published authentication events for Google OAuth user {UserId}", result.User.Id);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Failed to publish UserSignedUpNotification for Google OAuth user {UserId}", result.User.Id);
+            logger.LogWarning(ex, "Failed to publish authentication events for Google OAuth user {UserId}", result.User.Id);
             // Don't fail the sign-in process if notification fails
         }
 
