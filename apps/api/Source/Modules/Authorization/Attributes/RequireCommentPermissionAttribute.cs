@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using GameGuild.Modules.Authentication;
-using GameGuild.Modules.Comments;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 

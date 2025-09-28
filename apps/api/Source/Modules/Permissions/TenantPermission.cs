@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-
 namespace GameGuild.Modules.Permissions;
 
 /// <summary> Tenant-wide permissions (Layer 1 of the DAC permission system) Allows setting permissions at the tenant level for users </summary>

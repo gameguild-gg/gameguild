@@ -5,7 +5,6 @@ using System.Text;
 using GameGuild.CQRS;
 using GameGuild.Modules.Audit;
 using GameGuild.Modules.Credentials;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 
@@ -321,11 +320,11 @@ public class AuthService(
                 }
 
                 // If already rotated by another request: return replacement if still active
-                if (existing.IsRevoked && existing.ReplacedByToken is not null)
+                if (existing is { IsRevoked: true, ReplacedByToken: not null })
                 {
                     var replacement = existing.ReplacedByToken != null ? await refreshTokenRepository.GetByTokenAsync(existing.ReplacedByToken) : null;
 
-                    if (replacement != null && !replacement.IsRevoked && replacement.ExpiresAt > DateTime.UtcNow)
+                    if (replacement is { IsRevoked: false } && replacement.ExpiresAt > DateTime.UtcNow)
                     {
                         logger.LogInformation("Refresh token already rotated by another request (attempt {Attempt})", attempt);
 
@@ -423,8 +422,6 @@ public class AuthService(
                 // Clear tracked entities to avoid stale state before retry
                 // Context detachment handled by repository layer
                 await Task.Delay(25); // small backoff
-
-                continue; // retry loop
             }
         }
 

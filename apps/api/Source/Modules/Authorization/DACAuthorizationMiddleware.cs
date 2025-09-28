@@ -1,14 +1,12 @@
 using System.Security.Claims;
 using HotChocolate.Resolvers;
-using Microsoft.Extensions.Logging;
-
 
 namespace GameGuild.Authorization;
 
 /// <summary> HotChocolate middleware for 3-layer DAC permission system Supports Tenant, Content-Type, and Resource level permissions </summary>
-public class DACAuthorizationMiddleware(FieldDelegate next) {
+public class DacAuthorizationMiddleware(FieldDelegate next) {
   public async ValueTask InvokeAsync(IMiddlewareContext context) {
-    var logger = context.Services.GetRequiredService<ILogger<DACAuthorizationMiddleware>>();
+    var logger = context.Services.GetRequiredService<ILogger<DacAuthorizationMiddleware>>();
     var fieldName = context.Selection.Field.Name;
     var operation = context.Operation.Type.ToString();
 
@@ -34,7 +32,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
       operation, fieldName, userContext.UserId, userContext.TenantId);
 
     // Check for DAC authorization attributes on the resolver
-    var dacAttribute = GetDACAttribute(context);
+    var dacAttribute = GetDacAttribute(context);
 
     if (dacAttribute != null) {
       var attributeType = dacAttribute.GetType().Name;
@@ -75,7 +73,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
     return ValueTask.FromResult<UsersContext?>(new UsersContext { UserId = userId, TenantId = tenantId });
   }
 
-  private static DACAuthorizationAttribute? GetDACAttribute(IMiddlewareContext context) {
+  private static DacAuthorizationAttribute? GetDacAttribute(IMiddlewareContext context) {
     // Check the resolver method for DAC attributes
     var selection = context.Selection;
     var field = selection.Field;
@@ -83,7 +81,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
     // Get the resolver method attributes
     var resolverMember = field.ResolverMember;
 
-    if (resolverMember != null) return resolverMember.GetCustomAttributes(typeof(DACAuthorizationAttribute), true).FirstOrDefault() as DACAuthorizationAttribute;
+    if (resolverMember != null) return resolverMember.GetCustomAttributes(typeof(DacAuthorizationAttribute), true).FirstOrDefault() as DacAuthorizationAttribute;
 
     return null;
   }
@@ -96,8 +94,8 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
     return fieldName.StartsWith("__");
   }
 
-  private async ValueTask<bool> CheckPermissionAsync(IPermissionService permissionService, UsersContext userContext, DACAuthorizationAttribute dacAttribute, IMiddlewareContext context) {
-    var logger = context.Services.GetRequiredService<ILogger<DACAuthorizationMiddleware>>();
+  private async ValueTask<bool> CheckPermissionAsync(IPermissionService permissionService, UsersContext userContext, DacAuthorizationAttribute dacAttribute, IMiddlewareContext context) {
+    var logger = context.Services.GetRequiredService<ILogger<DacAuthorizationMiddleware>>();
     var fieldName = context.Selection.Field.Name;
 
     return dacAttribute switch {
@@ -108,13 +106,13 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
     };
   }
 
-  private static bool IsContentTypePermissionAttribute(DACAuthorizationAttribute attribute) {
+  private static bool IsContentTypePermissionAttribute(DacAuthorizationAttribute attribute) {
     var type = attribute.GetType();
 
     return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(RequireContentTypePermissionAttribute<>);
   }
 
-  private static bool IsResourcePermissionAttribute(DACAuthorizationAttribute attribute) {
+  private static bool IsResourcePermissionAttribute(DacAuthorizationAttribute attribute) {
     var type = attribute.GetType();
 
     return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(RequireResourcePermissionAttribute<,>);
@@ -138,7 +136,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
     return hasPermission;
   }
 
-  private static async ValueTask<bool> CheckContentTypePermissionDynamicAsync(IPermissionService permissionService, UsersContext userContext, DACAuthorizationAttribute attribute, ILogger logger, string fieldName) {
+  private static async ValueTask<bool> CheckContentTypePermissionDynamicAsync(IPermissionService permissionService, UsersContext userContext, DacAuthorizationAttribute attribute, ILogger logger, string fieldName) {
     var entityType = attribute.GetType().GetGenericArguments()[0];
     var requiredPermissionProperty = attribute.GetType().GetProperty("RequiredPermission");
     var requiredPermission = (PermissionType)requiredPermissionProperty!.GetValue(attribute)!;
@@ -160,7 +158,7 @@ public class DACAuthorizationMiddleware(FieldDelegate next) {
     return hasPermission;
   }
 
-  private async ValueTask<bool> CheckResourcePermissionDynamicAsync(IPermissionService permissionService, UsersContext userContext, DACAuthorizationAttribute attribute, IMiddlewareContext context, ILogger logger, string fieldName) {
+  private async ValueTask<bool> CheckResourcePermissionDynamicAsync(IPermissionService permissionService, UsersContext userContext, DacAuthorizationAttribute attribute, IMiddlewareContext context, ILogger logger, string fieldName) {
     var resourceIdParameterProperty = attribute.GetType().GetProperty("ResourceIdParameterName");
     var resourceIdParameter = resourceIdParameterProperty?.GetValue(attribute) as string ?? "id";
 

@@ -1,7 +1,7 @@
 ﻿namespace GameGuild.Authorization;
 
 /// <summary> Extension methods for applying DAC authorization middleware </summary>
-public static class DACAuthorizationExtensions {
+public static class DacAuthorizationExtensions {
   /// <summary> Adds DAC authorization middleware to a field </summary>
-  public static IObjectFieldDescriptor UseDACAuthorization(this IObjectFieldDescriptor descriptor) { return descriptor.Use<DACAuthorizationMiddleware>(); }
+  public static IObjectFieldDescriptor UseDacAuthorization(this IObjectFieldDescriptor descriptor) { return descriptor.Use<DacAuthorizationMiddleware>(); }
 }
