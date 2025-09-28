@@ -1,4 +1,4 @@
-namespace GameGuild.Core.Domain.Identity;
+namespace GameGuild.Modules.Users;
 
 /// <summary> Interface for accessing current user context Domain interface for user identity concerns </summary>
 public interface IUserContext {
