@@ -225,6 +225,11 @@ The BFS is optimal for finding the shortest path, when the weights or distances 
 
 ## Dijkstra's Algorithm
 
+WiP Content will be added later. In the mean time follow these links:
+
+- [Pathfinding.js](https://qiao.github.io/PathFinding.js/visual/)
+- [Red Blob Games](https://www.redblobgames.com/pathfinding/a-star/introduction.html)
+
 ## A\* Algorithm
 
 ### Heuristics
