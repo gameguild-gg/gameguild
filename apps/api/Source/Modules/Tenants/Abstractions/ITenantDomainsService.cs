@@ -120,10 +120,14 @@ public interface ITenantDomainsService
 public class DomainValidationResult
 {
     public bool IsValid { get; set; }
+
     public bool IsAvailable { get; set; }
+
     public List<string> Errors { get; set; } = [];
 
     public static DomainValidationResult Success() => new() { IsValid = true, IsAvailable = true };
-    public static DomainValidationResult Failure(params string[] errors) => new() { IsValid = false, IsAvailable = false, Errors = errors.ToList() };
+
+    public static DomainValidationResult Failure(params string[ ] errors) => new() { IsValid = false, IsAvailable = false, Errors = errors.ToList() };
+
     public static DomainValidationResult Unavailable(string message = "Domain is not available") => new() { IsValid = true, IsAvailable = false, Errors = [message] };
 }
