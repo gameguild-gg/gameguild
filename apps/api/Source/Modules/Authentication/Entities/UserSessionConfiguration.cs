@@ -1,6 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 namespace GameGuild.Modules.Authentication;
 
 internal sealed class UserSessionConfiguration : IEntityTypeConfiguration<UserSession>

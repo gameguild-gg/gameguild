@@ -3,7 +3,7 @@
 /// <summary>
 /// Permission levels for the 3-layer DAC system
 /// </summary>
-public enum DACPermissionLevel {
+public enum DacPermissionLevel {
   /// <summary>
   /// Tenant-wide permissions - applies to all content types within a tenant
   /// </summary>
