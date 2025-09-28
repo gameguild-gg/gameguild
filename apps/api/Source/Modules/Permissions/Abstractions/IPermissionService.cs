@@ -1,3 +1,5 @@
+using GameGuild.Modules.Permissions;
+
 namespace GameGuild;
 
 /// <summary>
@@ -9,7 +11,8 @@ namespace GameGuild;
 /// Implements the Specification pattern for complex permission queries
 /// and follows Domain-Driven Design principles
 /// </summary>
-public interface IPermissionService {
+public interface IPermissionService
+{
   // ===== LAYER 1: TENANT-WIDE PERMISSIONS =====
 
   /// <summary>
@@ -89,7 +92,7 @@ public interface IPermissionService {
   /// <summary>
   /// Grant content-type permissions to a user
   /// </summary>
-  Task<GameGuild.Modules.Permissions.ContentTypePermission> GrantContentTypePermissionAsync(
+  Task<ContentTypePermission> GrantContentTypePermissionAsync(
       Guid? userId, Guid? tenantId,
       string contentTypeName, PermissionType[] permissions
   );
