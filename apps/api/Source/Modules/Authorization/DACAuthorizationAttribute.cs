@@ -2,9 +2,9 @@
 
 /// <summary> Base attribute for 3-layer DAC authorization in GraphQL resolvers </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
-public abstract class DACAuthorizationAttribute(PermissionType requiredPermission, Type entityType) : Attribute {
+public abstract class DacAuthorizationAttribute(PermissionType requiredPermission, Type entityType) : Attribute {
   /// <summary> The permission level (Tenant, ContentType, or Resource) </summary>
-  public abstract DACPermissionLevel PermissionLevel { get; }
+  public abstract DacPermissionLevel PermissionLevel { get; }
 
   /// <summary> The required permission type for the operation </summary>
   public PermissionType RequiredPermission { get; } = requiredPermission;

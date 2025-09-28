@@ -80,23 +80,8 @@ public class RequireDacPermissionAttribute : Attribute, IAsyncAuthorizationFilte
   }
 }
 
-/// <summary> Attribute specifically for resource-level permission checks </summary>
-[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
-public class RequireDacResourcePermissionAttribute : RequireDacPermissionAttribute {
-  public RequireDacResourcePermissionAttribute(PermissionType requiredPermission, string resourceIdParameter) : base(requiredPermission) { ResourceIdParameter = resourceIdParameter; }
-}
-
 /// <summary> Attribute specifically for content-type permission checks </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
 public class RequireContentTypePermissionAttribute : RequireDacPermissionAttribute {
   public RequireContentTypePermissionAttribute(PermissionType requiredPermission, string contentTypeName) : base(requiredPermission) { ContentTypeName = contentTypeName; }
-}
-
-/// <summary> Attribute for project-specific permission checks </summary>
-[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
-public class RequireProjectPermissionAttribute : RequireDacResourcePermissionAttribute {
-  public RequireProjectPermissionAttribute(PermissionType requiredPermission) : base(requiredPermission, "projectId") {
-    ContentTypeName = "Project";
-    ResourceOwnerIdProperty = "OwnerId";
-  }
 }
