@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils"
 import type { JSX } from "react/jsx-runtime"
 import { EditorLoadingContext } from "../lexical-editor"
 
-export type TableStyle = "default" | "striped" | "bordered" | "minimal" | "modern"
+export type TableStyle = "default" | "striped" | "bordered" | "minimal" | "modern" | "grid" | "accent" | "dark" | "colorful" | "professional"
 
 export interface TableCellData {
   content: string
@@ -286,15 +286,109 @@ function TableComponent({ node }: { node: TableNode }) {
   const getTableStyleClasses = (style: TableStyle) => {
     switch (style) {
       case "striped":
-        return "border-collapse border border-border [&_tr:nth-child(even)]:bg-muted/50"
+        return cn(
+          "border-collapse border border-gray-300 dark:border-gray-600",
+          "[&_tr:nth-child(even)]:bg-gray-50 dark:[&_tr:nth-child(even)]:bg-gray-800/30",
+          "[&_tr:nth-child(odd)]:bg-white dark:[&_tr:nth-child(odd)]:bg-gray-900",
+          "[&_th]:bg-gray-100 dark:[&_th]:bg-gray-700 [&_th]:font-semibold [&_th]:text-gray-900 dark:[&_th]:text-gray-100",
+          "[&_th]:border-b-2 [&_th]:border-gray-400 dark:[&_th]:border-gray-500",
+          "[&_td]:border-b [&_td]:border-gray-200 dark:[&_td]:border-gray-700",
+          "shadow-sm"
+        )
       case "bordered":
-        return "border-collapse border-2 border-border [&_th]:border [&_td]:border"
+        return cn(
+          "border-collapse border-2 border-gray-400 dark:border-gray-500",
+          "[&_th]:border-2 [&_th]:border-gray-400 dark:[&_th]:border-gray-500",
+          "[&_td]:border [&_td]:border-gray-300 dark:[&_td]:border-gray-600",
+          "[&_th]:bg-gray-200 dark:[&_th]:bg-gray-700 [&_th]:font-bold [&_th]:text-gray-900 dark:[&_th]:text-gray-100",
+          "[&_td]:bg-white dark:[&_td]:bg-gray-900",
+          "shadow-lg"
+        )
       case "minimal":
-        return "border-collapse [&_th]:border-b [&_td]:border-b border-b-0"
+        return cn(
+          "border-collapse",
+          "[&_th]:border-b-2 [&_th]:border-gray-300 dark:[&_th]:border-gray-600",
+          "[&_th]:font-semibold [&_th]:text-gray-800 dark:[&_th]:text-gray-200",
+          "[&_td]:border-b [&_td]:border-gray-100 dark:[&_td]:border-gray-800",
+          "[&_tr:hover]:bg-gray-50 dark:[&_tr:hover]:bg-gray-800/50",
+          "text-gray-700 dark:text-gray-300"
+        )
       case "modern":
-        return "border-collapse shadow-sm rounded-lg overflow-hidden [&_th]:bg-primary/5 [&_th]:font-semibold"
+        return cn(
+          "border-collapse shadow-lg rounded-lg overflow-hidden",
+          "[&_th]:bg-gradient-to-r [&_th]:from-blue-600 [&_th]:to-blue-700 dark:[&_th]:from-blue-700 dark:[&_th]:to-blue-800",
+          "[&_th]:text-white [&_th]:font-bold [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wider",
+          "[&_th]:px-6 [&_th]:py-4",
+          "[&_td]:bg-white dark:[&_td]:bg-gray-900 [&_td]:px-6 [&_td]:py-4",
+          "[&_tr:nth-child(even)]:bg-gray-50 dark:[&_tr:nth-child(even)]:bg-gray-800/50",
+          "[&_tr:hover]:bg-blue-50 dark:[&_tr:hover]:bg-blue-900/20 [&_tr:hover]:transition-colors",
+          "text-gray-700 dark:text-gray-300"
+        )
+      case "grid":
+        return cn(
+          "border-collapse border border-gray-400 dark:border-gray-500",
+          "[&_th]:border [&_th]:border-gray-400 dark:[&_th]:border-gray-500",
+          "[&_td]:border [&_td]:border-gray-400 dark:[&_td]:border-gray-500",
+          "[&_th]:bg-gray-300 dark:[&_th]:bg-gray-600 [&_th]:font-bold [&_th]:text-gray-900 dark:[&_th]:text-gray-100",
+          "[&_td]:bg-white dark:[&_td]:bg-gray-900",
+          "[&_th]:px-4 [&_th]:py-3 [&_td]:px-4 [&_td]:py-3",
+          "shadow-md"
+        )
+      case "accent":
+        return cn(
+          "border-collapse shadow-md rounded-lg overflow-hidden",
+          "[&_th]:bg-gradient-to-r [&_th]:from-emerald-500 [&_th]:to-emerald-600 dark:[&_th]:from-emerald-600 dark:[&_th]:to-emerald-700",
+          "[&_th]:text-white [&_th]:font-semibold",
+          "[&_th]:px-4 [&_th]:py-3",
+          "[&_td]:bg-white dark:[&_td]:bg-gray-900 [&_td]:px-4 [&_td]:py-3",
+          "[&_tr:nth-child(even)]:bg-emerald-50 dark:[&_tr:nth-child(even)]:bg-emerald-900/10",
+          "[&_tr:hover]:bg-emerald-100 dark:[&_tr:hover]:bg-emerald-900/20",
+          "[&_td]:border-b [&_td]:border-emerald-100 dark:[&_td]:border-emerald-800",
+          "text-gray-700 dark:text-gray-300"
+        )
+      case "dark":
+        return cn(
+          "border-collapse shadow-xl rounded-lg overflow-hidden",
+          "[&_th]:bg-gray-800 dark:[&_th]:bg-gray-900",
+          "[&_th]:text-gray-100 [&_th]:font-bold [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wide",
+          "[&_th]:px-6 [&_th]:py-4 [&_th]:border-b [&_th]:border-gray-600",
+          "[&_td]:bg-gray-700 dark:[&_td]:bg-gray-800 [&_td]:text-gray-100",
+          "[&_td]:px-6 [&_td]:py-4 [&_td]:border-b [&_td]:border-gray-600 dark:[&_td]:border-gray-700",
+          "[&_tr:hover]:bg-gray-600 dark:[&_tr:hover]:bg-gray-700"
+        )
+      case "colorful":
+        return cn(
+          "border-collapse shadow-lg rounded-lg overflow-hidden",
+          "[&_th]:bg-gradient-to-r [&_th]:from-purple-500 [&_th]:via-pink-500 [&_th]:to-red-500",
+          "[&_th]:text-white [&_th]:font-bold [&_th]:text-center",
+          "[&_th]:px-4 [&_th]:py-3",
+          "[&_td]:px-4 [&_td]:py-3",
+          "[&_tbody_tr:nth-child(odd)]:bg-red-50 dark:[&_tbody_tr:nth-child(odd)]:bg-red-900/10",
+          "[&_tbody_tr:nth-child(even)]:bg-blue-50 dark:[&_tbody_tr:nth-child(even)]:bg-blue-900/10", 
+          "[&_tr:hover]:bg-purple-50 dark:[&_tr:hover]:bg-purple-900/20",
+          "text-gray-700 dark:text-gray-300"
+        )
+      case "professional":
+        return cn(
+          "border-collapse shadow-md",
+          "[&_th]:bg-slate-700 dark:[&_th]:bg-slate-800",
+          "[&_th]:text-white [&_th]:font-semibold [&_th]:text-sm [&_th]:tracking-wide",
+          "[&_th]:px-6 [&_th]:py-4 [&_th]:text-left",
+          "[&_th]:border-b-2 [&_th]:border-slate-500",
+          "[&_td]:bg-white dark:[&_td]:bg-gray-900 [&_td]:px-6 [&_td]:py-4",
+          "[&_td]:border-b [&_td]:border-slate-200 dark:[&_td]:border-slate-700",
+          "[&_tr:hover]:bg-slate-50 dark:[&_tr:hover]:bg-slate-800/30",
+          "text-slate-700 dark:text-slate-300",
+          "rounded-lg overflow-hidden"
+        )
       default:
-        return "border-collapse"
+        return cn(
+          "border-collapse",
+          "[&_th]:border-b [&_th]:border-gray-200 dark:[&_th]:border-gray-700",
+          "[&_th]:font-medium [&_th]:text-left",
+          "[&_td]:border-b [&_td]:border-gray-200 dark:[&_td]:border-gray-700",
+          "text-gray-900 dark:text-gray-100"
+        )
     }
   }
 
@@ -546,23 +640,80 @@ function TableComponent({ node }: { node: TableNode }) {
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide">Appearance</h3>
                     </div>
                     
-                    <div>
+                    <div className="space-y-3">
                       <Label htmlFor="table-style" className="text-sm font-medium text-gray-700 dark:text-gray-300">Table Style</Label>
-                      <Select
-                        value={tempData.style}
-                        onValueChange={(value) => setTempData({ ...tempData, style: value as TableStyle })}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="default">Default</SelectItem>
-                          <SelectItem value="striped">Striped</SelectItem>
-                          <SelectItem value="bordered">Bordered</SelectItem>
-                          <SelectItem value="minimal">Minimal</SelectItem>
-                          <SelectItem value="modern">Modern</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      
+                      {/* Style Preview Grid */}
+                      <div className="grid grid-cols-1 gap-2 p-3 border rounded-lg bg-white dark:bg-gray-800 max-h-80 overflow-y-auto">
+                        {[
+                          { value: "default", name: "Plain Table", preview: "Simple clean design" },
+                          { value: "striped", name: "Table Striped", preview: "Alternating row colors" },
+                          { value: "bordered", name: "Table Grid", preview: "Complete border grid" },
+                          { value: "minimal", name: "Table List", preview: "Minimal lines design" },
+                          { value: "modern", name: "Table Modern", preview: "Blue professional style" },
+                          { value: "grid", name: "Table Grid Lines", preview: "Bold grid pattern" },
+                          { value: "accent", name: "Table Green", preview: "Green accent theme" },
+                          { value: "dark", name: "Table Dark", preview: "Dark mode design" },
+                          { value: "colorful", name: "Table Colorful", preview: "Vibrant row colors" },
+                          { value: "professional", name: "Table Professional", preview: "Corporate style" },
+                        ].map((style) => (
+                          <button
+                            key={style.value}
+                            type="button"
+                            onClick={() => setTempData({ ...tempData, style: style.value as TableStyle })}
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-lg border-2 transition-all hover:shadow-md",
+                              tempData.style === style.value
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg ring-2 ring-blue-200 dark:ring-blue-800"
+                                : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                            )}
+                          >
+                            {/* Mini table preview */}
+                            <div className="flex-shrink-0 w-20 h-14 border border-gray-300 dark:border-gray-600 rounded overflow-hidden bg-white dark:bg-gray-900">
+                              <div className={cn(
+                                "w-full h-full scale-[1] origin-top-left",
+                                getTableStyleClasses(style.value as TableStyle)
+                              )}>
+                                <table className="w-full h-full text-[8px]">
+                                  <thead>
+                                    <tr>
+                                      <th className="px-1 py-0.5">Header 1</th>
+                                      <th className="px-1 py-0.5">Header 2</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td className="px-1 py-0.5">Data 1</td>
+                                      <td className="px-1 py-0.5">Data 2</td>
+                                    </tr>
+                                    <tr>
+                                      <td className="px-1 py-0.5">Row 2</td>
+                                      <td className="px-1 py-0.5">Cell</td>
+                                    </tr>
+                                    <tr>
+                                      <td className="px-1 py-0.5">Row 3</td>
+                                      <td className="px-1 py-0.5">Info</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                            
+                            {/* Style info */}
+                            <div className="flex-1 text-left">
+                              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{style.name}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{style.preview}</div>
+                            </div>
+                            
+                            {/* Selection indicator */}
+                            {tempData.style === style.value && (
+                              <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                                <Check className="w-3 h-3 text-white" />
+                              </div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="space-y-3">
