@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Authentication;
+namespace GameGuild.Modules.Users;
 
 /// <summary> DTO for user information </summary>
 public class UserDto

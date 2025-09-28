@@ -1,4 +1,6 @@
-namespace GameGuild.Modules.Authentication;
+using GameGuild.Modules.Authentication;
+
+namespace GameGuild.Modules.Users;
 
 /// <summary> Response DTO for user profile information </summary>
 public class UserProfileDto

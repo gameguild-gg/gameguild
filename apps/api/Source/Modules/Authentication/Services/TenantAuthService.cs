@@ -20,13 +20,13 @@ public class TenantAuthService(ITenantService tenantService, ITenantContextServi
         // Use specified tenant ID or the first available tenant
         Guid selectedTenantId;
 
-        if (tenantId.HasValue)
-            selectedTenantId = tenantId.Value;
-        else if (availableTenants.First().TenantId.HasValue)
-            selectedTenantId = availableTenants.First().TenantId!.Value;
+        if (tenantId.HasValue) { selectedTenantId = tenantId.Value; }
+        else if (availableTenants.First().TenantId.HasValue) { selectedTenantId = availableTenants.First().TenantId!.Value; }
         else
+        {
             // If we somehow don't have a valid tenant ID, return original result
             return authResult;
+        }
 
         // Validate tenant access
         var tenantPermission = availableTenants.FirstOrDefault(tp => tp.TenantId.HasValue && tp.TenantId.Value == selectedTenantId);
@@ -47,7 +47,7 @@ public class TenantAuthService(ITenantService tenantService, ITenantContextServi
         var tenantClaims = await GetTenantClaimsAsync(user, selectedTenantId);
 
         // Generate new token with tenant claims
-        var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
+        var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email };
         var roles = new[ ] { "User" }; // TODO: fetch actual tenant-specific roles
         var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
 
