@@ -20,27 +20,13 @@ public class RefreshTokenHandler(IAuthService authService, IMediator mediator, I
         {
             var response = await _authService.RefreshTokenAsync(refreshRequest);
 
-            // Publish refresh token used event
-            await _mediator.Publish(new RefreshTokenUsedEvent(
-                response.User.Id,
-                Guid.Parse(request.RefreshToken), // Note: This might need adjustment based on how RefreshToken is structured
-                DateTime.UtcNow
-            ), cancellationToken);
+            // Note: We don't publish RefreshTokenUsedEvent and RefreshTokenGeneratedEvent here
+            // because these should be published from within the AuthService.RefreshTokenAsync method
+            // where the actual token operations happen and we have access to the token entities
 
-            // Publish new refresh token generated event if a new one was created
-            if (!string.IsNullOrEmpty(response.RefreshToken))
-            {
-                await _mediator.Publish(new RefreshTokenGeneratedEvent(
-                    response.User.Id,
-                    Guid.NewGuid(), // This should be the actual new token ID
-                    response.RefreshTokenExpiresAt ?? DateTime.UtcNow.AddDays(30),
-                    DateTime.UtcNow
-                ), cancellationToken);
-            }
-
-            // Optional: publish notification with extracted info
-            var notification = new TokenRefreshedNotification { UserId = response.User.Id, Email = response.User.Email, TenantId = response.TenantId, RefreshedAt = DateTime.UtcNow };
-            await _mediator.Publish(notification, cancellationToken);
+            // Publish event for successful token refresh (for analytics and logging)
+            var tokenRefreshedEvent = new TokenRefreshedEvent(response.User.Id, response.User.Email, response.TenantId, DateTime.UtcNow);
+            await _mediator.Publish(tokenRefreshedEvent, cancellationToken);
 
             _logger.LogInformation("Refresh token processed successfully for user {UserId}", response.User.Id);
 

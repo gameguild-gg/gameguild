@@ -1,7 +1,6 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Users;
 
-namespace GameGuild.Modules.Authentication;
+namespace GameGuild.Modules.Users;
 
 /// <summary> Handler for get user profile query using CQRS pattern </summary>
 public class GetUserProfileQueryHandler(IUserService userService, ILogger<GetUserProfileQueryHandler> logger) : IRequestHandler<GetUserProfileQuery, UserProfileDto>
@@ -35,7 +34,7 @@ public class GetUserProfileQueryHandler(IUserService userService, ILogger<GetUse
                 CreatedAt = user.CreatedAt,
                 UpdatedAt = user.UpdatedAt,
                 CurrentTenant = null, // Would need separate service to get tenant info
-                AvailableTenants = new List<TenantInfo>(),
+                AvailableTenants = [],
             };
 
             _logger.LogInformation("User profile retrieved successfully for user {UserId}", request.UserId);
