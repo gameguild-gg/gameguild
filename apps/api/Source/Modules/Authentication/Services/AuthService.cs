@@ -5,6 +5,7 @@ using System.Text;
 using GameGuild.CQRS;
 using GameGuild.Modules.Audit;
 using GameGuild.Modules.Credentials;
+using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 
@@ -22,6 +23,7 @@ public class AuthService(
     IEmailVerificationService emailVerificationService,
     ITenantAuthService tenantAuthService,
     ITenantService tenantService,
+    IPermissionService permissionService,
     IAuthenticationAnomalyDetectionService anomalyDetectionService,
     IUserEnumerationProtectionService enumerationProtection,
     IAuditService auditService,
@@ -100,7 +102,7 @@ public class AuthService(
 
             // Create tokens and response
             var userDto = new UserDto { Id = user!.Id, Username = user.Username, Email = user.Email };
-            var roles = new[ ] { "User" }; // TODO: fetch actual roles if available
+            var roles = new[] { "User" }; // TODO: fetch actual roles if available
 
             var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
             var refreshToken = jwtTokenService.GenerateRefreshToken();
@@ -123,7 +125,12 @@ public class AuthService(
 
             var response = new SignInResponse
             {
-                AccessToken = accessToken, RefreshToken = refreshToken, ExpiresAt = refreshTokenExpiresAt, AccessTokenExpiresAt = accessTokenExpiresAt, RefreshTokenExpiresAt = refreshTokenExpiresAt, User = userDto
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                ExpiresAt = refreshTokenExpiresAt,
+                AccessTokenExpiresAt = accessTokenExpiresAt,
+                RefreshTokenExpiresAt = refreshTokenExpiresAt,
+                User = userDto
             };
 
             // Enhance response with tenant data
@@ -179,14 +186,21 @@ public class AuthService(
             // Handle tenant association
             if (request.TenantId.HasValue)
             {
-                // Note: AddUserToTenantAsync method not available in current ITenantService interface
-                // TODO: Implement tenant user association when interface is updated
-                logger.LogInformation("User {UserId} registered for tenant {TenantId}", user.Id, request.TenantId.Value);
+                // Add user to tenant using permission service
+                try
+                {
+                    await permissionService.JoinTenantAsync(user.Id, request.TenantId.Value);
+                    logger.LogInformation("User {UserId} successfully joined tenant {TenantId}", user.Id, request.TenantId.Value);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to add user {UserId} to tenant {TenantId}", user.Id, request.TenantId.Value);
+                }
             }
 
             // Create tokens
             var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email };
-            var roles = new[ ] { "User" };
+            var roles = new[] { "User" };
 
             var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles);
             var refreshToken = jwtTokenService.GenerateRefreshToken();
@@ -226,7 +240,12 @@ public class AuthService(
 
             var response = new SignInResponse
             {
-                AccessToken = accessToken, RefreshToken = refreshToken, ExpiresAt = refreshTokenExpiresAt, AccessTokenExpiresAt = accessTokenExpiresAt, RefreshTokenExpiresAt = refreshTokenExpiresAt, User = userDto
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                ExpiresAt = refreshTokenExpiresAt,
+                AccessTokenExpiresAt = accessTokenExpiresAt,
+                RefreshTokenExpiresAt = refreshTokenExpiresAt,
+                User = userDto
             };
 
             return await tenantAuthService.EnhanceWithTenantDataAsync(response, user, request.TenantId);
@@ -242,7 +261,7 @@ public class AuthService(
     private static string HashPassword(string password)
     {
         // Use BCrypt for proper password hashing (replace the simple SHA256)
-        return BCrypt.Net.BCrypt.HashPassword(password, workFactor : 12);
+        return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
     }
 
     private static bool VerifyPassword(string password, string hash)
@@ -312,7 +331,7 @@ public class AuthService(
 
                         var userAlready = await userRepository.GetByIdAsync(existing.UserId) ?? throw new UnauthorizedAccessException("User not found");
                         var userDtoAlready = new UserDto { Id = userAlready.Id, Username = userAlready.Username, Email = userAlready.Email };
-                        var rolesAlready = new[ ] { "User" }; // TODO: actual roles
+                        var rolesAlready = new[] { "User" }; // TODO: actual roles
 
                         var accessMinutesAlready = int.Parse(configuration["Jwt:ExpirationMinutes"] ?? configuration["Jwt:ExpiryInMinutes"] ?? "60");
                         var newAccessTokenAlready = jwtTokenService.GenerateAccessToken(userDtoAlready, rolesAlready);
@@ -347,11 +366,14 @@ public class AuthService(
 
                 if (tenantId.HasValue)
                 {
-                    // Note: GetUserTenantsAsync method not available in current ITenantAuthService interface
-                    // Using empty list until interface is updated
-                    var permittedTenants = new List<object>();
+                    // Get user's tenant permissions to validate access
+                    var permittedTenants = await permissionService.GetUserTenantsAsync(user.Id);
+                    var activeTenants = permittedTenants.Where(tp => !tp.IsExpired).ToList();
 
-                    if (permittedTenants.Any(t => t.TenantId.HasValue && t.TenantId.Value == tenantId.Value)) { tenantClaims = await tenantAuthService.GetTenantClaimsAsync(user, tenantId.Value); }
+                    if (activeTenants.Any(t => t.TenantId.HasValue && t.TenantId.Value == tenantId.Value))
+                    {
+                        tenantClaims = await tenantAuthService.GetTenantClaimsAsync(user, tenantId.Value);
+                    }
                     else
                     {
                         tenantId = null; // ignore inaccessible tenant
@@ -363,7 +385,7 @@ public class AuthService(
                 var refreshDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
 
                 var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email };
-                var roles = new[ ] { "User" }; // TODO: actual roles
+                var roles = new[] { "User" }; // TODO: actual roles
 
                 var newAccessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
                 var newRefreshTokenValue = jwtTokenService.GenerateRefreshToken();
@@ -438,7 +460,7 @@ public class AuthService(
 
         // Generate tokens
         var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email, };
-        var roles = new[ ] { "User", }; // TODO: fetch actual roles
+        var roles = new[] { "User", }; // TODO: fetch actual roles
         var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
         var refreshToken = jwtTokenService.GenerateRefreshToken();
 
@@ -471,7 +493,7 @@ public class AuthService(
 
         // Generate tokens
         var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email, };
-        var roles = new[ ] { "User", }; // TODO: fetch actual roles
+        var roles = new[] { "User", }; // TODO: fetch actual roles
         var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
         var refreshToken = jwtTokenService.GenerateRefreshToken();
 
@@ -509,7 +531,7 @@ public class AuthService(
 
             // Generate tokens
             var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email, };
-            var roles = new[ ] { "User", }; // TODO: fetch actual roles
+            var roles = new[] { "User", }; // TODO: fetch actual roles
             var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
             var refreshToken = jwtTokenService.GenerateRefreshToken();
 
@@ -525,7 +547,12 @@ public class AuthService(
 
             var response = new SignInResponse
             {
-                AccessToken = jwtToken, RefreshToken = refreshToken, ExpiresAt = refreshTokenExpiresAt, AccessTokenExpiresAt = accessTokenExpiresAt, RefreshTokenExpiresAt = refreshTokenExpiresAt, User = userDto,
+                AccessToken = jwtToken,
+                RefreshToken = refreshToken,
+                ExpiresAt = refreshTokenExpiresAt,
+                AccessTokenExpiresAt = accessTokenExpiresAt,
+                RefreshTokenExpiresAt = refreshTokenExpiresAt,
+                User = userDto,
             };
 
             // Enhance with tenant data
@@ -647,7 +674,7 @@ public class AuthService(
 
         // Generate tokens
         var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email, };
-        var roles = new[ ] { "User", }; // TODO: fetch actual roles
+        var roles = new[] { "User", }; // TODO: fetch actual roles
         var jwtToken = jwtTokenService.GenerateAccessToken(userDto, roles);
         var refreshToken = jwtTokenService.GenerateRefreshToken();
 

@@ -211,7 +211,7 @@ public class PermissionService : IPermissionService {
 
   #region Layer 2: Content-Type Permissions
 
-  public async Task<GameGuild.Modules.Permissions.ContentTypePermission> GrantContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType[] permissions) {
+  public async Task<ContentTypePermission> GrantContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType[] permissions) {
     using var userContext = LoggingExtensions.WithUserContext(userId, tenantId);
 
     if (string.IsNullOrWhiteSpace(contentTypeName)) throw new ArgumentException("Content type name cannot be null or empty", nameof(contentTypeName));
@@ -592,7 +592,7 @@ public class PermissionService : IPermissionService {
     permissions.Add(permissionFlag);
   }
 
-  private static void AddPermissionsFromEntity(HashSet<PermissionType> permissions, GameGuild.Modules.Permissions.WithPermissions entity) {
+  private static void AddPermissionsFromEntity(HashSet<PermissionType> permissions, WithPermissions entity) {
     foreach (var permission in Enum.GetValues<PermissionType>()) {
       if (entity.HasPermission(permission)) permissions.Add(permission);
     }
