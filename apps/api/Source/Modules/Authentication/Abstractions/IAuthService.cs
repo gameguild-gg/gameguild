@@ -29,7 +29,7 @@ public interface IAuthService
 
     Task<EmailOperationResponse> VerifyEmailAsync(EmailVerificationRequest verificationRequest);
 
-    Task<EmailOperationResponse> ForgotPasswordAsync(ForgotPasswordRequestDto request);
+    Task<EmailOperationResponse> ForgotPasswordAsync(PasswordResetRequestDto request);
 
     Task<EmailOperationResponse> ResetPasswordAsync(ResetPasswordRequest request);
 
