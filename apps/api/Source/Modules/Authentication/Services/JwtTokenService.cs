@@ -2,15 +2,16 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using GameGuild.Modules.Users;
 using Microsoft.IdentityModel.Tokens;
 
 namespace GameGuild.Modules.Authentication;
 
 public class JwtTokenService(IConfiguration configuration) : IJwtTokenService
 {
-    public string GenerateAccessToken(UserDto user, string[ ] roles) { return GenerateAccessToken(user, roles, null); }
+    public string GenerateAccessToken(UserDto user, string[] roles) { return GenerateAccessToken(user, roles, null); }
 
-    public string GenerateAccessToken(UserDto user, string[ ] roles, IEnumerable<Claim>? additionalClaims = null)
+    public string GenerateAccessToken(UserDto user, string[] roles, IEnumerable<Claim>? additionalClaims = null)
     {
         var claims = new List<Claim>
         {
@@ -35,7 +36,7 @@ public class JwtTokenService(IConfiguration configuration) : IJwtTokenService
         var expiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
         var expires = DateTime.UtcNow.AddMinutes(expiryMinutes);
 
-        var token = new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"], claims, expires : expires, signingCredentials : creds);
+        var token = new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"], claims, expires: expires, signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
@@ -57,7 +58,11 @@ public class JwtTokenService(IConfiguration configuration) : IJwtTokenService
 
         var tokenValidationParameters = new TokenValidationParameters
         {
-            ValidateAudience = false, ValidateIssuer = false, ValidateIssuerSigningKey = true, IssuerSigningKey = key, ValidateLifetime = false, // We don't care about the token's expiration date
+            ValidateAudience = false,
+            ValidateIssuer = false,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = key,
+            ValidateLifetime = false, // We don't care about the token's expiration date
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();

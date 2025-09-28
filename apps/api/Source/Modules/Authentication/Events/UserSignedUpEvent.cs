@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Authentication;
 

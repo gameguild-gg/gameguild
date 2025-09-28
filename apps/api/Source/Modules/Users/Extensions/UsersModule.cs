@@ -1,3 +1,5 @@
+using FluentValidation;
+
 namespace GameGuild.Modules.Users;
 
 /// <summary> Extension methods for registering Users module services </summary>
@@ -9,6 +11,9 @@ public static class UsersModule
         // Register Users repository and services
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserService, UserService>();
+
+        // Register validators for CQRS queries
+        services.AddScoped<IValidator<GetUserProfileQuery>, GetUserProfileQueryValidator>();
 
         // CQRS handlers are automatically registered by assembly scanning
 

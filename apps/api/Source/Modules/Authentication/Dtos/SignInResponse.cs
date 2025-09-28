@@ -1,3 +1,5 @@
+using GameGuild.Modules.Users;
+
 namespace GameGuild.Modules.Authentication;
 
 /// <summary> DTO for sign-in response </summary>
