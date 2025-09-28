@@ -1,7 +1,7 @@
-﻿namespace GameGuild.Modules.Authentication.Models;
+﻿namespace GameGuild.Modules.Authentication;
 
 /// <summary>
-/// DTO for password reset requests
+/// DTO for password reset requests (forgot password functionality)
 /// </summary>
 public class PasswordResetRequestDto
 {

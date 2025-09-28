@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Authentication.Models;
+﻿namespace GameGuild.Modules.Authentication;
 
 /// <summary>
 /// DTO for OAuth sign-in requests

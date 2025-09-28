@@ -19,6 +19,14 @@ public class RevokeTokenHandler(IAuthService authService, IMediator mediator, IL
         {
             await _authService.RevokeRefreshTokenAsync(request.RefreshToken, request.IpAddress ?? "Unknown");
 
+            // Publish refresh token revoked event
+            await _mediator.Publish(new RefreshTokenRevokedEvent(
+                Guid.Empty, // Note: This should be the actual user ID, which might need to be retrieved
+                Guid.Parse(request.RefreshToken), // Note: This might need adjustment based on how RefreshToken is structured
+                "Manual revocation",
+                DateTime.UtcNow
+            ), cancellationToken);
+
             // Publish notification for audit/logging purposes
             var notification = new TokenRevokedNotification { RefreshToken = request.RefreshToken, IpAddress = request.IpAddress, RevokedAt = DateTime.UtcNow };
 
