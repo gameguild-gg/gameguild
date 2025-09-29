@@ -1,30 +1,17 @@
-using GameGuild.Core.Performance;
-using GameGuild.Database;
-using GameGuild.Modules.Authentication.Models;
-using GameGuild.Modules.Contents;
-using GameGuild.Modules.Permissions;
-using GameGuild.Modules.Posts;
-using GameGuild.Modules.Posts.Models;
-using GameGuild.Modules.Programs;
-using GameGuild.Modules.Projects;
-using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Users;
-using GameGuild.Source.Modules.Programs.Models;
-using Microsoft.Extensions.DependencyInjection;
-
 namespace GameGuild.Core.Configuration;
 
 /// <summary>
 /// Extension methods for configuring performance optimizations
 /// </summary>
-public static class PerformanceConfiguration {
-
+public static class PerformanceConfiguration
+{
     /// <summary>
     /// Adds performance optimization services including compiled queries
     /// </summary>
     /// <param name="services">The service collection</param>
     /// <returns>The service collection for chaining</returns>
-    public static IServiceCollection AddPerformanceOptimizations(this IServiceCollection services) {
+    public static IServiceCollection AddPerformanceOptimizations(this IServiceCollection services)
+    {
         // TEMPORARILY DISABLED: Compiled queries service disabled due to type conflicts
         // services.AddSingleton<ICompiledQueriesService, CompiledQueriesService>();
 
@@ -53,7 +40,7 @@ public interface ICompiledQueriesService {
     Task<Tenant?> GetTenantByIdAsync(ApplicationDbContext context, Guid tenantId);
 
     /// <summary>
-    /// Gets published program by slug using compiled query  
+    /// Gets published program by slug using compiled query
     /// </summary>
     Task<GameGuild.Modules.Programs.Program?> GetPublishedProgramBySlugAsync(ApplicationDbContext context, string slug);    /// <summary>
                                                                                                                             /// Gets published project by slug using compiled query
