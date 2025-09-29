@@ -404,8 +404,8 @@ graph TD
 
 ## GitHub Actions and Github Pages
 
-WiP.
+Every major game engine has its own way of building artifacts.
 
-### Github Pages
+I personally created a GitHub Actions workflow for Unity projects. It builds the project for WebGL. You can find the workflow in the [UnityBoilerplate](https://github.com/gameguild-gg/UnityBoilerplate) repository. This might be outdated, so if you want to receive bonus points in this class, update it, then create a merge request.
 
-WiP.
+Later on, I will create a similar workflow for Godot projects, but if you want a specific boilerplate, talk to me and I will create one for you.
