@@ -207,88 +207,15 @@ Not all files should be tracked by version control. The `.gitignore` file tells 
 
 #### What to Ignore:
 
-**Build Artifacts**
-- Compiled binaries (`.exe`, `.dll`, `.so`)
-- Object files (`.o`, `.obj`)
-- Build directories (`build/`, `bin/`, `obj/`)
-
-**IDE and Editor Files**
-- IDE configuration files (`.vscode/`, `.idea/`)
-- Temporary files created by editors
-- User-specific settings
-
-**Operating System Files**
-- `.DS_Store` (macOS)
-- `Thumbs.db` (Windows)
-- `desktop.ini` (Windows)
-
-**Dependencies and Packages**
-- `node_modules/` (Node.js)
-- Package manager cache files
-- Downloaded dependencies
-
-**Sensitive Information**
-- API keys and passwords
-- Database connection strings
-- Personal configuration files
+- **Build Artifacts**: Compiled binaries (`.exe`, `.dll`, `.so`), Object files (`.o`, `.obj`), Build directories (`build/`, `bin/`, `obj/`)
+- **IDE and Editor Files**: `.vscode/`, `.idea/`, Temporary files created by editors, User-specific settings
+**Operating System Files** - `.DS_Store` (macOS), `Thumbs.db` (Windows), `desktop.ini` (Windows)
 
 #### Game Engine Specific Examples:
 
-**Unity Projects:**
-```gitignore
-# Unity generated files
-[Ll]ibrary/
-[Tt]emp/
-[Oo]bj/
-[Bb]uild/
-[Bb]uilds/
-[Ll]ogs/
-[Uu]ser[Ss]ettings/
-
-# Never ignore Assets folder
-!/[Aa]ssets/**
-
-# Ignore specific Unity files
-*.pidb
-*.booproj
-*.svd
-*.userprefs
-*.csproj
-*.sln
-*.suo
-*.tmp
-*.user
-*.userprefs
-*.pidb
-*.booproj
-```
-
-**Unreal Engine Projects:**
-```gitignore
-# Unreal Engine files
-Binaries/
-DerivedDataCache/
-Intermediate/
-Saved/
-*.VC.db
-*.opensdf
-*.opendb
-*.sdf
-*.sln
-*.suo
-*.xcodeproj
-*.xcworkspace
-```
-
-**Godot Projects:**
-```gitignore
-# Godot files
-.import/
-export.cfg
-export_presets.cfg
-.mono/
-data_*/
-```
+- [**Unity Projects:**](https://github.com/github/gitignore/blob/main/Unity.gitignore)
+- [**Unreal Engine Projects:**](https://github.com/github/gitignore/blob/main/UnrealEngine.gitignore)
+- [**Godot Projects:**](https://github.com/github/gitignore/blob/main/Godot.gitignore)
 
 #### Best Practices:
 - Create `.gitignore` before your first commit
@@ -299,84 +226,21 @@ data_*/
 
 ## Git Hosting Platforms
 
-While Git is a distributed version control system that can work without a central server, most teams use hosting platforms for collaboration, backup, and additional features.
+While Git is a distributed version control system that can work without a central server, most teams use hosting platforms for collaboration, backup, and additional features. For more details, check out the [Top Git Hosting Services](https://gitprotect.io/blog/top-git-hosting-services/) article.
 
 ### GitHub
 
 [GitHub](https://github.com/) is the most popular platform for hosting Git repositories, especially for open-source projects.
 
-**Features:**
-- Unlimited public and private repositories
-- Issue tracking and project management
-- Pull requests and code review tools
-- GitHub Actions for CI/CD
-- GitHub Pages for static website hosting
-- Large community and ecosystem
-- Integration with many third-party tools
+### Other Git Platforms
 
-**Pricing:**
-- Free for public repositories and small teams
-- Paid plans for advanced features and larger teams
-- GitHub Student Pack offers free access to many developer tools
+While we'll focus on GitHub, other options exist:
 
-**Best for:** Open-source projects, teams already in the GitHub ecosystem, projects needing extensive integrations
+- **GitLab**: Complete DevOps platform with built-in CI/CD and self-hosting options
+- **Bitbucket**: Integrates well with Atlassian tools (Jira, Confluence)
+- **Self-hosted**: Gitea or GitLab Community Edition for on-premises hosting
 
-### GitLab
-
-[GitLab](https://about.gitlab.com/) offers a complete DevOps platform with built-in CI/CD, issue tracking, and more.
-
-**Features:**
-- Built-in CI/CD pipelines
-- Issue tracking and project management
-- Container registry
-- Security scanning and compliance tools
-- Self-hosted options available
-- Integrated DevOps workflow
-
-**Pricing:**
-- Free tier with generous limits
-- Self-hosted community edition available
-- Paid plans for advanced features
-
-**Best for:** Teams wanting an all-in-one DevOps platform, organizations needing self-hosted solutions
-
-### Bitbucket
-
-[Bitbucket](https://bitbucket.org/) by Atlassian integrates well with other Atlassian tools like Jira and Confluence.
-
-**Features:**
-- Git and Mercurial support
-- Integration with Atlassian ecosystem
-- Built-in CI/CD with Pipelines
-- Code review tools
-- Issue tracking integration with Jira
-
-**Best for:** Teams already using Atlassian tools, organizations needing Mercurial support
-
-### Self-Hosted Options
-
-**Gitea**
-- Lightweight, self-hosted Git service
-- Easy to install and maintain
-- Similar interface to GitHub
-- Free and open-source
-
-**GitLab Community Edition**
-- Robust feature set
-- Self-hosted version of GitLab
-- Full DevOps platform
-- Free and open-source
-
-### Choosing a Platform
-
-Consider these factors when selecting a Git hosting platform:
-
-- **Team Size**: Free tiers vary in user limits
-- **Storage Needs**: Important for game projects with large assets
-- **Integration Requirements**: Existing tools and workflows
-- **Security Needs**: Compliance and access control requirements
-- **Budget**: Pricing models and feature requirements
-- **Self-Hosting**: Whether you need on-premises hosting
+Choose based on your team's existing tools, storage needs, and hosting preferences.
 
 ## Types of automation
 
@@ -408,6 +272,6 @@ graph TD
 
 Every major game engine has its own way of building artifacts.
 
-I personally created a GitHub Actions workflow for Unity projects. It builds the project for WebGL. You can find the workflow in the [UnityBoilerplate](https://github.com/gameguild-gg/UnityBoilerplate) repository. This might be outdated, so if you want to receive bonus points in this class, update it, then create a merge request.
+I personally created a GitHub Actions workflow for Unity projects. It builds the project for WebGL and deploys it to GitHub Pages on every commit. You can find the workflow in the [UnityBoilerplate](https://github.com/gameguild-gg/UnityBoilerplate) repository. This might be outdated, so if you want to receive bonus points in this class, update it, then create a merge request.
 
 Later on, I will create a similar workflow for Godot projects, but if you want a specific boilerplate, talk to me and I will create one for you.
