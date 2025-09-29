@@ -114,7 +114,7 @@ public static class WebApplicationBuilderExtensions {
     var assemblies = DependencyInjection.GetAssembliesByPattern();
 
     // Add CQRS services (handlers, behaviors, etc.)
-    builder.Services.AddCQRS(assemblies);
+    builder.Services.AddCqrs(assemblies);
 
     return builder;
   }

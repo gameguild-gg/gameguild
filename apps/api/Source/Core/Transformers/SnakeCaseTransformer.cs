@@ -1,46 +1,49 @@
 ﻿using System.Text.RegularExpressions;
 using Newtonsoft.Json.Serialization;
 
-
 namespace GameGuild;
 
 /// <summary> Snake case transformer implementation using Newtonsoft.Json. </summary>
-public partial class SnakeCaseTransformer : CachedCaseTransformer {
-  [GeneratedRegex(@"^[a-z0-9]+(?:_[a-z0-9]+)*$", RegexOptions.Compiled)]
-  private static partial Regex SnakeCaseValidationRegex();
-  private static readonly SnakeCaseNamingStrategy NamingStrategy = new SnakeCaseNamingStrategy();
+public partial class SnakeCaseTransformer : CachedCaseTransformer
+{
+    [GeneratedRegex(@"^[a-z0-9]+(?:_[a-z0-9]+)*$", RegexOptions.Compiled)]
+    private static partial Regex SnakeCaseValidationRegex();
 
-  protected override string CacheKeyPrefix { get => "snake"; }
+    private static readonly SnakeCaseNamingStrategy NamingStrategy = new SnakeCaseNamingStrategy();
 
-  protected override string TransformCore(string input, CaseTransformOptions options) {
-    if (string.IsNullOrEmpty(input)) return string.Empty;
+    protected override string CacheKeyPrefix { get => "snake"; }
 
-    var result = input;
+    protected override string TransformCore(string input, CaseTransformOptions options)
+    {
+        if (string.IsNullOrEmpty(input)) return string.Empty;
 
-    // Apply custom replacements if provided
-    if (options.StringReplacements != null)
-      foreach (var replacement in options.StringReplacements) { result = result.Replace(replacement.Key, replacement.Value); }
+        var result = input;
 
-    // Trim whitespace if requested
-    if (options.TrimWhitespace) result = result.Trim();
+        // Apply custom replacements if provided
+        if (options.StringReplacements != null)
+            foreach (var replacement in options.StringReplacements) { result = result.Replace(replacement.Key, replacement.Value); }
 
-    // Convert to snake case using Newtonsoft.Json naming strategy
-    result = NamingStrategy.GetPropertyName(result, false);
+        // Trim whitespace if requested
+        if (options.TrimWhitespace) result = result.Trim();
 
-    // Apply custom separator if provided
-    if (!string.IsNullOrEmpty(options.CustomSeparator) && options.CustomSeparator != "_") result = result.Replace("_", options.CustomSeparator);
+        // Convert to snake case using Newtonsoft.Json naming strategy
+        result = NamingStrategy.GetPropertyName(result, false);
 
-    // Truncate if necessary
-    if (result.Length > options.MaxLength) result = result[..options.MaxLength].TrimEnd('_');
+        // Apply custom separator if provided
+        if (!string.IsNullOrEmpty(options.CustomSeparator) && options.CustomSeparator != "_") result = result.Replace("_", options.CustomSeparator);
 
-    return result;
-  }
+        // Truncate if necessary
+        if (result.Length > options.MaxLength) result = result[..options.MaxLength].TrimEnd('_');
 
-  public override bool IsValidFormat(string input) {
-    if (string.IsNullOrEmpty(input)) return false;
+        return result;
+    }
 
-    // Check if it matches snake_case pattern: lowercase letters, numbers, and underscores
-    // No leading/trailing underscores, no consecutive underscores
-    return SnakeCaseValidationRegex().IsMatch(input);
-  }
+    public override bool IsValidFormat(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return false;
+
+        // Check if it matches snake_case pattern: lowercase letters, numbers, and underscores
+        // No leading/trailing underscores, no consecutive underscores
+        return SnakeCaseValidationRegex().IsMatch(input);
+    }
 }

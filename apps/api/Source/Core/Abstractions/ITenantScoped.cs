@@ -1,5 +1,6 @@
 namespace GameGuild;
 
-public interface ITenantScoped {
-  Guid? TenantId { get; }
+public interface ITenantScoped
+{
+    Guid? TenantId { get; }
 }
