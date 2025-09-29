@@ -1,18 +1,20 @@
-﻿using GameGuild.Authorization.Middleware;
+﻿// using GameGuild.Authorization.Middleware;
+// 
+// 
+// namespace GameGuild;
+// 
+// public static class MiddlewareExtensions {
+//   public static IApplicationBuilder UseRequestContextLogging(this IApplicationBuilder app) {
+//     app.UseMiddleware<RequestContextLoggingMiddleware>();
+// 
+//     return app;
+//   }
+// 
+//   // public static IApplicationBuilder UseExceptionHandler(this IApplicationBuilder app) {
+//   //   app.UseMiddleware<ExceptionHandlingMiddleware>();
+//   // 
+//   //   return app;
+//   // }
+// }
 
 
-namespace GameGuild;
-
-public static class MiddlewareExtensions {
-  public static IApplicationBuilder UseRequestContextLogging(this IApplicationBuilder app) {
-    app.UseMiddleware<RequestContextLoggingMiddleware>();
-
-    return app;
-  }
-
-  // public static IApplicationBuilder UseExceptionHandler(this IApplicationBuilder app) {
-  //   app.UseMiddleware<ExceptionHandlingMiddleware>();
-  // 
-  //   return app;
-  // }
-}
