@@ -1,8 +1,4 @@
-using HotChocolate.Execution;
 using HotChocolate.Language;
-using HotChocolate.Types;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace GameGuild.Core.GraphQL;
@@ -11,15 +7,15 @@ namespace GameGuild.Core.GraphQL;
 /// Middleware for analyzing GraphQL query complexity and depth to prevent resource exhaustion attacks
 /// Implements comprehensive query analysis with configurable limits
 /// </summary>
-public class GraphQLSecurityMiddleware {
-    private readonly Microsoft.AspNetCore.Http.RequestDelegate _next;
+public class GraphQlSecurityMiddleware {
+    private readonly RequestDelegate _next;
     private readonly GraphQlOptions _options;
-    private readonly ILogger<GraphQLSecurityMiddleware> _logger;
+    private readonly ILogger<GraphQlSecurityMiddleware> _logger;
 
-    public GraphQLSecurityMiddleware(
-      Microsoft.AspNetCore.Http.RequestDelegate next,
+    public GraphQlSecurityMiddleware(
+      RequestDelegate next,
       IOptions<GraphQlOptions> options,
-      ILogger<GraphQLSecurityMiddleware> logger) {
+      ILogger<GraphQlSecurityMiddleware> logger) {
         _next = next;
         _options = options.Value;
         _logger = logger;
@@ -27,14 +23,14 @@ public class GraphQLSecurityMiddleware {
 
     public async Task InvokeAsync(HttpContext context) {
         // Only process GraphQL requests
-        if (!IsGraphQLRequest(context)) {
+        if (!IsGraphQlRequest(context)) {
             await _next(context);
             return;
         }
 
         try {
             // Read and analyze the GraphQL query
-            var queryAnalysis = await AnalyzeGraphQLRequestAsync(context);
+            var queryAnalysis = await AnalyzeGraphQlRequestAsync(context);
 
             if (!queryAnalysis.IsValid) {
                 await HandleSecurityViolation(context, queryAnalysis);
@@ -52,15 +48,15 @@ public class GraphQLSecurityMiddleware {
         }
     }
 
-    private bool IsGraphQLRequest(HttpContext context) {
+    private bool IsGraphQlRequest(HttpContext context) {
         return context.Request.Path.StartsWithSegments(_options.Path, StringComparison.OrdinalIgnoreCase);
     }
 
-    private async Task<GraphQLQueryAnalysis> AnalyzeGraphQLRequestAsync(HttpContext context) {
-        var query = await ExtractGraphQLQueryAsync(context);
+    private async Task<GraphQlQueryAnalysis> AnalyzeGraphQlRequestAsync(HttpContext context) {
+        var query = await ExtractGraphQlQueryAsync(context);
 
         if (string.IsNullOrWhiteSpace(query)) {
-            return GraphQLQueryAnalysis.Invalid("Empty query");
+            return GraphQlQueryAnalysis.Invalid("Empty query");
         }
 
         try {
@@ -86,20 +82,20 @@ public class GraphQLSecurityMiddleware {
             violations.AddRange(dosPatterns);
 
             return violations.Count > 0
-              ? GraphQLQueryAnalysis.Invalid(string.Join("; ", violations))
-              : GraphQLQueryAnalysis.Valid(depthAnalysis.MaxDepth, complexityAnalysis.TotalComplexity, complexityAnalysis.FieldCount);
+              ? GraphQlQueryAnalysis.Invalid(string.Join("; ", violations))
+              : GraphQlQueryAnalysis.Valid(depthAnalysis.MaxDepth, complexityAnalysis.TotalComplexity, complexityAnalysis.FieldCount);
         }
         catch (Exception ex) when (ex.Message.Contains("syntax")) {
             _logger.LogWarning("Invalid GraphQL syntax: {Error}", ex.Message);
-            return GraphQLQueryAnalysis.Invalid($"Invalid GraphQL syntax: {ex.Message}");
+            return GraphQlQueryAnalysis.Invalid($"Invalid GraphQL syntax: {ex.Message}");
         }
         catch (Exception ex) {
             _logger.LogError(ex, "Error analyzing GraphQL query");
-            return GraphQLQueryAnalysis.Invalid("Query analysis failed");
+            return GraphQlQueryAnalysis.Invalid("Query analysis failed");
         }
     }
 
-    private async Task<string> ExtractGraphQLQueryAsync(HttpContext context) {
+    private async Task<string> ExtractGraphQlQueryAsync(HttpContext context) {
         context.Request.EnableBuffering();
 
         try {
@@ -143,7 +139,7 @@ public class GraphQLSecurityMiddleware {
         return string.Empty;
     }
 
-    private GraphQLDepthAnalysis AnalyzeDepth(DocumentNode document) {
+    private GraphQlDepthAnalysis AnalyzeDepth(DocumentNode document) {
         var maxDepth = 0;
 
         foreach (var definition in document.Definitions.OfType<OperationDefinitionNode>()) {
@@ -151,7 +147,7 @@ public class GraphQLSecurityMiddleware {
             maxDepth = Math.Max(maxDepth, depth);
         }
 
-        return new GraphQLDepthAnalysis(maxDepth);
+        return new GraphQlDepthAnalysis(maxDepth);
     }
 
     private int CalculateSelectionSetDepth(SelectionSetNode selectionSet, int currentDepth) {
@@ -179,7 +175,7 @@ public class GraphQLSecurityMiddleware {
         return maxDepth;
     }
 
-    private GraphQLComplexityAnalysis AnalyzeComplexity(DocumentNode document) {
+    private GraphQlComplexityAnalysis AnalyzeComplexity(DocumentNode document) {
         var totalComplexity = 0;
         var fieldCount = 0;
 
@@ -189,7 +185,7 @@ public class GraphQLSecurityMiddleware {
             fieldCount += fields;
         }
 
-        return new GraphQLComplexityAnalysis(totalComplexity, fieldCount);
+        return new GraphQlComplexityAnalysis(totalComplexity, fieldCount);
     }
 
     private (int complexity, int fieldCount) CalculateSelectionSetComplexity(SelectionSetNode? selectionSet) {
@@ -347,7 +343,7 @@ public class GraphQLSecurityMiddleware {
           .ToHashSet();
 
         foreach (var fragment in document.Definitions.OfType<FragmentDefinitionNode>()) {
-            if (HasCircularReference(fragment, fragmentNames, new HashSet<string>())) {
+            if (HasCircularReference(fragment, fragmentNames, [])) {
                 return true;
             }
         }
@@ -382,7 +378,7 @@ public class GraphQLSecurityMiddleware {
         return 0;
     }
 
-    private async Task HandleSecurityViolation(HttpContext context, GraphQLQueryAnalysis analysis) {
+    private async Task HandleSecurityViolation(HttpContext context, GraphQlQueryAnalysis analysis) {
         context.Response.StatusCode = 400;
         context.Response.ContentType = "application/json";
 
@@ -409,45 +405,10 @@ public class GraphQLSecurityMiddleware {
         _logger.LogWarning("GraphQL security violation: {Error}", analysis.ErrorMessage);
     }
 
-    private void LogQueryAnalysis(HttpContext context, GraphQLQueryAnalysis analysis) {
+    private void LogQueryAnalysis(HttpContext context, GraphQlQueryAnalysis analysis) {
         if (analysis.IsValid) {
             _logger.LogDebug("GraphQL query analysis - Depth: {Depth}, Complexity: {Complexity}, Fields: {FieldCount}",
               analysis.Depth, analysis.Complexity, analysis.FieldCount);
         }
-    }
-}
-
-public class GraphQLQueryAnalysis {
-    public bool IsValid { get; private set; }
-    public string? ErrorMessage { get; private set; }
-    public int Depth { get; private set; }
-    public int Complexity { get; private set; }
-    public int FieldCount { get; private set; }
-
-    private GraphQLQueryAnalysis(bool isValid, string? errorMessage = null, int depth = 0, int complexity = 0, int fieldCount = 0) {
-        IsValid = isValid;
-        ErrorMessage = errorMessage;
-        Depth = depth;
-        Complexity = complexity;
-        FieldCount = fieldCount;
-    }
-
-    public static GraphQLQueryAnalysis Valid(int depth, int complexity, int fieldCount) =>
-      new(true, null, depth, complexity, fieldCount);
-
-    public static GraphQLQueryAnalysis Invalid(string errorMessage) =>
-      new(false, errorMessage);
-}
-
-public record GraphQLDepthAnalysis(int MaxDepth);
-
-public record GraphQLComplexityAnalysis(int TotalComplexity, int FieldCount);
-
-/// <summary>
-/// Extension methods for adding GraphQL security middleware
-/// </summary>
-public static class GraphQLSecurityMiddlewareExtensions {
-    public static IApplicationBuilder UseGraphQLSecurity(this IApplicationBuilder builder) {
-        return builder.UseMiddleware<GraphQLSecurityMiddleware>();
     }
 }

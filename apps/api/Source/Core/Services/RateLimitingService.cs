@@ -1,21 +1,9 @@
-using System.Net;
 using System.Security.Claims;
-using System.Threading.RateLimiting;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 namespace GameGuild.Core.Services;
-
-/// <summary>
-/// Service for managing rate limiting policies per endpoint, user, and IP
-/// Supports both in-memory and distributed (Redis) rate limiting
-/// </summary>
-public interface IRateLimitingService {
-  Task<RateLimitCheckResult> CheckRateLimitAsync(HttpContext context, string endpoint);
-  Task RecordRequestAsync(HttpContext context, string endpoint);
-  Task<Dictionary<string, object>> GetRateLimitStatsAsync(string? userId = null, string? ipAddress = null);
-}
 
 public class RateLimitingService : IRateLimitingService {
   private readonly RateLimitingOptions _options;
@@ -53,7 +41,7 @@ public class RateLimitingService : IRateLimitingService {
     // Check multiple rate limit scopes
     var checks = new List<Task<RateLimitCheckResult>> {
       CheckGlobalRateLimit(ipAddress),
-      CheckIPRateLimit(ipAddress, endpointConfig),
+      CheckIpRateLimit(ipAddress, endpointConfig),
     };
 
     if (!string.IsNullOrEmpty(userId)) {
@@ -89,7 +77,7 @@ public class RateLimitingService : IRateLimitingService {
 
     var tasks = new List<Task> {
       RecordGlobalRequest(ipAddress),
-      RecordIPRequest(ipAddress, endpointConfig),
+      RecordIpRequest(ipAddress, endpointConfig),
       RecordEndpointRequest(endpoint, endpointConfig)
     };
 
@@ -111,7 +99,7 @@ public class RateLimitingService : IRateLimitingService {
     }
 
     if (!string.IsNullOrEmpty(ipAddress)) {
-      stats["ip"] = await GetIPStatsAsync(ipAddress);
+      stats["ip"] = await GetIpStatsAsync(ipAddress);
     }
 
     stats["global"] = await GetGlobalStatsAsync();
@@ -161,8 +149,8 @@ public class RateLimitingService : IRateLimitingService {
         BurstSize = _options.AuthRequestsPerMinute / 6 // ~10 seconds worth
       },
       var e when e.Contains("/graphql") => new EndpointRateLimitConfig {
-        RequestsPerMinute = _options.GraphQLRequestsPerMinute,
-        BurstSize = _options.GraphQLRequestsPerMinute / 4 // ~15 seconds worth
+        RequestsPerMinute = _options.GraphQlRequestsPerMinute,
+        BurstSize = _options.GraphQlRequestsPerMinute / 4 // ~15 seconds worth
       },
       var e when e.Contains("/payment") => new EndpointRateLimitConfig {
         RequestsPerMinute = _options.PaymentRequestsPerMinute,
@@ -177,11 +165,11 @@ public class RateLimitingService : IRateLimitingService {
 
   private async Task<RateLimitCheckResult> CheckGlobalRateLimit(string ipAddress) {
     var key = $"global_ip:{ipAddress}";
-    return await CheckRateLimit(key, _options.RequestsPerMinutePerIP, _options.BurstSizePerIP, "Global IP limit");
+    return await CheckRateLimit(key, _options.RequestsPerMinutePerIp, _options.BurstSizePerIp, "Global IP limit");
   }
 
-  private async Task<RateLimitCheckResult> CheckIPRateLimit(string ipAddress, EndpointRateLimitConfig config) {
-    if (!config.ApplyToIP) return RateLimitCheckResult.Allow();
+  private async Task<RateLimitCheckResult> CheckIpRateLimit(string ipAddress, EndpointRateLimitConfig config) {
+    if (!config.ApplyToIp) return RateLimitCheckResult.Allow();
 
     var key = $"ip:{ipAddress}";
     return await CheckRateLimit(key, config.RequestsPerMinute, config.BurstSize, "IP limit");
@@ -248,11 +236,11 @@ public class RateLimitingService : IRateLimitingService {
   }
 
   private async Task RecordGlobalRequest(string ipAddress) {
-    await RecordRequest($"global_ip:{ipAddress}", _options.RequestsPerMinutePerIP, _options.BurstSizePerIP);
+    await RecordRequest($"global_ip:{ipAddress}", _options.RequestsPerMinutePerIp, _options.BurstSizePerIp);
   }
 
-  private async Task RecordIPRequest(string ipAddress, EndpointRateLimitConfig config) {
-    if (config.ApplyToIP) {
+  private async Task RecordIpRequest(string ipAddress, EndpointRateLimitConfig config) {
+    if (config.ApplyToIp) {
       await RecordRequest($"ip:{ipAddress}", config.RequestsPerMinute, config.BurstSize);
     }
   }
@@ -310,7 +298,7 @@ public class RateLimitingService : IRateLimitingService {
     return new { userId, message = "User stats not implemented yet" };
   }
 
-  private async Task<object> GetIPStatsAsync(string ipAddress) {
+  private async Task<object> GetIpStatsAsync(string ipAddress) {
     // Return IP-specific rate limit statistics
     return new { ipAddress, message = "IP stats not implemented yet" };
   }
@@ -319,25 +307,4 @@ public class RateLimitingService : IRateLimitingService {
     // Return global rate limit statistics
     return new { message = "Global stats not implemented yet" };
   }
-}
-
-public class RateLimitCheckResult {
-  public bool IsAllowed { get; private set; }
-  public string? Reason { get; private set; }
-  public TimeSpan? RetryAfter { get; private set; }
-
-  private RateLimitCheckResult(bool isAllowed, string? reason = null, TimeSpan? retryAfter = null) {
-    IsAllowed = isAllowed;
-    Reason = reason;
-    RetryAfter = retryAfter;
-  }
-
-  public static RateLimitCheckResult Allow() => new(true);
-  public static RateLimitCheckResult Deny(string reason, TimeSpan? retryAfter = null) => new(false, reason, retryAfter);
-}
-
-public class RateLimitWindow {
-  public DateTimeOffset WindowStart { get; set; } = DateTimeOffset.UtcNow;
-  public int RequestCount { get; set; } = 0;
-  public int TokensRemaining { get; set; } = 0;
 }

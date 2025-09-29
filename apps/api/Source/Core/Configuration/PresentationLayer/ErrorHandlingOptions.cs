@@ -3,7 +3,8 @@ namespace GameGuild;
 /// <summary>
 /// Configuration options for global error handling features
 /// </summary>
-public sealed class ErrorHandlingOptions {
+public sealed class ErrorHandlingOptions
+{
     /// <summary>
     /// Enable enhanced exception handling with detailed error information
     /// </summary>
@@ -22,7 +23,8 @@ public sealed class ErrorHandlingOptions {
     /// <summary>
     /// Validates the configuration options
     /// </summary>
-    public void Validate() {
+    public void Validate()
+    {
         // Validation logic can be added here if needed
         // Currently no validation constraints for boolean flags
     }

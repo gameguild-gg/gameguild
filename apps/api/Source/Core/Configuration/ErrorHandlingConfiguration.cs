@@ -1,15 +1,15 @@
-using GameGuild;
-
 namespace GameGuild.Core.Configuration;
 
 /// <summary>
 /// Configuration for global error handling and RFC 7807 ProblemDetails
 /// </summary>
-public static class ErrorHandlingConfiguration {
+public static class ErrorHandlingConfiguration
+{
     /// <summary>
     /// Configures global error handling with RFC 7807 ProblemDetails
     /// </summary>
-    public static IServiceCollection SetupErrorHandling(this IServiceCollection services, IConfiguration configuration, ErrorHandlingOptions? options = null) {
+    public static IServiceCollection SetupErrorHandling(this IServiceCollection services, IConfiguration configuration, ErrorHandlingOptions? options = null)
+    {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
