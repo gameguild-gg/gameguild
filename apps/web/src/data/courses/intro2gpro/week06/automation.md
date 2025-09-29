@@ -91,14 +91,29 @@ Git Flow:
 
 <iframe src="https://giphy.com/embed/ZgYBhq1x7L1bW" width="480" height="206" style="" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/choose-chose-wisely-ZgYBhq1x7L1bW">via GIPHY</a></p>
 
-- [GitKraken](https://www.gitkraken.com/) is paid but but free for public and personal repos. This is my personal recommendation. The best at solving merge conflics, it even connects to AI to automate the process.
-- [Git Fork](https://www.git-tower.com/students/github) Paid but it is free for students through GitHub Student Developer Pack.
+- [GitKraken](https://www.gitkraken.com/) is paid but but free for public and personal repos. This is my personal recommendation. The best at solving merge conflics, it even connects to AI to automate the process. Lacks Git LFS locking.
+- [Git Fork](https://www.git-tower.com/students/github) Paid but it is free for students through GitHub Student Developer Pack. My choice for Git LFS locking
 - [Sublime Merge](https://www.sublimemerge.com/) Arguably the best free Git GUI tool as far as I could find. Best option if you dont want bureoucratic proccess to enroll to a free version of gitkraken or git fork. It have a solid merge conflict solver.
 - [GitHub Desktop](https://desktop.github.com/) Native and integrated to GitHub ecosystem, chose this if you are willing to marry with GitHub.
 - [SourceTree](https://www.sourcetreeapp.com/) Solid open source git GUI tool.
-- [TortoiseGit](https://tortoisegit.org/) Native and integrated to Windows ecosystem. It is really bad at solving merging conflicts.
+- [TortoiseGit](https://tortoisegit.org/) Native and integrated to Windows ecosystem. It is really bad at solving merging conflicts. Supports Git LFS locking.
+
+| Tool | LFS Locking | Designer-Friendly | Free Option | Best For | Merge Conflict Resolution |
+|------|------------|-------------------|-------------|----------|---------------------------|
+| **Fork** | ✅ Full support | Very good | ❌ Paid only | Teams needing locking | Good - Visual 3-way merge tool |
+| **Tower** | ❌ Not supported | Excellent | ✅ Free for education | Design-first workflows | Excellent - Conflict Wizard with undo |
+| **GitKraken** | ❌ Not supported | Excellent | ✅ Free tier (public repos) | Visual learners | **Amazing - AI-powered suggestions & explanations** |
+| **SmartGit** | ✅ Full support | Moderate | ✅ Free for non-commercial | Technical designers | Very good - Advanced merge tools |
+| **Sublime Merge** | ❌ Not supported | Good | ✅ Unlimited evaluation | Speed-focused developers | Good - 3-way visual editor, no AI |
+| **TortoiseGit** | ✅ Full support | Basic | ✅ Completely free | Windows-only teams | Basic - External merge tool integration |
+| **Sourcetree** | ❌ Not supported | Poor | ✅ Completely free | Atlassian users | Poor - Limited built-in tools |
+| **GitHub Desktop** | ❌ Not supported | Good | ✅ Completely free | GitHub beginners | Basic - Simple conflict highlighting |
 
 ### Subversion (SVN)
+
+::: note 
+
+This section SVN is only here for completeness. You may use SVN for specific and controlled scope. But I don't see any company using it nowadays. Game companies use either git with LFS, perforce, plastic or other in-house solution.
 
 Despite its age, Subversion is still used in many projects, especially in game development with single developers or small teams. It is a **centralized** VCS, which means that all changes are stored in a single server repository. This is useful when you want to have a single source of truth for your project.
 
