@@ -118,6 +118,7 @@ import intro2gproGamedevTools from './intro2gpro/week02/gamedev-tools.md';
 import intro2gproGamedevCareers from './intro2gpro/week03/gamedev-careers.md';
 import intro2gproGamedevIssues from './intro2gpro/week04/gamedev-issues.md';
 import intro2gproGamedevIssuesPresentations from './intro2gpro/week05/gamedev-issues-presentations.md';
+import intro2gproAutomation from './intro2gpro/week06/automation.md';
 
 // Game Publishing Course Imports
 import gamePublishingSyllabus from './game-publishing/syllabus.md';
@@ -300,6 +301,29 @@ export const intro2gproGamedevIssuesPresentationsContent: ProgramContent = {
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
     slug: 'gamedev-issues-presentations',
+};
+
+export const intro2gproAutomationContent: ProgramContent = {
+    id: 'intro2gpro-automation',
+    programId: 'intro2gpro-program-1',
+    parentId: undefined,
+    title: 'Week 06: Automation in Game Development',
+    description: 'Comprehensive guide to automation tools and practices in game development, including version control systems, CI/CD, and development workflows.',
+    type: 0, // Page
+    body: intro2gproAutomation,
+    sortOrder: 8,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 180,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'automation',
 };
 
 // Child content for gamedev-issues
@@ -3784,6 +3808,7 @@ intro2gproProgram.programContents = [
     intro2gproGamedevCareersContent,
     intro2gproGamedevIssuesContent,
     intro2gproGamedevIssuesPresentationsContent,
+    intro2gproAutomationContent,
 ];
 
 gamePublishingProgram.programContents = [
@@ -3803,6 +3828,7 @@ intro2gproGamedevToolsContent.program = intro2gproProgram;
 intro2gproGamedevCareersContent.program = intro2gproProgram;
 intro2gproGamedevIssuesContent.program = intro2gproProgram;
 intro2gproGamedevIssuesPresentationsContent.program = intro2gproProgram;
+intro2gproAutomationContent.program = intro2gproProgram;
 intro2gproTechnicalChallengesContent.program = intro2gproProgram;
 intro2gproDesignChallengesContent.program = intro2gproProgram;
 intro2gproBusinessChallengesContent.program = intro2gproProgram;
