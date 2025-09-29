@@ -115,6 +115,8 @@ Git Flow:
 
 This section SVN is only here for completeness. You may use SVN for specific and controlled scope. But I don't see any company using it nowadays. Game companies use either git with LFS, perforce, plastic or other in-house solution.
 
+:::
+
 Despite its age, Subversion is still used in many projects, especially in game development with single developers or small teams. It is a **centralized** VCS, which means that all changes are stored in a single server repository. This is useful when you want to have a single source of truth for your project.
 
 #### Key Features of SVN:
