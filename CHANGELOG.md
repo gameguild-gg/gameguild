@@ -1,3 +1,11 @@
+# [2.22.0](https://github.com/gameguild-gg/gameguild/compare/v2.21.4...v2.22.0) (2025-09-29)
+
+
+### Features
+
+* **course:** Add 'Automation in Game Development' module to Intro to GPro ([413efd2](https://github.com/gameguild-gg/gameguild/commit/413efd2f6326c6b309811ee1574cbf284d39335e))
+* **mermaid:** Standardize chart background and container styling ([6b1af26](https://github.com/gameguild-gg/gameguild/commit/6b1af26dffc29b13ef4807881acd295b157463ef))
+
 ## [2.21.4](https://github.com/gameguild-gg/gameguild/compare/v2.21.3...v2.21.4) (2025-09-22)
 
 
