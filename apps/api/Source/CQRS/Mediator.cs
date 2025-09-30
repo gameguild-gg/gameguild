@@ -11,9 +11,9 @@ namespace GameGuild.CQRS;
 /// </summary>
 public class Mediator : IMediator {
   // O(1) lookup caches for performance
-  private static readonly ConcurrentDictionary<Type, HandlerMetadata> _handlerCache = new ConcurrentDictionary<Type, HandlerMetadata>();
+  private static readonly ConcurrentDictionary<Type, HandlerMetadata> HandlerCache = new ConcurrentDictionary<Type, HandlerMetadata>();
 
-  private static readonly ConcurrentDictionary<Type, Type> _handlerTypeCache = new ConcurrentDictionary<Type, Type>();
+  private static readonly ConcurrentDictionary<Type, Type> HandlerTypeCache = new ConcurrentDictionary<Type, Type>();
 
   private readonly INotificationPublisher _notificationPublisher;
 
@@ -42,12 +42,12 @@ public class Mediator : IMediator {
     var requestType = request.GetType();
 
     // O(1) lookup for handler type
-    var handlerType = _handlerTypeCache.GetOrAdd(requestType, static rt => typeof(IRequestHandler<,>).MakeGenericType(rt, typeof(TResponse)));
+    var handlerType = HandlerTypeCache.GetOrAdd(requestType, static rt => typeof(IRequestHandler<,>).MakeGenericType(rt, typeof(TResponse)));
 
     var handler = GetHandler(handlerType);
 
     // O(1) lookup for handler metadata with compiled delegate
-    var metadata = _handlerCache.GetOrAdd(
+    var metadata = HandlerCache.GetOrAdd(
       handlerType,
       static ht => {
         var method = ht.GetMethod("Handle");
@@ -81,12 +81,12 @@ public class Mediator : IMediator {
     var requestType = typeof(TRequest);
 
     // O(1) lookup for handler type - IRequest is IRequest<Unit>
-    var handlerType = _handlerTypeCache.GetOrAdd(requestType, static rt => typeof(IRequestHandler<,>).MakeGenericType(rt, typeof(Unit)));
+    var handlerType = HandlerTypeCache.GetOrAdd(requestType, static rt => typeof(IRequestHandler<,>).MakeGenericType(rt, typeof(Unit)));
 
     var handler = GetHandler(handlerType);
 
     // O(1) lookup for handler metadata
-    var metadata = _handlerCache.GetOrAdd(
+    var metadata = HandlerCache.GetOrAdd(
       handlerType,
       static ht => {
         var method = ht.GetMethod("Handle");

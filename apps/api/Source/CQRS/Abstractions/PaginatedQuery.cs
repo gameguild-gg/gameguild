@@ -2,7 +2,7 @@ namespace GameGuild.CQRS;
 
 /// <summary> Base class for paginated queries </summary>
 /// <typeparam name="TResult"> The type of result returned by the query </typeparam>
-public abstract class PaginatedQuery<TResult> : IQuery<GameGuild.PagedResult<TResult>> {
+public abstract class PaginatedQuery<TResult> : IQuery<PagedResult<TResult>> {
   /// <summary> Page number (1-based) </summary>
   public int PageNumber { get; set; } = 1;
 
@@ -25,6 +25,3 @@ public abstract class PaginatedQuery<TResult> : IQuery<GameGuild.PagedResult<TRe
     if (PageSize < 1 || PageSize > 100) throw new ArgumentOutOfRangeException(nameof(PageSize), "Page size must be between 1 and 100");
   }
 }
-
-/// <summary> Sort direction for paginated queries </summary>
-public enum SortDirection { Ascending, Descending }
