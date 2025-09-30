@@ -1,5 +1,3 @@
-using GameGuild.Modules.Permissions;
-
 namespace GameGuild.Core.Domain;
 
 /// <summary>

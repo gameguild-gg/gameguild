@@ -20,7 +20,7 @@ public static class LoggingConfiguration
         Log.Logger = CreateLogger(configuration).CreateLogger();
 
         // Add Serilog to the service collection
-        services.AddSerilog(Log.Logger, dispose : true);
+        services.AddSerilog(Log.Logger, dispose: true);
 
         return services;
     }
@@ -72,25 +72,25 @@ public static class LoggingConfiguration
         // Configure sinks based on environment
         var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 
-        if (environment == "Development") { loggerConfig.WriteTo.Console(outputTemplate : "[{Timestamp:HH:mm:ss} {Level:u3}] [{Module}] {Message:lj} {Properties:j}{NewLine}{Exception}"); }
+        if (environment == "Development") { loggerConfig.WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{Module}] {Message:lj} {Properties:j}{NewLine}{Exception}"); }
         else { loggerConfig.WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter()); }
 
         // Add file logging for all environments
         loggerConfig.WriteTo.File(
-            path : "logs/gameguild-.log",
-            rollingInterval : RollingInterval.Day,
-            retainedFileCountLimit : 30,
-            formatter : new Serilog.Formatting.Json.JsonFormatter(),
-            restrictedToMinimumLevel : LogEventLevel.Information
+            path: "logs/gameguild-.log",
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 30,
+            formatter: new Serilog.Formatting.Json.JsonFormatter(),
+            restrictedToMinimumLevel: LogEventLevel.Information
         );
 
         // Add structured file for errors
         loggerConfig.WriteTo.File(
-            path : "logs/gameguild-errors-.log",
-            rollingInterval : RollingInterval.Day,
-            retainedFileCountLimit : 90,
-            formatter : new Serilog.Formatting.Json.JsonFormatter(),
-            restrictedToMinimumLevel : LogEventLevel.Error
+            path: "logs/gameguild-errors-.log",
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 90,
+            formatter: new Serilog.Formatting.Json.JsonFormatter(),
+            restrictedToMinimumLevel: LogEventLevel.Error
         );
 
         return loggerConfig;
@@ -110,13 +110,13 @@ public static class LoggingConfiguration
 
     private static void EnrichFromRequest(IDiagnosticContext diagnosticContext, HttpContext httpContext)
     {
-        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value ?? "unknown");
         diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
-        diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.FirstOrDefault());
-        diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress?.ToString());
+        diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.FirstOrDefault() ?? "unknown");
+        diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
 
         // Add correlation ID if present
-        if (httpContext.Request.Headers.TryGetValue("X-Correlation-ID", out var correlationId)) { diagnosticContext.Set("CorrelationId", correlationId.FirstOrDefault()); }
+        if (httpContext.Request.Headers.TryGetValue("X-Correlation-ID", out var correlationId)) { diagnosticContext.Set("CorrelationId", correlationId.FirstOrDefault() ?? "unknown"); }
 
         // Add user context if authenticated
         if (httpContext.User?.Identity?.IsAuthenticated == true)

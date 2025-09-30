@@ -127,7 +127,7 @@ public class MfaService(
 
             switch (method)
             {
-                case MfaMethod.Totp :
+                case MfaMethod.Totp:
                     if (string.IsNullOrEmpty(config.TotpSecretKey))
                     {
                         failureReason = "TOTP not configured";
@@ -141,7 +141,7 @@ public class MfaService(
 
                     break;
 
-                case MfaMethod.BackupCode :
+                case MfaMethod.BackupCode:
                     if (string.IsNullOrEmpty(config.BackupCodes))
                     {
                         failureReason = "Backup codes not configured";
@@ -163,7 +163,7 @@ public class MfaService(
 
                     break;
 
-                default : failureReason = "Unsupported MFA method"; break;
+                default: failureReason = "Unsupported MFA method"; break;
             }
 
             if (isValid)
@@ -237,7 +237,7 @@ public class MfaService(
         }
     }
 
-    public async Task<string[ ]> GenerateBackupCodesAsync(Guid userId)
+    public async Task<string[]> GenerateBackupCodesAsync(Guid userId)
     {
         try
         {
@@ -263,7 +263,7 @@ public class MfaService(
         }
     }
 
-    public Task<byte[ ]> GenerateQrCodeAsync(string qrCodeData)
+    public Task<byte[]> GenerateQrCodeAsync(string qrCodeData)
     {
         try
         {

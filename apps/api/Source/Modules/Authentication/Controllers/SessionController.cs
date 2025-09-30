@@ -24,17 +24,17 @@ public class SessionController(ISessionManagementService sessionService, ILogger
             var sessions = await sessionService.GetUserSessionsAsync(userId, true);
 
             var response = sessions.Select(s => new SessionResponse
-                    {
-                        Id = s.Id,
-                        DeviceInfo = ParseDeviceInfo(s.DeviceInfo),
-                        Location = ParseLocation(s.Location),
-                        IpAddress = s.IpAddress,
-                        CreatedAt = s.CreatedAt,
-                        LastUsedAt = s.LastUsedAt,
-                        ExpiresAt = s.ExpiresAt,
-                        IsTrustedDevice = s.IsTrustedDevice,
-                        IsCurrent = IsCurrentSession(s.Id)
-                    }
+            {
+                Id = s.Id,
+                DeviceInfo = ParseDeviceInfo(s.DeviceInfo),
+                Location = ParseLocation(s.Location),
+                IpAddress = s.IpAddress,
+                CreatedAt = s.CreatedAt,
+                LastUsedAt = s.LastUsedAt,
+                ExpiresAt = s.ExpiresAt,
+                IsTrustedDevice = s.IsTrustedDevice,
+                IsCurrent = IsCurrentSession(s.Id)
+            }
                 )
                 .ToList();
 
