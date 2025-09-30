@@ -9,18 +9,17 @@ public class GetUserProfileStatisticsHandler(IUserProfileService userProfileServ
     {
         try
         {
-            logger.LogDebug("Generating user profile statistics for TenantId={TenantId}, FromDate={FromDate}, ToDate={ToDate}, IncludeDeleted={IncludeDeleted}",
-                request.TenantId, request.FromDate, request.ToDate, request.IncludeDeleted);
-
-            UserProfileStatistics statistics = await userProfileService.GetStatisticsAsync(
+            logger.LogDebug(
+                "Generating user profile statistics for TenantId={TenantId}, FromDate={FromDate}, ToDate={ToDate}, IncludeDeleted={IncludeDeleted}",
+                request.TenantId,
                 request.FromDate,
                 request.ToDate,
-                request.TenantId,
                 request.IncludeDeleted
             );
 
-            logger.LogDebug("Generated user profile statistics: Total={Total}, Active={Active}, New={New}",
-                statistics.TotalUserProfiles, statistics.ActiveUserProfiles, statistics.NewUserProfiles);
+            UserProfileStatistics statistics = await userProfileService.GetStatisticsAsync(request.FromDate, request.ToDate, request.TenantId, request.IncludeDeleted);
+
+            logger.LogDebug("Generated user profile statistics: Total={Total}, Active={Active}, New={New}", statistics.TotalUserProfiles, statistics.ActiveUserProfiles, statistics.NewUserProfiles);
 
             return Result.Success(statistics);
         }

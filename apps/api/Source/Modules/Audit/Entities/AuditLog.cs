@@ -3,7 +3,8 @@ namespace GameGuild.Modules.Audit;
 /// <summary>
 /// Audit log entry for tracking security-sensitive operations
 /// </summary>
-public class AuditLog : EntityBase {
+public class AuditLog : EntityBase
+{
     /// <summary>
     /// Type of action being audited
     /// </summary>

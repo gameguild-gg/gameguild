@@ -26,8 +26,6 @@ public interface IAuditService
 
     Task LogTenantIsolationBypassAsync(Guid userId, string reason, object? metadata = null);
 
-
-
     // Privacy audit methods
     Task LogPrivacyOperationAsync(string actionType, Guid userId, string? settingName = null, string? oldValue = null, string? newValue = null, Guid? tenantId = null, object? metadata = null);
 

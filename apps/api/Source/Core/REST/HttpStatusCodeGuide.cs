@@ -3,11 +3,13 @@ namespace GameGuild.Core.REST;
 /// <summary>
 /// HTTP status code guidelines and semantic meanings
 /// </summary>
-public static class HttpStatusCodeGuide {
+public static class HttpStatusCodeGuide
+{
     /// <summary>
     /// 2xx Success - The action was successfully received, understood, and accepted
     /// </summary>
-    public static class Success {
+    public static class Success
+    {
         /// <summary>200 OK - Standard response for successful HTTP requests</summary>
         public const int Ok = 200;
 
@@ -24,7 +26,8 @@ public static class HttpStatusCodeGuide {
     /// <summary>
     /// 3xx Redirection - Further action must be taken to complete the request
     /// </summary>
-    public static class Redirection {
+    public static class Redirection
+    {
         /// <summary>304 Not Modified - Resource has not been modified since last request</summary>
         public const int NotModified = 304;
     }
@@ -32,7 +35,8 @@ public static class HttpStatusCodeGuide {
     /// <summary>
     /// 4xx Client Error - Request contains bad syntax or cannot be fulfilled
     /// </summary>
-    public static class ClientError {
+    public static class ClientError
+    {
         /// <summary>400 Bad Request - Server cannot process request due to client error</summary>
         public const int BadRequest = 400;
 
@@ -64,7 +68,8 @@ public static class HttpStatusCodeGuide {
     /// <summary>
     /// 5xx Server Error - Server failed to fulfill apparently valid request
     /// </summary>
-    public static class ServerError {
+    public static class ServerError
+    {
         /// <summary>500 Internal Server Error - Generic server error</summary>
         public const int InternalServerError = 500;
 

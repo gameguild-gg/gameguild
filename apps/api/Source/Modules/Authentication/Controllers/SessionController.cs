@@ -261,7 +261,7 @@ public class SessionController(ISessionManagementService sessionService, ILogger
         }
     }
 
-    private Guid GetCurrentUserId()
+    private new Guid GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 

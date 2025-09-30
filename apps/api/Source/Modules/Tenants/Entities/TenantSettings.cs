@@ -18,8 +18,7 @@ public class TenantSettings : Resource
     public new virtual Tenant? Tenant { get; set; }
 
     /// <summary> Default language identifier for the tenant </summary>
-    [Required]
-    public Guid DefaultLanguageId { get; set; }
+    public Guid? DefaultLanguageId { get; set; }
 
     /// <summary> Navigation reference to the default language </summary>
     public virtual Language? DefaultLanguage { get; set; }
