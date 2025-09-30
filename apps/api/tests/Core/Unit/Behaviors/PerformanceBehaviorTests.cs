@@ -22,7 +22,7 @@ public class PerformanceBehaviorTests
         _mockLogger = new Mock<ILogger<PerformanceBehavior<TestRequest, Result<string>>>>();
         _mockDateTimeProvider = new Mock<IDateTimeProvider>();
         _mockNext = new Mock<RequestHandlerDelegateBase<Result<string>>>();
-        
+
         _mockDateTimeProvider.Setup(x => x.UtcNow).Returns(_fixedDateTime);
     }
 
@@ -39,7 +39,7 @@ public class PerformanceBehaviorTests
         TestRequest request = new() { Name = "Test" };
         PerformanceBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object, _mockDateTimeProvider.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -57,7 +57,7 @@ public class PerformanceBehaviorTests
         TestRequest request = new() { Name = "Test" };
         PerformanceBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object, _mockDateTimeProvider.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -68,7 +68,7 @@ public class PerformanceBehaviorTests
             x => x.Log(
                 LogLevel.Debug,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("TestRequest") && 
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("TestRequest") &&
                                               v.ToString()!.Contains("Performance")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
@@ -82,7 +82,7 @@ public class PerformanceBehaviorTests
         TestRequest request = new() { Name = "Test" };
         PerformanceBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object, _mockDateTimeProvider.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         // Setup slow response (simulate delay > 1000ms)
         _mockNext.Setup(x => x()).Returns(async () =>
         {
@@ -98,7 +98,7 @@ public class PerformanceBehaviorTests
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("TestRequest") && 
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("TestRequest") &&
                                               v.ToString()!.Contains("Performance")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
@@ -112,7 +112,7 @@ public class PerformanceBehaviorTests
         TestRequest request = new() { Name = "Test" };
         PerformanceBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object, _mockDateTimeProvider.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         // Setup very slow response (simulate delay > 5000ms)
         _mockNext.Setup(x => x()).Returns(async () =>
         {
@@ -128,7 +128,7 @@ public class PerformanceBehaviorTests
             x => x.Log(
                 LogLevel.Error,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("TestRequest") && 
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("TestRequest") &&
                                               v.ToString()!.Contains("Performance")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
@@ -142,7 +142,7 @@ public class PerformanceBehaviorTests
         TestRequest request = new() { Name = "Test" };
         PerformanceBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object, _mockDateTimeProvider.Object);
         InvalidOperationException exception = new("Test exception");
-        
+
         _mockNext.Setup(x => x()).ThrowsAsync(exception);
 
         // Act & Assert
@@ -153,7 +153,7 @@ public class PerformanceBehaviorTests
             x => x.Log(
                 It.IsAny<LogLevel>(),
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("TestRequest") && 
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("TestRequest") &&
                                               v.ToString()!.Contains("Performance")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
@@ -167,7 +167,7 @@ public class PerformanceBehaviorTests
         TestRequest request = new() { Name = "Test" };
         PerformanceBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object, _mockDateTimeProvider.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -191,7 +191,7 @@ public class PerformanceBehaviorTests
         TestRequest request = new() { Name = "Test" };
         PerformanceBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object, _mockDateTimeProvider.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -208,7 +208,7 @@ public class PerformanceBehaviorTests
         TestRequest request = new() { Name = "Test" };
         PerformanceBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object, _mockDateTimeProvider.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -232,7 +232,7 @@ public class PerformanceBehaviorTests
         TestRequest request = new() { Name = "Test" };
         PerformanceBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object, _mockDateTimeProvider.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         const int delayMs = 100;
         _mockNext.Setup(x => x()).Returns(async () =>
         {
