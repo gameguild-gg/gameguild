@@ -96,7 +96,7 @@ public class RequestLoggingMiddleware
             request.EnableBuffering();
             request.Body.Position = 0;
 
-            using var reader = new StreamReader(request.Body, Encoding.UTF8, leaveOpen : true);
+            using var reader = new StreamReader(request.Body, Encoding.UTF8, leaveOpen: true);
             var body = await reader.ReadToEndAsync();
             request.Body.Position = 0;
 
@@ -118,7 +118,10 @@ public class RequestLoggingMiddleware
 
         var responseInfo = new
         {
-            StatusCode = response.StatusCode, ContentType = response.ContentType, ContentLength = response.ContentLength, Headers = _options.LogResponseHeaders ? CaptureHeaders(response.Headers) : null
+            StatusCode = response.StatusCode,
+            ContentType = response.ContentType,
+            ContentLength = response.ContentLength,
+            Headers = _options.LogResponseHeaders ? CaptureHeaders(response.Headers) : null
         };
 
         if (exception != null)
@@ -148,7 +151,7 @@ public class RequestLoggingMiddleware
                 IsSlowRequest = elapsed.TotalMilliseconds > _options.SlowRequestThresholdMs
             }
         );
-        
+
         return Task.CompletedTask;
     }
 
@@ -184,7 +187,7 @@ public class RequestLoggingMiddleware
     {
         var sensitiveHeaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Authorization", "Cookie", "Set-Cookie", "X-API-Key", "X-Auth-Token" };
 
-        return headers.Where(h => !sensitiveHeaders.Contains(h.Key)).ToDictionary(h => h.Key, h => string.Join(", ", (string[ ]) h.Value!), StringComparer.OrdinalIgnoreCase);
+        return headers.Where(h => !sensitiveHeaders.Contains(h.Key)).ToDictionary(h => h.Key, h => string.Join(", ", (string[])h.Value!), StringComparer.OrdinalIgnoreCase);
     }
 
     private static string GetUserAgent(HttpRequest request) { return request.Headers.UserAgent.FirstOrDefault() ?? "Unknown"; }
@@ -192,7 +195,7 @@ public class RequestLoggingMiddleware
     private static string GetClientIpAddress(HttpContext context)
     {
         // Try to get the real client IP from various headers (for reverse proxies)
-        var headers = new[ ] { "X-Forwarded-For", "X-Real-IP", "CF-Connecting-IP" };
+        var headers = new[] { "X-Forwarded-For", "X-Real-IP", "CF-Connecting-IP" };
 
         foreach (var header in headers)
         {

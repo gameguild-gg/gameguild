@@ -6,45 +6,36 @@ namespace GameGuild;
 /// MediatR pipeline behavior that converts FluentValidation failures to Result<T> with Error.
 /// Uses the modern Result<T> pattern instead of throwing exceptions for validation failures.
 /// </summary>
-public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : IBaseRequest
+public class ValidationBehavior<TRequest, TResponse>(IEnumerable<FluentValidation.IValidator<TRequest>> validators, ILogger<ValidationBehavior<TRequest, TResponse>> logger) : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : IBaseRequest
 {
-    private readonly IEnumerable<FluentValidation.IValidator<TRequest>> _validators;
-
-    private readonly ILogger<ValidationBehavior<TRequest, TResponse>> _logger;
-
-    public ValidationBehavior(IEnumerable<FluentValidation.IValidator<TRequest>> validators, ILogger<ValidationBehavior<TRequest, TResponse>> logger)
-    {
-        _validators = validators;
-        _logger = logger;
-    }
-
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(next);
 
         var requestName = typeof(TRequest).Name;
-        _logger.LogDebug("Validating request {RequestName}", requestName);
+        logger.LogDebug("Validating request {RequestName}", requestName);
 
-        if (!_validators.Any())
+        if (!validators.Any())
         {
-            _logger.LogDebug("No validators found for {RequestName}", requestName);
+            logger.LogDebug("No validators found for {RequestName}", requestName);
 
             return await next().ConfigureAwait(false);
         }
 
         var context = new FluentValidation.ValidationContext<TRequest>(request);
-        var validationResults = await Task.WhenAll(_validators.Select(v => v.ValidateAsync(context, cancellationToken))).ConfigureAwait(false);
+        var validationResults = await Task.WhenAll(validators.Select(v => v.ValidateAsync(context, cancellationToken))).ConfigureAwait(false);
 
         var failures = validationResults.Where(r => !r.IsValid).SelectMany(r => r.Errors).ToArray();
 
         if (failures.Length == 0)
         {
-            _logger.LogDebug("Validation passed for {RequestName}", requestName);
+            logger.LogDebug("Validation passed for {RequestName}", requestName);
 
             return await next().ConfigureAwait(false);
         }
 
-        _logger.LogWarning("Validation failed for {RequestName} with {ErrorCount} errors", requestName, failures.Length);
+        logger.LogWarning("Validation failed for {RequestName} with {ErrorCount} errors", requestName, failures.Length);
 
         // Convert FluentValidation failures to our unified Error format
         var errors = failures.Select(f => Error.ValidationFailure(f.PropertyName, f.ErrorMessage, f.AttemptedValue)).ToArray();
@@ -66,7 +57,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
         // For non-Result types, we cannot return validation errors properly
         // Log this as an error since all new code should use Result<T>
-        _logger.LogError("Cannot handle validation errors for non-Result response type: {ResponseType}. Please update to use Result<T>", typeof(TResponse).Name);
+        logger.LogError("Cannot handle validation errors for non-Result response type: {ResponseType}. Please update to use Result<T>", typeof(TResponse).Name);
         var errorMessage = string.Join("; ", errors.Select(e => $"{e.GetProperty()}: {e.Message}"));
 
         throw new InvalidOperationException($"Validation failed but cannot return Result: {errorMessage}");

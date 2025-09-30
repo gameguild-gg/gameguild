@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using GameGuild.Modules.Core.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,9 +20,10 @@ public class AuditController(IAuditService auditService, ILogger<AuditController
         try
         {
             var adminUserId = GetCurrentUserId();
+            if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
 
             // Log admin access to audit logs
-            await auditService.LogAdminActionAsync(adminUserId, "ViewAuditLogs", "Admin accessed audit logs", new { Filters = request, RequestedBy = adminUserId });
+            await auditService.LogAdminActionAsync(adminUserId.Value, "ViewAuditLogs", "Admin accessed audit logs", new { Filters = request, RequestedBy = adminUserId.Value });
 
             var query = new AuditLogQuery
             {
@@ -65,8 +65,9 @@ public class AuditController(IAuditService auditService, ILogger<AuditController
         try
         {
             var adminUserId = GetCurrentUserId();
+            if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
 
-            await auditService.LogAdminActionAsync(adminUserId, "ViewAuditStatistics", "Admin accessed audit statistics");
+            await auditService.LogAdminActionAsync(adminUserId.Value, "ViewAuditStatistics", "Admin accessed audit statistics");
 
             var startDate = request.StartDate ?? DateTime.UtcNow.AddDays(-30);
             var endDate = request.EndDate ?? DateTime.UtcNow;
@@ -113,8 +114,9 @@ public class AuditController(IAuditService auditService, ILogger<AuditController
         try
         {
             var adminUserId = GetCurrentUserId();
+            if (!adminUserId.HasValue) throw new UnauthorizedAccessException("User not authenticated");
 
-            await auditService.LogAdminActionAsync(adminUserId, "ExportAuditLogs", "Admin exported audit logs", new { ExportRequest = request, RequestedBy = adminUserId });
+            await auditService.LogAdminActionAsync(adminUserId.Value, "ExportAuditLogs", "Admin exported audit logs", new { ExportRequest = request, RequestedBy = adminUserId.Value });
 
             var query = new AuditLogQuery
             {

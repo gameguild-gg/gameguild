@@ -126,7 +126,7 @@ public partial class RateLimitingMiddleware
         if (checkResult.RetryAfter.HasValue)
         {
             var retryAfterSeconds = (int) Math.Ceiling(checkResult.RetryAfter.Value.TotalSeconds);
-            context.Response.Headers["Retry-After"] = retryAfterSeconds.ToString();
+            context.Response.Headers.RetryAfter = retryAfterSeconds.ToString();
             context.Response.Headers["X-RateLimit-Reset"] = DateTimeOffset.UtcNow.Add(checkResult.RetryAfter.Value).ToUnixTimeSeconds().ToString();
         }
 

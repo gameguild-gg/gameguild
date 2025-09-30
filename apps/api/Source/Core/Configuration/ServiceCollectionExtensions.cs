@@ -524,7 +524,8 @@ public static class ServiceCollectionExtensions
                 InfrastructureConfiguration.ConfigureDbContext(options, dbOptions);
 
                 // Enable sensitive data logging only in development for pooled contexts
-                if (dbOptions.EnableSensitiveDataLogging) { options.EnableSensitiveDataLogging(); }
+                var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")?.Equals("Development", StringComparison.OrdinalIgnoreCase) == true;
+                if (dbOptions.EnableSensitiveDataLogging && isDevelopment) { options.EnableSensitiveDataLogging(); }
 
                 // Enable query splitting for better performance with complex includes
                 // options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);  // DISABLED: Method doesn't exist in current EF version

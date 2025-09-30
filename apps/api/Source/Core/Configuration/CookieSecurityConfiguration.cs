@@ -62,7 +62,7 @@ public static class CookieSecurityConfiguration
                 // Configure for API scenarios
                 authOptions.Events.OnRedirectToLogin = context =>
                 {
-                    if (context.Request.Path.StartsWithSegments("/api") || context.Request.Headers.Accept.Any(h => h.Contains("application/json")))
+                    if (context.Request.Path.StartsWithSegments("/api") || context.Request.Headers.Accept.Any(h => h != null && h.Contains("application/json")))
                     {
                         context.Response.StatusCode = 401;
 
@@ -74,7 +74,7 @@ public static class CookieSecurityConfiguration
 
                 authOptions.Events.OnRedirectToAccessDenied = context =>
                 {
-                    if (context.Request.Path.StartsWithSegments("/api") || context.Request.Headers.Accept.Any(h => h.Contains("application/json")))
+                    if (context.Request.Path.StartsWithSegments("/api") || context.Request.Headers.Accept.Any(h => h != null && h.Contains("application/json")))
                     {
                         context.Response.StatusCode = 403;
 
@@ -153,7 +153,7 @@ public static class CookieSecurityConfiguration
     {
         if (string.IsNullOrEmpty(cookieName)) return false;
 
-        var sensitiveNames = new[ ] { "auth", "session", "token", "csrf", "xsrf", "identity", "__requestverificationtoken" };
+        var sensitiveNames = new[] { "auth", "session", "token", "csrf", "xsrf", "identity", "__requestverificationtoken" };
 
         return sensitiveNames.Any(name => cookieName.ToLowerInvariant().Contains(name));
     }
