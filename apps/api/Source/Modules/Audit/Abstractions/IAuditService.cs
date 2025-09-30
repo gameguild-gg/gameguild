@@ -26,10 +26,7 @@ public interface IAuditService
 
     Task LogTenantIsolationBypassAsync(Guid userId, string reason, object? metadata = null);
 
-    // Role template audit methods
-    Task LogRoleTemplateOperationAsync(string actionType, Guid roleTemplateId, Guid? tenantId = null, Guid? userId = null, string? description = null, object? metadata = null, bool success = true);
 
-    Task LogTenantRoleOperationAsync(string actionType, Guid userId, Guid tenantId, string roleName, object? metadata = null, bool success = true);
 
     // Privacy audit methods
     Task LogPrivacyOperationAsync(string actionType, Guid userId, string? settingName = null, string? oldValue = null, string? newValue = null, Guid? tenantId = null, object? metadata = null);
