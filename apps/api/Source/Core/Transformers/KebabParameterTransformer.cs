@@ -1,6 +1,6 @@
 namespace GameGuild;
 
-/// <summary> Transforms route parameters from PascalCase to kebab-case Example: "TenantRoles" becomes "tenant-roles" </summary>
+/// <summary> Transforms route parameters from PascalCase to kebab-case Example: "TenantUsers" becomes "tenant-users" </summary>
 public class KebabParameterTransformer : IOutboundParameterTransformer
 {
     private static readonly KebabCaseTransformer Transformer = new();
