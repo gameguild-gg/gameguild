@@ -1,7 +1,8 @@
 ﻿namespace GameGuild.Core.Domain.Permissions;
 
 /// <summary> Individual permission layer in the hierarchy </summary>
-public class PermissionLayer {
+public class PermissionLayer
+{
     public PermissionSource Source { get; set; }
 
     public bool? IsGranted { get; set; }

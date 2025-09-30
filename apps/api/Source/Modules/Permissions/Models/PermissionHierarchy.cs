@@ -1,7 +1,8 @@
 ﻿namespace GameGuild.Core.Domain.Permissions;
 
 /// <summary> Permission hierarchy for debugging and audit </summary>
-public class PermissionHierarchy {
+public class PermissionHierarchy
+{
     public PermissionType Permission { get; set; }
 
     public Guid UserId { get; set; }

@@ -3,7 +3,8 @@
 namespace GameGuild.Core.Domain.Permissions;
 
 /// <summary> Testing Lab specific permissions result </summary>
-public class TestingLabPermissions {
+public class TestingLabPermissions
+{
     public bool CanCreateSessions { get; set; }
 
     public bool CanEditSessions { get; set; }

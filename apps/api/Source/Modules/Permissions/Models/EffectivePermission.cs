@@ -1,7 +1,8 @@
 ﻿namespace GameGuild.Core.Domain.Permissions;
 
 /// <summary> Effective permission with all metadata </summary>
-public class EffectivePermission {
+public class EffectivePermission
+{
     public PermissionType Permission { get; set; }
 
     public bool IsGranted { get; set; }

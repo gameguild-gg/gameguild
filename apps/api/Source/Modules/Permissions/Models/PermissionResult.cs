@@ -1,7 +1,8 @@
 ﻿namespace GameGuild.Core.Domain.Permissions;
 
 /// <summary> Detailed permission resolution result </summary>
-public class PermissionResult {
+public class PermissionResult
+{
     public bool IsGranted { get; set; }
 
     public bool IsExplicitlyDenied { get; set; }

@@ -1,7 +1,8 @@
 ﻿namespace GameGuild.Core.Domain.Permissions;
 
 /// <summary> Source of permission grant/denial </summary>
-public enum PermissionSource {
+public enum PermissionSource
+{
     None = 0,
 
     GlobalDefault = 1,
