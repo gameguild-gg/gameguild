@@ -114,7 +114,14 @@ public class AuditService(ApplicationDbContext context, IHttpContextAccessor htt
         await LogAsync(
             new CreateAuditLogRequest
             {
-                ActionType = actionType, ResourceType = "System", UserId = userId, Description = description, Metadata = metadata, Success = true, RiskLevel = AuditRiskLevel.High, Category = AuditCategory.Admin
+                ActionType = actionType,
+                ResourceType = "System",
+                UserId = userId,
+                Description = description,
+                Metadata = metadata,
+                Success = true,
+                RiskLevel = AuditRiskLevel.High,
+                Category = AuditCategory.Admin
             }
         );
     }
@@ -172,43 +179,9 @@ public class AuditService(ApplicationDbContext context, IHttpContextAccessor htt
         );
     }
 
-    public async Task LogRoleTemplateOperationAsync(string actionType, Guid roleTemplateId, Guid? tenantId = null, Guid? userId = null, string? description = null, object? metadata = null, bool success = true)
-    {
-        await LogAsync(
-            new CreateAuditLogRequest
-            {
-                ActionType = actionType,
-                ResourceType = "RoleTemplate",
-                ResourceId = roleTemplateId.ToString(),
-                UserId = userId,
-                TenantId = tenantId,
-                Description = description ?? $"Role template operation: {actionType}",
-                Metadata = metadata,
-                Success = success,
-                RiskLevel = AuditRiskLevel.Medium,
-                Category = AuditCategory.RoleTemplate
-            }
-        );
-    }
 
-    public async Task LogTenantRoleOperationAsync(string actionType, Guid userId, Guid tenantId, string roleName, object? metadata = null, bool success = true)
-    {
-        await LogAsync(
-            new CreateAuditLogRequest
-            {
-                ActionType = actionType,
-                ResourceType = "TenantRole",
-                ResourceId = $"{tenantId}:{roleName}",
-                UserId = userId,
-                TenantId = tenantId,
-                Description = $"Tenant role {actionType}: {roleName} for user {userId}",
-                Metadata = new { RoleName = roleName, AdditionalMetadata = metadata },
-                Success = success,
-                RiskLevel = AuditRiskLevel.Medium,
-                Category = AuditCategory.RoleTemplate
-            }
-        );
-    }
+
+
 
     public async Task LogPrivacyOperationAsync(string actionType, Guid userId, string? settingName = null, string? oldValue = null, string? newValue = null, Guid? tenantId = null, object? metadata = null)
     {
