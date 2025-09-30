@@ -6,11 +6,13 @@ namespace GameGuild.Modules.Tenants;
 ///     Service implementation for tenant domains management operations
 ///     Follows hexagonal architecture principles as an adapter (implementation)
 /// </summary>
-public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRepository tenantRepository, ITenantCacheService cacheService, ILogger<TenantDomainsService> logger) : ITenantDomainsService
+public partial class TenantDomainsService(ITenantDomainsRepository repository, ITenantRepository tenantRepository, ITenantCacheService cacheService, ILogger<TenantDomainsService> logger) : ITenantDomainsService
 {
-    private static readonly Regex DomainPattern = new(@"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$", RegexOptions.Compiled);
+    [GeneratedRegex(@"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$", RegexOptions.Compiled)]
+    private static partial Regex DomainPattern();
 
-    private static readonly Regex SubdomainPattern = new(@"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$", RegexOptions.Compiled);
+    [GeneratedRegex(@"^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$", RegexOptions.Compiled)]
+    private static partial Regex SubdomainPattern();
 
     public async Task<IReadOnlyList<TenantDomain>> GetTenantDomainsAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
@@ -40,8 +42,14 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
 
         TenantDomain? domain = await repository.GetTenantDomainByIdAsync(domainId, cancellationToken);
 
-        if (domain != null) { logger.LogDebug("Found tenant domain: {FullDomain}", domain.FullDomainName); }
-        else { logger.LogDebug("Tenant domain not found: {DomainId}", domainId); }
+        if (domain != null)
+        {
+            logger.LogDebug("Found tenant domain: {FullDomain}", domain.FullDomainName);
+        }
+        else
+        {
+            logger.LogDebug("Tenant domain not found: {DomainId}", domainId);
+        }
 
         return domain;
     }
@@ -51,7 +59,7 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
         logger.LogDebug("Creating tenant domain for tenant {TenantId}: {Subdomain}.{TopLevel}", tenantId, subdomain, topLevelDomain);
 
         // Validate domain
-        DomainValidationResult validationResult = await ValidateDomainAsync(topLevelDomain, subdomain, cancellationToken : cancellationToken);
+        DomainValidationResult validationResult = await ValidateDomainAsync(topLevelDomain, subdomain, cancellationToken: cancellationToken);
 
         if (!validationResult.IsValid || !validationResult.IsAvailable)
         {
@@ -63,7 +71,10 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
         // Verify tenant exists
         Tenant? tenant = await tenantRepository.GetByIdAsync(tenantId, cancellationToken);
 
-        if (tenant == null) { throw new ArgumentException($"Tenant not found: {tenantId}"); }
+        if (tenant == null)
+        {
+            throw new ArgumentException($"Tenant not found: {tenantId}");
+        }
 
         // Create domain
         TenantDomain newDomain = new() { TenantId = tenantId, TopLevelDomain = topLevelDomain.ToLowerInvariant(), Subdomain = subdomain?.ToLowerInvariant(), IsMainDomain = isMainDomain };
@@ -71,7 +82,10 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
         TenantDomain createdDomain = await repository.CreateTenantDomainAsync(newDomain, cancellationToken);
 
         // If this is main domain, unset other main domains for this tenant
-        if (isMainDomain) { await UnsetOtherMainDomainsAsync(tenantId, createdDomain.Id, cancellationToken); }
+        if (isMainDomain)
+        {
+            await UnsetOtherMainDomainsAsync(tenantId, createdDomain.Id, cancellationToken);
+        }
 
         // Refresh cache
         await cacheService.RefreshTenantDomainsAsync(tenantId, cancellationToken);
@@ -88,7 +102,10 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
         // Get existing domain
         TenantDomain? existingDomain = await repository.GetTenantDomainByIdAsync(domainId, cancellationToken);
 
-        if (existingDomain == null) { throw new ArgumentException($"Tenant domain not found: {domainId}"); }
+        if (existingDomain == null)
+        {
+            throw new ArgumentException($"Tenant domain not found: {domainId}");
+        }
 
         // Validate domain (exclude current domain from availability check)
         DomainValidationResult validationResult = await ValidateDomainAsync(topLevelDomain, subdomain, domainId, cancellationToken);
@@ -108,7 +125,10 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
         TenantDomain updatedDomain = await repository.UpdateTenantDomainAsync(existingDomain, cancellationToken);
 
         // If this is main domain, unset other main domains for this tenant
-        if (isMainDomain) { await UnsetOtherMainDomainsAsync(existingDomain.TenantId, domainId, cancellationToken); }
+        if (isMainDomain)
+        {
+            await UnsetOtherMainDomainsAsync(existingDomain.TenantId, domainId, cancellationToken);
+        }
 
         // Refresh cache
         await cacheService.RefreshTenantDomainsAsync(existingDomain.TenantId, cancellationToken);
@@ -150,8 +170,14 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
 
         TenantDomain? domain = await repository.FindTenantDomainByMatchAsync(topLevelDomain, subdomain, cancellationToken);
 
-        if (domain != null) { logger.LogDebug("Found tenant domain: {FullDomain} for tenant: {TenantId}", domain.FullDomainName, domain.TenantId); }
-        else { logger.LogDebug("Tenant domain not found for: {Subdomain}.{TopLevel}", subdomain, topLevelDomain); }
+        if (domain != null)
+        {
+            logger.LogDebug("Found tenant domain: {FullDomain} for tenant: {TenantId}", domain.FullDomainName, domain.TenantId);
+        }
+        else
+        {
+            logger.LogDebug("Tenant domain not found for: {Subdomain}.{TopLevel}", subdomain, topLevelDomain);
+        }
 
         return domain;
     }
@@ -162,11 +188,17 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
 
         TenantDomain? domain = await FindTenantDomainByMatchAsync(topLevelDomain, subdomain, cancellationToken);
 
-        if (domain == null) { return null; }
+        if (domain == null)
+        {
+            return null;
+        }
 
         Tenant? tenant = await tenantRepository.GetByIdAsync(domain.TenantId, cancellationToken);
 
-        if (tenant != null) { logger.LogDebug("Found tenant {TenantSlug} for domain: {FullDomain}", tenant.Slug, domain.FullDomainName); }
+        if (tenant != null)
+        {
+            logger.LogDebug("Found tenant {TenantSlug} for domain: {FullDomain}", tenant.Slug, domain.FullDomainName);
+        }
 
         return tenant;
     }
@@ -183,7 +215,10 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
         // Get domain
         TenantDomain? domain = await repository.GetTenantDomainByIdAsync(domainId, cancellationToken);
 
-        if (domain == null) { throw new ArgumentException($"Tenant domain not found: {domainId}"); }
+        if (domain == null)
+        {
+            throw new ArgumentException($"Tenant domain not found: {domainId}");
+        }
 
         // Set as main domain
         domain.IsMainDomain = true;
@@ -204,11 +239,17 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
     {
         logger.LogDebug("Getting primary tenant domain for tenant: {TenantId}", tenantId);
 
-        var domains = await GetTenantDomainsAsync(tenantId, cancellationToken);
+        IReadOnlyList<TenantDomain> domains = await GetTenantDomainsAsync(tenantId, cancellationToken);
         TenantDomain? primaryDomain = domains.FirstOrDefault(d => d.IsMainDomain);
 
-        if (primaryDomain != null) { logger.LogDebug("Found primary domain for tenant {TenantId}: {FullDomain}", tenantId, primaryDomain.FullDomainName); }
-        else { logger.LogDebug("No primary domain found for tenant: {TenantId}", tenantId); }
+        if (primaryDomain != null)
+        {
+            logger.LogDebug("Found primary domain for tenant {TenantId}: {FullDomain}", tenantId, primaryDomain.FullDomainName);
+        }
+        else
+        {
+            logger.LogDebug("No primary domain found for tenant: {TenantId}", tenantId);
+        }
 
         return primaryDomain;
     }
@@ -218,19 +259,34 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
         List<string> errors = [];
 
         // Validate top-level domain format
-        if (string.IsNullOrWhiteSpace(topLevelDomain)) { errors.Add("Top-level domain is required"); }
-        else if (!DomainPattern.IsMatch(topLevelDomain)) { errors.Add("Invalid top-level domain format"); }
+        if (string.IsNullOrWhiteSpace(topLevelDomain))
+        {
+            errors.Add("Top-level domain is required");
+        }
+        else if (!DomainPattern().IsMatch(topLevelDomain))
+        {
+            errors.Add("Invalid top-level domain format");
+        }
 
         // Validate subdomain format if provided
-        if (!string.IsNullOrWhiteSpace(subdomain) && !SubdomainPattern.IsMatch(subdomain)) { errors.Add("Invalid subdomain format"); }
+        if (!string.IsNullOrWhiteSpace(subdomain) && !SubdomainPattern().IsMatch(subdomain))
+        {
+            errors.Add("Invalid subdomain format");
+        }
 
         // If format validation failed, return early
-        if (errors.Count > 0) { return DomainValidationResult.Failure(errors.ToArray()); }
+        if (errors.Count > 0)
+        {
+            return DomainValidationResult.Failure([.. errors]);
+        }
 
         // Check availability
         bool isAvailable = await IsDomainAvailableAsync(topLevelDomain, subdomain, excludeDomainId, cancellationToken);
 
-        if (!isAvailable) { return DomainValidationResult.Unavailable(); }
+        if (!isAvailable)
+        {
+            return DomainValidationResult.Unavailable();
+        }
 
         return DomainValidationResult.Success();
     }
@@ -239,7 +295,7 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
     {
         logger.LogDebug("Getting all tenant domains");
 
-        var allDomains = await repository.GetAllTenantDomainsAsync(cancellationToken);
+        IReadOnlyList<TenantDomain> allDomains = await repository.GetAllTenantDomainsAsync(cancellationToken);
 
         logger.LogDebug("Retrieved {Count} tenant domains", allDomains.Count);
 
@@ -248,12 +304,12 @@ public class TenantDomainsService(ITenantDomainsRepository repository, ITenantRe
 
     private async Task UnsetOtherMainDomainsAsync(Guid tenantId, Guid excludeDomainId, CancellationToken cancellationToken)
     {
-        var domains = await repository.GetTenantDomainsAsync(tenantId, cancellationToken);
+        IReadOnlyList<TenantDomain> domains = await repository.GetTenantDomainsAsync(tenantId, cancellationToken);
 
         foreach (TenantDomain domain in domains.Where(d => d.IsMainDomain && d.Id != excludeDomainId))
         {
             domain.IsMainDomain = false;
-            await repository.UpdateTenantDomainAsync(domain, cancellationToken);
+            _ = await repository.UpdateTenantDomainAsync(domain, cancellationToken);
         }
     }
 }

@@ -119,15 +119,18 @@ public class RateLimitingService : IRateLimitingService
         {
             var e when e.Contains("/auth/") => new EndpointRateLimitConfig
             {
-                RequestsPerMinute = _options.AuthRequestsPerMinute, BurstSize = _options.AuthRequestsPerMinute / 6 // ~10 seconds worth
+                RequestsPerMinute = _options.AuthRequestsPerMinute,
+                BurstSize = _options.AuthRequestsPerMinute / 6 // ~10 seconds worth
             },
             var e when e.Contains("/graphql") => new EndpointRateLimitConfig
             {
-                RequestsPerMinute = _options.GraphQlRequestsPerMinute, BurstSize = _options.GraphQlRequestsPerMinute / 4 // ~15 seconds worth
+                RequestsPerMinute = _options.GraphQlRequestsPerMinute,
+                BurstSize = _options.GraphQlRequestsPerMinute / 4 // ~15 seconds worth
             },
             var e when e.Contains("/payment") => new EndpointRateLimitConfig
             {
-                RequestsPerMinute = _options.PaymentRequestsPerMinute, BurstSize = _options.PaymentRequestsPerMinute / 5 // ~12 seconds worth
+                RequestsPerMinute = _options.PaymentRequestsPerMinute,
+                BurstSize = _options.PaymentRequestsPerMinute / 5 // ~12 seconds worth
             },
             _ => new EndpointRateLimitConfig { RequestsPerMinute = _options.RequestsPerMinute, BurstSize = _options.BurstSize }
         };

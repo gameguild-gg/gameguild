@@ -26,6 +26,6 @@ public class TenantSettingsConfiguration : IEntityTypeConfiguration<TenantSettin
 
         // Relationships
         _ = builder.HasOne(ts => ts.Tenant).WithMany().HasForeignKey(ts => ts.TenantId).OnDelete(DeleteBehavior.Cascade);
-        _ = builder.HasOne(ts => ts.DefaultLanguage).WithMany().HasForeignKey(ts => ts.DefaultLanguageId).OnDelete(DeleteBehavior.Restrict);
+        _ = builder.HasOne(ts => ts.DefaultLanguage).WithMany().HasForeignKey(ts => ts.DefaultLanguageId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
     }
 }
