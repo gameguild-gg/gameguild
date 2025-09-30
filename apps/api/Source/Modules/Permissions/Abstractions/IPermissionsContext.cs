@@ -1,7 +1,8 @@
 ﻿namespace GameGuild.Core.Domain.Identity;
 
 /// <summary> Context interface for permissions checking within a request scope </summary>
-public interface IPermissionsContext {
+public interface IPermissionsContext
+{
     /// <summary> Gets the current user ID from the context </summary>
     Guid? UserId { get; }
 
