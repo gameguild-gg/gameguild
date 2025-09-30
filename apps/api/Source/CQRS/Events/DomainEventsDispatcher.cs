@@ -2,7 +2,7 @@
 
 namespace GameGuild.CQRS;
 
-internal sealed class DomainEventsDispatcher(IServiceProvider serviceProvider) : IDomainEventsDispatcher
+public sealed class DomainEventsDispatcher(IServiceProvider serviceProvider) : IDomainEventsDispatcher
 {
     private static readonly ConcurrentDictionary<Type, Type> HandlerTypeDictionary = new ConcurrentDictionary<Type, Type>();
 
@@ -38,14 +38,14 @@ internal sealed class DomainEventsDispatcher(IServiceProvider serviceProvider) :
         {
             var wrapperType = WrapperTypeDictionary.GetOrAdd(domainEventType, type => typeof(HandlerWrapper<>).MakeGenericType(type));
 
-            return (HandlerWrapper) (Activator.CreateInstance(wrapperType, handler) ?? throw new InvalidOperationException($"Failed to create handler wrapper for type {domainEventType.Name}"));
+            return (HandlerWrapper)(Activator.CreateInstance(wrapperType, handler) ?? throw new InvalidOperationException($"Failed to create handler wrapper for type {domainEventType.Name}"));
         }
     }
 
     private sealed class HandlerWrapper<T>(object handler) : HandlerWrapper where T : IDomainEvent
     {
-        private readonly IDomainEventHandler<T> _handler = (IDomainEventHandler<T>) handler;
+        private readonly IDomainEventHandler<T> _handler = (IDomainEventHandler<T>)handler;
 
-        public override async Task Handle(IDomainEvent domainEvent, CancellationToken cancellationToken) { await _handler.Handle((T) domainEvent, cancellationToken); }
+        public override async Task Handle(IDomainEvent domainEvent, CancellationToken cancellationToken) { await _handler.Handle((T)domainEvent, cancellationToken); }
     }
 }

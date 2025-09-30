@@ -26,6 +26,7 @@ public class Mediator : IMediator
     /// <param name="notificationPublisher">Notification publisher</param>
     public Mediator(ServiceFactory serviceFactory, INotificationPublisher? notificationPublisher = null)
     {
+        ArgumentNullException.ThrowIfNull(serviceFactory);
         _serviceFactory = serviceFactory;
         _notificationPublisher = notificationPublisher ?? new ForeachAwaitPublisher();
     }
@@ -66,7 +67,7 @@ public class Mediator : IMediator
         {
             var result = await metadata.CompiledInvoker(handler, [request, cancellationToken]).ConfigureAwait(false);
 
-            return (TResponse) result!;
+            return (TResponse)result!;
         }
 
         // Fallback to reflection (should rarely happen)
@@ -209,7 +210,7 @@ public class Mediator : IMediator
         if (handlers != null)
         {
             // Convert to array once for efficient enumeration - O(n)
-            var handlerArray = handlers as INotificationHandler<TNotification>[ ] ?? handlers.ToArray();
+            var handlerArray = handlers as INotificationHandler<TNotification>[] ?? handlers.ToArray();
 
             if (handlerArray.Length > 0)
             {
@@ -306,7 +307,7 @@ public class Mediator : IMediator
     /// <summary>
     /// Creates a compiled delegate for fast method invocation - O(1) after compilation
     /// </summary>
-    private static Func<object, object[ ], Task<object?>>? CreateCompiledInvoker<TResponse>(MethodInfo method)
+    private static Func<object, object[], Task<object?>>? CreateCompiledInvoker<TResponse>(MethodInfo method)
     {
         try
         {
@@ -338,7 +339,7 @@ public class Mediator : IMediator
     /// <summary>
     /// Creates a compiled delegate for Unit returns - O(1) after compilation
     /// </summary>
-    private static Func<object, object[ ], Task<object?>>? CreateCompiledInvokerUnit(MethodInfo method)
+    private static Func<object, object[], Task<object?>>? CreateCompiledInvokerUnit(MethodInfo method)
     {
         try
         {
