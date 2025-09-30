@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using FluentAssertions;
@@ -275,7 +276,7 @@ public class MediatorPerformanceTests : IDisposable
 
     public class PerformanceStreamHandler : IStreamRequestHandler<PerformanceStreamRequest, string>
     {
-        public async IAsyncEnumerable<string> Handle(PerformanceStreamRequest request, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<string> Handle(PerformanceStreamRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             for (int i = 0; i < request.Count; i++)
             {
@@ -367,7 +368,7 @@ public class BenchmarkRunner
 {
     public static void RunBenchmarks()
     {
-        var summary = BenchmarkRunner.Run<MediatorBenchmarks>();
+        var summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<MediatorBenchmarks>();
         Console.WriteLine(summary);
     }
 }

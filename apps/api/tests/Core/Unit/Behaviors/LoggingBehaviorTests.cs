@@ -34,7 +34,7 @@ public class LoggingBehaviorTests
         TestRequest request = new() { Name = "Test" };
         LoggingBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -58,7 +58,7 @@ public class LoggingBehaviorTests
         TestRequest request = new() { Name = "Test" };
         LoggingBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object);
         Result<string> successResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(successResult);
 
         // Act
@@ -83,7 +83,7 @@ public class LoggingBehaviorTests
         LoggingBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object);
         Error error = Error.Failure("Test.Error", "Test error message");
         Result<string> failureResult = Result.Failure<string>(error);
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(failureResult);
 
         // Act
@@ -94,8 +94,8 @@ public class LoggingBehaviorTests
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Completed") && 
-                                              v.ToString()!.Contains("with error") && 
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Completed") &&
+                                              v.ToString()!.Contains("with error") &&
                                               v.ToString()!.Contains("TestRequest") &&
                                               v.ToString()!.Contains("Test.Error") &&
                                               v.ToString()!.Contains("Test error message")),
@@ -111,7 +111,7 @@ public class LoggingBehaviorTests
         TestRequest request = new() { Name = "Test" };
         LoggingBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object);
         InvalidOperationException exception = new("Test exception");
-        
+
         _mockNext.Setup(x => x()).ThrowsAsync(exception);
 
         // Act & Assert
@@ -122,7 +122,7 @@ public class LoggingBehaviorTests
             x => x.Log(
                 LogLevel.Error,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Error processing") && 
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Error processing") &&
                                               v.ToString()!.Contains("TestRequest")),
                 It.Is<Exception>(ex => ex == exception),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
@@ -136,7 +136,7 @@ public class LoggingBehaviorTests
         TestRequest request = new() { Name = "Test" };
         LoggingBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -154,7 +154,7 @@ public class LoggingBehaviorTests
         TestRequest request = new() { Name = "Test" };
         LoggingBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         // Setup slow response (simulate delay)
         _mockNext.Setup(x => x()).Returns(async () =>
         {
@@ -170,7 +170,7 @@ public class LoggingBehaviorTests
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Slow request detected") && 
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Slow request detected") &&
                                               v.ToString()!.Contains("TestRequest")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
@@ -184,7 +184,7 @@ public class LoggingBehaviorTests
         TestRequest request = new() { Name = "Test" };
         LoggingBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -208,7 +208,7 @@ public class LoggingBehaviorTests
         TestRequest request = new() { Name = "Test" };
         LoggingBehavior<TestRequest, Result<string>> behavior = new(_mockLogger.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -252,7 +252,7 @@ public class LoggingBehaviorNonResultTests
         TestRequest request = new() { Name = "Test" };
         LoggingBehavior<TestRequest, string> behavior = new(_mockLogger.Object);
         const string expectedResponse = "Success";
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResponse);
 
         // Act
@@ -260,7 +260,7 @@ public class LoggingBehaviorNonResultTests
 
         // Assert
         _ = result.Should().Be(expectedResponse);
-        
+
         _mockLogger.Verify(
             x => x.Log(
                 LogLevel.Information,

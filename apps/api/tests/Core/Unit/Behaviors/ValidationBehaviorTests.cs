@@ -34,8 +34,8 @@ public class ValidationBehaviorTests
     {
         public TestRequestValidator()
         {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required");
-            RuleFor(x => x.Email).EmailAddress().WithMessage("Email must be valid");
+            _ = RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required");
+            _ = RuleFor(x => x.Email).EmailAddress().WithMessage("Email must be valid");
         }
     }
 
@@ -47,7 +47,7 @@ public class ValidationBehaviorTests
         IEnumerable<IValidator<TestRequest>> validators = [];
         ValidationBehavior<TestRequest, Result<string>> behavior = new(validators, _mockLogger.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -66,7 +66,7 @@ public class ValidationBehaviorTests
         IEnumerable<IValidator<TestRequest>> validators = [new TestRequestValidator()];
         ValidationBehavior<TestRequest, Result<string>> behavior = new(validators, _mockLogger.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -132,7 +132,7 @@ public class ValidationBehaviorTests
         IEnumerable<IValidator<TestRequest>> validators = [];
         ValidationBehavior<TestRequest, Result<string>> behavior = new(validators, _mockLogger.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -157,7 +157,7 @@ public class ValidationBehaviorTests
         IEnumerable<IValidator<TestRequest>> validators = [new TestRequestValidator()];
         ValidationBehavior<TestRequest, Result<string>> behavior = new(validators, _mockLogger.Object);
         Result<string> expectedResult = Result.Success("Success");
-        
+
         _mockNext.Setup(x => x()).ReturnsAsync(expectedResult);
 
         // Act
@@ -201,19 +201,19 @@ public class ValidationBehaviorTests
     {
         // Arrange
         TestRequest request = new() { Name = "", Email = "invalid-email" };
-        
+
         Mock<IValidator<TestRequest>> validator1 = new();
         Mock<IValidator<TestRequest>> validator2 = new();
-        
+
         ValidationFailure failure1 = new("Name", "Name is required");
         ValidationFailure failure2 = new("Email", "Email is invalid");
-        
-        validator1.Setup(x => x.ValidateAsync(It.IsAny<ValidationContext<TestRequest>>(), It.IsAny<CancellationToken>()))
-               .ReturnsAsync(new ValidationResult([failure1]));
-               
-        validator2.Setup(x => x.ValidateAsync(It.IsAny<ValidationContext<TestRequest>>(), It.IsAny<CancellationToken>()))
-               .ReturnsAsync(new ValidationResult([failure2]));
-        
+
+        _ = validator1.Setup(x => x.ValidateAsync(It.IsAny<ValidationContext<TestRequest>>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync(new FluentValidation.Results.ValidationResult([failure1]));
+
+        _ = validator2.Setup(x => x.ValidateAsync(It.IsAny<ValidationContext<TestRequest>>(), It.IsAny<CancellationToken>()))
+               .ReturnsAsync(new FluentValidation.Results.ValidationResult([failure2]));
+
         IEnumerable<IValidator<TestRequest>> validators = [validator1.Object, validator2.Object];
         ValidationBehavior<TestRequest, Result<string>> behavior = new(validators, _mockLogger.Object);
 

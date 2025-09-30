@@ -66,7 +66,7 @@ public class ServiceCollectionExtensionsTests
     public void AddCqrs_Should_ThrowArgumentNullException_When_Services_IsNull()
     {
         // Act & Assert
-        var act = () => ServiceCollectionExtensions.AddCqrs(null!, Assembly.GetExecutingAssembly());
+        var act = () => ((IServiceCollection)null!).AddCqrs(Assembly.GetExecutingAssembly());
         act.Should().Throw<ArgumentNullException>();
     }
 

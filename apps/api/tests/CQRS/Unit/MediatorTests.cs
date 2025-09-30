@@ -27,7 +27,7 @@ public class MediatorTests
     public void Constructor_Should_ThrowArgumentNullException_When_ServiceFactory_IsNull()
     {
         // Act & Assert
-        var act = () => new Mediator(null!);
+        var act = () => new Mediator(null!, _mockNotificationPublisher.Object);
         act.Should().Throw<ArgumentNullException>();
     }
 
@@ -78,7 +78,7 @@ public class MediatorTests
         var request = new TestQuery();
 
         _mockServiceFactory.Setup(sf => sf(It.IsAny<Type>()))
-                          .Returns(null);
+                          .Returns((object?)null);
 
         // Act & Assert
         var act = async () => await _mediator.Send<string>(request);
@@ -90,20 +90,19 @@ public class MediatorTests
     public async Task Send_WithoutResponse_Should_Call_Handler()
     {
         // Arrange
-        var request = new TestCommand();
-        var mockHandler = new Mock<IRequestHandler<TestCommand>>();
+        var command = new TestCommand();
+        var mockHandler = new Mock<IRequestHandler<TestCommand, GameGuild.CQRS.Unit>>();
+        mockHandler.Setup(h => h.Handle(command, It.IsAny<CancellationToken>()))
+                   .Returns(Task.FromResult(GameGuild.CQRS.Unit.Value));
 
-        mockHandler.Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
-                   .Returns(Task.CompletedTask);
-
-        _mockServiceFactory.Setup(sf => sf(typeof(IRequestHandler<TestCommand>)))
+        _mockServiceFactory.Setup(sf => sf(typeof(IRequestHandler<TestCommand, GameGuild.CQRS.Unit>)))
                           .Returns(mockHandler.Object);
 
         // Act
-        await _mediator.Send(request);
+        await _mediator.Send(command);
 
         // Assert
-        mockHandler.Verify(h => h.Handle(request, It.IsAny<CancellationToken>()), Times.Once);
+        mockHandler.Verify(h => h.Handle(command, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -112,54 +111,195 @@ public class MediatorTests
         // Arrange
         var notification = new TestNotification();
 
-        _mockNotificationPublisher.Setup(np => np.Publish(notification, It.IsAny<ServiceFactory>(), It.IsAny<CancellationToken>()))
+        _mockNotificationPublisher.Setup(np => np.Publish(It.IsAny<IEnumerable<NotificationHandlerExecutorBase>>(), notification, It.IsAny<CancellationToken>()))
                                  .Returns(Task.CompletedTask);
 
         // Act
         await _mediator.Publish(notification);
 
         // Assert
-        _mockNotificationPublisher.Verify(np => np.Publish(notification, _mockServiceFactory.Object, It.IsAny<CancellationToken>()), Times.Once);
+        _mockNotificationPublisher.Verify(np => np.Publish(It.IsAny<IEnumerable<NotificationHandlerExecutorBase>>(), notification, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task CreateStream_Should_Return_Stream_From_Handler()
+    public async Task CreateStream_Should_Create_Async_Enumerable()
     {
         // Arrange
-        var request = new TestStreamRequest();
-        var expectedItems = new[] { "item1", "item2", "item3" };
-        var mockHandler = new Mock<IStreamRequestHandler<TestStreamRequest, string>>();
+        var request = new TestStreamRequest { BatchSize = 10 };
 
+        var mockHandler = new Mock<IStreamRequestHandler<TestStreamRequest, string>>();
         mockHandler.Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
-                   .Returns(ToAsyncEnumerable(expectedItems));
+                   .Returns(GetAsyncEnumerable());
 
         _mockServiceFactory.Setup(sf => sf(typeof(IStreamRequestHandler<TestStreamRequest, string>)))
                           .Returns(mockHandler.Object);
 
         // Act
-        var results = new List<string>();
-        await foreach (var item in _mediator.CreateStream(request))
-        {
-            results.Add(item);
-        }
+        var stream = _mediator.CreateStream(request);
 
         // Assert
-        results.Should().BeEquivalentTo(expectedItems);
+        stream.Should().NotBeNull();
+        var items = new List<string>();
+        await foreach (var item in stream)
+        {
+            items.Add(item);
+        }
+        items.Should().HaveCount(3);
+        items.Should().ContainInOrder("item1", "item2", "item3");
+    }
+
+    [Fact]
+    public async Task Send_Should_Handle_Handler_Exception_Gracefully()
+    {
+        // Arrange
+        var request = new TestRequest { Value = "test" };
+        var expectedException = new InvalidOperationException("Handler failed");
+
+        var mockHandler = new Mock<IRequestHandler<TestRequest, string>>();
+        mockHandler.Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
+                   .ThrowsAsync(expectedException);
+
+        _mockServiceFactory.Setup(sf => sf(typeof(IRequestHandler<TestRequest, string>)))
+                          .Returns(mockHandler.Object);
+
+        // Act & Assert
+        var act = async () => await _mediator.Send<string>(request);
+        await act.Should().ThrowAsync<InvalidOperationException>()
+                 .WithMessage("Handler failed");
+    }
+
+    [Fact]
+    public async Task Send_Should_Handle_Missing_Handler_Gracefully()
+    {
+        // Arrange
+        var request = new TestRequest { Value = "test" };
+
+        _mockServiceFactory.Setup(sf => sf(typeof(IRequestHandler<TestRequest, string>)))
+                          .Returns((object?)null);
+
+        // Act & Assert
+        var act = async () => await _mediator.Send<string>(request);
+        await act.Should().ThrowAsync<InvalidOperationException>()
+                 .WithMessage("*handler*not*found*");
+    }
+
+    [Fact]
+    public async Task Send_Should_Handle_Concurrent_Requests()
+    {
+        // Arrange
+        const int concurrentRequests = 100;
+        var requests = Enumerable.Range(0, concurrentRequests)
+                               .Select(i => new TestRequest { Value = $"test-{i}" })
+                               .ToArray();
+
+        var mockHandler = new Mock<IRequestHandler<TestRequest, string>>();
+        mockHandler.Setup(h => h.Handle(It.IsAny<TestRequest>(), It.IsAny<CancellationToken>()))
+                   .Returns<TestRequest, CancellationToken>((req, _) => Task.FromResult($"handled-{req.Value}"));
+
+        _mockServiceFactory.Setup(sf => sf(typeof(IRequestHandler<TestRequest, string>)))
+                          .Returns(mockHandler.Object);
+
+        // Act
+        var tasks = requests.Select(async req => await _mediator.Send<string>(req));
+        var results = await Task.WhenAll(tasks);
+
+        // Assert
+        results.Should().HaveCount(concurrentRequests);
+        for (int i = 0; i < concurrentRequests; i++)
+        {
+            results[i].Should().Be($"handled-test-{i}");
+        }
+        mockHandler.Verify(h => h.Handle(It.IsAny<TestRequest>(), It.IsAny<CancellationToken>()),
+                          Times.Exactly(concurrentRequests));
+    }
+
+    [Fact]
+    public async Task Send_Should_Respect_Cancellation_Token()
+    {
+        // Arrange
+        var request = new TestRequest { Value = "test" };
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        var mockHandler = new Mock<IRequestHandler<TestRequest, string>>();
+        mockHandler.Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
+                   .Returns<TestRequest, CancellationToken>((_, ct) =>
+                   {
+                       ct.ThrowIfCancellationRequested();
+                       return Task.FromResult("handled");
+                   });
+
+        _mockServiceFactory.Setup(sf => sf(typeof(IRequestHandler<TestRequest, string>)))
+                          .Returns(mockHandler.Object);
+
+        // Act & Assert
+        var act = async () => await _mediator.Send<string>(request, cts.Token);
+        await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task Send_Object_Should_Handle_Multiple_IRequest_Interfaces()
+    {
+        // Arrange
+        var request = new MultiInterfaceRequest();
+        var mockHandler = new Mock<IRequestHandler<MultiInterfaceRequest, string>>();
+        mockHandler.Setup(h => h.Handle(request, It.IsAny<CancellationToken>()))
+                   .ReturnsAsync("handled");
+
+        _mockServiceFactory.Setup(sf => sf(typeof(IRequestHandler<MultiInterfaceRequest, string>)))
+                          .Returns(mockHandler.Object);
+
+        // Act
+        var result = await _mediator.Send(request);
+
+        // Assert
+        result.Should().Be("handled");
         mockHandler.Verify(h => h.Handle(request, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    private static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(IEnumerable<T> items)
+    [Fact]
+    public async Task Publish_Should_Handle_No_Handlers_Gracefully()
     {
-        foreach (var item in items)
-        {
-            yield return item;
-        }
-        await Task.CompletedTask;
+        // Arrange
+        var notification = new TestNotification { Message = "test" };
+        _mockNotificationPublisher.Setup(np => np.Publish(It.IsAny<IEnumerable<NotificationHandlerExecutorBase>>(), notification, It.IsAny<CancellationToken>()))
+                                  .Returns(Task.CompletedTask);
+
+        // Act & Assert
+        var act = async () => await _mediator.Publish(notification);
+        await act.Should().NotThrowAsync();
+        _mockNotificationPublisher.Verify(np => np.Publish(It.IsAny<IEnumerable<NotificationHandlerExecutorBase>>(), notification, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private async IAsyncEnumerable<string> GetAsyncEnumerable()
+    {
+        await Task.Yield(); // Add await to satisfy CS1998
+        yield return "item1";
+        yield return "item2";
+        yield return "item3";
     }
 
     // Test classes for mocking
     public class TestQuery : IRequest<string> { }
-    public class TestCommand : IRequest { }
-    public class TestNotification : INotification { }
-    public class TestStreamRequest : IStreamRequest<string> { }
+    public class TestCommand : IRequest<GameGuild.CQRS.Unit> { }
+    public class TestNotification : INotification
+    {
+        public string Message { get; set; } = string.Empty;
+    }
+    public class TestStreamRequest : IStreamRequest<string>
+    {
+        public int BatchSize { get; set; }
+    }
+
+    public class TestRequest : IRequest<string>
+    {
+        public string Value { get; set; } = string.Empty;
+    }
+
+    // Test class that implements multiple IRequest interfaces
+    public class MultiInterfaceRequest : IRequest<string>, IRequest<int>
+    {
+        public string StringValue { get; set; } = "test";
+        public int IntValue { get; set; } = 42;
+    }
 }
