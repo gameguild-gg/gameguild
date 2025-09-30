@@ -1,11 +1,12 @@
 using FluentAssertions;
+using GameGuild;
 using GameGuild.CQRS;
 using Xunit;
 
 namespace GameGuild.Tests.CQRS.Unit;
 
 /// <summary>
-/// Unit tests for CQRS abstractions and interfaces
+/// Tests for CQRS abstractions and interfaces
 /// </summary>
 public class CQRSAbstractionsTests
 {
@@ -42,7 +43,7 @@ public class CQRSAbstractionsTests
     {
         // Assert
         typeof(ICommandHandler<TestCommand, string>).Should().BeAssignableTo<IRequestHandler<TestCommand, string>>();
-        typeof(ICommandHandler<TestCommand>).Should().BeAssignableTo<IRequestHandler<TestCommand>>();
+        typeof(ICommandHandler<TestCommandWithoutResponse>).Should().BeAssignableTo<IRequestHandler<TestCommandWithoutResponse>>();
     }
 
     [Fact]
@@ -63,16 +64,16 @@ public class CQRSAbstractionsTests
     public void IResultQueryHandler_Should_Inherit_From_IRequestHandler()
     {
         // Assert
-        typeof(IResultQueryHandler<TestResultQuery>).Should().BeAssignableTo<IRequestHandler<TestResultQuery, Result>>();
+        typeof(IResultQueryHandler<TestResultQuery, string>).Should().BeAssignableTo<IRequestHandler<TestResultQuery, Result<string>>>();
     }
 
     [Fact]
     public void Unit_Should_Have_Default_Value()
     {
         // Act
-        var unit1 = Unit.Value;
-        var unit2 = new Unit();
-        var unit3 = default(Unit);
+        var unit1 = GameGuild.CQRS.Unit.Value;
+        var unit2 = new GameGuild.CQRS.Unit();
+        var unit3 = default(GameGuild.CQRS.Unit);
 
         // Assert
         unit1.Should().Be(unit2);
@@ -84,8 +85,8 @@ public class CQRSAbstractionsTests
     public void Unit_Should_Be_Equal()
     {
         // Arrange
-        var unit1 = Unit.Value;
-        var unit2 = Unit.Value;
+        var unit1 = GameGuild.CQRS.Unit.Value;
+        var unit2 = GameGuild.CQRS.Unit.Value;
 
         // Act & Assert
         unit1.Equals(unit2).Should().BeTrue();
@@ -98,7 +99,7 @@ public class CQRSAbstractionsTests
     public void Unit_ToString_Should_Return_Unit()
     {
         // Act
-        var result = Unit.Value.ToString();
+        var result = GameGuild.CQRS.Unit.Value.ToString();
 
         // Assert
         result.Should().Be("()");
@@ -118,8 +119,8 @@ public class CQRSAbstractionsTests
         var query = new TestPaginatedQuery();
 
         // Assert
-        query.Page.Should().Be(1);
-        query.PageSize.Should().Be(10);
+        query.PageNumber.Should().Be(1);
+        query.PageSize.Should().Be(20);
         query.SortBy.Should().BeNull();
         query.SortDirection.Should().Be(SortDirection.Ascending);
     }
@@ -130,15 +131,15 @@ public class CQRSAbstractionsTests
         // Act
         var query = new TestPaginatedQuery
         {
-            Page = 5,
-            PageSize = 20,
+            PageNumber = 5,
+            PageSize = 25,
             SortBy = "Name",
             SortDirection = SortDirection.Descending
         };
 
         // Assert
-        query.Page.Should().Be(5);
-        query.PageSize.Should().Be(20);
+        query.PageNumber.Should().Be(5);
+        query.PageSize.Should().Be(25);
         query.SortBy.Should().Be("Name");
         query.SortDirection.Should().Be(SortDirection.Descending);
     }
@@ -163,24 +164,33 @@ public class CQRSAbstractionsTests
     public class TestCommandWithoutResponse : ICommand { }
     public class TestQuery : IQuery<string> { }
     public class TestResultCommand : IResultCommand { }
-    public class TestResultQuery : IResultQuery { }
+    public class TestResultQuery : IResultQuery<string> { }
     public class TestPaginatedQuery : PaginatedQuery<string> { }
 
     public class TestDomainEvent : IDomainEvent
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public DateTime OccurredOn { get; set; } = DateTime.UtcNow;
+        public Guid EventId { get; } = Guid.NewGuid();
+        public DateTime OccurredAt { get; } = DateTime.UtcNow;
+        public int Version { get; } = 1;
+        public Guid AggregateId { get; set; }
+        public string AggregateType { get; } = nameof(TestDomainEvent);
     }
 
     public class TestEntityWithDomainEvents : IHasDomainEvents
     {
         private readonly List<IDomainEvent> _domainEvents = new();
 
-        public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+        public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
         public void AddDomainEvent(IDomainEvent domainEvent)
         {
             _domainEvents.Add(domainEvent);
+        }
+
+        public void RemoveDomainEvent(IDomainEvent domainEvent)
+        {
+            _domainEvents.Remove(domainEvent);
         }
 
         public void ClearDomainEvents()

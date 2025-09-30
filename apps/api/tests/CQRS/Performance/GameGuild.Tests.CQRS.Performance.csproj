@@ -25,6 +25,7 @@
         <PackageReference Include="AutoFixture" />
         <PackageReference Include="AutoFixture.Xunit2" />
         <PackageReference Include="NBomber" />
+        <PackageReference Include="BenchmarkDotNet" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     </ItemGroup>
 

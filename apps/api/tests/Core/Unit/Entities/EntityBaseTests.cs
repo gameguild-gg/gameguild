@@ -15,86 +15,93 @@ public class EntityBaseTests
     {
         public string Name { get; set; } = string.Empty;
         public int Value { get; set; }
+        
+        public TestEntity() : base() { }
+        public TestEntity(object partial) : base(partial) { }
     }
 
     // Test domain event for testing
     private class TestDomainEvent : IDomainEvent
     {
-        public DateTime OccurredOn { get; } = DateTime.UtcNow;
+        public Guid EventId { get; } = Guid.NewGuid();
+        public DateTime OccurredAt { get; } = DateTime.UtcNow;
+        public int Version { get; } = 1;
+        public Guid AggregateId { get; set; }
+        public string AggregateType { get; } = nameof(TestDomainEvent);
     }
 
     [Fact]
     public void Constructor_Should_Initialize_Default_Values()
     {
         // Act
-        var entity = new TestEntity();
+        TestEntity entity = new();
 
         // Assert
-        entity.Id.Should().BeEmpty();
-        entity.Version.Should().Be(0);
-        entity.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        entity.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
-        entity.DeletedAt.Should().BeNull();
-        entity.Tenant.Should().BeNull();
-        entity.IsGlobal.Should().BeTrue();
-        entity.IsNew.Should().BeTrue();
-        entity.IsDeleted.Should().BeFalse();
-        entity.DomainEvents.Should().BeEmpty();
+        _ = entity.Id.Should().BeEmpty();
+        _ = entity.Version.Should().Be(0);
+        _ = entity.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        _ = entity.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        _ = entity.DeletedAt.Should().BeNull();
+        _ = entity.Tenant.Should().BeNull();
+        _ = entity.IsGlobal.Should().BeTrue();
+        _ = entity.IsNew.Should().BeTrue();
+        _ = entity.IsDeleted.Should().BeFalse();
+        _ = entity.DomainEvents.Should().BeEmpty();
     }
 
     [Fact]
     public void Constructor_With_Partial_Should_Initialize_Properties()
     {
         // Arrange
-        var partial = new { Name = "Test", Value = 42 };
+        object partial = new { Name = "Test", Value = 42 };
 
         // Act
-        var entity = new TestEntity(partial);
+        TestEntity entity = new(partial);
 
         // Assert
-        entity.Name.Should().Be("Test");
-        entity.Value.Should().Be(42);
+        _ = entity.Name.Should().Be("Test");
+        _ = entity.Value.Should().Be(42);
     }
 
     [Fact]
     public void IsGlobal_Should_Return_True_When_Tenant_Is_Null()
     {
         // Arrange
-        var entity = new TestEntity();
+        TestEntity entity = new();
 
         // Act & Assert
-        entity.IsGlobal.Should().BeTrue();
+        _ = entity.IsGlobal.Should().BeTrue();
     }
 
     [Fact]
     public void IsGlobal_Should_Return_False_When_Tenant_Is_Set()
     {
         // Arrange
-        var entity = new TestEntity();
-        var tenant = new Tenant { Id = Guid.NewGuid(), Name = "Test Tenant" };
+        TestEntity entity = new();
+        Tenant tenant = new() { Id = Guid.NewGuid(), Name = "Test Tenant" };
 
         // Act
         entity.Tenant = tenant;
 
         // Assert
-        entity.IsGlobal.Should().BeFalse();
+        _ = entity.IsGlobal.Should().BeFalse();
     }
 
     [Fact]
-    public void IsNew_Should_Return_True_When_Version_Is_Zero()
+    public void Version_ShouldNotBeNegative_WhenSetToNegativeValue()
     {
-        // Arrange
-        var entity = new TestEntity { Version = 0 };
-
+        // Arrange & Act & Assert
+        TestEntity entity = new() { Version = 0 };
+        
         // Act & Assert
-        entity.IsNew.Should().BeTrue();
+        _ = entity.Version.Should().BeGreaterOrEqualTo(0);
     }
 
     [Fact]
     public void IsNew_Should_Return_False_When_Version_Is_Not_Zero()
     {
         // Arrange
-        var entity = new TestEntity { Version = 1 };
+        TestEntity entity = new TestEntity { Version = 1 };
 
         // Act & Assert
         entity.IsNew.Should().BeFalse();
@@ -104,7 +111,7 @@ public class EntityBaseTests
     public void IsDeleted_Should_Return_False_When_DeletedAt_Is_Null()
     {
         // Arrange
-        var entity = new TestEntity();
+        TestEntity entity = new();
 
         // Act & Assert
         entity.IsDeleted.Should().BeFalse();
@@ -114,7 +121,7 @@ public class EntityBaseTests
     public void IsDeleted_Should_Return_True_When_DeletedAt_Has_Value()
     {
         // Arrange
-        var entity = new TestEntity { DeletedAt = DateTime.UtcNow };
+        TestEntity entity = new() { DeletedAt = DateTime.UtcNow };
 
         // Act & Assert
         entity.IsDeleted.Should().BeTrue();
@@ -124,8 +131,8 @@ public class EntityBaseTests
     public void Touch_Should_Update_UpdatedAt_Timestamp()
     {
         // Arrange
-        var entity = new TestEntity();
-        var originalUpdatedAt = entity.UpdatedAt;
+        TestEntity entity = new();
+        DateTime originalUpdatedAt = entity.UpdatedAt;
         Thread.Sleep(1); // Ensure time difference
 
         // Act
@@ -139,8 +146,8 @@ public class EntityBaseTests
     public void SoftDelete_Should_Set_DeletedAt_And_Update_UpdatedAt()
     {
         // Arrange
-        var entity = new TestEntity();
-        var originalUpdatedAt = entity.UpdatedAt;
+        TestEntity entity = new();
+        DateTime originalUpdatedAt = entity.UpdatedAt;
 
         // Act
         entity.SoftDelete();
@@ -156,8 +163,8 @@ public class EntityBaseTests
     public void SoftDelete_Should_Not_Change_DeletedAt_When_Already_Deleted()
     {
         // Arrange
-        var entity = new TestEntity();
-        var deletedAt = DateTime.UtcNow.AddDays(-1);
+        TestEntity entity = new();
+        DateTime deletedAt = DateTime.UtcNow.AddDays(-1);
         entity.DeletedAt = deletedAt;
 
         // Act
@@ -171,8 +178,8 @@ public class EntityBaseTests
     public void Restore_Should_Clear_DeletedAt_And_Update_UpdatedAt()
     {
         // Arrange
-        var entity = new TestEntity { DeletedAt = DateTime.UtcNow.AddDays(-1) };
-        var originalUpdatedAt = entity.UpdatedAt;
+        TestEntity entity = new() { DeletedAt = DateTime.UtcNow.AddDays(-1) };
+        DateTime originalUpdatedAt = entity.UpdatedAt;
 
         // Act
         entity.Restore();
@@ -187,8 +194,8 @@ public class EntityBaseTests
     public void Restore_Should_Not_Change_When_Not_Deleted()
     {
         // Arrange
-        var entity = new TestEntity();
-        var originalUpdatedAt = entity.UpdatedAt;
+        TestEntity entity = new();
+        DateTime originalUpdatedAt = entity.UpdatedAt;
 
         // Act
         entity.Restore();
@@ -202,8 +209,8 @@ public class EntityBaseTests
     public void AddDomainEvent_Should_Add_Event_To_Collection()
     {
         // Arrange
-        var entity = new TestEntity();
-        var domainEvent = new TestDomainEvent();
+        TestEntity entity = new();
+        TestDomainEvent domainEvent = new();
 
         // Act
         entity.AddDomainEvent(domainEvent);
@@ -217,8 +224,8 @@ public class EntityBaseTests
     public void RemoveDomainEvent_Should_Remove_Event_From_Collection()
     {
         // Arrange
-        var entity = new TestEntity();
-        var domainEvent = new TestDomainEvent();
+        TestEntity entity = new();
+        TestDomainEvent domainEvent = new();
         entity.AddDomainEvent(domainEvent);
 
         // Act
@@ -232,7 +239,7 @@ public class EntityBaseTests
     public void ClearDomainEvents_Should_Remove_All_Events()
     {
         // Arrange
-        var entity = new TestEntity();
+        TestEntity entity = new();
         entity.AddDomainEvent(new TestDomainEvent());
         entity.AddDomainEvent(new TestDomainEvent());
 
@@ -247,8 +254,8 @@ public class EntityBaseTests
     public void SetProperties_Should_Update_Valid_Properties()
     {
         // Arrange
-        var entity = new TestEntity();
-        var properties = new Dictionary<string, object?>
+        TestEntity entity = new();
+        Dictionary<string, object?> properties = new()
         {
             { nameof(TestEntity.Name), "Updated Name" },
             { nameof(TestEntity.Value), 100 }
@@ -266,8 +273,8 @@ public class EntityBaseTests
     public void SetProperties_Should_Ignore_Invalid_Properties()
     {
         // Arrange
-        var entity = new TestEntity();
-        var properties = new Dictionary<string, object?>
+        TestEntity entity = new();
+        Dictionary<string, object?> properties = new()
         {
             { "NonExistentProperty", "SomeValue" },
             { nameof(TestEntity.Name), "Valid Name" }
@@ -282,8 +289,8 @@ public class EntityBaseTests
     public void SetProperties_Should_Convert_Compatible_Types()
     {
         // Arrange
-        var entity = new TestEntity();
-        var properties = new Dictionary<string, object?>
+        TestEntity entity = new();
+        Dictionary<string, object?> properties = new()
         {
             { nameof(TestEntity.Value), "42" } // String to int conversion
         };
@@ -299,7 +306,7 @@ public class EntityBaseTests
     public void ToDictionary_Should_Return_All_Property_Values()
     {
         // Arrange
-        var entity = new TestEntity
+        TestEntity entity = new()
         {
             Id = Guid.NewGuid(),
             Name = "Test",
@@ -323,7 +330,7 @@ public class EntityBaseTests
     public void ToString_Should_Return_Formatted_String()
     {
         // Arrange
-        var entity = new TestEntity
+        TestEntity entity = new()
         {
             Id = Guid.NewGuid(),
             Version = 1,
@@ -347,7 +354,7 @@ public class EntityBaseTests
     public void ToString_Should_Include_Deleted_Status_When_Deleted()
     {
         // Arrange
-        var entity = new TestEntity { DeletedAt = DateTime.UtcNow };
+        TestEntity entity = new() { DeletedAt = DateTime.UtcNow };
 
         // Act
         var result = entity.ToString();

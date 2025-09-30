@@ -12,6 +12,7 @@ public class CoreAbstractionsTests
     private class TestEntity : EntityBase<int>, IAuditable, IConcurrencyControlled, ITenantScoped
     {
         public string Name { get; set; } = string.Empty;
+        public Guid? TenantId { get; set; }
     }
 
     [Fact]
@@ -114,8 +115,8 @@ public class IResultTests
         _ = failureResult.Should().BeAssignableTo<IResult<string>>();
 
         // Verify interface contract
-        IResult<string> iSuccessResult = successResult;
-        IResult<string> iFailureResult = failureResult;
+        IResult<string> iSuccessResult = (IResult<string>)successResult;
+        IResult<string> iFailureResult = (IResult<string>)failureResult;
 
         _ = iSuccessResult.IsSuccess.Should().BeTrue();
         _ = iSuccessResult.Value.Should().Be("test");
