@@ -24,14 +24,14 @@ public static class ServiceCollectionExtensions {
   /// <param name="services"> Service collection </param>
   /// <param name="assemblies"> Assemblies to scan for handlers </param>
   /// <returns> Service collection </returns>
-  public static IServiceCollection AddCQRS(this IServiceCollection services, params Assembly[] assemblies) { return services.AddCQRS(_ => { }, assemblies); }
+  public static IServiceCollection AddCqrs(this IServiceCollection services, params Assembly[] assemblies) { return services.AddCqrs(_ => { }, assemblies); }
 
   /// <summary> Adds CQRS services to the service collection </summary>
   /// <param name="services"> Service collection </param>
   /// <param name="configuration"> Configuration action </param>
   /// <param name="assemblies"> Assemblies to scan for handlers </param>
   /// <returns> Service collection </returns>
-  public static IServiceCollection AddCQRS(this IServiceCollection services, Action<CqrsConfiguration>? configuration, params Assembly[] assemblies) {
+  public static IServiceCollection AddCqrs(this IServiceCollection services, Action<CqrsConfiguration>? configuration, params Assembly[] assemblies) {
     ArgumentNullException.ThrowIfNull(services);
     ArgumentNullException.ThrowIfNull(assemblies);
 
@@ -268,11 +268,11 @@ public static class ServiceCollectionExtensions {
   /// <param name="assemblies"> Assemblies to scan </param>
   /// <param name="configurator"> Configuration action </param>
   /// <returns> Service collection </returns>
-  public static IServiceCollection AddCQRSFromAssemblies(this IServiceCollection services, IEnumerable<Assembly> assemblies, Action<CQRSAssemblyConfiguration>? configurator = null) {
+  public static IServiceCollection AddCqrsFromAssemblies(this IServiceCollection services, IEnumerable<Assembly> assemblies, Action<CqrsAssemblyConfiguration>? configurator = null) {
     ArgumentNullException.ThrowIfNull(services);
     ArgumentNullException.ThrowIfNull(assemblies);
 
-    var config = new CQRSAssemblyConfiguration();
+    var config = new CqrsAssemblyConfiguration();
     configurator?.Invoke(config);
 
     foreach (var assembly in assemblies) {
