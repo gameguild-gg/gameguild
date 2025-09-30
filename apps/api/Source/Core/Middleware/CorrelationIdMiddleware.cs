@@ -5,17 +5,22 @@ namespace GameGuild.Core.Middleware;
 /// <summary>
 /// Middleware to add correlation ID to all requests and log context
 /// </summary>
-public class CorrelationIdMiddleware {
+public class CorrelationIdMiddleware
+{
     private readonly RequestDelegate _next;
+
     private readonly ILogger<CorrelationIdMiddleware> _logger;
+
     private const string CorrelationIdHeaderName = "X-Correlation-ID";
 
-    public CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger) {
+    public CorrelationIdMiddleware(RequestDelegate next, ILogger<CorrelationIdMiddleware> logger)
+    {
         _next = next;
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context) {
+    public async Task InvokeAsync(HttpContext context)
+    {
         var correlationId = GetOrCreateCorrelationId(context);
 
         // Store in HttpContext.Items for other middleware to access
@@ -25,20 +30,18 @@ public class CorrelationIdMiddleware {
         context.Response.Headers.TryAdd(CorrelationIdHeaderName, correlationId);
 
         // Add to log context for the duration of the request
-        using (LogContext.PushProperty("CorrelationId", correlationId)) {
-            _logger.LogDebug("Processing request {RequestPath} with correlation ID {CorrelationId}",
-                context.Request.Path, correlationId);
+        using (LogContext.PushProperty("CorrelationId", correlationId))
+        {
+            _logger.LogDebug("Processing request {RequestPath} with correlation ID {CorrelationId}", context.Request.Path, correlationId);
 
             await _next(context);
         }
     }
 
-    private static string GetOrCreateCorrelationId(HttpContext context) {
+    private static string GetOrCreateCorrelationId(HttpContext context)
+    {
         // Check if correlation ID is already present in request headers
-        if (context.Request.Headers.TryGetValue(CorrelationIdHeaderName, out var correlationId)
-            && !string.IsNullOrEmpty(correlationId)) {
-            return correlationId.ToString();
-        }
+        if (context.Request.Headers.TryGetValue(CorrelationIdHeaderName, out var correlationId) && !string.IsNullOrEmpty(correlationId)) { return correlationId.ToString(); }
 
         // Generate a new correlation ID
         return Guid.NewGuid().ToString("D");

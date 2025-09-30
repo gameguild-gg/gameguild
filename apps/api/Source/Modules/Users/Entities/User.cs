@@ -101,7 +101,10 @@ public sealed class User : EntityBase, IUser
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
         ArgumentException.ThrowIfNullOrWhiteSpace(username);
 
-        return new User { Email = email, GivenName = givenName, FamilyName = familyName, Username = username, PhoneNumber = !string.IsNullOrWhiteSpace(phoneNumber) ? new PhoneNumber(phoneNumber) : null, IsActive = true };
+        return new User
+        {
+            Email = email, GivenName = givenName, FamilyName = familyName, Username = username, PhoneNumber = !string.IsNullOrWhiteSpace(phoneNumber) ? new PhoneNumber(phoneNumber) : null, IsActive = true
+        };
     }
 
     /// <summary>

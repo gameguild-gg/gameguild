@@ -11,7 +11,8 @@ public class UserContext(IHttpContextAccessor httpContextAccessor, ILogger<UserC
     {
         get
         {
-            string? userIdClaim = _user?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? (_user?.FindFirst("sub")?.Value ?? _user?.FindFirst("user_id")?.Value ?? _user?.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value);
+            string? userIdClaim = _user?.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+                                  (_user?.FindFirst("sub")?.Value ?? _user?.FindFirst("user_id")?.Value ?? _user?.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value);
 
             if (Guid.TryParse(userIdClaim, out Guid id))
             {
@@ -30,9 +31,7 @@ public class UserContext(IHttpContextAccessor httpContextAccessor, ILogger<UserC
 
     public string? Name { get => _user?.FindFirst(ClaimTypes.Name)?.Value ?? _user?.FindFirst("name")?.Value ?? _user?.FindFirst("preferred_username")?.Value; }
 
-    public IDictionary<string, object> Claims { get { return _user == null ? new Dictionary<string, object>() : _user.Claims.ToDictionary(c => c.Type, c => (object)c.Value); } }
+    public IDictionary<string, object> Claims { get { return _user == null ? new Dictionary<string, object>() : _user.Claims.ToDictionary(c => c.Type, c => (object) c.Value); } }
 
     public bool IsAuthenticated { get => _user?.Identity?.IsAuthenticated ?? false; }
-
-
 }
