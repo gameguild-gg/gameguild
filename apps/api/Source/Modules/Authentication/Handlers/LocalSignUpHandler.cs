@@ -12,21 +12,10 @@ public class LocalSignUpHandler(IAuthService authService, IMediator mediator, IL
         var result = await authService.LocalSignUpAsync(signUpRequest);
 
         // Publish sign-up event
-        await mediator.Publish(new UserSignedUpEvent(
-            result.User.Id,
-            result.User.Email,
-            "Local",
-            DateTime.UtcNow
-        ), cancellationToken);
+        await mediator.Publish(new UserSignedUpEvent(result.User.Id, result.User.Email, "Local", DateTime.UtcNow), cancellationToken);
 
         // Publish notification for side effects (email, analytics, etc.)
-        var notification = new UserSignedUpNotification
-        {
-            UserId = result.User.Id,
-            Email = result.User.Email,
-            Username = request.Username,
-            TenantId = result.TenantId
-        };
+        var notification = new UserSignedUpNotification { UserId = result.User.Id, Email = result.User.Email, Username = request.Username, TenantId = result.TenantId };
 
         await mediator.Publish(notification, cancellationToken);
 

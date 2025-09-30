@@ -13,10 +13,10 @@ public abstract class SpecificationBase<T> : ISpecification<T>
 
     /// <summary> Initializes a new instance of the <see cref="SpecificationBase{T}" /> class </summary>
     /// <param name="criteria"> The criteria expression </param>
-    protected SpecificationBase(Expression<Func<T, bool>>? criteria = null) { Criteria = criteria; }
+    protected SpecificationBase(Expression<Func<T, bool>> criteria) { Criteria = criteria; }
 
     /// <inheritdoc />
-    public Expression<Func<T, bool>>? Criteria { get; }
+    public Expression<Func<T, bool>> Criteria { get; }
 
     /// <inheritdoc />
     public ReadOnlyCollection<Expression<Func<T, object>>> Includes { get => _includes.AsReadOnly(); }

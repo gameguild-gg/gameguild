@@ -21,19 +21,19 @@ public class UsersController(IMediator mediator, ILogger<UsersController> logger
         var users = await mediator.Send(query);
 
         var userDtos = users.Select(u => new UserResponse
-        {
-            Id = u.Id,
-            Version = u.Version,
-            GivenName = u.GivenName,
-            FamilyName = u.FamilyName,
-            Username = u.Username,
-            Email = u.Email,
-            IsActive = u.IsActive,
-            CreatedAt = u.CreatedAt,
-            UpdatedAt = u.UpdatedAt,
-            DeletedAt = u.DeletedAt,
-            IsDeleted = u.DeletedAt != null
-        }
+                {
+                    Id = u.Id,
+                    Version = u.Version,
+                    GivenName = u.GivenName,
+                    FamilyName = u.FamilyName,
+                    Username = u.Username,
+                    Email = u.Email,
+                    IsActive = u.IsActive,
+                    CreatedAt = u.CreatedAt,
+                    UpdatedAt = u.UpdatedAt,
+                    DeletedAt = u.DeletedAt,
+                    IsDeleted = u.DeletedAt != null
+                }
             )
             .ToList();
 

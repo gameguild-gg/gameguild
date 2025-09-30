@@ -25,16 +25,9 @@ public class UserProfilesController(IMediator mediator) : ControllerBase
         if (!userProfiles.IsSuccess) return BadRequest(userProfiles.Error);
 
         var userProfileDtos = userProfiles.Value.Select(up => new UserProfileResponse
-        {
-            Id = up.Id,
-            Version = up.Version,
-            DisplayName = up.DisplayName,
-            TenantId = up.Tenant?.Id,
-            CreatedAt = up.CreatedAt,
-            UpdatedAt = up.UpdatedAt,
-            DeletedAt = up.DeletedAt,
-            IsDeleted = up.IsDeleted,
-        }
+            {
+                Id = up.Id, Version = up.Version, DisplayName = up.DisplayName, TenantId = up.Tenant?.Id, CreatedAt = up.CreatedAt, UpdatedAt = up.UpdatedAt, DeletedAt = up.DeletedAt, IsDeleted = up.IsDeleted,
+            }
         );
 
         return Ok(userProfileDtos);

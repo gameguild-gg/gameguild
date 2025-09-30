@@ -117,9 +117,9 @@ public class TenantSettingsService(ITenantSettingsRepository repository, ITenant
         if (settings.TenantId == Guid.Empty) { errors.Add("TenantId is required"); }
 
         // Validate default language exists
-        if (settings.DefaultLanguageId != Guid.Empty)
+        if (settings.DefaultLanguageId.HasValue && settings.DefaultLanguageId != Guid.Empty)
         {
-            Language? language = await languageRepository.GetByIdAsync(settings.DefaultLanguageId);
+            Language? language = await languageRepository.GetByIdAsync(settings.DefaultLanguageId.Value);
 
             if (language == null) { errors.Add("Default language does not exist"); }
         }

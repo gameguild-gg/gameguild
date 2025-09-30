@@ -94,8 +94,6 @@ public static class AuditActionTypes
 
     public const string TenantUserRemoved = "TenantUserRemoved";
 
-
-
     // Privacy Operations
     public const string PrivacySettingsUpdated = "PrivacySettingsUpdated";
 

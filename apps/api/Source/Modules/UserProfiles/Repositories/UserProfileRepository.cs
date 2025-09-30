@@ -94,8 +94,7 @@ public class UserProfileRepository(ApplicationDbContext context) : IUserProfileR
     {
         return string.IsNullOrWhiteSpace(searchTerm)
             ? await _context.UserProfiles.Where(up => up.DeletedAt == null).ToListAsync(cancellationToken)
-            : await _context.UserProfiles.Where(up => up.DeletedAt == null && up.DisplayName!.Contains(searchTerm))
-                .ToListAsync(cancellationToken);
+            : await _context.UserProfiles.Where(up => up.DeletedAt == null && up.DisplayName!.Contains(searchTerm)).ToListAsync(cancellationToken);
     }
 
     public async Task<UserProfileStatistics> GetStatisticsAsync(DateTime? fromDate = null, DateTime? toDate = null, Guid? tenantId = null, bool includeDeleted = false, CancellationToken cancellationToken = default)
@@ -106,8 +105,7 @@ public class UserProfileRepository(ApplicationDbContext context) : IUserProfileR
         var query = _context.UserProfiles.AsQueryable();
 
         // Apply tenant filter
-        if (tenantId.HasValue)
-            query = query.Where(up => EF.Property<Guid?>(up, "TenantId") == tenantId);
+        if (tenantId.HasValue) query = query.Where(up => EF.Property<Guid?>(up, "TenantId") == tenantId);
 
         var statistics = new UserProfileStatistics();
 
@@ -132,11 +130,11 @@ public class UserProfileRepository(ApplicationDbContext context) : IUserProfileR
 
         // Calculate average per day
         var daysDiff = (toDateTime - fromDateTime).TotalDays;
-        if (daysDiff > 0)
-            statistics.AverageNewUserProfilesPerDay = statistics.NewUserProfiles / daysDiff;
+        if (daysDiff > 0) statistics.AverageNewUserProfilesPerDay = statistics.NewUserProfiles / daysDiff;
 
         // Display name patterns (common prefixes/titles)
         var displayNames = await query.Where(up => up.DisplayName != null).Select(up => up.DisplayName).ToListAsync(cancellationToken);
+
         var patterns = displayNames.Where(name => !string.IsNullOrEmpty(name))
             .SelectMany(name => name!.Split(' ', StringSplitOptions.RemoveEmptyEntries))
             .Where(word => word.Length > 2)
@@ -147,8 +145,7 @@ public class UserProfileRepository(ApplicationDbContext context) : IUserProfileR
         // Tenant distribution (if multi-tenant)
         if (tenantId == null)
         {
-            var tenantCounts = await query.GroupBy(up => EF.Property<Guid?>(up, "TenantId"))
-                .Select(g => new { TenantId = g.Key, Count = g.Count() }).ToListAsync(cancellationToken);
+            var tenantCounts = await query.GroupBy(up => EF.Property<Guid?>(up, "TenantId")).Select(g => new { TenantId = g.Key, Count = g.Count() }).ToListAsync(cancellationToken);
             statistics.TenantDistribution = tenantCounts.ToDictionary(tc => tc.TenantId?.ToString() ?? "No Tenant", tc => tc.Count);
         }
 

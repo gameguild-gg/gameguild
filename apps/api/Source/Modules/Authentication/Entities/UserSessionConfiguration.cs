@@ -22,25 +22,17 @@ internal sealed class UserSessionConfiguration : IEntityTypeConfiguration<UserSe
         builder.HasIndex(us => new { us.IpAddress, us.CreatedAt });
 
         // Property configurations
-        builder.Property(us => us.RefreshToken)
-            .HasMaxLength(256)
-            .IsRequired();
+        builder.Property(us => us.RefreshToken).HasMaxLength(256).IsRequired();
 
-        builder.Property(us => us.AccessTokenHash)
-            .HasMaxLength(256)
-            .IsRequired(false);
+        builder.Property(us => us.AccessTokenHash).HasMaxLength(256).IsRequired(false);
 
         builder.Property(us => us.IpAddress)
             .HasMaxLength(45) // IPv6 max length
             .IsRequired();
 
-        builder.Property(us => us.UserAgent)
-            .HasMaxLength(1000)
-            .IsRequired();
+        builder.Property(us => us.UserAgent).HasMaxLength(1000).IsRequired();
 
-        builder.Property(us => us.DeviceFingerprint)
-            .HasMaxLength(256)
-            .IsRequired(false);
+        builder.Property(us => us.DeviceFingerprint).HasMaxLength(256).IsRequired(false);
 
         builder.Property(us => us.DeviceInfo)
             .HasColumnType("jsonb") // PostgreSQL specific - use "json" for other databases
@@ -50,15 +42,11 @@ internal sealed class UserSessionConfiguration : IEntityTypeConfiguration<UserSe
             .HasColumnType("jsonb") // PostgreSQL specific - use "json" for other databases
             .IsRequired(false);
 
-        builder.Property(us => us.TerminationReason)
-            .HasMaxLength(200)
-            .IsRequired(false);
+        builder.Property(us => us.TerminationReason).HasMaxLength(200).IsRequired(false);
 
-        builder.Property(us => us.IsActive)
-            .HasDefaultValue(true);
+        builder.Property(us => us.IsActive).HasDefaultValue(true);
 
-        builder.Property(us => us.IsTrustedDevice)
-            .HasDefaultValue(false);
+        builder.Property(us => us.IsTrustedDevice).HasDefaultValue(false);
 
         // Computed properties (read-only)
         builder.Ignore(us => us.IsExpired);

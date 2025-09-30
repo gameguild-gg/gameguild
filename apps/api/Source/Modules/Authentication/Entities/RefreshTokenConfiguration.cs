@@ -14,27 +14,19 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.HasIndex(rt => rt.CreatedAt);
 
         // Property configurations
-        builder.Property(rt => rt.Token)
-            .HasMaxLength(256)
-            .IsRequired();
+        builder.Property(rt => rt.Token).HasMaxLength(256).IsRequired();
 
         builder.Property(rt => rt.CreatedByIp)
             .HasMaxLength(45) // IPv6 max length
             .IsRequired();
 
-        builder.Property(rt => rt.RevokedByIp)
-            .HasMaxLength(45)
-            .IsRequired(false);
+        builder.Property(rt => rt.RevokedByIp).HasMaxLength(45).IsRequired(false);
 
-        builder.Property(rt => rt.ReplacedByToken)
-            .HasMaxLength(256)
-            .IsRequired(false);
+        builder.Property(rt => rt.ReplacedByToken).HasMaxLength(256).IsRequired(false);
 
-        builder.Property(rt => rt.ExpiresAt)
-            .IsRequired();
+        builder.Property(rt => rt.ExpiresAt).IsRequired();
 
-        builder.Property(rt => rt.IsRevoked)
-            .HasDefaultValue(false);
+        builder.Property(rt => rt.IsRevoked).HasDefaultValue(false);
 
         // Computed properties (read-only)
         builder.Ignore(rt => rt.IsExpired);

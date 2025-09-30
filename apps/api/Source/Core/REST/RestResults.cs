@@ -3,7 +3,8 @@
 /// <summary>
 /// Helper methods for common REST result patterns
 /// </summary>
-public static class RestResults {
+public static class RestResults
+{
     /// <summary>Standard 200 OK response</summary>
     public static int Ok => HttpStatusCodeGuide.Success.Ok;
 

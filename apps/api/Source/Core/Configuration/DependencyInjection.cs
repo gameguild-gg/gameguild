@@ -3,6 +3,7 @@ using GameGuild.Authorization.Identity;
 using GameGuild.Core.Configuration;
 using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
+using GameGuild.Modules.Audit;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Localization;
@@ -35,157 +36,89 @@ public static class DependencyInjection
         services.AddStructuredLogging(configuration);
 
         // 1. HTTP Logging (capture everything)
-        if (options.EnableHttpLogging)
-        {
-            services.SetupHttpLogging(configuration, options.HttpLogging);
-        }
+        if (options.EnableHttpLogging) { services.SetupHttpLogging(configuration, options.HttpLogging); }
 
         // 2. Exception Handling/Problem Details (early error handling)
-        if (options.EnableProblemDetails)
-        {
-            services.SetupProblemDetails(configuration, options.ProblemDetails);
-        }
+        if (options.EnableProblemDetails) { services.SetupProblemDetails(configuration, options.ProblemDetails); }
 
         // 3. Localization (early for proper culture context)
-        if (options.EnableLocalization)
-        {
-            services.SetupLocalization(configuration, options.Localization);
-        }
+        if (options.EnableLocalization) { services.SetupLocalization(configuration, options.Localization); }
 
         // 4. Memory Caching (foundation for other services)
-        if (options.EnableMemoryCaching)
-        {
-            services.SetupMemoryCaching(configuration, options.MemoryCaching);
-        }
+        if (options.EnableMemoryCaching) { services.SetupMemoryCaching(configuration, options.MemoryCaching); }
 
         // 5. Response Caching (early performance optimization)
-        if (options.EnableResponseCaching)
-        {
-            services.SetupResponseCaching(configuration, options.ResponseCaching);
-        }
+        if (options.EnableResponseCaching) { services.SetupResponseCaching(configuration, options.ResponseCaching); }
 
         // 6. Response Compression (early performance optimization)
-        if (options.EnableResponseCompression)
-        {
-            services.SetupResponseCompression(configuration, options.ResponseCompression);
-        }    // 7. CORS (Cross-Origin Resource Sharing)
-             // TODO: CF-Connecting-IP Cloudflare header support.
-        if (options.EnableCors)
-        {
-            services.SetupCors(configuration, options.Cors);
-        }
+        if (options.EnableResponseCompression) { services.SetupResponseCompression(configuration, options.ResponseCompression); } // 7. CORS (Cross-Origin Resource Sharing)
+
+        // TODO: CF-Connecting-IP Cloudflare header support.
+        if (options.EnableCors) { services.SetupCors(configuration, options.Cors); }
 
         // 8. Authentication (identify user, and tenant)
-        if (options.EnableAuthentication)
-        {
-            services.SetupAuthentication(configuration, options.Authentication);
-        }
+        if (options.EnableAuthentication) { services.SetupAuthentication(configuration, options.Authentication); }
 
         // 8.5. Cookie Security
-        if (options.EnableCookieSecurity)
-        {
-            services.AddCookieSecurity(configuration, options.CookieSecurity);
-        }
+        if (options.EnableCookieSecurity) { services.AddCookieSecurity(configuration, options.CookieSecurity); }
 
         // 9. Request Context (user/tenant context after authentication)
-        if (options.EnableRequestContext)
-        {
-            services.SetupRequestContext(configuration, options.RequestContext);
-        }
+        if (options.EnableRequestContext) { services.SetupRequestContext(configuration, options.RequestContext); }
 
         // 10. Authorization (depends on authentication)
-        if (options.EnableAuthorization)
-        {
-            services.SetupAuthorization(configuration, options.Authorization);
-        }
+        if (options.EnableAuthorization) { services.SetupAuthorization(configuration, options.Authorization); }
 
         // 11. Rate Limiting (after authentication for user-based limits)
-        if (options.EnableRateLimiting)
-        {
-            services.SetupRateLimiting(configuration, options.RateLimiting);
-        }
+        if (options.EnableRateLimiting) { services.SetupRateLimiting(configuration, options.RateLimiting); }
 
         // 12. Model Validation
-        if (options.EnableModelValidation)
-        {
-            services.SetupModelValidation(configuration, options.ModelValidation);
-        }
+        if (options.EnableModelValidation) { services.SetupModelValidation(configuration, options.ModelValidation); }
 
         // 13. API Robustness (FluentValidation pipeline behaviors and enhanced error handling)
-        if (options.EnableFluentValidation)
-        {
-            services.SetupFluentValidation(configuration, options.FluentValidation);
-        }
+        if (options.EnableFluentValidation) { services.SetupFluentValidation(configuration, options.FluentValidation); }
 
-        if (options.EnableErrorHandling)
-        {
-            services.SetupErrorHandling(configuration, options.ErrorHandling);
-        }
+        if (options.EnableErrorHandling) { services.SetupErrorHandling(configuration, options.ErrorHandling); }
 
         // 14. Feature Flags (OpenFeature)
-        if (options.EnableFeatureFlags)
-        {
-            services.SetupFeatureFlags(configuration, options.FeatureFlags);
-        }
+        if (options.EnableFeatureFlags) { services.SetupFeatureFlags(configuration, options.FeatureFlags); }
 
         // 14. API Versioning
-        if (options.EnableApiVersioning)
-        {
-            services.SetupApiVersioning(configuration, options.ApiVersioning);
-        }
+        if (options.EnableApiVersioning) { services.SetupApiVersioning(configuration, options.ApiVersioning); }
 
         // 14.5. REST Conventions (Enhanced versioning, status codes, ETags)
         services.SetupRestConventions(configuration);
 
         // 15. API Explorer
-        if (options.EnableApiExplorer)
-        {
-            services.SetupApiExplorer(configuration, options.ApiVersioning);
-        }
+        if (options.EnableApiExplorer) { services.SetupApiExplorer(configuration, options.ApiVersioning); }
 
         // 16. Health Checks
-        if (options.EnableHealthChecks)
-        {
-            services.SetupHealthChecks(configuration, options.HealthChecks);
-        }
+        if (options.EnableHealthChecks) { services.SetupHealthChecks(configuration, options.HealthChecks); }
 
         // 17. SignalR (real-time communication)
-        if (options.EnableSignalR)
-        {
-            services.SetupSignalR(configuration, options.SignalR);
-        }
+        if (options.EnableSignalR) { services.SetupSignalR(configuration, options.SignalR); }
 
         // 18. Controllers/Endpoints
-        services.AddControllers(options =>
-        {
-            options.Conventions.Add(new Microsoft.AspNetCore.Mvc.ApplicationModels.RouteTokenTransformerConvention(new KebabParameterTransformer()));
-        })
-          .AddApplicationPart(typeof(PresentationLayerOptions).Assembly)
-          .AddApplicationPart(typeof(AuthController).Assembly) // Authentication module
-          .AddApplicationPart(typeof(UsersController).Assembly) // Users module
-          .AddApplicationPart(typeof(TenantsController).Assembly) // Tenants module
-                                                                  // .AddApplicationPart(typeof(BillingWebhooksController).Assembly) // Billing module - temporarily disabled
-                                                                  // .AddApplicationPart(typeof(PaymentsController).Assembly) // Payments module - temporarily disabled
-                                                                  // .AddApplicationPart(typeof(SubscriptionsController).Assembly) // Subscriptions module - temporarily disabled
-          .AddApplicationPart(typeof(UserProfilesController).Assembly) // UserProfiles module
-          .AddJsonOptions(JsonSerializerConfiguration.ConfigureMvcJsonOptions);
+        services.AddControllers(options => { options.Conventions.Add(new Microsoft.AspNetCore.Mvc.ApplicationModels.RouteTokenTransformerConvention(new KebabParameterTransformer())); })
+            .AddApplicationPart(typeof(PresentationLayerOptions).Assembly)
+            .AddApplicationPart(typeof(AuthController).Assembly) // Authentication module
+            .AddApplicationPart(typeof(UsersController).Assembly) // Users module
+            .AddApplicationPart(typeof(TenantsController).Assembly) // Tenants module
+                                                                    // .AddApplicationPart(typeof(BillingWebhooksController).Assembly) // Billing module - temporarily disabled
+                                                                    // .AddApplicationPart(typeof(PaymentsController).Assembly) // Payments module - temporarily disabled
+                                                                    // .AddApplicationPart(typeof(SubscriptionsController).Assembly) // Subscriptions module - temporarily disabled
+            .AddApplicationPart(typeof(UserProfilesController).Assembly) // UserProfiles module
+            .AddJsonOptions(JsonSerializerConfiguration.ConfigureMvcJsonOptions);
 
         // Configure global JSON options for HttpClient and other components
         JsonSerializerConfiguration.ConfigureHttpClientJsonOptions(services);
 
         // 19. GraphQL server configuration
-        if (options.EnableGraphQl)
-        {
-            services.SetupGraphQl(configuration, options.GraphQl);
-        }
+        if (options.EnableGraphQl) { services.SetupGraphQl(configuration, options.GraphQl); }
 
         // 20. gRPC (handled by the application layer)
 
         // 21. OpenAPI/Swagger
-        if (options.EnableOpenApi)
-        {
-            services.SetupOpenApi(configuration, options.OpenApi);
-        }
+        if (options.EnableOpenApi) { services.SetupOpenApi(configuration, options.OpenApi); }
 
         return services;
     }
@@ -263,10 +196,11 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(entryAssembly);
         ArgumentNullException.ThrowIfNull(additionalAssemblies);
 
-        var baseAssemblies = new[] {
-      Assembly.GetExecutingAssembly(), // Core assembly
-      entryAssembly, // Explicitly provided entry assembly (e.g., API assembly)
-    };
+        var baseAssemblies = new[]
+        {
+            Assembly.GetExecutingAssembly(), // Core assembly
+            entryAssembly, // Explicitly provided entry assembly (e.g., API assembly)
+        };
 
         return additionalAssemblies.Length > 0 ? baseAssemblies.Concat(additionalAssemblies).Distinct().ToArray() : baseAssemblies.Distinct().ToArray();
     }
@@ -328,7 +262,8 @@ public static class DependencyInjection
 
         // Legacy modules still using old pattern (to be migrated)
         services.AddResourcesModule();
-        // services.AddTenantsModule(); // Temporarily disabled - using new pattern
+        services.AddTenantServices(); // Re-enabled for authentication dependencies
+        services.AddAuditServices(); // Re-enabled for authentication dependencies
         // services.AddProjectsModule(); // Temporarily disabled
         // services.AddSubscriptionsModule(); // Temporarily disabled
         services.AddCredentialsModule();
@@ -377,6 +312,7 @@ public static class DependencyInjection
         Console.WriteLine("✅ HttpContextAccessor registered");
 
         Console.WriteLine("🔧 AddCoreInfrastructure completed successfully");
+
         return services;
     }
 
@@ -399,6 +335,7 @@ public static class DependencyInjection
         // Console.WriteLine("✅ IUserPrivacyService registered");
 
         Console.WriteLine("🔧 AddCoreServices completed successfully");
+
         return services;
     }
 
@@ -406,18 +343,15 @@ public static class DependencyInjection
     private static IServiceCollection AddCloudflareServices(this IServiceCollection services, IConfiguration configuration)
     {
         // Configure CloudflareDynamicDnsOptions
-        services.Configure<Configuration.CloudflareDynamicDnsOptions>(
-            configuration.GetSection(Configuration.CloudflareDynamicDnsOptions.SectionName));
+        services.Configure<Configuration.CloudflareDynamicDnsOptions>(configuration.GetSection(Configuration.CloudflareDynamicDnsOptions.SectionName));
 
         // Register HTTP client for CloudflareExternalIpService
         services.AddHttpClient<DNS.Cloudflare.CloudflareExternalIpService>();
 
         // Register the service for both interfaces
         services.AddScoped<DNS.Cloudflare.CloudflareExternalIpService>();
-        services.AddScoped<DNS.Cloudflare.ICloudflareExternalIpService>(provider =>
-            provider.GetRequiredService<DNS.Cloudflare.CloudflareExternalIpService>());
-        services.AddScoped<Services.ICloudflareExternalIpService>(provider =>
-            provider.GetRequiredService<DNS.Cloudflare.CloudflareExternalIpService>());
+        services.AddScoped<DNS.Cloudflare.ICloudflareExternalIpService>(provider => provider.GetRequiredService<DNS.Cloudflare.CloudflareExternalIpService>());
+        services.AddScoped<Services.ICloudflareExternalIpService>(provider => provider.GetRequiredService<DNS.Cloudflare.CloudflareExternalIpService>());
 
         // Register the hosted service (temporarily disabled due to scope issue)
         // services.AddHostedService<GameGuild.DNS.Cloudflare.CloudflareExternalIpHostedService>();

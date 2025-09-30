@@ -8,27 +8,20 @@ namespace GameGuild.Core.Domain;
 public class PermissionResult
 {
     public bool IsGranted { get; init; }
+
     public string? Reason { get; init; }
+
     public PermissionSource Source { get; init; } = PermissionSource.NotGranted;
 
-    public static PermissionResult Granted(PermissionSource source, string? reason = null)
-        => new() { IsGranted = true, Source = source, Reason = reason };
+    public static PermissionResult Granted(PermissionSource source, string? reason = null) => new() { IsGranted = true, Source = source, Reason = reason };
 
-    public static PermissionResult Denied(string? reason = null)
-        => new() { IsGranted = false, Reason = reason };
+    public static PermissionResult Denied(string? reason = null) => new() { IsGranted = false, Reason = reason };
 }
 
 /// <summary>
 /// Source of permission grant
 /// </summary>
-public enum PermissionSource
-{
-    NotGranted,
-    TenantWide,
-    ContentType,
-    Resource,
-    Owner
-}
+public enum PermissionSource { NotGranted, TenantWide, ContentType, Resource, Owner }
 
 /// <summary>
 /// Effective permission details
@@ -36,8 +29,11 @@ public enum PermissionSource
 public class EffectivePermission
 {
     public PermissionType Permission { get; init; }
+
     public PermissionSource Source { get; init; }
+
     public string? Context { get; init; }
+
     public DateTime GrantedAt { get; init; }
 }
 
@@ -47,6 +43,8 @@ public class EffectivePermission
 public class PermissionHierarchy
 {
     public PermissionType Permission { get; init; }
+
     public Dictionary<PermissionSource, bool> Sources { get; init; } = new();
+
     public string? FinalDecision { get; init; }
 }

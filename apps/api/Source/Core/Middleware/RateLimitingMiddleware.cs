@@ -9,29 +9,34 @@ namespace GameGuild.Core.Middleware;
 /// Middleware for enforcing rate limits per endpoint, user, and IP address
 /// Integrates with the IRateLimitingService for comprehensive rate limiting
 /// </summary>
-public partial class RateLimitingMiddleware {
+public partial class RateLimitingMiddleware
+{
     [GeneratedRegex(@"/\d+(?=/|$)", RegexOptions.IgnoreCase)]
     private static partial Regex NumberIdRegex();
 
     [GeneratedRegex(@"/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?=/|$)", RegexOptions.IgnoreCase)]
     private static partial Regex GuidIdRegex();
+
     private readonly RequestDelegate _next;
+
     private readonly RateLimitingOptions _options;
+
     private readonly ILogger<RateLimitingMiddleware> _logger;
 
-    public RateLimitingMiddleware(
-      RequestDelegate next,
-      IOptions<RateLimitingOptions> options,
-      ILogger<RateLimitingMiddleware> logger) {
+    public RateLimitingMiddleware(RequestDelegate next, IOptions<RateLimitingOptions> options, ILogger<RateLimitingMiddleware> logger)
+    {
         _next = next;
         _options = options.Value;
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context) {
+    public async Task InvokeAsync(HttpContext context)
+    {
         // Skip rate limiting for certain paths or methods
-        if (ShouldSkipRateLimit(context)) {
+        if (ShouldSkipRateLimit(context))
+        {
             await _next(context);
+
             return;
         }
 
@@ -39,12 +44,15 @@ public partial class RateLimitingMiddleware {
         var rateLimitingService = context.RequestServices.GetRequiredService<IRateLimitingService>();
         var endpoint = GetEndpointIdentifier(context);
 
-        try {
+        try
+        {
             // Check rate limit before processing request
             var checkResult = await rateLimitingService.CheckRateLimitAsync(context, endpoint);
 
-            if (!checkResult.IsAllowed) {
+            if (!checkResult.IsAllowed)
+            {
                 await HandleRateLimitExceeded(context, checkResult);
+
                 return;
             }
 
@@ -52,11 +60,10 @@ public partial class RateLimitingMiddleware {
             await _next(context);
 
             // Record successful request (only after successful processing)
-            if (context.Response.StatusCode < 400) {
-                await rateLimitingService.RecordRequestAsync(context, endpoint);
-            }
+            if (context.Response.StatusCode < 400) { await rateLimitingService.RecordRequestAsync(context, endpoint); }
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Error in rate limiting middleware for endpoint: {Endpoint}", endpoint);
 
             // Continue with request even if rate limiting fails
@@ -64,30 +71,27 @@ public partial class RateLimitingMiddleware {
         }
     }
 
-    private bool ShouldSkipRateLimit(HttpContext context) {
+    private bool ShouldSkipRateLimit(HttpContext context)
+    {
         var path = context.Request.Path.Value ?? string.Empty;
 
         // Skip for health checks and monitoring endpoints
-        if (path.StartsWith("/health", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("/metrics", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("/ping", StringComparison.OrdinalIgnoreCase)) {
+        if (path.StartsWith("/health", StringComparison.OrdinalIgnoreCase) || path.StartsWith("/metrics", StringComparison.OrdinalIgnoreCase) || path.StartsWith("/ping", StringComparison.OrdinalIgnoreCase))
+        {
             return true;
         }
 
         // Skip for OPTIONS requests (CORS preflight)
-        if (context.Request.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase)) {
-            return true;
-        }
+        if (context.Request.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase)) { return true; }
 
         // Skip for WebSocket requests
-        if (context.WebSockets.IsWebSocketRequest) {
-            return true;
-        }
+        if (context.WebSockets.IsWebSocketRequest) { return true; }
 
         return false;
     }
 
-    private string GetEndpointIdentifier(HttpContext context) {
+    private string GetEndpointIdentifier(HttpContext context)
+    {
         var path = context.Request.Path.Value ?? string.Empty;
         var method = context.Request.Method;
 
@@ -97,7 +101,8 @@ public partial class RateLimitingMiddleware {
         return $"{method}:{normalizedPath}";
     }
 
-    private string NormalizePath(string path) {
+    private string NormalizePath(string path)
+    {
         // Remove trailing slashes
         path = path.TrimEnd('/');
 
@@ -109,31 +114,25 @@ public partial class RateLimitingMiddleware {
         return path.ToLowerInvariant();
     }
 
-    private async Task HandleRateLimitExceeded(HttpContext context, RateLimitCheckResult checkResult) {
-        context.Response.StatusCode = (int)HttpStatusCode.TooManyRequests;
+    private async Task HandleRateLimitExceeded(HttpContext context, RateLimitCheckResult checkResult)
+    {
+        context.Response.StatusCode = (int) HttpStatusCode.TooManyRequests;
         context.Response.ContentType = "application/json";
 
         // Add rate limit headers
         context.Response.Headers["X-RateLimit-Limit"] = "Various limits apply";
         context.Response.Headers["X-RateLimit-Remaining"] = "0";
 
-        if (checkResult.RetryAfter.HasValue) {
-            var retryAfterSeconds = (int)Math.Ceiling(checkResult.RetryAfter.Value.TotalSeconds);
+        if (checkResult.RetryAfter.HasValue)
+        {
+            var retryAfterSeconds = (int) Math.Ceiling(checkResult.RetryAfter.Value.TotalSeconds);
             context.Response.Headers["Retry-After"] = retryAfterSeconds.ToString();
-            context.Response.Headers["X-RateLimit-Reset"] =
-              DateTimeOffset.UtcNow.Add(checkResult.RetryAfter.Value).ToUnixTimeSeconds().ToString();
+            context.Response.Headers["X-RateLimit-Reset"] = DateTimeOffset.UtcNow.Add(checkResult.RetryAfter.Value).ToUnixTimeSeconds().ToString();
         }
 
-        var response = new {
-            error = "Rate limit exceeded",
-            message = checkResult.Reason ?? "Too many requests",
-            retryAfter = checkResult.RetryAfter?.TotalSeconds,
-            timestamp = DateTimeOffset.UtcNow
-        };
+        var response = new { error = "Rate limit exceeded", message = checkResult.Reason ?? "Too many requests", retryAfter = checkResult.RetryAfter?.TotalSeconds, timestamp = DateTimeOffset.UtcNow };
 
-        var jsonResponse = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions {
-            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-        });
+        var jsonResponse = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
 
         await context.Response.WriteAsync(jsonResponse);
 
@@ -141,10 +140,12 @@ public partial class RateLimitingMiddleware {
         var userId = context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         var ipAddress = context.Connection.RemoteIpAddress?.ToString();
 
-        _logger.LogWarning("Rate limit exceeded for User: {UserId}, IP: {IpAddress}, Endpoint: {Endpoint}, Reason: {Reason}",
-          userId ?? "Anonymous",
-          ipAddress ?? "Unknown",
-          GetEndpointIdentifier(context),
-          checkResult.Reason);
+        _logger.LogWarning(
+            "Rate limit exceeded for User: {UserId}, IP: {IpAddress}, Endpoint: {Endpoint}, Reason: {Reason}",
+            userId ?? "Anonymous",
+            ipAddress ?? "Unknown",
+            GetEndpointIdentifier(context),
+            checkResult.Reason
+        );
     }
 }

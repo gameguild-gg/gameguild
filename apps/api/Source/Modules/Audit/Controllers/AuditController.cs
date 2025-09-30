@@ -149,13 +149,9 @@ public class AuditController(IAuditService auditService, ILogger<AuditController
         }
     }
 
-    private Guid GetCurrentUserId()
+    protected new Guid? GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId)) { throw new UnauthorizedAccessException("User ID not found in token"); }
-
-        return userId;
+        return base.GetCurrentUserId();
     }
 
     private AuditLogDto MapToDto(AuditLog log)

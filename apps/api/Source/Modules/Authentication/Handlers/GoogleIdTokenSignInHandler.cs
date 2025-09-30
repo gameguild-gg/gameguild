@@ -16,25 +16,22 @@ public class GoogleIdTokenSignInHandler(IAuthService authService, IMediator medi
         try
         {
             // Publish sign-in event
-            await mediator.Publish(new UserSignedInEvent(
-                result.User.Id,
-                result.User.Email,
-                "Google",
-                null, // IP address would need to be passed from context
-                null, // User agent would need to be passed from context
-                DateTime.UtcNow
-            ), cancellationToken);
+            await mediator.Publish(
+                new UserSignedInEvent(
+                    result.User.Id,
+                    result.User.Email,
+                    "Google",
+                    null, // IP address would need to be passed from context
+                    null, // User agent would need to be passed from context
+                    DateTime.UtcNow
+                ),
+                cancellationToken
+            );
 
             // For now, we'll check if a UserProfile exists to determine if this was a new user
             // This is a simple heuristic - if no profile exists, we assume it's a new user
             // Always publish the notification - the handler will check if it's actually a new user
-            var notification = new UserSignedUpNotification
-            {
-                UserId = result.User.Id,
-                Email = result.User.Email,
-                Username = result.User.Username ?? result.User.Email,
-                TenantId = request.TenantId
-            };
+            var notification = new UserSignedUpNotification { UserId = result.User.Id, Email = result.User.Email, Username = result.User.Username ?? result.User.Email, TenantId = request.TenantId };
 
             await mediator.Publish(notification, cancellationToken);
 

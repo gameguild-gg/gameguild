@@ -45,8 +45,5 @@ public static class AuthenticationModule
     }
 
     /// <summary> Adds authentication middleware to the application pipeline </summary>
-    public static IApplicationBuilder UseAuthenticationModule(this IApplicationBuilder app)
-    {
-        return app.UseAuthentication().UseAuthorization();
-    }
+    public static IApplicationBuilder UseAuthenticationModule(this IApplicationBuilder app) { return app.UseAuthentication().UseAuthorization(); }
 }

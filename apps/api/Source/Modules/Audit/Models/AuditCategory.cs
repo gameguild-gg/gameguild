@@ -26,6 +26,4 @@ public enum AuditCategory
     Tenant = 9,
 
     Privacy = 10,
-
-
 }

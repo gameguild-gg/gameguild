@@ -4,7 +4,8 @@ namespace GameGuild.Core.Modules;
 /// Interface for defining modules in the GameGuild application.
 /// Provides a standardized approach for module registration and endpoint mapping.
 /// </summary>
-public interface IModule {
+public interface IModule
+{
     /// <summary>
     /// Configures services for the module in the dependency injection container.
     /// </summary>

@@ -30,6 +30,7 @@ public class UpdateUserHandler(ApplicationDbContext context, ILogger<UpdateUserH
 
         // Update user properties
         bool nameChanged = false;
+
         if (request.GivenName != null && user.GivenName != request.GivenName)
         {
             changes["GivenName"] = new { From = user.GivenName, To = request.GivenName };

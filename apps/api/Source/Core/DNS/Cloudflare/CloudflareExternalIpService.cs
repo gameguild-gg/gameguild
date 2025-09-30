@@ -190,7 +190,7 @@ public class CloudflareExternalIpService : ICloudflareExternalIpService, GameGui
             _options.TimeoutSeconds = 10;
         }
 
-        _logger.LogInformation("Cloudflare Dynamic DNS service configured for zone {ZoneId} with {RecordCount} records", _options.ZoneId, _options.DnsRecords.Count);
+        _logger.LogInformation("Cloudflare Dynamic DNS service configured for zone {ZoneId} with {RecordCount} records", _options.ZoneId, _options.DnsRecords?.Count ?? 0);
     }
 
     private List<string> GetShuffledIpServices()

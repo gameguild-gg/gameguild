@@ -34,14 +34,7 @@ public class CreateUserProfileHandler(IUserProfileService userProfileService, IU
 
             // Publish domain event
             await eventPublisher.PublishAsync(
-                new UserProfileCreatedEvent(
-                    createdProfile.Id,
-                    request.UserId,
-                    createdProfile.DisplayName ?? string.Empty,
-                    givenName,
-                    familyName,
-                    createdProfile.CreatedAt
-                ),
+                new UserProfileCreatedEvent(createdProfile.Id, request.UserId, createdProfile.DisplayName ?? string.Empty, givenName, familyName, createdProfile.CreatedAt),
                 cancellationToken
             );
 

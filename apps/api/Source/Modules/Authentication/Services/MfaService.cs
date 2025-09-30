@@ -263,7 +263,7 @@ public class MfaService(
         }
     }
 
-    public async Task<byte[ ]> GenerateQrCodeAsync(string qrCodeData)
+    public Task<byte[ ]> GenerateQrCodeAsync(string qrCodeData)
     {
         try
         {
@@ -271,7 +271,7 @@ public class MfaService(
             var qrCodeInfo = qrGenerator.CreateQrCode(qrCodeData, QRCodeGenerator.ECCLevel.Q);
             using var qrCode = new PngByteQRCode(qrCodeInfo);
 
-            return qrCode.GetGraphic(20);
+            return Task.FromResult(qrCode.GetGraphic(20));
         }
         catch (Exception ex)
         {

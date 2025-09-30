@@ -11,24 +11,24 @@ public class TenantRepository(ApplicationDbContext context) : ITenantRepository
 
     public async Task<IReadOnlyList<Tenant>> GetActiveTenantsAsync(CancellationToken cancellationToken = default)
     {
-        var tenants = await _context.Tenants.Where(tenant => tenant.IsActive && !tenant.IsDeleted).AsNoTracking().OrderBy(tenant => tenant.Name).ToListAsync(cancellationToken);
+        var tenants = await _context.Tenants.Where(tenant => tenant.IsActive && tenant.DeletedAt == null).AsNoTracking().OrderBy(tenant => tenant.Name).ToListAsync(cancellationToken);
 
         return tenants.AsReadOnly();
     }
 
     public async Task<Tenant?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Tenants.FirstOrDefaultAsync(tenant => tenant.Id == id && !tenant.IsDeleted, cancellationToken);
+        return await _context.Tenants.FirstOrDefaultAsync(tenant => tenant.Id == id && tenant.DeletedAt == null, cancellationToken);
     }
 
     public async Task<Tenant?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
     {
         string normalizedSlug = slug.ToLowerInvariant();
 
-        return await _context.Tenants.FirstOrDefaultAsync(tenant => tenant.Slug.ToLower() == normalizedSlug && !tenant.IsDeleted, cancellationToken);
+        return await _context.Tenants.FirstOrDefaultAsync(tenant => tenant.Slug.ToLower() == normalizedSlug && tenant.DeletedAt == null, cancellationToken);
     }
 
-    public async Task<Tenant?> GetDefaultAsync(CancellationToken cancellationToken = default) { return await _context.Tenants.FirstOrDefaultAsync(tenant => tenant.IsDefault && !tenant.IsDeleted, cancellationToken); }
+    public async Task<Tenant?> GetDefaultAsync(CancellationToken cancellationToken = default) { return await _context.Tenants.FirstOrDefaultAsync(tenant => tenant.IsDefault && tenant.DeletedAt == null, cancellationToken); }
 
     public async Task<Tenant> CreateAsync(Tenant tenant, CancellationToken cancellationToken = default)
     {
@@ -60,7 +60,7 @@ public class TenantRepository(ApplicationDbContext context) : ITenantRepository
     {
         string normalizedSlug = slug.ToLowerInvariant();
 
-        var query = _context.Tenants.Where(tenant => tenant.Slug.ToLower() == normalizedSlug && !tenant.IsDeleted);
+        var query = _context.Tenants.Where(tenant => tenant.Slug.ToLower() == normalizedSlug && tenant.DeletedAt == null);
 
         if (excludeId.HasValue) { query = query.Where(tenant => tenant.Id != excludeId.Value); }
 

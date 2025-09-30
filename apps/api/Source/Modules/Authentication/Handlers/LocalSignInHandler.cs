@@ -18,14 +18,7 @@ public class LocalSignInHandler(IAuthService authService, IMediator mediator, IH
             var result = await authService.LocalSignInAsync(signInRequest);
 
             // Publish successful sign-in event
-            await mediator.Publish(new UserSignedInEvent(
-                result.User.Id,
-                result.User.Email,
-                "Local",
-                ipAddress,
-                userAgent,
-                DateTime.UtcNow
-            ), cancellationToken);
+            await mediator.Publish(new UserSignedInEvent(result.User.Id, result.User.Email, "Local", ipAddress, userAgent, DateTime.UtcNow), cancellationToken);
 
             logger.LogInformation("User {UserId} successfully signed in via local authentication", result.User.Id);
 
@@ -34,13 +27,7 @@ public class LocalSignInHandler(IAuthService authService, IMediator mediator, IH
         catch (UnauthorizedAccessException ex)
         {
             // Publish failed authentication event
-            await mediator.Publish(new AuthenticationFailedEvent(
-                request.Email,
-                "Invalid credentials",
-                ipAddress,
-                userAgent,
-                DateTime.UtcNow
-            ), cancellationToken);
+            await mediator.Publish(new AuthenticationFailedEvent(request.Email, "Invalid credentials", ipAddress, userAgent, DateTime.UtcNow), cancellationToken);
 
             logger.LogWarning("Authentication failed for email {Email}: {Reason}", request.Email, ex.Message);
 
@@ -49,13 +36,7 @@ public class LocalSignInHandler(IAuthService authService, IMediator mediator, IH
         catch (Exception ex)
         {
             // Publish failed authentication event
-            await mediator.Publish(new AuthenticationFailedEvent(
-                request.Email,
-                ex.Message,
-                ipAddress,
-                userAgent,
-                DateTime.UtcNow
-            ), cancellationToken);
+            await mediator.Publish(new AuthenticationFailedEvent(request.Email, ex.Message, ipAddress, userAgent, DateTime.UtcNow), cancellationToken);
 
             logger.LogError(ex, "Sign-in failed for email {Email}", request.Email);
 
@@ -68,10 +49,8 @@ public class LocalSignInHandler(IAuthService authService, IMediator mediator, IH
         if (httpContext == null) return null;
 
         var forwarded = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(forwarded))
-        {
-            return forwarded.Split(',')[0].Trim();
-        }
+
+        if (!string.IsNullOrEmpty(forwarded)) { return forwarded.Split(',')[0].Trim(); }
 
         return httpContext.Connection.RemoteIpAddress?.ToString();
     }
