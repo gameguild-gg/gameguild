@@ -1,7 +1,7 @@
 namespace GameGuild.CQRS;
 
 /// <summary> Configuration for CQRS assembly scanning </summary>
-public class CQRSAssemblyConfiguration {
+public class CqrsAssemblyConfiguration {
   /// <summary> Gets or sets whether to include request handlers </summary>
   public bool IncludeRequestHandlers { get; set; } = true;
 
