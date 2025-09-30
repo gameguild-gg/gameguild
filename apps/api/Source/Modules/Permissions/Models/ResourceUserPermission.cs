@@ -1,6 +1,5 @@
 ﻿using GameGuild.Core.Domain.Permissions;
 
-
 namespace GameGuild.Modules.Resources;
 
 /// <summary> User and their permissions on a resource </summary>

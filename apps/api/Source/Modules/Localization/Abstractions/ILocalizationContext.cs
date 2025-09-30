@@ -3,7 +3,8 @@
 namespace GameGuild.Core.Domain.Identity;
 
 /// <summary> Context interface for localization within a request scope </summary>
-public interface ILocalizationContext {
+public interface ILocalizationContext
+{
     /// <summary> Gets the current culture </summary>
     CultureInfo CurrentCulture { get; }
 

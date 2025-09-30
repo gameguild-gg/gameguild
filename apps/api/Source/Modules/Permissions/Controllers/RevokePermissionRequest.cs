@@ -1,6 +1,7 @@
 ﻿namespace GameGuild.Modules.Permissions.Controllers;
 
-public class RevokePermissionRequest {
+public class RevokePermissionRequest
+{
     public Guid? TenantId { get; set; }
 
     public string Action { get; set; } = string.Empty;
