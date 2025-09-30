@@ -30,11 +30,9 @@ public class UserContext(IHttpContextAccessor httpContextAccessor, ILogger<UserC
 
     public string? Name { get => _user?.FindFirst(ClaimTypes.Name)?.Value ?? _user?.FindFirst("name")?.Value ?? _user?.FindFirst("preferred_username")?.Value; }
 
-    public IDictionary<string, object> Claims { get { return _user == null ? new Dictionary<string, object>() : _user.Claims.ToDictionary(c => c.Type, c => (object) c.Value); } }
+    public IDictionary<string, object> Claims { get { return _user == null ? new Dictionary<string, object>() : _user.Claims.ToDictionary(c => c.Type, c => (object)c.Value); } }
 
     public bool IsAuthenticated { get => _user?.Identity?.IsAuthenticated ?? false; }
 
-    public bool IsInRole(string role) { return _user?.IsInRole(role) ?? false; }
 
-    public IEnumerable<string> Roles { get => _user?.FindAll(ClaimTypes.Role)?.Select(c => c.Value) ?? []; }
 }

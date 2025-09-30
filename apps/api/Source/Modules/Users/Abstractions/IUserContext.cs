@@ -1,7 +1,8 @@
 namespace GameGuild.Modules.Users;
 
 /// <summary> Interface for accessing current user context Domain interface for user identity concerns </summary>
-public interface IUserContext {
+public interface IUserContext
+{
   /// <summary> Gets the current user ID </summary>
   Guid? UserId { get; }
 
@@ -17,9 +18,5 @@ public interface IUserContext {
   /// <summary> Checks if user is authenticated </summary>
   bool IsAuthenticated { get; }
 
-  /// <summary> Gets user roles </summary>
-  IEnumerable<string> Roles { get; }
 
-  /// <summary> Checks if user has specific role </summary>
-  bool IsInRole(string role);
 }
