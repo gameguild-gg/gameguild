@@ -35,8 +35,5 @@ public abstract class BaseController : ControllerBase
     /// </summary>
     protected string? GetCurrentUserEmail() { return User.FindFirst(ClaimTypes.Email)?.Value; }
 
-    /// <summary>
-    /// Gets the current user's role from the JWT token
-    /// </summary>
-    protected string? GetCurrentUserRole() { return User.FindFirst(ClaimTypes.Role)?.Value; }
+
 }

@@ -3,9 +3,10 @@ using GameGuild.Authorization.Identity;
 using GameGuild.Core.Configuration;
 using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
-using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Credentials;
+using GameGuild.Modules.Localization;
+using GameGuild.Modules.Permissions.Contexts;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.UserProfiles;
@@ -163,9 +164,9 @@ public static class DependencyInjection
           .AddApplicationPart(typeof(AuthController).Assembly) // Authentication module
           .AddApplicationPart(typeof(UsersController).Assembly) // Users module
           .AddApplicationPart(typeof(TenantsController).Assembly) // Tenants module
-          .AddApplicationPart(typeof(BillingWebhooksController).Assembly) // Billing module
-          .AddApplicationPart(typeof(PaymentsController).Assembly) // Payments module
-          .AddApplicationPart(typeof(SubscriptionsController).Assembly) // Subscriptions module
+                                                                  // .AddApplicationPart(typeof(BillingWebhooksController).Assembly) // Billing module - temporarily disabled
+                                                                  // .AddApplicationPart(typeof(PaymentsController).Assembly) // Payments module - temporarily disabled
+                                                                  // .AddApplicationPart(typeof(SubscriptionsController).Assembly) // Subscriptions module - temporarily disabled
           .AddApplicationPart(typeof(UserProfilesController).Assembly) // UserProfiles module
           .AddJsonOptions(JsonSerializerConfiguration.ConfigureMvcJsonOptions);
 
@@ -197,8 +198,8 @@ public static class DependencyInjection
         // Get all GameGuild assemblies automatically to scan for CQRS handlers
         var assemblies = GetAssembliesByPattern();
 
-        // Add CQRS services (handlers, behaviors, etc.)
-        services.AddCQRS(assemblies);
+        // Add CQRS services (handlers, behaviors, etc.) - temporarily disabled
+        // services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(assemblies));
 
         // Add telemetry pipeline behavior for CQRS operations
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(Core.Behaviors.TelemetryBehavior<,>));
@@ -231,8 +232,8 @@ public static class DependencyInjection
         {
             ServiceCollectionExtensions.AddDatabaseContext(services, configuration);
 
-            // Register database seeder
-            services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
+            // Register database seeder - temporarily disabled
+            // services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
         }
 
         // Add OpenTelemetry observability
@@ -318,23 +319,23 @@ public static class DependencyInjection
 
         // Core business modules with IModule implementations
         services.AddAuthenticationModule(configuration);
-        services.AddProgramsModuleV2(configuration); // Keep V2 temporarily until updated
-        services.AddBillingModule(configuration);
-        services.AddPaymentsModule(configuration);
-        services.AddTestingLabModule(configuration);
-        services.AddPostsModule(configuration);
+        // services.AddProgramsModuleV2(configuration); // Temporarily disabled
+        // services.AddBillingModule(configuration); // Temporarily disabled
+        // services.AddPaymentsModule(configuration); // Temporarily disabled
+        // services.AddTestingLabModule(configuration); // Temporarily disabled
+        // services.AddPostsModule(configuration); // Temporarily disabled
         services.AddAuthorizationModule(configuration);
 
         // Legacy modules still using old pattern (to be migrated)
         services.AddResourcesModule();
-        services.AddTenantsModule();
-        services.AddProjectsModule();
-        services.AddSubscriptionsModule();
+        // services.AddTenantsModule(); // Temporarily disabled - using new pattern
+        // services.AddProjectsModule(); // Temporarily disabled
+        // services.AddSubscriptionsModule(); // Temporarily disabled
         services.AddCredentialsModule();
         services.AddUsersModule();
         services.AddUserProfilesModule();
-        services.AddUserAchievementsModule();
-        services.AddProductsModule();
+        // services.AddUserAchievementsModule(); // Temporarily disabled
+        // services.AddProductsModule(); // Temporarily disabled
 
         // External infrastructure services
         services.AddCloudflareServices(configuration);
@@ -385,21 +386,17 @@ public static class DependencyInjection
         // Add debug logging
         Console.WriteLine("🔧 AddCoreServices called");
 
-        // Tenant isolation and management services
-        services.AddScoped<ITenantIsolationService, TenantIsolationService>();
-        Console.WriteLine("✅ ITenantIsolationService registered");
+        // Tenant isolation and management services - temporarily disabled
+        // services.AddScoped<ITenantIsolationService, TenantIsolationService>();
+        // Console.WriteLine("✅ ITenantIsolationService registered");
 
-        // Role template management services
-        services.AddScoped<IRoleTemplateService, RoleTemplateService>();
-        Console.WriteLine("✅ IRoleTemplateService registered");
+        // Username normalization services - temporarily disabled
+        // services.AddScoped<IUsernameNormalizationService, UsernameNormalizationService>();
+        // Console.WriteLine("✅ IUsernameNormalizationService registered");
 
-        // Username normalization services
-        services.AddScoped<IUsernameNormalizationService, UsernameNormalizationService>();
-        Console.WriteLine("✅ IUsernameNormalizationService registered");
-
-        // Privacy management services
-        services.AddScoped<IUserPrivacyService, UserPrivacyService>();
-        Console.WriteLine("✅ IUserPrivacyService registered");
+        // Privacy management services - temporarily disabled
+        // services.AddScoped<IUserPrivacyService, UserPrivacyService>();
+        // Console.WriteLine("✅ IUserPrivacyService registered");
 
         Console.WriteLine("🔧 AddCoreServices completed successfully");
         return services;
