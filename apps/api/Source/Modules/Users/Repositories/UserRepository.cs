@@ -53,9 +53,11 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
         var query = includeDeleted ? _context.Users.IgnoreQueryFilters() : _context.Users.Where(u => u.DeletedAt == null);
 
         return await query.Where(u => (u.GivenName != null && u.GivenName.Contains(searchTerm)) ||
-                                     (u.FamilyName != null && u.FamilyName.Contains(searchTerm)) ||
-                                     (u.EmailAddress != null && u.EmailAddress.Value.Contains(searchTerm)) ||
-                                     u.Username.Contains(searchTerm)).ToListAsync(cancellationToken);
+                                      (u.FamilyName != null && u.FamilyName.Contains(searchTerm)) ||
+                                      (u.EmailAddress != null && u.EmailAddress.Value.Contains(searchTerm)) ||
+                                      u.Username.Contains(searchTerm)
+            )
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<UserStatistics> GetUserStatisticsAsync(CancellationToken cancellationToken = default)

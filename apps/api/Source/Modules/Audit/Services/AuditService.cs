@@ -114,14 +114,7 @@ public class AuditService(ApplicationDbContext context, IHttpContextAccessor htt
         await LogAsync(
             new CreateAuditLogRequest
             {
-                ActionType = actionType,
-                ResourceType = "System",
-                UserId = userId,
-                Description = description,
-                Metadata = metadata,
-                Success = true,
-                RiskLevel = AuditRiskLevel.High,
-                Category = AuditCategory.Admin
+                ActionType = actionType, ResourceType = "System", UserId = userId, Description = description, Metadata = metadata, Success = true, RiskLevel = AuditRiskLevel.High, Category = AuditCategory.Admin
             }
         );
     }
@@ -178,10 +171,6 @@ public class AuditService(ApplicationDbContext context, IHttpContextAccessor htt
             }
         );
     }
-
-
-
-
 
     public async Task LogPrivacyOperationAsync(string actionType, Guid userId, string? settingName = null, string? oldValue = null, string? newValue = null, Guid? tenantId = null, object? metadata = null)
     {

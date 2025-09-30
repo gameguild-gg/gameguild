@@ -4,10 +4,12 @@
 /// Base abstract class for modules providing common functionality.
 /// Implements standard module patterns and logging.
 /// </summary>
-public abstract class ModuleBase : IModule {
+public abstract class ModuleBase : IModule
+{
     private readonly ILogger<ModuleBase> _logger;
 
-    protected ModuleBase() {
+    protected ModuleBase()
+    {
         // Create a logger using the factory method
         var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         _logger = loggerFactory.CreateLogger<ModuleBase>();
@@ -16,16 +18,20 @@ public abstract class ModuleBase : IModule {
     /// <summary>
     /// Configures services for the module. Override to add module-specific services.
     /// </summary>
-    public virtual IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration) {
+    public virtual IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    {
         _logger.LogInformation("Configuring services for {ModuleName} v{ModuleVersion}", ModuleName, ModuleVersion);
+
         return services;
     }
 
     /// <summary>
     /// Maps endpoints for the module. Override to add module-specific endpoints.
     /// </summary>
-    public virtual WebApplication MapEndpoints(WebApplication app) {
+    public virtual WebApplication MapEndpoints(WebApplication app)
+    {
         _logger.LogInformation("Mapping endpoints for {ModuleName} v{ModuleVersion}", ModuleName, ModuleVersion);
+
         return app;
     }
 

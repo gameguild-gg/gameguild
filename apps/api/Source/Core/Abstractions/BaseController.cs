@@ -34,6 +34,4 @@ public abstract class BaseController : ControllerBase
     /// Gets the current user's email from the JWT token
     /// </summary>
     protected string? GetCurrentUserEmail() { return User.FindFirst(ClaimTypes.Email)?.Value; }
-
-
 }

@@ -3,7 +3,8 @@
 /// <summary>
 /// Configuration options for request logging middleware.
 /// </summary>
-public class RequestLoggingOptions {
+public class RequestLoggingOptions
+{
     /// <summary>
     /// Whether to log request headers (sensitive headers are automatically filtered).
     /// </summary>
@@ -32,12 +33,5 @@ public class RequestLoggingOptions {
     /// <summary>
     /// Paths to skip logging (e.g., health check endpoints).
     /// </summary>
-    public List<string> SkipPaths { get; set; } =
-    [
-        "/health",
-        "/ping",
-        "/favicon.ico",
-        "/_framework",
-        "/swagger"
-    ];
+    public List<string> SkipPaths { get; set; } = ["/health", "/ping", "/favicon.ico", "/_framework", "/swagger"];
 }

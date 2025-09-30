@@ -19,13 +19,9 @@ internal sealed class TrustedDeviceConfiguration : IEntityTypeConfiguration<Trus
         builder.HasIndex(td => new { td.UserId, td.IsActive });
 
         // Property configurations
-        builder.Property(td => td.DeviceFingerprint)
-            .HasMaxLength(256)
-            .IsRequired();
+        builder.Property(td => td.DeviceFingerprint).HasMaxLength(256).IsRequired();
 
-        builder.Property(td => td.DeviceName)
-            .HasMaxLength(200)
-            .IsRequired();
+        builder.Property(td => td.DeviceName).HasMaxLength(200).IsRequired();
 
         builder.Property(td => td.DeviceInfo)
             .HasColumnType("jsonb") // PostgreSQL specific - use "json" for other databases
@@ -35,8 +31,7 @@ internal sealed class TrustedDeviceConfiguration : IEntityTypeConfiguration<Trus
             .HasColumnType("jsonb") // PostgreSQL specific - use "json" for other databases
             .IsRequired(false);
 
-        builder.Property(td => td.IsActive)
-            .HasDefaultValue(true);
+        builder.Property(td => td.IsActive).HasDefaultValue(true);
 
         // Computed properties (read-only)
         builder.Ignore(td => td.IsExpired);

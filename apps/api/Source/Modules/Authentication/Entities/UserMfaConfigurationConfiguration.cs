@@ -22,22 +22,17 @@ internal sealed class UserMfaConfigurationConfiguration : IEntityTypeConfigurati
             .HasColumnType("jsonb") // PostgreSQL specific - use "json" for other databases
             .IsRequired(false);
 
-        builder.Property(mfa => mfa.QrCodeSetupData)
-            .HasMaxLength(1000)
-            .IsRequired(false);
+        builder.Property(mfa => mfa.QrCodeSetupData).HasMaxLength(1000).IsRequired(false);
 
         builder.Property(mfa => mfa.PreferredMethod)
             .HasConversion<string>() // Store enum as string
             .HasMaxLength(20);
 
-        builder.Property(mfa => mfa.IsEnabled)
-            .HasDefaultValue(false);
+        builder.Property(mfa => mfa.IsEnabled).HasDefaultValue(false);
 
-        builder.Property(mfa => mfa.IsSetupComplete)
-            .HasDefaultValue(false);
+        builder.Property(mfa => mfa.IsSetupComplete).HasDefaultValue(false);
 
-        builder.Property(mfa => mfa.FailedAttempts)
-            .HasDefaultValue(0);
+        builder.Property(mfa => mfa.FailedAttempts).HasDefaultValue(0);
 
         // Optimistic concurrency
         builder.Property(mfa => mfa.Version).IsConcurrencyToken();

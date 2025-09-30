@@ -7,33 +7,40 @@ namespace GameGuild.Core.GraphQL;
 /// Middleware for analyzing GraphQL query complexity and depth to prevent resource exhaustion attacks
 /// Implements comprehensive query analysis with configurable limits
 /// </summary>
-public class GraphQlSecurityMiddleware {
+public class GraphQlSecurityMiddleware
+{
     private readonly RequestDelegate _next;
+
     private readonly GraphQlOptions _options;
+
     private readonly ILogger<GraphQlSecurityMiddleware> _logger;
 
-    public GraphQlSecurityMiddleware(
-      RequestDelegate next,
-      IOptions<GraphQlOptions> options,
-      ILogger<GraphQlSecurityMiddleware> logger) {
+    public GraphQlSecurityMiddleware(RequestDelegate next, IOptions<GraphQlOptions> options, ILogger<GraphQlSecurityMiddleware> logger)
+    {
         _next = next;
         _options = options.Value;
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context) {
+    public async Task InvokeAsync(HttpContext context)
+    {
         // Only process GraphQL requests
-        if (!IsGraphQlRequest(context)) {
+        if (!IsGraphQlRequest(context))
+        {
             await _next(context);
+
             return;
         }
 
-        try {
+        try
+        {
             // Read and analyze the GraphQL query
             var queryAnalysis = await AnalyzeGraphQlRequestAsync(context);
 
-            if (!queryAnalysis.IsValid) {
+            if (!queryAnalysis.IsValid)
+            {
                 await HandleSecurityViolation(context, queryAnalysis);
+
                 return;
             }
 
@@ -42,24 +49,23 @@ public class GraphQlSecurityMiddleware {
 
             await _next(context);
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Error in GraphQL security middleware");
             await _next(context);
         }
     }
 
-    private bool IsGraphQlRequest(HttpContext context) {
-        return context.Request.Path.StartsWithSegments(_options.Path, StringComparison.OrdinalIgnoreCase);
-    }
+    private bool IsGraphQlRequest(HttpContext context) { return context.Request.Path.StartsWithSegments(_options.Path, StringComparison.OrdinalIgnoreCase); }
 
-    private async Task<GraphQlQueryAnalysis> AnalyzeGraphQlRequestAsync(HttpContext context) {
+    private async Task<GraphQlQueryAnalysis> AnalyzeGraphQlRequestAsync(HttpContext context)
+    {
         var query = await ExtractGraphQlQueryAsync(context);
 
-        if (string.IsNullOrWhiteSpace(query)) {
-            return GraphQlQueryAnalysis.Invalid("Empty query");
-        }
+        if (string.IsNullOrWhiteSpace(query)) { return GraphQlQueryAnalysis.Invalid("Empty query"); }
 
-        try {
+        try
+        {
             // Parse the GraphQL document
             var document = Utf8GraphQLParser.Parse(query);
 
@@ -69,80 +75,80 @@ public class GraphQlSecurityMiddleware {
 
             var violations = new List<string>();
 
-            if (depthAnalysis.MaxDepth > _options.MaxDepth) {
-                violations.Add($"Query depth {depthAnalysis.MaxDepth} exceeds limit of {_options.MaxDepth}");
-            }
+            if (depthAnalysis.MaxDepth > _options.MaxDepth) { violations.Add($"Query depth {depthAnalysis.MaxDepth} exceeds limit of {_options.MaxDepth}"); }
 
-            if (complexityAnalysis.TotalComplexity > _options.MaxComplexity) {
-                violations.Add($"Query complexity {complexityAnalysis.TotalComplexity} exceeds limit of {_options.MaxComplexity}");
-            }
+            if (complexityAnalysis.TotalComplexity > _options.MaxComplexity) { violations.Add($"Query complexity {complexityAnalysis.TotalComplexity} exceeds limit of {_options.MaxComplexity}"); }
 
             // Check for potential DoS patterns
             var dosPatterns = DetectDoSPatterns(document);
             violations.AddRange(dosPatterns);
 
             return violations.Count > 0
-              ? GraphQlQueryAnalysis.Invalid(string.Join("; ", violations))
-              : GraphQlQueryAnalysis.Valid(depthAnalysis.MaxDepth, complexityAnalysis.TotalComplexity, complexityAnalysis.FieldCount);
+                ? GraphQlQueryAnalysis.Invalid(string.Join("; ", violations))
+                : GraphQlQueryAnalysis.Valid(depthAnalysis.MaxDepth, complexityAnalysis.TotalComplexity, complexityAnalysis.FieldCount);
         }
-        catch (Exception ex) when (ex.Message.Contains("syntax")) {
+        catch (Exception ex) when (ex.Message.Contains("syntax"))
+        {
             _logger.LogWarning("Invalid GraphQL syntax: {Error}", ex.Message);
+
             return GraphQlQueryAnalysis.Invalid($"Invalid GraphQL syntax: {ex.Message}");
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Error analyzing GraphQL query");
+
             return GraphQlQueryAnalysis.Invalid("Query analysis failed");
         }
     }
 
-    private async Task<string> ExtractGraphQlQueryAsync(HttpContext context) {
+    private async Task<string> ExtractGraphQlQueryAsync(HttpContext context)
+    {
         context.Request.EnableBuffering();
 
-        try {
-            if (context.Request.Method.Equals("GET", StringComparison.OrdinalIgnoreCase)) {
-                return context.Request.Query["query"].FirstOrDefault() ?? string.Empty;
-            }
+        try
+        {
+            if (context.Request.Method.Equals("GET", StringComparison.OrdinalIgnoreCase)) { return context.Request.Query["query"].FirstOrDefault() ?? string.Empty; }
 
-            if (context.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase)) {
+            if (context.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
+            {
                 context.Request.Body.Position = 0;
-                using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
+                using var reader = new StreamReader(context.Request.Body, leaveOpen : true);
                 var body = await reader.ReadToEndAsync();
                 context.Request.Body.Position = 0;
 
-                if (context.Request.ContentType?.Contains("application/json") == true) {
+                if (context.Request.ContentType?.Contains("application/json") == true)
+                {
                     var jsonDoc = System.Text.Json.JsonDocument.Parse(body);
 
                     // Handle single query object: { "query": "...", "variables": {...} }
-                    if (jsonDoc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object) {
-                        if (jsonDoc.RootElement.TryGetProperty("query", out var queryElement)) {
-                            return queryElement.GetString() ?? string.Empty;
-                        }
+                    if (jsonDoc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object)
+                    {
+                        if (jsonDoc.RootElement.TryGetProperty("query", out var queryElement)) { return queryElement.GetString() ?? string.Empty; }
                     }
                     // Handle batched query array: [{ "query": "...", "variables": {...} }]
-                    else if (jsonDoc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array) {
+                    else if (jsonDoc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+                    {
                         // For batched queries, analyze the first query in the batch
                         var firstElement = jsonDoc.RootElement.EnumerateArray().FirstOrDefault();
-                        if (firstElement.ValueKind == System.Text.Json.JsonValueKind.Object &&
-                            firstElement.TryGetProperty("query", out var batchQueryElement)) {
-                            return batchQueryElement.GetString() ?? string.Empty;
-                        }
+
+                        if (firstElement.ValueKind == System.Text.Json.JsonValueKind.Object && firstElement.TryGetProperty("query", out var batchQueryElement)) { return batchQueryElement.GetString() ?? string.Empty; }
                     }
                 }
 
                 return body;
             }
         }
-        catch (Exception ex) {
-            _logger.LogWarning(ex, "Failed to extract GraphQL query from request");
-        }
+        catch (Exception ex) { _logger.LogWarning(ex, "Failed to extract GraphQL query from request"); }
 
         return string.Empty;
     }
 
-    private GraphQlDepthAnalysis AnalyzeDepth(DocumentNode document) {
+    private GraphQlDepthAnalysis AnalyzeDepth(DocumentNode document)
+    {
         var maxDepth = 0;
 
-        foreach (var definition in document.Definitions.OfType<OperationDefinitionNode>()) {
+        foreach (var definition in document.Definitions.OfType<OperationDefinitionNode>())
+        {
             var depth = CalculateSelectionSetDepth(definition.SelectionSet, 1);
             maxDepth = Math.Max(maxDepth, depth);
         }
@@ -150,21 +156,18 @@ public class GraphQlSecurityMiddleware {
         return new GraphQlDepthAnalysis(maxDepth);
     }
 
-    private int CalculateSelectionSetDepth(SelectionSetNode selectionSet, int currentDepth) {
-        if (selectionSet?.Selections == null || !selectionSet.Selections.Any()) {
-            return currentDepth;
-        }
+    private int CalculateSelectionSetDepth(SelectionSetNode selectionSet, int currentDepth)
+    {
+        if (selectionSet?.Selections == null || !selectionSet.Selections.Any()) { return currentDepth; }
 
         var maxDepth = currentDepth;
 
-        foreach (var selection in selectionSet.Selections) {
-            var selectionDepth = selection switch {
-                FieldNode field => field.SelectionSet != null
-                  ? CalculateSelectionSetDepth(field.SelectionSet, currentDepth + 1)
-                  : currentDepth,
-                InlineFragmentNode inlineFragment => inlineFragment.SelectionSet != null
-                  ? CalculateSelectionSetDepth(inlineFragment.SelectionSet, currentDepth)
-                  : currentDepth,
+        foreach (var selection in selectionSet.Selections)
+        {
+            var selectionDepth = selection switch
+            {
+                FieldNode field => field.SelectionSet != null ? CalculateSelectionSetDepth(field.SelectionSet, currentDepth + 1) : currentDepth,
+                InlineFragmentNode inlineFragment => inlineFragment.SelectionSet != null ? CalculateSelectionSetDepth(inlineFragment.SelectionSet, currentDepth) : currentDepth,
                 FragmentSpreadNode => currentDepth + 1, // Conservative estimate for fragments
                 _ => currentDepth
             };
@@ -175,11 +178,13 @@ public class GraphQlSecurityMiddleware {
         return maxDepth;
     }
 
-    private GraphQlComplexityAnalysis AnalyzeComplexity(DocumentNode document) {
+    private GraphQlComplexityAnalysis AnalyzeComplexity(DocumentNode document)
+    {
         var totalComplexity = 0;
         var fieldCount = 0;
 
-        foreach (var definition in document.Definitions.OfType<OperationDefinitionNode>()) {
+        foreach (var definition in document.Definitions.OfType<OperationDefinitionNode>())
+        {
             var (complexity, fields) = CalculateSelectionSetComplexity(definition.SelectionSet);
             totalComplexity += complexity;
             fieldCount += fields;
@@ -188,16 +193,17 @@ public class GraphQlSecurityMiddleware {
         return new GraphQlComplexityAnalysis(totalComplexity, fieldCount);
     }
 
-    private (int complexity, int fieldCount) CalculateSelectionSetComplexity(SelectionSetNode? selectionSet) {
-        if (selectionSet?.Selections == null || !selectionSet.Selections.Any()) {
-            return (0, 0);
-        }
+    private (int complexity, int fieldCount) CalculateSelectionSetComplexity(SelectionSetNode? selectionSet)
+    {
+        if (selectionSet?.Selections == null || !selectionSet.Selections.Any()) { return (0, 0); }
 
         var totalComplexity = 0;
         var totalFields = 0;
 
-        foreach (var selection in selectionSet.Selections) {
-            var (selectionComplexity, selectionFields) = selection switch {
+        foreach (var selection in selectionSet.Selections)
+        {
+            var (selectionComplexity, selectionFields) = selection switch
+            {
                 FieldNode field => CalculateFieldComplexity(field),
                 InlineFragmentNode inlineFragment => CalculateSelectionSetComplexity(inlineFragment.SelectionSet),
                 FragmentSpreadNode => (5, 1), // Conservative estimate for fragments
@@ -211,7 +217,8 @@ public class GraphQlSecurityMiddleware {
         return (totalComplexity, totalFields);
     }
 
-    private (int complexity, int fieldCount) CalculateFieldComplexity(FieldNode field) {
+    private (int complexity, int fieldCount) CalculateFieldComplexity(FieldNode field)
+    {
         var baseComplexity = GetFieldComplexity(field.Name.Value);
         var fieldCount = 1;
 
@@ -227,9 +234,11 @@ public class GraphQlSecurityMiddleware {
         return (totalComplexity, totalFields);
     }
 
-    private int GetFieldComplexity(string fieldName) {
+    private int GetFieldComplexity(string fieldName)
+    {
         // Assign different complexity scores based on field types
-        return fieldName.ToLowerInvariant() switch {
+        return fieldName.ToLowerInvariant() switch
+        {
             // High complexity operations
             var f when f.Contains("search") => 10,
             var f when f.Contains("aggregate") => 8,
@@ -250,15 +259,16 @@ public class GraphQlSecurityMiddleware {
         };
     }
 
-    private int CalculateArgumentComplexity(IReadOnlyList<ArgumentNode>? arguments) {
-        if (arguments == null || !arguments.Any()) {
-            return 0;
-        }
+    private int CalculateArgumentComplexity(IReadOnlyList<ArgumentNode>? arguments)
+    {
+        if (arguments == null || !arguments.Any()) { return 0; }
 
         var complexity = 0;
 
-        foreach (var argument in arguments) {
-            complexity += argument.Name.Value.ToLowerInvariant() switch {
+        foreach (var argument in arguments)
+        {
+            complexity += argument.Name.Value.ToLowerInvariant() switch
+            {
                 "first" or "last" => GetPaginationComplexity(argument.Value),
                 "take" or "skip" => GetPaginationComplexity(argument.Value),
                 "where" or "filter" => 2,
@@ -270,10 +280,13 @@ public class GraphQlSecurityMiddleware {
         return complexity;
     }
 
-    private int GetPaginationComplexity(IValueNode value) {
-        if (value is IntValueNode intValue && int.TryParse(intValue.Value, out var limit)) {
+    private int GetPaginationComplexity(IValueNode value)
+    {
+        if (value is IntValueNode intValue && int.TryParse(intValue.Value, out var limit))
+        {
             // Higher complexity for larger pagination limits
-            return limit switch {
+            return limit switch
+            {
                 > 100 => 5,
                 > 50 => 3,
                 > 20 => 2,
@@ -284,77 +297,70 @@ public class GraphQlSecurityMiddleware {
         return 1;
     }
 
-    private List<string> DetectDoSPatterns(DocumentNode document) {
+    private List<string> DetectDoSPatterns(DocumentNode document)
+    {
         var violations = new List<string>();
 
         // Check for deeply nested aliases (alias DoS attack)
         var aliasCount = CountAliases(document);
-        if (aliasCount > 50) {
-            violations.Add($"Excessive aliases detected: {aliasCount}");
-        }
+
+        if (aliasCount > 50) { violations.Add($"Excessive aliases detected: {aliasCount}"); }
 
         // Check for circular fragment references
-        if (HasCircularFragments(document)) {
-            violations.Add("Circular fragment references detected");
-        }
+        if (HasCircularFragments(document)) { violations.Add("Circular fragment references detected"); }
 
         // Check for excessive directive usage
         var directiveCount = CountDirectives(document);
-        if (directiveCount > 20) {
-            violations.Add($"Excessive directives detected: {directiveCount}");
-        }
+
+        if (directiveCount > 20) { violations.Add($"Excessive directives detected: {directiveCount}"); }
 
         return violations;
     }
 
-    private int CountAliases(DocumentNode document) {
+    private int CountAliases(DocumentNode document)
+    {
         var aliasCount = 0;
 
-        foreach (var definition in document.Definitions.OfType<OperationDefinitionNode>()) {
-            aliasCount += CountAliasesInSelectionSet(definition.SelectionSet);
-        }
+        foreach (var definition in document.Definitions.OfType<OperationDefinitionNode>()) { aliasCount += CountAliasesInSelectionSet(definition.SelectionSet); }
 
         return aliasCount;
     }
 
-    private int CountAliasesInSelectionSet(SelectionSetNode? selectionSet) {
+    private int CountAliasesInSelectionSet(SelectionSetNode? selectionSet)
+    {
         if (selectionSet?.Selections == null) return 0;
 
         var count = 0;
 
-        foreach (var selection in selectionSet.Selections) {
-            if (selection is FieldNode field) {
+        foreach (var selection in selectionSet.Selections)
+        {
+            if (selection is FieldNode field)
+            {
                 if (field.Alias != null) count++;
                 count += CountAliasesInSelectionSet(field.SelectionSet);
             }
-            else if (selection is InlineFragmentNode inlineFragment) {
-                count += CountAliasesInSelectionSet(inlineFragment.SelectionSet);
-            }
+            else if (selection is InlineFragmentNode inlineFragment) { count += CountAliasesInSelectionSet(inlineFragment.SelectionSet); }
         }
 
         return count;
     }
 
-    private bool HasCircularFragments(DocumentNode document) {
+    private bool HasCircularFragments(DocumentNode document)
+    {
         // Simplified check - could be enhanced with proper graph traversal
-        var fragmentNames = document.Definitions
-          .OfType<FragmentDefinitionNode>()
-          .Select(f => f.Name.Value)
-          .ToHashSet();
+        var fragmentNames = document.Definitions.OfType<FragmentDefinitionNode>().Select(f => f.Name.Value).ToHashSet();
 
-        foreach (var fragment in document.Definitions.OfType<FragmentDefinitionNode>()) {
-            if (HasCircularReference(fragment, fragmentNames, [])) {
-                return true;
-            }
+        foreach (var fragment in document.Definitions.OfType<FragmentDefinitionNode>())
+        {
+            if (HasCircularReference(fragment, fragmentNames, [])) { return true; }
         }
 
         return false;
     }
 
-    private bool HasCircularReference(FragmentDefinitionNode fragment, HashSet<string> allFragments, HashSet<string> visited) {
-        if (visited.Contains(fragment.Name.Value)) {
-            return true;
-        }
+    private bool HasCircularReference(FragmentDefinitionNode fragment, HashSet<string> allFragments, HashSet<string> visited)
+    {
+        if (visited.Contains(fragment.Name.Value)) { return true; }
 
         visited.Add(fragment.Name.Value);
 
@@ -363,52 +369,48 @@ public class GraphQlSecurityMiddleware {
         return false;
     }
 
-    private int CountDirectives(DocumentNode document) {
+    private int CountDirectives(DocumentNode document)
+    {
         var directiveCount = 0;
 
-        foreach (var definition in document.Definitions) {
-            directiveCount += CountDirectivesInNode(definition);
-        }
+        foreach (var definition in document.Definitions) { directiveCount += CountDirectivesInNode(definition); }
 
         return directiveCount;
     }
 
-    private int CountDirectivesInNode(ISyntaxNode node) {
+    private int CountDirectivesInNode(ISyntaxNode node)
+    {
         // Simplified directive counting - could be enhanced
         return 0;
     }
 
-    private async Task HandleSecurityViolation(HttpContext context, GraphQlQueryAnalysis analysis) {
+    private async Task HandleSecurityViolation(HttpContext context, GraphQlQueryAnalysis analysis)
+    {
         context.Response.StatusCode = 400;
         context.Response.ContentType = "application/json";
 
-        var response = new {
-            errors = new[] {
-        new {
-          message = "Query security violation",
-          details = analysis.ErrorMessage,
-          extensions = new {
-            code = "QUERY_SECURITY_VIOLATION",
-            maxDepth = _options.MaxDepth,
-            maxComplexity = _options.MaxComplexity
-          }
-        }
-      }
+        var response = new
+        {
+            errors = new[ ]
+            {
+                new
+                {
+                    message = "Query security violation",
+                    details = analysis.ErrorMessage,
+                    extensions = new { code = "QUERY_SECURITY_VIOLATION", maxDepth = _options.MaxDepth, maxComplexity = _options.MaxComplexity }
+                }
+            }
         };
 
-        var json = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions {
-            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-        });
+        var json = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
 
         await context.Response.WriteAsync(json);
 
         _logger.LogWarning("GraphQL security violation: {Error}", analysis.ErrorMessage);
     }
 
-    private void LogQueryAnalysis(HttpContext context, GraphQlQueryAnalysis analysis) {
-        if (analysis.IsValid) {
-            _logger.LogDebug("GraphQL query analysis - Depth: {Depth}, Complexity: {Complexity}, Fields: {FieldCount}",
-              analysis.Depth, analysis.Complexity, analysis.FieldCount);
-        }
+    private void LogQueryAnalysis(HttpContext context, GraphQlQueryAnalysis analysis)
+    {
+        if (analysis.IsValid) { _logger.LogDebug("GraphQL query analysis - Depth: {Depth}, Complexity: {Complexity}, Fields: {FieldCount}", analysis.Depth, analysis.Complexity, analysis.FieldCount); }
     }
 }

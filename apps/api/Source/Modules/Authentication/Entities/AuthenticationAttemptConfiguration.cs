@@ -26,39 +26,25 @@ internal sealed class AuthenticationAttemptConfiguration : IEntityTypeConfigurat
         // Property configurations - these are already defined with data annotations
         // but we can add additional EF Core specific configurations here if needed
 
-        builder.Property(aa => aa.Email)
-            .HasMaxLength(256)
-            .IsRequired();
+        builder.Property(aa => aa.Email).HasMaxLength(256).IsRequired();
 
         builder.Property(aa => aa.IpAddress)
             .HasMaxLength(45) // IPv6 max length
             .IsRequired();
 
-        builder.Property(aa => aa.UserAgent)
-            .HasMaxLength(1000)
-            .IsRequired(false);
+        builder.Property(aa => aa.UserAgent).HasMaxLength(1000).IsRequired(false);
 
-        builder.Property(aa => aa.FailureReason)
-            .HasMaxLength(50)
-            .IsRequired(false);
+        builder.Property(aa => aa.FailureReason).HasMaxLength(50).IsRequired(false);
 
-        builder.Property(aa => aa.Location)
-            .HasMaxLength(200)
-            .IsRequired(false);
+        builder.Property(aa => aa.Location).HasMaxLength(200).IsRequired(false);
 
-        builder.Property(aa => aa.DeviceFingerprint)
-            .HasMaxLength(64)
-            .IsRequired(false);
+        builder.Property(aa => aa.DeviceFingerprint).HasMaxLength(64).IsRequired(false);
 
-        builder.Property(aa => aa.CorrelationId)
-            .HasMaxLength(64)
-            .IsRequired(false);
+        builder.Property(aa => aa.CorrelationId).HasMaxLength(64).IsRequired(false);
 
-        builder.Property(aa => aa.RiskScore)
-            .HasDefaultValue(0);
+        builder.Property(aa => aa.RiskScore).HasDefaultValue(0);
 
-        builder.Property(aa => aa.IsSuspicious)
-            .HasDefaultValue(false);
+        builder.Property(aa => aa.IsSuspicious).HasDefaultValue(false);
 
         // JSON column for metadata
         builder.Property(aa => aa.Metadata)

@@ -3,22 +3,23 @@
 /// <summary>
 /// Helper class to dispose multiple disposables
 /// </summary>
-internal class CompositeDisposable : IDisposable {
+internal class CompositeDisposable : IDisposable
+{
     private readonly List<IDisposable> _disposables;
+
     private bool _disposed;
 
-    public CompositeDisposable(List<IDisposable> disposables) {
-        _disposables = disposables ?? throw new ArgumentNullException(nameof(disposables));
-    }
+    public CompositeDisposable(List<IDisposable> disposables) { _disposables = disposables ?? throw new ArgumentNullException(nameof(disposables)); }
 
-    public void Dispose() {
+    public void Dispose()
+    {
         if (_disposed) return;
 
-        foreach (var disposable in _disposables) {
-            try {
-                disposable?.Dispose();
-            }
-            catch {
+        foreach (var disposable in _disposables)
+        {
+            try { disposable?.Dispose(); }
+            catch
+            {
                 // Ignore disposal errors
             }
         }

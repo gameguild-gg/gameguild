@@ -28,20 +28,13 @@ internal sealed class MfaAttemptConfiguration : IEntityTypeConfiguration<MfaAtte
             .HasMaxLength(45) // IPv6 max length
             .IsRequired();
 
-        builder.Property(ma => ma.UserAgent)
-            .HasMaxLength(1000)
-            .IsRequired();
+        builder.Property(ma => ma.UserAgent).HasMaxLength(1000).IsRequired();
 
-        builder.Property(ma => ma.FailureReason)
-            .HasMaxLength(200)
-            .IsRequired(false);
+        builder.Property(ma => ma.FailureReason).HasMaxLength(200).IsRequired(false);
 
-        builder.Property(ma => ma.Location)
-            .HasMaxLength(200)
-            .IsRequired(false);
+        builder.Property(ma => ma.Location).HasMaxLength(200).IsRequired(false);
 
-        builder.Property(ma => ma.IsSuccessful)
-            .HasDefaultValue(false);
+        builder.Property(ma => ma.IsSuccessful).HasDefaultValue(false);
 
         // Optimistic concurrency
         builder.Property(ma => ma.Version).IsConcurrencyToken();

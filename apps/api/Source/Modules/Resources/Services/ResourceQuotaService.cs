@@ -184,7 +184,7 @@ public class ResourceQuotaService(IResourceQuotaRepository repository, ILogger<R
 
         if (limitCheck.CanProceed)
         {
-            await RecordUsageAsync(tenantId, type, amount, userId, source, cancellationToken: cancellationToken);
+            await RecordUsageAsync(tenantId, type, amount, userId, source, cancellationToken : cancellationToken);
             logger.LogDebug("Successfully consumed {Amount} units of {Type} for tenant {TenantId}", amount, type, tenantId);
         }
         else { logger.LogWarning("Failed to consume {Amount} units of {Type} for tenant {TenantId}: {Reason}", amount, type, tenantId, limitCheck.Message); }
@@ -213,7 +213,7 @@ public class ResourceQuotaService(IResourceQuotaRepository repository, ILogger<R
         if (quota?.HardLimit is null or <= 0) { return response; }
 
         long hardLimitValue = quota.HardLimit.Value;
-        response.UsagePercentage = (double)response.CurrentUsage / hardLimitValue * 100;
+        response.UsagePercentage = (double) response.CurrentUsage / hardLimitValue * 100;
         response.RemainingQuota = Math.Max(0, hardLimitValue - response.CurrentUsage);
 
         return response;

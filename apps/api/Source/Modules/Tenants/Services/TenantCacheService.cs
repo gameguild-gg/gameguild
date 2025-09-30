@@ -314,7 +314,7 @@ public class TenantCacheService : ITenantCacheService
     {
         _logger.LogDebug("Loading tenants into cache");
 
-        var tenants = await context.Tenants.Where(t => !t.IsDeleted).ToListAsync(cancellationToken);
+        var tenants = await context.Tenants.Where(t => t.DeletedAt == null).ToListAsync(cancellationToken);
 
         _tenantCache.Clear();
         _tenantSlugCache.Clear();
