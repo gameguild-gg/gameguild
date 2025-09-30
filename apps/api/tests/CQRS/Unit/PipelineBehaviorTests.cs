@@ -23,7 +23,7 @@ public class PipelineBehaviorTests
         var expectedResponse = "handled";
         var nextCalled = false;
 
-        RequestHandlerDelegate<string> next = () =>
+        RequestHandlerDelegateBase<string> next = () =>
         {
             nextCalled = true;
             return Task.FromResult(expectedResponse);
@@ -60,7 +60,7 @@ public class PipelineBehaviorTests
         mockValidator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(validationResult);
 
-        RequestHandlerDelegate<string> next = () =>
+        RequestHandlerDelegateBase<string> next = () =>
         {
             nextCalled = true;
             return Task.FromResult("handled");
@@ -91,7 +91,7 @@ public class PipelineBehaviorTests
         mockValidator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(validationResult);
 
-        RequestHandlerDelegate<string> next = () => Task.FromResult("should not be called");
+        RequestHandlerDelegateBase<string> next = () => Task.FromResult("should not be called");
 
         // Act & Assert
         var act = async () => await behavior.Handle(request, next, CancellationToken.None);
@@ -125,14 +125,14 @@ public class PipelineBehaviorTests
         mockValidator2.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
                      .ReturnsAsync(validationResult2);
 
-        RequestHandlerDelegate<string> next = () => Task.FromResult("should not be called");
+        RequestHandlerDelegateBase<string> next = () => Task.FromResult("should not be called");
 
         // Act & Assert
         var act = async () => await behavior.Handle(request, next, CancellationToken.None);
         var exception = await act.Should().ThrowAsync<ValidationException>();
 
-        exception.Subject.Message.Should().Contain("Error 1");
-        exception.Subject.Message.Should().Contain("Error 2");
+        exception.Which.Message.Should().Contain("Error 1");
+        exception.Which.Message.Should().Contain("Error 2");
     }
 
     [Fact]
@@ -143,7 +143,7 @@ public class PipelineBehaviorTests
         var request = new TestRequest { Value = "test" };
         var nextCalled = false;
 
-        RequestHandlerDelegate<string> next = () =>
+        RequestHandlerDelegateBase<string> next = () =>
         {
             nextCalled = true;
             return Task.FromResult("handled");
@@ -158,6 +158,191 @@ public class PipelineBehaviorTests
     }
 
     [Fact]
+    public async Task PerformanceBehavior_Should_Log_Slow_Requests()
+    {
+        // Arrange
+        var mockLogger = new Mock<ILogger<PerformanceBehavior<TestRequest, string>>>();
+        var behavior = new PerformanceBehavior<TestRequest, string>(mockLogger.Object);
+        var request = new TestRequest { Value = "slow-request" };
+
+        RequestHandlerDelegateBase<string> next = async () =>
+        {
+            await Task.Delay(100); // Simulate slow operation
+            return "handled";
+        };
+
+        // Act
+        var result = await behavior.Handle(request, next, CancellationToken.None);
+
+        // Assert
+        result.Should().Be("handled");
+        mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Long running request")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task PerformanceBehavior_Should_Not_Log_Fast_Requests()
+    {
+        // Arrange
+        var mockLogger = new Mock<ILogger<PerformanceBehavior<TestRequest, string>>>();
+        var behavior = new PerformanceBehavior<TestRequest, string>(mockLogger.Object);
+        var request = new TestRequest { Value = "fast-request" };
+
+        RequestHandlerDelegateBase<string> next = () => Task.FromResult("handled");
+
+        // Act
+        var result = await behavior.Handle(request, next, CancellationToken.None);
+
+        // Assert
+        result.Should().Be("handled");
+        mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ExceptionHandlingBehavior_Should_Catch_And_Wrap_Exceptions()
+    {
+        // Arrange
+        var mockLogger = new Mock<ILogger<ExceptionHandlingBehavior<TestRequest, string>>>();
+        var behavior = new ExceptionHandlingBehavior<TestRequest, string>(mockLogger.Object);
+        var request = new TestRequest { Value = "exception-request" };
+        var originalException = new InvalidOperationException("Original error");
+
+        RequestHandlerDelegateBase<string> next = () => throw originalException;
+
+        // Act & Assert
+        var act = async () => await behavior.Handle(request, next, CancellationToken.None);
+        var exception = await act.Should().ThrowAsync<ApplicationException>()
+                                 .WithMessage("An error occurred while processing the request");
+
+        exception.Which.InnerException.Should().Be(originalException);
+
+        mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Exception occurred")),
+                originalException,
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task CachingBehavior_Should_Return_Cached_Result_If_Available()
+    {
+        // Arrange
+        var mockCache = new Mock<ICacheService>();
+        var behavior = new CachingBehavior<CacheableTestRequest, string>(mockCache.Object);
+        var request = new CacheableTestRequest { Value = "cached-request", CacheKey = "test-cache-key" };
+        var cachedResult = "cached-result";
+        var nextCalled = false;
+
+        mockCache.Setup(c => c.GetAsync<string>(request.CacheKey, It.IsAny<CancellationToken>()))
+                 .ReturnsAsync(cachedResult);
+
+        RequestHandlerDelegateBase<string> next = () =>
+        {
+            nextCalled = true;
+            return Task.FromResult("fresh-result");
+        };
+
+        // Act
+        var result = await behavior.Handle(request, next, CancellationToken.None);
+
+        // Assert
+        result.Should().Be(cachedResult);
+        nextCalled.Should().BeFalse();
+        mockCache.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CachingBehavior_Should_Cache_Fresh_Result_If_Not_Cached()
+    {
+        // Arrange
+        var mockCache = new Mock<ICacheService>();
+        var behavior = new CachingBehavior<CacheableTestRequest, string>(mockCache.Object);
+        var request = new CacheableTestRequest
+        {
+            Value = "uncached-request",
+            CacheKey = "test-cache-key",
+            CacheExpiration = TimeSpan.FromMinutes(5)
+        };
+        var freshResult = "fresh-result";
+        var nextCalled = false;
+
+        mockCache.Setup(c => c.GetAsync<string>(request.CacheKey, It.IsAny<CancellationToken>()))
+                 .ReturnsAsync((string?)null);
+        mockCache.Setup(c => c.SetAsync(request.CacheKey, freshResult, request.CacheExpiration, It.IsAny<CancellationToken>()))
+                 .Returns(Task.CompletedTask);
+
+        RequestHandlerDelegateBase<string> next = () =>
+        {
+            nextCalled = true;
+            return Task.FromResult(freshResult);
+        };
+
+        // Act
+        var result = await behavior.Handle(request, next, CancellationToken.None);
+
+        // Assert
+        result.Should().Be(freshResult);
+        nextCalled.Should().BeTrue();
+        mockCache.Verify(c => c.SetAsync(request.CacheKey, freshResult, request.CacheExpiration, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Multiple_Behaviors_Should_Execute_In_Correct_Order()
+    {
+        // Arrange
+        var executionOrder = new List<string>();
+        var mockLogger = new Mock<ILogger<LoggingBehavior<TestRequest, string>>>();
+        var mockValidator = new Mock<IValidator<TestRequest>>();
+
+        var loggingBehavior = new LoggingBehavior<TestRequest, string>(mockLogger.Object);
+        var validationBehavior = new ValidationBehavior<TestRequest, string>(new[] { mockValidator.Object });
+
+        var request = new TestRequest { Value = "pipeline-test" };
+        var validationResult = new ValidationResult { IsValid = true };
+
+        mockValidator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(validationResult);
+
+        // Create nested pipeline: Logging -> Validation -> Handler
+        RequestHandlerDelegateBase<string> handler = () =>
+        {
+            executionOrder.Add("Handler");
+            return Task.FromResult("handled");
+        };
+
+        RequestHandlerDelegateBase<string> validationNext = () =>
+        {
+            executionOrder.Add("ValidationNext");
+            return validationBehavior.Handle(request, handler, CancellationToken.None);
+        };
+
+        // Act
+        executionOrder.Add("LoggingStart");
+        var result = await loggingBehavior.Handle(request, validationNext, CancellationToken.None);
+        executionOrder.Add("LoggingEnd");
+
+        // Assert
+        result.Should().Be("handled");
+        executionOrder.Should().ContainInOrder("LoggingStart", "ValidationNext", "Handler", "LoggingEnd");
+    }
+
+    [Fact]
     public async Task PerformanceBehavior_Should_Measure_Execution_Time()
     {
         // Arrange
@@ -166,7 +351,7 @@ public class PipelineBehaviorTests
         var request = new TestRequest { Value = "test" };
         var nextCalled = false;
 
-        RequestHandlerDelegate<string> next = async () =>
+        RequestHandlerDelegateBase<string> next = async () =>
         {
             nextCalled = true;
             await Task.Delay(100); // Simulate some work
@@ -200,7 +385,7 @@ public class PipelineBehaviorTests
         var request = new TestRequest { Value = "test" };
         var originalException = new InvalidOperationException("Original error");
 
-        RequestHandlerDelegate<string> next = () => throw originalException;
+        RequestHandlerDelegateBase<string> next = () => throw originalException;
 
         // Act & Assert
         var act = async () => await behavior.Handle(request, next, CancellationToken.None);
@@ -235,7 +420,7 @@ public class PipelineBehaviorTests
         mockCache.Setup(c => c.SetAsync(request.CacheKey, expectedResult, It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-        RequestHandlerDelegate<string> next = () =>
+        RequestHandlerDelegateBase<string> next = () =>
         {
             nextCallCount++;
             return Task.FromResult(expectedResult);
@@ -261,12 +446,12 @@ public class PipelineBehaviorTests
     }
 
     // Test classes and interfaces
-    public class TestRequest : IRequest<string>
+    public class TestRequest : IBaseRequest
     {
         public string Value { get; set; } = string.Empty;
     }
 
-    public class TestCacheableRequest : IRequest<string>, ICacheableRequest
+    public class TestCacheableRequest : IBaseRequest, ICacheableRequest
     {
         public string Value { get; set; } = string.Empty;
         public string CacheKey { get; set; } = string.Empty;
@@ -309,7 +494,7 @@ public class PipelineBehaviorTests
 
     // Sample pipeline behaviors for testing
     public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-        where TRequest : notnull
+        where TRequest : IBaseRequest
     {
         private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
 
@@ -318,7 +503,7 @@ public class PipelineBehaviorTests
             _logger = logger;
         }
 
-        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Handling {RequestType}", typeof(TRequest).Name);
             var response = await next();
@@ -328,7 +513,7 @@ public class PipelineBehaviorTests
     }
 
     public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-        where TRequest : notnull
+        where TRequest : IBaseRequest
     {
         private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -337,7 +522,7 @@ public class PipelineBehaviorTests
             _validators = validators;
         }
 
-        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken)
         {
             if (_validators.Any())
             {
@@ -355,7 +540,7 @@ public class PipelineBehaviorTests
     }
 
     public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-        where TRequest : notnull
+        where TRequest : IBaseRequest
     {
         private readonly ILogger<PerformanceBehavior<TRequest, TResponse>> _logger;
 
@@ -364,7 +549,7 @@ public class PipelineBehaviorTests
             _logger = logger;
         }
 
-        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken)
         {
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var response = await next();
@@ -380,7 +565,7 @@ public class PipelineBehaviorTests
     }
 
     public class ExceptionHandlingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-        where TRequest : notnull
+        where TRequest : IBaseRequest
     {
         private readonly ILogger<ExceptionHandlingBehavior<TRequest, TResponse>> _logger;
 
@@ -389,7 +574,7 @@ public class PipelineBehaviorTests
             _logger = logger;
         }
 
-        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken)
         {
             try
             {
@@ -404,7 +589,7 @@ public class PipelineBehaviorTests
     }
 
     public class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-        where TRequest : notnull, ICacheableRequest
+        where TRequest : IBaseRequest, ICacheableRequest
     {
         private readonly ICacheService _cache;
 
@@ -413,7 +598,7 @@ public class PipelineBehaviorTests
             _cache = cache;
         }
 
-        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
+        public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegateBase<TResponse> next, CancellationToken cancellationToken)
         {
             var cachedResult = await _cache.GetAsync<TResponse>(request.CacheKey, cancellationToken);
             if (cachedResult != null)
@@ -425,5 +610,13 @@ public class PipelineBehaviorTests
             await _cache.SetAsync(request.CacheKey, result, request.CacheExpiration, cancellationToken);
             return result;
         }
+    }
+
+    // Test request classes
+    public class CacheableTestRequest : IRequest<string>, ICacheableRequest
+    {
+        public string Value { get; set; } = string.Empty;
+        public string CacheKey { get; set; } = string.Empty;
+        public TimeSpan CacheExpiration { get; set; } = TimeSpan.FromMinutes(5);
     }
 }

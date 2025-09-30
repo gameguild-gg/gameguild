@@ -15,11 +15,12 @@ public class DomainExceptionTests
         // Arrange
         const string message = "Domain error occurred";
 
-        // Act
-        DomainException exception = new(message);
+        // Act - Use concrete BusinessException instead of abstract DomainException
+        BusinessException exception = new(message);
 
         // Assert
         _ = exception.Should().BeAssignableTo<Exception>();
+        _ = exception.Should().BeAssignableTo<DomainException>();
         _ = exception.Message.Should().Be(message);
     }
 
@@ -30,37 +31,8 @@ public class DomainExceptionTests
         const string message = "Domain error occurred";
         InvalidOperationException innerException = new("Inner error");
 
-        // Act
-        DomainException exception = new(message, innerException);
-
-        // Assert
-        _ = exception.Message.Should().Be(message);
-        _ = exception.InnerException.Should().Be(innerException);
-    }
-
-    [Fact]
-    public void NotFoundException_Should_Inherit_From_Exception()
-    {
-        // Arrange
-        const string message = "Resource not found";
-
-        // Act
-        NotFoundException exception = new(message);
-
-        // Assert
-        _ = exception.Should().BeAssignableTo<Exception>();
-        _ = exception.Message.Should().Be(message);
-    }
-
-    [Fact]
-    public void NotFoundException_Should_Accept_InnerException()
-    {
-        // Arrange
-        const string message = "Resource not found";
-        InvalidOperationException innerException = new("Inner error");
-
-        // Act
-        NotFoundException exception = new(message, innerException);
+        // Act - Use concrete BusinessException instead of abstract DomainException
+        BusinessException exception = new(message, innerException);
 
         // Assert
         _ = exception.Message.Should().Be(message);
@@ -73,17 +45,15 @@ public class DomainExceptionTests
         // Arrange
         const string rule = "TestRule";
         const string message = "Business rule violated";
-        BusinessRuleSeverity severity = BusinessRuleSeverity.Error;
 
         // Act
-        BusinessRuleViolationException exception = new(rule, message, severity);
+        BusinessRuleViolationException exception = new(rule, message);
 
         // Assert
         _ = exception.Should().BeAssignableTo<Exception>();
+        _ = exception.Should().BeAssignableTo<DomainException>();
         _ = exception.Rule.Should().Be(rule);
-        _ = exception.Severity.Should().Be(severity);
-        _ = exception.Message.Should().Contain(rule);
-        _ = exception.Message.Should().Contain(message);
+        _ = exception.Message.Should().Be(message);
     }
 
     [Fact]
@@ -92,13 +62,13 @@ public class DomainExceptionTests
         // Arrange
         const string rule = "TestRule";
         const string message = "Custom error message";
-        BusinessRuleSeverity severity = BusinessRuleSeverity.Warning;
 
         // Act
-        BusinessRuleViolationException exception = new(rule, message, severity);
+        BusinessRuleViolationException exception = new(rule, message);
 
         // Assert
-        _ = exception.Message.Should().Be($"Business rule '{rule}' violated: {message}");
+        _ = exception.Rule.Should().Be(rule);
+        _ = exception.Message.Should().Be(message);
     }
 
     [Fact]
@@ -107,33 +77,32 @@ public class DomainExceptionTests
         // Arrange
         const string rule = "TestRule";
         const string message = "Business rule violated";
-        BusinessRuleSeverity severity = BusinessRuleSeverity.Error;
         InvalidOperationException innerException = new("Inner error");
 
         // Act
-        BusinessRuleViolationException exception = new(rule, message, severity, innerException);
+        BusinessRuleViolationException exception = new(rule, message, innerException);
 
         // Assert
         _ = exception.Rule.Should().Be(rule);
-        _ = exception.Severity.Should().Be(severity);
+        _ = exception.Message.Should().Be(message);
         _ = exception.InnerException.Should().Be(innerException);
     }
 
-    [Theory]
-    [InlineData(BusinessRuleSeverity.Warning)]
-    [InlineData(BusinessRuleSeverity.Error)]
-    [InlineData(BusinessRuleSeverity.Critical)]
-    public void BusinessRuleViolationException_Should_Accept_All_Severity_Levels(BusinessRuleSeverity severity)
+    [Fact]
+    public void BusinessRuleViolationException_Should_Have_Context_Property()
     {
         // Arrange
         const string rule = "TestRule";
         const string message = "Test message";
+        object context = new { UserId = 123, Action = "Create" };
 
         // Act
-        BusinessRuleViolationException exception = new(rule, message, severity);
+        BusinessRuleViolationException exception = new(rule, message, context);
 
         // Assert
-        _ = exception.Severity.Should().Be(severity);
+        _ = exception.Rule.Should().Be(rule);
+        _ = exception.Message.Should().Be(message);
+        _ = exception.Context.Should().Be(context);
     }
 }
 
@@ -165,24 +134,36 @@ public class ErrorTypeTests
 }
 
 /// <summary>
-/// Unit tests for BusinessRuleSeverity enumeration
+/// Unit tests for NotFoundException
 /// </summary>
-public class BusinessRuleSeverityTests
+public class NotFoundExceptionTests
 {
     [Fact]
-    public void BusinessRuleSeverity_Should_Have_Expected_Values()
+    public void NotFoundException_Should_Inherit_From_Exception()
     {
-        // Act & Assert
-        _ = Enum.IsDefined(typeof(BusinessRuleSeverity), BusinessRuleSeverity.Warning).Should().BeTrue();
-        _ = Enum.IsDefined(typeof(BusinessRuleSeverity), BusinessRuleSeverity.Error).Should().BeTrue();
-        _ = Enum.IsDefined(typeof(BusinessRuleSeverity), BusinessRuleSeverity.Critical).Should().BeTrue();
+        // Arrange
+        const string message = "Resource not found";
+
+        // Act
+        NotFoundException exception = new(message);
+
+        // Assert
+        _ = exception.Should().BeAssignableTo<Exception>();
+        _ = exception.Message.Should().Be(message);
     }
 
     [Fact]
-    public void BusinessRuleSeverity_Should_Have_Correct_Numeric_Values()
+    public void NotFoundException_Should_Accept_InnerException()
     {
-        // Act & Assert
-        _ = ((int)BusinessRuleSeverity.Warning).Should().BeLessThan((int)BusinessRuleSeverity.Error);
-        _ = ((int)BusinessRuleSeverity.Error).Should().BeLessThan((int)BusinessRuleSeverity.Critical);
+        // Arrange
+        const string message = "Resource not found";
+        InvalidOperationException innerException = new("Inner error");
+
+        // Act
+        NotFoundException exception = new(message, innerException);
+
+        // Assert
+        _ = exception.Message.Should().Be(message);
+        _ = exception.InnerException.Should().Be(innerException);
     }
 }

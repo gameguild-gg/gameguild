@@ -1,5 +1,8 @@
 using FluentAssertions;
 using GameGuild.CQRS;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+using Moq;
 using Xunit;
 
 namespace GameGuild.Tests.CQRS.Unit;
@@ -13,7 +16,8 @@ public class MemoryCacheServiceTests
 
     public MemoryCacheServiceTests()
     {
-        _cacheService = new MemoryCacheService();
+        var cache = new MemoryCache(Options.Create(new MemoryCacheOptions()));
+        _cacheService = new MemoryCacheService(cache);
     }
 
     [Fact]
@@ -234,5 +238,13 @@ public class MemoryCacheServiceTests
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+    }
+
+    public class LargeTestObject
+    {
+        public Guid Id { get; set; }
+        public string LargeData { get; set; } = string.Empty;
+        public int[] Numbers { get; set; } = Array.Empty<int>();
+        public List<TestObject> NestedObjects { get; set; } = new();
     }
 }
