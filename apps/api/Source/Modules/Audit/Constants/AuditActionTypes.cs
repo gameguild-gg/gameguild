@@ -94,18 +94,7 @@ public static class AuditActionTypes
 
     public const string TenantUserRemoved = "TenantUserRemoved";
 
-    // Role Template Operations
-    public const string RoleTemplateCreated = "RoleTemplateCreated";
 
-    public const string RoleTemplateUpdated = "RoleTemplateUpdated";
-
-    public const string RoleTemplateDeleted = "RoleTemplateDeleted";
-
-    public const string RoleTemplateApplied = "RoleTemplateApplied";
-
-    public const string TenantRoleAssigned = "TenantRoleAssigned";
-
-    public const string TenantRoleRevoked = "TenantRoleRevoked";
 
     // Privacy Operations
     public const string PrivacySettingsUpdated = "PrivacySettingsUpdated";

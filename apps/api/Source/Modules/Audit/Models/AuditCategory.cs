@@ -27,5 +27,5 @@ public enum AuditCategory
 
     Privacy = 10,
 
-    RoleTemplate = 11
+
 }
