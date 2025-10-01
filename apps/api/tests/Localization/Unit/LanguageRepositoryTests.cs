@@ -135,16 +135,23 @@ public class LanguageRepositoryTests : IAsyncDisposable
         result.Should().BeNull();
     }
 
+    [Fact]
+    public async Task GetByCodeAsync_Should_Throw_ArgumentException_For_Null_Code()
+    {
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await _repository.GetByCodeAsync(null!));
+    }
+
     [Theory]
-    [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
     [InlineData("\t")]
     public async Task GetByCodeAsync_Should_Throw_ArgumentException_For_Invalid_Code(string invalidCode)
     {
         // Act & Assert
-        await FluentActions.Invoking(() => _repository.GetByCodeAsync(invalidCode))
-            .Should().ThrowAsync<ArgumentException>();
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await _repository.GetByCodeAsync(invalidCode));
     }
 
     [Fact]
