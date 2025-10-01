@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.Modules.Localization;
+using GameGuild.Modules.Resources;
 using Xunit;
 
 namespace GameGuild.Tests.Localization.Unit;
@@ -29,13 +30,14 @@ public class LanguageTests
     }
 
     [Fact]
-    public void Constructor_With_Partial_Should_Initialize_Correctly()
+    public void Constructor_With_Object_Initializer_Should_Initialize_Correctly()
     {
-        // Arrange
-        var partial = new { Code = "en-US", Name = "English (United States)" };
-
         // Act
-        var language = new Language(partial);
+        var language = new Language
+        {
+            Code = "en-US",
+            Name = "English (United States)"
+        };
 
         // Assert
         language.Code.Should().Be("en-US");
@@ -51,12 +53,12 @@ public class LanguageTests
     [InlineData("de", "German")]
     public void Code_Property_Should_Accept_Valid_Language_Codes(string code, string name)
     {
-        // Arrange
-        var language = new Language();
-
         // Act
-        language.Code = code;
-        language.Name = name;
+        var language = new Language
+        {
+            Code = code,
+            Name = name
+        };
 
         // Assert
         language.Code.Should().Be(code);
@@ -66,11 +68,11 @@ public class LanguageTests
     [Fact]
     public void IsDefault_Property_Should_Be_Settable()
     {
-        // Arrange
-        var language = new Language();
-
         // Act
-        language.IsDefault = true;
+        var language = new Language
+        {
+            IsDefault = true
+        };
 
         // Assert
         language.IsDefault.Should().BeTrue();
@@ -79,11 +81,11 @@ public class LanguageTests
     [Fact]
     public void IsActive_Property_Should_Be_Settable()
     {
-        // Arrange
-        var language = new Language();
-
         // Act
-        language.IsActive = false;
+        var language = new Language
+        {
+            IsActive = false
+        };
 
         // Assert
         language.IsActive.Should().BeFalse();
@@ -107,11 +109,11 @@ public class LanguageTests
     [InlineData("\n")]
     public void Code_Should_Accept_Empty_Or_Whitespace_Values(string code)
     {
-        // Arrange
-        var language = new Language();
-
         // Act
-        language.Code = code;
+        var language = new Language
+        {
+            Code = code
+        };
 
         // Assert
         language.Code.Should().Be(code);
@@ -142,15 +144,17 @@ public class LanguageTests
     public void Properties_Should_Be_Settable()
     {
         // Arrange
-        var language = new Language();
         const string code = "pt-BR";
         const string name = "Portuguese (Brazil)";
 
         // Act
-        language.Code = code;
-        language.Name = name;
-        language.IsActive = false;
-        language.IsDefault = true;
+        var language = new Language
+        {
+            Code = code,
+            Name = name,
+            IsActive = false,
+            IsDefault = true
+        };
 
         // Assert
         language.Code.Should().Be(code);

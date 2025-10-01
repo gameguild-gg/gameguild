@@ -21,7 +21,7 @@ public class ResourceLocalizationTests
         resourceLocalization.Id.Should().NotBeEmpty();
         resourceLocalization.ResourceType.Should().BeEmpty();
         resourceLocalization.ResourceId.Should().Be(Guid.Empty);
-        resourceLocalization.LanguageId.Should().Be(Guid.Empty);
+        // LanguageId is handled by EF Core navigation property
         resourceLocalization.Language.Should().BeNull();
         resourceLocalization.FieldName.Should().BeEmpty();
         resourceLocalization.Content.Should().BeEmpty();
@@ -34,27 +34,26 @@ public class ResourceLocalizationTests
     }
 
     [Fact]
-    public void Constructor_With_Partial_Should_Initialize_Correctly()
+    public void Constructor_With_Object_Initializer_Should_Initialize_Correctly()
     {
         // Arrange
         var resourceId = Guid.NewGuid();
-        var languageId = Guid.NewGuid();
-        var partial = new
+        var language = new Language { Code = "en-US", Name = "English" };
+
+        // Act
+        var resourceLocalization = new ResourceLocalization
         {
             ResourceType = "Article",
             ResourceId = resourceId,
-            LanguageId = languageId,
+            Language = language,
             FieldName = "Title",
             Content = "Test Title"
         };
 
-        // Act
-        var resourceLocalization = new ResourceLocalization(partial);
-
         // Assert
         resourceLocalization.ResourceType.Should().Be("Article");
         resourceLocalization.ResourceId.Should().Be(resourceId);
-        resourceLocalization.LanguageId.Should().Be(languageId);
+        resourceLocalization.Language.Should().Be(language);
         resourceLocalization.FieldName.Should().Be("Title");
         resourceLocalization.Content.Should().Be("Test Title");
         resourceLocalization.Status.Should().Be(LocalizationStatus.Draft);
@@ -168,20 +167,22 @@ public class ResourceLocalizationTests
     }
 
     [Fact]
-    public void ResourceId_And_LanguageId_Should_Be_Settable()
+    public void ResourceId_And_Language_Should_Be_Settable()
     {
         // Arrange
-        var resourceLocalization = new ResourceLocalization();
         var resourceId = Guid.NewGuid();
-        var languageId = Guid.NewGuid();
+        var language = new Language { Code = "en-US", Name = "English" };
 
         // Act
-        resourceLocalization.ResourceId = resourceId;
-        resourceLocalization.LanguageId = languageId;
+        var resourceLocalization = new ResourceLocalization
+        {
+            ResourceId = resourceId,
+            Language = language
+        };
 
         // Assert
         resourceLocalization.ResourceId.Should().Be(resourceId);
-        resourceLocalization.LanguageId.Should().Be(languageId);
+        resourceLocalization.Language.Should().Be(language);
     }
 
     [Fact]
@@ -211,23 +212,23 @@ public class ResourceLocalizationTests
         // Arrange
         var resourceId = Guid.NewGuid();
         var language = new Language { Code = "es-ES", Name = "Spanish (Spain)" };
-        var resourceLocalization = new ResourceLocalization();
 
         // Act
-        resourceLocalization.ResourceType = "Article";
-        resourceLocalization.ResourceId = resourceId;
-        resourceLocalization.Language = language;
-        resourceLocalization.LanguageId = language.Id;
-        resourceLocalization.FieldName = "Title";
-        resourceLocalization.Content = "Título del Artículo";
-        resourceLocalization.IsDefault = false;
-        resourceLocalization.Status = LocalizationStatus.Published;
+        var resourceLocalization = new ResourceLocalization
+        {
+            ResourceType = "Article",
+            ResourceId = resourceId,
+            Language = language,
+            FieldName = "Title",
+            Content = "Título del Artículo",
+            IsDefault = false,
+            Status = LocalizationStatus.Published
+        };
 
         // Assert
         resourceLocalization.ResourceType.Should().Be("Article");
         resourceLocalization.ResourceId.Should().Be(resourceId);
         resourceLocalization.Language.Should().Be(language);
-        resourceLocalization.LanguageId.Should().Be(language.Id);
         resourceLocalization.FieldName.Should().Be("Title");
         resourceLocalization.Content.Should().Be("Título del Artículo");
         resourceLocalization.IsDefault.Should().BeFalse();
