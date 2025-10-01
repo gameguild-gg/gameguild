@@ -43,6 +43,7 @@ x86/
 
 /[Tt]estResults/
 /[Ll]ogs/
+
 # Node.js Dependencies
 /node_modules
 
