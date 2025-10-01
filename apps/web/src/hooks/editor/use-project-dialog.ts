@@ -12,13 +12,14 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "cloud"
 }
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete?: (id: string) => Promise<void>
-  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any") => Promise<ProjectData[]>
+  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "cloud") => Promise<ProjectData[]>
 }
 
 interface UseProjectDialogProps {
@@ -29,6 +30,7 @@ interface UseProjectDialogProps {
 export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProjectDialogProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [storageTypeFilter, setStorageTypeFilter] = useState<"local" | "cloud" | undefined>(undefined)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(16) // Changed initial itemsPerPage from 10 to 12 to match available options in selector
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
@@ -38,7 +40,7 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
   // Reset pagination only when filter criteria actually change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, selectedTags, tagFilterMode])
+  }, [searchTerm, selectedTags, tagFilterMode, storageTypeFilter])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -52,8 +54,8 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
       try {
         let projects: ProjectData[]
 
-        if (searchTerm || selectedTags.length > 0) {
-          projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode)
+        if (searchTerm || selectedTags.length > 0 || storageTypeFilter) {
+          projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode, storageTypeFilter)
         } else {
           projects = await storageAdapter.list()
         }
@@ -66,7 +68,7 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     }
 
     filterProjects()
-  }, [searchTerm, selectedTags, isDbInitialized, tagFilterMode, storageAdapter])
+  }, [searchTerm, selectedTags, isDbInitialized, tagFilterMode, storageTypeFilter, storageAdapter])
 
   const handleDownload = async (
     projectId: string,
@@ -155,6 +157,8 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     setSearchTerm,
     selectedTags,
     setSelectedTags,
+    storageTypeFilter,
+    setStorageTypeFilter,
     currentPage,
     setCurrentPage,
     itemsPerPage,
