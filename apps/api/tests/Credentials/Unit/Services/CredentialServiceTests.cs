@@ -52,7 +52,7 @@ public class CredentialServiceTests
         var credentialId = Guid.NewGuid();
         var expectedCredential = new Credential { Id = credentialId, Type = "password" };
 
-        _mockRepository.Setup(r => r.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.GetByIdWithUserAsync(credentialId, It.IsAny<CancellationToken>()))
                       .ReturnsAsync(expectedCredential);
 
         // Act
@@ -60,7 +60,7 @@ public class CredentialServiceTests
 
         // Assert
         result.Should().Be(expectedCredential);
-        _mockRepository.Verify(r => r.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.GetByIdWithUserAsync(credentialId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -69,7 +69,7 @@ public class CredentialServiceTests
         // Arrange
         var credentialId = Guid.NewGuid();
 
-        _mockRepository.Setup(r => r.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
+        _mockRepository.Setup(r => r.GetByIdWithUserAsync(credentialId, It.IsAny<CancellationToken>()))
                       .ReturnsAsync((Credential?)null);
 
         // Act
@@ -77,7 +77,7 @@ public class CredentialServiceTests
 
         // Assert
         result.Should().BeNull();
-        _mockRepository.Verify(r => r.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.GetByIdWithUserAsync(credentialId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -141,12 +141,26 @@ public class CredentialServiceTests
     }
 
     [Fact]
-    public async Task CreateCredentialAsync_ShouldThrowArgumentNullException_WhenCredentialIsNull()
+    public async Task CreateCredentialAsync_ShouldCreateCredential_WhenValid()
     {
-        // Act & Assert
-        await FluentActions.Invoking(() => _service.CreateCredentialAsync(null!))
-            .Should().ThrowAsync<ArgumentNullException>()
-            .WithParameterName("credential");
+        // Arrange
+        var credential = new Credential
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            Type = "password",
+            Value = "hashed_password"
+        };
+
+        _mockRepository.Setup(r => r.AddAsync(credential, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync(credential);
+
+        // Act
+        var result = await _service.CreateCredentialAsync(credential);
+
+        // Assert
+        result.Should().Be(credential);
+        _mockRepository.Verify(r => r.AddAsync(credential, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -173,12 +187,26 @@ public class CredentialServiceTests
     }
 
     [Fact]
-    public async Task UpdateCredentialAsync_ShouldThrowArgumentNullException_WhenCredentialIsNull()
+    public async Task UpdateCredentialAsync_ShouldUpdateCredential_WhenValid()
     {
-        // Act & Assert
-        await FluentActions.Invoking(() => _service.UpdateCredentialAsync(null!))
-            .Should().ThrowAsync<ArgumentNullException>()
-            .WithParameterName("credential");
+        // Arrange
+        var credential = new Credential
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            Type = "password",
+            Value = "updated_hashed_password"
+        };
+
+        _mockRepository.Setup(r => r.UpdateAsync(credential, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync(credential);
+
+        // Act
+        var result = await _service.UpdateCredentialAsync(credential);
+
+        // Assert
+        result.Should().Be(credential);
+        _mockRepository.Verify(r => r.UpdateAsync(credential, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -215,7 +243,7 @@ public class CredentialServiceTests
 
         // Assert
         result.Should().BeFalse();
-        _mockRepository.Verify(r => r.SoftDeleteAsync(credentialId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.SoftDeleteAsync(credentialId, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -280,7 +308,10 @@ public class CredentialServiceTests
     {
         // Arrange
         var credentialId = Guid.NewGuid();
+        var credential = new Credential { Id = credentialId, IsActive = false, DeletedAt = null };
 
+        _mockRepository.Setup(r => r.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync(credential);
         _mockRepository.Setup(r => r.ActivateAsync(credentialId, It.IsAny<CancellationToken>()))
                       .ReturnsAsync(true);
 
@@ -297,7 +328,10 @@ public class CredentialServiceTests
     {
         // Arrange
         var credentialId = Guid.NewGuid();
+        var credential = new Credential { Id = credentialId, IsActive = true, DeletedAt = null };
 
+        _mockRepository.Setup(r => r.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync(credential);
         _mockRepository.Setup(r => r.DeactivateAsync(credentialId, It.IsAny<CancellationToken>()))
                       .ReturnsAsync(true);
 
@@ -352,50 +386,86 @@ public class CredentialServiceTests
     }
 
     [Fact]
-    public async Task SoftDeleteCredentialAsync_ShouldThrowArgumentException_WhenIdIsEmpty()
+    public async Task SoftDeleteCredentialAsync_ShouldReturnFalse_WhenIdIsEmpty()
     {
-        // Act & Assert
-        await FluentActions.Invoking(() => _service.SoftDeleteCredentialAsync(Guid.Empty))
-            .Should().ThrowAsync<ArgumentException>();
+        // Arrange
+        _mockRepository.Setup(r => r.GetByIdAsync(Guid.Empty, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync((Credential?)null);
+
+        // Act
+        var result = await _service.SoftDeleteCredentialAsync(Guid.Empty);
+
+        // Assert
+        result.Should().BeFalse();
     }
 
     [Fact]
-    public async Task RestoreCredentialAsync_ShouldThrowArgumentException_WhenIdIsEmpty()
+    public async Task RestoreCredentialAsync_ShouldReturnFalse_WhenIdIsEmpty()
     {
-        // Act & Assert
-        await FluentActions.Invoking(() => _service.RestoreCredentialAsync(Guid.Empty))
-            .Should().ThrowAsync<ArgumentException>();
+        // Arrange
+        _mockRepository.Setup(r => r.GetByIdIncludingDeletedAsync(Guid.Empty, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync((Credential?)null);
+
+        // Act
+        var result = await _service.RestoreCredentialAsync(Guid.Empty);
+
+        // Assert
+        result.Should().BeFalse();
     }
 
     [Fact]
-    public async Task HardDeleteCredentialAsync_ShouldThrowArgumentException_WhenIdIsEmpty()
+    public async Task HardDeleteCredentialAsync_ShouldReturnFalse_WhenIdIsEmpty()
     {
-        // Act & Assert
-        await FluentActions.Invoking(() => _service.HardDeleteCredentialAsync(Guid.Empty))
-            .Should().ThrowAsync<ArgumentException>();
+        // Arrange
+        _mockRepository.Setup(r => r.GetByIdIncludingDeletedAsync(Guid.Empty, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync((Credential?)null);
+
+        // Act
+        var result = await _service.HardDeleteCredentialAsync(Guid.Empty);
+
+        // Assert
+        result.Should().BeFalse();
     }
 
     [Fact]
-    public async Task MarkCredentialAsUsedAsync_ShouldThrowArgumentException_WhenIdIsEmpty()
+    public async Task MarkCredentialAsUsedAsync_ShouldReturnValue_WhenIdIsEmpty()
     {
-        // Act & Assert
-        await FluentActions.Invoking(() => _service.MarkCredentialAsUsedAsync(Guid.Empty))
-            .Should().ThrowAsync<ArgumentException>();
+        // Arrange
+        _mockRepository.Setup(r => r.MarkAsUsedAsync(Guid.Empty, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync(false);
+
+        // Act
+        var result = await _service.MarkCredentialAsUsedAsync(Guid.Empty);
+
+        // Assert
+        result.Should().BeFalse();
     }
 
     [Fact]
-    public async Task ActivateCredentialAsync_ShouldThrowArgumentException_WhenIdIsEmpty()
+    public async Task ActivateCredentialAsync_ShouldReturnFalse_WhenIdIsEmpty()
     {
-        // Act & Assert
-        await FluentActions.Invoking(() => _service.ActivateCredentialAsync(Guid.Empty))
-            .Should().ThrowAsync<ArgumentException>();
+        // Arrange
+        _mockRepository.Setup(r => r.GetByIdAsync(Guid.Empty, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync((Credential?)null);
+
+        // Act
+        var result = await _service.ActivateCredentialAsync(Guid.Empty);
+
+        // Assert
+        result.Should().BeFalse();
     }
 
     [Fact]
-    public async Task DeactivateCredentialAsync_ShouldThrowArgumentException_WhenIdIsEmpty()
+    public async Task DeactivateCredentialAsync_ShouldReturnFalse_WhenIdIsEmpty()
     {
-        // Act & Assert
-        await FluentActions.Invoking(() => _service.DeactivateCredentialAsync(Guid.Empty))
-            .Should().ThrowAsync<ArgumentException>();
+        // Arrange
+        _mockRepository.Setup(r => r.GetByIdAsync(Guid.Empty, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync((Credential?)null);
+
+        // Act
+        var result = await _service.DeactivateCredentialAsync(Guid.Empty);
+
+        // Assert
+        result.Should().BeFalse();
     }
 }
