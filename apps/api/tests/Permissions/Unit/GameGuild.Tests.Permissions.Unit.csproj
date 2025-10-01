@@ -25,6 +25,8 @@
         <PackageReference Include="AutoFixture" />
         <PackageReference Include="AutoFixture.Xunit2" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+
     </ItemGroup>
 
     <ItemGroup>
