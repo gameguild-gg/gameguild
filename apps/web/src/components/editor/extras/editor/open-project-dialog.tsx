@@ -23,6 +23,7 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "cloud"
 }
 
 interface StorageAdapter {
@@ -30,7 +31,7 @@ interface StorageAdapter {
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete: (id: string) => Promise<void>
-  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any") => Promise<ProjectData[]>
+  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "cloud") => Promise<ProjectData[]>
 }
 
 interface OpenProjectDialogProps {
@@ -67,6 +68,8 @@ export function OpenProjectDialog({
     setSearchTerm,
     selectedTags,
     setSelectedTags,
+    storageTypeFilter,
+    setStorageTypeFilter,
     currentPage,
     setCurrentPage,
     itemsPerPage,
@@ -221,6 +224,8 @@ export function OpenProjectDialog({
                 availableTags={availableTags}
                 tagFilterMode={tagFilterMode}
                 onTagFilterModeChange={setTagFilterMode}
+                storageTypeFilter={storageTypeFilter}
+                onStorageTypeFilterChange={setStorageTypeFilter}
                 itemsPerPage={itemsPerPage}
                 onItemsPerPageChange={setItemsPerPage}
                 showFilters={true}

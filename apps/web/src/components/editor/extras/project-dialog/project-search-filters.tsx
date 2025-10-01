@@ -13,6 +13,8 @@ interface ProjectSearchFiltersProps {
   availableTags: Array<{ name: string }>
   tagFilterMode: "all" | "any"
   onTagFilterModeChange: (mode: "all" | "any") => void
+  storageTypeFilter?: "local" | "cloud"
+  onStorageTypeFilterChange?: (type: "local" | "cloud" | undefined) => void
   itemsPerPage: number
   onItemsPerPageChange: (value: number) => void
   showFilters?: boolean
@@ -27,6 +29,8 @@ export function ProjectSearchFilters({
   availableTags,
   tagFilterMode,
   onTagFilterModeChange,
+  storageTypeFilter,
+  onStorageTypeFilterChange,
   itemsPerPage,
   onItemsPerPageChange,
   showFilters = false,
@@ -227,6 +231,41 @@ export function ProjectSearchFilters({
               </div>
             )}
           </div>
+
+          {/* Storage Type Filter Section */}
+          {onStorageTypeFilterChange && (
+            <>
+              <div className="hidden h-auto w-px bg-gray-200 dark:bg-gray-700 md:block" />
+              
+              <div className="flex-1 space-y-2">
+                <Label className="text-sm font-medium">Storage type:</Label>
+                <select
+                  value={storageTypeFilter || ""}
+                  onChange={(e) => onStorageTypeFilterChange(e.target.value as "local" | "cloud" || undefined)}
+                  className="w-full rounded border bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">All types</option>
+                  <option value="local">Local only</option>
+                  <option value="cloud">Cloud only</option>
+                </select>
+                
+                {storageTypeFilter && (
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                      Showing: {`${storageTypeFilter} projects`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onStorageTypeFilterChange(undefined)}
+                      className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
