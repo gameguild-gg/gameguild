@@ -221,13 +221,14 @@ export default function Page() {
       searchTerm: string,
       tags: string[],
       filterMode: "all" | "any" = "any",
+      storageTypeFilter?: "local" | "cloud",
     ): Promise<ProjectData[]> => {
       if (!isDbInitialized) {
         return []
       }
 
       try {
-        return await dbStorage.current.searchProjects(searchTerm, tags, filterMode)
+        return await dbStorage.current.searchProjects(searchTerm, tags, filterMode, storageTypeFilter)
       } catch (error) {
         console.error("Failed to search projects:", error)
         return []
