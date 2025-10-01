@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.Modules.Credentials;
+using Xunit;
 
 namespace GameGuild.Tests.Credentials.Unit.Events;
 
