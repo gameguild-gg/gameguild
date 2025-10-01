@@ -39,7 +39,7 @@ public class BusinessExceptionTests
     }
 
     [Fact]
-    public void Should_Inherit_From_Exception()
+    public void BusinessException_Should_Inherit_From_Exception()
     {
         // Arrange & Act
         var exception = new BusinessException("test");
