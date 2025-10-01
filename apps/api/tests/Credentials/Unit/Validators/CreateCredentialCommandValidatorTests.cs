@@ -277,6 +277,31 @@ public class CreateCredentialCommandValidatorTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task Validate_ShouldPassValidation_ForInvalidCredentialFormat()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var command = new CreateCredentialCommand
+        {
+            UserId = userId,
+            Type = "email",
+            Value = "invalid-email-format" // Invalid email format
+        };
+
+        // Mock user exists check and ensure credential uniqueness
+        await SetupUserExistsCheck(userId, true);
+        await SetupUniqueCredentialCheck(userId, command.Type, true);
+
+        // Act
+        var result = await _validator.TestValidateAsync(command);
+
+        // Assert
+        // The current validator doesn't enforce email format validation,
+        // so this passes basic validation rules (non-empty, max length, etc.)
+        result.IsValid.Should().BeTrue();
+    }
+
     private async Task SetupUniqueCredentialCheck(Guid userId, string type, bool isUnique)
     {
         // Clear existing credentials
