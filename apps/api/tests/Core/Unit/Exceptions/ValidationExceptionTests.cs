@@ -69,7 +69,7 @@ public class ValidationExceptionTests
     }
 
     [Fact]
-    public void Should_Inherit_From_Exception()
+    public void ValidationException_Should_Inherit_From_Exception()
     {
         // Arrange & Act
         ValidationException exception = new("test");

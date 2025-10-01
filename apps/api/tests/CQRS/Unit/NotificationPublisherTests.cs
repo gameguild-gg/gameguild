@@ -68,7 +68,7 @@ public class NotificationPublisherTests
 
         // Should execute sequentially - order might vary due to task scheduling
         executionOrder.Should().HaveCount(3);
-        executionOrder.Should().Contain(new[] { 1, 2, 3 });
+        executionOrder.Should().Contain([1, 2, 3]);
     }
 
     [Fact]
