@@ -27,7 +27,7 @@ public class TenantPermissionTests
         tenantPermission.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         tenantPermission.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
         tenantPermission.DeletedAt.Should().BeNull();
-        tenantPermission.IsActive.Should().BeTrue();
+        tenantPermission.IsDeleted.Should().BeFalse();
         tenantPermission.ExpiresAt.Should().BeNull();
     }
 
@@ -104,19 +104,19 @@ public class TenantPermissionTests
     }
 
     [Fact]
-    public void RemovePermission_ShouldRemoveSpecificPermission()
+    public void RemovePermission_ShouldRemovePermissionFromFlags()
     {
         // Arrange
-        var tenantPermission = new TenantPermission(Guid.NewGuid(), Guid.NewGuid());
-        tenantPermission.AddPermission(PermissionType.Read);
-        tenantPermission.AddPermission(PermissionType.Comment);
+        var permission = new TenantPermission(Guid.NewGuid(), Guid.NewGuid());
+        permission.AddPermission(PermissionType.Read);
+        permission.AddPermission(PermissionType.Comment);
 
         // Act
-        tenantPermission.RemovePermission(PermissionType.Read);
+        permission.RemovePermission(PermissionType.Read);
 
         // Assert
-        tenantPermission.HasPermission(PermissionType.Read).Should().BeFalse();
-        tenantPermission.HasPermission(PermissionType.Comment).Should().BeTrue();
+        permission.HasPermission(PermissionType.Read).Should().BeFalse();
+        permission.HasPermission(PermissionType.Comment).Should().BeTrue();
     }
 
     [Fact]
@@ -140,16 +140,16 @@ public class TenantPermissionTests
     }
 
     [Fact]
-    public void IsExpired_ShouldReturnFalse_WhenExpiresAtIsInFuture()
+    public void IsExpired_ShouldReturnFalse_WhenExpirationDateIsFuture()
     {
         // Arrange
-        var tenantPermission = new TenantPermission(Guid.NewGuid(), Guid.NewGuid())
+        var permission = new TenantPermission(Guid.NewGuid(), Guid.NewGuid())
         {
             ExpiresAt = DateTime.UtcNow.AddDays(1)
         };
 
         // Act & Assert
-        tenantPermission.IsExpired.Should().BeFalse();
+        permission.IsExpired.Should().BeFalse();
     }
 
     [Fact]
