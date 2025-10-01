@@ -27,7 +27,7 @@ public class DomainEventsDispatcherTests
 
         _mockServiceProvider.Setup(sp => sp.GetService(typeof(IServiceScopeFactory)))
                            .Returns(mockScopeFactory.Object);
-        
+
         mockScopeFactory.Setup(sf => sf.CreateScope())
                        .Returns(_mockScope.Object);
 
@@ -48,7 +48,7 @@ public class DomainEventsDispatcherTests
         var domainEvent = new TestDomainEvent { Id = Guid.NewGuid() };
         var mockHandler = new Mock<IDomainEventHandler<TestDomainEvent>>();
 
-        _mockScopeServiceProvider.Setup(sp => sp.GetServices(typeof(IDomainEventHandler<TestDomainEvent>)))
+        _mockScopeServiceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<IDomainEventHandler<TestDomainEvent>>)))
                                  .Returns(new[] { mockHandler.Object });
 
         mockHandler.Setup(h => h.Handle(domainEvent, It.IsAny<CancellationToken>()))
@@ -70,7 +70,7 @@ public class DomainEventsDispatcherTests
         var event2 = new TestDomainEvent { Id = Guid.NewGuid() };
         var mockHandler = new Mock<IDomainEventHandler<TestDomainEvent>>();
 
-        _mockScopeServiceProvider.Setup(sp => sp.GetServices(typeof(IDomainEventHandler<TestDomainEvent>)))
+        _mockScopeServiceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<IDomainEventHandler<TestDomainEvent>>)))
                                  .Returns(new[] { mockHandler.Object });
 
         mockHandler.Setup(h => h.Handle(It.IsAny<TestDomainEvent>(), It.IsAny<CancellationToken>()))
@@ -93,7 +93,7 @@ public class DomainEventsDispatcherTests
         var mockHandler1 = new Mock<IDomainEventHandler<TestDomainEvent>>();
         var mockHandler2 = new Mock<IDomainEventHandler<TestDomainEvent>>();
 
-        _mockScopeServiceProvider.Setup(sp => sp.GetServices(typeof(IDomainEventHandler<TestDomainEvent>)))
+        _mockScopeServiceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<IDomainEventHandler<TestDomainEvent>>)))
                                  .Returns(new[] { mockHandler1.Object, mockHandler2.Object });
 
         mockHandler1.Setup(h => h.Handle(domainEvent, It.IsAny<CancellationToken>()))
@@ -116,7 +116,7 @@ public class DomainEventsDispatcherTests
         var domainEvent = new TestDomainEvent { Id = Guid.NewGuid() };
         var mockHandler = new Mock<IDomainEventHandler<TestDomainEvent>>();
 
-        _mockScopeServiceProvider.Setup(sp => sp.GetServices(typeof(IDomainEventHandler<TestDomainEvent>)))
+        _mockScopeServiceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<IDomainEventHandler<TestDomainEvent>>)))
                                  .Returns(new object?[] { null, mockHandler.Object, null });
 
         mockHandler.Setup(h => h.Handle(domainEvent, It.IsAny<CancellationToken>()))
@@ -145,7 +145,7 @@ public class DomainEventsDispatcherTests
         var mockHandler = new Mock<IDomainEventHandler<TestDomainEvent>>();
         var expectedException = new InvalidOperationException("Handler failed");
 
-        _mockScopeServiceProvider.Setup(sp => sp.GetServices(typeof(IDomainEventHandler<TestDomainEvent>)))
+        _mockScopeServiceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<IDomainEventHandler<TestDomainEvent>>)))
                                  .Returns(new[] { mockHandler.Object });
 
         mockHandler.Setup(h => h.Handle(domainEvent, It.IsAny<CancellationToken>()))
@@ -165,7 +165,7 @@ public class DomainEventsDispatcherTests
         var mockHandler = new Mock<IDomainEventHandler<TestDomainEvent>>();
         var cancellationToken = new CancellationToken(true);
 
-        _mockScopeServiceProvider.Setup(sp => sp.GetServices(typeof(IDomainEventHandler<TestDomainEvent>)))
+        _mockScopeServiceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<IDomainEventHandler<TestDomainEvent>>)))
                                  .Returns(new[] { mockHandler.Object });
 
         mockHandler.Setup(h => h.Handle(domainEvent, cancellationToken))
@@ -189,7 +189,7 @@ public class DomainEventsDispatcherTests
         var mockHandler = new Mock<IDomainEventHandler<TestDomainEvent>>();
         var handledEvents = new ConcurrentBag<Guid>();
 
-        _mockScopeServiceProvider.Setup(sp => sp.GetServices(typeof(IDomainEventHandler<TestDomainEvent>)))
+        _mockScopeServiceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<IDomainEventHandler<TestDomainEvent>>)))
                                  .Returns(new[] { mockHandler.Object });
 
         mockHandler.Setup(h => h.Handle(It.IsAny<TestDomainEvent>(), It.IsAny<CancellationToken>()))
@@ -219,9 +219,9 @@ public class DomainEventsDispatcherTests
         var mockTestHandler = new Mock<IDomainEventHandler<TestDomainEvent>>();
         var mockAnotherHandler = new Mock<IDomainEventHandler<AnotherTestDomainEvent>>();
 
-        _mockScopeServiceProvider.Setup(sp => sp.GetServices(typeof(IDomainEventHandler<TestDomainEvent>)))
+        _mockScopeServiceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<IDomainEventHandler<TestDomainEvent>>)))
                                  .Returns(new[] { mockTestHandler.Object });
-        _mockScopeServiceProvider.Setup(sp => sp.GetServices(typeof(IDomainEventHandler<AnotherTestDomainEvent>)))
+        _mockScopeServiceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<IDomainEventHandler<AnotherTestDomainEvent>>)))
                                  .Returns(new[] { mockAnotherHandler.Object });
 
         mockTestHandler.Setup(h => h.Handle(testEvent, It.IsAny<CancellationToken>()))
@@ -244,7 +244,7 @@ public class DomainEventsDispatcherTests
         var domainEvent = new TestDomainEvent { Id = Guid.NewGuid() };
         var mockHandler = new Mock<IDomainEventHandler<TestDomainEvent>>();
 
-        _mockScopeServiceProvider.Setup(sp => sp.GetServices(typeof(IDomainEventHandler<TestDomainEvent>)))
+        _mockScopeServiceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<IDomainEventHandler<TestDomainEvent>>)))
                                  .Returns(new[] { mockHandler.Object });
 
         mockHandler.Setup(h => h.Handle(domainEvent, It.IsAny<CancellationToken>()))
@@ -266,7 +266,7 @@ public class DomainEventsDispatcherTests
         var mockHandler = new Mock<IDomainEventHandler<TestDomainEvent>>();
         var processingDelay = TimeSpan.FromMilliseconds(100);
 
-        _mockScopeServiceProvider.Setup(sp => sp.GetServices(typeof(IDomainEventHandler<TestDomainEvent>)))
+        _mockScopeServiceProvider.Setup(sp => sp.GetService(typeof(IEnumerable<IDomainEventHandler<TestDomainEvent>>)))
                                  .Returns(new[] { mockHandler.Object });
 
         mockHandler.Setup(h => h.Handle(domainEvent, It.IsAny<CancellationToken>()))
