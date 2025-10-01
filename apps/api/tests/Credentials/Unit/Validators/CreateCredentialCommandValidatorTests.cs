@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using GameGuild.Database;
@@ -13,35 +14,40 @@ namespace GameGuild.Tests.Credentials.Unit.Validators;
 /// Unit tests for the CreateCredentialCommandValidator
 /// Tests validation rules and business logic validation
 /// </summary>
-public class CreateCredentialCommandValidatorTests
+public class CreateCredentialCommandValidatorTests : IDisposable
 {
-    private readonly Mock<ApplicationDbContext> _mockContext;
+    private readonly TestApplicationDbContext _context;
     private readonly CreateCredentialCommandValidator _validator;
 
     public CreateCredentialCommandValidatorTests()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
             .Options;
 
-        _mockContext = new Mock<ApplicationDbContext>(options);
-        _validator = new CreateCredentialCommandValidator(_mockContext.Object);
+        _context = new TestApplicationDbContext(options);
+        _validator = new CreateCredentialCommandValidator(_context);
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
     }
 
     [Fact]
-    public void Validate_ShouldHaveError_WhenUserIdIsEmpty()
+    public async Task Validate_ShouldHaveError_WhenUserIdIsEmpty()
     {
         // Arrange
         var command = new CreateCredentialCommand { UserId = Guid.Empty };
 
         // Act & Assert
-        _validator.TestValidate(command)
-            .ShouldHaveValidationErrorFor(x => x.UserId)
-            .WithErrorMessage("User ID is required");
+        var result = await _validator.TestValidateAsync(command);
+        result.ShouldHaveValidationErrorFor(x => x.UserId)
+              .WithErrorMessage("User ID is required");
     }
 
     [Fact]
-    public void Validate_ShouldHaveError_WhenTypeIsEmpty()
+    public async Task Validate_ShouldHaveError_WhenTypeIsEmpty()
     {
         // Arrange
         var command = new CreateCredentialCommand
@@ -51,13 +57,13 @@ public class CreateCredentialCommandValidatorTests
         };
 
         // Act & Assert
-        _validator.TestValidate(command)
-            .ShouldHaveValidationErrorFor(x => x.Type)
-            .WithErrorMessage("Credential type is required");
+        var result = await _validator.TestValidateAsync(command);
+        result.ShouldHaveValidationErrorFor(x => x.Type)
+              .WithErrorMessage("Credential type is required");
     }
 
     [Fact]
-    public void Validate_ShouldHaveError_WhenTypeIsTooLong()
+    public async Task Validate_ShouldHaveError_WhenTypeIsTooLong()
     {
         // Arrange
         var command = new CreateCredentialCommand
@@ -67,13 +73,13 @@ public class CreateCredentialCommandValidatorTests
         };
 
         // Act & Assert
-        _validator.TestValidate(command)
-            .ShouldHaveValidationErrorFor(x => x.Type)
-            .WithErrorMessage("Credential type must be 50 characters or fewer");
+        var result = await _validator.TestValidateAsync(command);
+        result.ShouldHaveValidationErrorFor(x => x.Type)
+              .WithErrorMessage("Credential type must be 50 characters or fewer");
     }
 
     [Fact]
-    public void Validate_ShouldHaveError_WhenValueIsEmpty()
+    public async Task Validate_ShouldHaveError_WhenValueIsEmpty()
     {
         // Arrange
         var command = new CreateCredentialCommand
@@ -84,13 +90,13 @@ public class CreateCredentialCommandValidatorTests
         };
 
         // Act & Assert
-        _validator.TestValidate(command)
-            .ShouldHaveValidationErrorFor(x => x.Value)
-            .WithErrorMessage("Credential value is required");
+        var result = await _validator.TestValidateAsync(command);
+        result.ShouldHaveValidationErrorFor(x => x.Value)
+              .WithErrorMessage("Credential value is required");
     }
 
     [Fact]
-    public void Validate_ShouldHaveError_WhenValueIsTooLong()
+    public async Task Validate_ShouldHaveError_WhenValueIsTooLong()
     {
         // Arrange
         var command = new CreateCredentialCommand
@@ -101,13 +107,13 @@ public class CreateCredentialCommandValidatorTests
         };
 
         // Act & Assert
-        _validator.TestValidate(command)
-            .ShouldHaveValidationErrorFor(x => x.Value)
-            .WithErrorMessage("Credential value must be 1000 characters or fewer");
+        var result = await _validator.TestValidateAsync(command);
+        result.ShouldHaveValidationErrorFor(x => x.Value)
+              .WithErrorMessage("Credential value must be 1000 characters or fewer");
     }
 
     [Fact]
-    public void Validate_ShouldHaveError_WhenMetadataIsTooLong()
+    public async Task Validate_ShouldHaveError_WhenMetadataIsTooLong()
     {
         // Arrange
         var command = new CreateCredentialCommand
@@ -119,13 +125,13 @@ public class CreateCredentialCommandValidatorTests
         };
 
         // Act & Assert
-        _validator.TestValidate(command)
-            .ShouldHaveValidationErrorFor(x => x.Metadata)
-            .WithErrorMessage("Metadata must be 2000 characters or fewer");
+        var result = await _validator.TestValidateAsync(command);
+        result.ShouldHaveValidationErrorFor(x => x.Metadata)
+              .WithErrorMessage("Metadata must be 2000 characters or fewer");
     }
 
     [Fact]
-    public void Validate_ShouldHaveError_WhenExpiresAtIsInPast()
+    public async Task Validate_ShouldHaveError_WhenExpiresAtIsInPast()
     {
         // Arrange
         var command = new CreateCredentialCommand
@@ -137,13 +143,13 @@ public class CreateCredentialCommandValidatorTests
         };
 
         // Act & Assert
-        _validator.TestValidate(command)
-            .ShouldHaveValidationErrorFor(x => x.ExpiresAt)
-            .WithErrorMessage("Expiration date must be in the future");
+        var result = await _validator.TestValidateAsync(command);
+        result.ShouldHaveValidationErrorFor(x => x.ExpiresAt)
+              .WithErrorMessage("Expiration date must be in the future");
     }
 
     [Fact]
-    public void Validate_ShouldNotHaveError_WhenExpiresAtIsInFuture()
+    public async Task Validate_ShouldNotHaveError_WhenExpiresAtIsInFuture()
     {
         // Arrange
         var command = new CreateCredentialCommand
@@ -155,16 +161,18 @@ public class CreateCredentialCommandValidatorTests
         };
 
         // Mock user exists check
-        SetupUserExistsCheck(command.UserId, true);
-        SetupUniqueCredentialCheck(command.UserId, command.Type, true);
+        await SetupUserExistsCheck(command.UserId, true);
+        await SetupUniqueCredentialCheck(command.UserId, command.Type, true);
 
-        // Act & Assert
-        _validator.TestValidate(command)
-            .ShouldNotHaveValidationErrorFor(x => x.ExpiresAt);
+        // Act
+        var result = await _validator.TestValidateAsync(command);
+
+        // Assert
+        result.ShouldNotHaveValidationErrorFor(x => x.ExpiresAt);
     }
 
     [Fact]
-    public void Validate_ShouldNotHaveError_WhenExpiresAtIsNull()
+    public async Task Validate_ShouldNotHaveError_WhenExpiresAtIsNull()
     {
         // Arrange
         var command = new CreateCredentialCommand
@@ -176,12 +184,14 @@ public class CreateCredentialCommandValidatorTests
         };
 
         // Mock user exists check
-        SetupUserExistsCheck(command.UserId, true);
-        SetupUniqueCredentialCheck(command.UserId, command.Type, true);
+        await SetupUserExistsCheck(command.UserId, true);
+        await SetupUniqueCredentialCheck(command.UserId, command.Type, true);
 
-        // Act & Assert
-        _validator.TestValidate(command)
-            .ShouldNotHaveValidationErrorFor(x => x.ExpiresAt);
+        // Act
+        var result = await _validator.TestValidateAsync(command);
+
+        // Assert
+        result.ShouldNotHaveValidationErrorFor(x => x.ExpiresAt);
     }
 
     [Theory]
@@ -189,7 +199,7 @@ public class CreateCredentialCommandValidatorTests
     [InlineData("api_key")]
     [InlineData("oauth_token")]
     [InlineData("2fa_secret")]
-    public void Validate_ShouldNotHaveError_ForValidCredentialTypes(string credentialType)
+    public async Task Validate_ShouldNotHaveError_ForValidCredentialTypes(string credentialType)
     {
         // Arrange
         var command = new CreateCredentialCommand
@@ -200,16 +210,18 @@ public class CreateCredentialCommandValidatorTests
         };
 
         // Mock user exists check
-        SetupUserExistsCheck(command.UserId, true);
-        SetupUniqueCredentialCheck(command.UserId, command.Type, true);
+        await SetupUserExistsCheck(command.UserId, true);
+        await SetupUniqueCredentialCheck(command.UserId, command.Type, true);
 
-        // Act & Assert
-        _validator.TestValidate(command)
-            .ShouldNotHaveValidationErrorFor(x => x.Type);
+        // Act
+        var result = await _validator.TestValidateAsync(command);
+
+        // Assert
+        result.ShouldNotHaveValidationErrorFor(x => x.Type);
     }
 
     [Fact]
-    public void Validate_ShouldNotHaveError_ForValidMetadataLength()
+    public async Task Validate_ShouldNotHaveError_ForValidMetadataLength()
     {
         // Arrange
         var validMetadata = new string('x', 1999); // Just under the limit
@@ -222,16 +234,16 @@ public class CreateCredentialCommandValidatorTests
         };
 
         // Mock user exists check
-        SetupUserExistsCheck(command.UserId, true);
-        SetupUniqueCredentialCheck(command.UserId, command.Type, true);
+        await SetupUserExistsCheck(command.UserId, true);
+        await SetupUniqueCredentialCheck(command.UserId, command.Type, true);
 
         // Act & Assert
-        _validator.TestValidate(command)
-            .ShouldNotHaveValidationErrorFor(x => x.Metadata);
+        var result = await _validator.TestValidateAsync(command);
+        result.ShouldNotHaveValidationErrorFor(x => x.Metadata);
     }
 
     [Fact]
-    public void Validate_ShouldPassAllValidations_ForValidCommand()
+    public async Task Validate_ShouldPassAllValidations_ForValidCommand()
     {
         // Arrange
         var command = new CreateCredentialCommand
@@ -245,29 +257,36 @@ public class CreateCredentialCommandValidatorTests
         };
 
         // Mock user exists check
-        SetupUserExistsCheck(command.UserId, true);
-        SetupUniqueCredentialCheck(command.UserId, command.Type, true);
+        await SetupUserExistsCheck(command.UserId, true);
+        await SetupUniqueCredentialCheck(command.UserId, command.Type, true);
 
         // Act & Assert
-        var result = _validator.TestValidate(command);
+        var result = await _validator.TestValidateAsync(command);
         result.ShouldNotHaveAnyValidationErrors();
     }
 
-    private void SetupUserExistsCheck(Guid userId, bool exists)
+    private async Task SetupUserExistsCheck(Guid userId, bool exists)
     {
-        var mockUserSet = new Mock<DbSet<User>>();
-        mockUserSet.Setup(s => s.AnyAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>(), It.IsAny<CancellationToken>()))
-                   .ReturnsAsync(exists);
+        // Clear existing data
+        _context.Users.RemoveRange(_context.Users);
 
-        _mockContext.Setup(c => c.Users).Returns(mockUserSet.Object);
+        if (exists)
+        {
+            _context.Users.Add(new User { Id = userId });
+            await _context.SaveChangesAsync();
+        }
     }
 
-    private void SetupUniqueCredentialCheck(Guid userId, string type, bool isUnique)
+    private async Task SetupUniqueCredentialCheck(Guid userId, string type, bool isUnique)
     {
-        var mockCredentialSet = new Mock<DbSet<Credential>>();
-        mockCredentialSet.Setup(s => s.AnyAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Credential, bool>>>(), It.IsAny<CancellationToken>()))
-                         .ReturnsAsync(!isUnique); // AnyAsync returns opposite of uniqueness
+        // Clear existing credentials
+        _context.Credentials.RemoveRange(_context.Credentials);
 
-        _mockContext.Setup(c => c.Credentials).Returns(mockCredentialSet.Object);
+        if (!isUnique)
+        {
+            // Add existing credential to make it non-unique
+            _context.Credentials.Add(new Credential { UserId = userId, Type = type, Value = "existing" });
+            await _context.SaveChangesAsync();
+        }
     }
 }

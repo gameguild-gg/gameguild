@@ -111,7 +111,6 @@ public class LocalizationStatusTests
     [InlineData("InvalidStatus")]
     [InlineData("")]
     [InlineData(" ")]
-    [InlineData("123")]
     public void Parse_Should_Fail_For_Invalid_Values(string invalidStatus)
     {
         // Act
@@ -120,6 +119,26 @@ public class LocalizationStatusTests
         // Assert
         success.Should().BeFalse();
         result.Should().Be(default(LocalizationStatus));
+    }
+
+    [Theory]
+    [InlineData("123")]  // Numeric values that don't correspond to defined enum values
+    [InlineData("999")]
+    [InlineData("-1")]
+    public void Parse_Should_Succeed_For_Numeric_Values_But_May_Not_Be_Defined(string numericStatus)
+    {
+        // Act
+        var success = Enum.TryParse<LocalizationStatus>(numericStatus, out var result);
+
+        // Assert - TryParse succeeds for numeric strings but result may not be a defined value
+        success.Should().BeTrue();
+
+        // Check if the result is a defined enum value
+        var isDefined = Enum.IsDefined(typeof(LocalizationStatus), result);
+        if (numericStatus == "123" || numericStatus == "999" || numericStatus == "-1")
+        {
+            isDefined.Should().BeFalse("because these numeric values don't correspond to defined enum values");
+        }
     }
 
     [Fact]
