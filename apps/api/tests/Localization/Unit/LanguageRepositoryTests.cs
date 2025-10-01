@@ -1,10 +1,44 @@
 using FluentAssertions;
 using GameGuild.Database;
 using GameGuild.Modules.Localization;
+using GameGuild.Modules.Permissions.Entities;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace GameGuild.Tests.Localization.Unit;
+
+/// <summary>
+/// Test-specific ApplicationDbContext that handles InMemory provider limitations
+/// </summary>
+public class TestApplicationDbContext : ApplicationDbContext
+{
+    public TestApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    {
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Configure PermissionAuditLog.Metadata for InMemory provider
+        modelBuilder.Entity<PermissionAuditLog>(entity =>
+        {
+            entity.Ignore(e => e.Metadata); // Ignore the problematic Dictionary property in tests
+        });
+
+        // Configure PermissionDelegation.Conditions for InMemory provider
+        modelBuilder.Entity<PermissionDelegation>(entity =>
+        {
+            entity.Ignore(e => e.Conditions); // Ignore the problematic Dictionary property in tests
+        });
+
+        // Configure PermissionTemplate.Metadata for InMemory provider
+        modelBuilder.Entity<PermissionTemplate>(entity =>
+        {
+            entity.Ignore(e => e.Metadata); // Ignore the problematic Dictionary property in tests
+        });
+    }
+}
 
 /// <summary>
 /// Unit tests for LanguageRepository
@@ -18,9 +52,10 @@ public class LanguageRepositoryTests : IAsyncDisposable
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning))
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        _context = new TestApplicationDbContext(options);
         _repository = new LanguageRepository(_context);
     }
 
@@ -139,7 +174,7 @@ public class LanguageRepositoryTests : IAsyncDisposable
     public async Task GetByCodeAsync_Should_Throw_ArgumentException_For_Null_Code()
     {
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
             await _repository.GetByCodeAsync(null!));
     }
 

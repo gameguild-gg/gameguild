@@ -34,6 +34,10 @@ public abstract class Resource : EntityBase, ILocalizable, ITenantable
     /// <summary> Adds a localization for a specific field in the given language </summary>
     public virtual ResourceLocalization AddLocalization(string fieldName, string content, Language language, LocalizationStatus status = LocalizationStatus.Draft)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(fieldName, nameof(fieldName));
+        ArgumentException.ThrowIfNullOrWhiteSpace(content, nameof(content));
+        ArgumentNullException.ThrowIfNull(language, nameof(language));
+
         var localization = new ResourceLocalization { ResourceType = GetType().Name, Language = language, FieldName = fieldName, Content = content, Status = status };
 
         Localizations.Add(localization);
