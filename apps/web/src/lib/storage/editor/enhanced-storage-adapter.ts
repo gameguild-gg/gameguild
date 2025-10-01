@@ -11,6 +11,7 @@ interface ProjectData {
   updatedAt: string
   hash?: string
   syncStatus?: "synced" | "pending" | "conflict" | "local-only"
+  storageType: "local" | "cloud"
 }
 
 interface TagData {
@@ -28,6 +29,7 @@ interface ProjectMetadata {
   createdAt: string
   updatedAt: string
   syncStatus?: "synced" | "pending" | "conflict" | "local-only"
+  storageType: "local" | "cloud"
 }
 
 export class EnhancedStorageAdapter {
@@ -36,7 +38,7 @@ export class EnhancedStorageAdapter {
   private isInitialized = false
 
   private readonly DB_NAME = "GGEditorDB"
-  private readonly DB_VERSION = 2 // Incremented for TagData support
+  private readonly DB_VERSION = 3 // Incremented for storageType support
   private readonly STORE_NAME = "projects"
   private readonly TAGS_STORE_NAME = "tags" // Kept for migration/compatibility, can be removed later
   private readonly METADATA_STORE_NAME = "project_metadata"
@@ -67,6 +69,7 @@ export class EnhancedStorageAdapter {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result
+        const oldVersion = event.oldVersion
 
         // Create projects store
         if (!db.objectStoreNames.contains(this.STORE_NAME)) {
@@ -89,11 +92,70 @@ export class EnhancedStorageAdapter {
           const tagDataStore = db.createObjectStore(this.TAG_DATA_STORE_NAME, { keyPath: "id" })
           tagDataStore.createIndex("name", "name", { unique: true })
         }
+
+        // Migration for storageType field (version 2 -> 3)
+        if (oldVersion < 3) {
+          // This migration will run after the stores are created
+          event.target!.addEventListener('success', () => {
+            this.migrateToStorageType()
+          })
+        }
       }
     })
   }
 
-  async save(id: string, name: string, data: string, tags: string[] = []): Promise<void> {
+  private async migrateToStorageType(): Promise<void> {
+    if (!this.db) return
+
+    try {
+      const transaction = this.db.transaction([this.STORE_NAME, this.METADATA_STORE_NAME], "readwrite")
+      const projectStore = transaction.objectStore(this.STORE_NAME)
+      const metadataStore = transaction.objectStore(this.METADATA_STORE_NAME)
+
+      // Get all projects
+      const projectsRequest = projectStore.getAll()
+      projectsRequest.onsuccess = () => {
+        const projects = projectsRequest.result as (ProjectData & { storageType?: string })[]
+        
+        projects.forEach(project => {
+          // Add storageType if it doesn't exist
+          if (!project.storageType) {
+            const updatedProject: ProjectData = {
+              ...project,
+              storageType: "local", // Default to local for existing projects
+            }
+            projectStore.put(updatedProject)
+
+            // Update metadata as well
+            const metadata: ProjectMetadata = {
+              id: project.id,
+              name: project.name,
+              tags: project.tags,
+              size: project.size,
+              hash: project.hash || "",
+              createdAt: project.createdAt,
+              updatedAt: project.updatedAt,
+              syncStatus: project.syncStatus,
+              storageType: "local",
+            }
+            metadataStore.put(metadata)
+          }
+        })
+      }
+
+      transaction.oncomplete = () => {
+        console.log("Migration to storageType completed successfully")
+      }
+
+      transaction.onerror = () => {
+        console.error("Migration to storageType failed:", transaction.error)
+      }
+    } catch (error) {
+      console.error("Failed to migrate to storageType:", error)
+    }
+  }
+
+  async save(id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "cloud" = "local"): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const hash = await HashManager.generateHash(data)
@@ -113,6 +175,7 @@ export class EnhancedStorageAdapter {
       createdAt: existing ? existing.createdAt : now,
       updatedAt: now,
       syncStatus: "pending",
+      storageType,
     }
 
     // Save to IndexedDB
@@ -148,6 +211,7 @@ export class EnhancedStorageAdapter {
         createdAt: projectData.createdAt,
         updatedAt: projectData.updatedAt,
         syncStatus: projectData.syncStatus,
+        storageType: projectData.storageType,
       }
       metadataStore.put(metadata)
 
@@ -172,8 +236,12 @@ export class EnhancedStorageAdapter {
         await this.saveToIndexedDB({
           ...serverProject,
           syncStatus: "synced",
+          storageType: "cloud", // Server projects are cloud-based
         })
-        return serverProject
+        return {
+          ...serverProject,
+          storageType: "cloud" as const,
+        }
       }
 
       return null
@@ -182,12 +250,16 @@ export class EnhancedStorageAdapter {
     // Check if local project needs sync with server
     const syncedProject = await this.syncManager.syncProjectIfNeeded(localProject)
     if (syncedProject) {
-      // Update local project with server version
+      // Update local project with server version, preserving storage type
       await this.saveToIndexedDB({
         ...syncedProject,
         syncStatus: "synced",
+        storageType: localProject.storageType,
       })
-      return syncedProject
+      return {
+        ...syncedProject,
+        storageType: localProject.storageType,
+      }
     }
 
     return localProject
@@ -309,6 +381,7 @@ export class EnhancedStorageAdapter {
     searchTerm: string,
     tags: string[],
     filterMode: "all" | "any" = "any",
+    storageTypeFilter?: "local" | "cloud",
   ): Promise<ProjectData[]> {
     if (!this.db) throw new Error("IndexedDB not initialized")
 
@@ -363,13 +436,19 @@ export class EnhancedStorageAdapter {
     // If filtered by tags, load only those projects. Otherwise, load all.
     const projectsToFilter = await this.getProjectsByIds(projectIdsToLoad ? Array.from(projectIdsToLoad) : null)
 
-    // 3. Filter by search term
-    if (searchTerm) {
-      const lowerCaseSearchTerm = searchTerm.toLowerCase()
-      return projectsToFilter.filter((project) => project.name.toLowerCase().includes(lowerCaseSearchTerm))
+    // 3. Filter by storage type
+    let filteredByStorage = projectsToFilter
+    if (storageTypeFilter) {
+      filteredByStorage = projectsToFilter.filter((project) => project.storageType === storageTypeFilter)
     }
 
-    return projectsToFilter
+    // 4. Filter by search term
+    if (searchTerm) {
+      const lowerCaseSearchTerm = searchTerm.toLowerCase()
+      return filteredByStorage.filter((project) => project.name.toLowerCase().includes(lowerCaseSearchTerm))
+    }
+
+    return filteredByStorage
   }
 
   private async getProjectsByIds(ids: string[] | null): Promise<ProjectData[]> {
@@ -522,6 +601,52 @@ export class EnhancedStorageAdapter {
     }
 
     return null
+  }
+
+  // Storage type management
+  async updateProjectStorageType(id: string, storageType: "local" | "cloud"): Promise<void> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const project = await this.loadFromIndexedDB(id)
+    if (!project) {
+      throw new Error(`Project ${id} not found`)
+    }
+
+    const updatedProject: ProjectData = {
+      ...project,
+      storageType,
+      updatedAt: new Date().toISOString(),
+      syncStatus: "pending",
+    }
+
+    await this.saveToIndexedDB(updatedProject)
+    await this.syncManager.queueProjectUpdate(updatedProject)
+
+    console.log(`Updated storage type for project "${project.name}" to: ${storageType}`)
+  }
+
+  async getProjectsByStorageType(storageType: "local" | "cloud"): Promise<ProjectData[]> {
+    const allProjects = await this.listFromIndexedDB()
+    return allProjects.filter((project) => project.storageType === storageType)
+  }
+
+  async getStorageTypeStats(): Promise<{
+    local: number
+    cloud: number
+    total: number
+  }> {
+    const allProjects = await this.listFromIndexedDB()
+    const stats = {
+      local: 0,
+      cloud: 0,
+      total: allProjects.length,
+    }
+
+    allProjects.forEach((project) => {
+      stats[project.storageType]++
+    })
+
+    return stats
   }
 
   // Sync management
