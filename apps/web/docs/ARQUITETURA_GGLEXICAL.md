@@ -44,7 +44,7 @@ interface ProjectData {
   updatedAt: string       // Data da última atualização (ISO string)
   hash?: string           // Hash para verificação de integridade/sync
   syncStatus?: "synced" | "pending" | "conflict" | "local-only"
-  storageType: "local" | "cloud" | "both"  // Tipo de armazenamento do projeto
+  storageType: "local" | "cloud"  // Tipo de armazenamento do projeto
 }
 ```
 
@@ -68,7 +68,7 @@ interface ProjectMetadata {
   createdAt: string
   updatedAt: string
   syncStatus?: "synced" | "pending" | "conflict" | "local-only"
-  storageType: "local" | "cloud" | "both"  // Tipo de armazenamento do projeto
+  storageType: "local" | "cloud"  // Tipo de armazenamento do projeto
 }
 ```
 
@@ -107,7 +107,7 @@ O sistema utiliza uma implementação robusta de IndexedDB através da classe `E
 - `searchProjects(searchTerm, tags, filterMode, storageTypeFilter)` - Busca por termo, tags e/ou tipo de armazenamento
 - `getAllTags()` - Retorna todas as tags com contagem de uso
 - `getProjectsByStorageType(storageType)` - Filtra projetos por tipo de armazenamento
-- `getStorageTypeStats()` - Estatísticas de distribuição de tipos de armazenamento
+- `getStorageTypeStats()` - Estatísticas de distribuição entre local e cloud
 
 ##### Gerenciamento de Tags:
 - Sistema bidirecional: projetos → tags e tags → projetos
@@ -117,11 +117,11 @@ O sistema utiliza uma implementação robusta de IndexedDB através da classe `E
 
 ##### Gerenciamento de Tipos de Armazenamento:
 - **Local**: Projetos armazenados apenas localmente no IndexedDB
-- **Cloud**: Projetos sincronizados com servidor (quando disponível)
-- **Both**: Projetos disponíveis tanto local quanto na nuvem
+- **Cloud**: Projetos sincronizados com servidor remoto (baixados localmente para edição)
 - Filtros de busca por tipo de armazenamento
 - Migração automática de projetos existentes (padrão: "local")
-- Interface visual com ícones distintivos (📱 local, ☁️ cloud, 🔄 both)
+- Interface visual com ícones distintivos (📱 local, ☁️ cloud)
+- Sincronização transparente: projetos cloud são baixados localmente para trabalho offline
 
 ## Sistema de Sincronização (Preparado para Nuvem)
 
@@ -242,10 +242,10 @@ IndexedDB (tag_data store) → Interface (autocomplete/filtros)
 ### 1. Sistema de Filtros Inteligentes:
 - **Busca por texto**: Busca no nome e conteúdo dos projetos
 - **Filtros por tags**: Modo "any" (qualquer tag) ou "all" (todas as tags)
-- **Filtro por tipo de armazenamento**: Local, Cloud ou Both
+- **Filtro por tipo de armazenamento**: Local ou Cloud
 - **Combinação de filtros**: Todos os filtros trabalham em conjunto
 - **Interface responsiva**: Filtros colapsáveis em dispositivos móveis
-- **Indicadores visuais**: Badges coloridos por tipo de armazenamento
+- **Indicadores visuais**: Badges coloridos por tipo de armazenamento (local/cloud)
 
 ### 2. Sistema de Nodes Customizados:
 - **ImageNode**: Imagens com redimensionamento
@@ -263,8 +263,8 @@ IndexedDB (tag_data store) → Interface (autocomplete/filtros)
 - Compressão automática de imagens
 - **Estratégias de armazenamento flexíveis**:
   - Projetos locais apenas (para privacidade total)
-  - Projetos na nuvem (para colaboração)
-  - Projetos híbridos (backup e sincronização)
+  - Projetos na nuvem (para colaboração e backup)
+  - **Sistema local-first**: todos os projetos editados localmente independente do tipo
 
 ### 4. Sistema de Import/Export:
 - Formato nativo `.gglexical`
@@ -272,40 +272,44 @@ IndexedDB (tag_data store) → Interface (autocomplete/filtros)
 - Preservação de metadados e tags
 - **Preservação do tipo de armazenamento** na importação/exportação
 - Validação de integridade
+- **Compatibilidade com projetos local e cloud**
 
 ## Estratégias de Armazenamento
 
 ### Tipos de Armazenamento Disponíveis:
 
 #### 1. **Local Only** (`storageType: "local"`)
-- **Uso**: Projetos sensíveis ou privados
+- **Uso**: Projetos privados ou que não necessitam sincronização
 - **Características**:
   - Armazenamento apenas no IndexedDB local
   - Sem sincronização com servidor
   - Máxima privacidade e controle
   - Performance otimizada (sem latência de rede)
+  - Ideal para rascunhos, projetos pessoais ou dados sensíveis
 
-#### 2. **Cloud Only** (`storageType: "cloud"`)
-- **Uso**: Projetos colaborativos ou públicos
+#### 2. **Cloud Sync** (`storageType: "cloud"`)
+- **Uso**: Projetos colaborativos, públicos ou que precisam estar disponíveis em múltiplos dispositivos
 - **Características**:
   - Sincronização automática com servidor
+  - Baixado localmente para edição offline
   - Disponível em múltiplos dispositivos
   - Backup automático na nuvem
-  - Requer conectividade para acesso completo
+  - Requer conectividade inicial para download
+  - **Funcionamento híbrido**: mesmo sendo "cloud", o projeto é baixado e editado localmente, com sincronização periódica
 
-#### 3. **Hybrid Storage** (`storageType: "both"`)
-- **Uso**: Projetos importantes com necessidade de backup
-- **Características**:
-  - Melhor de ambos os mundos
-  - Cache local para performance
-  - Backup automático na nuvem
-  - Funcionamento offline com sincronização posterior
+### Filosofia de Armazenamento:
+O sistema adota uma abordagem **"local-first"** onde:
+- Todos os projetos são editados localmente para máxima performance
+- Projetos "cloud" são baixados e mantidos em cache local
+- Sincronização acontece em background de forma transparente
+- O usuário sempre trabalha com dados locais, independente do tipo de storage
 
 ### Migração e Compatibilidade:
 - **Migração automática**: Projetos existentes são marcados como "local"
 - **Conversão dinâmica**: Usuário pode alterar tipo de armazenamento a qualquer momento
 - **Preservação de dados**: Nenhum dado é perdido durante mudanças de tipo
 - **Versionamento do banco**: Sistema suporta upgrades automáticos (v2 → v3)
+- **Download sob demanda**: Projetos cloud são baixados quando necessário
 
 ## Preparação para Nuvem
 
@@ -332,6 +336,7 @@ IndexedDB (tag_data store) → Interface (autocomplete/filtros)
 - Lazy loading de projetos grandes
 - Índices otimizados para busca
 - Debouncing de operações de auto-save
+- **Cache local**: todos os projetos mantidos localmente para acesso instantâneo
 
 ### Segurança:
 - Hash de integridade dos dados
@@ -344,6 +349,13 @@ IndexedDB (tag_data store) → Interface (autocomplete/filtros)
 - Indicadores visuais de status de sync
 - Recuperação automática de drafts
 - Interface responsiva para diferentes dispositivos
+- **Indicadores de tipo de storage**: ícones visuais distinguem projetos locais (📱) de cloud (☁️)
+
+### Modelo de Sincronização Simplificado:
+- **Local**: Dados apenas no dispositivo atual
+- **Cloud**: Dados sincronizados com servidor, mas sempre editados localmente
+- **Transparência**: Usuário não precisa se preocupar com localização dos dados
+- **Offline-first**: Sistema funciona completamente offline, sync é complementar
 
 ---
 
