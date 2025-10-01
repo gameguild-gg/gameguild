@@ -302,16 +302,13 @@ public class SpecificationBaseTests
     }
 
     [Fact]
-    public void Should_Implement_ISpecification()
+    public void TestSpecification_Should_Implement_ISpecification()
     {
-        // Arrange
-        Expression<Func<TestEntity, bool>> criteria = x => x.IsActive;
-
-        // Act
-        TestSpecification specification = new(criteria);
+        // Arrange & Act
+        var spec = new TestSpecification(x => x.IsActive);
 
         // Assert
-        _ = specification.Should().BeAssignableTo<ISpecification<TestEntity>>();
+        _ = spec.Should().BeAssignableTo<ISpecification<TestEntity>>();
     }
 
     [Fact]

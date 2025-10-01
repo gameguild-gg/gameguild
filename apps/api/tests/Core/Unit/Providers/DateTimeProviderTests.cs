@@ -57,7 +57,7 @@ public class DateTimeProviderTests
     }
 
     [Fact]
-    public void Should_Implement_IDateTimeProvider()
+    public void DateTimeProvider_Should_Implement_IDateTimeProvider()
     {
         // Arrange & Act
         DateTimeProvider provider = new();

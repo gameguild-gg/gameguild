@@ -15,7 +15,7 @@ public class EntityBaseTests
     {
         public string Name { get; set; } = string.Empty;
         public int Value { get; set; }
-        
+
         public TestEntity() : base() { }
         public TestEntity(object partial) : base(partial) { }
     }
@@ -88,11 +88,11 @@ public class EntityBaseTests
     }
 
     [Fact]
-    public void Version_ShouldNotBeNegative_WhenSetToNegativeValue()
+    public void Version_Should_Not_Be_Negative_When_Set_To_Negative_Value()
     {
         // Arrange & Act & Assert
         TestEntity entity = new() { Version = 0 };
-        
+
         // Act & Assert
         _ = entity.Version.Should().BeGreaterOrEqualTo(0);
     }

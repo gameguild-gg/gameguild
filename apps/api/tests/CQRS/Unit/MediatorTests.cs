@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Reflection;
 using FluentAssertions;
 using GameGuild.CQRS;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +29,7 @@ public class MediatorTests
     {
         // Act & Assert
         var act = () => new Mediator(null!, _mockNotificationPublisher.Object);
-        act.Should().Throw<ArgumentNullException>();
+        act.Should().Throw<ArgumentNullException>().WithParameterName("serviceFactory");
     }
 
     [Fact]
@@ -110,6 +111,11 @@ public class MediatorTests
     {
         // Arrange
         var notification = new TestNotification();
+        var mockHandler = new Mock<INotificationHandler<TestNotification>>();
+        var handlers = new[] { mockHandler.Object };
+
+        _mockServiceFactory.Setup(sf => sf(typeof(IEnumerable<INotificationHandler<TestNotification>>)))
+                          .Returns(handlers);
 
         _mockNotificationPublisher.Setup(np => np.Publish(It.IsAny<IEnumerable<NotificationHandlerExecutorBase>>(), notification, It.IsAny<CancellationToken>()))
                                  .Returns(Task.CompletedTask);
@@ -234,7 +240,9 @@ public class MediatorTests
 
         // Act & Assert
         var act = async () => await _mediator.Send<string>(request, cts.Token);
-        await act.Should().ThrowAsync<OperationCanceledException>();
+        var exception = await act.Should().ThrowAsync<Exception>();
+        exception.And.Should().BeOfType<TargetInvocationException>();
+        exception.And.InnerException.Should().BeOfType<OperationCanceledException>();
     }
 
     [Fact]
@@ -262,13 +270,17 @@ public class MediatorTests
     {
         // Arrange
         var notification = new TestNotification { Message = "test" };
-        _mockNotificationPublisher.Setup(np => np.Publish(It.IsAny<IEnumerable<NotificationHandlerExecutorBase>>(), notification, It.IsAny<CancellationToken>()))
-                                  .Returns(Task.CompletedTask);
+        var emptyHandlers = Array.Empty<INotificationHandler<TestNotification>>();
+
+        _mockServiceFactory.Setup(sf => sf(typeof(IEnumerable<INotificationHandler<TestNotification>>)))
+                          .Returns(emptyHandlers);
 
         // Act & Assert
         var act = async () => await _mediator.Publish(notification);
         await act.Should().NotThrowAsync();
-        _mockNotificationPublisher.Verify(np => np.Publish(It.IsAny<IEnumerable<NotificationHandlerExecutorBase>>(), notification, It.IsAny<CancellationToken>()), Times.Once);
+
+        // Should not call notification publisher when no handlers are found
+        _mockNotificationPublisher.Verify(np => np.Publish(It.IsAny<IEnumerable<NotificationHandlerExecutorBase>>(), notification, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private async IAsyncEnumerable<string> GetAsyncEnumerable()
