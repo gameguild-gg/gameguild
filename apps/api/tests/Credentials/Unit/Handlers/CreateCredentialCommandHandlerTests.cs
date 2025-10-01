@@ -230,4 +230,31 @@ public class CreateCredentialCommandHandlerTests
             .Should().Throw<ArgumentNullException>()
             .WithParameterName("mediator");
     }
+
+    [Fact]
+    public async Task Handle_Should_Handle_Service_Failure_Gracefully()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var user = new User { Id = userId };
+        var command = new CreateCredentialCommand
+        {
+            UserId = userId,
+            Type = "password",
+            Value = "hashed_password"
+        };
+
+        var getUserQuery = new GetUserByIdQuery { UserId = userId };
+        _mockMediator.Setup(m => m.Send(It.IsAny<GetUserByIdQuery>(), It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(user);
+
+        // Setup service to throw an exception (simulating service failure)
+        _mockCredentialService.Setup(s => s.CreateCredentialAsync(It.IsAny<Credential>()))
+                             .ThrowsAsync(new InvalidOperationException("Database connection failure"));
+
+        // Act & Assert
+        await FluentActions.Invoking(async () => await _handler.Handle(command, CancellationToken.None))
+            .Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Database connection failure");
+    }
 }
