@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { FolderOpen, Trash2, Download, Info } from "lucide-react"
+import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud } from "lucide-react"
 import { DownloadConfirmDialog } from "@/components/editor/extras/dialogs/download-confirm-dialog"
 
 interface ProjectData {
@@ -15,6 +15,7 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "cloud"
 }
 
 interface ProjectListProps {
@@ -85,6 +86,29 @@ export function ProjectList({
     setDownloadDialog({ open: false, project: null })
   }
 
+  // Render storage type indicator
+  const renderStorageIndicator = (storageType: "local" | "cloud" | undefined) => {
+    if (!storageType || storageType === "local") {
+      return (
+        <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" title="Local storage">
+          <HardDrive className="h-3 w-3" />
+          <span>Local</span>
+        </div>
+      )
+    }
+
+    if (storageType === "cloud") {
+      return (
+        <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400" title="Cloud storage">
+          <Cloud className="h-3 w-3" />
+          <span>Cloud</span>
+        </div>
+      )
+    }
+
+    return null
+  }
+
   const paginatedProjects = projects.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   if (projects.length === 0) {
@@ -120,13 +144,14 @@ export function ProjectList({
               onClick={() => onOpen(project.id)}
             >
               <div className="flex flex-col p-4">
-                <div className="mb-2">
+                <div className="mb-2 flex items-start justify-between">
                   <span
                     className="block truncate font-semibold text-gray-900 dark:text-gray-100"
                     title={project.name}
                   >
                     {project.name}
                   </span>
+                  {renderStorageIndicator(project.storageType)}
                 </div>
                 {project.tags && project.tags.length > 0 && (
                   <div className="mb-3 flex flex-wrap gap-1" title={project.tags.join(", ")}>
