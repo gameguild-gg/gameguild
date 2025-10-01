@@ -17,12 +17,13 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "cloud"
 }
 
 interface ProjectSidebarListProps {
   storageAdapter: {
     list: () => Promise<ProjectData[]>
-    searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any") => Promise<ProjectData[]>
+    searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "cloud") => Promise<ProjectData[]>
   }
   availableTags: Array<{ name: string }>
   currentProject: ProjectData | null
@@ -46,11 +47,12 @@ export function ProjectSidebarList({
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [tagFilterMode, setTagFilterMode] = useState<"all" | "any">("any")
+  const [storageTypeFilter, setStorageTypeFilter] = useState<"local" | "cloud" | undefined>(undefined)
   const [showFilters, setShowFilters] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
   const [isPinned, setIsPinned] = useState(isSticky)
   const [isMobile, setIsMobile] = useState(false)
-  const [itemsPerPage, setItemsPerPage] = useState(32)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -68,9 +70,9 @@ export function ProjectSidebarList({
     }
   }, [isDbInitialized])
 
-  // Filter projects when search term or tags change
+  // Filter projects when search term, tags, or storage type change
   useEffect(() => {
-    if (searchTerm || selectedTags.length > 0) {
+    if (searchTerm || selectedTags.length > 0 || storageTypeFilter) {
       searchProjects()
     } else {
       if (searchModeOnly) {
@@ -79,7 +81,7 @@ export function ProjectSidebarList({
         setFilteredProjects(projects)
       }
     }
-  }, [searchTerm, selectedTags, tagFilterMode, projects, searchModeOnly])
+  }, [searchTerm, selectedTags, tagFilterMode, storageTypeFilter, projects, searchModeOnly])
 
   const loadProjects = async () => {
     try {
@@ -102,7 +104,7 @@ export function ProjectSidebarList({
   const searchProjects = async () => {
     try {
       setLoading(true)
-      const results = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode)
+      const results = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode, storageTypeFilter)
       setFilteredProjects(results)
     } catch (error) {
       console.error("Failed to search projects:", error)
@@ -167,6 +169,8 @@ export function ProjectSidebarList({
             availableTags={availableTags}
             tagFilterMode={tagFilterMode}
             onTagFilterModeChange={setTagFilterMode}
+            storageTypeFilter={storageTypeFilter}
+            onStorageTypeFilterChange={setStorageTypeFilter}
             itemsPerPage={itemsPerPage}
             onItemsPerPageChange={setItemsPerPage}
             showFilters={showFilters}
@@ -185,13 +189,13 @@ export function ProjectSidebarList({
               <div className="text-center py-12">
                 <FileText className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                  {searchTerm || selectedTags.length > 0
+                  {searchTerm || selectedTags.length > 0 || storageTypeFilter
                     ? "No documents found"
                     : searchModeOnly
                       ? "Use the filters to search for documents"
                       : "No documents available"}
                 </p>
-                {searchTerm || selectedTags.length > 0 ? (
+                {searchTerm || selectedTags.length > 0 || storageTypeFilter ? (
                   <p className="text-xs text-gray-400 dark:text-gray-500">Try adjusting your search or filters</p>
                 ) : searchModeOnly ? (
                   <p className="text-xs text-gray-400 dark:text-gray-500">The list will appear after searching</p>
@@ -243,6 +247,13 @@ export function ProjectSidebarList({
                         </div>
                         <span>•</span>
                         <span>{formatFileSize(project.size)}</span>
+                        <span>•</span>
+                        <Badge 
+                          variant={project.storageType === "cloud" ? "default" : "outline"} 
+                          className="text-xs px-1.5 py-0.5 h-4"
+                        >
+                          {project.storageType === "local" ? "📱" : "☁️"}
+                        </Badge>
                       </div>
                     </div>
                   </div>
