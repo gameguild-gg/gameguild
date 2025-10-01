@@ -2,9 +2,9 @@ using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Users;
-using MediatR;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Xunit;
 
 namespace GameGuild.Tests.Credentials.Unit.Handlers;
 
