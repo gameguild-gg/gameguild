@@ -106,9 +106,9 @@ public class CredentialTests
     public void IsValid_WhenActiveAndNotExpiredAndNotDeleted_ShouldBeTrue()
     {
         // Arrange
-        var credential = new Credential 
-        { 
-            IsActive = true, 
+        var credential = new Credential
+        {
+            IsActive = true,
             ExpiresAt = DateTime.UtcNow.AddDays(1),
             DeletedAt = null
         };
@@ -121,9 +121,9 @@ public class CredentialTests
     public void IsValid_WhenInactive_ShouldBeFalse()
     {
         // Arrange
-        var credential = new Credential 
-        { 
-            IsActive = false, 
+        var credential = new Credential
+        {
+            IsActive = false,
             ExpiresAt = DateTime.UtcNow.AddDays(1),
             DeletedAt = null
         };
@@ -136,9 +136,9 @@ public class CredentialTests
     public void IsValid_WhenExpired_ShouldBeFalse()
     {
         // Arrange
-        var credential = new Credential 
-        { 
-            IsActive = true, 
+        var credential = new Credential
+        {
+            IsActive = true,
             ExpiresAt = DateTime.UtcNow.AddDays(-1),
             DeletedAt = null
         };
@@ -151,9 +151,9 @@ public class CredentialTests
     public void IsValid_WhenDeleted_ShouldBeFalse()
     {
         // Arrange
-        var credential = new Credential 
-        { 
-            IsActive = true, 
+        var credential = new Credential
+        {
+            IsActive = true,
             ExpiresAt = DateTime.UtcNow.AddDays(1),
             DeletedAt = DateTime.UtcNow
         };
