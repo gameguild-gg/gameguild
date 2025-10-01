@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.Modules.Credentials;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Xunit;
 
 namespace GameGuild.Tests.Credentials.Unit.Services;
 
@@ -19,7 +20,7 @@ public class CredentialServiceTests
     {
         _mockRepository = new Mock<ICredentialRepository>();
         _mockLogger = new Mock<ILogger<CredentialService>>();
-        _service = new CredentialService(_mockRepository.Object, _mockLogger.Object);
+        _service = new CredentialService(_mockRepository.Object);
     }
 
     [Fact]
@@ -186,8 +187,11 @@ public class CredentialServiceTests
         // Arrange
         var credentialId = Guid.NewGuid();
 
+        var mockCredential = new Credential { Id = credentialId };
+        _mockRepository.Setup(r => r.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync(mockCredential);
         _mockRepository.Setup(r => r.SoftDeleteAsync(credentialId, It.IsAny<CancellationToken>()))
-                      .ReturnsAsync(true);
+                      .Returns(Task.CompletedTask);
 
         // Act
         var result = await _service.SoftDeleteCredentialAsync(credentialId);
@@ -203,8 +207,8 @@ public class CredentialServiceTests
         // Arrange
         var credentialId = Guid.NewGuid();
 
-        _mockRepository.Setup(r => r.SoftDeleteAsync(credentialId, It.IsAny<CancellationToken>()))
-                      .ReturnsAsync(false);
+        _mockRepository.Setup(r => r.GetByIdAsync(credentialId, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync((Credential?)null);
 
         // Act
         var result = await _service.SoftDeleteCredentialAsync(credentialId);
@@ -220,8 +224,11 @@ public class CredentialServiceTests
         // Arrange
         var credentialId = Guid.NewGuid();
 
+        var mockCredential = new Credential { Id = credentialId, DeletedAt = DateTime.UtcNow };
+        _mockRepository.Setup(r => r.GetByIdIncludingDeletedAsync(credentialId, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync(mockCredential);
         _mockRepository.Setup(r => r.RestoreAsync(credentialId, It.IsAny<CancellationToken>()))
-                      .ReturnsAsync(true);
+                      .Returns(Task.CompletedTask);
 
         // Act
         var result = await _service.RestoreCredentialAsync(credentialId);
@@ -237,15 +244,18 @@ public class CredentialServiceTests
         // Arrange
         var credentialId = Guid.NewGuid();
 
-        _mockRepository.Setup(r => r.HardDeleteAsync(credentialId, It.IsAny<CancellationToken>()))
-                      .ReturnsAsync(true);
+        Credential mockCredential = new Credential { Id = credentialId, DeletedAt = DateTime.UtcNow };
+        _mockRepository.Setup(r => r.GetByIdIncludingDeletedAsync(credentialId, It.IsAny<CancellationToken>()))
+                      .ReturnsAsync(mockCredential);
+        _mockRepository.Setup(r => r.RemoveAsync(credentialId, It.IsAny<CancellationToken>()))
+                      .Returns(Task.CompletedTask);
 
         // Act
         var result = await _service.HardDeleteCredentialAsync(credentialId);
 
         // Assert
         result.Should().BeTrue();
-        _mockRepository.Verify(r => r.HardDeleteAsync(credentialId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepository.Verify(r => r.RemoveAsync(credentialId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

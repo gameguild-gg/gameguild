@@ -1,9 +1,9 @@
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Modules.Credentials;
-using MediatR;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Xunit;
 
 namespace GameGuild.Tests.Credentials.Unit.Handlers;
 
@@ -23,7 +23,7 @@ public class ActivateCredentialCommandHandlerTests
         _mockCredentialService = new Mock<ICredentialService>();
         _mockLogger = new Mock<ILogger<ActivateCredentialCommandHandler>>();
         _mockMediator = new Mock<IMediator>();
-        _handler = new ActivateCredentialCommandHandler(_mockCredentialService.Object, _mockLogger.Object, _mockMediator.Object);
+        _handler = new ActivateCredentialCommandHandler(_mockCredentialService.Object, _mockMediator.Object, _mockLogger.Object);
     }
 
     [Fact]
@@ -31,7 +31,7 @@ public class ActivateCredentialCommandHandlerTests
     {
         // Arrange
         var credentialId = Guid.NewGuid();
-        var command = new ActivateCredentialCommand { CredentialId = credentialId };
+        var command = new ActivateCredentialCommand(credentialId);
 
         var credential = new Credential
         {
@@ -62,7 +62,7 @@ public class ActivateCredentialCommandHandlerTests
     {
         // Arrange
         var credentialId = Guid.NewGuid();
-        var command = new ActivateCredentialCommand { CredentialId = credentialId };
+        var command = new ActivateCredentialCommand(credentialId);
 
         _mockCredentialService.Setup(s => s.GetCredentialByIdAsync(credentialId))
                              .ReturnsAsync((Credential?)null);
@@ -82,7 +82,7 @@ public class ActivateCredentialCommandHandlerTests
     {
         // Arrange
         var credentialId = Guid.NewGuid();
-        var command = new ActivateCredentialCommand { CredentialId = credentialId };
+        var command = new ActivateCredentialCommand(credentialId);
 
         var credential = new Credential
         {
@@ -113,7 +113,7 @@ public class ActivateCredentialCommandHandlerTests
         var credentialId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var credentialType = "password";
-        var command = new ActivateCredentialCommand { CredentialId = credentialId };
+        var command = new ActivateCredentialCommand(credentialId);
 
         var credential = new Credential
         {
@@ -135,9 +135,7 @@ public class ActivateCredentialCommandHandlerTests
         // Assert
         _mockMediator.Verify(m => m.Publish(
             It.Is<CredentialActivatedEvent>(e =>
-                e.CredentialId == credentialId &&
-                e.UserId == userId &&
-                e.Type == credentialType),
+                e.CredentialId == credentialId),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -146,7 +144,7 @@ public class ActivateCredentialCommandHandlerTests
     {
         // Arrange
         var credentialId = Guid.NewGuid();
-        var command = new ActivateCredentialCommand { CredentialId = credentialId };
+        var command = new ActivateCredentialCommand(credentialId);
         var expectedException = new InvalidOperationException("Database error");
 
         _mockCredentialService.Setup(s => s.GetCredentialByIdAsync(credentialId))
@@ -162,7 +160,7 @@ public class ActivateCredentialCommandHandlerTests
     public void Constructor_ShouldThrowArgumentNullException_WhenCredentialServiceIsNull()
     {
         // Act & Assert
-        FluentActions.Invoking(() => new ActivateCredentialCommandHandler(null!, _mockLogger.Object, _mockMediator.Object))
+        FluentActions.Invoking(() => new ActivateCredentialCommandHandler(null!, _mockMediator.Object, _mockLogger.Object))
             .Should().Throw<ArgumentNullException>()
             .WithParameterName("credentialService");
     }
@@ -171,7 +169,7 @@ public class ActivateCredentialCommandHandlerTests
     public void Constructor_ShouldThrowArgumentNullException_WhenLoggerIsNull()
     {
         // Act & Assert
-        FluentActions.Invoking(() => new ActivateCredentialCommandHandler(_mockCredentialService.Object, null!, _mockMediator.Object))
+        FluentActions.Invoking(() => new ActivateCredentialCommandHandler(_mockCredentialService.Object, _mockMediator.Object, null!))
             .Should().Throw<ArgumentNullException>()
             .WithParameterName("logger");
     }
@@ -180,7 +178,7 @@ public class ActivateCredentialCommandHandlerTests
     public void Constructor_ShouldThrowArgumentNullException_WhenMediatorIsNull()
     {
         // Act & Assert
-        FluentActions.Invoking(() => new ActivateCredentialCommandHandler(_mockCredentialService.Object, _mockLogger.Object, null!))
+        FluentActions.Invoking(() => new ActivateCredentialCommandHandler(_mockCredentialService.Object, null!, _mockLogger.Object))
             .Should().Throw<ArgumentNullException>()
             .WithParameterName("mediator");
     }

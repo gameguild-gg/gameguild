@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Users;
+using Xunit;
 
 namespace GameGuild.Tests.Credentials.Unit.Entities;
 
