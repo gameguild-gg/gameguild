@@ -148,7 +148,7 @@ public class LocalSignUpCommandValidatorTests
     public void Validate_ShouldHaveError_WhenPasswordIsTooLong()
     {
         // Arrange
-        var longPassword = new string('A', 120) + "1!bcdefg"; // 129 characters
+        var longPassword = new string('A', 121) + "1!bcdefg"; // 129 characters
         var command = new LocalSignUpCommand
         {
             Email = "test@example.com",
