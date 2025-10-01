@@ -1,10 +1,10 @@
 using FluentAssertions;
 using GameGuild.Database;
-using GameGuild.Tests.Permissions.Unit;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Abstractions;
 using GameGuild.Modules.Permissions.Commands;
 using GameGuild.Modules.Permissions.Handlers;
+using GameGuild.Tests.Permissions.Unit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -26,7 +26,7 @@ public class GrantTenantPermissionHandlerTests : IDisposable
 
     public GrantTenantPermissionHandlerTests()
     {
-        var options = new DbContextOptionsBuilder<TestApplicationDbContext>()
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
             .Options;
 
@@ -183,7 +183,9 @@ public class GrantTenantPermissionHandlerTests : IDisposable
                 null,
                 "Grant",
                 permissions,
-                reason),
+                reason,
+                null,
+                null),
             Times.Once);
     }
 
@@ -212,7 +214,9 @@ public class GrantTenantPermissionHandlerTests : IDisposable
                 null,
                 "Grant",
                 permissions,
-                "Permissions granted via command"),
+                "Permissions granted via command",
+                null,
+                null),
             Times.Once);
     }
 
