@@ -33,17 +33,6 @@ public class ActivateCredentialCommandHandlerTests
         var credentialId = Guid.NewGuid();
         var command = new ActivateCredentialCommand(credentialId);
 
-        var credential = new Credential
-        {
-            Id = credentialId,
-            UserId = Guid.NewGuid(),
-            Type = "password",
-            IsActive = false
-        };
-
-        _mockCredentialService.Setup(s => s.GetCredentialByIdAsync(credentialId))
-                             .ReturnsAsync(credential);
-
         _mockCredentialService.Setup(s => s.ActivateCredentialAsync(credentialId))
                              .ReturnsAsync(true);
 
@@ -52,29 +41,8 @@ public class ActivateCredentialCommandHandlerTests
 
         // Assert
         result.Should().BeTrue();
-        _mockCredentialService.Verify(s => s.GetCredentialByIdAsync(credentialId), Times.Once);
         _mockCredentialService.Verify(s => s.ActivateCredentialAsync(credentialId), Times.Once);
         _mockMediator.Verify(m => m.Publish(It.IsAny<CredentialActivatedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task Handle_ShouldReturnFalse_WhenCredentialNotFound()
-    {
-        // Arrange
-        var credentialId = Guid.NewGuid();
-        var command = new ActivateCredentialCommand(credentialId);
-
-        _mockCredentialService.Setup(s => s.GetCredentialByIdAsync(credentialId))
-                             .ReturnsAsync((Credential?)null);
-
-        // Act
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.Should().BeFalse();
-        _mockCredentialService.Verify(s => s.GetCredentialByIdAsync(credentialId), Times.Once);
-        _mockCredentialService.Verify(s => s.ActivateCredentialAsync(It.IsAny<Guid>()), Times.Never);
-        _mockMediator.Verify(m => m.Publish(It.IsAny<CredentialActivatedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -83,16 +51,6 @@ public class ActivateCredentialCommandHandlerTests
         // Arrange
         var credentialId = Guid.NewGuid();
         var command = new ActivateCredentialCommand(credentialId);
-
-        var credential = new Credential
-        {
-            Id = credentialId,
-            UserId = Guid.NewGuid(),
-            Type = "password"
-        };
-
-        _mockCredentialService.Setup(s => s.GetCredentialByIdAsync(credentialId))
-                             .ReturnsAsync(credential);
 
         _mockCredentialService.Setup(s => s.ActivateCredentialAsync(credentialId))
                              .ReturnsAsync(false);
@@ -111,20 +69,7 @@ public class ActivateCredentialCommandHandlerTests
     {
         // Arrange
         var credentialId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
-        var credentialType = "password";
         var command = new ActivateCredentialCommand(credentialId);
-
-        var credential = new Credential
-        {
-            Id = credentialId,
-            UserId = userId,
-            Type = credentialType,
-            IsActive = false
-        };
-
-        _mockCredentialService.Setup(s => s.GetCredentialByIdAsync(credentialId))
-                             .ReturnsAsync(credential);
 
         _mockCredentialService.Setup(s => s.ActivateCredentialAsync(credentialId))
                              .ReturnsAsync(true);
@@ -147,7 +92,7 @@ public class ActivateCredentialCommandHandlerTests
         var command = new ActivateCredentialCommand(credentialId);
         var expectedException = new InvalidOperationException("Database error");
 
-        _mockCredentialService.Setup(s => s.GetCredentialByIdAsync(credentialId))
+        _mockCredentialService.Setup(s => s.ActivateCredentialAsync(credentialId))
                              .ThrowsAsync(expectedException);
 
         // Act & Assert

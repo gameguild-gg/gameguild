@@ -306,38 +306,43 @@ public class ResourceTests
     }
 
     [Fact]
-    public void AddLocalization_With_Null_Language_Should_Still_Create_Localization()
+    public void AddLocalization_Should_Throw_For_Null_Language()
     {
         // Arrange
         var resource = new TestResource();
 
-        // Act
-        var localization = resource.AddLocalization("Title", "Test Content", null!);
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            resource.AddLocalization("Title", "Test Content", null!));
+        exception.ParamName.Should().Be("language");
+    }
 
-        // Assert
-        localization.Should().NotBeNull();
-        localization.Language.Should().BeNull();
-        localization.FieldName.Should().Be("Title");
-        localization.Content.Should().Be("Test Content");
-        resource.Localizations.Should().Contain(localization);
+    [Fact]
+    public void AddLocalization_Should_Handle_Null_Content()
+    {
+        // Arrange
+        var resource = new TestResource();
+        var language = new Language { Code = "en-US", Name = "English" };
+
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            resource.AddLocalization("Title", null!, language));
+        exception.ParamName.Should().Be("content");
     }
 
     [Theory]
     [InlineData("")]
     [InlineData(" ")]
     [InlineData("\t")]
-    [InlineData(null)]
-    public void AddLocalization_Should_Handle_Empty_Or_Null_Content(string content)
+    public void AddLocalization_Should_Throw_For_Empty_Or_Whitespace_Content(string content)
     {
         // Arrange
         var resource = new TestResource();
         var language = new Language { Code = "en-US", Name = "English" };
 
-        // Act
-        var localization = resource.AddLocalization("Title", content, language);
-
-        // Assert
-        localization.Content.Should().Be(content);
-        resource.Localizations.Should().Contain(localization);
+        // Act & Assert
+        var exception = Assert.Throws<ArgumentException>(() =>
+            resource.AddLocalization("Title", content, language));
+        exception.ParamName.Should().Be("content");
     }
 }
