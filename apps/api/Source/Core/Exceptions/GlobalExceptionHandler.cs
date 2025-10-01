@@ -1,4 +1,5 @@
 using System.Security;
+using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,9 +15,8 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         var problemDetails = CreateProblemDetails(exception);
 
         httpContext.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
-        httpContext.Response.ContentType = "application/problem+json";
 
-        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+        await httpContext.Response.WriteAsJsonAsync(problemDetails, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }, "application/problem+json", cancellationToken);
 
         return true;
     }

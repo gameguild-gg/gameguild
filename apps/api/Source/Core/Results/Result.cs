@@ -49,11 +49,13 @@ public class Result : IResult
 /// <summary>
 /// Result with a value - simplified to only use Error
 /// </summary>
-public class Result<TValue> : Result
+public class Result<TValue> : Result, IResult<TValue>
 {
     private readonly TValue? _value;
 
     public Result(TValue? value, bool isSuccess, Error error) : base(isSuccess, error) { _value = value; }
+
+    TValue? IResult<TValue>.Value => IsSuccess ? _value : default;
 
     [NotNull]
     public TValue Value => IsSuccess ? _value! : throw new InvalidOperationException("The value of a failure result can't be accessed.");

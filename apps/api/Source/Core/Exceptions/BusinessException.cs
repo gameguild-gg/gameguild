@@ -1,9 +1,11 @@
+using GameGuild;
+
 namespace GameGuild.Core.Exceptions;
 
 /// <summary>
 /// Exception thrown when a business rule is violated
 /// </summary>
-public class BusinessException : Exception
+public class BusinessException : DomainException
 {
     public BusinessException(string message) : base(message) { }
 

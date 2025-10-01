@@ -72,9 +72,9 @@ public class PerformanceBehavior<TRequest, TResponse>(ILogger<PerformanceBehavio
 
         return elapsedMilliseconds switch
         {
-            > CriticalRequestThresholdMs => LogLevel.Critical,
+            > CriticalRequestThresholdMs => LogLevel.Error, // Changed from Critical to Error
             > SlowRequestThresholdMs => LogLevel.Warning,
-            _ => LogLevel.Information
+            _ => LogLevel.Debug // Changed from Information to Debug
         };
     }
 }
