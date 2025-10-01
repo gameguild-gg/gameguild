@@ -20,6 +20,15 @@ public record Money
         Currency = currency.ToUpperInvariant();
     }
 
+    // Private constructor that allows negative amounts for internal operations like subtraction
+    private Money(decimal amount, string currency, bool allowNegative)
+    {
+        if (string.IsNullOrWhiteSpace(currency)) throw new ArgumentException("Currency cannot be null or empty.", nameof(currency));
+
+        Amount = Math.Round(amount, 2, MidpointRounding.AwayFromZero);
+        Currency = currency.ToUpperInvariant();
+    }
+
     public decimal Amount { get; init; }
 
     public string Currency { get; init; }
@@ -36,7 +45,7 @@ public record Money
 
     public static Money operator -(Money left, Money right)
     {
-        return left.Currency != right.Currency ? throw new InvalidOperationException("Cannot subtract money with different currencies.") : new Money(left.Amount - right.Amount, left.Currency);
+        return left.Currency != right.Currency ? throw new InvalidOperationException("Cannot subtract money with different currencies.") : new Money(left.Amount - right.Amount, left.Currency, allowNegative: true);
     }
 
     public static Money operator *(Money money, decimal multiplier) { return new Money(money.Amount * multiplier, money.Currency); }
