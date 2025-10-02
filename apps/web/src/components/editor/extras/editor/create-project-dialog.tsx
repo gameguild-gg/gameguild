@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { StorageOptionSelector, type StorageOption } from "./storage-option-selector"
 
 interface ProjectData {
   id: string
@@ -49,6 +50,7 @@ export function CreateProjectDialog({
   const [projectTags, setProjectTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
+  const [storageOptions, setStorageOptions] = useState<StorageOption[]>(["local"])
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -80,6 +82,15 @@ export function CreateProjectDialog({
         description: "Por favor, adicione pelo menos uma tag ao projeto",
         duration: 3000,
         icon: "🏷️",
+      })
+      return
+    }
+
+    if (storageOptions.length === 0) {
+      toast.error("Opção de armazenamento obrigatória", {
+        description: "Por favor, selecione pelo menos uma opção de armazenamento",
+        duration: 3000,
+        icon: "💾",
       })
       return
     }
@@ -127,6 +138,7 @@ export function CreateProjectDialog({
       setProjectTags([])
       setTagInput("")
       setShowTagDropdown(false)
+      setStorageOptions(["local"])
       onOpenChange(false)
 
       // Update lists
@@ -153,6 +165,7 @@ export function CreateProjectDialog({
     setProjectTags([])
     setTagInput("")
     setShowTagDropdown(false)
+    setStorageOptions(["local"])
     onOpenChange(false)
   }
 
@@ -376,6 +389,13 @@ export function CreateProjectDialog({
             )}
           </div>
 
+          {/* Storage Options Section */}
+          <StorageOptionSelector
+            selectedOptions={storageOptions}
+            onSelectionChange={setStorageOptions}
+            required={true}
+          />
+
           <div className="p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <svg
@@ -401,7 +421,7 @@ export function CreateProjectDialog({
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={projectTags.length === 0}>
+            <Button onClick={handleCreate} disabled={projectTags.length === 0 || storageOptions.length === 0}>
               Create Project
             </Button>
           </div>
