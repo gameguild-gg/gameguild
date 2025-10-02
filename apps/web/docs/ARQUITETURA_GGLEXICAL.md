@@ -287,15 +287,37 @@ IndexedDB (tag_data store) → Interface (autocomplete/filtros)
   - Performance otimizada (sem latência de rede)
   - Ideal para rascunhos, projetos pessoais ou dados sensíveis
 
-#### 2. **Cloud Sync** (`storageType: "cloud"`)
-- **Uso**: Projetos colaborativos, públicos ou que precisam estar disponíveis em múltiplos dispositivos
+#### 2. **Server Sync** (`storageType: "server"`)
+- **Uso**: Projetos corporativos, colaboração em equipe, integração com plataforma
 - **Características**:
-  - Sincronização automática com servidor
+  - Sincronização com servidor GameGuild
   - Baixado localmente para edição offline
   - Disponível em múltiplos dispositivos
-  - Backup automático na nuvem
-  - Requer conectividade inicial para download
-  - **Funcionamento híbrido**: mesmo sendo "cloud", o projeto é baixado e editado localmente, com sincronização periódica
+  - Sistema de permissões e colaboração
+  - Integração com ecossistema GameGuild
+  - Backup automático e versionamento
+
+#### 3. **Drive Sync** (`storageType: "drive"`)
+- **Uso**: Projetos pessoais, uso independente, controle total dos dados
+- **Características**:
+  - Sincronização com Google Drive pessoal
+  - Pasta dedicada "GGLexical Projects"
+  - Funcionamento offline após sync inicial
+  - Controle total sobre os dados
+  - 15GB+ de storage gratuito
+  - Ideal para freelancers e uso pessoal
+
+### Casos de Uso por Tipo:
+
+| Cenário | Local | Server | Drive |
+|---------|--------|--------|-------|
+| **Rascunho rápido** | ✅ Ideal | ❌ Overhead | ❌ Overhead |
+| **Projeto pessoal** | ✅ Simples | ❌ Desnecessário | ✅ Ideal |
+| **Colaboração em equipe** | ❌ Limitado | ✅ Ideal | ❌ Individual |
+| **Dados sensíveis** | ✅ Máxima privacidade | ⚠️ Depende da política | ⚠️ Google TOS |
+| **Uso offline** | ✅ Sempre | ✅ Após sync | ✅ Após sync |
+| **Backup automático** | ❌ Não | ✅ Sim | ✅ Google Drive |
+| **Sem conta necessária** | ✅ Sim | ❌ Conta GameGuild | ❌ Conta Google |
 
 ### Filosofia de Armazenamento:
 O sistema adota uma abordagem **"local-first"** onde:
@@ -323,16 +345,23 @@ O sistema adota uma abordagem **"local-first"** onde:
 
 ### Implementação Detalhada:
 
-Para a implementação completa do armazenamento na nuvem, consulte o documento especializado:
-**[📋 CLOUD_STORAGE_ORCHESTRATION.md](./CLOUD_STORAGE_ORCHESTRATION.md)**
+Para a implementação completa do armazenamento na nuvem, consulte os documentos especializados:
 
-Este documento inclui:
+**[📋 CLOUD_STORAGE_ORCHESTRATION.md](./CLOUD_STORAGE_ORCHESTRATION.md)**
 - Extensão do modelo Project no backend (.NET 9)
 - Controllers REST API completos
 - Commands/Queries/Handlers (CQRS)
 - Atualização do frontend com LexicalApiClient
 - Sistema de migração e configuração
 - Integração com sistema de autenticação existente
+
+**[🚀 DUAL_CLOUD_STORAGE_ARCHITECTURE.md](./DUAL_CLOUD_STORAGE_ARCHITECTURE.md)**
+- **Arquitetura Dual**: Servidor GameGuild + Google Drive
+- **Múltiplas opções de storage**: Local, Server, Drive
+- **Interface unificada**: CloudStorageProvider abstraction
+- **Autenticação flexível**: JWT (server) + OAuth 2.0 (Drive)
+- **Casos de uso distintos**: Pessoal vs Corporativo vs Privado
+- **Conversão dinâmica** entre tipos de armazenamento
 
 ### Benefícios da Arquitetura Atual:
 
