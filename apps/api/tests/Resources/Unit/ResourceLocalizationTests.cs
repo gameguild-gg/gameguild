@@ -1,7 +1,6 @@
 using FluentAssertions;
 using GameGuild.Modules.Localization;
 using GameGuild.Modules.Resources;
-using GameGuild.Modules.Tenants;
 using Xunit;
 
 namespace GameGuild.Tests.Resources.Unit;

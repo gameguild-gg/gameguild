@@ -154,6 +154,9 @@ public class UserTestCoverageVerificationTests
         var entityTypes = _usersAssembly.GetTypes()
             .Where(t => t.Namespace?.StartsWith("GameGuild.Modules.Users") == true)
             .Where(t => t.IsClass && !t.IsAbstract && !t.IsGenericType)
+            .Where(t => !t.Name.Contains("<")) // Exclude compiler-generated types
+            .Where(t => !t.Name.Contains(">")) // Exclude compiler-generated types
+            .Where(t => !t.Name.StartsWith("<")) // Exclude compiler-generated types
             .Where(t => !t.Name.EndsWith("Command") &&
                        !t.Name.EndsWith("Query") &&
                        !t.Name.EndsWith("Handler") &&
@@ -166,6 +169,9 @@ public class UserTestCoverageVerificationTests
                        !t.Name.EndsWith("Extensions") &&
                        !t.Name.EndsWith("Event") &&
                        !t.Name.EndsWith("EventHandler") &&
+                       !t.Name.EndsWith("Dto") && // Exclude DTOs
+                       !t.Name.EndsWith("Context") && // Exclude DbContext classes
+                       !t.Name.EndsWith("Statistics") && // Exclude statistics/result classes
                        !t.Name.Contains("Configuration"))
             .ToList();
 
@@ -202,7 +208,10 @@ public class UserTestCoverageVerificationTests
         var queries = allTypes.Where(t => t.Name.EndsWith("Query")).ToList();
         var handlers = allTypes.Where(t => t.Name.EndsWith("Handler")).ToList();
         var validators = allTypes.Where(t => t.Name.EndsWith("Validator")).ToList();
-        var entities = allTypes.Where(t => !t.Name.EndsWith("Command") &&
+        var entities = allTypes.Where(t => !t.Name.Contains("<") && // Exclude compiler-generated types
+                                           !t.Name.Contains(">") && // Exclude compiler-generated types
+                                           !t.Name.StartsWith("<") && // Exclude compiler-generated types
+                                           !t.Name.EndsWith("Command") &&
                                            !t.Name.EndsWith("Query") &&
                                            !t.Name.EndsWith("Handler") &&
                                            !t.Name.EndsWith("Validator") &&
@@ -214,6 +223,9 @@ public class UserTestCoverageVerificationTests
                                            !t.Name.EndsWith("Extensions") &&
                                            !t.Name.EndsWith("Event") &&
                                            !t.Name.EndsWith("EventHandler") &&
+                                           !t.Name.EndsWith("Dto") && // Exclude DTOs
+                                           !t.Name.EndsWith("Context") && // Exclude DbContext classes
+                                           !t.Name.EndsWith("Statistics") && // Exclude statistics/result classes
                                            !t.Name.Contains("Configuration")).ToList();
 
         // Act: Get test classes

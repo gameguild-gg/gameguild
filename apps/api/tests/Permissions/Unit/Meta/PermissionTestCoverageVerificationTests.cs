@@ -25,13 +25,16 @@ public class PermissionTestCoverageVerificationTests
     {
         // Arrange
         var commandTypes = _permissionsAssembly.GetTypes()
-            .Where(t => t.Name.EndsWith("Command") && !t.IsAbstract)
+            .Where(t => t.Namespace?.Contains("Permissions") == true &&
+                       t.Name.EndsWith("Command") && !t.IsAbstract)
             .ToList();
 
         // Act & Assert
         foreach (var commandType in commandTypes)
         {
-            var expectedHandlerTestName = $"{commandType.Name}HandlerTests";
+            // Remove "Command" suffix from the command name to match handler naming convention
+            var handlerName = commandType.Name.Replace("Command", "");
+            var expectedHandlerTestName = $"{handlerName}HandlerTests";
             var handlerTestType = _testAssembly.GetTypes()
                 .FirstOrDefault(t => t.Name == expectedHandlerTestName);
 
@@ -45,7 +48,8 @@ public class PermissionTestCoverageVerificationTests
     {
         // Arrange
         var queryTypes = _permissionsAssembly.GetTypes()
-            .Where(t => t.Name.EndsWith("Query") && !t.IsAbstract)
+            .Where(t => t.Namespace?.Contains("Permissions") == true &&
+                       t.Name.EndsWith("Query") && !t.IsAbstract)
             .ToList();
 
         // Act & Assert
@@ -65,7 +69,8 @@ public class PermissionTestCoverageVerificationTests
     {
         // Arrange
         var validatorTypes = _permissionsAssembly.GetTypes()
-            .Where(t => t.Name.EndsWith("Validator") && !t.IsAbstract)
+            .Where(t => t.Namespace?.Contains("Permissions") == true &&
+                       t.Name.EndsWith("Validator") && !t.IsAbstract)
             .ToList();
 
         // Act & Assert

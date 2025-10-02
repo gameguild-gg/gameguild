@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild;
 using GameGuild.CQRS;
 using Xunit;
 

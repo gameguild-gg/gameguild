@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using BenchmarkDotNet.Attributes;
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Database;
@@ -7,7 +6,6 @@ using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;

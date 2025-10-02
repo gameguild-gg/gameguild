@@ -1,11 +1,9 @@
-using System.Linq.Expressions;
 using FluentAssertions;
 using FluentValidation.TestHelper;
 using GameGuild.Database;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
-using Moq;
 using Xunit;
 
 namespace GameGuild.Tests.Credentials.Unit.Validators;

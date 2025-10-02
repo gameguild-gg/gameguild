@@ -1,4 +1,3 @@
-using FluentAssertions;
 using FluentValidation.TestHelper;
 using GameGuild.Modules.Authentication;
 using Xunit;

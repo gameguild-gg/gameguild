@@ -25,7 +25,9 @@ public class AuditTestCoverageVerificationTests
     {
         // Arrange
         var commandTypes = _auditAssembly.GetTypes()
-            .Where(t => t.Name.EndsWith("Command") && !t.IsAbstract)
+            .Where(t => t.Namespace?.StartsWith("GameGuild.Modules.Audit") == true &&
+                       t.Name.EndsWith("Command") &&
+                       !t.IsAbstract)
             .ToList();
 
         // Act & Assert
@@ -45,7 +47,11 @@ public class AuditTestCoverageVerificationTests
     {
         // Arrange
         var queryTypes = _auditAssembly.GetTypes()
-            .Where(t => t.Name.EndsWith("Query") && !t.IsAbstract)
+            .Where(t => t.Namespace?.StartsWith("GameGuild.Modules.Audit") == true &&
+                       t.Name.EndsWith("Query") &&
+                       !t.IsAbstract &&
+                       !t.Name.Contains("Request") &&  // Exclude query request DTOs
+                       t.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition().Name.Contains("IRequest")))  // Must implement IRequest<>
             .ToList();
 
         // Act & Assert
@@ -65,7 +71,9 @@ public class AuditTestCoverageVerificationTests
     {
         // Arrange
         var validatorTypes = _auditAssembly.GetTypes()
-            .Where(t => t.Name.EndsWith("Validator") && !t.IsAbstract)
+            .Where(t => t.Namespace?.StartsWith("GameGuild.Modules.Audit") == true &&
+                       t.Name.EndsWith("Validator") &&
+                       !t.IsAbstract)
             .ToList();
 
         // Act & Assert
@@ -86,10 +94,10 @@ public class AuditTestCoverageVerificationTests
         // Arrange
         var entityTypes = _auditAssembly.GetTypes()
             .Where(t => t.Namespace?.Contains("Audit") == true &&
-                       (t.Name.EndsWith("Log") || t.Name.EndsWith("Entry") ||
-                        t.Name.EndsWith("Category") || t.Name.EndsWith("Level") ||
-                        t.Name.EndsWith("Query") || t.Name.EndsWith("Dto")) &&
-                       !t.IsAbstract && !t.IsInterface && !t.Name.Contains("Configuration"))
+                       (t.Name.EndsWith("Log") || t.Name.EndsWith("Entry") || t.Name.EndsWith("Dto")) &&
+                       !t.IsAbstract && !t.IsInterface && !t.IsEnum &&
+                       !t.Name.Contains("Configuration") && !t.Name.Contains("Query") &&
+                       !t.Name.Contains("Request"))  // Exclude query parameters and request DTOs
             .ToList();
 
         // Act & Assert

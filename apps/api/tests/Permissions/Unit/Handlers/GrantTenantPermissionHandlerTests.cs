@@ -4,7 +4,6 @@ using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Abstractions;
 using GameGuild.Modules.Permissions.Commands;
 using GameGuild.Modules.Permissions.Handlers;
-using GameGuild.Tests.Permissions.Unit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;

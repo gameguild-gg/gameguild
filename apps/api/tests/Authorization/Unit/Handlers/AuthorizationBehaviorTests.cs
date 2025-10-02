@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using FluentAssertions;
-using GameGuild;
 using GameGuild.CQRS;
 using GameGuild.Modules.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -44,7 +43,7 @@ public class AuthorizationBehaviorTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnUnauthorized_WhenUserIsNotAuthenticated()
+    public async Task Handle_ShouldThrowUnauthorizedException_WhenUserIsNotAuthenticated()
     {
         // Arrange
         var request = new TestAuthorizedRequest();
@@ -55,14 +54,15 @@ public class AuthorizationBehaviorTests
         _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        var result = await _behavior.Handle(request, () => Task.FromResult("success"), CancellationToken.None);
+        var act = async () => await _behavior.Handle(request, () => Task.FromResult("success"), CancellationToken.None);
 
         // Assert
-        result.Should().BeNull(); // Unauthorized response
+        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("Authentication is required");
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnForbidden_WhenUserLacksRequiredRole()
+    public async Task Handle_ShouldThrowUnauthorizedException_WhenUserLacksRequiredRole()
     {
         // Arrange
         var request = new TestAuthorizedRequest { RequiredRoles = new[] { "Admin" } };
@@ -77,10 +77,11 @@ public class AuthorizationBehaviorTests
         _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        var result = await _behavior.Handle(request, () => Task.FromResult("success"), CancellationToken.None);
+        var act = async () => await _behavior.Handle(request, () => Task.FromResult("success"), CancellationToken.None);
 
         // Assert
-        result.Should().BeNull(); // Forbidden response
+        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("Insufficient permissions");
     }
 
     [Fact]
@@ -106,7 +107,7 @@ public class AuthorizationBehaviorTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnForbidden_WhenUserLacksRequiredPermission()
+    public async Task Handle_ShouldThrowUnauthorizedException_WhenUserLacksRequiredPermission()
     {
         // Arrange
         var request = new TestAuthorizedRequest { RequiredPermissions = new[] { "read:users" } };
@@ -121,10 +122,11 @@ public class AuthorizationBehaviorTests
         _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        var result = await _behavior.Handle(request, () => Task.FromResult("success"), CancellationToken.None);
+        var act = async () => await _behavior.Handle(request, () => Task.FromResult("success"), CancellationToken.None);
 
         // Assert
-        result.Should().BeNull(); // Forbidden response
+        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("Insufficient permissions");
     }
 
     [Fact]
@@ -161,7 +163,8 @@ public class AuthorizationBehaviorTests
         _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        await _behavior.Handle(request, () => Task.FromResult("success"), CancellationToken.None);
+        var act = async () => await _behavior.Handle(request, () => Task.FromResult("success"), CancellationToken.None);
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
 
         // Assert
         _mockLogger.Verify(
@@ -190,7 +193,8 @@ public class AuthorizationBehaviorTests
         _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
-        await _behavior.Handle(request, () => Task.FromResult("success"), CancellationToken.None);
+        var act = async () => await _behavior.Handle(request, () => Task.FromResult("success"), CancellationToken.None);
+        await act.Should().ThrowAsync<UnauthorizedAccessException>();
 
         // Assert
         _mockLogger.Verify(

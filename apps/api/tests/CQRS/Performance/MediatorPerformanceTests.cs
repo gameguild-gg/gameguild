@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Running;
 using FluentAssertions;
 using GameGuild.CQRS;
 using Microsoft.Extensions.DependencyInjection;
