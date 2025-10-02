@@ -4,6 +4,7 @@ import { useCookies } from '@/hooks/use-cookies';
 import { environment } from '@/configs/environment';
 import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
 import { useEffect } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 /**
  * Conditional Analytics Provider that only loads analytics scripts
@@ -62,6 +63,44 @@ export function ConditionalAnalytics() {
 }
 
 /**
+ * Track route changes and send GA4/GTM page_view events with accurate URL
+ */
+export function RouteAnalyticsTracker() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const search = searchParams?.toString();
+    const page_path = search ? `${pathname}?${search}` : pathname || '/';
+    const page_location = window.location.href;
+    const page_title = typeof document !== 'undefined' ? document.title : undefined;
+
+    // GA4 page_view
+    if (window.gtag) {
+      window.gtag('event', 'page_view', {
+        page_location,
+        page_path,
+        page_title,
+      });
+    }
+
+    // GTM dataLayer push (optional but helpful for tag-based tracking)
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: 'page_view',
+        page_location,
+        page_path,
+        page_title,
+      });
+    }
+  }, [pathname, searchParams]);
+
+  return null;
+}
+
+/**
  * Initialize Google Consent Mode before any analytics scripts load
  * This should be called as early as possible in the app lifecycle
  */
@@ -91,6 +130,8 @@ export function InitializeGoogleConsent() {
         anonymize_ip: true,
         allow_google_signals: false,
         allow_ad_personalization_signals: false,
+        // Disable automatic page_view to avoid incorrect/default URLs and control via RouteAnalyticsTracker
+        send_page_view: false,
       });
     }
   }, []);
