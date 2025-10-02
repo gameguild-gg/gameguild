@@ -1,6 +1,5 @@
 using GameGuild.Core.Logging;
 using GameGuild.CQRS;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Abstractions;
 
 namespace GameGuild.Modules.Permissions.Commands;

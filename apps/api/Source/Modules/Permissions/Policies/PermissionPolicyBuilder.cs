@@ -1,6 +1,4 @@
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Abstractions;
-using Microsoft.AspNetCore.Http;
 
 namespace GameGuild.Modules.Permissions.Policies;
 
