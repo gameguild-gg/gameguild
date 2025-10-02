@@ -321,6 +321,19 @@ O sistema adota uma abordagem **"local-first"** onde:
 4. **Fase 3**: Colaboração em tempo real
 5. **Fase 4**: Versionamento e histórico de mudanças
 
+### Implementação Detalhada:
+
+Para a implementação completa do armazenamento na nuvem, consulte o documento especializado:
+**[📋 CLOUD_STORAGE_ORCHESTRATION.md](./CLOUD_STORAGE_ORCHESTRATION.md)**
+
+Este documento inclui:
+- Extensão do modelo Project no backend (.NET 9)
+- Controllers REST API completos
+- Commands/Queries/Handlers (CQRS)
+- Atualização do frontend com LexicalApiClient
+- Sistema de migração e configuração
+- Integração com sistema de autenticação existente
+
 ### Benefícios da Arquitetura Atual:
 
 - **Funcionalidade offline completa**
@@ -328,6 +341,7 @@ O sistema adota uma abordagem **"local-first"** onde:
 - **Escalabilidade preparada** para sync
 - **Estrutura de dados consistente** para migração
 - **Zero dependência** de servidor para funcionar
+- **Integração nativa** com infraestrutura GameGuild existente
 
 ## Considerações Técnicas
 
