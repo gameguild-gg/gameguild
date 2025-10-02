@@ -30,14 +30,14 @@ const storageOptions: StorageOptionConfig[] = [
     id: "local",
     label: "Local Storage",
     description: "Salvo apenas no seu dispositivo",
-    icon: <HardDrive className="w-4 h-4" />,
+    icon: <HardDrive className="w-3.5 h-3.5" />,
     enabled: true,
   },
   {
     id: "gameguild-cloud",
     label: "GameGuild Cloud",
     description: "Sincronizado com servidor GameGuild",
-    icon: <Database className="w-4 h-4" />,
+    icon: <Database className="w-3.5 h-3.5" />,
     enabled: false,
     comingSoon: true,
   },
@@ -45,7 +45,7 @@ const storageOptions: StorageOptionConfig[] = [
     id: "google-drive",
     label: "Google Drive",
     description: "Sincronizado com sua conta Google Drive",
-    icon: <Cloud className="w-4 h-4" />,
+    icon: <Cloud className="w-3.5 h-3.5" />,
     enabled: false,
     comingSoon: true,
   },
@@ -82,7 +82,7 @@ export function StorageOptionSelector({
   }
 
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-2 ${className}`}>
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">
           Storage Options {required && <span className="text-red-500">*</span>}
@@ -92,7 +92,7 @@ export function StorageOptionSelector({
         )}
       </div>
       
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {storageOptions.map((option) => {
           const isSelected = selectedOptions.includes(option.id)
           const isDisabled = disabled || !option.enabled
@@ -106,8 +106,8 @@ export function StorageOptionSelector({
                   : "border-gray-200 dark:border-gray-700"
               } ${isDisabled ? "opacity-50" : "hover:border-gray-300 dark:hover:border-gray-600"}`}
             >
-              <CardContent className="p-3">
-                <div className="flex items-start space-x-3">
+              <CardContent className="p-2">
+                <div className="flex items-center space-x-2">
                   <Checkbox
                     id={option.id}
                     checked={isSelected}
@@ -115,29 +115,28 @@ export function StorageOptionSelector({
                       handleOptionToggle(option.id, checked as boolean)
                     }
                     disabled={isDisabled}
-                    className="mt-0.5"
+                    className="shrink-0"
                   />
                   
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <div className={isSelected ? "text-blue-600 dark:text-blue-400" : "text-gray-500"}>
-                        {option.icon}
-                      </div>
-                      <Label 
-                        htmlFor={option.id}
-                        className={`text-sm font-medium cursor-pointer ${
-                          isDisabled ? "cursor-not-allowed" : ""
-                        } ${isSelected ? "text-blue-900 dark:text-blue-100" : ""}`}
-                      >
-                        {option.label}
-                        {option.comingSoon && (
-                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
-                            Em breve
-                          </span>
-                        )}
-                      </Label>
-                    </div>
-                    <p className={`text-xs ${
+                  <div className={isSelected ? "text-blue-600 dark:text-blue-400" : "text-gray-500"}>
+                    {option.icon}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <Label 
+                      htmlFor={option.id}
+                      className={`text-sm font-medium cursor-pointer block ${
+                        isDisabled ? "cursor-not-allowed" : ""
+                      } ${isSelected ? "text-blue-900 dark:text-blue-100" : ""}`}
+                    >
+                      {option.label}
+                      {option.comingSoon && (
+                        <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
+                          Em breve
+                        </span>
+                      )}
+                    </Label>
+                    <p className={`text-xs truncate ${
                       isSelected 
                         ? "text-blue-700 dark:text-blue-300" 
                         : "text-gray-500 dark:text-gray-400"
@@ -153,14 +152,14 @@ export function StorageOptionSelector({
       </div>
       
       {selectedOptions.length > 1 && (
-        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <div className="flex items-center gap-2 mb-1">
-            <Cloud className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+        <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Cloud className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+            <span className="text-xs font-medium text-blue-800 dark:text-blue-200">
               Múltiplos destinos selecionados
             </span>
           </div>
-          <p className="text-xs text-blue-700 dark:text-blue-300">
+          <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
             O projeto será salvo em todos os destinos selecionados e mantido sincronizado.
           </p>
         </div>
