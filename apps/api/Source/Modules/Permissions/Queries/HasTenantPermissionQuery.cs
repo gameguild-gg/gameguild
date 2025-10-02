@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Permissions;
 
 namespace GameGuild.Modules.Permissions.Queries;
 
