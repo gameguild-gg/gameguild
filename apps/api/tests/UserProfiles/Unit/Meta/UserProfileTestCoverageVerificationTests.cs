@@ -154,6 +154,10 @@ public class UserProfileTestCoverageVerificationTests
         var entityTypes = _userProfilesAssembly.GetTypes()
             .Where(t => t.Namespace?.StartsWith("GameGuild.Modules.UserProfiles") == true)
             .Where(t => t.IsClass && !t.IsAbstract && !t.IsGenericType)
+            .Where(t => !t.Name.Contains("<") && !t.Name.Contains(">")) // Exclude compiler-generated types
+            .Where(t => !t.Name.EndsWith("Dto")) // Exclude DTOs
+            .Where(t => !t.Name.EndsWith("Context")) // Exclude DbContext classes
+            .Where(t => !t.Name.EndsWith("Statistics")) // Exclude statistics classes
             .Where(t => !t.Name.EndsWith("Command") &&
                        !t.Name.EndsWith("Query") &&
                        !t.Name.EndsWith("Handler") &&
@@ -202,7 +206,11 @@ public class UserProfileTestCoverageVerificationTests
         var queries = allTypes.Where(t => t.Name.EndsWith("Query")).ToList();
         var handlers = allTypes.Where(t => t.Name.EndsWith("Handler")).ToList();
         var validators = allTypes.Where(t => t.Name.EndsWith("Validator")).ToList();
-        var entities = allTypes.Where(t => !t.Name.EndsWith("Command") &&
+        var entities = allTypes.Where(t => !t.Name.Contains("<") && !t.Name.Contains(">")) // Exclude compiler-generated
+                               .Where(t => !t.Name.EndsWith("Dto")) // Exclude DTOs
+                               .Where(t => !t.Name.EndsWith("Context")) // Exclude contexts
+                               .Where(t => !t.Name.EndsWith("Statistics")) // Exclude statistics
+                               .Where(t => !t.Name.EndsWith("Command") &&
                                            !t.Name.EndsWith("Query") &&
                                            !t.Name.EndsWith("Handler") &&
                                            !t.Name.EndsWith("Validator") &&

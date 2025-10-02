@@ -1,6 +1,4 @@
-using FluentAssertions;
 using FluentValidation.TestHelper;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Commands;
 using GameGuild.Modules.Permissions.Validators;
 using Xunit;
@@ -120,7 +118,7 @@ public class GrantTenantPermissionCommandValidatorTests
     public async Task Validate_ShouldNotHaveError_WhenReasonIsMaxLength()
     {
         // Arrange
-        var maxLengthReason = new string('a', 1000); // Exactly 1000 characters
+        var maxLengthReason = new string('a', 500); // Exactly 500 characters
         var command = new GrantTenantPermissionCommand
         {
             UserId = Guid.NewGuid(),

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using FluentAssertions;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
