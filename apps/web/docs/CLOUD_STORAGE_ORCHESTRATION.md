@@ -18,6 +18,20 @@ O projeto já possui uma API robusta em .NET 9 com:
 - **Sistema de Hash**: Para detecção de mudanças
 - **Configuração de Sync**: `syncConfig` centralizados
 
+## Evolução para Arquitetura Dual
+
+> **⚡ NOVA ARQUITETURA DUAL DISPONÍVEL**
+> 
+> Para uma implementação mais avançada com **múltiplas opções de cloud storage**, 
+> consulte: **[📋 DUAL_CLOUD_STORAGE_ARCHITECTURE.md](./DUAL_CLOUD_STORAGE_ARCHITECTURE.md)**
+> 
+> Esta nova arquitetura oferece:
+> - **Google Drive Integration** (pessoal/offline)
+> - **GameGuild Server** (corporativo/colaborativo) 
+> - **Storage Local** (privacidade máxima)
+> - **Conversão dinâmica** entre tipos de storage
+> - **Interface unificada** para múltiplos provedores
+
 ## Proposta de Implementação
 
 ### 1. Extensão do Modelo Project (Backend)
