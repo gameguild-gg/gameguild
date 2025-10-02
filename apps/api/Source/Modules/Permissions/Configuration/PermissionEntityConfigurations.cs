@@ -1,7 +1,4 @@
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GameGuild.Modules.Permissions.Configuration;
 
@@ -124,8 +121,10 @@ public class PermissionAuditLogConfiguration : IEntityTypeConfiguration<Permissi
         builder.Property(pal => pal.Permissions)
             .HasColumnType("jsonb");
 
-        builder.Property(pal => pal.Metadata)
-            .HasColumnType("jsonb");
+        // Metadata property: jsonb for PostgreSQL (skip column type for InMemory)
+        // InMemory provider doesn't support Dictionary<string, object> with column types
+        // Will be conditionally configured in ApplicationDbContext.OnModelCreating
+        builder.Property(pal => pal.Metadata);
     }
 }
 

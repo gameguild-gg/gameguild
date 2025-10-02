@@ -1,9 +1,7 @@
 using System.Text.Json;
 using GameGuild.Database;
 using GameGuild.Modules.Permissions.Abstractions;
-using GameGuild.Modules.Permissions.Entities;
 using GameGuild.Modules.Permissions.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Permissions.Services;
 

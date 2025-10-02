@@ -21,6 +21,8 @@ public class HasTenantPermissionQueryHandler : IRequestHandler<HasTenantPermissi
 
     public async Task<bool> Handle(HasTenantPermissionQuery request, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
+
         _logger.LogDebug("Checking tenant permission for User:{UserId} in Tenant:{TenantId}, Permission:{Permission}",
             request.UserId, request.TenantId, request.Permission);
 

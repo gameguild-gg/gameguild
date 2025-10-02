@@ -1,4 +1,3 @@
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Abstractions;
 
 namespace GameGuild.Modules.Permissions.Extensions;
