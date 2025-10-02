@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Abstractions;
 using GameGuild.Modules.Permissions.Queries;
 using Microsoft.Extensions.Logging;

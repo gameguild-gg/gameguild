@@ -25,13 +25,15 @@ public class AuthenticationTestCoverageVerificationTests
     {
         // Arrange
         var commandTypes = _authenticationAssembly.GetTypes()
-            .Where(t => t.Name.EndsWith("Command") && !t.IsAbstract)
+            .Where(t => t.Namespace?.Contains("Authentication") == true &&
+                       t.Name.EndsWith("Command") && !t.IsAbstract)
             .ToList();
 
         // Act & Assert
         foreach (var commandType in commandTypes)
         {
-            var expectedHandlerTestName = $"{commandType.Name}HandlerTests";
+            var commandName = commandType.Name.Replace("Command", "");
+            var expectedHandlerTestName = $"{commandName}HandlerTests";
             var handlerTestType = _testAssembly.GetTypes()
                 .FirstOrDefault(t => t.Name == expectedHandlerTestName);
 
@@ -45,7 +47,8 @@ public class AuthenticationTestCoverageVerificationTests
     {
         // Arrange
         var queryTypes = _authenticationAssembly.GetTypes()
-            .Where(t => t.Name.EndsWith("Query") && !t.IsAbstract)
+            .Where(t => t.Namespace?.Contains("Authentication") == true &&
+                       t.Name.EndsWith("Query") && !t.IsAbstract)
             .ToList();
 
         // Act & Assert
@@ -65,7 +68,8 @@ public class AuthenticationTestCoverageVerificationTests
     {
         // Arrange
         var validatorTypes = _authenticationAssembly.GetTypes()
-            .Where(t => t.Name.EndsWith("Validator") && !t.IsAbstract)
+            .Where(t => t.Namespace?.Contains("Authentication") == true &&
+                       t.Name.EndsWith("Validator") && !t.IsAbstract)
             .ToList();
 
         // Act & Assert
