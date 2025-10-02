@@ -1,6 +1,6 @@
 import { auth }                              from '@/auth';
 import { WebVitals }                         from '@/components/analytics';
-import { ConditionalAnalytics, InitializeGoogleConsent } from '@/components/analytics/conditional-analytics';
+import { ConditionalAnalytics, InitializeGoogleConsent, RouteAnalyticsTracker } from '@/components/analytics/conditional-analytics';
 import { ErrorBoundaryProvider }             from '@/components/common/errors/error-boundary-provider';
 import { ApolloClientProvider }              from '@/components/providers/apollo-provider';
 import { GitHubIssueProvider }               from '@/components/providers/github-issue-provider';
@@ -58,11 +58,12 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
     {/* Initialize Google Consent Mode early */ }
     <InitializeGoogleConsent/>
 
+    {/* Track page views on route changes */}
+    <RouteAnalyticsTracker/>
+
     <NextIntlClientProvider locale={ locale } messages={ messages }>
       {/* Conditional Analytics - only loads when the user consents */ }
       <ConditionalAnalytics/>
-      <GoogleAnalytics gaId={ environment.googleAnalyticsMeasurementId }/>
-      <GoogleTagManager gtmId={ environment.googleTagManagerId }/>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <ErrorBoundaryProvider config={ { level: 'page', enableRetry: true, maxRetries: 3, reportToAnalytics: true, isolate: false } }>
           {/* TODO: If the session has a user and it has signed-in by a web3 address then try to connect to the wallet address. */ }

@@ -272,6 +272,15 @@ graph TD
 
 Every major game engine has its own way of building artifacts.
 
-I personally created a GitHub Actions workflow for Unity projects. It builds the project for WebGL and deploys it to GitHub Pages on every commit. You can find the workflow in the [UnityBoilerplate](https://github.com/gameguild-gg/UnityBoilerplate) repository. This might be outdated, so if you want to receive bonus points in this class, update it, then create a merge request.
+I personally created a GitHub Actions workflow for Unity projects. It builds the project for WebGL and deploys it to GitHub Pages on every commit. 
 
-Later on, I will create a similar workflow for Godot projects, but if you want a specific boilerplate, talk to me and I will create one for you.
+- **Unity** You can find the workflow in the [UnityBoilerplate](https://github.com/gameguild-gg/UnityBoilerplate) repository. It will generate a deployment [like this](https://gameguild-gg.github.io/UnityBoilerplate/).
+- **C++-SDL3-CPM-CMake** If you enjoy hardcore coding, use this [SDL3-CPM-CMake-Example](https://github.com/gameguild-gg/SDL3-CPM-CMake-Example) repository, it will deploy to gh-pages [like this](https://gameguild-gg.github.io/SDL3-CPM-CMake-Example/).
+
+Later on, I will create a similar workflow for Godot projects, but if you want a specific boilerplate, talk to me and I will create one for you. The requested ones are:
+
+- Godot + C#. WebGL builds with C# scripting enabled is available only on the version 3.6.
+- Unreal. The last version of Unreal Engine supporting WebGL natively is 4.23.
+- RenPy. I have no idea.
+
+I wont be able to produce boilerplates to them. So you will just build manually and publish them to GitHub Pages. Talk to me how can you do that.
