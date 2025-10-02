@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { SaveAll } from 'lucide-react'
+import { useState } from "react"
+import { StorageOptionSelector, type StorageOption } from "./storage-option-selector"
 
 interface SaveAsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectName: string
   onProjectNameChange: (name: string) => void
-  onSave: () => void
+  onSave: (storageOptions: StorageOption[]) => void
   currentProjectSize: number
   getSizeIndicatorColor: () => string
   formatSize: (size: number) => string
@@ -29,6 +31,11 @@ export function SaveAsDialog({
   formatSize,
   isDbInitialized
 }: SaveAsDialogProps) {
+  const [storageOptions, setStorageOptions] = useState<StorageOption[]>(["local"])
+
+  const handleSave = () => {
+    onSave(storageOptions)
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -49,10 +56,17 @@ export function SaveAsDialog({
               value={projectName}
               onChange={(e) => onProjectNameChange(e.target.value)}
               placeholder="Enter project name..."
-              onKeyDown={(e) => e.key === "Enter" && onSave()}
+              onKeyDown={(e) => e.key === "Enter" && handleSave()}
               className="mt-1"
             />
           </div>
+          {/* Storage Options Section */}
+          <StorageOptionSelector
+            selectedOptions={storageOptions}
+            onSelectionChange={setStorageOptions}
+            required={true}
+          />
+          
           <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <span className="text-sm text-gray-600 dark:text-gray-300">Project size:</span>
             <span className={`text-sm font-medium ${getSizeIndicatorColor()}`}>
@@ -63,7 +77,7 @@ export function SaveAsDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={onSave}>Save Project</Button>
+            <Button onClick={handleSave} disabled={storageOptions.length === 0}>Save Project</Button>
           </div>
         </div>
       </DialogContent>
