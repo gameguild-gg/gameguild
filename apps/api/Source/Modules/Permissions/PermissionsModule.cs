@@ -5,7 +5,6 @@ using GameGuild.CQRS;
 using GameGuild.Modules.Permissions.Abstractions;
 using GameGuild.Modules.Permissions.Commands;
 using GameGuild.Modules.Permissions.Configuration;
-using GameGuild.Modules.Permissions.Entities;
 using GameGuild.Modules.Permissions.Handlers;
 using GameGuild.Modules.Permissions.Services;
 using GameGuild.Modules.Permissions.Validators;

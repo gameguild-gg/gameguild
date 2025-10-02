@@ -1,8 +1,5 @@
-using GameGuild.Authorization;
 using GameGuild.Core.Domain.Identity;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Abstractions;
-using GameGuild.Modules.Permissions.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using PermissionLayer = GameGuild.Authorization.PermissionLayer;

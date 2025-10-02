@@ -1,9 +1,7 @@
 using GameGuild.CQRS;
 using GameGuild.Database;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Abstractions;
 using GameGuild.Modules.Permissions.Commands;
-using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Permissions.Handlers;
 

@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using GameGuild;
-using Microsoft.EntityFrameworkCore;
-
 namespace GameGuild.Modules.Permissions.Entities;
 
 /// <summary>
