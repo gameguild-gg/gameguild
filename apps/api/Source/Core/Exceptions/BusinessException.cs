@@ -1,5 +1,3 @@
-using GameGuild;
-
 namespace GameGuild.Core.Exceptions;
 
 /// <summary>

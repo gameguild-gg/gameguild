@@ -506,11 +506,18 @@ public static class ServiceCollectionExtensions
     /// <returns> The service collection for chaining </returns>
     public static IServiceCollection AddDatabaseContext(this IServiceCollection services, IConfiguration configuration)
     {
+        // Skip database registration in Testing environment - integration tests will register their own
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        if (environment?.Equals("Testing", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return services;
+        }
+
         // Build database options from configuration
         var dbOptions = InfrastructureConfiguration.CreateDatabaseOptions(configuration);
 
         // Configure pooling size based on environment
-        var poolSize = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") switch
+        var poolSize = environment switch
         {
             "Development" => 16, // Lower for development
             "Testing" => 8, // Even lower for tests
@@ -524,7 +531,7 @@ public static class ServiceCollectionExtensions
                 InfrastructureConfiguration.ConfigureDbContext(options, dbOptions);
 
                 // Enable sensitive data logging only in development for pooled contexts
-                var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")?.Equals("Development", StringComparison.OrdinalIgnoreCase) == true;
+                var isDevelopment = environment?.Equals("Development", StringComparison.OrdinalIgnoreCase) == true;
                 if (dbOptions.EnableSensitiveDataLogging && isDevelopment) { options.EnableSensitiveDataLogging(); }
 
                 // Enable query splitting for better performance with complex includes
