@@ -2,7 +2,6 @@ using FluentAssertions;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using Moq;
 using Xunit;
 
 namespace GameGuild.Tests.CQRS.Unit;

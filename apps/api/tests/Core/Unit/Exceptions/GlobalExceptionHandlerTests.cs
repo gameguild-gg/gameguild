@@ -3,7 +3,6 @@ using System.Text.Json;
 using FluentAssertions;
 using GameGuild.Core.Infrastructure.Exceptions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;

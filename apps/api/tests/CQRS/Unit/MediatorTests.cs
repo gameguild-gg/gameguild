@@ -1,8 +1,6 @@
-using System.Collections.Concurrent;
 using System.Reflection;
 using FluentAssertions;
 using GameGuild.CQRS;
-using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
