@@ -14,6 +14,7 @@ import { toast } from "sonner"
 import type { LexicalEditor } from "lexical"
 import { ImportProjectDialog } from "./import-project-dialog"
 import { InfoDialog } from "./info-dialog"
+import type { StorageOption } from "./storage-option-selector"
 
 interface ProjectData {
   id: string
@@ -27,7 +28,7 @@ interface ProjectData {
 }
 
 interface StorageAdapter {
-  save: (id: string, name: string, data: string, tags: string[]) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageOption) => Promise<void>
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete: (id: string) => Promise<void>
@@ -138,7 +139,7 @@ export function OpenProjectDialog({
     setInfoDialogOpen(true)
   }
 
-  const handleSaveInfo = async (projectId: string, newName: string, newTags: string[]) => {
+  const handleSaveInfo = async (projectId: string, newName: string, newTags: string[], storageType: StorageOption) => {
     const projectToUpdate = await storageAdapter.load(projectId)
     if (!projectToUpdate) {
       toast.error("Error finding project to update.")
@@ -146,7 +147,7 @@ export function OpenProjectDialog({
     }
 
     try {
-      await storageAdapter.save(projectId, newName, projectToUpdate.data, newTags)
+      await storageAdapter.save(projectId, newName, projectToUpdate.data, newTags, storageType)
       toast.success("Project updated", {
         description: `"${newName}" has been updated successfully.`,
       })
