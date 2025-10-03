@@ -117,7 +117,7 @@ export default function PreviewPage() {
       searchTerm: string,
       tags: string[],
       filterMode: "all" | "any" = "any",
-      storageTypeFilter?: "local" | "cloud",
+      storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive",
     ): Promise<ProjectData[]> => {
       if (!isDbInitialized) {
         return []
