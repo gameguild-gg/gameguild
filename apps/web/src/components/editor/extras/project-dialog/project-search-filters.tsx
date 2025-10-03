@@ -13,8 +13,8 @@ interface ProjectSearchFiltersProps {
   availableTags: Array<{ name: string }>
   tagFilterMode: "all" | "any"
   onTagFilterModeChange: (mode: "all" | "any") => void
-  storageTypeFilter?: "local" | "cloud"
-  onStorageTypeFilterChange?: (type: "local" | "cloud" | undefined) => void
+  storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive"
+  onStorageTypeFilterChange?: (type: "local" | "gameguild-cloud" | "google-drive" | undefined) => void
   itemsPerPage: number
   onItemsPerPageChange: (value: number) => void
   showFilters?: boolean
@@ -241,18 +241,19 @@ export function ProjectSearchFilters({
                 <Label className="text-sm font-medium">Storage type:</Label>
                 <select
                   value={storageTypeFilter || ""}
-                  onChange={(e) => onStorageTypeFilterChange(e.target.value as "local" | "cloud" || undefined)}
+                  onChange={(e) => onStorageTypeFilterChange(e.target.value as "local" | "gameguild-cloud" | "google-drive" || undefined)}
                   className="w-full rounded border bg-background px-3 py-2 text-sm"
                 >
                   <option value="">All types</option>
                   <option value="local">Local only</option>
-                  <option value="cloud">Cloud only</option>
+                  <option value="gameguild-cloud">GameGuild Cloud</option>
+                  <option value="google-drive">Google Drive</option>
                 </select>
                 
                 {storageTypeFilter && (
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-xs text-gray-600 dark:text-gray-400">
-                      Showing: {`${storageTypeFilter} projects`}
+                      Showing: {storageTypeFilter === "gameguild-cloud" ? "GameGuild Cloud" : storageTypeFilter === "google-drive" ? "Google Drive" : storageTypeFilter} projects
                     </span>
                     <button
                       type="button"
