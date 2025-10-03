@@ -20,7 +20,7 @@ interface ProjectData {
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[]) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive") => Promise<void>
 }
 
 interface CreateProjectDialogProps {
@@ -29,7 +29,7 @@ interface CreateProjectDialogProps {
   isDbInitialized: boolean
   storageAdapter: StorageAdapter
   availableTags: Array<{ name: string }>
-  onProjectCreate: (projectData: { id: string; name: string; tags: string[] }) => void
+  onProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive" }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
   generateProjectId: () => string
@@ -124,13 +124,14 @@ export function CreateProjectDialog({
 
     try {
       const newProjectId = generateProjectId()
-      await storageAdapter.save(newProjectId, newCreateProjectName, emptyState, projectTags)
+      await storageAdapter.save(newProjectId, newCreateProjectName, emptyState, projectTags, storageOption)
 
       // Call the callback to update parent state
       onProjectCreate({
         id: newProjectId,
         name: newCreateProjectName,
         tags: projectTags,
+        storageType: storageOption,
       })
 
       // Reset form state
