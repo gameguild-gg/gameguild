@@ -19,6 +19,14 @@ interface GoogleDriveFolder {
   createdTime: string
 }
 
+// Extend window type for new Google Identity Services
+declare global {
+  interface Window {
+    google: any
+    gapi: any
+  }
+}
+
 export function useGoogleDriveAuth() {
   const [authState, setAuthState] = useState<GoogleDriveAuthState>({
     isAuthenticated: false,
@@ -35,16 +43,25 @@ export function useGoogleDriveAuth() {
   const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
   
   // Minimal required scopes - only file access within app-created folders
-  const SCOPES = [
-    'https://www.googleapis.com/auth/drive.file', // Access only to files created by this app
-  ]
+  const SCOPES = 'https://www.googleapis.com/auth/drive.file'
 
-  // Load Google API client
+  // Load Google APIs (both GIS and GAPI)
   const loadGoogleAPI = useCallback(async () => {
     if (typeof window === 'undefined') return false
 
     try {
-      // Load Google API script if not already loaded
+      // Load Google Identity Services (new auth)
+      if (!window.google) {
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement('script')
+          script.src = 'https://accounts.google.com/gsi/client'
+          script.onload = () => resolve()
+          script.onerror = () => reject(new Error('Failed to load Google Identity Services'))
+          document.head.appendChild(script)
+        })
+      }
+
+      // Load Google API script (for Drive API)
       if (!window.gapi) {
         await new Promise<void>((resolve, reject) => {
           const script = document.createElement('script')
@@ -55,17 +72,15 @@ export function useGoogleDriveAuth() {
         })
       }
 
-      // Initialize GAPI
+      // Initialize GAPI for Drive API
       await new Promise<void>((resolve) => {
-        window.gapi.load('client:auth2', resolve)
+        window.gapi.load('client', resolve)
       })
 
       // Initialize client
       await window.gapi.client.init({
         apiKey: API_KEY,
-        clientId: CLIENT_ID,
         discoveryDocs: [DISCOVERY_DOC],
-        scope: SCOPES.join(' ')
       })
 
       return true
@@ -78,31 +93,37 @@ export function useGoogleDriveAuth() {
       }))
       return false
     }
-  }, [API_KEY, CLIENT_ID])
+  }, [API_KEY])
 
   // Check authentication status
   const checkAuthStatus = useCallback(async () => {
-    if (!window.gapi?.auth2) return
-
-    const authInstance = window.gapi.auth2.getAuthInstance()
-    const isSignedIn = authInstance.isSignedIn.get()
+    // Check if we have a stored access token
+    const storedToken = localStorage.getItem('gglexical_google_drive_token')
+    const storedExpiry = localStorage.getItem('gglexical_google_drive_token_expiry')
     
-    if (isSignedIn) {
-      const user = authInstance.currentUser.get()
-      const authResponse = user.getAuthResponse()
+    if (storedToken && storedExpiry) {
+      const expiryTime = parseInt(storedExpiry)
+      const now = Date.now()
       
-      // Retrieve saved folder info from localStorage
-      const savedFolder = localStorage.getItem('gglexical_google_drive_folder')
-      const savedFolderName = localStorage.getItem('gglexical_google_drive_folder_name')
-      
-      setAuthState(prev => ({
-        ...prev,
-        isAuthenticated: true,
-        accessToken: authResponse.access_token,
-        selectedFolder: savedFolder,
-        folderName: savedFolderName,
-        error: null,
-      }))
+      if (now < expiryTime) {
+        // Token is still valid
+        const savedFolder = localStorage.getItem('gglexical_google_drive_folder')
+        const savedFolderName = localStorage.getItem('gglexical_google_drive_folder_name')
+        
+        setAuthState(prev => ({
+          ...prev,
+          isAuthenticated: true,
+          accessToken: storedToken,
+          selectedFolder: savedFolder,
+          folderName: savedFolderName,
+          error: null,
+        }))
+        return
+      } else {
+        // Token expired, clean up
+        localStorage.removeItem('gglexical_google_drive_token')
+        localStorage.removeItem('gglexical_google_drive_token_expiry')
+      }
     }
   }, [])
 
@@ -132,9 +153,9 @@ export function useGoogleDriveAuth() {
     initialize()
   }, [loadGoogleAPI, checkAuthStatus, CLIENT_ID, API_KEY])
 
-  // Authenticate with Google
+  // Authenticate with Google using new GIS
   const authenticate = useCallback(async (): Promise<boolean> => {
-    if (!window.gapi?.auth2) {
+    if (!window.google || !CLIENT_ID) {
       toast.error('Google API não carregada')
       return false
     }
@@ -142,53 +163,73 @@ export function useGoogleDriveAuth() {
     try {
       setAuthState(prev => ({ ...prev, isLoading: true, error: null }))
       
-      const authInstance = window.gapi.auth2.getAuthInstance()
-      const user = await authInstance.signIn({
-        prompt: 'select_account'
-      })
-      
-      const authResponse = user.getAuthResponse()
-      
-      // Validate token before proceeding
-      const tokenValidation = await GoogleDriveSecurity.validateToken(authResponse.access_token)
-      if (!tokenValidation.isValid) {
-        throw new Error(tokenValidation.error || 'Invalid token')
-      }
-      
-      // Store authentication time for cleanup
-      localStorage.setItem('gglexical_google_drive_auth_time', Date.now().toString())
-      
-      setAuthState(prev => ({
-        ...prev,
-        isAuthenticated: true,
-        accessToken: authResponse.access_token,
-        isLoading: false,
-        error: null,
-      }))
+      // Use new Google Identity Services
+      return new Promise((resolve) => {
+        const tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: SCOPES,
+          callback: async (response: any) => {
+            if (response.error) {
+              console.error('Google authentication failed:', response)
+              
+              let errorMessage = 'Falha na autenticação'
+              if (response.error === 'popup_closed_by_user') {
+                errorMessage = 'Autenticação cancelada pelo usuário'
+              } else if (response.error === 'access_denied') {
+                errorMessage = 'Acesso negado pelo usuário'
+              }
+              
+              setAuthState(prev => ({ 
+                ...prev, 
+                error: errorMessage,
+                isLoading: false 
+              }))
+              
+              toast.error(errorMessage)
+              resolve(false)
+              return
+            }
 
-      GoogleDriveSecurity.logSecurityEvent('google_drive_auth_success')
-      toast.success('Autenticado com Google Drive')
-      return true
+            // Success - we have an access token
+            const accessToken = response.access_token
+            const expiresIn = response.expires_in ? parseInt(response.expires_in) * 1000 : 3600000 // Default 1 hour
+            const expiryTime = Date.now() + expiresIn
+
+            // Store token with expiry
+            localStorage.setItem('gglexical_google_drive_token', accessToken)
+            localStorage.setItem('gglexical_google_drive_token_expiry', expiryTime.toString())
+            localStorage.setItem('gglexical_google_drive_auth_time', Date.now().toString())
+
+            setAuthState(prev => ({
+              ...prev,
+              isAuthenticated: true,
+              accessToken: accessToken,
+              isLoading: false,
+              error: null,
+            }))
+
+            GoogleDriveSecurity.logSecurityEvent('google_drive_auth_success')
+            toast.success('Autenticado com Google Drive')
+            resolve(true)
+          },
+        })
+
+        // Request access token
+        tokenClient.requestAccessToken({ prompt: 'consent' })
+      })
     } catch (error: any) {
       console.error('Google authentication failed:', error)
       
-      let errorMessage = 'Falha na autenticação'
-      if (error.error === 'popup_closed_by_user') {
-        errorMessage = 'Autenticação cancelada pelo usuário'
-      } else if (error.error === 'access_denied') {
-        errorMessage = 'Acesso negado pelo usuário'
-      }
-      
       setAuthState(prev => ({ 
         ...prev, 
-        error: errorMessage,
+        error: 'Falha na autenticação',
         isLoading: false 
       }))
       
-      toast.error(errorMessage)
+      toast.error('Falha na autenticação')
       return false
     }
-  }, [])
+  }, [CLIENT_ID, SCOPES])
 
   // Create or find GGLexical folder
   const createOrFindFolder = useCallback(async (folderName: string): Promise<string | null> => {
@@ -200,6 +241,9 @@ export function useGoogleDriveAuth() {
 
     try {
       return await GoogleDriveSecurity.throttleApiCall(async () => {
+        // Set the access token for GAPI client before making API calls
+        window.gapi.client.setToken({ access_token: authState.accessToken })
+        
         // First, check if folder already exists
         const searchResponse = await window.gapi.client.drive.files.list({
           q: `name='${finalFolderName}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
@@ -256,15 +300,22 @@ export function useGoogleDriveAuth() {
 
   // Sign out
   const signOut = useCallback(async () => {
-    if (!window.gapi?.auth2) return
-
     try {
-      const authInstance = window.gapi.auth2.getAuthInstance()
-      await authInstance.signOut()
+      // Revoke the access token
+      const accessToken = authState.accessToken
+      if (accessToken) {
+        // Revoke token using new GIS method
+        window.google?.accounts?.oauth2?.revoke(accessToken, () => {
+          console.log('Token revoked')
+        })
+      }
       
       // Clear stored data
+      localStorage.removeItem('gglexical_google_drive_token')
+      localStorage.removeItem('gglexical_google_drive_token_expiry')
       localStorage.removeItem('gglexical_google_drive_folder')
       localStorage.removeItem('gglexical_google_drive_folder_name')
+      localStorage.removeItem('gglexical_google_drive_auth_time')
       
       setAuthState({
         isAuthenticated: false,
@@ -280,13 +331,16 @@ export function useGoogleDriveAuth() {
       console.error('Sign out failed:', error)
       toast.error('Falha ao desconectar')
     }
-  }, [])
+  }, [authState.accessToken])
 
   // Get available folders (for selection)
   const getAvailableFolders = useCallback(async (): Promise<GoogleDriveFolder[]> => {
     if (!authState.accessToken) return []
 
     try {
+      // Set the access token for GAPI client
+      window.gapi.client.setToken({ access_token: authState.accessToken })
+      
       const response = await window.gapi.client.drive.files.list({
         q: "mimeType='application/vnd.google-apps.folder' and trashed=false",
         fields: 'files(id, name, createdTime)',
@@ -314,5 +368,6 @@ export function useGoogleDriveAuth() {
 declare global {
   interface Window {
     gapi: any
+    google: any
   }
 }
