@@ -702,7 +702,14 @@ export default function Page() {
                         setIsFirstTime(false)
                       }}
                       onProjectsListUpdate={loadSavedProjectsList}
-                      onCreateNew={() => setCreateDialogOpen(true)}
+                      onCreateNew={() => {
+                        // Reset current project data when creating new
+                        setCurrentProjectId("")
+                        setCurrentProjectName("")
+                        setCurrentProjectStorageType("local")
+                        setProjectTags([])
+                        setCreateDialogOpen(true)
+                      }}
                       currentProjectName={currentProjectName}
                     />
                   </div>
@@ -829,6 +836,7 @@ export default function Page() {
                     }
                     setCurrentProjectId(projectData.id)
                     setCurrentProjectName(projectData.name)
+                    setCurrentProjectStorageType(projectData.storageType)
                     setProjectTags(projectData.tags)
                     setEditorState(
                       '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
