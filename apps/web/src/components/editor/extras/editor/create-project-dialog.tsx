@@ -50,7 +50,7 @@ export function CreateProjectDialog({
   const [projectTags, setProjectTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
-  const [storageOptions, setStorageOptions] = useState<StorageOption[]>(["local"])
+  const [storageOption, setStorageOption] = useState<StorageOption>("local")
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -86,9 +86,9 @@ export function CreateProjectDialog({
       return
     }
 
-    if (storageOptions.length === 0) {
+    if (!storageOption) {
       toast.error("Opção de armazenamento obrigatória", {
-        description: "Por favor, selecione pelo menos uma opção de armazenamento",
+        description: "Por favor, selecione uma opção de armazenamento",
         duration: 3000,
         icon: "💾",
       })
@@ -138,7 +138,7 @@ export function CreateProjectDialog({
       setProjectTags([])
       setTagInput("")
       setShowTagDropdown(false)
-      setStorageOptions(["local"])
+      setStorageOption("local")
       onOpenChange(false)
 
       // Update lists
@@ -165,7 +165,7 @@ export function CreateProjectDialog({
     setProjectTags([])
     setTagInput("")
     setShowTagDropdown(false)
-    setStorageOptions(["local"])
+    setStorageOption("local")
     onOpenChange(false)
   }
 
@@ -391,9 +391,8 @@ export function CreateProjectDialog({
 
           {/* Storage Options Section */}
           <StorageOptionSelector
-            selectedOptions={storageOptions}
-            onSelectionChange={setStorageOptions}
-            required={true}
+            selectedOption={storageOption}
+            onSelectionChange={setStorageOption}
           />
 
           <div className="p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
@@ -421,7 +420,7 @@ export function CreateProjectDialog({
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={projectTags.length === 0 || storageOptions.length === 0}>
+            <Button onClick={handleCreate} disabled={projectTags.length === 0 || !storageOption}>
               Create Project
             </Button>
           </div>

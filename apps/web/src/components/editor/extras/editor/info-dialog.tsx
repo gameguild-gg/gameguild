@@ -21,7 +21,7 @@ interface ProjectData {
   id: string
   name: string
   tags: string[]
-  storageOptions?: StorageOption[]
+  storageType?: StorageOption
 }
 
 interface StorageAdapter {
@@ -32,7 +32,7 @@ interface InfoDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   project: ProjectData | null
-  onSave: (projectId: string, newName: string, newTags: string[], storageOptions: StorageOption[]) => Promise<void>
+  onSave: (projectId: string, newName: string, newTags: string[], storageOption: StorageOption) => Promise<void>
   availableTags: Array<{ name: string }>
   storageAdapter: StorageAdapter
 }
@@ -49,19 +49,19 @@ export function InfoDialog({
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
-  const [storageOptions, setStorageOptions] = useState<StorageOption[]>(["local"])
+  const [storageOption, setStorageOption] = useState<StorageOption>("local")
 
   useEffect(() => {
     if (project) {
       setName(project.name)
       setTags(project.tags || [])
-      setStorageOptions(project.storageOptions || ["local"])
+      setStorageOption(project.storageType || "local")
     } else {
       // Reset state when dialog is closed or project is null
       setName("")
       setTags([])
       setTagInput("")
-      setStorageOptions(["local"])
+      setStorageOption("local")
     }
   }, [project])
 
@@ -105,7 +105,7 @@ export function InfoDialog({
     }
 
     try {
-      await onSave(project.id, trimmedName, tags, storageOptions)
+      await onSave(project.id, trimmedName, tags, storageOption)
       onOpenChange(false)
     } catch (error) {
       // Error is handled in the onSave implementation, but we can add a fallback
@@ -298,9 +298,8 @@ export function InfoDialog({
             </Label>
             <div className="col-span-3">
               <StorageOptionSelector
-                selectedOptions={storageOptions}
-                onSelectionChange={setStorageOptions}
-                required={true}
+                selectedOption={storageOption}
+                onSelectionChange={setStorageOption}
               />
             </div>
           </div>
