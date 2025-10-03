@@ -50,6 +50,13 @@ export class GoogleDriveService {
     return !!(this.accessToken && this.folderId && window.gapi?.client?.drive)
   }
 
+  // Set authentication token for GAPI client
+  private setAuthToken() {
+    if (this.accessToken && window.gapi?.client) {
+      window.gapi.client.setToken({ access_token: this.accessToken })
+    }
+  }
+
   // Upload file content as JSON
   private async uploadJsonFile(
     fileName: string, 
@@ -105,6 +112,9 @@ export class GoogleDriveService {
     }
 
     try {
+      // Set auth token before API call
+      this.setAuthToken()
+      
       const response = await window.gapi.client.drive.files.get({
         fileId: fileId,
         alt: 'media',
@@ -124,6 +134,9 @@ export class GoogleDriveService {
     }
 
     try {
+      // Set auth token before API call
+      this.setAuthToken()
+      
       const response = await window.gapi.client.drive.files.list({
         q: `'${this.folderId}' in parents and name contains '.gglexical.json' and trashed=false`,
         fields: 'files(id, name, createdTime, modifiedTime, size)',
@@ -242,6 +255,9 @@ export class GoogleDriveService {
     }
 
     try {
+      // Set auth token before API call
+      this.setAuthToken()
+      
       await window.gapi.client.drive.files.delete({
         fileId: project.driveFileId!,
       })
