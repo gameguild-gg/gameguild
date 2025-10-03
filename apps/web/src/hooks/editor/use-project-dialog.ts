@@ -12,14 +12,14 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
-  storageType?: "local" | "cloud"
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
 }
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete?: (id: string) => Promise<void>
-  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "cloud") => Promise<ProjectData[]>
+  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive") => Promise<ProjectData[]>
 }
 
 interface UseProjectDialogProps {
@@ -30,7 +30,7 @@ interface UseProjectDialogProps {
 export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProjectDialogProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const [storageTypeFilter, setStorageTypeFilter] = useState<"local" | "cloud" | undefined>(undefined)
+  const [storageTypeFilter, setStorageTypeFilter] = useState<"local" | "gameguild-cloud" | "google-drive" | undefined>(undefined)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(16) // Changed initial itemsPerPage from 10 to 12 to match available options in selector
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
