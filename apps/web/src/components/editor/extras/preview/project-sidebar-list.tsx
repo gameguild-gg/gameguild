@@ -16,13 +16,13 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
-  storageType?: "local" | "cloud"
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
 }
 
 interface ProjectSidebarListProps {
   storageAdapter: {
     list: () => Promise<ProjectData[]>
-    searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "cloud") => Promise<ProjectData[]>
+    searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive") => Promise<ProjectData[]>
   }
   availableTags: Array<{ name: string; usageCount: number }>
   currentProject: ProjectData | null
@@ -42,7 +42,7 @@ export function ProjectSidebarList({
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [tagFilterMode, setTagFilterMode] = useState<"all" | "any">("any")
-  const [storageTypeFilter, setStorageTypeFilter] = useState<"local" | "cloud" | undefined>(undefined)
+  const [storageTypeFilter, setStorageTypeFilter] = useState<"local" | "gameguild-cloud" | "google-drive" | undefined>(undefined)
   const [showFilters, setShowFilters] = useState(false)
   const [loading, setLoading] = useState(false)
   const [tagSearchInput, setTagSearchInput] = useState("")

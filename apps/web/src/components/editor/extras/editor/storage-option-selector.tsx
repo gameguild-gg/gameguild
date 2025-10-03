@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useState } from "react"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Cloud, Database, HardDrive, Settings, CheckCircle } from "lucide-react"
@@ -13,10 +13,9 @@ import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
 export type StorageOption = "local" | "gameguild-cloud" | "google-drive"
 
 interface StorageOptionSelectorProps {
-  selectedOptions: StorageOption[]
-  onSelectionChange: (options: StorageOption[]) => void
+  selectedOption: StorageOption
+  onSelectionChange: (option: StorageOption) => void
   disabled?: boolean
-  required?: boolean
   className?: string
   onGoogleDriveConfigured?: () => void
 }
@@ -57,49 +56,30 @@ const storageOptions: StorageOptionConfig[] = [
 ]
 
 export function StorageOptionSelector({
-  selectedOptions,
+  selectedOption,
   onSelectionChange,
   disabled = false,
-  required = true,
   className = "",
   onGoogleDriveConfigured,
 }: StorageOptionSelectorProps) {
   const [showGoogleDriveAuth, setShowGoogleDriveAuth] = useState(false)
   const { hasValidSetup: isGoogleDriveConfigured } = useGoogleDriveAuth()
-  const handleOptionToggle = (optionId: StorageOption, checked: boolean) => {
+  
+  const handleOptionSelect = (optionId: StorageOption) => {
     if (disabled) return
 
     // Special handling for Google Drive
-    if (optionId === "google-drive" && checked && !isGoogleDriveConfigured) {
+    if (optionId === "google-drive" && !isGoogleDriveConfigured) {
       setShowGoogleDriveAuth(true)
       return
     }
 
-    let newOptions: StorageOption[]
-    
-    if (checked) {
-      // Add option if not already present
-      newOptions = selectedOptions.includes(optionId) 
-        ? selectedOptions 
-        : [...selectedOptions, optionId]
-    } else {
-      // Remove option, but ensure at least one is selected if required
-      newOptions = selectedOptions.filter(opt => opt !== optionId)
-      
-      // If required and trying to uncheck the last option, prevent it
-      if (required && newOptions.length === 0) {
-        return
-      }
-    }
-    
-    onSelectionChange(newOptions)
+    onSelectionChange(optionId)
   }
 
   const handleGoogleDriveAuthSuccess = () => {
-    // Add Google Drive to selected options if not already present
-    if (!selectedOptions.includes("google-drive")) {
-      onSelectionChange([...selectedOptions, "google-drive"])
-    }
+    // Set Google Drive as selected option after successful auth
+    onSelectionChange("google-drive")
     onGoogleDriveConfigured?.()
   }
 
@@ -107,16 +87,18 @@ export function StorageOptionSelector({
     <div className={`space-y-2 ${className}`}>
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">
-          Storage Options {required && <span className="text-red-500">*</span>}
+          Storage Type
         </Label>
-        {required && selectedOptions.length === 0 && (
-          <span className="text-xs text-red-500">Selecione pelo menos uma opção</span>
-        )}
       </div>
       
-      <div className="space-y-1.5">
+      <RadioGroup 
+        value={selectedOption} 
+        onValueChange={handleOptionSelect}
+        className="space-y-1.5"
+        disabled={disabled}
+      >
         {storageOptions.map((option) => {
-          const isSelected = selectedOptions.includes(option.id)
+          const isSelected = selectedOption === option.id
           const isDisabled = disabled || (!option.enabled && option.id !== "google-drive")
           const isGoogleDrive = option.id === "google-drive"
           const needsConfiguration = isGoogleDrive && !isGoogleDriveConfigured
@@ -132,12 +114,9 @@ export function StorageOptionSelector({
             >
               <CardContent className="p-2">
                 <div className="flex items-center space-x-2">
-                  <Checkbox
+                  <RadioGroupItem
+                    value={option.id}
                     id={option.id}
-                    checked={isSelected}
-                    onCheckedChange={(checked) => 
-                      handleOptionToggle(option.id, checked as boolean)
-                    }
                     disabled={isDisabled}
                     className="shrink-0"
                   />
@@ -197,21 +176,7 @@ export function StorageOptionSelector({
             </Card>
           )
         })}
-      </div>
-      
-      {selectedOptions.length > 1 && (
-        <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <div className="flex items-center gap-2">
-            <Cloud className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-            <span className="text-xs font-medium text-blue-800 dark:text-blue-200">
-              Múltiplos destinos selecionados
-            </span>
-          </div>
-          <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-            O projeto será salvo em todos os destinos selecionados e mantido sincronizado.
-          </p>
-        </div>
-      )}
+      </RadioGroup>
       
       {/* Google Drive Authentication Dialog */}
       <GoogleDriveAuthDialog

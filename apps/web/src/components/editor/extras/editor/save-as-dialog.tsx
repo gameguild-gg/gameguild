@@ -13,7 +13,7 @@ interface SaveAsDialogProps {
   onOpenChange: (open: boolean) => void
   projectName: string
   onProjectNameChange: (name: string) => void
-  onSave: (storageOptions: StorageOption[]) => void
+  onSave: (storageOption: StorageOption) => void
   currentProjectSize: number
   getSizeIndicatorColor: () => string
   formatSize: (size: number) => string
@@ -31,10 +31,10 @@ export function SaveAsDialog({
   formatSize,
   isDbInitialized
 }: SaveAsDialogProps) {
-  const [storageOptions, setStorageOptions] = useState<StorageOption[]>(["local"])
+  const [storageOption, setStorageOption] = useState<StorageOption>("local")
 
   const handleSave = () => {
-    onSave(storageOptions)
+    onSave(storageOption)
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -62,9 +62,8 @@ export function SaveAsDialog({
           </div>
           {/* Storage Options Section */}
           <StorageOptionSelector
-            selectedOptions={storageOptions}
-            onSelectionChange={setStorageOptions}
-            required={true}
+            selectedOption={storageOption}
+            onSelectionChange={setStorageOption}
           />
           
           <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -77,7 +76,7 @@ export function SaveAsDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={storageOptions.length === 0}>Save Project</Button>
+            <Button onClick={handleSave}>Save Project</Button>
           </div>
         </div>
       </DialogContent>
