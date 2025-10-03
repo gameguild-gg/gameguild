@@ -23,7 +23,7 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
-  storageType?: "local" | "cloud"
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
 }
 
 interface StorageAdapter {
@@ -31,7 +31,7 @@ interface StorageAdapter {
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete: (id: string) => Promise<void>
-  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "cloud") => Promise<ProjectData[]>
+  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive") => Promise<ProjectData[]>
 }
 
 interface OpenProjectDialogProps {
