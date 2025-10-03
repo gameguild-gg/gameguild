@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud } from "lucide-react"
+import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud, Database } from "lucide-react"
 import { DownloadConfirmDialog } from "@/components/editor/extras/dialogs/download-confirm-dialog"
 
 interface ProjectData {
@@ -15,7 +15,7 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
-  storageType?: "local" | "cloud"
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
 }
 
 interface ProjectListProps {
@@ -86,8 +86,8 @@ export function ProjectList({
     setDownloadDialog({ open: false, project: null })
   }
 
-  // Render storage type indicator
-  const renderStorageIndicator = (storageType: "local" | "cloud" | undefined) => {
+    // Render storage type indicator
+  const renderStorageIndicator = (storageType: "local" | "gameguild-cloud" | "google-drive" | undefined) => {
     if (!storageType || storageType === "local") {
       return (
         <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" title="Local storage">
@@ -97,11 +97,20 @@ export function ProjectList({
       )
     }
 
-    if (storageType === "cloud") {
+    if (storageType === "gameguild-cloud") {
       return (
-        <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400" title="Cloud storage">
+        <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400" title="GameGuild Cloud storage">
+          <Database className="h-3 w-3" />
+          <span>GameGuild</span>
+        </div>
+      )
+    }
+
+    if (storageType === "google-drive") {
+      return (
+        <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400" title="Google Drive storage">
           <Cloud className="h-3 w-3" />
-          <span>Cloud</span>
+          <span>Google Drive</span>
         </div>
       )
     }
