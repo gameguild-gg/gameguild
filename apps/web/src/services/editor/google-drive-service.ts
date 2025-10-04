@@ -1,5 +1,7 @@
 "use client"
 
+import { HashManager } from "../../lib/sync/editor/hash-manager"
+
 interface GoogleDriveFile {
   id: string
   name: string
@@ -17,7 +19,9 @@ interface GoogleDriveProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  hash: string
   driveFileId?: string
+  storageType: string
 }
 
 export class GoogleDriveService {
@@ -194,13 +198,17 @@ export class GoogleDriveService {
       throw new Error('Google Drive service not ready')
     }
 
+    const hash = await HashManager.generateHash(data)
+    
     const projectData: Omit<GoogleDriveProjectData, 'driveFileId' | 'size'> = {
       id,
       name,
       data,
       tags,
+      hash,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      storageType: "google-drive",
     }
 
     // Check if project already exists

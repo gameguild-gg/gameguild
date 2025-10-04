@@ -8,7 +8,7 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
-  hash?: string
+  hash: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
 }
 
@@ -92,6 +92,7 @@ export class GoogleDriveSync {
           data: project.data,
           tags: project.tags,
           size: project.size,
+          hash: project.hash,
           createdAt: project.createdAt,
           updatedAt: project.updatedAt,
           storageType: "google-drive"
@@ -122,6 +123,7 @@ export class GoogleDriveSync {
         data: project.data,
         tags: project.tags,
         size: project.size,
+        hash: project.hash,
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
         storageType: "google-drive" as const
