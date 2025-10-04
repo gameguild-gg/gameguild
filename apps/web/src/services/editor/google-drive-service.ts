@@ -28,6 +28,9 @@ export class GoogleDriveService {
   private static instance: GoogleDriveService
   private folderId: string | null = null
   private accessToken: string | null = null
+  private readyState: boolean | null = null // Cache for isReady state
+  private lastReadyCheck: number = 0
+  private readonly READY_CHECK_CACHE_MS = 5000 // Cache isReady for 5 seconds
 
   private constructor() {
     // Load saved folder ID
@@ -47,23 +50,35 @@ export class GoogleDriveService {
   setAuth(accessToken: string, folderId: string) {
     this.accessToken = accessToken
     this.folderId = folderId
+    this.readyState = null // Reset cache when auth changes
   }
 
-  // Check if service is ready
+  // Check if service is ready (with caching)
   isReady(): boolean {
+    const now = Date.now()
+    
+    // Return cached result if within cache period
+    if (this.readyState !== null && (now - this.lastReadyCheck) < this.READY_CHECK_CACHE_MS) {
+      return this.readyState
+    }
+    
     const hasToken = !!this.accessToken
     const hasFolder = !!this.folderId
     const hasGapi = !!(window.gapi?.client?.drive)
     
-    console.log("GoogleDriveService.isReady() check:", {
-      hasToken,
-      hasFolder,
-      hasGapi,
-      accessToken: this.accessToken ? `${this.accessToken.substring(0, 10)}...` : null,
-      folderId: this.folderId
-    })
+    this.readyState = hasToken && hasFolder && hasGapi
+    this.lastReadyCheck = now
     
-    return hasToken && hasFolder && hasGapi
+    if (this.readyState) {
+      console.log("GoogleDriveService ready:", {
+        hasToken,
+        hasFolder,
+        hasGapi,
+        folderId: this.folderId
+      })
+    }
+    
+    return this.readyState
   }
 
   // Set authentication token for GAPI client
@@ -143,7 +158,7 @@ export class GoogleDriveService {
     }
   }
 
-  // List files in the GGLexical folder
+  // List projects using new folder structure
   async listProjects(): Promise<GoogleDriveProjectData[]> {
     if (!this.isReady()) {
       return []
@@ -153,30 +168,37 @@ export class GoogleDriveService {
       // Set auth token before API call
       this.setAuthToken()
       
+      // Find all project folders (projeto-*)
       const response = await window.gapi.client.drive.files.list({
-        q: `'${this.folderId}' in parents and name contains '.gglexical.json' and trashed=false`,
-        fields: 'files(id, name, createdTime, modifiedTime, size)',
+        q: `'${this.folderId}' in parents and mimeType='application/vnd.google-apps.folder' and name contains 'projeto-' and trashed=false`,
+        fields: 'files(id, name, createdTime, modifiedTime)',
         orderBy: 'modifiedTime desc',
       })
 
-      const files = response.result.files || []
+      const projectFolders = response.result.files || []
       const projects: GoogleDriveProjectData[] = []
 
-      // Download and parse each project file
-      for (const file of files) {
+      // For each project folder, get metadata from index.json
+      for (const folder of projectFolders) {
         try {
-          const content = await this.downloadJsonFile(file.id!)
-          if (content && this.isValidProjectData(content)) {
-            const projectData = content as any
-            projects.push({
-              ...projectData,
-              driveFileId: file.id!,
-              size: parseInt(file.size || '0'),
-              updatedAt: file.modifiedTime!,
-            })
+          const indexFileResponse = await window.gapi.client.drive.files.list({
+            q: `'${folder.id}' in parents and name='index.json' and trashed=false`,
+            fields: 'files(id)',
+          })
+          
+          const indexFile = indexFileResponse.result.files?.[0]
+          if (indexFile) {
+            const metadata = await this.downloadJsonFile(indexFile.id!)
+            if (metadata && this.isValidProjectMetadata(metadata)) {
+              projects.push({
+                ...metadata as any,
+                driveFileId: folder.id!, // Use folder ID for reference
+                storageType: "google-drive"
+              })
+            }
           }
         } catch (error) {
-          console.error(`Failed to load project ${file.name}:`, error)
+          console.error(`Failed to load project metadata from folder ${folder.name}:`, error)
         }
       }
 
@@ -187,7 +209,7 @@ export class GoogleDriveService {
     }
   }
 
-  // Save project to Google Drive
+  // Save project to Google Drive using new folder structure
   async saveProject(
     id: string, 
     name: string, 
@@ -198,35 +220,164 @@ export class GoogleDriveService {
       throw new Error('Google Drive service not ready')
     }
 
+    this.setAuthToken()
+    
     const hash = await HashManager.generateHash(data)
     
-    const projectData: Omit<GoogleDriveProjectData, 'driveFileId' | 'size'> = {
-      id,
-      name,
-      data,
-      tags,
-      hash,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      storageType: "google-drive",
-    }
-
-    // Check if project already exists
-    const existingProjects = await this.listProjects()
-    const existingProject = existingProjects.find(p => p.id === id)
-    
-    const fileName = `${name}.gglexical.json`
-    const fileId = existingProject?.driveFileId
-
     try {
-      const driveFileId = await this.uploadJsonFile(fileName, projectData, fileId)
-      if (!driveFileId) {
-        throw new Error('Failed to get file ID after upload')
+      // 1. Create or find project folder
+      const projectFolderName = `projeto-${id}`
+      let projectFolderId = await this.findProjectFolder(projectFolderName)
+      
+      if (!projectFolderId) {
+        projectFolderId = await this.createProjectFolder(projectFolderName)
       }
+      
+      // 2. Create metadata
+      const metadata = {
+        id,
+        name,
+        tags,
+        size: new Blob([data]).size,
+        hash,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        storageType: "google-drive"
+      }
+      
+      // 3. Save index.json (metadata)
+      await this.saveFileToFolder(
+        projectFolderId,
+        'index.json',
+        JSON.stringify(metadata, null, 2),
+        'application/json'
+      )
+      
+      // 4. Save data file
+      await this.saveFileToFolder(
+        projectFolderId,
+        `${id}.gglexical`,
+        data,
+        'application/json'
+      )
+      
+      console.log(`Project ${id} saved successfully to Google Drive`)
+      
     } catch (error) {
       console.error('Save project failed:', error)
       throw error
     }
+  }
+
+  // Helper: Find project folder by name
+  private async findProjectFolder(folderName: string): Promise<string | null> {
+    try {
+      const response = await window.gapi.client.drive.files.list({
+        q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and parents in '${this.folderId}' and trashed=false`,
+        fields: 'files(id, name)',
+      })
+      
+      return response.result.files?.[0]?.id || null
+    } catch (error) {
+      console.error('Failed to find project folder:', error)
+      return null
+    }
+  }
+
+  // Helper: Create project folder
+  private async createProjectFolder(folderName: string): Promise<string> {
+    try {
+      const response = await window.gapi.client.drive.files.create({
+        resource: {
+          name: folderName,
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: [this.folderId!],
+        },
+        fields: 'id',
+      })
+      
+      return response.result.id!
+    } catch (error) {
+      console.error('Failed to create project folder:', error)
+      throw error
+    }
+  }
+
+  // Helper: Save file to specific folder
+  private async saveFileToFolder(
+    folderId: string,
+    fileName: string,
+    content: string,
+    mimeType: string
+  ): Promise<string> {
+    try {
+      // Check if file already exists
+      const existingFileResponse = await window.gapi.client.drive.files.list({
+        q: `name='${fileName}' and parents in '${folderId}' and trashed=false`,
+        fields: 'files(id)',
+      })
+      
+      const existingFileId = existingFileResponse.result.files?.[0]?.id
+      
+      if (existingFileId) {
+        // Update existing file
+        const response = await window.gapi.client.request({
+          path: `https://www.googleapis.com/upload/drive/v3/files/${existingFileId}`,
+          method: 'PATCH',
+          params: {
+            uploadType: 'media',
+          },
+          headers: {
+            'Content-Type': mimeType,
+          },
+          body: content,
+        })
+        return existingFileId
+      } else {
+        // Create new file
+        const response = await window.gapi.client.request({
+          path: 'https://www.googleapis.com/upload/drive/v3/files',
+          method: 'POST',
+          params: {
+            uploadType: 'multipart',
+          },
+          headers: {
+            'Content-Type': 'multipart/related; boundary="foo_bar_baz"',
+          },
+          body: this.createMultipartBody(fileName, content, mimeType, folderId),
+        })
+        return response.result.id
+      }
+    } catch (error) {
+      console.error(`Failed to save file ${fileName}:`, error)
+      throw error
+    }
+  }
+
+  // Helper: Create multipart body for file upload
+  private createMultipartBody(
+    fileName: string,
+    content: string,
+    mimeType: string,
+    parentId: string
+  ): string {
+    const metadata = {
+      name: fileName,
+      parents: [parentId],
+    }
+    
+    const delimiter = 'foo_bar_baz'
+    const close_delim = `\r\n--${delimiter}--`
+    
+    let body = `--${delimiter}\r\n`
+    body += 'Content-Type: application/json\r\n\r\n'
+    body += JSON.stringify(metadata) + '\r\n'
+    body += `--${delimiter}\r\n`
+    body += `Content-Type: ${mimeType}\r\n\r\n`
+    body += content
+    body += close_delim
+    
+    return body
   }
 
   // Update existing project
@@ -287,10 +438,66 @@ export class GoogleDriveService {
     }
   }
 
-  // Get project by ID
+  // Get project by ID with full data
   async getProject(projectId: string): Promise<GoogleDriveProjectData | null> {
-    const projects = await this.listProjects()
-    return projects.find(p => p.id === projectId) || null
+    if (!this.isReady()) {
+      return null
+    }
+
+    try {
+      this.setAuthToken()
+      
+      // Find project folder
+      const projectFolderName = `projeto-${projectId}`
+      const projectFolderId = await this.findProjectFolder(projectFolderName)
+      
+      if (!projectFolderId) {
+        return null
+      }
+      
+      // Get metadata from index.json
+      const indexFileResponse = await window.gapi.client.drive.files.list({
+        q: `'${projectFolderId}' in parents and name='index.json' and trashed=false`,
+        fields: 'files(id)',
+      })
+      
+      const indexFile = indexFileResponse.result.files?.[0]
+      if (!indexFile) {
+        return null
+      }
+      
+      const metadata = await this.downloadJsonFile(indexFile.id!)
+      if (!metadata || !this.isValidProjectMetadata(metadata)) {
+        return null
+      }
+      
+      // Get data from .gglexical file
+      const dataFileResponse = await window.gapi.client.drive.files.list({
+        q: `'${projectFolderId}' in parents and name='${projectId}.gglexical' and trashed=false`,
+        fields: 'files(id)',
+      })
+      
+      const dataFile = dataFileResponse.result.files?.[0]
+      if (!dataFile) {
+        return null
+      }
+      
+      const dataResponse = await window.gapi.client.drive.files.get({
+        fileId: dataFile.id!,
+        alt: 'media',
+      })
+      
+      return {
+        ...(metadata as any),
+        data: dataResponse.body,
+        driveFileId: projectFolderId,
+        storageType: "google-drive"
+      }
+      
+    } catch (error) {
+      console.error(`Failed to get project ${projectId}:`, error)
+      return null
+    }
   }
 
   // Validate project data structure
@@ -301,6 +508,20 @@ export class GoogleDriveService {
       typeof data.name === 'string' &&
       typeof data.data === 'string' &&
       Array.isArray(data.tags) &&
+      typeof data.createdAt === 'string' &&
+      typeof data.updatedAt === 'string'
+    )
+  }
+
+  // Validate project metadata structure (lighter validation for index.json)
+  private isValidProjectMetadata(data: any): boolean {
+    return (
+      data &&
+      typeof data.id === 'string' &&
+      typeof data.name === 'string' &&
+      Array.isArray(data.tags) &&
+      typeof data.hash === 'string' &&
+      typeof data.size === 'number' &&
       typeof data.createdAt === 'string' &&
       typeof data.updatedAt === 'string'
     )
