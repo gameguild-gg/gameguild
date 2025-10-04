@@ -17,6 +17,7 @@ interface ProjectData {
   createdAt: string
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
 }
 
 interface ProjectListProps {
@@ -91,7 +92,10 @@ export function ProjectList({
   }
 
     // Render storage type indicator
-  const renderStorageIndicator = (storageType: "local" | "gameguild-cloud" | "google-drive" | undefined) => {
+  const renderStorageIndicator = (
+    storageType: "local" | "gameguild-cloud" | "google-drive" | undefined,
+    isLocallyAvailable?: boolean
+  ) => {
     if (!storageType || storageType === "local") {
       return (
         <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" title="Stored locally on this device">
@@ -113,22 +117,28 @@ export function ProjectList({
 
     if (storageType === "google-drive") {
       const isConnected = isGoogleDriveAuthenticated
+      const isAvailableLocally = isLocallyAvailable === true
+      
       return (
         <div className={`flex items-center gap-1 text-xs ${
           isConnected 
-            ? "text-green-600 dark:text-green-400" 
+            ? (isAvailableLocally ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400")
             : "text-orange-600 dark:text-orange-400"
         }`} title={
-          isConnected 
-            ? "Stored on Google Drive - Connected and accessible" 
-            : "Stored on Google Drive - Connect to access"
+          !isConnected 
+            ? "Stored on Google Drive - Connect to access"
+            : isAvailableLocally
+              ? "Stored on Google Drive - Downloaded and ready"
+              : "Stored on Google Drive - Click to download"
         }>
           <Cloud className="h-3 w-3" />
           <span>Google Drive</span>
-          {isConnected ? (
+          {!isConnected ? (
+            <WifiOff className="h-2 w-2" />
+          ) : isAvailableLocally ? (
             <Wifi className="h-2 w-2" />
           ) : (
-            <WifiOff className="h-2 w-2" />
+            <Download className="h-2 w-2" />
           )}
         </div>
       )
@@ -179,7 +189,7 @@ export function ProjectList({
                   >
                     {project.name}
                   </span>
-                  {renderStorageIndicator(project.storageType)}
+                  {renderStorageIndicator(project.storageType, project.isLocallyAvailable)}
                 </div>
                 {project.tags && project.tags.length > 0 && (
                   <div className="mb-3 flex flex-wrap gap-1" title={project.tags.join(", ")}>
