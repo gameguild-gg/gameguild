@@ -49,7 +49,7 @@ export function OpenProjectDialogPreview({
   const [googleDriveAuthDialogOpen, setGoogleDriveAuthDialogOpen] = useState(false)
 
   // Google Drive authentication hook
-  const { isAuthenticated, isLoading, authenticate, signOut } = useGoogleDriveAuth()
+  const { isAuthenticated, isLoading, authenticate, signOut, refreshAuthState } = useGoogleDriveAuth()
 
   const {
     searchTerm,
@@ -197,6 +197,8 @@ export function OpenProjectDialogPreview({
         onOpenChange={setGoogleDriveAuthDialogOpen}
         onAuthSuccess={() => {
           setGoogleDriveAuthDialogOpen(false)
+          // Refresh auth state to ensure UI reflects the new authentication status
+          refreshAuthState()
           toast.success("Google Drive connected successfully!", {
             description: "You can now access your Google Drive projects for preview.",
             duration: 3000,
