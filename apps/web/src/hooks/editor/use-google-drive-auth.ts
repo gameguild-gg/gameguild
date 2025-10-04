@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import { GoogleDriveSecurity } from "@/utils/editor/google-drive-security"
+import { GoogleDriveService } from "@/services/editor/google-drive-service"
 
 interface GoogleDriveAuthState {
   isAuthenticated: boolean
@@ -44,6 +45,17 @@ export function useGoogleDriveAuth() {
   
   // Minimal required scopes - only file access within app-created folders
   const SCOPES = 'https://www.googleapis.com/auth/drive.file'
+
+  // Configure GoogleDriveService when authentication state changes
+  useEffect(() => {
+    const googleDriveService = GoogleDriveService.getInstance()
+    
+    if (authState.isAuthenticated && authState.accessToken && authState.selectedFolder) {
+      // Configure the service with authentication credentials
+      googleDriveService.setAuth(authState.accessToken, authState.selectedFolder)
+      console.log('GoogleDriveService configured with auth credentials')
+    }
+  }, [authState.isAuthenticated, authState.accessToken, authState.selectedFolder])
 
   // Load Google APIs (both GIS and GAPI)
   const loadGoogleAPI = useCallback(async () => {
