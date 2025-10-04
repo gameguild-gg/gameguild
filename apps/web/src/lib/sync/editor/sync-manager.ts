@@ -11,7 +11,7 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
-  hash?: string
+  hash: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
 }
 
