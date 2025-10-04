@@ -38,6 +38,15 @@ export function useGoogleDriveAuth() {
     error: null,
   })
 
+  // Helper function to update localStorage and notify other instances
+  const updateLocalStorage = useCallback((key: string, value: string) => {
+    localStorage.setItem(key, value)
+    // Dispatch custom event for same-tab updates
+    window.dispatchEvent(new CustomEvent('gglexical-storage-change', { 
+      detail: { key, value } 
+    }))
+  }, [])
+
   // Google Drive API configuration
   const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_DRIVE_CLIENT_ID
   const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_DRIVE_API_KEY
@@ -208,9 +217,9 @@ export function useGoogleDriveAuth() {
             const expiryTime = Date.now() + expiresIn
 
             // Store token with expiry
-            localStorage.setItem('gglexical_google_drive_token', accessToken)
-            localStorage.setItem('gglexical_google_drive_token_expiry', expiryTime.toString())
-            localStorage.setItem('gglexical_google_drive_auth_time', Date.now().toString())
+            updateLocalStorage('gglexical_google_drive_token', accessToken)
+            updateLocalStorage('gglexical_google_drive_token_expiry', expiryTime.toString())
+            updateLocalStorage('gglexical_google_drive_auth_time', Date.now().toString())
 
             setAuthState(prev => ({
               ...prev,
@@ -266,8 +275,8 @@ export function useGoogleDriveAuth() {
           const folder = searchResponse.result.files[0]
           
           // Save folder info
-          localStorage.setItem('gglexical_google_drive_folder', folder.id!)
-          localStorage.setItem('gglexical_google_drive_folder_name', folder.name!)
+          updateLocalStorage('gglexical_google_drive_folder', folder.id!)
+          updateLocalStorage('gglexical_google_drive_folder_name', folder.name!)
           
           setAuthState(prev => ({
             ...prev,
@@ -290,8 +299,8 @@ export function useGoogleDriveAuth() {
         const folderId = createResponse.result.id!
         
         // Save folder info
-        localStorage.setItem('gglexical_google_drive_folder', folderId)
-        localStorage.setItem('gglexical_google_drive_folder_name', finalFolderName)
+        updateLocalStorage('gglexical_google_drive_folder', folderId)
+        updateLocalStorage('gglexical_google_drive_folder_name', finalFolderName)
         
         setAuthState(prev => ({
           ...prev,
@@ -366,12 +375,88 @@ export function useGoogleDriveAuth() {
     }
   }, [authState.accessToken])
 
+  // Add a refresh function to force state update
+  const refreshAuthState = useCallback(() => {
+    const storedToken = localStorage.getItem('gglexical_google_drive_token')
+    const storedExpiry = localStorage.getItem('gglexical_google_drive_token_expiry')
+    
+    if (storedToken && storedExpiry) {
+      const expiryTime = parseInt(storedExpiry)
+      const now = Date.now()
+      
+      if (now < expiryTime) {
+        // Token is still valid
+        const savedFolder = localStorage.getItem('gglexical_google_drive_folder')
+        const savedFolderName = localStorage.getItem('gglexical_google_drive_folder_name')
+        
+        setAuthState(prev => ({
+          ...prev,
+          isAuthenticated: true,
+          accessToken: storedToken,
+          selectedFolder: savedFolder,
+          folderName: savedFolderName,
+          error: null,
+        }))
+      } else {
+        // Token expired, clean up
+        localStorage.removeItem('gglexical_google_drive_token')
+        localStorage.removeItem('gglexical_google_drive_token_expiry')
+        setAuthState(prev => ({
+          ...prev,
+          isAuthenticated: false,
+          accessToken: null,
+          selectedFolder: null,
+          folderName: null,
+        }))
+      }
+    } else {
+      setAuthState(prev => ({
+        ...prev,
+        isAuthenticated: false,
+        accessToken: null,
+        selectedFolder: null,
+        folderName: null,
+      }))
+    }
+  }, [])
+
+  // Listen for localStorage changes to automatically refresh auth state
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'gglexical_google_drive_token' || 
+          e.key === 'gglexical_google_drive_token_expiry' ||
+          e.key === 'gglexical_google_drive_folder') {
+        // Token or folder changed, refresh auth state
+        refreshAuthState()
+      }
+    }
+
+    const handleCustomStorageChange = (e: CustomEvent) => {
+      const { key } = e.detail
+      if (key === 'gglexical_google_drive_token' || 
+          key === 'gglexical_google_drive_token_expiry' ||
+          key === 'gglexical_google_drive_folder') {
+        // Token or folder changed, refresh auth state
+        refreshAuthState()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('gglexical-storage-change', handleCustomStorageChange as EventListener)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('gglexical-storage-change', handleCustomStorageChange as EventListener)
+    }
+  }, [refreshAuthState])
+
   return {
     ...authState,
     authenticate,
     signOut,
     createOrFindFolder,
     getAvailableFolders,
+    refreshAuthState,
     hasValidSetup: authState.isAuthenticated && authState.selectedFolder,
   }
 }
