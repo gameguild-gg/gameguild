@@ -47,7 +47,19 @@ export class GoogleDriveService {
 
   // Check if service is ready
   isReady(): boolean {
-    return !!(this.accessToken && this.folderId && window.gapi?.client?.drive)
+    const hasToken = !!this.accessToken
+    const hasFolder = !!this.folderId
+    const hasGapi = !!(window.gapi?.client?.drive)
+    
+    console.log("GoogleDriveService.isReady() check:", {
+      hasToken,
+      hasFolder,
+      hasGapi,
+      accessToken: this.accessToken ? `${this.accessToken.substring(0, 10)}...` : null,
+      folderId: this.folderId
+    })
+    
+    return hasToken && hasFolder && hasGapi
   }
 
   // Set authentication token for GAPI client
