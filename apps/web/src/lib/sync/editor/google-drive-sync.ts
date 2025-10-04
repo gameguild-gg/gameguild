@@ -9,7 +9,7 @@ interface ProjectData {
   createdAt: string
   updatedAt: string
   hash: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
+  storageType: "local" | "gameguild-cloud" | "google-drive"
 }
 
 interface SyncResult {
