@@ -4,8 +4,9 @@ import type React from "react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud, Database } from "lucide-react"
+import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud, Database, Wifi, WifiOff } from "lucide-react"
 import { DownloadConfirmDialog } from "@/components/editor/extras/dialogs/download-confirm-dialog"
+import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
 
 interface ProjectData {
   id: string
@@ -59,6 +60,9 @@ export function ProjectList({
     project: ProjectData | null
   }>({ open: false, project: null })
 
+  // Google Drive authentication hook to check connection status
+  const { isAuthenticated: isGoogleDriveAuthenticated } = useGoogleDriveAuth()
+
   // Format file size
   const formatSize = (sizeInKB: number): string => {
     if (sizeInKB < 1024) {
@@ -90,7 +94,7 @@ export function ProjectList({
   const renderStorageIndicator = (storageType: "local" | "gameguild-cloud" | "google-drive" | undefined) => {
     if (!storageType || storageType === "local") {
       return (
-        <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" title="Local storage">
+        <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" title="Stored locally on this device">
           <HardDrive className="h-3 w-3" />
           <span>Local</span>
         </div>
@@ -99,18 +103,33 @@ export function ProjectList({
 
     if (storageType === "gameguild-cloud") {
       return (
-        <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400" title="GameGuild Cloud storage">
+        <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400" title="Stored on GameGuild Cloud - Always accessible">
           <Database className="h-3 w-3" />
           <span>GameGuild</span>
+          <Wifi className="h-2 w-2" />
         </div>
       )
     }
 
     if (storageType === "google-drive") {
+      const isConnected = isGoogleDriveAuthenticated
       return (
-        <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400" title="Google Drive storage">
+        <div className={`flex items-center gap-1 text-xs ${
+          isConnected 
+            ? "text-green-600 dark:text-green-400" 
+            : "text-orange-600 dark:text-orange-400"
+        }`} title={
+          isConnected 
+            ? "Stored on Google Drive - Connected and accessible" 
+            : "Stored on Google Drive - Connect to access"
+        }>
           <Cloud className="h-3 w-3" />
           <span>Google Drive</span>
+          {isConnected ? (
+            <Wifi className="h-2 w-2" />
+          ) : (
+            <WifiOff className="h-2 w-2" />
+          )}
         </div>
       )
     }
