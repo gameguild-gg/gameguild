@@ -191,9 +191,13 @@ export class EnhancedStorageAdapter {
     // Handle sync based on storage type
     if (storageType === "google-drive") {
       // Sync to Google Drive
+      console.log("Attempting Google Drive sync for project:", name)
+      console.log("GoogleDriveService isReady:", this.googleDriveSync ? "GoogleDriveSync initialized" : "GoogleDriveSync NOT initialized")
+      
       try {
         const syncResult = await this.googleDriveSync.syncToGoogleDrive(projectData)
         if (syncResult.success) {
+          console.log("Google Drive sync successful for project:", name)
           // Update sync status to synced
           projectData.syncStatus = "synced"
           await this.saveToIndexedDB(projectData)
