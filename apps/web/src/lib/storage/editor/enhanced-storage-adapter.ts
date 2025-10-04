@@ -11,7 +11,7 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
-  hash?: string
+  hash: string
   syncStatus?: "synced" | "pending" | "conflict" | "local-only"
   storageType: "local" | "gameguild-cloud" | "google-drive"
 }
@@ -262,14 +262,19 @@ export class EnhancedStorageAdapter {
       if (await this.googleDriveSync.isGoogleDriveAvailable()) {
         const googleDriveProject = await this.googleDriveSync.loadFromGoogleDrive(id)
         if (googleDriveProject) {
+          // Ensure hash exists for the project
+          const hash = googleDriveProject.hash || await HashManager.generateHash(googleDriveProject.data)
+          
           // Save downloaded project locally
           await this.saveToIndexedDB({
             ...googleDriveProject,
+            hash,
             syncStatus: "synced",
             storageType: "google-drive",
           })
           return {
             ...googleDriveProject,
+            hash,
             storageType: "google-drive" as const,
           }
         }
@@ -278,14 +283,19 @@ export class EnhancedStorageAdapter {
       // Try GameGuild cloud server
       const serverProject = await this.syncManager.downloadProject(id)
       if (serverProject) {
+        // Ensure hash exists for the project
+        const hash = serverProject.hash || await HashManager.generateHash(serverProject.data)
+        
         // Save downloaded project locally
         await this.saveToIndexedDB({
           ...serverProject,
+          hash,
           syncStatus: "synced",
           storageType: "gameguild-cloud", // Server projects are cloud-based
         })
         return {
           ...serverProject,
+          hash,
           storageType: "gameguild-cloud" as const,
         }
       }
@@ -300,14 +310,19 @@ export class EnhancedStorageAdapter {
         try {
           const googleDriveProject = await this.googleDriveSync.loadFromGoogleDrive(id)
           if (googleDriveProject && googleDriveProject.updatedAt > localProject.updatedAt) {
+            // Ensure hash exists for the project
+            const hash = googleDriveProject.hash || await HashManager.generateHash(googleDriveProject.data)
+            
             // Update local copy with newer version from Google Drive
             await this.saveToIndexedDB({
               ...googleDriveProject,
+              hash,
               syncStatus: "synced",
               storageType: "google-drive",
             })
             return {
               ...googleDriveProject,
+              hash,
               storageType: "google-drive" as const,
             }
           }
@@ -320,14 +335,19 @@ export class EnhancedStorageAdapter {
       // Check if local project needs sync with server
       const syncedProject = await this.syncManager.syncProjectIfNeeded(localProject)
       if (syncedProject) {
+        // Ensure hash exists for the project
+        const hash = syncedProject.hash || await HashManager.generateHash(syncedProject.data)
+        
         // Update local project with server version, preserving storage type
         await this.saveToIndexedDB({
           ...syncedProject,
+          hash,
           syncStatus: "synced",
           storageType: localProject.storageType,
         })
         return {
           ...syncedProject,
+          hash,
           storageType: localProject.storageType,
         }
       }
