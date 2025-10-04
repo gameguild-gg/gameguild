@@ -3,7 +3,8 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp, Cloud, Database, HardDrive } from "lucide-react"
+import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
 
 interface ProjectSearchFiltersProps {
   searchTerm: string
@@ -39,6 +40,9 @@ export function ProjectSearchFilters({
   const [tagSearchInput, setTagSearchInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
+
+  // Google Drive authentication hook
+  const { isAuthenticated: isGoogleDriveAuthenticated } = useGoogleDriveAuth()
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -238,17 +242,78 @@ export function ProjectSearchFilters({
               <div className="hidden h-auto w-px bg-gray-200 dark:bg-gray-700 md:block" />
               
               <div className="flex-1 space-y-2">
-                <Label className="text-sm font-medium">Storage type:</Label>
-                <select
-                  value={storageTypeFilter || ""}
-                  onChange={(e) => onStorageTypeFilterChange(e.target.value as "local" | "gameguild-cloud" | "google-drive" || undefined)}
-                  className="w-full rounded border bg-background px-3 py-2 text-sm"
-                >
-                  <option value="">All types</option>
-                  <option value="local">Local only</option>
-                  <option value="gameguild-cloud">GameGuild Cloud</option>
-                  <option value="google-drive">Google Drive</option>
-                </select>
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Storage type:</Label>
+                  {isGoogleDriveAuthenticated && (
+                    <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                      <Cloud className="h-3 w-3" />
+                      <span>Google Drive Connected</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <select
+                    value={storageTypeFilter || ""}
+                    onChange={(e) => onStorageTypeFilterChange(e.target.value as "local" | "gameguild-cloud" | "google-drive" || undefined)}
+                    className="w-full rounded border bg-background px-3 py-2 text-sm"
+                  >
+                    <option value="">All storage types</option>
+                    <option value="local">💾 Local storage only</option>
+                    <option value="gameguild-cloud">🏢 GameGuild Cloud</option>
+                    <option value="google-drive">
+                      ☁️ Google Drive {!isGoogleDriveAuthenticated ? "(Connect to access)" : ""}
+                    </option>
+                  </select>
+                  
+                  {/* Storage type quick filters */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onStorageTypeFilterChange(storageTypeFilter === "local" ? undefined : "local")}
+                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
+                        storageTypeFilter === "local"
+                          ? "bg-gray-600 text-white dark:bg-gray-400 dark:text-gray-900"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                      }`}
+                      title="Show only local projects"
+                    >
+                      <HardDrive className="h-3 w-3" />
+                      Local
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => onStorageTypeFilterChange(storageTypeFilter === "gameguild-cloud" ? undefined : "gameguild-cloud")}
+                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
+                        storageTypeFilter === "gameguild-cloud"
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                      }`}
+                      title="Show only GameGuild Cloud projects"
+                    >
+                      <Database className="h-3 w-3" />
+                      GameGuild
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => onStorageTypeFilterChange(storageTypeFilter === "google-drive" ? undefined : "google-drive")}
+                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
+                        storageTypeFilter === "google-drive"
+                          ? "bg-green-600 text-white"
+                          : isGoogleDriveAuthenticated
+                          ? "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                          : "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600"
+                      }`}
+                      title={isGoogleDriveAuthenticated ? "Show only Google Drive projects" : "Connect to Google Drive first"}
+                      disabled={!isGoogleDriveAuthenticated}
+                    >
+                      <Cloud className="h-3 w-3" />
+                      Google Drive
+                    </button>
+                  </div>
+                </div>
                 
                 {storageTypeFilter && (
                   <div className="flex items-center justify-between pt-1">
