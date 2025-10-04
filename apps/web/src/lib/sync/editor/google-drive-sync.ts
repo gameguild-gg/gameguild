@@ -30,20 +30,28 @@ export class GoogleDriveSync {
    */
   async syncToGoogleDrive(project: ProjectData): Promise<SyncResult> {
     try {
+      console.log("GoogleDriveSync: Starting sync for project:", project.name)
+      
       if (!project.storageType || project.storageType !== "google-drive") {
+        console.log("GoogleDriveSync: Project not configured for Google Drive storage")
         return {
           success: false,
           error: "Project is not configured for Google Drive storage"
         }
       }
 
+      console.log("GoogleDriveService isReady:", this.googleDriveService.isReady())
+      console.log("GoogleDriveService instance:", this.googleDriveService)
+      
       if (!this.googleDriveService.isReady()) {
+        console.error("GoogleDriveSync: Service not ready")
         return {
           success: false,
           error: "Google Drive service is not authenticated or ready"
         }
       }
 
+      console.log("GoogleDriveSync: Calling saveProject...")
       await this.googleDriveService.saveProject(
         project.id,
         project.name,
@@ -51,6 +59,7 @@ export class GoogleDriveSync {
         project.tags
       )
 
+      console.log("GoogleDriveSync: Project saved successfully")
       return {
         success: true,
         projectId: project.id
