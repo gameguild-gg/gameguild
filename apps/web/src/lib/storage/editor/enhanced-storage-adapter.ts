@@ -14,6 +14,7 @@ interface ProjectData {
   hash: string
   syncStatus?: "synced" | "pending" | "conflict" | "local-only"
   storageType: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean // Indicates if the project data is stored locally
 }
 
 interface TagData {
@@ -412,13 +413,44 @@ export class EnhancedStorageAdapter {
 
     // Get local projects
     const localProjects = await this.listFromIndexedDB()
+    
+    // Mark local projects as locally available
+    const localProjectsMarked = localProjects.map(project => ({
+      ...project,
+      isLocallyAvailable: true
+    }))
+    
+    // Get Google Drive projects metadata (if authenticated)
+    let googleDriveProjects: ProjectData[] = []
+    if (await this.googleDriveSync.isGoogleDriveAvailable()) {
+      try {
+        googleDriveProjects = await this.googleDriveSync.listFromGoogleDrive()
+        console.log(`Found ${googleDriveProjects.length} Google Drive projects`)
+      } catch (error) {
+        console.error("Failed to list Google Drive projects:", error)
+      }
+    }
+
+    // Merge projects, removing duplicates (prioritize local versions)
+    const localProjectIds = new Set(localProjects.map(p => p.id))
+    const uniqueGoogleDriveProjects = googleDriveProjects
+      .filter(p => !localProjectIds.has(p.id))
+      .map(project => ({
+        ...project,
+        isLocallyAvailable: false // These are only on Google Drive
+      }))
+    
+    const allProjects = [...localProjectsMarked, ...uniqueGoogleDriveProjects]
+    
+    // Sort by last updated
+    allProjects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 
     // Fetch server metadata in parallel (non-blocking)
     this.syncServerMetadata().catch((error) => {
       console.error("Failed to sync server metadata:", error)
     })
 
-    return localProjects
+    return allProjects
   }
 
   private async listFromIndexedDB(): Promise<ProjectData[]> {
@@ -525,7 +557,10 @@ export class EnhancedStorageAdapter {
 
     // 2. Load projects
     // If filtered by tags, load only those projects. Otherwise, load all.
-    const projectsToFilter = await this.getProjectsByIds(projectIdsToLoad ? Array.from(projectIdsToLoad) : null)
+    const allProjects = await this.list() // Use list() method which includes Google Drive projects
+    const projectsToFilter = projectIdsToLoad 
+      ? allProjects.filter(project => projectIdsToLoad!.has(project.id))
+      : allProjects
 
     // 3. Filter by storage type
     let filteredByStorage = projectsToFilter

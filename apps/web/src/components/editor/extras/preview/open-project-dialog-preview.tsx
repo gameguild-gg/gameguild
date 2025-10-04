@@ -21,6 +21,7 @@ interface ProjectData {
   createdAt: string
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
 }
 
 interface StorageAdapter {
