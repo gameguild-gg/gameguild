@@ -14,7 +14,7 @@ interface ProjectData {
   hash: string
   syncStatus?: "synced" | "pending" | "conflict" | "local-only"
   storageType: "local" | "gameguild-cloud" | "google-drive"
-  isLocallyAvailable?: boolean // Indicates if the project data is stored locally
+  isLocallyAvailable?: boolean // Computed dynamically based on local storage check
 }
 
 interface TagData {
@@ -414,13 +414,7 @@ export class EnhancedStorageAdapter {
     // Get local projects
     const localProjects = await this.listFromIndexedDB()
     
-    // Mark local projects as locally available
-    const localProjectsMarked = localProjects.map(project => ({
-      ...project,
-      isLocallyAvailable: true
-    }))
-    
-    // Get Google Drive projects metadata (if authenticated)
+    // Get Google Drive projects metadata efficiently (if authenticated)
     let googleDriveProjects: ProjectData[] = []
     if (await this.googleDriveSync.isGoogleDriveAvailable()) {
       try {
@@ -431,14 +425,29 @@ export class EnhancedStorageAdapter {
       }
     }
 
-    // Merge projects, removing duplicates (prioritize local versions)
+    // Efficiently determine which projects are locally available
+    const localGoogleDriveProjectIds = new Set(
+      localProjects
+        .filter(p => p.storageType === "google-drive")
+        .map(p => p.id)
+    )
+    
+    // Mark Google Drive projects as locally available or not
+    const googleDriveProjectsWithAvailability = googleDriveProjects.map(project => ({
+      ...project,
+      isLocallyAvailable: localGoogleDriveProjectIds.has(project.id)
+    }))
+    
+    // Mark local projects as locally available
+    const localProjectsMarked = localProjects.map(project => ({
+      ...project,
+      isLocallyAvailable: true
+    }))
+    
+    // Merge projects, removing duplicates (prioritize local versions for actual data)
     const localProjectIds = new Set(localProjects.map(p => p.id))
-    const uniqueGoogleDriveProjects = googleDriveProjects
+    const uniqueGoogleDriveProjects = googleDriveProjectsWithAvailability
       .filter(p => !localProjectIds.has(p.id))
-      .map(project => ({
-        ...project,
-        isLocallyAvailable: false // These are only on Google Drive
-      }))
     
     const allProjects = [...localProjectsMarked, ...uniqueGoogleDriveProjects]
     
