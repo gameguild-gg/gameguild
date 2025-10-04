@@ -93,7 +93,7 @@ export function OpenProjectDialog({
   const [googleDriveAuthDialogOpen, setGoogleDriveAuthDialogOpen] = useState(false)
 
   // Google Drive authentication hook
-  const { isAuthenticated, isLoading, authenticate, signOut } = useGoogleDriveAuth()
+  const { isAuthenticated, isLoading, authenticate, signOut, refreshAuthState } = useGoogleDriveAuth()
 
   const handleOpen = async (projectId: string) => {
     const projectData = await loadProject(projectId)
@@ -399,6 +399,8 @@ export function OpenProjectDialog({
         onOpenChange={setGoogleDriveAuthDialogOpen}
         onAuthSuccess={() => {
           setGoogleDriveAuthDialogOpen(false)
+          // Refresh auth state to ensure UI reflects the new authentication status
+          refreshAuthState()
           // Refresh the projects list to include Google Drive projects
           onProjectsListUpdate()
           toast.success("Google Drive connected successfully!", {
