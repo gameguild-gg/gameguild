@@ -2,6 +2,12 @@
 
 In this assignment, you will create a basic 2D platformer game using Unity. The game will feature a player character that can move, jump, and collect objects while avoiding obstacles. The player will navigate between different scenes using mouse.
 
+::: danger
+
+Do the following steps on your forked repository from the previous week!
+
+:::
+
 Requirements:
 
 ## 1. Scene 1 (Menu Scene):
