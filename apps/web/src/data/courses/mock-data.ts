@@ -119,6 +119,7 @@ import intro2gproGamedevCareers from './intro2gpro/week03/gamedev-careers.md';
 import intro2gproGamedevIssues from './intro2gpro/week04/gamedev-issues.md';
 import intro2gproGamedevIssuesPresentations from './intro2gpro/week05/gamedev-issues-presentations.md';
 import intro2gproAutomation from './intro2gpro/week06/automation.md';
+import intro2gproUnityPlatformer from './intro2gpro/week07/unity-platformer.md';
 
 // Game Publishing Course Imports
 import gamePublishingSyllabus from './game-publishing/syllabus.md';
@@ -324,6 +325,29 @@ export const intro2gproAutomationContent: ProgramContent = {
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
     slug: 'automation',
+};
+
+export const intro2gproUnityPlatformerContent: ProgramContent = {
+    id: 'intro2gpro-unity-platformer',
+    programId: 'intro2gpro-program-1',
+    parentId: undefined,
+    title: 'Week 07: Building a 2D Platformer Game with Unity',
+    description: 'Create a basic 2D platformer game using Unity with player movement, collectibles, obstacles, and scene management.',
+    type: 0, // Page
+    body: intro2gproUnityPlatformer,
+    sortOrder: 9,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 240,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'unity-platformer',
 };
 
 // Child content for gamedev-issues
@@ -3809,6 +3833,7 @@ intro2gproProgram.programContents = [
     intro2gproGamedevIssuesContent,
     intro2gproGamedevIssuesPresentationsContent,
     intro2gproAutomationContent,
+    intro2gproUnityPlatformerContent,
 ];
 
 gamePublishingProgram.programContents = [
@@ -3829,6 +3854,7 @@ intro2gproGamedevCareersContent.program = intro2gproProgram;
 intro2gproGamedevIssuesContent.program = intro2gproProgram;
 intro2gproGamedevIssuesPresentationsContent.program = intro2gproProgram;
 intro2gproAutomationContent.program = intro2gproProgram;
+intro2gproUnityPlatformerContent.program = intro2gproProgram;
 intro2gproTechnicalChallengesContent.program = intro2gproProgram;
 intro2gproDesignChallengesContent.program = intro2gproProgram;
 intro2gproBusinessChallengesContent.program = intro2gproProgram;
@@ -4004,6 +4030,8 @@ export const mockProgramContents: ProgramContent[] = [
     intro2gproGamedevCareersContent,
     intro2gproGamedevIssuesContent,
     intro2gproGamedevIssuesPresentationsContent,
+    intro2gproAutomationContent,
+    intro2gproUnityPlatformerContent,
     
     // Game Publishing content
     gamePublishingSyllabusContent,
