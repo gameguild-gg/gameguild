@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import JSZip from "jszip"
+import { ProjectExporter, type ProjectData as ExportProjectData } from "@/lib/interopAdapter/project-exporter"
+import { HashManager } from "@/lib/sync/editor/hash-manager"
 
 interface ProjectData {
   id: string
@@ -80,33 +81,30 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     updatedAt: string,
   ) => {
     try {
-      const zip = new JSZip()
+      // Generate hash for the project
+      const hash = await HashManager.generateHash(projectData)
 
-      // Add the lexical file with .gglexical extension
-      zip.file(`${projectName}.gglexical`, projectData)
-
-      // Create index.json with project metadata
-      const metadata = {
+      // Prepare project data for export using ProjectExporter
+      const exportProjectData: ExportProjectData = {
         id: projectId,
         name: projectName,
+        data: projectData,
         tags: projectTags,
         size: new Blob([projectData]).size,
         createdAt: createdAt,
         updatedAt: updatedAt,
-        version: "1.0",
-        type: "gg-lexical-project",
+        hash: hash,
+        storageType: "local"
       }
 
-      zip.file("index.json", JSON.stringify(metadata, null, 2))
-
-      // Generate zip file
-      const zipBlob = await zip.generateAsync({ type: "blob" })
-      const url = URL.createObjectURL(zipBlob)
+      // Use ProjectExporter to create the ZIP file
+      const zipBlob = await ProjectExporter.createZipFile(exportProjectData, hash)
 
       // Create download link
+      const url = URL.createObjectURL(zipBlob)
       const link = document.createElement("a")
       link.href = url
-      link.download = `gg-lexical-editor-${projectName}.zip`
+      link.download = ProjectExporter.getDownloadFilename(exportProjectData)
       document.body.appendChild(link)
       link.click()
 
@@ -114,15 +112,15 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
 
-      toast.success("Download started", {
-        description: `Folder "gg-lexical-editor-${projectName}.zip" is being downloaded`,
+      toast.success("Export completed", {
+        description: `Project "${projectName}" exported successfully`,
         duration: 2500,
         icon: "📥",
       })
     } catch (error) {
-      console.error("Download error:", error)
-      toast.error("Download error", {
-        description: "Could not download the project folder. Please try again.",
+      console.error("Export failed:", error)
+      toast.error("Export failed", {
+        description: "Could not export the project. Please try again.",
         duration: 4000,
         icon: "❌",
       })
