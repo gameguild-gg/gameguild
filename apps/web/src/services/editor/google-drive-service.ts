@@ -1,6 +1,8 @@
 "use client"
 
 import { HashManager } from "../../lib/sync/editor/hash-manager"
+import { ProjectExporter, type ProjectData as ExportProjectData } from "../../lib/interopAdapter/project-exporter"
+import { ProjectImporter, type FolderStructureData } from "../../lib/interopAdapter/project-importer"
 
 interface GoogleDriveFile {
   id: string
@@ -225,43 +227,45 @@ export class GoogleDriveService {
     const hash = await HashManager.generateHash(data)
     
     try {
-      // 1. Create or find project folder
-      const projectFolderName = `projeto-${id}`
-      let projectFolderId = await this.findProjectFolder(projectFolderName)
-      
-      if (!projectFolderId) {
-        projectFolderId = await this.createProjectFolder(projectFolderName)
-      }
-      
-      // 2. Create metadata
-      const metadata = {
+      // 1. Prepare project data for export using ProjectExporter
+      const projectData: ExportProjectData = {
         id,
         name,
+        data,
         tags,
         size: new Blob([data]).size,
-        hash,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        hash,
         storageType: "google-drive"
       }
       
-      // 3. Save index.json (metadata)
+      const exportedProject = ProjectExporter.prepareForExport(projectData, hash)
+      
+      // 2. Create or find project folder
+      let projectFolderId = await this.findProjectFolder(exportedProject.folderName)
+      
+      if (!projectFolderId) {
+        projectFolderId = await this.createProjectFolder(exportedProject.folderName)
+      }
+      
+      // 3. Save index.json (metadata) using ProjectExporter format
       await this.saveFileToFolder(
         projectFolderId,
         'index.json',
-        JSON.stringify(metadata, null, 2),
+        JSON.stringify(exportedProject.metadata, null, 2),
         'application/json'
       )
       
-      // 4. Save data file
+      // 4. Save data file using ProjectExporter format
       await this.saveFileToFolder(
         projectFolderId,
-        `${id}.gglexical`,
-        data,
+        'data.gglexical',
+        exportedProject.data,
         'application/json'
       )
       
-      console.log(`Project ${id} saved successfully to Google Drive`)
+      console.log(`Project ${id} saved successfully to Google Drive using ProjectExporter`)
       
     } catch (error) {
       console.error('Save project failed:', error)
@@ -394,22 +398,8 @@ export class GoogleDriveService {
       throw new Error('Project not found')
     }
 
-    const updatedProjectData = {
-      ...project,
-      name,
-      data,
-      tags,
-      updatedAt: new Date().toISOString(),
-    }
-
-    const fileName = `${name}.gglexical.json`
-    
-    try {
-      await this.uploadJsonFile(fileName, updatedProjectData, project.driveFileId)
-    } catch (error) {
-      console.error('Update project failed:', error)
-      throw error
-    }
+    // Use the standard saveProject method which now uses ProjectExporter
+    await this.saveProject(projectId, name, data, tags)
   }
 
   // Delete project from Google Drive
@@ -466,14 +456,14 @@ export class GoogleDriveService {
         return null
       }
       
-      const metadata = await this.downloadJsonFile(indexFile.id!)
-      if (!metadata || !this.isValidProjectMetadata(metadata)) {
+      const indexData = await this.downloadJsonFile(indexFile.id!)
+      if (!indexData) {
         return null
       }
       
-      // Get data from .gglexical file
+      // Get data from data.gglexical file (updated to use new filename)
       const dataFileResponse = await window.gapi.client.drive.files.list({
-        q: `'${projectFolderId}' in parents and name='${projectId}.gglexical' and trashed=false`,
+        q: `'${projectFolderId}' in parents and name='data.gglexical' and trashed=false`,
         fields: 'files(id)',
       })
       
@@ -487,9 +477,25 @@ export class GoogleDriveService {
         alt: 'media',
       })
       
+      // Use ProjectImporter to process the folder structure
+      const folderData: FolderStructureData = {
+        indexContent: JSON.stringify(indexData),
+        dataContent: dataResponse.body,
+        folderName: projectFolderName
+      }
+      
+      const importedProject = await ProjectImporter.importFromFolderStructure(folderData)
+      
+      // Convert to GoogleDriveProjectData format
       return {
-        ...(metadata as any),
-        data: dataResponse.body,
+        id: importedProject.id,
+        name: importedProject.name,
+        data: importedProject.data,
+        tags: importedProject.tags,
+        size: importedProject.metadata?.size || new Blob([importedProject.data]).size,
+        createdAt: importedProject.metadata?.createdAt || new Date().toISOString(),
+        updatedAt: importedProject.metadata?.updatedAt || new Date().toISOString(),
+        hash: importedProject.metadata?.hash || '',
         driveFileId: projectFolderId,
         storageType: "google-drive"
       }
