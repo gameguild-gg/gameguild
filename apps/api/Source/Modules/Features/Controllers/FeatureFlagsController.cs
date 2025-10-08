@@ -1,10 +1,10 @@
 // using GameGuild.Modules.Features.Models;
 // using GameGuild.Modules.Features.Services;
 // using Microsoft.AspNetCore.Mvc;
-//
-//
+// 
+// 
 // namespace GameGuild.Modules.Features.Controllers;
-//
+// 
 // /// <summary>
 // /// Controller for managing feature flags
 // /// </summary>
@@ -13,14 +13,14 @@
 // [Authorize]
 // public class FeatureFlagsController : ControllerBase {
 //   private readonly IFeatureFlagService _featureFlagService;
-//
+// 
 //   private readonly ILogger<FeatureFlagsController> _logger;
-//
+// 
 //   public FeatureFlagsController(IFeatureFlagService featureFlagService, ILogger<FeatureFlagsController> logger) {
 //     _featureFlagService = featureFlagService;
 //     _logger = logger;
 //   }
-//
+// 
 //   /// <summary>
 //   /// Evaluate a feature flag
 //   /// </summary>
@@ -36,18 +36,18 @@
 //         IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
 //         UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
 //       };
-//
+// 
 //       var result = await _featureFlagService.EvaluateFeatureAsync(request.FeatureKey, context, cancellationToken);
-//
+// 
 //       return Ok(result);
 //     }
 //     catch (Exception ex) {
 //       _logger.LogError(ex, "Error evaluating feature flag '{FeatureKey}'", request.FeatureKey);
-//
+// 
 //       return StatusCode(500, new { error = "Internal server error" });
 //     }
 //   }
-//
+// 
 //   /// <summary>
 //   /// Get boolean feature flag value
 //   /// </summary>
@@ -69,18 +69,18 @@
 //         IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
 //         UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
 //       };
-//
+// 
 //       var result = await _featureFlagService.GetBooleanAsync(featureKey, defaultValue, context, cancellationToken);
-//
+// 
 //       return Ok(new { featureKey, value = result, type = "boolean" });
 //     }
 //     catch (Exception ex) {
 //       _logger.LogError(ex, "Error getting boolean feature flag '{FeatureKey}'", featureKey);
-//
+// 
 //       return Ok(new { featureKey, value = defaultValue, type = "boolean", error = true });
 //     }
 //   }
-//
+// 
 //   /// <summary>
 //   /// Get all feature flags
 //   /// </summary>
@@ -88,7 +88,7 @@
 //   public async Task<IActionResult> GetFeatureFlags([FromQuery] Guid? tenantId = null, [FromQuery] string? environment = null, CancellationToken cancellationToken = default) {
 //     try {
 //       var flags = await _featureFlagService.GetFeatureFlagsAsync(tenantId ?? GetCurrentTenantId(), environment, cancellationToken);
-//
+// 
 //       return Ok(
 //         flags.Select(f => new {
 //           f.Id,
@@ -112,11 +112,11 @@
 //     }
 //     catch (Exception ex) {
 //       _logger.LogError(ex, "Error getting feature flags");
-//
+// 
 //       return StatusCode(500, new { error = "Internal server error" });
 //     }
 //   }
-//
+// 
 //   /// <summary>
 //   /// Get feature flag by ID
 //   /// </summary>
@@ -124,18 +124,18 @@
 //   public async Task<IActionResult> GetFeatureFlag(Guid id, CancellationToken cancellationToken) {
 //     try {
 //       var flag = await _featureFlagService.GetFeatureFlagByIdAsync(id, cancellationToken);
-//
+// 
 //       if (flag == null) return NotFound(new { error = "Feature flag not found" });
-//
+// 
 //       return Ok(flag);
 //     }
 //     catch (Exception ex) {
 //       _logger.LogError(ex, "Error getting feature flag {Id}", id);
-//
+// 
 //       return StatusCode(500, new { error = "Internal server error" });
 //     }
 //   }
-//
+// 
 //   /// <summary>
 //   /// Create a new feature flag
 //   /// </summary>
@@ -155,18 +155,18 @@
 //         Environment = request.Environment ?? "production",
 //         TenantId = request.TenantId ?? GetCurrentTenantId()
 //       };
-//
+// 
 //       var created = await _featureFlagService.CreateFeatureFlagAsync(featureFlag, cancellationToken);
-//
+// 
 //       return CreatedAtAction(nameof(GetFeatureFlag), new { id = created.Id }, created);
 //     }
 //     catch (Exception ex) {
 //       _logger.LogError(ex, "Error creating feature flag");
-//
+// 
 //       return StatusCode(500, new { error = "Internal server error" });
 //     }
 //   }
-//
+// 
 //   /// <summary>
 //   /// Update a feature flag
 //   /// </summary>
@@ -186,20 +186,20 @@
 //         Environment = request.Environment ?? "production",
 //         TenantId = request.TenantId
 //       };
-//
+// 
 //       var updated = await _featureFlagService.UpdateFeatureFlagAsync(id, featureFlag, cancellationToken);
-//
+// 
 //       if (updated == null) return NotFound(new { error = "Feature flag not found" });
-//
+// 
 //       return Ok(updated);
 //     }
 //     catch (Exception ex) {
 //       _logger.LogError(ex, "Error updating feature flag {Id}", id);
-//
+// 
 //       return StatusCode(500, new { error = "Internal server error" });
 //     }
 //   }
-//
+// 
 //   /// <summary>
 //   /// Delete a feature flag
 //   /// </summary>
@@ -207,18 +207,18 @@
 //   public async Task<IActionResult> DeleteFeatureFlag(Guid id, CancellationToken cancellationToken) {
 //     try {
 //       var deleted = await _featureFlagService.DeleteFeatureFlagAsync(id, cancellationToken);
-//
+// 
 //       if (!deleted) return NotFound(new { error = "Feature flag not found" });
-//
+// 
 //       return NoContent();
 //     }
 //     catch (Exception ex) {
 //       _logger.LogError(ex, "Error deleting feature flag {Id}", id);
-//
+// 
 //       return StatusCode(500, new { error = "Internal server error" });
 //     }
 //   }
-//
+// 
 //   /// <summary>
 //   /// Get feature flag usage analytics
 //   /// </summary>
@@ -226,7 +226,7 @@
 //   public async Task<IActionResult> GetUsageAnalytics(Guid id, [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null, CancellationToken cancellationToken = default) {
 //     try {
 //       var analytics = await _featureFlagService.GetUsageAnalyticsAsync(id, fromDate, toDate, cancellationToken);
-//
+// 
 //       return Ok(
 //         new {
 //           featureFlagId = id,
@@ -241,87 +241,89 @@
 //     }
 //     catch (Exception ex) {
 //       _logger.LogError(ex, "Error getting usage analytics for feature flag {Id}", id);
-//
+// 
 //       return StatusCode(500, new { error = "Internal server error" });
 //     }
 //   }
-//
+// 
 //   private Guid? GetCurrentUserId() {
 //     var userIdClaim = User?.FindFirst("sub")?.Value ?? User?.FindFirst("userId")?.Value;
-//
+// 
 //     return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
 //   }
-//
+// 
 //   private Guid? GetCurrentTenantId() {
 //     var tenantIdClaim = User?.FindFirst("tenantId")?.Value;
-//
+// 
 //     return Guid.TryParse(tenantIdClaim, out var tenantId) ? tenantId : null;
 //   }
-//
+// 
 //   private List<string> GetCurrentUserRoles() { return User?.FindAll("role")?.Select(c => c.Value).ToList() ?? new List<string>(); }
 // }
-//
+// 
 // /// <summary>
 // /// Request models for feature flag operations
 // /// </summary>
 // public class FeatureEvaluationRequest {
 //   public string FeatureKey { get; set; } = string.Empty;
-//
+// 
 //   public Guid? UserId { get; set; }
-//
+// 
 //   public Guid? TenantId { get; set; }
-//
+// 
 //   public string? Environment { get; set; }
-//
+// 
 //   public List<string>? UserRoles { get; set; }
-//
+// 
 //   public Dictionary<string, object>? CustomAttributes { get; set; }
 // }
-//
+// 
 // public class CreateFeatureFlagRequest {
 //   public string Key { get; set; } = string.Empty;
-//
+// 
 //   public string Name { get; set; } = string.Empty;
-//
+// 
 //   public string? Description { get; set; }
-//
+// 
 //   public bool IsEnabled { get; set; }
-//
+// 
 //   public FeatureFlagType Type { get; set; } = FeatureFlagType.Toggle;
-//
+// 
 //   public string? DefaultValue { get; set; }
-//
+// 
 //   public string? EnabledValue { get; set; }
-//
+// 
 //   public bool IsGlobal { get; set; } = true;
-//
+// 
 //   public int RolloutPercentage { get; set; } = 100;
-//
+// 
 //   public string? Environment { get; set; }
-//
+// 
 //   public Guid? TenantId { get; set; }
 // }
-//
+// 
 // public class UpdateFeatureFlagRequest {
 //   public string Key { get; set; } = string.Empty;
-//
+// 
 //   public string Name { get; set; } = string.Empty;
-//
+// 
 //   public string? Description { get; set; }
-//
+// 
 //   public bool IsEnabled { get; set; }
-//
+// 
 //   public FeatureFlagType Type { get; set; } = FeatureFlagType.Toggle;
-//
+// 
 //   public string? DefaultValue { get; set; }
-//
+// 
 //   public string? EnabledValue { get; set; }
-//
+// 
 //   public bool IsGlobal { get; set; } = true;
-//
+// 
 //   public int RolloutPercentage { get; set; } = 100;
-//
+// 
 //   public string? Environment { get; set; }
-//
+// 
 //   public Guid? TenantId { get; set; }
 // }
+
+
