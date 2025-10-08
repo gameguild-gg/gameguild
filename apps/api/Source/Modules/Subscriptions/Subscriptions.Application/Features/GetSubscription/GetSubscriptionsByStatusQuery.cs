@@ -1,0 +1,9 @@
+using MediatR;
+using GameGuild.Modules.Subscriptions.Entities;
+using GameGuild.Modules.Subscriptions.SubscriptionPlans.Entities;
+using GameGuild.Modules.Subscriptions.Models;
+
+namespace GameGuild.Modules.Subscriptions.Features.GetSubscription;
+
+public record GetSubscriptionsByStatusQuery(SubscriptionStatus Status) : IQuery<IEnumerable<Subscription>>;
+

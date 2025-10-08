@@ -1,0 +1,7 @@
+using MediatR;
+using GameGuild.Modules.Subscriptions.DTOs;
+
+namespace GameGuild.Modules.Subscriptions.Features.GetSubscription;
+
+public record GetSubscriptionBillingHistoryQuery(Guid SubscriptionId) : IQuery<IEnumerable<BillingHistoryDto>>;
+
