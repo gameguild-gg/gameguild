@@ -42,6 +42,11 @@ public sealed class User : EntityBase, IUser
     [MaxLength(50)]
     public string Username { get; set; } = string.Empty;
 
+    /// <summary>
+    ///     Date and time when the user was last seen/logged in
+    /// </summary>
+    public DateTime? LastSeenAt { get; set; }
+
     // Legacy Email property for backwards compatibility (mapped to EmailAddress.Value)
     [NotMapped]
     public string Email { get => EmailAddress?.Value ?? string.Empty; set => EmailAddress = string.IsNullOrEmpty(value) ? null : new EmailAddress(value); }
@@ -83,7 +88,7 @@ public sealed class User : EntityBase, IUser
     /// </summary>
     public void RecordActivity()
     {
-        // LastSeenAt = DateTime.UtcNow; // TODO: Enable when LastSeenAt property is implemented
+        LastSeenAt = DateTime.UtcNow;
         Touch();
     }
 
@@ -103,7 +108,12 @@ public sealed class User : EntityBase, IUser
 
         return new User
         {
-            Email = email, GivenName = givenName, FamilyName = familyName, Username = username, PhoneNumber = !string.IsNullOrWhiteSpace(phoneNumber) ? new PhoneNumber(phoneNumber) : null, IsActive = true
+            Email = email,
+            GivenName = givenName,
+            FamilyName = familyName,
+            Username = username,
+            PhoneNumber = !string.IsNullOrWhiteSpace(phoneNumber) ? new PhoneNumber(phoneNumber) : null,
+            IsActive = true
         };
     }
 

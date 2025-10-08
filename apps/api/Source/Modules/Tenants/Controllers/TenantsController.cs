@@ -16,11 +16,14 @@ public class TenantsController(
     ICommandHandler<HardDeleteTenantCommand, Result<bool>> hardDeleteTenantHandler,
     ICommandHandler<ActivateTenantCommand, Result<bool>> activateTenantHandler,
     ICommandHandler<DeactivateTenantCommand, Result<bool>> deactivateTenantHandler,
+    ICommandHandler<ArchiveTenantCommand, Result> archiveTenantHandler,
+    ICommandHandler<UnarchiveTenantCommand, Result> unarchiveTenantHandler,
     IQueryHandler<GetTenantByIdQuery, Result<Tenant?>> getTenantByIdHandler,
     IQueryHandler<GetTenantByNameQuery, Result<Tenant?>> getTenantByNameHandler,
     IQueryHandler<GetTenantBySlugQuery, Result<Tenant?>> getTenantBySlugHandler,
     IQueryHandler<GetDeletedTenantsQuery, Result<IEnumerable<Tenant>>> getDeletedTenantsHandler,
-    IQueryHandler<GetActiveTenantsQuery, Result<IEnumerable<Tenant>>> getActiveTenantsHandler
+    IQueryHandler<GetActiveTenantsQuery, Result<IEnumerable<Tenant>>> getActiveTenantsHandler,
+    IQueryHandler<GetArchivedTenantsQuery, IEnumerable<Tenant>> getArchivedTenantsHandler
 ) : ControllerBase
 {
     /// <summary> Get a specific tenant by ID </summary>
@@ -230,5 +233,47 @@ public class TenantsController(
         if (!result.IsSuccess) return BadRequest(result.Error);
 
         return NoContent();
+    }
+
+    /// <summary> Archive a tenant (distinct from delete) </summary>
+    /// <param name="id"> Tenant ID </param>
+    /// <param name="request"> Archive request with optional reason </param>
+    /// <returns> Archive result </returns>
+    [HttpPost("{id:guid}/archive")]
+    // [RequireTenantPermission(PermissionType.Edit)]
+    public async Task<ActionResult> ArchiveTenant(Guid id, [FromBody] ArchiveTenantRequest? request = null)
+    {
+        var command = new ArchiveTenantCommand(id, request?.Reason);
+        var result = await archiveTenantHandler.Handle(command, CancellationToken.None);
+
+        if (!result.IsSuccess) return BadRequest(result.Error);
+
+        return NoContent();
+    }
+
+    /// <summary> Unarchive a tenant </summary>
+    /// <param name="id"> Tenant ID </param>
+    /// <returns> Unarchive result </returns>
+    [HttpPost("{id:guid}/unarchive")]
+    // [RequireTenantPermission(PermissionType.Edit)]
+    public async Task<ActionResult> UnarchiveTenant(Guid id)
+    {
+        var command = new UnarchiveTenantCommand(id);
+        var result = await unarchiveTenantHandler.Handle(command, CancellationToken.None);
+
+        if (!result.IsSuccess) return BadRequest(result.Error);
+
+        return NoContent();
+    }
+
+    /// <summary> Get archived tenants </summary>
+    /// <returns> List of archived tenants </returns>
+    [HttpGet("archived")]
+    public async Task<ActionResult<IEnumerable<Tenant>>> GetArchivedTenants()
+    {
+        var query = new GetArchivedTenantsQuery();
+        var result = await getArchivedTenantsHandler.Handle(query, CancellationToken.None);
+
+        return Ok(result);
     }
 }

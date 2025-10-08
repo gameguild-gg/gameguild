@@ -37,6 +37,16 @@ public class Tenant : EntityBase
     [MaxLength(255)]
     public string Slug { get; set; } = string.Empty;
 
+    /// <summary> Admin email for the tenant </summary>
+    [MaxLength(255)]
+    public string? AdminEmail { get; set; }
+
+    /// <summary> Whether this tenant is archived (distinct from deleted) </summary>
+    public bool IsArchived { get; set; } = false;
+
+    /// <summary> When the tenant was archived (null if not archived) </summary>
+    public DateTime? ArchivedAt { get; set; }
+
     /// <summary> Activate the tenant </summary>
     public void Activate()
     {
@@ -57,5 +67,29 @@ public class Tenant : EntityBase
         Name = name;
         Description = description;
         Touch();
+    }
+
+    /// <summary> Archive the tenant </summary>
+    public void Archive(string reason = "")
+    {
+        IsArchived = true;
+        ArchivedAt = DateTime.UtcNow;
+        IsActive = false; // Archived tenants are also inactive
+        Touch();
+
+        // Add domain event
+        AddDomainEvent(new TenantArchivedEvent(Id, reason));
+    }
+
+    /// <summary> Unarchive/restore the tenant </summary>
+    public void Unarchive()
+    {
+        IsArchived = false;
+        ArchivedAt = null;
+        IsActive = true; // Unarchived tenants become active again
+        Touch();
+
+        // Add domain event
+        AddDomainEvent(new TenantRestoredEvent(Id));
     }
 }
