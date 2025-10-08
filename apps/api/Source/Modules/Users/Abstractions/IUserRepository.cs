@@ -64,6 +64,16 @@ public interface IUserRepository : IRepository<User>
     Task<IEnumerable<User>> SearchAsync(string searchTerm, bool includeDeleted = false, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Search users by name or email with pagination
+    /// </summary>
+    /// <param name="searchTerm">Search term</param>
+    /// <param name="pageNumber">Page number (1-based)</param>
+    /// <param name="pageSize">Number of users per page</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Tuple of users and total count</returns>
+    Task<(IEnumerable<User> Users, int TotalCount)> SearchAsync(string searchTerm, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Get user statistics
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -87,6 +97,38 @@ public interface IUserRepository : IRepository<User>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if email exists</returns>
     Task<bool> EmailExistsAsync(string email, Guid? excludeUserId = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Check if user exists by email
+    /// </summary>
+    /// <param name="email">Email address to check</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>True if user exists</returns>
+    Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Check if multiple users exist by their email addresses
+    /// </summary>
+    /// <param name="emails">Collection of email addresses to check</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Dictionary mapping email addresses to existence status</returns>
+    Task<IDictionary<string, bool>> CheckEmailsExistAsync(IEnumerable<string> emails, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Get multiple users by their IDs
+    /// </summary>
+    /// <param name="ids">Collection of user IDs</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of users</returns>
+    Task<IEnumerable<User>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Get multiple users by their email addresses
+    /// </summary>
+    /// <param name="emails">Collection of email addresses</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of users</returns>
+    Task<IEnumerable<User>> GetByEmailsAsync(IEnumerable<string> emails, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Get usernames starting with a prefix (for unique username generation)
