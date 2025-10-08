@@ -1,0 +1,24 @@
+﻿namespace GameGuild.Modules.Features.Models;
+
+/// <summary>
+///     Feature flag targeting request
+/// </summary>
+public class FeatureFlagTargetingRequest
+{
+    public Guid FeatureFlagId { get; set; }
+
+    public string TargetType { get; set; } = string.Empty;
+
+    public string TargetIdentifier { get; set; } = string.Empty;
+
+    public bool IsEnabled { get; set; }
+
+    public int RolloutPercentage { get; set; } = 100;
+
+    public string? CustomValue { get; set; }
+
+    public int Priority { get; set; }
+
+    public Dictionary<string, object> Metadata { get; init; } = new Dictionary<string, object>();
+}
+
