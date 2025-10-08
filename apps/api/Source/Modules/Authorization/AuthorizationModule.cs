@@ -1,7 +1,6 @@
-using GameGuild.Core.Domain.Permissions;
 using GameGuild.Core.Infrastructure.Permissions;
 using GameGuild.Core.Modules;
-using GameGuild.Services;
+using GameGuild.Modules.Permissions.Contexts;
 
 namespace GameGuild.Source.Modules.Authorization;
 
@@ -11,28 +10,29 @@ namespace GameGuild.Source.Modules.Authorization;
 /// </summary>
 [StandardizedModule("Comprehensive authorization services following Clean Architecture and DAC patterns")]
 [ModuleVersion("1.0.0")]
-public class AuthorizationModule : ModuleBase {
+public class AuthorizationModule : ModuleBase
+{
     public override string ModuleName => "Authorization";
+
     public override string ModuleVersion => "1.0.0";
 
-    public override IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration) {
+    public override IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    {
         base.ConfigureServices(services, configuration);
 
         // Register Authorization services
         services.AddScoped<IPermissionService, PermissionService>();
-        services.AddScoped<IModulePermissionService, ModulePermissionService>();
-        services.AddScoped<ISimplePermissionService, SimplePermissionService>();
 
-        // Register missing DAC and Resource Permission services
-        services.AddScoped<IDacPermissionResolver, DacPermissionResolver>();
-        services.AddScoped<IResourcePermissionService, ResourcePermissionService>();
+        // Register unified permission context
+        services.AddScoped<PermissionsContext>();
 
         // CQRS handlers are automatically registered by assembly scanning
 
         return services;
     }
 
-    public override WebApplication MapEndpoints(WebApplication app) {
+    public override WebApplication MapEndpoints(WebApplication app)
+    {
         base.MapEndpoints(app);
 
         // Authorization module middleware should be configured here
