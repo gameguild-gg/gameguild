@@ -6,6 +6,7 @@ using GameGuild.CQRS;
 using GameGuild.Modules.Audit;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Credentials;
+using GameGuild.Modules.Features;
 using GameGuild.Modules.Localization;
 using GameGuild.Modules.Permissions.Contexts;
 using GameGuild.Modules.Resources;
@@ -270,6 +271,7 @@ public static class DependencyInjection
         services.AddCredentialsModule();
         services.AddUsersModule();
         services.AddUserProfilesModule();
+        services.AddFeaturesModule();
         // services.AddUserAchievementsModule(); // Temporarily disabled
         // services.AddProductsModule(); // Temporarily disabled
 

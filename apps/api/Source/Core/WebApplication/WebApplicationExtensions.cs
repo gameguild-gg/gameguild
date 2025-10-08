@@ -125,20 +125,20 @@ internal static class WebApplicationExtensions
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        if (!app.Environment.IsDevelopment() && !app.Environment.IsStaging()) return app;
+        if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+        {
+            // Native .NET 9 OpenAPI endpoint
+            app.MapOpenApi();
 
-        // Native .NET 9 OpenAPI endpoint
-        app.MapOpenApi();
-
-        // Swashbuckle Swagger UI
-        app.UseSwagger();
-
-        app.UseSwaggerUI(options =>
-            {
-                options.SwaggerEndpoint($"/swagger/{documentName}/swagger.json", "GameGuild API v1");
-                options.RoutePrefix = "swagger"; // Swagger UI will be available at /swagger
-            }
-        );
+            // Swashbuckle Swagger UI
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint($"/swagger/{documentName}/swagger.json", "GameGuild API v1");
+                    c.RoutePrefix = "swagger"; // Swagger UI will be available at /swagger
+                }
+            );
+        }
 
         return app;
     }

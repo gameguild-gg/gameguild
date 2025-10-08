@@ -4,6 +4,7 @@ import { CourseCard } from "@/components/courses/course-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { CourseSummary } from "@/hooks/use-programs-graphql"
 import { useMyPrograms } from "@/hooks/use-programs-graphql"
 import { BookOpen, Grid3X3, List, Plus, Search } from "lucide-react"
 import Link from "next/link"
@@ -25,8 +26,8 @@ export default function CoursesPage() {
     refetch()
   }
 
-  const filteredCourses = React.useMemo(() => {
-    return courses.filter((course) => {
+  const filteredCourses = React.useMemo<CourseSummary[]>(() => {
+    return courses.filter((course: CourseSummary) => {
       const courseTitle = course.title || ""
       const courseDescription = course.description || ""
       const courseInstructor = course.instructor || ""
@@ -36,12 +37,12 @@ export default function CoursesPage() {
         courseDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
         courseInstructor.toLowerCase().includes(searchQuery.toLowerCase())
 
-      const matchesLevel = levelFilter === "all" || course.level === levelFilter
-      const matchesStatus = statusFilter === "all" || course.status === statusFilter
-      const matchesCategory = categoryFilter === "all" || course.category === categoryFilter
+      const matchesLevel = levelFilter === "all" || (course.level ?? "") === levelFilter
+      const matchesStatus = statusFilter === "all" || (course.status ?? "") === statusFilter
+      const matchesCategory = categoryFilter === "all" || (course.category ?? "") === categoryFilter
 
       return matchesSearch && matchesLevel && matchesStatus && matchesCategory
-    }).sort((a, b) => {
+    }).sort((a: CourseSummary, b: CourseSummary) => {
       switch (sortBy) {
         case "title":
           return (a.title || "").localeCompare(b.title || "")
@@ -232,7 +233,7 @@ export default function CoursesPage() {
         </div>
       ) : (
         <div className={`grid gap-6 ${viewMode === "grid" ? "md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
-          {filteredCourses.map((course) => (
+          {filteredCourses.map((course: CourseSummary) => (
             <CourseCard key={course.id} course={course} viewMode={viewMode} />
           ))}
         </div>

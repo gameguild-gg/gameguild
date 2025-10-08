@@ -60,6 +60,13 @@ public interface ITenantRepository
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Get all archived tenants
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of archived tenants</returns>
+    Task<IReadOnlyList<Tenant>> GetArchivedAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Check if a tenant slug is available
     /// </summary>
     /// <param name="slug">The slug to check</param>

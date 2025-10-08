@@ -8,7 +8,7 @@ namespace GameGuild;
 ///   and IConcurrencyControlled interfaces.
 /// </summary>
 /// <typeparam name="TKey"> The type of the entity's identifier </typeparam>
-public abstract class EntityBase<TKey> : IEntity<TKey>, IHasDomainEvents where TKey : IEquatable<TKey>
+public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomainEvents where TKey : IEquatable<TKey>
 {
     private readonly List<IDomainEvent> _domainEvents = [];
 
@@ -21,6 +21,9 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, IHasDomainEvents where T
 
     /// <summary> The tenant this entity belongs to (null if global) </summary>
     public virtual Tenant? Tenant { get; set; }
+
+    /// <summary> Unique identifier that associates the entity with a specific tenant in a multi-tenant system </summary>
+    public virtual Guid? TenantId { get => Tenant?.Id; }
 
     /// <summary> Whether the entity is global (not tenant-specific) </summary>
     public virtual bool IsGlobal { get => Tenant == null; }
@@ -201,20 +204,20 @@ public class EntityBase : EntityBase<Guid>, IEntity
 
         switch (partial)
         {
-            case null : break;
-            case Dictionary<string, object?> dict : instance.SetProperties(dict); break;
+            case null: break;
+            case Dictionary<string, object?> dict: instance.SetProperties(dict); break;
 
-            default :
-            {
-                var properties = partial.GetType().GetProperties();
-                var propDict = new Dictionary<string, object?>();
+            default:
+                {
+                    var properties = partial.GetType().GetProperties();
+                    var propDict = new Dictionary<string, object?>();
 
-                foreach (var prop in properties) { propDict[prop.Name] = prop.GetValue(partial); }
+                    foreach (var prop in properties) { propDict[prop.Name] = prop.GetValue(partial); }
 
-                instance.SetProperties(propDict);
+                    instance.SetProperties(propDict);
 
-                break;
-            }
+                    break;
+                }
         }
 
         return instance;

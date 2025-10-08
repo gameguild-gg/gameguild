@@ -287,5 +287,71 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
         return users.Count;
     }
 
+    public async Task<IEnumerable<User>> GetByIdsAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .Where(u => ids.Contains(u.Id) && u.DeletedAt == null)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<User>> GetByEmailsAsync(IEnumerable<string> emails, CancellationToken cancellationToken = default)
+    {
+        var normalizedEmails = emails.Select(e => e.ToLowerInvariant()).ToList();
+
+        return await _context.Users
+            .Where(u => u.EmailAddress != null && normalizedEmails.Contains(u.EmailAddress.Value) && u.DeletedAt == null)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        string normalizedEmail = email.ToLowerInvariant();
+
+        return await _context.Users
+            .AnyAsync(u => u.EmailAddress != null && u.EmailAddress.Value == normalizedEmail && u.DeletedAt == null, cancellationToken);
+    }
+
+    public async Task<IDictionary<string, bool>> CheckEmailsExistAsync(IEnumerable<string> emails, CancellationToken cancellationToken = default)
+    {
+        var normalizedEmails = emails.Select(e => e.ToLowerInvariant()).ToList();
+
+        var existingEmails = await _context.Users
+            .Where(u => u.EmailAddress != null && normalizedEmails.Contains(u.EmailAddress.Value) && u.DeletedAt == null)
+            .Select(u => u.EmailAddress!.Value)
+            .ToListAsync(cancellationToken);
+
+        return normalizedEmails.ToDictionary(email => email, email => existingEmails.Contains(email));
+    }
+
+    public async Task<(IEnumerable<User> Users, int TotalCount)> SearchAsync(
+        string searchTerm,
+        int pageNumber,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _context.Users.Where(u => u.DeletedAt == null);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            string normalizedSearchTerm = searchTerm.ToLowerInvariant();
+            query = query.Where(u =>
+                (u.DisplayName != null && u.DisplayName.ToLower().Contains(normalizedSearchTerm)) ||
+                (u.GivenName != null && u.GivenName.ToLower().Contains(normalizedSearchTerm)) ||
+                (u.FamilyName != null && u.FamilyName.ToLower().Contains(normalizedSearchTerm)) ||
+                (u.Username != null && u.Username.ToLower().Contains(normalizedSearchTerm)) ||
+                (u.EmailAddress != null && u.EmailAddress.Value.Contains(normalizedSearchTerm))
+            );
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var users = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (users, totalCount);
+    }
+
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) { return await _context.SaveChangesAsync(cancellationToken); }
 }

@@ -12,7 +12,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
     {
         logger.LogError(exception, "Exception occurred: {Message}", exception.Message);
 
-        var problemDetails = CreateProblemDetails(exception);
+        var problemDetails = CreateProblemDetails(exception, httpContext);
 
         httpContext.Response.StatusCode = problemDetails.Status ?? StatusCodes.Status500InternalServerError;
 
@@ -21,9 +21,9 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         return true;
     }
 
-    private static ProblemDetails CreateProblemDetails(Exception exception)
+    private static ProblemDetails CreateProblemDetails(Exception exception, HttpContext httpContext)
     {
-        return exception switch
+        var problemDetails = exception switch
         {
             ValidationException validationException => new ProblemDetails
             {
@@ -97,5 +97,13 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                 Detail = "An unexpected error occurred while processing your request"
             },
         };
+
+        // Add correlation ID if available
+        if (httpContext.Request.Headers.TryGetValue("X-Correlation-ID", out var correlationId))
+        {
+            problemDetails.Extensions["correlationId"] = correlationId.ToString();
+        }
+
+        return problemDetails;
     }
 }

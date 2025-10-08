@@ -11,7 +11,11 @@ public class TenantRepository(ApplicationDbContext context) : ITenantRepository
 
     public async Task<IReadOnlyList<Tenant>> GetActiveTenantsAsync(CancellationToken cancellationToken = default)
     {
-        var tenants = await _context.Tenants.Where(tenant => tenant.IsActive && tenant.DeletedAt == null).AsNoTracking().OrderBy(tenant => tenant.Name).ToListAsync(cancellationToken);
+        var tenants = await _context.Tenants
+            .Where(tenant => tenant.IsActive && !tenant.IsArchived && tenant.DeletedAt == null)
+            .AsNoTracking()
+            .OrderBy(tenant => tenant.Name)
+            .ToListAsync(cancellationToken);
 
         return tenants.AsReadOnly();
     }
@@ -54,6 +58,17 @@ public class TenantRepository(ApplicationDbContext context) : ITenantRepository
 
         tenant.SoftDelete();
         _ = await UpdateAsync(tenant, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Tenant>> GetArchivedAsync(CancellationToken cancellationToken = default)
+    {
+        var tenants = await _context.Tenants
+            .Where(tenant => tenant.IsArchived && tenant.DeletedAt == null)
+            .AsNoTracking()
+            .OrderBy(tenant => tenant.Name)
+            .ToListAsync(cancellationToken);
+
+        return tenants.AsReadOnly();
     }
 
     public async Task<bool> IsSlugAvailableAsync(string slug, Guid? excludeId = null, CancellationToken cancellationToken = default)
