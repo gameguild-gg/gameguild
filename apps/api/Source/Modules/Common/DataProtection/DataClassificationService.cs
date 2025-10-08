@@ -140,21 +140,21 @@ public sealed class DataClassificationService
         foreach (var classification in classifications)
         {
             // Check if PII has lawful basis
-            if (classification.Classification.HasFlag(DataClassification.PII) && 
+            if (classification.Classification.HasFlag(DataClassification.PII) &&
                 !classification.LawfulBasis.HasValue)
             {
                 result.Warnings.Add($"Property '{classification.PropertyName}' is PII but has no lawful basis specified");
             }
 
             // Check if sensitive PII requires encryption
-            if (classification.Classification.HasFlag(DataClassification.SensitivePII) && 
+            if (classification.Classification.HasFlag(DataClassification.SensitivePII) &&
                 !classification.RequiresEncryption)
             {
                 result.Warnings.Add($"Property '{classification.PropertyName}' is sensitive PII but encryption is not required");
             }
 
             // Check if PII has retention policy
-            if (classification.Classification.HasFlag(DataClassification.PII) && 
+            if (classification.Classification.HasFlag(DataClassification.PII) &&
                 !classification.RetentionDays.HasValue)
             {
                 result.Warnings.Add($"Property '{classification.PropertyName}' is PII but has no retention policy");
