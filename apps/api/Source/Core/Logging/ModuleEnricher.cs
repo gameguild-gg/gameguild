@@ -12,63 +12,89 @@ public class ModuleEnricher : ILogEventEnricher
     {
         var moduleName = ExtractModuleName(logEvent);
 
-        if (!string.IsNullOrEmpty(moduleName)) { logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("Module", moduleName)); }
+        if (!string.IsNullOrEmpty(moduleName))
+        {
+            logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("Module", moduleName));
+        }
 
         var componentType = ExtractComponentType(logEvent);
 
-        if (!string.IsNullOrEmpty(componentType)) { logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ComponentType", componentType)); }
+        if (!string.IsNullOrEmpty(componentType))
+        {
+            logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty("ComponentType", componentType));
+        }
     }
 
     private static string? ExtractModuleName(LogEvent logEvent)
     {
-        if (!logEvent.Properties.TryGetValue("SourceContext", out var sourceContext)) return null;
+        if (!logEvent.Properties.TryGetValue("SourceContext", out var sourceContext))
+        {
+            return null;
+        }
 
         var sourceContextValue = sourceContext.ToString().Trim('"');
 
-        // Extract module name from namespace patterns like:
-        // GameGuild.Modules.Authentication.* -> Authentication
-        // GameGuild.Modules.Users.* -> Users
-        // GameGuild.Modules.Permissions.* -> Permissions
-        if (sourceContextValue.StartsWith("GameGuild.Modules.", StringComparison.OrdinalIgnoreCase))
+        // Extract module name from namespace pattern: GameGuild.Modules.{ModuleName}
+        if (sourceContextValue.Contains("GameGuild.Modules.", StringComparison.OrdinalIgnoreCase))
         {
             var parts = sourceContextValue.Split('.');
+            var moduleIndex = Array.FindIndex(parts, p => p.Equals("Modules", StringComparison.OrdinalIgnoreCase));
 
-            if (parts.Length >= 3)
+            if (moduleIndex >= 0 && moduleIndex + 1 < parts.Length)
             {
-                return parts[2]; // Extract module name
+                return parts[moduleIndex + 1];
             }
         }
 
-        // Handle core components
-        if (sourceContextValue.StartsWith("GameGuild.Core.", StringComparison.OrdinalIgnoreCase)) { return "Core"; }
+        // Extract from GameGuild.Core namespace
+        if (sourceContextValue.Contains("GameGuild.Core.", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Core";
+        }
 
-        if (sourceContextValue.StartsWith("GameGuild.CQRS.", StringComparison.OrdinalIgnoreCase)) { return "CQRS"; }
-
-        if (sourceContextValue.StartsWith("GameGuild.Database.", StringComparison.OrdinalIgnoreCase)) { return "Database"; }
-
-        return "System";
+        return null;
     }
 
     private static string? ExtractComponentType(LogEvent logEvent)
     {
-        if (!logEvent.Properties.TryGetValue("SourceContext", out var sourceContext)) return null;
+        if (!logEvent.Properties.TryGetValue("SourceContext", out var sourceContext))
+        {
+            return null;
+        }
 
         var sourceContextValue = sourceContext.ToString().Trim('"');
 
         // Determine component type based on class name patterns
-        if (sourceContextValue.Contains("Controller")) return "Controller";
+        if (sourceContextValue.Contains("Command", StringComparison.OrdinalIgnoreCase) ||
+            sourceContextValue.Contains("Handler", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Command";
+        }
 
-        if (sourceContextValue.Contains("Handler")) return "Handler";
+        if (sourceContextValue.Contains("Query", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Query";
+        }
 
-        if (sourceContextValue.Contains("Service")) return "Service";
+        if (sourceContextValue.Contains("Controller", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Controller";
+        }
 
-        if (sourceContextValue.Contains("Middleware")) return "Middleware";
+        if (sourceContextValue.Contains("Service", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Service";
+        }
 
-        if (sourceContextValue.Contains("Behavior")) return "Behavior";
+        if (sourceContextValue.Contains("Middleware", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Middleware";
+        }
 
-        if (sourceContextValue.Contains("Resolver")) return "Resolver";
-
-        if (sourceContextValue.Contains("Repository")) return "Repository";
+        if (sourceContextValue.Contains("Repository", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Repository";
+        }
 
         return null;
     }

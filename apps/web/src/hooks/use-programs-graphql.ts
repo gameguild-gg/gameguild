@@ -60,18 +60,28 @@ export const transformProgramToCourse = (program: Program) => ({
     id: program.id,
     title: program.title,
     description: program.description || '',
+    shortDescription: program.description || '',
     thumbnail: program.thumbnail || '/default-course-thumbnail.jpg',
+    thumbnailUrl: program.thumbnail || '/default-course-thumbnail.jpg',
+    coverUrl: program.thumbnail || '/default-course-thumbnail.jpg',
     videoShowcaseUrl: program.videoShowcaseUrl,
     category: program.category || 'General',
     difficulty: program.difficulty || 'Beginner',
+    level: program.difficulty?.toLowerCase() || 'beginner',
     estimatedHours: program.estimatedHours || 0,
+    duration: (program.estimatedHours || 0) * 60,
     visibility: program.visibility,
-    status: program.status,
+    status: program.status?.toLowerCase() || 'draft',
     slug: program.slug,
+    averageRating: 0,
+    totalStudents: 0,
+    instructor: program.creator?.displayName || 'Unknown instructor',
     createdAt: program.createdAt,
     updatedAt: program.updatedAt,
     creator: program.creator
 });
+
+export type CourseSummary = ReturnType<typeof transformProgramToCourse>;
 
 // Hook to get programs the current user can edit
 export const useMyPrograms = (options?: { skip?: number; take?: number }) => {
@@ -83,9 +93,11 @@ export const useMyPrograms = (options?: { skip?: number; take?: number }) => {
         errorPolicy: 'all'
     });
 
+    const courses = (data?.myPrograms?.map(transformProgramToCourse) || []) as CourseSummary[];
+
     return {
         programs: data?.myPrograms || [],
-        courses: data?.myPrograms?.map(transformProgramToCourse) || [], // For compatibility
+        courses,
         loading,
         error,
         refetch
@@ -103,9 +115,13 @@ export const usePublishedPrograms = (options?: {
             take: options?.take || 50
         },
         errorPolicy: 'all'
-    }); return {
+    });
+
+    const courses = (data?.publishedPrograms?.map(transformProgramToCourse) || []) as CourseSummary[];
+
+    return {
         programs: data?.publishedPrograms || [],
-        courses: data?.publishedPrograms?.map(transformProgramToCourse) || [], // For compatibility
+        courses,
         loading,
         error,
         refetch

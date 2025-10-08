@@ -1,11 +1,20 @@
 'use client';
-
-import { Course } from '@/lib/types';
 import { BookOpen } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+type CourseCardCourse = {
+  id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  thumbnailUrl?: string;
+  coverUrl?: string;
+  duration?: number;
+  level?: string;
+  totalStudents?: number;
+};
 
-export function CourseCard({ course, viewMode = 'grid' }: { course: Course; viewMode?: 'grid' | 'list' }) {
+export function CourseCard({ course, viewMode = 'grid' }: { course: CourseCardCourse; viewMode?: 'grid' | 'list' }) {
   return (
     <Link href={`/p/${course.slug}`} className="block">
       <div className="overflow-hidden border rounded-lg bg-card cursor-pointer transition-transform duration-200 hover:scale-[1.02] hover:shadow-lg">
