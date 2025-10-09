@@ -13,6 +13,9 @@ import { ListItemNode, ListNode } from "@lexical/list"
 import { CodeNode } from "@lexical/code"
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table"
 import { AutoLinkNode, LinkNode } from "@lexical/link"
+import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin"
+import { AutoLinkPlugin } from "@lexical/react/LexicalAutoLinkPlugin"
+import type { LinkMatcher } from "@lexical/react/LexicalAutoLinkPlugin"
 import { HTMLNode } from "./nodes/html-node"
 
 import { cn } from "@/lib/utils"
@@ -77,6 +80,9 @@ import { SourceCodePlugin } from "./plugins/source-code-plugin"
 
 import { MermaidNode } from "./nodes/mermaid-node"
 import { MermaidPlugin } from "./plugins/mermaid-plugin"
+import { CustomListNode } from "./nodes/custom-list-node"
+import { TableNode as CustomTableNode } from "./nodes/table-node"
+import { TablePlugin } from "./plugins/table-plugin"
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import {
@@ -137,7 +143,8 @@ function StructureDeleteConfirmPlugin() {
           node.getType() === "admonition" ||
           node.getType() === "divider" ||
           node.getType() === "header" ||
-          node.getType() === "mermaid",
+          node.getType() === "mermaid" ||
+          node.getType() === "table",
       )
 
       if (hasStructuralNodes) {
@@ -223,7 +230,8 @@ function StructureDeleteConfirmPlugin() {
                   node.getType() === "admonition" ||
                   node.getType() === "divider" ||
                   node.getType() === "header" ||
-                  node.getType() === "mermaid"
+                  node.getType() === "mermaid" ||
+                  node.getType() === "table"
                 ) {
                   node.remove()
                 }
@@ -273,7 +281,8 @@ const initialConfig = {
     HeadingNode,
     QuoteNode,
     ListItemNode,
-    ListNode,
+    // ListNode,  // Substituído pelo CustomListNode
+    CustomListNode,
     // Remove CodeHighlightNode to avoid the prismjs dependency
     CodeNode,
     TableCellNode,
@@ -298,6 +307,7 @@ const initialConfig = {
     SpotifyNode,
     SourceCodeNode,
     MermaidNode,
+    CustomTableNode,
   ],
   theme: {
     text: {
@@ -317,9 +327,11 @@ const initialConfig = {
     list: {
       ul: "list-disc list-inside",
       ol: "list-decimal list-inside",
+      listitem: "my-1",
     },
     quote: "border-l-4 border-muted pl-4 italic",
     code: "bg-muted p-1 rounded font-mono text-sm",
+    link: "text-blue-600 underline hover:text-blue-800 cursor-pointer",
   },
   onError: (error: Error) => {
     console.error(error)
@@ -352,6 +364,42 @@ function EditorRefPlugin({ editorRef }: { editorRef?: React.MutableRefObject<Lex
 
   return null
 }
+
+// Configure URL matchers for AutoLinkPlugin
+const URL_MATCHER =
+  /((https?:\/\/(www\.)?)|(www\.))[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/
+
+const EMAIL_MATCHER =
+  /(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/
+
+const MATCHERS: LinkMatcher[] = [
+  (text: string) => {
+    const match = URL_MATCHER.exec(text)
+    if (match === null) {
+      return null
+    }
+    const fullMatch = match[0]
+    return {
+      index: match.index,
+      length: fullMatch.length,
+      text: fullMatch,
+      url: fullMatch.startsWith('http') ? fullMatch : `https://${fullMatch}`,
+    }
+  },
+  (text: string) => {
+    const match = EMAIL_MATCHER.exec(text)
+    if (match === null) {
+      return null
+    }
+    const fullMatch = match[0]
+    return {
+      index: match.index,
+      length: fullMatch.length,
+      text: fullMatch,
+      url: `mailto:${fullMatch}`,
+    }
+  },
+]
 
 // Atualizar a função Editor para incluir o EditorRefPlugin:
 export function Editor({ className, initialState, onChange, editorRef, onLoadingChange }: EditorProps) {
@@ -386,6 +434,8 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             />
             <FloatingContentInsertPlugin />
             <FloatingTextFormatToolbarPlugin />
+            <LinkPlugin />
+            <AutoLinkPlugin matchers={MATCHERS} />
             <ImagePlugin />
             <QuizPlugin />
             <MarkdownPlugin />
@@ -404,6 +454,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             <CodePlugin />
             <SourceCodePlugin />
             <MermaidPlugin />
+            <TablePlugin />
             <OnChangePlugin
               onChange={(editorState) => {
                 if (onChange) {

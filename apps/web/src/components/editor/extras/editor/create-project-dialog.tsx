@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { StorageOptionSelector, type StorageOption } from "./storage-option-selector"
 
 interface ProjectData {
   id: string
@@ -19,7 +20,7 @@ interface ProjectData {
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[]) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive") => Promise<void>
 }
 
 interface CreateProjectDialogProps {
@@ -28,7 +29,7 @@ interface CreateProjectDialogProps {
   isDbInitialized: boolean
   storageAdapter: StorageAdapter
   availableTags: Array<{ name: string }>
-  onProjectCreate: (projectData: { id: string; name: string; tags: string[] }) => void
+  onProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive" }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
   generateProjectId: () => string
@@ -49,6 +50,7 @@ export function CreateProjectDialog({
   const [projectTags, setProjectTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
+  const [storageOption, setStorageOption] = useState<StorageOption>("local")
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -84,6 +86,15 @@ export function CreateProjectDialog({
       return
     }
 
+    if (!storageOption) {
+      toast.error("Opção de armazenamento obrigatória", {
+        description: "Por favor, selecione uma opção de armazenamento",
+        duration: 3000,
+        icon: "💾",
+      })
+      return
+    }
+
 
 
     // Check if project with same name already exists
@@ -113,13 +124,14 @@ export function CreateProjectDialog({
 
     try {
       const newProjectId = generateProjectId()
-      await storageAdapter.save(newProjectId, newCreateProjectName, emptyState, projectTags)
+      await storageAdapter.save(newProjectId, newCreateProjectName, emptyState, projectTags, storageOption)
 
       // Call the callback to update parent state
       onProjectCreate({
         id: newProjectId,
         name: newCreateProjectName,
         tags: projectTags,
+        storageType: storageOption,
       })
 
       // Reset form state
@@ -127,6 +139,7 @@ export function CreateProjectDialog({
       setProjectTags([])
       setTagInput("")
       setShowTagDropdown(false)
+      setStorageOption("local")
       onOpenChange(false)
 
       // Update lists
@@ -153,6 +166,7 @@ export function CreateProjectDialog({
     setProjectTags([])
     setTagInput("")
     setShowTagDropdown(false)
+    setStorageOption("local")
     onOpenChange(false)
   }
 
@@ -376,6 +390,12 @@ export function CreateProjectDialog({
             )}
           </div>
 
+          {/* Storage Options Section */}
+          <StorageOptionSelector
+            selectedOption={storageOption}
+            onSelectionChange={setStorageOption}
+          />
+
           <div className="p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <svg
@@ -401,7 +421,7 @@ export function CreateProjectDialog({
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={projectTags.length === 0}>
+            <Button onClick={handleCreate} disabled={projectTags.length === 0 || !storageOption}>
               Create Project
             </Button>
           </div>

@@ -6,8 +6,11 @@ import { ProjectSearchFilters } from "@/components/editor/extras/project-dialog/
 import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
 import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
 import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
-import { FolderOpen, Eye } from "lucide-react"
+import { FolderOpen, Eye, Cloud } from "lucide-react"
 import { toast } from "sonner"
+import { GoogleDriveAuthDialog } from "../editor/google-drive-auth-dialog"
+import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
+import { useState } from "react"
 
 interface ProjectData {
   id: string
@@ -17,12 +20,14 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
 }
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
-  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any") => Promise<ProjectData[]>
+  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive") => Promise<ProjectData[]>
 }
 
 interface OpenProjectDialogPreviewProps {
@@ -42,11 +47,18 @@ export function OpenProjectDialogPreview({
   availableTags,
   onProjectLoad,
 }: OpenProjectDialogPreviewProps) {
+  const [googleDriveAuthDialogOpen, setGoogleDriveAuthDialogOpen] = useState(false)
+
+  // Google Drive authentication hook
+  const { isAuthenticated, isLoading, authenticate, signOut, refreshAuthState } = useGoogleDriveAuth()
+
   const {
     searchTerm,
     setSearchTerm,
     selectedTags,
     setSelectedTags,
+    storageTypeFilter,
+    setStorageTypeFilter,
     currentPage,
     setCurrentPage,
     itemsPerPage,
@@ -90,8 +102,45 @@ export function OpenProjectDialogPreview({
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Open Project for Preview</DialogTitle>
-          <p className="text-sm text-muted-foreground">Select a project to preview its content</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle>Open Project for Preview</DialogTitle>
+              <p className="text-sm text-muted-foreground">Select a project to preview its content</p>
+            </div>
+            
+            {/* Google Drive Auth Button */}
+            <div className="flex items-center gap-2">
+              {isAuthenticated ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                    <Cloud className="h-3 w-3" />
+                    <span>Google Drive Connected</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={signOut}
+                    className="text-xs text-gray-500 hover:text-red-600"
+                    title="Disconnect Google Drive"
+                  >
+                    Disconnect
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setGoogleDriveAuthDialogOpen(true)}
+                  disabled={isLoading}
+                  className="gap-1 text-xs"
+                  title="Connect to Google Drive to access your cloud projects"
+                >
+                  <Cloud className="h-3 w-3" />
+                  {isLoading ? "Connecting..." : "Connect Google Drive"}
+                </Button>
+              )}
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="flex-1 min-h-0 flex flex-col space-y-4">
@@ -104,6 +153,8 @@ export function OpenProjectDialogPreview({
               availableTags={availableTags}
               tagFilterMode={tagFilterMode}
               onTagFilterModeChange={setTagFilterMode}
+              storageTypeFilter={storageTypeFilter}
+              onStorageTypeFilterChange={setStorageTypeFilter}
               itemsPerPage={itemsPerPage}
               onItemsPerPageChange={setItemsPerPage}
               showFilters={true}
@@ -141,6 +192,21 @@ export function OpenProjectDialogPreview({
           </div>
         </div>
       </DialogContent>
+
+      <GoogleDriveAuthDialog
+        open={googleDriveAuthDialogOpen}
+        onOpenChange={setGoogleDriveAuthDialogOpen}
+        onAuthSuccess={() => {
+          setGoogleDriveAuthDialogOpen(false)
+          // Refresh auth state to ensure UI reflects the new authentication status
+          refreshAuthState()
+          toast.success("Google Drive connected successfully!", {
+            description: "You can now access your Google Drive projects for preview.",
+            duration: 3000,
+            icon: "☁️",
+          })
+        }}
+      />
     </Dialog>
   )
 }
