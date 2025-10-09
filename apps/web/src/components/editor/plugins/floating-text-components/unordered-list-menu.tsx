@@ -1,8 +1,9 @@
 "use client"
 
 import { useCallback } from "react"
-import { $getSelection, $isRangeSelection } from "lexical"
-import { INSERT_UNORDERED_LIST_COMMAND } from "@lexical/list"
+import { $getSelection, $isRangeSelection, $createTextNode } from "lexical"
+import { $createListItemNode } from "@lexical/list"
+import { $createCustomListNode, $isCustomListNode } from "@/components/editor/nodes/custom-list-node"
 import { Check } from "lucide-react"
 import {
   DropdownMenuSub,
@@ -23,23 +24,56 @@ interface UnorderedListStyle {
 }
 
 const UNORDERED_LIST_STYLES: UnorderedListStyle[] = [
-  { icon: "•", name: "Disc (default)", style: "list-style-type: disc;" },
+  { icon: "•", name: "Disc (default)", style: "disc" },
+  { icon: "○", name: "Circle", style: "circle" },
+  { icon: "■", name: "Square", style: "square" },
+  { icon: "▶", name: "Arrow", style: "arrow" },
+  { icon: "★", name: "Star", style: "star" },
 ]
 
 export function UnorderedListMenu({ editor, currentListType }: UnorderedListMenuProps) {
   const handleUnorderedListClick = useCallback(
-    (style: string) => {
-      editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)
+    (listType: string) => {
       editor.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
-          const nodes = selection.getNodes()
-          nodes.forEach((node) => {
-            const listNode = node.getTopLevelElementOrThrow()
-            if (listNode.getType() === "list") {
-              listNode.setStyle(style)
+          // Detectar cor atual se já estamos em uma lista
+          let currentColor = "#3b82f6" // cor padrão
+          const anchorNode = selection.anchor.getNode()
+          let currentNode: any = anchorNode
+          
+          while (currentNode) {
+            if ($isCustomListNode(currentNode)) {
+              currentColor = currentNode.getMarkerColor()
+              break
             }
-          })
+            const parent = currentNode.getParent()
+            currentNode = parent
+          }
+          
+          // Criar diretamente um CustomListNode para listas não ordenadas
+          const customListNode = $createCustomListNode("bullet", 1, listType, currentColor)
+          const listItemNode = $createListItemNode()
+          
+          // Se há texto selecionado, usar esse texto no item da lista
+          const selectedText = selection.getTextContent()
+          if (selectedText) {
+            // Criar um novo nó de texto com o conteúdo selecionado
+            const textNode = $createTextNode(selectedText)
+            listItemNode.append(textNode)
+            // Remover o texto selecionado
+            selection.removeText()
+          }
+          
+          customListNode.append(listItemNode)
+          
+          // Inserir a lista customizada na posição atual
+          selection.insertNodes([customListNode])
+          
+          // Focar no item da lista para permitir edição
+          setTimeout(() => {
+            listItemNode.selectEnd()
+          }, 0)
         }
       })
     },
@@ -52,7 +86,7 @@ export function UnorderedListMenu({ editor, currentListType }: UnorderedListMenu
         <span className="mr-2">•</span>
         <span>Unordered Lists</span>
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent side="right" align="start" className="w-48">
+      <DropdownMenuSubContent className="w-48">
         {UNORDERED_LIST_STYLES.map((listStyle, index) => (
           <DropdownMenuItem
             key={index}
