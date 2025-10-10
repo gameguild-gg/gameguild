@@ -1,4 +1,4 @@
-using GameGuild.Modules.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Tenants.Repositories;
 using Microsoft.Extensions.Logging;
 
