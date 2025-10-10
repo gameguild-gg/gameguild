@@ -2,7 +2,6 @@ using GameGuild.CQRS;
 using GameGuild.Modules.Permissions.Abstractions;
 using GameGuild.Modules.Permissions.Commands;
 using GameGuild.Modules.Permissions.Entities;
-using GameGuild.Shared;
 
 namespace GameGuild.Modules.Permissions.Handlers;
 

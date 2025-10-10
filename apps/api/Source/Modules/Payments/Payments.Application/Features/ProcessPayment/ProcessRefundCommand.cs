@@ -1,5 +1,5 @@
 using GameGuild.Modules.Payments.Models;
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Payments.Features.ProcessPayment;
 

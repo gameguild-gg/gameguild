@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using MediatR;
+using GameGuild.CQRS;
 using GameGuild.Modules.Payments.Features.ProcessPayment;
 using GameGuild.Modules.Payments.Features.GetPayment;
 using GameGuild.Modules.Payments.Features.CalculatePricing;
