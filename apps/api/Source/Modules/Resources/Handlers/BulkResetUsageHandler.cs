@@ -1,4 +1,4 @@
-using GameGuild.Core.Messaging;
+using GameGuild.Messaging;
 using GameGuild.Modules.Resources.Commands;
 using GameGuild.Modules.Resources.Contexts;
 using GameGuild.Modules.Resources.Entities;

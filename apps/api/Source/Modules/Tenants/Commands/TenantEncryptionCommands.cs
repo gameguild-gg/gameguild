@@ -1,4 +1,4 @@
-using GameGuild.Core.Messaging;
+using GameGuild.Messaging;
 using GameGuild.Modules.Tenants;
 
 namespace GameGuild.Modules.Tenants.Commands;
