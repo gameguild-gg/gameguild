@@ -2,7 +2,6 @@ using GameGuild.Tenants.Commands;
 using GameGuild.Tenants.Entities;
 using GameGuild.Tenants.Repositories;
 using GameGuild.Tenants.Services;
-using GameGuild.Shared.CQRS;
 
 namespace GameGuild.Tenants.Handlers;
 

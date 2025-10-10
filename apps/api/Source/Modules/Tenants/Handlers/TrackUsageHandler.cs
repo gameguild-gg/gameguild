@@ -1,6 +1,6 @@
 using GameGuild.Core.Common;
 using GameGuild.Modules.Tenants.Abstractions;
-using GameGuild.Modules.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 
