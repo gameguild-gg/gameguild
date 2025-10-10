@@ -1,6 +1,5 @@
 using GameGuild.Modules.Products.Domain.Entities;
 using GameGuild.Database;
-using GameGuild.Modules.Products.Infrastructure.Persistence;
 using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Products.Application.Features.ManagePricing;

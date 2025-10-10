@@ -8,9 +8,7 @@ using GameGuild.Modules.Localization;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Entities;
 using GameGuild.Modules.Resources;
-using GameGuild.Modules.Tenants;
 using GameGuild.Modules.UserProfiles;
-using GameGuild.Modules.Users;
 using GameGuild.Modules.Users;
 using GameGuild.Source.Database.Seeding;
 

@@ -1,6 +1,5 @@
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Programs.Entities;
-using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Feedbacks.Entities;
 
