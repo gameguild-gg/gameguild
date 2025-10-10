@@ -1,5 +1,5 @@
 using GameGuild.Domain.Common;
-using GameGuild.Modules.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 
 namespace GameGuild.Modules.TestingLab.Entities;
 
