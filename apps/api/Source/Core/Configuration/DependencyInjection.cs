@@ -275,6 +275,7 @@ public static class DependencyInjection
         services.AddFeaturesModule();
         // services.AddUserAchievementsModule(); // Temporarily disabled
         // services.AddProductsModule(); // Temporarily disabled
+        services.AddExperimentsModule(); // Rate Plan Experiment Framework
 
         // External infrastructure services
         services.AddCloudflareServices(configuration);
