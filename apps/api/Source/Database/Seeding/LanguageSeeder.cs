@@ -12,9 +12,7 @@ public class LanguageSeeder(ILogger<LanguageSeeder> logger) : IDataSeeder
 
     private static readonly IReadOnlyList<(string Code, string Name, bool IsDefault)> SeedLanguages =
     [
-        ("en-US", "English (United States)", true),
-        ("pt-BR", "Português (Brasil)", false),
-        ("es-ES", "Español (España)", false)
+        ("en-US", "English (United States)", true), ("pt-BR", "Português (Brasil)", false), ("es-ES", "Español (España)", false)
     ];
 
     public async Task SeedAsync(ApplicationDbContext context, CancellationToken cancellationToken = default)
@@ -29,22 +27,13 @@ public class LanguageSeeder(ILogger<LanguageSeeder> logger) : IDataSeeder
             {
                 _logger.LogInformation("Adding language {LanguageCode} - {LanguageName}", code, name);
 
-                Language language = new()
-                {
-                    Code = code,
-                    Name = name,
-                    IsActive = true,
-                    IsDefault = isDefault
-                };
+                Language language = new() { Code = code, Name = name, IsActive = true, IsDefault = isDefault };
 
                 _ = context.Languages.Add(language);
             }
             else
             {
-                if (!existingLanguage.IsActive)
-                {
-                    existingLanguage.IsActive = true;
-                }
+                if (!existingLanguage.IsActive) { existingLanguage.IsActive = true; }
 
                 if (existingLanguage.IsDefault != isDefault)
                 {
@@ -55,9 +44,7 @@ public class LanguageSeeder(ILogger<LanguageSeeder> logger) : IDataSeeder
 
             if (isDefault)
             {
-                var otherDefaults = await context.Languages
-                    .Where(language => language.Code != code && language.IsDefault)
-                    .ToListAsync(cancellationToken);
+                var otherDefaults = await context.Languages.Where(language => language.Code != code && language.IsDefault).ToListAsync(cancellationToken);
 
                 foreach (Language otherDefault in otherDefaults)
                 {
@@ -81,10 +68,7 @@ public class LanguageSeeder(ILogger<LanguageSeeder> logger) : IDataSeeder
                 _ = await context.SaveChangesAsync(cancellationToken);
                 _logger.LogWarning("No default language detected. Promoted {LanguageCode} as default.", fallbackLanguage.Code);
             }
-            else
-            {
-                _logger.LogWarning("No languages available to promote as default.");
-            }
+            else { _logger.LogWarning("No languages available to promote as default."); }
         }
 
         _logger.LogInformation("Language seeding completed.");

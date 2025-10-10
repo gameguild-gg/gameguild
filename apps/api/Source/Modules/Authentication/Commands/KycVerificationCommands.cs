@@ -1,5 +1,5 @@
 using GameGuild.Core;
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Authentication;
 
