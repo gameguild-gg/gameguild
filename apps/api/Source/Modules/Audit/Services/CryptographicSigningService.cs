@@ -16,7 +16,7 @@ public class CryptographicSigningService : ICryptographicSigningService
     {
         _logger = logger;
         _signingKeys = new Dictionary<string, RSA>();
-        
+
         // Initialize default signing key
         InitializeDefaultKey();
     }
@@ -43,8 +43,8 @@ public class CryptographicSigningService : ICryptographicSigningService
             auditLog.Timestamp
         };
 
-        var json = JsonSerializer.Serialize(content, new JsonSerializerOptions 
-        { 
+        var json = JsonSerializer.Serialize(content, new JsonSerializerOptions
+        {
             WriteIndented = false,
             PropertyNamingPolicy = null
         });
@@ -57,7 +57,7 @@ public class CryptographicSigningService : ICryptographicSigningService
     public string ComputeChainHash(string contentHash, string previousHash, long sequenceNumber)
     {
         var chainData = $"{contentHash}|{previousHash}|{sequenceNumber}";
-        
+
         using var sha256 = SHA256.Create();
         var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(chainData));
         return Convert.ToBase64String(hashBytes);
@@ -66,7 +66,7 @@ public class CryptographicSigningService : ICryptographicSigningService
     public async Task<string> SignData(string data, CancellationToken cancellationToken = default)
     {
         await Task.CompletedTask; // For async consistency
-        
+
         var keyId = "default-key-2024";
         if (!_signingKeys.TryGetValue(keyId, out var rsa))
         {
@@ -75,7 +75,7 @@ public class CryptographicSigningService : ICryptographicSigningService
 
         var dataBytes = Encoding.UTF8.GetBytes(data);
         var signature = rsa.SignData(dataBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-        
+
         return Convert.ToBase64String(signature);
     }
 
@@ -97,7 +97,7 @@ public class CryptographicSigningService : ICryptographicSigningService
 
             var dataBytes = Encoding.UTF8.GetBytes(data);
             var signatureBytes = Convert.FromBase64String(signature);
-            
+
             return rsa.VerifyData(dataBytes, signatureBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         }
         catch (Exception ex)
@@ -126,11 +126,11 @@ public class CryptographicSigningService : ICryptographicSigningService
 
         var newKeyId = $"key-{DateTime.UtcNow:yyyyMMddHHmmss}";
         var newRsa = RSA.Create(2048);
-        
+
         _signingKeys[newKeyId] = newRsa;
-        
+
         _logger.LogInformation("Rotated signing key to {NewKeyId}", newKeyId);
-        
+
         return newKeyId;
     }
 
@@ -139,7 +139,7 @@ public class CryptographicSigningService : ICryptographicSigningService
         // In production, load from secure key storage (Azure Key Vault, AWS KMS, etc.)
         var rsa = RSA.Create(2048);
         _signingKeys["default-key-2024"] = rsa;
-        
+
         _logger.LogInformation("Initialized default signing key");
     }
 }

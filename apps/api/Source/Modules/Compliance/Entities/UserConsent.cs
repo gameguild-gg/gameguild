@@ -1,4 +1,4 @@
-using GameGuild.Core.Entities;
+using GameGuild.Core.Domain;
 
 namespace GameGuild.Modules.Compliance.Entities;
 

@@ -1,4 +1,4 @@
-using GameGuild.Core.Results;
+using GameGuild.CQRS;
 using GameGuild.Modules.Experiments.Entities;
 using GameGuild.Modules.Experiments.Repositories;
 

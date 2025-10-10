@@ -69,7 +69,7 @@ public class FieldAccessAuditService : IFieldAccessAuditService
         audit.SetAccessContext(ipAddress, userAgent, requestId, sessionId, apiEndpoint);
 
         // Determine if notification is required (e.g., for GDPR)
-        var requiresNotification = isSensitive && 
+        var requiresNotification = isSensitive &&
             (accessType == FieldAccessType.Export || accessType == FieldAccessType.Delete);
 
         if (!string.IsNullOrEmpty(legalBasis) || consentId.HasValue)

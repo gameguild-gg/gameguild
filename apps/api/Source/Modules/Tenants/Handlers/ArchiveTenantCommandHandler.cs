@@ -1,6 +1,6 @@
 using GameGuild.Core.CQRS;
 using GameGuild.Core.Exceptions;
-using GameGuild.Core.Results;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Tenants;
 

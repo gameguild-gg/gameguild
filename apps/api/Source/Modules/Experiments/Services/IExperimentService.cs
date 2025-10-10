@@ -1,4 +1,4 @@
-using GameGuild.Core.Results;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Experiments.Services;
 
