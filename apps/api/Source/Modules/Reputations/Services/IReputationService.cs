@@ -1,3 +1,4 @@
+using GameGuild.Modules.Users;
 namespace GameGuild.Modules.Reputations.Services;
 
 /// <summary> Service interface for managing a user reputation </summary>

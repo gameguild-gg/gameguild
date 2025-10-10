@@ -10,7 +10,7 @@ namespace GameGuild.Modules.DataArchival.Queries;
 public record GetArchivalPoliciesQuery : IRequest<Result<List<ArchivalPolicyDto>>>
 {
     public Guid? TenantId { get; init; }
-    
+
     public string? EntityType { get; init; }
 }
 
