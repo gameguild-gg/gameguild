@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 namespace GameGuild.CQRS;
 
 /// <summary> Marker interface to represent a request with a response </summary>

@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Modules.Users;
 using GameGuild.Common;
 using GameGuild.Modules.Kyc.Commands;
