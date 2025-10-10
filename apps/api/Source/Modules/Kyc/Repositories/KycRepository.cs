@@ -1,6 +1,6 @@
 using GameGuild.Common;
 using GameGuild.Modules.Kyc.Models;
-using GameGuild.Persistence;
+using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Kyc.Repositories;

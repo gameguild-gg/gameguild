@@ -1,7 +1,7 @@
 using GameGuild.Domain.Common;
 using GameGuild.Modules.Certificates.Entities;
 using GameGuild.Modules.Feedbacks.Entities;
-using GameGuild.Modules.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users.Entities;
 
 namespace GameGuild.Modules.Programs.Entities;

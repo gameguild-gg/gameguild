@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Shared.Common;
-using GameGuild.Shared;
 using GameGuild.Modules.Subscriptions.Abstractions;
 using GameGuild.Modules.Subscriptions.Entities;
 using GameGuild.Modules.Subscriptions.Models;

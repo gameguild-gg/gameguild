@@ -1,4 +1,3 @@
-using GameGuild.Shared.Abstractions;
 using GameGuild.Modules.Subscriptions.Entities;
 using GameGuild.Modules.Subscriptions.Models;
 
