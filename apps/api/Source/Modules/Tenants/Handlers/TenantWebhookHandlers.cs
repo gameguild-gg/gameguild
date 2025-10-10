@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Modules.Common.Configuration;
 using GameGuild.Tenants.Commands;
 using GameGuild.Tenants.Entities;
 using GameGuild.Tenants.Repositories;

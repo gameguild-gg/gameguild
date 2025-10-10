@@ -1,4 +1,6 @@
 using System.Text.Json;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 using GameGuild.Database;
 
 namespace GameGuild.Modules.Audit;

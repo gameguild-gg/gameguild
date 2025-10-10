@@ -1,4 +1,5 @@
 using System.Reflection;
+using GameGuild.Modules.Users;
 using GameGuild.Core.Logging;
 using GameGuild.Core.Middleware;
 using Serilog;

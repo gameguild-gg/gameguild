@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Subscriptions.Specifications;
 /// <summary>
 ///     Specification for finding active subscriptions
 /// </summary>
-public class ActiveSubscriptionsSpecification : Specification<Subscription>
+public class ActiveSubscriptionsSpecification : SpecificationBase<Subscription>
 {
     public ActiveSubscriptionsSpecification() : base(s => s.Status == SubscriptionStatus.Active) 
     { 

@@ -2,7 +2,7 @@ using GameGuild.Modules.Users;
 using GameGuild.Modules.Certificates.Entities;
 using GameGuild.Modules.Feedbacks.Entities;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Users.Entities;
+using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Programs.Entities;
 

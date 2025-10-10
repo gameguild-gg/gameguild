@@ -1,4 +1,5 @@
 using GameGuild.Modules.Payments.Payments.Application.Services;
+using GameGuild.Database;
 using GameGuild.Modules.Payments.Payments.Domain.Entities;
 using GameGuild.Modules.Payments.Payments.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +10,10 @@ namespace GameGuild.Modules.Payments.Payments.Infrastructure.Services;
 /// <summary>Dispute service implementation</summary>
 public class DisputeService : IDisputeService
 {
-    private readonly PaymentsDbContext _context;
+    private readonly ApplicationDbContext _context;
     private readonly ILogger<DisputeService> _logger;
 
-    public DisputeService(PaymentsDbContext context, ILogger<DisputeService> logger)
+    public DisputeService(ApplicationDbContext context, ILogger<DisputeService> logger)
     {
         _context = context;
         _logger = logger;

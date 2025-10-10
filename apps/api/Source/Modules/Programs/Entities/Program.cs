@@ -4,7 +4,7 @@ using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Feedbacks.Entities;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Users.Entities;
+using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Programs.Entities;
 
