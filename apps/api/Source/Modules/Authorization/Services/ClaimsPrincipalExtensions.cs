@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using GameGuild.Modules.Tenants;
 
 namespace GameGuild.Source.Modules.Authorization.Identity;
 

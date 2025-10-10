@@ -1,4 +1,4 @@
-﻿using GameGuild.Shared;
+﻿using GameGuild;
 using GameGuild.Modules.Features.Entities;
 
 namespace GameGuild.Modules.Features.Specifications;
@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Features.Specifications;
 /// <summary>
 ///     Specification for retrieving a feature flag by its key
 /// </summary>
-public class FeatureFlagByKeySpecification : BaseSpecification<FeatureFlag>
+public class FeatureFlagByKeySpecification : SpecificationBase<FeatureFlag>
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="FeatureFlagByKeySpecification"/> class

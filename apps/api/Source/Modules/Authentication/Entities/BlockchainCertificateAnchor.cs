@@ -1,4 +1,5 @@
 using GameGuild.Core;
+using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Authentication;
 

@@ -1,4 +1,5 @@
 using GameGuild.Database;
+using GameGuild.Modules.Tenants;
 using GameGuild.CQRS;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Credentials;
@@ -10,7 +11,7 @@ using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
-using GameGuild.Modules.Users.Entities;
+using GameGuild.Modules.Users;
 using GameGuild.Source.Database.Seeding;
 
 namespace GameGuild.Database;
@@ -31,9 +32,9 @@ public class ApplicationDbContext : DbContext
     // Core Entities
     public DbSet<User> Users => Set<User>();
 
-    public DbSet<Entities.Role> Roles => Set<Entities.Role>();
+    public DbSet<Role> Roles => Set<Role>();
 
-    public DbSet<Entities.UserRole> UserRoles => Set<Entities.UserRole>();
+    public DbSet<UserRole> UserRoles => Set<UserRole>();
 
     public DbSet<Credential> Credentials => Set<Credential>();
 

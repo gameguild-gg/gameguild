@@ -1,4 +1,5 @@
 using GameGuild.Modules.DataArchival.Services;
+using GameGuild.Modules.Common.Configuration;
 using GameGuild.CQRS;
 using System.ComponentModel.DataAnnotations;
 

@@ -128,7 +128,7 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     /// <param name="cancellationToken"> Cancellation token </param>
     /// <returns> List of tenant members </returns>
     [HttpGet("{tenantId:guid}/members")]
-    [RequireTenantPermission(PermissionType.View)]
+    [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<IReadOnlyList<TenantMemberDto>>> GetTenantMembers(
         Guid tenantId,
         CancellationToken cancellationToken)
@@ -211,7 +211,7 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     /// <param name="cancellationToken"> Cancellation token </param>
     /// <returns> List of child members </returns>
     [HttpGet("{tenantId:guid}/members/{userId:guid}/children")]
-    [RequireTenantPermission(PermissionType.View)]
+    [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<IReadOnlyList<TenantMemberDto>>> GetMemberChildren(
         Guid tenantId,
         Guid userId,
@@ -232,7 +232,7 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     /// <param name="cancellationToken"> Cancellation token </param>
     /// <returns> Complete member hierarchy </returns>
     [HttpGet("{tenantId:guid}/members/{userId:guid}/hierarchy")]
-    [RequireTenantPermission(PermissionType.View)]
+    [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<IReadOnlyList<TenantMemberDto>>> GetMemberHierarchy(
         Guid tenantId,
         Guid userId,
@@ -252,7 +252,7 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     /// <param name="cancellationToken"> Cancellation token </param>
     /// <returns> Complete tenant hierarchy tree </returns>
     [HttpGet("{tenantId:guid}/hierarchy")]
-    [RequireTenantPermission(PermissionType.View)]
+    [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<IReadOnlyList<TenantMemberDto>>> GetTenantHierarchyTree(
         Guid tenantId,
         CancellationToken cancellationToken)

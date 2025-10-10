@@ -1,4 +1,5 @@
 using GameGuild.Modules.Tags.Entities;
+using GameGuild.Modules.Common.Configuration;
 using GameGuild.Modules.Tenants;
 
 namespace GameGuild.Modules.Certificates.Entities;

@@ -1,4 +1,5 @@
 namespace GameGuild.Core.Domain;
+using GameGuild.Modules.Resources;
 
 /// <summary>
 /// Result of a permission check operation

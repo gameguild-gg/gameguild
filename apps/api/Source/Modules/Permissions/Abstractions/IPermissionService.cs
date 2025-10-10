@@ -1,4 +1,5 @@
 using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Resources.Entities;
 
 namespace GameGuild;
 

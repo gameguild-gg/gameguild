@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Subscriptions.Specifications;
 /// <summary>
 ///     Specification for finding subscriptions by status
 /// </summary>
-public class SubscriptionsByStatusSpecification : Specification<Subscription>
+public class SubscriptionsByStatusSpecification : SpecificationBase<Subscription>
 {
     public SubscriptionsByStatusSpecification(SubscriptionStatus status) : base(s => s.Status == status) { ApplyOrderBy(s => s.NextBillingDate); }
 }

@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Subscriptions.Specifications;
 /// <summary>
 ///     Specification for finding subscriptions expiring soon
 /// </summary>
-public class SubscriptionsExpiringSoonSpecification : Specification<Subscription>
+public class SubscriptionsExpiringSoonSpecification : SpecificationBase<Subscription>
 {
     public SubscriptionsExpiringSoonSpecification(int daysFromNow) : base(s =>
         s.EndDate.HasValue && s.EndDate.Value <= DateTime.UtcNow.AddDays(daysFromNow) && s.Status == SubscriptionStatus.Active

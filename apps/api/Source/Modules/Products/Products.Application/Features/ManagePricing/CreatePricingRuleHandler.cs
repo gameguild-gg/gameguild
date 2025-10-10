@@ -1,4 +1,5 @@
 using GameGuild.Modules.Products.Domain.Entities;
+using GameGuild.Database;
 using GameGuild.Modules.Products.Infrastructure.Persistence;
 using GameGuild.CQRS;
 
@@ -7,9 +8,9 @@ namespace GameGuild.Modules.Products.Application.Features.ManagePricing;
 /// <summary>Handler for creating pricing rules</summary>
 public class CreatePricingRuleHandler : IRequestHandler<CreatePricingRuleCommand, Guid>
 {
-    private readonly ProductsDbContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public CreatePricingRuleHandler(ProductsDbContext context)
+    public CreatePricingRuleHandler(ApplicationDbContext context)
     {
         _context = context;
     }

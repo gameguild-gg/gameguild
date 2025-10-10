@@ -1,7 +1,8 @@
 using GameGuild.Modules.Users;
+using GameGuild.Modules.Common.Configuration;
 using GameGuild.Modules.Programs.Entities;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Users.Entities;
+using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Certificates.Entities;
 

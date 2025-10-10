@@ -1,4 +1,5 @@
 using System.Net;
+using GameGuild.Modules.Users;
 using System.Text;
 using System.Text.Json;
 using GameGuild.Configuration;

@@ -1,4 +1,5 @@
 using GameGuild.Core.Domain;
+using GameGuild.Modules.Common.Configuration;
 
 namespace GameGuild.Modules.ErrorTracking.Entities;
 

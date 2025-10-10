@@ -1,4 +1,5 @@
 using FluentValidation;
+using GameGuild.Modules.Tenants;
 
 namespace GameGuild.Modules.Authentication;
 

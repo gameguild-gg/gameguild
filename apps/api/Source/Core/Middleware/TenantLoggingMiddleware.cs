@@ -1,4 +1,6 @@
 using Serilog.Context;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 
 namespace GameGuild.Core.Middleware;
 

@@ -1,4 +1,7 @@
 using GameGuild.Database;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
+using GameGuild.Modules.Resources;
 using System.Reflection;
 using GameGuild.Authorization.Identity;
 using GameGuild.Core.Configuration;

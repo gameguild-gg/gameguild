@@ -1,4 +1,5 @@
 using Serilog.Context;
+using GameGuild.Modules.Resources;
 
 namespace GameGuild.Core.Logging;
 

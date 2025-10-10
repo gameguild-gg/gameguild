@@ -1,7 +1,7 @@
 using System.Text.Json;
 using GameGuild.Helpers;
 using GameGuild.Core.Repositories;
-using GameGuild.Modules.Users.Entities;
+using GameGuild.Modules.Users;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Modules.Users.Services;

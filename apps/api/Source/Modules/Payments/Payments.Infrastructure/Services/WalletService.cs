@@ -1,4 +1,5 @@
 using GameGuild.Modules.Payments.Domain.Entities;
+using GameGuild.Database;
 using GameGuild.Modules.Payments.Payments.Application.Services;
 using GameGuild.Modules.Payments.Payments.Domain.Entities;
 using GameGuild.Modules.Payments.Payments.Infrastructure.Data;
@@ -10,10 +11,10 @@ namespace GameGuild.Modules.Payments.Payments.Infrastructure.Services;
 /// <summary>Wallet service implementation</summary>
 public class WalletService : IWalletService
 {
-    private readonly PaymentsDbContext _context;
+    private readonly ApplicationDbContext _context;
     private readonly ILogger<WalletService> _logger;
 
-    public WalletService(PaymentsDbContext context, ILogger<WalletService> logger)
+    public WalletService(ApplicationDbContext context, ILogger<WalletService> logger)
     {
         _context = context;
         _logger = logger;
