@@ -1,4 +1,5 @@
 using GameGuild.Modules.Products.Application.Services;
+using GameGuild.Database;
 using GameGuild.Modules.Products.Domain.Entities;
 using GameGuild.Modules.Products.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +10,10 @@ namespace GameGuild.Modules.Products.Infrastructure.Services;
 /// <summary>Implementation of dynamic pricing engine</summary>
 public class PricingEngine : IPricingEngine
 {
-    private readonly ProductsDbContext _context;
+    private readonly ApplicationDbContext _context;
     private readonly ILogger<PricingEngine> _logger;
 
-    public PricingEngine(ProductsDbContext context, ILogger<PricingEngine> logger)
+    public PricingEngine(ApplicationDbContext context, ILogger<PricingEngine> logger)
     {
         _context = context;
         _logger = logger;

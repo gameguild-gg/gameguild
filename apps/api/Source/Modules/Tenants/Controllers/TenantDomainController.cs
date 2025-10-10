@@ -18,7 +18,7 @@ public class TenantDomainController(ITenantDomainsService tenantDomainsService) 
     /// <param name="cancellationToken"> Cancellation token </param>
     /// <returns> List of tenant domains </returns>
     [HttpGet("tenant/{tenantId:guid}")]
-    [RequireTenantPermission(PermissionType.View)]
+    [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<IReadOnlyList<TenantDomain>>> GetTenantDomains(Guid tenantId, CancellationToken cancellationToken)
     {
         var domains = await tenantDomainsService.GetTenantDomainsAsync(tenantId, cancellationToken);
@@ -30,7 +30,7 @@ public class TenantDomainController(ITenantDomainsService tenantDomainsService) 
     /// <param name="cancellationToken"> Cancellation token </param>
     /// <returns> Tenant domain details </returns>
     [HttpGet("{domainId:guid}")]
-    [RequireTenantPermission(PermissionType.View)]
+    [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<TenantDomain>> GetTenantDomainById(Guid domainId, CancellationToken cancellationToken)
     {
         var domain = await tenantDomainsService.GetTenantDomainByIdAsync(domainId, cancellationToken);
@@ -56,7 +56,7 @@ public class TenantDomainController(ITenantDomainsService tenantDomainsService) 
     /// <param name="cancellationToken"> Cancellation token </param>
     /// <returns> Primary tenant domain </returns>
     [HttpGet("tenant/{tenantId:guid}/primary")]
-    [RequireTenantPermission(PermissionType.View)]
+    [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<TenantDomain>> GetPrimaryDomain(Guid tenantId, CancellationToken cancellationToken)
     {
         var domain = await tenantDomainsService.GetPrimaryTenantDomainAsync(tenantId, cancellationToken);
@@ -72,7 +72,7 @@ public class TenantDomainController(ITenantDomainsService tenantDomainsService) 
     /// <param name="cancellationToken"> Cancellation token </param>
     /// <returns> Tenant associated with the domain </returns>
     [HttpGet("find-tenant")]
-    [RequireTenantPermission(PermissionType.View)]
+    [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<Tenant>> FindTenantByDomain([FromQuery] string topLevelDomain, [FromQuery] string? subdomain = null, CancellationToken cancellationToken = default)
     {
         var tenant = await tenantDomainsService.FindTenantByDomainAsync(topLevelDomain, subdomain, cancellationToken);
@@ -88,7 +88,7 @@ public class TenantDomainController(ITenantDomainsService tenantDomainsService) 
     /// <param name="cancellationToken"> Cancellation token </param>
     /// <returns> Matching tenant domain </returns>
     [HttpGet("find")]
-    [RequireTenantPermission(PermissionType.View)]
+    [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<TenantDomain>> FindTenantDomainByMatch([FromQuery] string topLevelDomain, [FromQuery] string? subdomain = null, CancellationToken cancellationToken = default)
     {
         var domain = await tenantDomainsService.FindTenantDomainByMatchAsync(topLevelDomain, subdomain, cancellationToken);
@@ -175,7 +175,7 @@ public class TenantDomainController(ITenantDomainsService tenantDomainsService) 
     /// <param name="cancellationToken"> Cancellation token </param>
     /// <returns> Validation result </returns>
     [HttpGet("validate")]
-    [RequireTenantPermission(PermissionType.View)]
+    [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<DomainValidationResult>> ValidateDomain(
         [FromQuery] string topLevelDomain,
         [FromQuery] string? subdomain = null,
@@ -193,7 +193,7 @@ public class TenantDomainController(ITenantDomainsService tenantDomainsService) 
     /// <param name="cancellationToken"> Cancellation token </param>
     /// <returns> Availability status </returns>
     [HttpGet("check-availability")]
-    [RequireTenantPermission(PermissionType.View)]
+    [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<bool>> CheckDomainAvailability(
         [FromQuery] string topLevelDomain,
         [FromQuery] string? subdomain = null,

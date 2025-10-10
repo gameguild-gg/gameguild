@@ -1,4 +1,3 @@
-using GameGuild.Core.CQRS;
 using GameGuild.Core.Exceptions;
 using GameGuild.CQRS;
 

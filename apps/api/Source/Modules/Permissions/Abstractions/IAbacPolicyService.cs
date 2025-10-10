@@ -1,4 +1,5 @@
 namespace GameGuild.Modules.Permissions.Abstractions;
+using GameGuild.Modules.Resources.Entities;
 
 /// <summary>
 /// Service interface for ABAC (Attribute-Based Access Control) policy engine

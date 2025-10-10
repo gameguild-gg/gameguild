@@ -1,4 +1,5 @@
 namespace GameGuild.Modules.Resources.Queries;
+using GameGuild.Database;
 
 /// <summary>
 ///     Query to analyze usage trends for a tenant and resource type

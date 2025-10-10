@@ -1,4 +1,4 @@
-﻿using GameGuild.Shared;
+﻿using GameGuild;
 using GameGuild.Modules.Features.Entities;
 
 namespace GameGuild.Modules.Features.Abstractions;

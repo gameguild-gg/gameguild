@@ -1,4 +1,5 @@
 ﻿namespace GameGuild;
+using GameGuild.Modules.Users;
 
 public class RateLimitingOptions
 {

@@ -1,4 +1,4 @@
-﻿using GameGuild.Shared;
+﻿using GameGuild;
 using GameGuild.Modules.Features.Entities;
 
 namespace GameGuild.Modules.Features.Specifications;
@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Features.Specifications;
 /// <summary>
 ///     Specification for retrieving global feature flags
 /// </summary>
-public class GlobalFeatureFlagsSpecification : BaseSpecification<FeatureFlag>
+public class GlobalFeatureFlagsSpecification : SpecificationBase<FeatureFlag>
 {
     /// <summary>
     ///     Initializes a new instance of the <see cref="GlobalFeatureFlagsSpecification"/> class

@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using GameGuild.Modules.Users;
+using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Authentication;
 
