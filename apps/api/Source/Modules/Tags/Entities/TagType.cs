@@ -1,3 +1,4 @@
+using System.ComponentModel;
 namespace GameGuild.Modules.Tags.Entities;
 
 public enum TagType

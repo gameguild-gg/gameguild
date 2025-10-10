@@ -1,5 +1,5 @@
 using GameGuild.CQRS;
-using MediatR;
+using GameGuild.CQRS;
 using GameGuild.Common;
 using GameGuild.Modules.DeveloperPortal.Commands;
 using GameGuild.Modules.DeveloperPortal.Queries;
