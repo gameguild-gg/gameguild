@@ -1,6 +1,5 @@
 using GameGuild.Modules.Users;
 using System.Text.Json;
-using GameGuild.Domain.Common;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs.Entities;
 using GameGuild.Modules.Users.Entities;

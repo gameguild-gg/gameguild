@@ -23,7 +23,7 @@ public class GetSloByIdHandler : IRequestHandler<GetSloByIdQuery, Result<Service
         try
         {
             var slo = await _sloRepository.GetByIdAsync(request.SloId, cancellationToken);
-            
+
             if (slo == null)
                 return Result<ServiceLevelObjective>.Failure($"SLO {request.SloId} not found");
 

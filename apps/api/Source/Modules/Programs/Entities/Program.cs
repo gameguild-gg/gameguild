@@ -1,5 +1,4 @@
 using GameGuild.Modules.Users;
-using GameGuild.Domain.Common;
 using GameGuild.Modules.Certificates.Entities;
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Feedbacks.Entities;
