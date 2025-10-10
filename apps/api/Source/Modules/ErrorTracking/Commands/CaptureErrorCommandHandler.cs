@@ -1,6 +1,6 @@
 using GameGuild;
 using GameGuild.Modules.ErrorTracking.Services;
-using MediatR;
+using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Modules.ErrorTracking.Commands;

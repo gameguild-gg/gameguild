@@ -1,5 +1,5 @@
 using GameGuild;
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.ErrorTracking.Commands;
 
