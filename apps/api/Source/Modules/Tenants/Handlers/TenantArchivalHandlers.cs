@@ -1,4 +1,4 @@
-using GameGuild.Core.Messaging;
+using GameGuild.Messaging;
 using GameGuild.Modules.Tenants.Commands;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Tenants.Repositories;
