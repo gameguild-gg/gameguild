@@ -138,6 +138,29 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
         })
         return null
       }
+
+      // Additional validation for project data structure
+      if (!projectData.data) {
+        console.error("Project data missing 'data' field:", projectData)
+        toast.error("Project data incomplete", {
+          description: "The project file appears to be missing content data",
+          duration: 4000,
+          icon: "⚠️",
+        })
+        return null
+      }
+
+      // Validate that data is a non-empty string
+      if (typeof projectData.data !== 'string' || projectData.data.trim() === '') {
+        console.error("Project data is not a valid string:", typeof projectData.data, projectData.data?.length)
+        toast.error("Project data invalid", {
+          description: "The project content is not in the expected format",
+          duration: 4000,
+          icon: "⚠️",
+        })
+        return null
+      }
+
       return projectData
     } catch (error) {
       console.error("Load error:", error)
