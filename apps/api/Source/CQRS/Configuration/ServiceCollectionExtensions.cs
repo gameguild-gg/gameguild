@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 

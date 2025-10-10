@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 ﻿namespace GameGuild.CQRS;
 
 /// <summary> Marker interface for commands that return a result. Commands represent write operations that modify system state. This is a marker interface to provide semantic meaning and type safety. </summary>

@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 namespace GameGuild.CQRS;
 
 /// <summary> Send a request through the mediator pipeline to be handled by a single handler. </summary>

@@ -1,3 +1,4 @@
+using GameGuild.Modules.Payments.Domain.Entities;
 using GameGuild.Modules.Payments.Payments.Domain.Entities;
 
 namespace GameGuild.Modules.Payments.Payments.Application.Services;
