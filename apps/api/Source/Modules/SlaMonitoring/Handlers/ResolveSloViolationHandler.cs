@@ -1,5 +1,5 @@
 using GameGuild.CQRS;
-using MediatR;
+using GameGuild.CQRS;
 using GameGuild.Core;
 using GameGuild.Modules.SlaMonitoring.Commands;
 using GameGuild.Modules.SlaMonitoring.Repositories;
