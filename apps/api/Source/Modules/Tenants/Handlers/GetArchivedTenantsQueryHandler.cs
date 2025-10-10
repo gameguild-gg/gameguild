@@ -1,4 +1,4 @@
-using GameGuild.CQRS;
+using GameGuild.Core.CQRS;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Tenants;
