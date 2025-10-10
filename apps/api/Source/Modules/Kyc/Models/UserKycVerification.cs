@@ -1,3 +1,4 @@
+using GameGuild.Modules.Users;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;

@@ -1,3 +1,4 @@
+using GameGuild.Modules.Users;
 using GameGuild.Database;
 using GameGuild.Modules.Followers.Entities;
 using GameGuild.Modules.Followers.Events;

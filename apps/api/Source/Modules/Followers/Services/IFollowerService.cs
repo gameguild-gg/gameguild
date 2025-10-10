@@ -1,3 +1,4 @@
+using GameGuild.Modules.Users;
 using GameGuild.Modules.Followers.Entities;
 
 namespace GameGuild.Modules.Followers.Services;
