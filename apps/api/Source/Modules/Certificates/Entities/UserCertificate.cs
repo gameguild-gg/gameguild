@@ -1,3 +1,4 @@
+using GameGuild.Modules.Users;
 using GameGuild.Domain.Common;
 using GameGuild.Modules.Programs.Entities;
 using GameGuild.Modules.Tenants;

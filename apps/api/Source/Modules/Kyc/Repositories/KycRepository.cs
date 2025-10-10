@@ -1,3 +1,4 @@
+using GameGuild.Modules.Users;
 using GameGuild.Common;
 using GameGuild.Modules.Kyc.Models;
 using GameGuild.Database;
