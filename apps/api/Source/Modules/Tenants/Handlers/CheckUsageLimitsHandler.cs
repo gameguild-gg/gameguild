@@ -1,4 +1,3 @@
-using GameGuild.Core.Common;
 using GameGuild.Modules.Tenants.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;

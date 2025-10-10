@@ -1,10 +1,10 @@
-using GameGuild.Modules.Payments.Domain.Entities;
+using GameGuild.Modules.Payments.Payments.Domain.Entities;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Modules.Payments.Domain.Entities;
+namespace GameGuild.Modules.Payments.Payments.Domain.Entities;
 
 /// <summary>Entity representing a user's wallet</summary>
 [Table("user_wallets")]

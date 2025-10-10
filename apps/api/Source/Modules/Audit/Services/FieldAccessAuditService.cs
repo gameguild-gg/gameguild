@@ -1,4 +1,6 @@
 using System.Text.RegularExpressions;
+using GameGuild.Modules.Audit.Entities;
+using GameGuild.Modules.Audit.Enums;
 
 namespace GameGuild.Modules.Audit.Services;
 

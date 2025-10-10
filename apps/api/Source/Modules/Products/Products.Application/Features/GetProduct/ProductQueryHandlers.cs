@@ -5,6 +5,7 @@ using System.Threading.Task;
 using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.Database;
+using ProductEntity = GameGuild.Modules.Products.Domain.Entities.Product;
 using GameGuild.Modules.Products.Domain.Entities;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Tenants;
@@ -18,14 +19,14 @@ namespace GameGuild.Modules.Products.Application.Features.GetProduct;
 /// Query handlers for product operations
 /// </summary>
 public class ProductQueryHandlers
-  : IRequestHandler<GetProductByIdQuery, Product?>,
-    IRequestHandler<GetProductsQuery, IEnumerable<Product>>,
+  : IRequestHandler<GetProductByIdQuery, ProductEntity?>,
+    IRequestHandler<GetProductsQuery, IEnumerable<ProductEntity>>,
     IRequestHandler<GetUserProductsQuery, IEnumerable<UserProduct>>,
     IRequestHandler<GetProductPricingQuery, IEnumerable<ProductPricing>>,
     IRequestHandler<GetPromoCodeQuery, PromoCode?>,
     IRequestHandler<GetPromoCodesQuery, IEnumerable<PromoCode>>,
     IRequestHandler<ValidatePromoCodeQuery, PromoCodeValidationResult>,
-    IRequestHandler<GetProductBundleItemsQuery, IEnumerable<Product>>,
+    IRequestHandler<GetProductBundleItemsQuery, IEnumerable<ProductEntity>>,
     IRequestHandler<CheckProductAccessQuery, ProductAccessResult>
 {
     private readonly ApplicationDbContext _context;
@@ -44,7 +45,7 @@ public class ProductQueryHandlers
         _logger = logger;
     }
 
-    public async Task<Product?> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
+    public async Task<ProductEntity?> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Products.AsQueryable();
 
@@ -56,7 +57,7 @@ public class ProductQueryHandlers
         return await query.FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
     }
 
-    public async Task<IEnumerable<Product>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<ProductEntity>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
     {
         var query = _context.Products.AsQueryable();
 
@@ -217,19 +218,19 @@ public class ProductQueryHandlers
         }
     }
 
-    public async Task<IEnumerable<Product>> Handle(GetProductBundleItemsQuery request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<ProductEntity>> Handle(GetProductBundleItemsQuery request, CancellationToken cancellationToken)
     {
         var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == request.ProductId, cancellationToken);
 
         if (product == null || !product.IsBundle)
         {
-            return Enumerable.Empty<Product>();
+            return Enumerable.Empty<ProductEntity>();
         }
 
         var bundleItemIds = product.GetBundleItemIds();
         if (!bundleItemIds.Any())
         {
-            return Enumerable.Empty<Product>();
+            return Enumerable.Empty<ProductEntity>();
         }
 
         var query = _context.Products.Where(p => bundleItemIds.Contains(p.Id));
