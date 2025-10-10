@@ -80,17 +80,6 @@ public class ResourceQuota : EntityBase
     public string? Metadata { get; set; }
 
     /// <summary>
-    ///     Enable threshold notifications
-    /// </summary>
-    public bool NotificationsEnabled { get; set; }
-
-    /// <summary>
-    ///     Comma-separated threshold percentages (e.g., "75,90,100")
-    /// </summary>
-    [MaxLength(100)]
-    public string? NotificationThresholds { get; set; }
-
-    /// <summary>
     ///     Row version for optimistic concurrency control
     /// </summary>
     [Timestamp]
