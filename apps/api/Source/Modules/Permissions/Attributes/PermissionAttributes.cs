@@ -1,5 +1,5 @@
 using GameGuild.Core.Domain.Identity;
-using GameGuild.Modules.Resources.Entities;
+using GameGuild.Modules.Resources;
 using GameGuild.Modules.Permissions.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
