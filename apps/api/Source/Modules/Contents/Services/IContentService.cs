@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GameGuild.Source.Modules.Contents.Models;
 
 namespace GameGuild.Source.Modules.Contents.Services;
 
