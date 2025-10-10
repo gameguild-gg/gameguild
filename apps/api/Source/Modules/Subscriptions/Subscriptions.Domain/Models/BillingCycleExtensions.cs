@@ -1,4 +1,3 @@
-using GameGuild.Shared;
 
 namespace GameGuild.Modules.Subscriptions.Models;
 

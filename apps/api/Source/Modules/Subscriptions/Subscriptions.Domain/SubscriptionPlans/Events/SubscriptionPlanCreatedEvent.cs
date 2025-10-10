@@ -1,6 +1,6 @@
-using MediatR;
+using GameGuild.CQRS;
 
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Subscriptions.SubscriptionPlans.Events;
 

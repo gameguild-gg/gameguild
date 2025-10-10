@@ -6,7 +6,7 @@ using GameGuild.Modules.Billing.Features.ManageWebhook;
 using GameGuild.Modules.Billing.Features.GetWebhook;
 using GameGuild.Modules.Billing.Models;
 using GameGuild.Modules.Billing.Exceptions;
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Billing.Controllers;
 
