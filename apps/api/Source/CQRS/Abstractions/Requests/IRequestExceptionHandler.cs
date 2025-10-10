@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 namespace GameGuild.CQRS;
 
 /// <summary> Defines an exception handler for requests </summary>

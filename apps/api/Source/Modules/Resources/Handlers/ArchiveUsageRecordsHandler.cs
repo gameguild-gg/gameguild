@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Messaging;
 using GameGuild.Modules.Resources.Commands;
 using GameGuild.Modules.Resources.Contexts;
