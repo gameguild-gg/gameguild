@@ -1,5 +1,5 @@
 using GameGuild.Core.Domain;
-using GameGuild.Modules.Resources.Entities;
+using GameGuild.Modules.Resources;
 
 namespace GameGuild.Modules.Permissions;
 

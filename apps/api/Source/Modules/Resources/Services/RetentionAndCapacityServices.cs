@@ -1,6 +1,6 @@
 using GameGuild.Database;
 using GameGuild.Modules.Resources.Abstractions;
-using GameGuild.Modules.Resources.Entities;
+using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
