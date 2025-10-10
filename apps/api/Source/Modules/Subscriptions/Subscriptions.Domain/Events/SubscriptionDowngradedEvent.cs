@@ -1,5 +1,4 @@
-using MediatR;
-using GameGuild.Shared;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Subscriptions.Events;
 

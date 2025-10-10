@@ -1,4 +1,4 @@
-using MediatR;
+using GameGuild.CQRS;
 using GameGuild.Modules.Subscriptions.Abstractions;
 using GameGuild.Modules.Subscriptions.Entities;
 

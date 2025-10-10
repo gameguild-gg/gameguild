@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using MediatR;
+using GameGuild.CQRS;
 using GameGuild.Modules.Subscriptions.Features.CreateSubscription;
 using GameGuild.Modules.Subscriptions.Features.GetSubscription;
 using GameGuild.Modules.Subscriptions.Features.ManageSubscription;

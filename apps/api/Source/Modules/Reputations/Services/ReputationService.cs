@@ -1,5 +1,5 @@
 using GameGuild.Database;
-using GameGuild.Modules.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users.Entities;
 using GameGuild.Modules.Reputations.Entities;
 using Microsoft.EntityFrameworkCore;

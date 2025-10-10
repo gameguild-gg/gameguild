@@ -1,7 +1,6 @@
 using GameGuild.Modules.Subscriptions.Models;
-using GameGuild.Shared;
 
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Subscriptions.Events;
 

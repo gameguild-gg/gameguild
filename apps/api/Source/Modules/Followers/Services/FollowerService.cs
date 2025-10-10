@@ -1,4 +1,4 @@
-using GameGuild.Core.Data;
+using GameGuild.Database;
 using GameGuild.Modules.Followers.Entities;
 using GameGuild.Modules.Followers.Events;
 using Microsoft.EntityFrameworkCore;
