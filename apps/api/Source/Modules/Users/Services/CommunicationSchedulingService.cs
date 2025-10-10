@@ -1,4 +1,4 @@
-using GameGuild.Core.Helpers;
+using GameGuild.Helpers;
 using GameGuild.Core.Repositories;
 using GameGuild.Modules.Users.Entities;
 using Microsoft.Extensions.Logging;

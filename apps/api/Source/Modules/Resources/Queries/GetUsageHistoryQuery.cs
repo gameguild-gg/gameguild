@@ -1,4 +1,4 @@
-using GameGuild.Core.Messaging;
+using GameGuild.Messaging;
 using GameGuild.Modules.Resources.DTOs;
 
 namespace GameGuild.Modules.Resources.Queries;
