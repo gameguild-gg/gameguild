@@ -10,9 +10,9 @@ namespace GameGuild.Modules.DataArchival.Queries;
 public record GetArchivalJobsQuery : IRequest<Result<List<ArchivalJobDto>>>
 {
     public Guid? TenantId { get; init; }
-    
+
     public Guid? PolicyId { get; init; }
-    
+
     public string? Status { get; init; }
 }
 
@@ -33,13 +33,13 @@ public class GetArchivalJobsQueryHandler : IRequestHandler<GetArchivalJobsQuery,
         try
         {
             var jobs = await _jobRepository.GetAllAsync(request.TenantId, request.PolicyId, cancellationToken);
-            
+
             // Filter by status if provided
             if (!string.IsNullOrEmpty(request.Status) && Enum.TryParse<ArchivalJobStatus>(request.Status, out var status))
             {
                 jobs = jobs.Where(j => j.Status == status).ToList();
             }
-            
+
             var jobDtos = jobs.Select(j => new ArchivalJobDto
             {
                 Id = j.Id,
@@ -52,7 +52,7 @@ public class GetArchivalJobsQueryHandler : IRequestHandler<GetArchivalJobsQuery,
                 ItemsDeleted = j.ItemsDeleted,
                 ErrorMessage = j.ErrorMessage
             }).ToList();
-            
+
             return Result<List<ArchivalJobDto>>.Success(jobDtos);
         }
         catch (Exception ex)

@@ -1,3 +1,4 @@
+using GameGuild.Modules.Users;
 using GameGuild;
 
 namespace GameGuild.Modules.Reputations.Entities;
