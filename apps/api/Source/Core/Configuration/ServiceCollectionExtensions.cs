@@ -1,3 +1,4 @@
+using GameGuild.Database;
 ﻿using System.Globalization;
 // using GameGuild.Modules.Features.Services;
 using Microsoft.AspNetCore.HttpLogging;

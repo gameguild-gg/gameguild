@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using MediatR;
 using GameGuild.Core;
 
