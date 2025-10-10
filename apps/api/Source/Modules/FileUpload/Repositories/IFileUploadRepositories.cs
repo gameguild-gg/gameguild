@@ -1,4 +1,4 @@
-using GameGuild.Core.Results;
+using GameGuild.CQRS;
 using GameGuild.Modules.FileUpload.Entities;
 
 namespace GameGuild.Modules.FileUpload.Repositories;
