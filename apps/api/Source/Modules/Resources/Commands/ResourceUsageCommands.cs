@@ -1,5 +1,5 @@
 using GameGuild.Messaging;
-using GameGuild.Modules.Resources.Entities;
+using GameGuild.Modules.Resources;
 
 namespace GameGuild.Modules.Resources.Commands;
 
