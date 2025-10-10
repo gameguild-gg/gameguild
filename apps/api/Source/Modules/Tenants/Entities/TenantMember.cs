@@ -8,11 +8,13 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 ///     Represents a user's membership in a tenant with role and status tracking.
 ///     Links users to tenants with specific roles and membership lifecycle management.
+///     Supports hierarchical relationships for organizational structures.
 /// </summary>
 [Table("tenant_members")]
 [Index(nameof(UserId), nameof(TenantId), IsUnique = true)]
 [Index(nameof(TenantId), nameof(IsActive))]
 [Index(nameof(JoinedAt))]
+[Index(nameof(ParentMemberId))]
 public class TenantMember : EntityBase, ITenantable
 {
     /// <summary>
@@ -43,6 +45,33 @@ public class TenantMember : EntityBase, ITenantable
     /// </summary>
     [ForeignKey(nameof(TenantId))]
     public override Tenant? Tenant { get; set; }
+
+    /// <summary>
+    ///     ID of the parent member in the hierarchy (null for root members)
+    /// </summary>
+    public Guid? ParentMemberId { get; set; }
+
+    /// <summary>
+    ///     Navigation property to the parent member
+    /// </summary>
+    [ForeignKey(nameof(ParentMemberId))]
+    public TenantMember? ParentMember { get; set; }
+
+    /// <summary>
+    ///     Child members in the hierarchy
+    /// </summary>
+    public ICollection<TenantMember> ChildMembers { get; set; } = new List<TenantMember>();
+
+    /// <summary>
+    ///     Hierarchy path (e.g., "parent-id/this-id" for tracking full hierarchy)
+    /// </summary>
+    [MaxLength(2000)]
+    public string? HierarchyPath { get; set; }
+
+    /// <summary>
+    ///     Level in the hierarchy (0 for root, 1 for direct children, etc.)
+    /// </summary>
+    public int HierarchyLevel { get; set; } = 0;
 
     /// <summary>
     ///     Primary role of the member in the tenant

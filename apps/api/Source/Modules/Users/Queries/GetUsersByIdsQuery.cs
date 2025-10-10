@@ -1,5 +1,5 @@
 using GameGuild.Modules.Users.DTOs;
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Users.Queries;
 

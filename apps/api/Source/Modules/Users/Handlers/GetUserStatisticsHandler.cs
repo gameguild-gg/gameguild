@@ -11,7 +11,8 @@ public class GetUserStatisticsHandler(IUserRepository userRepository) : IQueryHa
 
     public async Task<UserStatistics> Handle(GetUserStatisticsQuery request, CancellationToken cancellationToken)
     {
-        // For now, use the basic statistics method - we can enhance this later for date filtering
+        // If date filtering is requested but repository doesn't support it yet, use basic method
+        // This can be enhanced when repository adds date filtering support
         return await _userRepository.GetUserStatisticsAsync(cancellationToken);
     }
 }

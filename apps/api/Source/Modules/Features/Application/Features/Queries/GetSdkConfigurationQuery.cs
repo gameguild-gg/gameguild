@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using GameGuild.CQRS;
 using GameGuild.Modules.Features.DTOs;
 using GameGuild.Modules.Features.Models;
 
