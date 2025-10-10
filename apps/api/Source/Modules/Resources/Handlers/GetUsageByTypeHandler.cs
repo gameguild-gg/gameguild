@@ -1,6 +1,6 @@
 using GameGuild.Messaging;
 using GameGuild.Modules.Resources.Contexts;
-using GameGuild.Modules.Resources.Entities;
+using GameGuild.Modules.Resources;
 using GameGuild.Modules.Resources.Queries;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
