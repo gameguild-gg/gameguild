@@ -1,6 +1,6 @@
 using GameGuild.Modules.Users.DTOs;
 using GameGuild.Modules.Users.Models;
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Users.Queries;
 

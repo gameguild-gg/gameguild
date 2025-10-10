@@ -1,5 +1,5 @@
 using GameGuild.CQRS;
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Users.Commands;
 
@@ -33,28 +33,29 @@ public sealed class BulkAssignRolesCommand : ICommand
 /// <summary>
 ///     Handler for BulkAssignRolesCommand
 /// </summary>
-/// <remarks>
-///     Note: This is a placeholder implementation. Full role management requires
-///     implementing a Roles module with proper role entities and repository methods.
-/// </remarks>
 public sealed class BulkAssignRolesCommandHandler : ICommandHandler<BulkAssignRolesCommand>
 {
     private readonly IUserRepository _userRepository;
+    private readonly IRoleRepository _roleRepository;
+    private readonly IUserRoleRepository _userRoleRepository;
     private readonly ILogger<BulkAssignRolesCommandHandler> _logger;
 
     public BulkAssignRolesCommandHandler(
         IUserRepository userRepository,
+        IRoleRepository roleRepository,
+        IUserRoleRepository userRoleRepository,
         ILogger<BulkAssignRolesCommandHandler> logger)
     {
         _userRepository = userRepository;
+        _roleRepository = roleRepository;
+        _userRoleRepository = userRoleRepository;
         _logger = logger;
     }
 
     public async Task<Unit> Handle(BulkAssignRolesCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogWarning(
-            "BulkAssignRolesCommand received but role management is not fully implemented. " +
-            "Attempted to assign roles to {UserCount} users",
+        _logger.LogInformation(
+            "Processing bulk role assignment for {AssignmentCount} user-role assignments",
             request.UserRoleAssignments.Count()
         );
 
@@ -62,6 +63,24 @@ public sealed class BulkAssignRolesCommandHandler : ICommandHandler<BulkAssignRo
         var userIds = request.UserRoleAssignments.Select(a => a.UserId).Distinct().ToList();
         var users = await _userRepository.GetByIdsAsync(userIds, cancellationToken);
         var foundUserIds = users.Select(u => u.Id).ToHashSet();
+
+        // Validate roles exist by name
+        var roleNames = request.UserRoleAssignments.Select(a => a.Role).Distinct().ToList();
+        var roles = new Dictionary<string, Entities.Role>();
+
+        foreach (var roleName in roleNames)
+        {
+            var role = await _roleRepository.GetByNameAsync(roleName, cancellationToken);
+            if (role == null)
+            {
+                _logger.LogWarning("Role {RoleName} not found in system", roleName);
+                continue;
+            }
+            roles[roleName] = role;
+        }
+
+        // Create UserRole entities for valid assignments
+        var userRolesToAssign = new List<Entities.UserRole>();
 
         foreach (var assignment in request.UserRoleAssignments)
         {
@@ -72,22 +91,54 @@ public sealed class BulkAssignRolesCommandHandler : ICommandHandler<BulkAssignRo
                     assignment.Role,
                     assignment.UserId
                 );
+                continue;
             }
-            else
+
+            if (!roles.ContainsKey(assignment.Role))
             {
-                _logger.LogInformation(
-                    "Would assign role {Role} to user {UserId} (not implemented)",
+                _logger.LogWarning(
+                    "Cannot assign role {Role} to user {UserId}: Role not found",
                     assignment.Role,
                     assignment.UserId
                 );
+                continue;
             }
+
+            var role = roles[assignment.Role];
+
+            // Check if assignment already exists
+            var exists = await _userRoleRepository.HasRoleAsync(assignment.UserId, role.Id, cancellationToken);
+            if (exists)
+            {
+                _logger.LogInformation(
+                    "User {UserId} already has role {Role}, skipping",
+                    assignment.UserId,
+                    assignment.Role
+                );
+                continue;
+            }
+
+            userRolesToAssign.Add(new Entities.UserRole
+            {
+                UserId = assignment.UserId,
+                RoleId = role.Id
+            });
         }
 
-        // TODO: Implement role assignment when Roles module is added
-        // This would typically:
-        // 1. Validate roles exist in the system
-        // 2. Create UserRole entities
-        // 3. Persist to database via IRoleRepository or IUserRoleRepository
+        // Bulk assign roles
+        if (userRolesToAssign.Count > 0)
+        {
+            await _userRoleRepository.AssignBulkAsync(userRolesToAssign, cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully assigned {Count} role assignments",
+                userRolesToAssign.Count
+            );
+        }
+        else
+        {
+            _logger.LogWarning("No valid role assignments to process");
+        }
 
         return Unit.Value;
     }

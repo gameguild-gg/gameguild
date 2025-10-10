@@ -100,6 +100,120 @@ public class PermissionsController : ControllerBase
     }
 
     /// <summary>
+    /// Grant resource-level permissions to a user
+    /// </summary>
+    [HttpPost("resource/grant")]
+    public async Task<ActionResult<ResourcePermission>> GrantResourcePermission(
+        [FromBody] GrantResourcePermissionCommand command)
+    {
+        try
+        {
+            var result = await _mediator.Send(command);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to grant resource permissions");
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Revoke resource-level permissions from a user
+    /// </summary>
+    [HttpPost("resource/revoke")]
+    public async Task<ActionResult> RevokeResourcePermission(
+        [FromBody] RevokeResourcePermissionCommand command)
+    {
+        try
+        {
+            await _mediator.Send(command);
+            return Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to revoke resource permissions");
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Check if user has a specific resource permission
+    /// </summary>
+    [HttpPost("resource/check")]
+    public async Task<ActionResult<bool>> HasResourcePermission(
+        [FromBody] HasResourcePermissionQuery query)
+    {
+        try
+        {
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to check resource permission");
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Get all resource permissions for a user
+    /// </summary>
+    [HttpPost("resource/list")]
+    public async Task<ActionResult<IEnumerable<PermissionType>>> GetResourcePermissions(
+        [FromBody] GetResourcePermissionsQuery query)
+    {
+        try
+        {
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get resource permissions");
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Get all permissions for a user (tenant + resource)
+    /// </summary>
+    [HttpPost("user/all")]
+    public async Task<ActionResult<UserPermissionsDto>> GetUserPermissions(
+        [FromBody] GetUserPermissionsQuery query)
+    {
+        try
+        {
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get user permissions");
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Get effective permissions for a user (resolved through all layers)
+    /// </summary>
+    [HttpPost("user/effective")]
+    public async Task<ActionResult<EffectivePermissionsDto>> GetEffectivePermissions(
+        [FromBody] GetEffectivePermissionsQuery query)
+    {
+        try
+        {
+            var result = await _mediator.Send(query);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get effective permissions");
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Get permission usage analytics for a tenant
     /// </summary>
     [HttpGet("analytics/{tenantId}")]
