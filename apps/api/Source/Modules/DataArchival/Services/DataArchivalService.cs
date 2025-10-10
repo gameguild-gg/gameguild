@@ -1,4 +1,3 @@
-using GameGuild.Core.Shared;
 using GameGuild.Modules.DataArchival.Entities;
 using Microsoft.Extensions.Logging;
 

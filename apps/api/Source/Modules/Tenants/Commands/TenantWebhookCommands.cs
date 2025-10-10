@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Tenants.Entities;
 
 namespace GameGuild.Tenants.Commands;

@@ -1,4 +1,3 @@
-using GameGuild.Core.Shared;
 using GameGuild.Modules.DataArchival.Services;
 using GameGuild.CQRS;
 using System.ComponentModel.DataAnnotations;

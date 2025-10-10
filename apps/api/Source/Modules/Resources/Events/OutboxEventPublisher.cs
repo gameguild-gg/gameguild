@@ -1,3 +1,4 @@
+using GameGuild.Database;
 using GameGuild.Modules.Resources.Contexts;
 using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
