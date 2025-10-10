@@ -1,5 +1,4 @@
 using GameGuild.Modules.Payments.Models;
-using GameGuild.Shared;
 
 namespace GameGuild.Modules.Payments.Abstractions;
 
