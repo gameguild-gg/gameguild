@@ -6,8 +6,8 @@ using GameGuild.Modules.Subscriptions.Abstractions;
 using GameGuild.Modules.Subscriptions.Events;
 using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.Modules.Subscriptions.SubscriptionPlans.Entities;
-using ModuState.Tenants.Domain.Entities;
-using ModuState.Users.Domain.Entities;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Subscriptions.Entities;
