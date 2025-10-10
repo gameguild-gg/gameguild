@@ -1,6 +1,6 @@
 using GameGuild.Messaging;
 using GameGuild.Modules.Resources.Commands;
-using GameGuild.Modules.Resources.Entities;
+using GameGuild.Modules.Resources;
 using GameGuild.Modules.Resources.Repositories;
 using Microsoft.Extensions.Logging;
 
