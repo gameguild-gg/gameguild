@@ -27,25 +27,25 @@ public class UpdateSloHandler : IRequestHandler<UpdateSloCommand, Result<Unit>>
 
             if (request.Name != null)
                 slo.Name = request.Name;
-            
+
             if (request.Description != null)
                 slo.Description = request.Description;
-            
+
             if (request.ServiceName != null)
                 slo.ServiceName = request.ServiceName;
-            
+
             if (request.TargetPercentage.HasValue)
                 slo.TargetPercentage = request.TargetPercentage.Value;
-            
+
             if (request.TimeWindowDays.HasValue)
                 slo.TimeWindowDays = request.TimeWindowDays.Value;
-            
+
             if (request.ErrorBudgetPercentage.HasValue)
                 slo.ErrorBudgetPercentage = request.ErrorBudgetPercentage.Value;
-            
+
             if (request.AlertThresholdPercentage.HasValue)
                 slo.AlertThresholdPercentage = request.AlertThresholdPercentage.Value;
-            
+
             if (request.IsActive.HasValue)
                 slo.IsActive = request.IsActive.Value;
 
