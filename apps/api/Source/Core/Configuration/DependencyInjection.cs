@@ -1,3 +1,4 @@
+using GameGuild.Database;
 using System.Reflection;
 using GameGuild.Authorization.Identity;
 using GameGuild.Core.Configuration;

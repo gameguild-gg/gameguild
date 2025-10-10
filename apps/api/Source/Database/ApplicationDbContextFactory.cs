@@ -1,3 +1,4 @@
+using GameGuild.Database;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace GameGuild.Database;

@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Tenants.Commands;
 using GameGuild.Tenants.Entities;
 using GameGuild.Tenants.Repositories;

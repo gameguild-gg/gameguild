@@ -1,3 +1,4 @@
+using GameGuild.Database;
 using GameGuild.Data;
 using Microsoft.EntityFrameworkCore;
 
