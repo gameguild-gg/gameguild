@@ -1,6 +1,6 @@
 using GameGuild.Core.Messaging;
 using GameGuild.Modules.Tenants.Commands;
-using GameGuild.Modules.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Tenants.Repositories;
 using GameGuild.Modules.Tenants.Services;
 using Microsoft.Extensions.Logging;
