@@ -53,7 +53,5 @@ public class SnakeCaseHistoryRepository(HistoryRepositoryDependencies dependenci
             if (!string.IsNullOrEmpty(foreignKeyName)) { foreignKey.SetConstraintName(snakeTransformer.Transform(foreignKeyName)); }
         }
     }
-
-
 }
 #pragma warning restore EF1001

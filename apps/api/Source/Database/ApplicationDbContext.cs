@@ -1,9 +1,14 @@
 using GameGuild.CQRS;
+using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Localization;
+using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Permissions.Entities;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
+using GameGuild.Modules.Users.Entities;
 using GameGuild.Source.Database.Seeding;
 
 namespace GameGuild.Database;
@@ -24,6 +29,10 @@ public class ApplicationDbContext : DbContext
     // Core Entities
     public DbSet<User> Users => Set<User>();
 
+    public DbSet<Entities.Role> Roles => Set<Entities.Role>();
+
+    public DbSet<Entities.UserRole> UserRoles => Set<Entities.UserRole>();
+
     public DbSet<Credential> Credentials => Set<Credential>();
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
@@ -32,10 +41,42 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<TenantDomain> TenantDomains => Set<TenantDomain>();
 
+    // User Profiles
+    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+
     // Localization
     public DbSet<Language> Languages => Set<Language>();
 
     public DbSet<ResourceLocalization> ResourceLocalizations => Set<ResourceLocalization>();
+
+    // Resources
+    public DbSet<ResourceQuota> ResourceQuotas => Set<ResourceQuota>();
+
+    public DbSet<ResourceUsageRecord> ResourceUsageRecords => Set<ResourceUsageRecord>();
+
+    // Authentication
+    public DbSet<AuthenticationAttempt> AuthenticationAttempts => Set<AuthenticationAttempt>();
+
+    public DbSet<MfaAttempt> MfaAttempts => Set<MfaAttempt>();
+
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    public DbSet<TrustedDevice> TrustedDevices => Set<TrustedDevice>();
+
+    public DbSet<UserMfaConfiguration> UserMfaConfigurations => Set<UserMfaConfiguration>();
+
+    public DbSet<UserSession> UserSessions => Set<UserSession>();
+
+    // Permissions
+    public DbSet<TenantPermission> TenantPermissions => Set<TenantPermission>();
+
+    public DbSet<ContentTypePermission> ContentTypePermissions => Set<ContentTypePermission>();
+
+    public DbSet<PermissionAuditLog> PermissionAuditLogs => Set<PermissionAuditLog>();
+
+    public DbSet<GameGuild.Modules.Permissions.Entities.PermissionTemplate> PermissionTemplates => Set<GameGuild.Modules.Permissions.Entities.PermissionTemplate>();
+
+    public DbSet<PermissionDelegation> PermissionDelegations => Set<PermissionDelegation>();
 
     // Feature Flags
     // public DbSet<FeatureFlag> FeatureFlags => Set<FeatureFlag>();
@@ -58,6 +99,35 @@ public class ApplicationDbContext : DbContext
         // Apply all entity configurations from current assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
+        // Configure PostgreSQL-specific features (skip for InMemory provider)
+        // Check if using InMemory provider by examining the database provider name
+        var providerName = Database.ProviderName;
+        var isInMemory = providerName?.Contains("InMemory", StringComparison.OrdinalIgnoreCase) ?? false;
+
+        if (isInMemory)
+        {
+            // InMemory provider doesn't support Dictionary<string, object> properties
+            // Ignore these properties for InMemory database
+            modelBuilder.Entity<PermissionAuditLog>().Ignore(pal => pal.Metadata);
+            modelBuilder.Entity<PermissionDelegation>().Ignore(pd => pd.Conditions);
+            modelBuilder.Entity<PermissionTemplate>().Ignore(pt => pt.Metadata);
+        }
+        else
+        {
+            // Configure jsonb column types for Dictionary<string, object> properties (PostgreSQL)
+            modelBuilder.Entity<PermissionAuditLog>()
+                .Property(pal => pal.Metadata)
+                .HasColumnType("jsonb");
+
+            modelBuilder.Entity<PermissionDelegation>()
+                .Property(pd => pd.Conditions)
+                .HasColumnType("jsonb");
+
+            modelBuilder.Entity<PermissionTemplate>()
+                .Property(pt => pt.Metadata)
+                .HasColumnType("jsonb");
+        }
+
         // Configure Tenant entity to not have a circular self-reference
         // Tenant entities should be global and not belong to other tenants
         modelBuilder.Entity<Tenant>().Ignore(t => t.Tenant);
@@ -67,10 +137,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Tenant>().HasIndex(t => t.IsDefault).IsUnique().HasFilter("is_default = true").HasDatabaseName("ix_tenant_unique_default");
 
         // Configure filtered unique index to guarantee a single default language
-        modelBuilder.Entity<Language>().HasIndex(language => language.IsDefault)
-            .IsUnique()
-            .HasFilter("is_default = true")
-            .HasDatabaseName("ix_language_unique_default");
+        modelBuilder.Entity<Language>().HasIndex(language => language.IsDefault).IsUnique().HasFilter("is_default = true").HasDatabaseName("ix_language_unique_default");
 
         // Configure snake_case naming for ALL database objects AFTER configurations are applied
         // This ensures that even explicitly set names in configurations get transformed to snake_case
@@ -190,12 +257,13 @@ public class ApplicationDbContext : DbContext
     /// <param name="cancellationToken">Cancellation token</param>
     public async Task SeedAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
     {
-    ILogger<LanguageSeeder> languageSeederLogger = serviceProvider.GetRequiredService<ILogger<LanguageSeeder>>();
-    var languageSeeder = new LanguageSeeder(languageSeederLogger);
-    await languageSeeder.SeedAsync(this, cancellationToken);
+        var languageSeederLogger = serviceProvider.GetRequiredService<ILogger<LanguageSeeder>>();
+        LanguageSeeder languageSeeder = new(languageSeederLogger);
+        await languageSeeder.SeedAsync(this, cancellationToken);
 
-    ILogger<TenantSeeder> logger = serviceProvider.GetRequiredService<ILogger<TenantSeeder>>();
-    var tenantSeeder = new TenantSeeder(logger);
+        var logger = serviceProvider.GetRequiredService<ILogger<TenantSeeder>>();
+        var languageRepository = serviceProvider.GetRequiredService<ILanguageRepository>();
+        TenantSeeder tenantSeeder = new(logger, languageRepository);
         await tenantSeeder.SeedAsync(this, cancellationToken);
 
         // Initialize tenant cache after seeding
