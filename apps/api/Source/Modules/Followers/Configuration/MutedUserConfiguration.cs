@@ -1,3 +1,4 @@
+using GameGuild.Modules.Users;
 using GameGuild.Modules.Followers.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
