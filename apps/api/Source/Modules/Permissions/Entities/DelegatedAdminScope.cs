@@ -1,3 +1,4 @@
+using GameGuild.Modules.Permissions.Entities;
 using GameGuild.Modules.Permissions.Constants;
 
 namespace GameGuild.Modules.Permissions.Entities;

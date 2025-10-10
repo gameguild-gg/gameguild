@@ -1,3 +1,4 @@
+using GameGuild.Modules.DataArchival.DTOs;
 using GameGuild.Modules.DataArchival.Entities;
 using Microsoft.Extensions.Logging;
 
