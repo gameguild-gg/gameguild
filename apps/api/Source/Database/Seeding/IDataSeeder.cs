@@ -1,3 +1,4 @@
+using GameGuild.Database;
 namespace GameGuild.Database;
 
 /// <summary>

@@ -1,3 +1,4 @@
+using GameGuild.Database;
 using GameGuild.Modules.Localization;
 
 namespace GameGuild.Database;

@@ -1,3 +1,4 @@
+using GameGuild.Database;
 using GameGuild.CQRS;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Credentials;

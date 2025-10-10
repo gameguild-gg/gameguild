@@ -1,3 +1,5 @@
+using GameGuild.Database;
+using GameGuild.CQRS;
 namespace GameGuild.Modules.Users;
 
 // ==================== TAG HANDLERS ====================

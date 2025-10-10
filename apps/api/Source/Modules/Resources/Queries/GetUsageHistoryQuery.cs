@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Messaging;
 using GameGuild.Modules.Resources.DTOs;
 
 namespace GameGuild.Modules.Resources.Queries;

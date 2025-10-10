@@ -1,3 +1,4 @@
+using GameGuild.Database;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using StackExchange.Redis;
 
