@@ -12,6 +12,7 @@ namespace GameGuild.Source.Database.Seeding;
 public class TenantSeeder(ILogger<TenantSeeder> logger, ILanguageRepository languageRepository) : IDataSeeder
 {
     private readonly ILogger<TenantSeeder> _logger = logger;
+
     private readonly ILanguageRepository _languageRepository = languageRepository;
 
     /// <summary>
@@ -100,10 +101,7 @@ public class TenantSeeder(ILogger<TenantSeeder> logger, ILanguageRepository lang
                 int updatedRecords = await context.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation("Updated TenantSettings default language for tenant {TenantId} (records affected: {ChangeCount})", tenant.Id, updatedRecords);
             }
-            else
-            {
-                _logger.LogInformation("TenantSettings already exist for tenant {TenantId}", tenant.Id);
-            }
+            else { _logger.LogInformation("TenantSettings already exist for tenant {TenantId}", tenant.Id); }
 
             return;
         }
@@ -200,7 +198,7 @@ public class TenantSeeder(ILogger<TenantSeeder> logger, ILanguageRepository lang
     /// <param name="cancellationToken">The cancellation token</param>
     private async Task SeedChamplainSubdomainsAsync(ApplicationDbContext context, Tenant tenant, CancellationToken cancellationToken)
     {
-        string[] subdomains = ["student", "faculty", "staff", "alumni"];
+        string[ ] subdomains = ["student", "faculty", "staff", "alumni"];
 
         foreach (string subdomain in subdomains)
         {
@@ -213,14 +211,7 @@ public class TenantSeeder(ILogger<TenantSeeder> logger, ILanguageRepository lang
                 continue;
             }
 
-            TenantDomain tenantSubdomain = new()
-            {
-                TenantId = tenant.Id,
-                TopLevelDomain = "champlain.edu",
-                Subdomain = subdomain,
-                IsMainDomain = false,
-                IsSecondaryDomain = true
-            };
+            TenantDomain tenantSubdomain = new() { TenantId = tenant.Id, TopLevelDomain = "champlain.edu", Subdomain = subdomain, IsMainDomain = false, IsSecondaryDomain = true };
 
             _ = context.TenantDomains.Add(tenantSubdomain);
             _logger.LogInformation("Added subdomain: {SubdomainName}.champlain.edu", subdomain);
