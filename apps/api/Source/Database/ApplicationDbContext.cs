@@ -2,6 +2,7 @@ using GameGuild.Database;
 using GameGuild.CQRS;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Credentials;
+using GameGuild.Modules.Experiments.Entities;
 using GameGuild.Modules.Localization;
 using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Entities;
@@ -78,6 +79,15 @@ public class ApplicationDbContext : DbContext
     public DbSet<GameGuild.Modules.Permissions.Entities.PermissionTemplate> PermissionTemplates => Set<GameGuild.Modules.Permissions.Entities.PermissionTemplate>();
 
     public DbSet<PermissionDelegation> PermissionDelegations => Set<PermissionDelegation>();
+
+    // Experiments
+    public DbSet<PricingExperiment> PricingExperiments => Set<PricingExperiment>();
+
+    public DbSet<ExperimentVariant> ExperimentVariants => Set<ExperimentVariant>();
+
+    public DbSet<UserAssignment> UserAssignments => Set<UserAssignment>();
+
+    public DbSet<ExperimentResult> ExperimentResults => Set<ExperimentResult>();
 
     // Feature Flags
     // public DbSet<FeatureFlag> FeatureFlags => Set<FeatureFlag>();

@@ -1,3 +1,4 @@
+using GameGuild.Modules.Permissions.Entities;
 using GameGuild.CQRS;
 using GameGuild.Modules.Permissions.Abstractions;
 using GameGuild.Modules.Permissions.Commands;
