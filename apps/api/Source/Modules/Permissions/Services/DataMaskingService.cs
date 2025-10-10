@@ -5,7 +5,6 @@ using System.Text.Json;
 using GameGuild.Database;
 using GameGuild.Modules.Permissions.Abstractions;
 using GameGuild.Modules.Permissions.Entities;
-using GameGuild.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
