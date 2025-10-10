@@ -104,7 +104,57 @@ export function OpenProjectDialog({
           setLoadingRef.current(true)
         }
 
-        const editorState = editorRef.current.parseEditorState(projectData.data)
+        // Validate project data structure
+        if (!projectData.data) {
+          throw new Error("Project data is missing")
+        }
+
+        // Validate that the data is valid JSON
+        let parsedData
+        try {
+          parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
+        } catch (parseError) {
+          throw new Error("Project data is not valid JSON")
+        }
+
+        // Validate that it has the expected Lexical structure
+        if (!parsedData || typeof parsedData !== 'object') {
+          throw new Error("Project data is not in expected format")
+        }
+
+        // Additional check for Lexical editor state structure
+        if (!parsedData.root || !parsedData.root.children) {
+          console.warn("Project data doesn't have expected Lexical structure, attempting to create minimal state")
+          // Create a minimal valid Lexical state if the structure is missing
+          parsedData = {
+            root: {
+              children: [{
+                children: [{
+                  detail: 0,
+                  format: 0,
+                  mode: "normal",
+                  style: "",
+                  text: projectData.data || "Empty project",
+                  type: "text",
+                  version: 1
+                }],
+                direction: "ltr",
+                format: "",
+                indent: 0,
+                type: "paragraph",
+                version: 1
+              }],
+              direction: "ltr",
+              format: "",
+              indent: 0,
+              type: "root",
+              version: 1
+            }
+          }
+        }
+
+        // Parse and set the editor state with the validated/corrected data
+        const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
         editorRef.current.setEditorState(editorState)
 
         await new Promise((resolve) => setTimeout(resolve, 100))
@@ -121,15 +171,19 @@ export function OpenProjectDialog({
           icon: "📂",
         })
       } catch (error) {
+        console.error("Failed to load project:", error, "Project data:", projectData)
         if (setLoadingRef.current) {
           setLoadingRef.current(false)
         }
+        const errorMessage = error instanceof Error ? error.message : "Unknown error"
         toast.error("Erro ao carregar projeto", {
-          description: "O arquivo do projeto está corrompido ou em formato inválido",
+          description: `O arquivo do projeto está corrompido ou em formato inválido: ${errorMessage}`,
           duration: 4000,
           icon: "❌",
         })
       }
+    } else {
+      console.error("Missing project data or editor ref:", { projectData, editorRef: editorRef.current })
     }
   }
 
