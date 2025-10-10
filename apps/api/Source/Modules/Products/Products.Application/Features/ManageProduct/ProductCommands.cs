@@ -1,5 +1,5 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Contents.Domain.Entities;
+// using GameGuild.Modules.Contents.Domain.Entities;
 using GameGuild.Modules.Products.Domain.Entities;
 using GameGuild.Modules.Products.Domain.Enums;
 

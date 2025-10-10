@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading;
-using System.Threading.Task;
+using System.Threading.Tasks;
 using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.Database;

@@ -1,7 +1,6 @@
 using GameGuild.Modules.Products.Application.Services;
 using GameGuild.Database;
 using GameGuild.Modules.Products.Domain.Entities;
-using GameGuild.Modules.Products.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
