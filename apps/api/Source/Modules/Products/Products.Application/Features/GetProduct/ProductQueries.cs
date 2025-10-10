@@ -1,13 +1,13 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents.Domain.Entities;
-using GameGuild.Modules.Products.Domain.Entities;
+using ProductEntity = GameGuild.Modules.Products.Domain.Entities.Product;
 using GameGuild.Modules.Products.Domain.Enums;
 
 
 namespace GameGuild.Modules.Products.Application.Features.GetProduct;
 
 /// <summary> Query to get product by ID </summary>
-public record GetProductByIdQuery : IRequest<Product?>
+public record GetProductByIdQuery : IRequest<ProductEntity?>
 {
     public Guid ProductId { get; init; }
 
@@ -17,7 +17,7 @@ public record GetProductByIdQuery : IRequest<Product?>
 }
 
 /// <summary> Query to get products list </summary>
-public record GetProductsQuery : IRequest<IEnumerable<Product>>
+public record GetProductsQuery : IRequest<IEnumerable<ProductEntity>>
 {
     public ProductType? Type { get; init; }
 
@@ -103,7 +103,7 @@ public record ValidatePromoCodeQuery : IRequest<PromoCodeValidationResult>
 }
 
 /// <summary> Query to get product bundle items </summary>
-public record GetProductBundleItemsQuery : IRequest<IEnumerable<Product>>
+public record GetProductBundleItemsQuery : IRequest<IEnumerable<ProductEntity>>
 {
     public Guid ProductId { get; init; }
 

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using GameGuild.Modules.Audit.Entities;
 
 namespace GameGuild.Modules.Audit.Services;
 
