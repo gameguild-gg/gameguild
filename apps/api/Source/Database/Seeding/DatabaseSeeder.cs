@@ -12,9 +12,6 @@ public class DatabaseSeeder(IEnumerable<IDataSeeder> seeders) : IDataSeeder
     /// </summary>
     public async Task SeedAsync(ApplicationDbContext context, CancellationToken cancellationToken = default)
     {
-        foreach (IDataSeeder seeder in _seeders)
-        {
-            await seeder.SeedAsync(context, cancellationToken);
-        }
+        foreach (IDataSeeder seeder in _seeders) { await seeder.SeedAsync(context, cancellationToken); }
     }
 }

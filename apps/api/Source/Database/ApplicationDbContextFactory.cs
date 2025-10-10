@@ -11,7 +11,7 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
     /// <summary>
     /// Creates a new instance of ApplicationDbContext for design-time operations
     /// </summary>
-    public ApplicationDbContext CreateDbContext(string[] args)
+    public ApplicationDbContext CreateDbContext(string[ ] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
@@ -37,8 +37,8 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
     private static IConfiguration BuildConfiguration()
     {
         var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .AddJsonFile($"appsettings.{GetEnvironment()}.json", optional: true, reloadOnChange: true)
+            .AddJsonFile("appsettings.json", optional : false, reloadOnChange : true)
+            .AddJsonFile($"appsettings.{GetEnvironment()}.json", optional : true, reloadOnChange : true)
             .AddEnvironmentVariables();
 
         return builder.Build();
