@@ -1,6 +1,6 @@
 using GameGuild.Modules.Resources.Commands;
 using GameGuild.Modules.Resources.Events;
-using MediatR;
+using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Modules.Resources.Handlers;

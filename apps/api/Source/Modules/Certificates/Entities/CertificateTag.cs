@@ -1,6 +1,6 @@
 using GameGuild.Domain.Common;
 using GameGuild.Modules.Tags.Entities;
-using GameGuild.Modules.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 
 namespace GameGuild.Modules.Certificates.Entities;
 

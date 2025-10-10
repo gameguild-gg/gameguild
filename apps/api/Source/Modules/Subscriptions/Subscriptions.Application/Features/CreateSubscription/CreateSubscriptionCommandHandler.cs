@@ -1,7 +1,6 @@
-using MediatR;
+using GameGuild.CQRS;
 using GameGuild.Modules.Subscriptions.Abstractions;
 using GameGuild.Modules.Subscriptions.Entities;
-using GameGuild.Shared;
 
 namespace GameGuild.Modules.Subscriptions.Features.CreateSubscription;
 

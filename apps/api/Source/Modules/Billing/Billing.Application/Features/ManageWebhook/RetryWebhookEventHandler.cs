@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using GameGuild.Modules.Billing.Models;
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Billing.Features.ManageWebhook;
 

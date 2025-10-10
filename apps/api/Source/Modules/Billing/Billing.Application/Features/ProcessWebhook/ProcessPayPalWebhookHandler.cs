@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using GameGuild.Modules.Billing.Entities;
 using GameGuild.Modules.Billing.Models;
 using GameGuild.Modules.Billing.Exceptions;
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Billing.Features.ProcessWebhook;
 
