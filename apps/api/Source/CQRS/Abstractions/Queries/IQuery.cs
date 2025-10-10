@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 ﻿namespace GameGuild.CQRS;
 
 /// <summary> Marker interface for queries in the system. Queries are read-only operations that return data without modifying state. This is a marker interface to provide semantic meaning and type safety for CQRS pattern. </summary>

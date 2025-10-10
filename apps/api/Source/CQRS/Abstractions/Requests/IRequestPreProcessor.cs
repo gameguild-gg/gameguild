@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 namespace GameGuild.CQRS;
 
 /// <summary> Defines a request pre-processor </summary>

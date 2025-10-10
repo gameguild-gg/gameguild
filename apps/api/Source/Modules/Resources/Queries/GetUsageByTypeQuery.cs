@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Messaging;
 
 namespace GameGuild.Modules.Resources.Queries;

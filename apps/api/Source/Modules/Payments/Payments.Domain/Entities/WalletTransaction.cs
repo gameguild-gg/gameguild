@@ -1,3 +1,4 @@
+using GameGuild.Modules.Payments.Domain.Entities;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild;
