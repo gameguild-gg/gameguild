@@ -72,6 +72,44 @@ public class FeatureFlag : EntityBase
     public string Environment { get; set; } = "production";
 
     /// <summary>
+    ///     Date and time when this feature flag expires (for temporary flags)
+    /// </summary>
+    public DateTimeOffset? ExpiresAt { get; set; }
+
+    /// <summary>
+    ///     Date when this feature flag should be reviewed for removal or update
+    /// </summary>
+    public DateTimeOffset? ReviewDate { get; set; }
+
+    /// <summary>
+    ///     Whether this is a kill switch flag for emergency global shutoff
+    /// </summary>
+    public bool IsKillSwitch { get; set; }
+
+    /// <summary>
+    ///     Owner or team responsible for this feature flag
+    /// </summary>
+    [MaxLength(200)]
+    public string? Owner { get; set; }
+
+    /// <summary>
+    ///     Contact information for escalation regarding this flag
+    /// </summary>
+    [MaxLength(500)]
+    public string? EscalationContact { get; set; }
+
+    /// <summary>
+    ///     Additional governance notes and metadata
+    /// </summary>
+    [MaxLength(2000)]
+    public string? GovernanceNotes { get; set; }
+
+    /// <summary>
+    ///     Whether this flag's sensitive values should be encrypted at rest
+    /// </summary>
+    public bool RequiresEncryption { get; set; }
+
+    /// <summary>
     ///     Navigation property to feature flag targets
     /// </summary>
     public virtual ICollection<FeatureFlagTarget> Targets { get; init; } = new List<FeatureFlagTarget>();
@@ -80,5 +118,35 @@ public class FeatureFlag : EntityBase
     ///     Navigation property to feature flag usage analytics
     /// </summary>
     public virtual ICollection<FeatureFlagUsage> UsageAnalytics { get; init; } = new List<FeatureFlagUsage>();
+
+    /// <summary>
+    ///     Checks if the feature flag has expired based on ExpiresAt
+    /// </summary>
+    public bool IsExpired() => ExpiresAt.HasValue && ExpiresAt.Value < DateTimeOffset.UtcNow;
+
+    /// <summary>
+    ///     Checks if the feature flag is stale and needs review
+    /// </summary>
+    public bool IsStale() => ReviewDate.HasValue && ReviewDate.Value < DateTimeOffset.UtcNow;
+
+    /// <summary>
+    ///     Gets the days until expiration (null if no expiry set)
+    /// </summary>
+    public int? GetDaysUntilExpiration()
+    {
+        if (!ExpiresAt.HasValue) return null;
+        var days = (ExpiresAt.Value - DateTimeOffset.UtcNow).Days;
+        return days < 0 ? 0 : days;
+    }
+
+    /// <summary>
+    ///     Gets the days until review is due (null if no review date set)
+    /// </summary>
+    public int? GetDaysUntilReview()
+    {
+        if (!ReviewDate.HasValue) return null;
+        var days = (ReviewDate.Value - DateTimeOffset.UtcNow).Days;
+        return days < 0 ? 0 : days;
+    }
 }
 

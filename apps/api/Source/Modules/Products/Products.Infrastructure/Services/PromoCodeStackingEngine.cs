@@ -1,4 +1,5 @@
 using GameGuild.Modules.Products.Application.Services;
+using GameGuild.Database;
 using GameGuild.Modules.Products.Domain.Entities;
 using GameGuild.Modules.Products.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +10,10 @@ namespace GameGuild.Modules.Products.Infrastructure.Services;
 /// <summary>Implementation of promo code stacking engine</summary>
 public class PromoCodeStackingEngine : IPromoCodeStackingEngine
 {
-    private readonly ProductsDbContext _context;
+    private readonly ApplicationDbContext _context;
     private readonly ILogger<PromoCodeStackingEngine> _logger;
 
-    public PromoCodeStackingEngine(ProductsDbContext context, ILogger<PromoCodeStackingEngine> logger)
+    public PromoCodeStackingEngine(ApplicationDbContext context, ILogger<PromoCodeStackingEngine> logger)
     {
         _context = context;
         _logger = logger;

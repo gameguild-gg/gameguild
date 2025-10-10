@@ -109,12 +109,3 @@ public enum FieldAccessType
     Encrypt,
     Decrypt
 }
-
-public enum SensitivityLevel
-{
-    Public,
-    Internal,
-    Confidential,
-    Restricted,
-    HighlyRestricted
-}

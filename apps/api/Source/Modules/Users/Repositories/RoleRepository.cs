@@ -1,5 +1,5 @@
 using GameGuild.Database;
-using GameGuild.Modules.Users.Entities;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Users.Repositories;

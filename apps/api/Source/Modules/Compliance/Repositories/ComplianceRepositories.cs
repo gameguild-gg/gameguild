@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using GameGuild.Database;
 using GameGuild.Core.Data;
 using GameGuild.Modules.Compliance.Entities;
 
@@ -6,9 +7,9 @@ namespace GameGuild.Modules.Compliance.Repositories;
 
 public class ConsentPolicyRepository : IConsentPolicyRepository
 {
-    private readonly AppDbContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public ConsentPolicyRepository(AppDbContext context) => _context = context;
+    public ConsentPolicyRepository(ApplicationDbContext context) => _context = context;
 
     public async Task<ConsentPolicy?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         await _context.Set<ConsentPolicy>().FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
@@ -51,9 +52,9 @@ public class ConsentPolicyRepository : IConsentPolicyRepository
 
 public class PolicyVersionRepository : IPolicyVersionRepository
 {
-    private readonly AppDbContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public PolicyVersionRepository(AppDbContext context) => _context = context;
+    public PolicyVersionRepository(ApplicationDbContext context) => _context = context;
 
     public async Task<PolicyVersion?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         await _context.Set<PolicyVersion>().FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
@@ -79,9 +80,9 @@ public class PolicyVersionRepository : IPolicyVersionRepository
 
 public class UserConsentRepository : IUserConsentRepository
 {
-    private readonly AppDbContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public UserConsentRepository(AppDbContext context) => _context = context;
+    public UserConsentRepository(ApplicationDbContext context) => _context = context;
 
     public async Task<UserConsent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         await _context.Set<UserConsent>().FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
@@ -120,9 +121,9 @@ public class UserConsentRepository : IUserConsentRepository
 
 public class ComplianceAuditRepository : IComplianceAuditRepository
 {
-    private readonly AppDbContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public ComplianceAuditRepository(AppDbContext context) => _context = context;
+    public ComplianceAuditRepository(ApplicationDbContext context) => _context = context;
 
     public async Task<ComplianceAudit?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
         await _context.Set<ComplianceAudit>().FirstOrDefaultAsync(a => a.Id == id, cancellationToken);

@@ -1,4 +1,5 @@
 using Microsoft.OpenApi.Models;
+using GameGuild.Modules.Tenants;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace GameGuild;

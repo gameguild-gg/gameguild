@@ -1,4 +1,5 @@
 using System.IO.Compression;
+using GameGuild.Modules.Audit.Entities;
 using System.Text.Json;
 
 namespace GameGuild.Modules.Audit.Services;
