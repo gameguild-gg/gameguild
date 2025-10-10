@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using GameGuild.CQRS;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using GameGuild.Modules.Features.Models;

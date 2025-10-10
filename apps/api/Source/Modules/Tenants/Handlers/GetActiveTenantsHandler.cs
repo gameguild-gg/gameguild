@@ -1,0 +1,33 @@
+using GameGuild.CQRS;
+using GameGuild.Database;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Modules.Tenants;
+
+/// <summary>
+///     Handler for getting all active tenants
+/// </summary>
+public class GetActiveTenantsHandler(ApplicationDbContext context, ILogger<GetActiveTenantsHandler> logger)
+    : IQueryHandler<GetActiveTenantsQuery, Result<IEnumerable<Tenant>>>
+{
+    public async Task<Result<IEnumerable<Tenant>>> Handle(GetActiveTenantsQuery request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var tenants = await context.Tenants
+                .Where(t => t.IsActive && t.DeletedAt == null)
+                .OrderBy(t => t.Name)
+                .ToListAsync(cancellationToken);
+
+            logger.LogInformation("Retrieved {Count} active tenants", tenants.Count);
+
+            return Result.Success<IEnumerable<Tenant>>(tenants);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving active tenants");
+            return Result.Failure<IEnumerable<Tenant>>(Error.Failure("Tenant.RetrievalFailed", "Failed to retrieve active tenants"));
+        }
+    }
+}

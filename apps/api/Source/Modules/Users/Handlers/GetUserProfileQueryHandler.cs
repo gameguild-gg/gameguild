@@ -3,11 +3,10 @@ using GameGuild.CQRS;
 namespace GameGuild.Modules.Users;
 
 /// <summary> Handler for get user profile query using CQRS pattern </summary>
-public class GetUserProfileQueryHandler(IUserService userService, ILogger<GetUserProfileQueryHandler> logger) : IRequestHandler<GetUserProfileQuery, UserProfileDto>
+public class GetUserProfileQueryHandler(IUserRepository userRepository, ILogger<GetUserProfileQueryHandler> logger) : IRequestHandler<GetUserProfileQuery, UserProfileDto>
 {
     private readonly ILogger<GetUserProfileQueryHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    private readonly IUserService _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+    private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
 
     public async Task<UserProfileDto> Handle(GetUserProfileQuery request, CancellationToken cancellationToken)
     {
@@ -15,26 +14,35 @@ public class GetUserProfileQueryHandler(IUserService userService, ILogger<GetUse
 
         try
         {
-            // Get user information
-            var user = await _userService.GetUserByIdAsync(request.UserId);
+            // Get user information directly from repository
+            var user = await _userRepository.GetByIdAsync(request.UserId, false, cancellationToken);
 
-            if (user == null) { throw new InvalidOperationException($"User with ID {request.UserId} not found"); }
+            if (user == null)
+            {
+                _logger.LogWarning("User with ID {UserId} not found", request.UserId);
+                throw new InvalidOperationException($"User with ID {request.UserId} not found");
+            }
 
             var userProfile = new UserProfileDto
             {
                 Id = user.Id,
                 Email = user.Email,
-                Username = user.Email, // Using email as username since User entity doesn't have Username
-                GivenName = user.GivenName, // Using Name as GivenName
-                FamilyName = user.FamilyName, // Not available in User entity
-                DisplayName = $"{user.GivenName} {user.FamilyName}".Trim(), // Combine GivenName and FamilyName
-                Title = "", // Not available in User entity
-                Description = "", // Not available in User entity
-                IsEmailVerified = true, // Assume verified for now
+                Username = user.Username,
+                Name = user.Name,
+                GivenName = user.GivenName,
+                FamilyName = user.FamilyName,
+                DisplayName = !string.IsNullOrWhiteSpace(user.Name) ? user.Name : $"{user.GivenName} {user.FamilyName}".Trim(),
+                PhoneNumber = user.PhoneNumber?.ToString(),
+                IsActive = user.IsActive,
+                Title = user.Title,
+                Description = user.Description,
+                IsEmailVerified = user.IsEmailVerified,
+                LastSeenAt = user.LastSeenAt,
                 CreatedAt = user.CreatedAt,
                 UpdatedAt = user.UpdatedAt,
-                CurrentTenant = null, // Would need separate service to get tenant info
-                AvailableTenants = [],
+                DeletedAt = user.DeletedAt,
+                CurrentTenant = null, // TODO: Populate from tenant context
+                AvailableTenants = new List<TenantInfo>() // TODO: Populate from user's tenant associations
             };
 
             _logger.LogInformation("User profile retrieved successfully for user {UserId}", request.UserId);
@@ -44,7 +52,6 @@ public class GetUserProfileQueryHandler(IUserService userService, ILogger<GetUse
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to retrieve user profile for user {UserId}", request.UserId);
-
             throw;
         }
     }

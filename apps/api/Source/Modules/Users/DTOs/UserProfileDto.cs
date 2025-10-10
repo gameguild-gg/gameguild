@@ -14,6 +14,9 @@ public class UserProfileDto
     /// <summary> Username </summary>
     public string Username { get; set; } = string.Empty;
 
+    /// <summary> Full name </summary>
+    public string? Name { get; set; }
+
     /// <summary> Given name </summary>
     public string? GivenName { get; set; }
 
@@ -22,6 +25,12 @@ public class UserProfileDto
 
     /// <summary> Display name </summary>
     public string? DisplayName { get; set; }
+
+    /// <summary> Phone number </summary>
+    public string? PhoneNumber { get; set; }
+
+    /// <summary> Whether user is active </summary>
+    public bool IsActive { get; set; }
 
     /// <summary> User title/position </summary>
     public string? Title { get; set; }
@@ -32,11 +41,17 @@ public class UserProfileDto
     /// <summary> Whether email is verified </summary>
     public bool IsEmailVerified { get; set; }
 
+    /// <summary> Date and time when the user was last seen/logged in </summary>
+    public DateTime? LastSeenAt { get; set; }
+
     /// <summary> Account creation date </summary>
     public DateTime CreatedAt { get; set; }
 
     /// <summary> Last update date </summary>
-    public DateTime? UpdatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+
+    /// <summary> Soft delete timestamp </summary>
+    public DateTime? DeletedAt { get; set; }
 
     /// <summary> Current tenant information </summary>
     public TenantInfo? CurrentTenant { get; set; }

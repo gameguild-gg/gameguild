@@ -129,7 +129,7 @@ public class TenantsController(
     /// <param name="request"> Tenant creation DTO </param>
     /// <returns> Created tenant </returns>
     [HttpPost]
-    // [RequireTenantPermission(PermissionType.Create)]
+    [RequireTenantPermission(PermissionType.Create)]
     public async Task<ActionResult<Tenant>> CreateTenant([FromBody] CreateTenantRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -147,7 +147,7 @@ public class TenantsController(
     /// <param name="request"> Tenant update DTO </param>
     /// <returns> Updated tenant </returns>
     [HttpPut("{id:guid}")]
-    // [RequireTenantPermission(PermissionType.Edit)]
+    [RequireTenantPermission(PermissionType.Edit)]
     public async Task<ActionResult<Tenant>> UpdateTenant(Guid id, [FromBody] UpdateTenantRequest request)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -164,7 +164,7 @@ public class TenantsController(
     /// <param name="id"> Tenant ID </param>
     /// <returns> Deletion result </returns>
     [HttpDelete("{id:guid}")]
-    // [RequireTenantPermission(PermissionType.Delete)]
+    [RequireTenantPermission(PermissionType.Delete)]
     public async Task<ActionResult> SoftDeleteTenant(Guid id)
     {
         var command = new SoftDeleteTenantCommand(id);
@@ -179,7 +179,7 @@ public class TenantsController(
     /// <param name="id"> Tenant ID </param>
     /// <returns> Restoration result </returns>
     [HttpPost("{id:guid}/restore")]
-    // [RequireTenantPermission(PermissionType.Restore)]
+    [RequireTenantPermission(PermissionType.Edit)]
     public async Task<ActionResult> RestoreTenant(Guid id)
     {
         var command = new RestoreTenantCommand(id);
@@ -194,7 +194,7 @@ public class TenantsController(
     /// <param name="id"> Tenant ID </param>
     /// <returns> Deletion result </returns>
     [HttpDelete("{id:guid}/permanent")]
-    // [RequireTenantPermission(PermissionType.HardDelete)]
+    [RequireSystemAdmin]
     public async Task<ActionResult> HardDeleteTenant(Guid id)
     {
         var command = new HardDeleteTenantCommand(id);
@@ -209,7 +209,7 @@ public class TenantsController(
     /// <param name="id"> Tenant ID </param>
     /// <returns> Activation result </returns>
     [HttpPost("{id:guid}/activate")]
-    // [RequireTenantPermission(PermissionType.Edit)]
+    [RequireTenantPermission(PermissionType.Edit)]
     public async Task<ActionResult> ActivateTenant(Guid id)
     {
         var command = new ActivateTenantCommand(id);
@@ -224,7 +224,7 @@ public class TenantsController(
     /// <param name="id"> Tenant ID </param>
     /// <returns> Deactivation result </returns>
     [HttpPost("{id:guid}/deactivate")]
-    // [RequireTenantPermission(PermissionType.Edit)]
+    [RequireTenantPermission(PermissionType.Edit)]
     public async Task<ActionResult> DeactivateTenant(Guid id)
     {
         var command = new DeactivateTenantCommand(id);
@@ -240,7 +240,7 @@ public class TenantsController(
     /// <param name="request"> Archive request with optional reason </param>
     /// <returns> Archive result </returns>
     [HttpPost("{id:guid}/archive")]
-    // [RequireTenantPermission(PermissionType.Edit)]
+    [RequireTenantPermission(PermissionType.Edit)]
     public async Task<ActionResult> ArchiveTenant(Guid id, [FromBody] ArchiveTenantRequest? request = null)
     {
         var command = new ArchiveTenantCommand(id, request?.Reason);
@@ -255,7 +255,7 @@ public class TenantsController(
     /// <param name="id"> Tenant ID </param>
     /// <returns> Unarchive result </returns>
     [HttpPost("{id:guid}/unarchive")]
-    // [RequireTenantPermission(PermissionType.Edit)]
+    [RequireTenantPermission(PermissionType.Edit)]
     public async Task<ActionResult> UnarchiveTenant(Guid id)
     {
         var command = new UnarchiveTenantCommand(id);

@@ -1,5 +1,5 @@
 using GameGuild.CQRS;
-using MediatR;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Users.Commands;
 

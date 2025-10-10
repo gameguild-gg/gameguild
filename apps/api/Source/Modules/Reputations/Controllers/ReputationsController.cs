@@ -1,31 +1,39 @@
 using GameGuild.Authorization.Identity;
+using GameGuild.Modules.Reputations.Entities;
+using GameGuild.Modules.Reputations.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GameGuild.Modules.Reputations;
+namespace GameGuild.Modules.Reputations.Controllers;
 
 [ApiController]
-[Route("[controller]")]
-public class ReputationsController : ControllerBase {
+[Route("api/[controller]")]
+public class ReputationsController : ControllerBase
+{
     private readonly IReputationService _reputationService;
     private readonly ILogger<ReputationsController> _logger;
 
     public ReputationsController(
         IReputationService reputationService,
-        ILogger<ReputationsController> logger) {
+        ILogger<ReputationsController> logger)
+    {
         _reputationService = reputationService;
         _logger = logger;
     }
 
     [HttpGet("user/{userId}")]
-    public async Task<ActionResult<IReputation>> GetUserReputation(Guid userId, [FromQuery] Guid? tenantId = null) {
-        try {
+    public async Task<ActionResult<IReputation>> GetUserReputation(Guid userId, [FromQuery] Guid? tenantId = null)
+    {
+        try
+        {
             var reputation = await _reputationService.GetUserReputationAsync(userId, tenantId);
-            if (reputation == null) {
+            if (reputation == null)
+            {
                 return NotFound();
             }
             return Ok(reputation);
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Error retrieving user reputation for user {UserId}", userId);
             return StatusCode(500, "Internal server error");
         }
@@ -36,15 +44,19 @@ public class ReputationsController : ControllerBase {
         Guid userId,
         [FromBody] int scoreChange,
         [FromQuery] Guid? tenantId = null,
-        [FromQuery] string? reason = null) {
-        try {
+        [FromQuery] string? reason = null)
+    {
+        try
+        {
             var reputation = await _reputationService.UpdateReputationAsync(userId, scoreChange, tenantId, reason);
             return Ok(reputation);
         }
-        catch (ArgumentException ex) {
+        catch (ArgumentException ex)
+        {
             return BadRequest(ex.Message);
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Error updating user reputation for user {UserId}", userId);
             return StatusCode(500, "Internal server error");
         }
@@ -53,12 +65,15 @@ public class ReputationsController : ControllerBase {
     [HttpGet("tier/{tier}")]
     public async Task<ActionResult<IEnumerable<IReputation>>> GetUsersByReputationTier(
         ReputationTier tier,
-        [FromQuery] Guid? tenantId = null) {
-        try {
+        [FromQuery] Guid? tenantId = null)
+    {
+        try
+        {
             var users = await _reputationService.GetUsersByReputationTierAsync(tier, tenantId);
             return Ok(users);
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             _logger.LogError(ex, "Error retrieving users by reputation tier {Tier}", tier);
             return StatusCode(500, "Internal server error");
         }

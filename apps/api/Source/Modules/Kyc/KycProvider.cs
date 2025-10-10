@@ -1,16 +1,21 @@
 using System.ComponentModel;
 
+namespace GameGuild.Common;
 
-namespace GameGuild;
+public enum KycProvider
+{
+    [Description("SumSub KYC verification provider")]
+    Sumsub,
 
-public enum KycProvider {
-  [Description("SumSub KYC verification provider")] Sumsub,
+    [Description("Shufti Pro KYC verification provider")]
+    Shufti,
 
-  [Description("Shufti Pro KYC verification provider")] Shufti,
+    [Description("Onfido KYC verification provider")]
+    Onfido,
 
-  [Description("Onfido KYC verification provider")] Onfido,
+    [Description("Jumio KYC verification provider")]
+    Jumio,
 
-  [Description("Jumio KYC verification provider")] Jumio,
-
-  [Description("Custom or internal KYC verification process")] Custom,
+    [Description("Custom or internal KYC verification process")]
+    Custom,
 }

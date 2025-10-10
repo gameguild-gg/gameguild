@@ -1,4 +1,4 @@
-﻿using MediatR;
+﻿using GameGuild.CQRS;
 namespace GameGuild.Modules.Features.Queries;
 
 /// <summary>

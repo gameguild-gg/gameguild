@@ -38,9 +38,27 @@ public sealed class User : EntityBase, IUser
     [MaxLength(100)]
     public string? FamilyName { get; set; }
 
+    /// <summary>
+    ///     Full name of the user (computed from GivenName and FamilyName)
+    /// </summary>
+    [MaxLength(100)]
+    public string? Name { get; set; }
+
     [Required]
     [MaxLength(50)]
     public string Username { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     High-precision balance for financial transactions
+    /// </summary>
+    [Column(TypeName = "decimal(18,8)")]
+    public decimal Balance { get; set; } = 0m;
+
+    /// <summary>
+    ///     Available balance (not locked in pending transactions)
+    /// </summary>
+    [Column(TypeName = "decimal(18,8)")]
+    public decimal AvailableBalance { get; set; } = 0m;
 
     /// <summary>
     ///     Date and time when the user was last seen/logged in
@@ -79,6 +97,20 @@ public sealed class User : EntityBase, IUser
     {
         GivenName = givenName;
         FamilyName = familyName;
+        PhoneNumber = !string.IsNullOrWhiteSpace(phoneNumber) ? new PhoneNumber(phoneNumber) : null;
+        Touch();
+    }
+
+    /// <summary>
+    ///     Update user information with full name
+    /// </summary>
+    /// <param name="name">New full name</param>
+    /// <param name="phoneNumber">New phone number</param>
+    public void UpdateInfo(string name, string? phoneNumber = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        Name = name;
         PhoneNumber = !string.IsNullOrWhiteSpace(phoneNumber) ? new PhoneNumber(phoneNumber) : null;
         Touch();
     }
@@ -126,6 +158,17 @@ public sealed class User : EntityBase, IUser
     {
         GivenName = givenName;
         FamilyName = familyName;
+        Touch();
+    }
+
+    /// <summary>
+    ///     Update the user's full name
+    /// </summary>
+    /// <param name="name">New full name</param>
+    public void UpdateName(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        Name = name;
         Touch();
     }
 

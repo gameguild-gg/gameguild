@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using GameGuild.Core.Domain.Permissions;
 using GameGuild.Modules.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -12,8 +11,7 @@ public class RequireTenantPermissionAttribute(PermissionType requiredPermission)
 {
     public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
-        // Try to use the enhanced DAC resolver first, fallback to legacy service
-        var dacResolver = context.HttpContext.RequestServices.GetService<IDacPermissionResolver>();
+        // Use simplified permission service
         var permissionService = context.HttpContext.RequestServices.GetRequiredService<IPermissionService>();
 
         // Extract user ID and tenant ID from JWT token
@@ -39,17 +37,8 @@ public class RequireTenantPermissionAttribute(PermissionType requiredPermission)
 
         try
         {
-            if (dacResolver != null)
-            {
-                // Use enhanced DAC resolver for better hierarchy resolution
-                var result = await dacResolver.ResolvePermissionAsync<EntityBase>(userId, tenantId, requiredPermission);
-                hasPermission = result.IsGranted;
-            }
-            else
-            {
-                // Fallback to legacy permission service
-                hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, requiredPermission);
-            }
+            // Use simplified permission service
+            hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, requiredPermission);
         }
         catch (Exception ex)
         {
