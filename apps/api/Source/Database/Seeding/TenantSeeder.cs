@@ -1,7 +1,6 @@
 using GameGuild.Database;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Localization;
-using GameGuild.Modules.Tenants;
 
 namespace GameGuild.Source.Database.Seeding;
 
@@ -199,7 +198,7 @@ public class TenantSeeder(ILogger<TenantSeeder> logger, ILanguageRepository lang
     /// <param name="cancellationToken">The cancellation token</param>
     private async Task SeedChamplainSubdomainsAsync(ApplicationDbContext context, Tenant tenant, CancellationToken cancellationToken)
     {
-        string[ ] subdomains = ["student", "faculty", "staff", "alumni"];
+        string[] subdomains = ["student", "faculty", "staff", "alumni"];
 
         foreach (string subdomain in subdomains)
         {

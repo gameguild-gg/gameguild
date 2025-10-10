@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using GameGuild.Modules.Audit.Entities;
+using GameGuild.Modules.Audit;
 using System.Text;
 using System.Text.Json;
 

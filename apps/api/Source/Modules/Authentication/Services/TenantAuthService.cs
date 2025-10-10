@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Permissions;
-using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 
 namespace GameGuild.Modules.Authentication;
@@ -54,7 +53,7 @@ public class TenantAuthService(ITenantService tenantService, IPermissionService 
 
         // Generate new token with tenant claims
         var userDto = new UserDto { Id = user.Id, Username = user.Username, Email = user.Email };
-        var roles = new[ ] { "User" }; // TODO: fetch actual tenant-specific roles
+        var roles = new[] { "User" }; // TODO: fetch actual tenant-specific roles
         var accessToken = jwtTokenService.GenerateAccessToken(userDto, roles, tenantClaims);
 
         // Update response with new token and tenant info

@@ -1,5 +1,4 @@
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Resources;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -62,11 +61,11 @@ public class RequirePermissionAttribute : Attribute, IAsyncAuthorizationFilter
             // Check permission based on layer
             switch (Layer)
             {
-                case PermissionLayer.Tenant : hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, RequiredPermission); break;
+                case PermissionLayer.Tenant: hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, RequiredPermission); break;
 
-                case PermissionLayer.ContentType when ContentType != null : hasPermission = await permissionService.HasContentTypePermissionAsync(userId, tenantId, ContentType, RequiredPermission); break;
+                case PermissionLayer.ContentType when ContentType != null: hasPermission = await permissionService.HasContentTypePermissionAsync(userId, tenantId, ContentType, RequiredPermission); break;
 
-                case PermissionLayer.Resource :
+                case PermissionLayer.Resource:
                     var resourceId = GetResourceId(context);
 
                     if (resourceId.HasValue)
@@ -78,8 +77,8 @@ public class RequirePermissionAttribute : Attribute, IAsyncAuthorizationFilter
 
                     break;
 
-                case PermissionLayer.Auto :
-                default :
+                case PermissionLayer.Auto:
+                default:
                     // Try in order: tenant -> content-type -> resource
                     hasPermission = await permissionService.HasTenantPermissionAsync(userId, tenantId, RequiredPermission);
 

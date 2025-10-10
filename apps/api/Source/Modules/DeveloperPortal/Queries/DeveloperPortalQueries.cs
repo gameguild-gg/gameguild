@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.CQRS;
 using GameGuild.Common;
 using GameGuild.Modules.DeveloperPortal.Entities;
 using GameGuild.Modules.DeveloperPortal.Services;
