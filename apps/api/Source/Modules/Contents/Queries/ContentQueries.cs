@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using GameGuild.CQRS;
+using GameGuild.Source.Modules.Contents.Models;
 
 namespace GameGuild.Source.Modules.Contents.Queries;
 

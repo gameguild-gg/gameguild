@@ -1,6 +1,6 @@
 using GameGuild.Core.Shared;
 using GameGuild.Modules.DataArchival.Services;
-using MediatR;
+using GameGuild.CQRS;
 using System.ComponentModel.DataAnnotations;
 
 namespace GameGuild.Modules.DataArchival.Queries;

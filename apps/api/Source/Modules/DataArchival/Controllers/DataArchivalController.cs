@@ -1,6 +1,6 @@
 using GameGuild.Modules.DataArchival.Commands;
 using GameGuild.Modules.DataArchival.Queries;
-using MediatR;
+using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
