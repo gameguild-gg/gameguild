@@ -1,3 +1,4 @@
+using GameGuild.Core.Common;
 using GameGuild.Modules.Tenants.Abstractions;
 using GameGuild.Modules.Tenants.Commands;
 using GameGuild.CQRS;
