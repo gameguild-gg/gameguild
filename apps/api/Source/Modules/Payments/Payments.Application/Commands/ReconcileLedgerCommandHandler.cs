@@ -1,6 +1,5 @@
 using GameGuild.Modules.Payments.Payments.Application.Services;
 using GameGuild.CQRS;
-using MediatR;
 
 namespace GameGuild.Modules.Payments.Payments.Application.Commands;
 
