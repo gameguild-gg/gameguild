@@ -29,7 +29,7 @@ public class DelegatedAdminScope : EntityBase
     /// <summary>
     /// Tenant in which this delegation is effective
     /// </summary>
-    public override Guid? TenantId { get; set; }
+    // TenantId inherited from EntityBase (no override needed)
 
     /// <summary>
     /// Type of scope (Department, Team, Project, ContentType, etc.)
