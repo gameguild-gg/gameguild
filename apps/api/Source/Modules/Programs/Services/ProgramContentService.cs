@@ -1,6 +1,7 @@
 using GameGuild.Database;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Programs.Entities;
 
 
 namespace GameGuild.Modules.Programs;

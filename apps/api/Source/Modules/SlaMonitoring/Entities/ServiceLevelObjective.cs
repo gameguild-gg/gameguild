@@ -130,3 +130,14 @@ public class ServiceLevelObjective : EntityBase
         return RemainingErrorBudget <= alertBudget;
     }
 }
+
+/// <summary>
+/// Status of an SLO.
+/// </summary>
+public enum SloStatus
+{
+    Active = 0,
+    Violated = 1,
+    Warning = 2,
+    Inactive = 3
+}

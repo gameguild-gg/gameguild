@@ -53,6 +53,16 @@ public enum NotificationPriority
 }
 
 /// <summary>
+/// Notification status.
+/// </summary>
+public enum NotificationStatus
+{
+    Unread = 0,
+    Read = 1,
+    Archived = 2
+}
+
+/// <summary>
 /// Notification delivery channels.
 /// </summary>
 [Flags]

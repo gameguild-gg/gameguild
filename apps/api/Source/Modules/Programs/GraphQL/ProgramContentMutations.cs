@@ -1,7 +1,6 @@
 using GameGuild.Authorization;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Programs;
-using GameGuild.Modules.Programs;
 using GradingMethodEnum = GameGuild.Modules.Programs.Models.GradingMethod;
 using ProgramContentTypeEnum = GameGuild.Modules.Programs.Models.ProgramContentType;
 using ProgramEntity = GameGuild.Modules.Programs.Program;

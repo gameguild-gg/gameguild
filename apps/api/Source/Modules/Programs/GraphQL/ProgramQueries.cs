@@ -3,7 +3,6 @@ using GameGuild.Authorization;
 using GameGuild.Authorization.Identity;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Programs;
-using GameGuild.Modules.Programs;
 using Microsoft.Extensions.Logging;
 using ProgramEntity = GameGuild.Modules.Programs.Program;
 
