@@ -1,6 +1,8 @@
 using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.GraphQL;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 
 
@@ -8,11 +10,14 @@ namespace GameGuild.Modules.UserAchievements;
 
 /// <summary> GraphQL mutations for achievements </summary>
 [ExtendObjectType<Mutation>]
-public class AchievementMutations {
+public class AchievementMutations
+{
   /// <summary> Create a new achievement </summary>
   [Authorize(Roles = ["Admin", "Moderator"])]
-  public async Task<Achievement> CreateAchievement([Service] IMediator mediator, CreateAchievementInput input) {
-    var command = new CreateAchievementCommand {
+  public async Task<Achievement> CreateAchievement([Service] IMediator mediator, CreateAchievementInput input)
+  {
+    var command = new CreateAchievementCommand
+    {
       Name = input.Name,
       Description = input.Description,
       Category = input.Category,
@@ -38,8 +43,10 @@ public class AchievementMutations {
 
   /// <summary> Update an existing achievement </summary>
   [Authorize(Roles = ["Admin", "Moderator"])]
-  public async Task<Achievement> UpdateAchievement([Service] IMediator mediator, [Service] IUserContext userContext, UpdateAchievementInput input) {
-    var command = new UpdateAchievementCommand {
+  public async Task<Achievement> UpdateAchievement([Service] IMediator mediator, [Service] IUserContext userContext, UpdateAchievementInput input)
+  {
+    var command = new UpdateAchievementCommand
+    {
       AchievementId = input.AchievementId,
       Name = input.Name,
       Description = input.Description,
@@ -63,7 +70,8 @@ public class AchievementMutations {
 
   /// <summary> Delete an achievement </summary>
   [Authorize(Roles = ["Admin"])]
-  public async Task<bool> DeleteAchievement([Service] IMediator mediator, [Service] IUserContext userContext, Guid achievementId) {
+  public async Task<bool> DeleteAchievement([Service] IMediator mediator, [Service] IUserContext userContext, Guid achievementId)
+  {
     var command = new DeleteAchievementCommand { AchievementId = achievementId, UserId = userContext.UserId ?? Guid.Empty };
 
     var result = await mediator.Send(command);
@@ -73,8 +81,10 @@ public class AchievementMutations {
 
   /// <summary> Award an achievement to a user </summary>
   [Authorize(Roles = ["Admin", "Moderator"])]
-  public async Task<UserAchievement> AwardAchievement([Service] IMediator mediator, [Service] IUserContext userContext, [Service] ITenantContext tenantContext, AwardAchievementInput input) {
-    var command = new AwardAchievementCommand {
+  public async Task<UserAchievement> AwardAchievement([Service] IMediator mediator, [Service] IUserContext userContext, [Service] ITenantContext tenantContext, AwardAchievementInput input)
+  {
+    var command = new AwardAchievementCommand
+    {
       UserId = input.UserId,
       AchievementId = input.AchievementId,
       Level = input.Level,
@@ -93,11 +103,13 @@ public class AchievementMutations {
 
   /// <summary> Update achievement progress for a user </summary>
   [Authorize]
-  public async Task<AchievementProgress> UpdateAchievementProgress([Service] IMediator mediator, [Service] IUserContext userContext, [Service] ITenantContext tenantContext, UpdateAchievementProgressInput input) {
+  public async Task<AchievementProgress> UpdateAchievementProgress([Service] IMediator mediator, [Service] IUserContext userContext, [Service] ITenantContext tenantContext, UpdateAchievementProgressInput input)
+  {
     // Only allow users to update their own progress or admins/moderators
     if (input.UserId != userContext.UserId && !userContext.IsInRole("Admin") && !userContext.IsInRole("Moderator")) { throw new GraphQLException("Access denied"); }
 
-    var command = new UpdateAchievementProgressCommand {
+    var command = new UpdateAchievementProgressCommand
+    {
       UserId = input.UserId,
       AchievementId = input.AchievementId,
       ProgressIncrement = input.ProgressIncrement,
@@ -113,7 +125,8 @@ public class AchievementMutations {
 
   /// <summary> Revoke an achievement from a user </summary>
   [Authorize(Roles = ["Admin", "Moderator"])]
-  public async Task<bool> RevokeAchievement([Service] IMediator mediator, [Service] IUserContext userContext, RevokeAchievementInput input) {
+  public async Task<bool> RevokeAchievement([Service] IMediator mediator, [Service] IUserContext userContext, RevokeAchievementInput input)
+  {
     var command = new RevokeAchievementCommand { UserAchievementId = input.UserAchievementId, Reason = input.Reason, RevokedByUserId = userContext.UserId ?? Guid.Empty };
 
     var result = await mediator.Send(command);
@@ -123,8 +136,10 @@ public class AchievementMutations {
 
   /// <summary> Bulk award an achievement to multiple users </summary>
   [Authorize(Roles = ["Admin"])]
-  public async Task<List<UserAchievement>> BulkAwardAchievement([Service] IMediator mediator, [Service] IUserContext userContext, [Service] ITenantContext tenantContext, BulkAwardAchievementInput input) {
-    var command = new BulkAwardAchievementCommand {
+  public async Task<List<UserAchievement>> BulkAwardAchievement([Service] IMediator mediator, [Service] IUserContext userContext, [Service] ITenantContext tenantContext, BulkAwardAchievementInput input)
+  {
+    var command = new BulkAwardAchievementCommand
+    {
       AchievementId = input.AchievementId,
       UserIds = input.UserIds,
       UserCriteria = input.UserCriteria,
@@ -141,7 +156,8 @@ public class AchievementMutations {
 
   /// <summary> Mark user achievement as notified </summary>
   [Authorize]
-  public async Task<bool> MarkAchievementNotified([Service] IMediator mediator, [Service] IUserContext userContext, Guid userAchievementId) {
+  public async Task<bool> MarkAchievementNotified([Service] IMediator mediator, [Service] IUserContext userContext, Guid userAchievementId)
+  {
     var command = new MarkAchievementNotifiedCommand { UserAchievementId = userAchievementId, UserId = userContext.UserId ?? Guid.Empty };
 
     var result = await mediator.Send(command);

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProductTypeEnum = GameGuild.ProductType;
 
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
+using ProductDomainEntity = GameGuild.Modules.Products.Domain.Entities.Product;
 namespace GameGuild.Modules.Products.Controllers;
 
 /// <summary>
@@ -47,7 +48,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get a specific product by ID using CQRS pattern (resource level read permission) </summary>
   [HttpGet("{id:guid}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Read)]
   public async Task<ActionResult<ProductEntity>> GetProduct(Guid id) {
     var query = new GetProductByIdQuery { ProductId = id };
     var product = await mediator.Send(query);
@@ -59,7 +60,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Update a product using CQRS pattern (resource level update permission) </summary>
   [HttpPut("{id:guid}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductEntity>> UpdateProduct(Guid id, [FromBody] UpdateProductCommand command) {
     var updateCommand = command with { ProductId = id, UpdatedBy = User.GetUserId() ?? Guid.Empty };
     var result = await mediator.Send(updateCommand);
@@ -71,7 +72,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Delete a product using CQRS pattern (resource level delete permission) </summary>
   [HttpDelete("{id:guid}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Delete)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Delete)]
   public async Task<ActionResult> DeleteProduct(Guid id) {
     var command = new DeleteProductCommand { ProductId = id, DeletedBy = User.GetUserId() ?? Guid.Empty };
     var result = await mediator.Send(command);
@@ -145,7 +146,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Publish a product (resource-level publish permission) </summary>
   [HttpPost("{id}/publish")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Publish)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Publish)]
   public async Task<ActionResult<ProductEntity>> PublishProduct(Guid id) {
     var product = await mediator.Send(new PublishProductCommand { ProductId = id, PublishedBy = User.GetUserId() ?? Guid.Empty });
 
@@ -154,7 +155,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Unpublish a product (resource-level edit permission) </summary>
   [HttpPost("{id}/unpublish")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductEntity>> UnpublishProduct(Guid id) {
     var product = await mediator.Send(new UnpublishProductCommand { ProductId = id, UnpublishedBy = User.GetUserId() ?? Guid.Empty });
 
@@ -163,7 +164,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Archive a product (resource-level edit permission) </summary>
   [HttpPost("{id}/archive")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductEntity>> ArchiveProduct(Guid id) {
     var product = await mediator.Send(new ArchiveProductCommand { ProductId = id, ArchivedBy = User.GetUserId() ?? Guid.Empty });
 
@@ -172,7 +173,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Set product visibility (resource-level edit permission) </summary>
   [HttpPut("{id}/visibility")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductEntity>> SetProductVisibility(Guid id, [FromBody] AccessLevel visibility) {
     var product = await mediator.Send(new SetProductVisibilityCommand { ProductId = id, Visibility = visibility, UpdatedBy = User.GetUserId() ?? Guid.Empty });
 
@@ -183,7 +184,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get bundle items (resource-level read permission) </summary>
   [HttpGet("{id}/bundle-items")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductEntity>>> GetBundleItems(Guid id) {
     var products = await mediator.Send(new GetBundleItemsQuery { BundleId = id });
 
@@ -192,7 +193,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Add product to bundle (resource-level edit permission) </summary>
   [HttpPost("{bundleId}/bundle-items/{productId}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Edit, "bundleId")]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Edit, "bundleId")]
   public async Task<ActionResult<ProductEntity>> AddToBundle(Guid bundleId, Guid productId) {
     var bundle = await mediator.Send(new AddToBundleCommand { BundleId = bundleId, ProductId = productId, UpdatedBy = User.GetUserId() ?? Guid.Empty });
 
@@ -201,7 +202,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Remove product from bundle (resource-level edit permission) </summary>
   [HttpDelete("{bundleId}/bundle-items/{productId}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Edit, "bundleId")]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Edit, "bundleId")]
   public async Task<ActionResult<ProductEntity>> RemoveFromBundle(Guid bundleId, Guid productId) {
     var bundle = await mediator.Send(new RemoveFromBundleCommand { BundleId = bundleId, ProductId = productId, UpdatedBy = User.GetUserId() ?? Guid.Empty });
 
@@ -212,7 +213,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get current pricing for a product (resource-level read permission) </summary>
   [HttpGet("{id}/pricing/current")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Read)]
   public async Task<ActionResult<ProductPricing>> GetCurrentPricing(Guid id) {
     var pricing = await mediator.Send(new GetCurrentPricingQuery { ProductId = id });
 
@@ -223,7 +224,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get pricing history for a product (resource-level read permission) </summary>
   [HttpGet("{id}/pricing/history")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductPricing>>> GetPricingHistory(Guid id) {
     var pricing = await mediator.Send(new GetPricingHistoryQuery { ProductId = id });
 
@@ -232,7 +233,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Set pricing for a product (resource-level edit permission) </summary>
   [HttpPost("{id}/pricing")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductPricing>> SetPricing(Guid id, [FromBody] SetPricingRequest request) {
     var pricing = await mediator.Send(new SetPricingCommand { ProductId = id, Price = request.BasePrice, Currency = request.Currency, UpdatedBy = User.GetUserId() ?? Guid.Empty });
 
@@ -243,7 +244,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get subscription plans for a product (resource-level read permission) </summary>
   [HttpGet("{id}/subscription-plans")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductSubscriptionPlan>>> GetSubscriptionPlans(Guid id) {
     var plans = await mediator.Send(new GetSubscriptionPlansQuery { ProductId = id });
 
@@ -252,7 +253,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Create subscription plan for a product (resource-level edit permission) </summary>
   [HttpPost("{id}/subscription-plans")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductSubscriptionPlan>> CreateSubscriptionPlan(Guid id, [FromBody] ProductSubscriptionPlan plan) {
     plan.ProductId = id; // Ensure the product ID matches the route
 
@@ -287,7 +288,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Check if user has access to product (resource-level read permission) </summary>
   [HttpGet("{id}/access/{userId}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Read)]
   public async Task<ActionResult<bool>> HasUserAccess(Guid id, Guid userId) {
     var hasAccess = await mediator.Send(new HasUserAccessQuery { UserId = userId, ProductId = id });
 
@@ -296,7 +297,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get user product details (resource-level read permission) </summary>
   [HttpGet("{id}/user-product/{userId}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Read)]
   public async Task<ActionResult<UserProduct>> GetUserProduct(Guid id, Guid userId) {
     var userProduct = await mediator.Send(new GetUserProductQuery { UserId = userId, ProductId = id });
 
@@ -307,7 +308,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Grant user access to product (resource-level edit permission) </summary>
   [HttpPost("{id}/access/{userId}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Edit)]
   public async Task<ActionResult<UserProduct>> GrantUserAccess(Guid id, Guid userId, [FromBody] GrantAccessRequest request) {
     var userProduct = await mediator.Send(new GrantUserAccessCommand { UserId = userId, ProductId = id, AcquisitionType = request.AcquisitionType, ExpiresAt = request.ExpiresAt, GrantedBy = User.GetUserId() ?? Guid.Empty });
 
@@ -316,7 +317,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Revoke user access to product (resource-level edit permission) </summary>
   [HttpDelete("{id}/access/{userId}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Edit)]
   public async Task<ActionResult> RevokeUserAccess(Guid id, Guid userId) {
     await mediator.Send(new RevokeUserAccessCommand { UserId = userId, ProductId = id });
 
@@ -336,7 +337,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get user count for product (resource-level read permission) </summary>
   [HttpGet("{id}/analytics/user-count")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Read)]
   public async Task<ActionResult<int>> GetUserCountForProduct(Guid id) {
     var count = await mediator.Send(new GetUserCountForProductQuery { ProductId = id });
 
@@ -345,7 +346,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get total revenue for product (resource-level read permission) </summary>
   [HttpGet("{id}/analytics/revenue")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductDomainEntity>(PermissionType.Read)]
   public async Task<ActionResult<decimal>> GetTotalRevenueForProduct(Guid id) {
     var revenue = await mediator.Send(new GetTotalRevenueForProductQuery { ProductId = id });
 
