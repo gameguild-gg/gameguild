@@ -1,5 +1,5 @@
 using GameGuild.Database;
-using GameGuild.Modules.Resources.Contexts;
+using GameGuild.Database;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Resources.Events;
 using Microsoft.EntityFrameworkCore;

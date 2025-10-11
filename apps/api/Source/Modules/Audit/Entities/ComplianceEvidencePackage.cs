@@ -1,4 +1,5 @@
 using GameGuild.Core.Domain;
+using GameGuild.Modules.Audit.Enums;
 
 namespace GameGuild.Modules.Audit.Entities;
 
@@ -115,20 +116,6 @@ public sealed class ComplianceEvidencePackage : EntityBase
     {
         AttachmentMetadata = metadata;
     }
-}
-
-public enum ComplianceFramework
-{
-    SOC2Type1,
-    SOC2Type2,
-    ISO27001,
-    GDPR,
-    HIPAA,
-    PCI_DSS,
-    CCPA,
-    FedRAMP,
-    NIST,
-    Custom
 }
 
 public enum CompliancePackageStatus
