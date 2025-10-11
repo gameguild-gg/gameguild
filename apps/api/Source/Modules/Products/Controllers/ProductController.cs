@@ -84,7 +84,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get products by type (content-type level read permission) </summary>
   [HttpGet("type/{type}")]
-  [RequireContentTypePermission<Product>(PermissionType.Read)]
+  [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductEntity>>> GetProductsByType(ProductTypeEnum type, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var products = await mediator.Send(new GetProductsByTypeQuery { Type = type, Skip = skip, Take = take });
 
@@ -101,7 +101,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Search products (content-type level read permission) </summary>
   [HttpGet("search")]
-  [RequireContentTypePermission<Product>(PermissionType.Read)]
+  [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductEntity>>> SearchProducts([FromQuery] string searchTerm, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var products = await mediator.Send(new SearchProductsQuery { SearchTerm = searchTerm, Skip = skip, Take = take });
 
@@ -110,7 +110,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get products by creator (content-type level read permission) </summary>
   [HttpGet("creator/{creatorId}")]
-  [RequireContentTypePermission<Product>(PermissionType.Read)]
+  [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductEntity>>> GetProductsByCreator(Guid creatorId, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var products = await mediator.Send(new GetProductsByCreatorQuery { CreatorId = creatorId, Skip = skip, Take = take });
 
@@ -119,7 +119,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get products in price range (content-type level read permission) </summary>
   [HttpGet("price-range")]
-  [RequireContentTypePermission<Product>(PermissionType.Read)]
+  [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductEntity>>> GetProductsInPriceRange([FromQuery] decimal minPrice, [FromQuery] decimal maxPrice, [FromQuery] string currency = "USD", [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var products = await mediator.Send(new GetProductsInPriceRangeQuery { MinPrice = minPrice, MaxPrice = maxPrice, Currency = currency, Skip = skip, Take = take });
 
@@ -128,7 +128,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get popular products (content-type level read permission) </summary>
   [HttpGet("popular")]
-  [RequireContentTypePermission<Product>(PermissionType.Read)]
+  [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductEntity>>> GetPopularProducts([FromQuery] int count = 10) {
     var products = await mediator.Send(new GetPopularProductsQuery { Take = count });
 
@@ -137,7 +137,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get recent products (content-type level read permission) </summary>
   [HttpGet("recent")]
-  [RequireContentTypePermission<Product>(PermissionType.Read)]
+  [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductEntity>>> GetRecentProducts([FromQuery] int count = 10) {
     var products = await mediator.Send(new GetRecentProductsQuery { Take = count });
 
@@ -328,7 +328,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get product count (content-type level read permission) </summary>
   [HttpGet("analytics/count")]
-  [RequireContentTypePermission<Product>(PermissionType.Read)]
+  [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<int>> GetProductCount([FromQuery] ProductTypeEnum? type = null, [FromQuery] ContentStatus? status = null) {
     var count = await mediator.Send(new GetProductCountQuery { Type = type, Status = status });
 
