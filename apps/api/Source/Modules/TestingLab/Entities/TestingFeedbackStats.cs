@@ -1,3 +1,5 @@
+using GameGuild.Modules.TestingLab.Entities;
+
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Statistics for testing feedback </summary>

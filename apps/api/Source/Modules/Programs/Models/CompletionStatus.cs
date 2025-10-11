@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace GameGuild.Source.Modules.Programs.Models;
+namespace GameGuild.Modules.Programs.Models;
 
 /// <summary>
 /// Represents the completion status for program enrollment

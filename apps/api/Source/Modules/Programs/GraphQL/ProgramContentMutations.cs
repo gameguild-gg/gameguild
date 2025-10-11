@@ -1,13 +1,13 @@
 using GameGuild.Authorization;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Programs;
-using GameGuild.Source.Modules.Programs.Models;
-using GradingMethodEnum = GameGuild.Source.Modules.Programs.Models.GradingMethod;
-using ProgramContentTypeEnum = GameGuild.Source.Modules.Programs.Models.ProgramContentType;
+using GameGuild.Modules.Programs;
+using GradingMethodEnum = GameGuild.Modules.Programs.Models.GradingMethod;
+using ProgramContentTypeEnum = GameGuild.Modules.Programs.Models.ProgramContentType;
 using ProgramEntity = GameGuild.Modules.Programs.Program;
 using VisibilityEnum = GameGuild.Visibility;
 
-namespace GameGuild.Source.Modules.Programs.GraphQL;
+namespace GameGuild.Modules.Programs.GraphQL;
 
 [ExtendObjectType<Mutation>]
 public class ProgramContentMutations {

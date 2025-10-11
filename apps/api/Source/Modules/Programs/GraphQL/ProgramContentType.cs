@@ -2,7 +2,7 @@ using GameGuild.Database;
 using GameGuild.Modules.Programs;
 using ProgramContentEntity = GameGuild.Modules.Programs.ProgramContent;
 
-namespace GameGuild.Source.Modules.Programs.GraphQL;
+namespace GameGuild.Modules.Programs.GraphQL;
 
 /// <summary> GraphQL type definition for ProgramContent entity </summary>
 public class ProgramContentGraphQLType : ObjectType<ProgramContent> {

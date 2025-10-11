@@ -265,7 +265,6 @@ public static class DependencyInjection {
         services.AddUsersModule();
         services.AddUserProfilesModule();
         services.AddFeaturesModule();
-        services.AddUserAchievementsModule(); // ✅ Enabled for gamification system
         // services.AddProductsModule(); // Temporarily disabled
         services.AddExperimentsModule(); // Rate Plan Experiment Framework
 

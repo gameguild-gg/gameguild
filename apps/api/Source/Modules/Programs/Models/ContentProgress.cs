@@ -1,6 +1,6 @@
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Users;
-using GameGuild.Source.Modules.Programs.Models;
+using GameGuild.Modules.Programs;
 
 
 namespace GameGuild.Modules.Programs;
