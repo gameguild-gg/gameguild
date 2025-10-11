@@ -6,7 +6,7 @@ namespace GameGuild.Modules.Permissions.Commands;
 /// <summary>
 /// Command to grant resource-level permissions to a user
 /// </summary>
-public class GrantResourcePermissionCommand : IRequest<ResourcePermission>
+public class GrantResourcePermissionCommand : IRequest<ResourcePermission<EntityBase>>
 {
     /// <summary>
     /// User ID to grant permissions to

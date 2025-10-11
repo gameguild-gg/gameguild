@@ -22,17 +22,17 @@ public class ErrorEventRepository : IErrorEventRepository
             .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
-    public async Task<List<ErrorEvent>> GetByIssueIdAsync(Guid issueId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<ErrorEvent>> GetByIssueIdAsync(Guid issueId, int skip, int take, CancellationToken cancellationToken = default)
     {
         return await _context.Set<ErrorEvent>()
             .Where(e => e.ErrorIssueId == issueId)
             .OrderByDescending(e => e.OccurredAt)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<ErrorEvent>> GetByDateRangeAsync(Guid? tenantId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<ErrorEvent>> GetByDateRangeAsync(Guid? tenantId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
     {
         var query = _context.Set<ErrorEvent>().AsQueryable();
 
@@ -47,11 +47,10 @@ public class ErrorEventRepository : IErrorEventRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Guid> AddAsync(ErrorEvent errorEvent, CancellationToken cancellationToken = default)
+    public async Task AddAsync(ErrorEvent errorEvent, CancellationToken cancellationToken = default)
     {
         _context.Set<ErrorEvent>().Add(errorEvent);
         await _context.SaveChangesAsync(cancellationToken);
-        return errorEvent.Id;
     }
 
     public async Task DeleteByIssueIdAsync(Guid issueId, CancellationToken cancellationToken = default)

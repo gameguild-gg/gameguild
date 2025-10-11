@@ -62,7 +62,7 @@ public class RevenueEvent : EntityBase
     public Guid? UserId { get; set; }
 
     /// <summary>Tenant ID for multi-tenancy</summary>
-    public override Guid? TenantId { get; set; }
+    // TenantId inherited from EntityBase (no override needed)
 
     /// <summary>Mark event as processed</summary>
     public void MarkAsProcessed(Guid? ledgerEntryId = null)

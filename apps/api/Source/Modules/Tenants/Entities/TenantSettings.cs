@@ -12,7 +12,7 @@ namespace GameGuild.Modules.Tenants;
 public class TenantSettings : Resource
 {
     /// <summary> Reference to the tenant (null for global default settings) </summary>
-    public override Guid? TenantId { get; set; }
+    // TenantId inherited from EntityBase (no override needed)
 
     /// <summary> Navigation property to the tenant </summary>
     public new virtual Tenant? Tenant { get; set; }

@@ -28,7 +28,7 @@ public class Tag : EntityBase
     /// <summary> Whether this tag is available for use </summary>
     public bool IsActive { get; set; } = true;
 
-    public override Guid? TenantId { get; set; }
+    // TenantId inherited from EntityBase (no override needed)
 
     // Navigation properties
     public virtual ICollection<TagRelationship> SourceRelationships { get; set; } = new List<TagRelationship>();

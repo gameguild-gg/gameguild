@@ -10,7 +10,7 @@ public class UserAssignment : EntityBase
     public Guid ExperimentId { get; set; }
     public Guid VariantId { get; set; }
     public Guid UserId { get; set; }
-    public override Guid? TenantId { get; set; }
+    // TenantId inherited from EntityBase (no override needed)
     public DateTime AssignedAt { get; set; }
     public bool HasConverted { get; set; }
     public DateTime? ConvertedAt { get; set; }

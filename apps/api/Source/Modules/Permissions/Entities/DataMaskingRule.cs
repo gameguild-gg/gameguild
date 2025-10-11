@@ -10,7 +10,7 @@ public class DataMaskingRule : EntityBase<Guid>
     /// <summary>
     /// Tenant ID to which this rule belongs (null for global rules)
     /// </summary>
-    public override Guid? TenantId { get; set; }
+    // TenantId inherited from EntityBase (no override needed)
 
     /// <summary>
     /// Name of the masking rule
@@ -163,7 +163,7 @@ public class DataAccessLog : EntityBase<Guid>
     /// <summary>
     /// Tenant ID
     /// </summary>
-    public override Guid? TenantId { get; set; }
+    // TenantId inherited from EntityBase (no override needed)
 
     /// <summary>
     /// User who accessed the data

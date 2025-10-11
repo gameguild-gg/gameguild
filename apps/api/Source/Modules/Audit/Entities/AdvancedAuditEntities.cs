@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Audit.Entities;
 /// </summary>
 public sealed class RetentionPolicySimulation : EntityBase
 {
-    public override Guid TenantId { get; private set; }
+    public new Guid? TenantId { get; private set; }
     public string PolicyName { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public int RetentionDays { get; private set; }
@@ -121,7 +121,7 @@ public sealed class RetentionPolicySimulation : EntityBase
 /// </summary>
 public sealed class PiiRedactionRule : EntityBase
 {
-    public override Guid TenantId { get; private set; }
+    public new Guid? TenantId { get; private set; }
     public string RuleName { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public bool IsEnabled { get; private set; }
@@ -203,7 +203,7 @@ public enum RedactionStrategy
 /// </summary>
 public sealed class SavedAuditQuery : EntityBase
 {
-    public override Guid TenantId { get; private set; }
+    public new Guid? TenantId { get; private set; }
     public string QueryName { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public string QueryDsl { get; private set; } = string.Empty;
@@ -253,7 +253,7 @@ public sealed class SavedAuditQuery : EntityBase
 /// </summary>
 public sealed class AuditReplaySession : EntityBase
 {
-    public override Guid TenantId { get; private set; }
+    public new Guid? TenantId { get; private set; }
     public string SessionName { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public Guid CreatedByUserId { get; private set; }

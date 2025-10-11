@@ -8,7 +8,6 @@ namespace GameGuild.Modules.Audit.Entities;
 /// </summary>
 public sealed class AuditAnomaly : EntityBase
 {
-    public override Guid TenantId { get; private set; }
     public Guid? UserId { get; private set; }
     public AnomalyType Type { get; private set; }
     public AnomalySeverity Severity { get; private set; }
