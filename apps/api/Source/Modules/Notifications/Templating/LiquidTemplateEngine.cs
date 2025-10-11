@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Fluid;
 using Fluid.Values;
+using Fluid.Ast;
 
 namespace GameGuild.Modules.Notifications.Templating;
 
