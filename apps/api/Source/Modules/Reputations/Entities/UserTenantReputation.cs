@@ -2,6 +2,7 @@ using GameGuild.Modules.Users;
 using GameGuild.Core.Domain;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Resources;
 
 namespace GameGuild.Modules.Reputations.Entities;
 
@@ -13,8 +14,7 @@ namespace GameGuild.Modules.Reputations.Entities;
 [Index(nameof(TenantPermissionId), IsUnique = true)]
 [Index(nameof(Score))]
 [Index(nameof(CurrentLevelId))]
-public class UserTenantReputation : Resource, IReputation
-{
+public class UserTenantReputation : Resource, IReputation {
     /// <summary>
     /// The user-tenant relationship this reputation belongs to
     /// </summary>
