@@ -104,9 +104,10 @@ public class UserSubscription : EntityBase {
   // Navigation properties
   [ForeignKey(nameof(UserId))] public virtual User User { get; set; } = null!;
 
-  [ForeignKey(nameof(SubscriptionPlanId))] public virtual ProductSubscriptionPlan SubscriptionPlan { get; set; } = null!;
-
-  public virtual ICollection<UserProduct> UserProducts { get; set; } = new List<UserProduct>();
+  // NOTE: ProductSubscriptionPlan and UserProduct types don't exist in this codebase
+  // These are likely from a different architecture and should be removed or replaced
+  // [ForeignKey(nameof(SubscriptionPlanId))] public virtual ProductSubscriptionPlan SubscriptionPlan { get; set; } = null!;
+  // public virtual ICollection<UserProduct> UserProducts { get; set; } = new List<UserProduct>();
 
   // Domain Properties
 

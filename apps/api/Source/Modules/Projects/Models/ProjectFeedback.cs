@@ -48,7 +48,7 @@ public class ProjectFeedback : Resource {
   /// </summary>
   [Required]
   [MaxLength(200)]
-  public new string Title { get; set; } = string.Empty;
+  public string Title { get; set; } = string.Empty;
 
   /// <summary>
   /// Review content

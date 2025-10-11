@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Tenants.Entities;
 using GameGuild.Services;
 using Microsoft.AspNetCore.Mvc;
 
