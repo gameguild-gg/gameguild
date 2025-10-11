@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using GameGuild.Modules.Audit.Entities;
 using GameGuild.Modules.Audit.Enums;
-using GameGuild.CQRS;
+
 
 namespace GameGuild.Modules.Audit.Services;
 
@@ -64,8 +64,8 @@ public class FieldAccessAuditService : IFieldAccessAuditService {
         var maskedOldValue = isSensitive ? MaskSensitiveData(oldValue, sensitivityLevel) : oldValue;
         var maskedNewValue = isSensitive ? MaskSensitiveData(newValue, sensitivityLevel) : newValue;
 
-        audit.SetValues(oldValue, newValue, maskedOldValue, maskedNewValue, isSensitive, sensitivityLevel);
-        audit.SetAccessContext(ipAddress, userAgent, null, null, null);
+        audit.SetValues(oldValue, newValue, maskedOldValue, maskedNewValue);
+        audit.SetAccessContext(null, null, null);
 
         // Determine if notification is required (e.g., for GDPR)
         var requiresNotification = isSensitive &&
@@ -122,8 +122,8 @@ public class FieldAccessAuditService : IFieldAccessAuditService {
         var maskedOldValue = isSensitive ? MaskSensitiveData(oldValue, sensitivityLevel) : oldValue;
         var maskedNewValue = isSensitive ? MaskSensitiveData(newValue, sensitivityLevel) : newValue;
 
-        audit.SetValues(oldValue, newValue, maskedOldValue, maskedNewValue, isSensitive, sensitivityLevel);
-        audit.SetAccessContext(ipAddress, userAgent, requestId, sessionId, apiEndpoint);
+        audit.SetValues(oldValue, newValue, maskedOldValue, maskedNewValue);
+        audit.SetAccessContext(requestId, sessionId, apiEndpoint);
 
         // Determine if notification is required (e.g., for GDPR)
         var requiresNotification = isSensitive &&

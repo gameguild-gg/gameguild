@@ -1,5 +1,4 @@
 using GameGuild.Core.Domain.Identity;
-using GameGuild.Core.Domain.Permissions;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Permissions;

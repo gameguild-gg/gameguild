@@ -1,5 +1,3 @@
-using GameGuild.Modules.Resources;
-
 namespace GameGuild.Modules.Certificates;
 
 /// <summary> Permission class for Certificate entities Manages access control for certificates </summary>

@@ -1,6 +1,6 @@
 using GameGuild.Modules.SlaMonitoring.Entities;
 using GameGuild.Modules.SlaMonitoring.Repositories;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.SlaMonitoring.Services;
 

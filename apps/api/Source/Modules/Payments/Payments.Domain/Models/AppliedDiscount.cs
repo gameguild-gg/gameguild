@@ -1,5 +1,3 @@
-using GameGuild.Modules.Payments.Models;
-
 namespace GameGuild.Modules.Payments.Models;
 
 /// <summary>

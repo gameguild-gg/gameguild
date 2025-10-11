@@ -1,17 +1,12 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
-
 using ContentEntity = GameGuild.Modules.Contents.Models.Content;
 
 // GraphQL attributes
 
 namespace GameGuild.Modules.Projects;
 
-/// <summary> Represents a project (game, tool, art, etc.) Enhanced with improved validation, indexing, and relationships </summary>
+/// <summary> LEGACY: Represents a project (game, tool, art, etc.) - Use GameGuild.Modules.Projects.Entities.Project instead </summary>
 [Table("Projects")]
 [Index(nameof(Title))]
 [Index(nameof(Status))]
@@ -20,7 +15,7 @@ namespace GameGuild.Modules.Projects;
 [Index(nameof(CategoryId))]
 [Index(nameof(CreatedAt))]
 [Index(nameof(UpdatedAt))]
-public sealed class Project : ContentEntity {
+public sealed class ProjectLegacy : ContentEntity {
   /// <summary> Short description (max 500 chars) </summary>
   [GraphQLDescription("Short description (max 500 chars).")]
   [MaxLength(500)]

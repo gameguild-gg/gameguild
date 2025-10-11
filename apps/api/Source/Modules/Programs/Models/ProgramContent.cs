@@ -1,8 +1,4 @@
 using System.Text.Json;
-using GameGuild.Modules.Contents.Models;
-using GameGuild.Modules.Programs;
-using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Programs.Entities;
 using ProgramContentTypeEntity = GameGuild.Modules.Programs.Entities.ProgramContentType;
 using GradingMethodEntity = GameGuild.Modules.Programs.Entities.GradingMethod;
 

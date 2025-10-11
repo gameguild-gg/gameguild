@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Common.Configuration;
-using GameGuild.Modules.Tenants;
+
 
 namespace GameGuild.Modules.Tenants;
 

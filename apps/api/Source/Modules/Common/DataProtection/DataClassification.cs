@@ -1,5 +1,3 @@
-using System;
-
 namespace GameGuild.Modules.Common.DataProtection;
 
 /// <summary>

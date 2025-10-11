@@ -1,6 +1,4 @@
-﻿using GameGuild.Modules.Products.Domain.Enums;
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
-namespace GameGuild.Modules.Products.GraphQL;
+﻿namespace GameGuild.Modules.Products.GraphQL;
 
 public class UpdatePromoCodeInput {
   public required Guid Id { get; set; }

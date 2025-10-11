@@ -1,19 +1,9 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.Database;
-using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Products.Queries;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-
-
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Handlers;
 

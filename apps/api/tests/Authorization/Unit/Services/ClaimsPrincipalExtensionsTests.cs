@@ -1,6 +1,4 @@
 using System.Security.Claims;
-using FluentAssertions;
-using GameGuild.Source.Modules.Authorization.Identity;
 using Xunit;
 
 namespace GameGuild.Tests.Authorization.Unit.Services;

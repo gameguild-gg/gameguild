@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace GameGuild.Modules.Subscriptions.SubscriptionPlans.Models;
 
 /// <summary>

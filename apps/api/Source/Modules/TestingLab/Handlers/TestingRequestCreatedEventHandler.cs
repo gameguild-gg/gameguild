@@ -1,4 +1,3 @@
-using GameGuild.Modules.TestingLab.Entities;
 using GameGuild.CQRS;
 
 

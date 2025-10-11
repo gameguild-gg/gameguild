@@ -1,5 +1,4 @@
 using GameGuild.Modules.Core.Controllers;
-using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Modules.Audit;

@@ -1,5 +1,3 @@
-using GameGuild.Modules.Tenants;
-
 namespace GameGuild.Modules.Tenants.Repositories;
 
 public interface ITenantBillingRepository

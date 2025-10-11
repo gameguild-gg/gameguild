@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using FluentAssertions;
-using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Users;
@@ -13,28 +12,23 @@ using Xunit;
 namespace GameGuild.Tests.Authentication.Integration;
 
 /// <summary>
-/// Integration tests for Authentication module
-/// Tests authentication workflows with real database and services
+/// Integration tests for authentication features
+/// Tests JWT token generation, refresh, and validation
 /// </summary>
-public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
-{
-    private readonly WebApplicationFactory<Program> _factory;
+public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactory<ApiProgram>>, IDisposable {
+    private readonly WebApplicationFactory<ApiProgram> _factory;
     private readonly HttpClient _client;
     private readonly IServiceScope _scope;
 
-    public AuthenticationIntegrationTests(WebApplicationFactory<Program> factory)
-    {
+    public AuthenticationIntegrationTests(WebApplicationFactory<ApiProgram> factory) {
         // Set environment variable before factory initialization
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
 
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
+        _factory = factory.WithWebHostBuilder(builder => {
             builder.UseEnvironment("Testing");
-            builder.ConfigureServices(services =>
-            {
+            builder.ConfigureServices(services => {
                 // Add in-memory database for testing
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
+                services.AddDbContext<ApplicationDbContext>(options => {
                     options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}");
                 });
 
@@ -50,11 +44,9 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
         _scope = _factory.Services.CreateScope();
     }
     [Fact]
-    public async Task LocalSignUp_ShouldCreateUser_WhenValidDataProvided()
-    {
+    public async Task LocalSignUp_ShouldCreateUser_WhenValidDataProvided() {
         // Arrange
-        var signUpCommand = new LocalSignUpCommand
-        {
+        var signUpCommand = new LocalSignUpCommand {
             Email = "integration.test@example.com",
             Username = "integrationtest",
             Password = "IntegrationTest123!"
@@ -76,14 +68,12 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
     }
 
     [Fact]
-    public async Task LocalSignIn_ShouldReturnToken_WhenValidCredentialsProvided()
-    {
+    public async Task LocalSignIn_ShouldReturnToken_WhenValidCredentialsProvided() {
         // Arrange - First create a user
         var context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var authService = _scope.ServiceProvider.GetRequiredService<IAuthService>();
 
-        var signUpRequest = new LocalSignUpRequest
-        {
+        var signUpRequest = new LocalSignUpRequest {
             Email = "signin.test@example.com",
             Username = "signintest",
             Password = "SignInTest123!"
@@ -91,8 +81,7 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
 
         await authService.LocalSignUpAsync(signUpRequest);
 
-        var signInCommand = new LocalSignInCommand
-        {
+        var signInCommand = new LocalSignInCommand {
             Email = signUpRequest.Email,
             Password = signUpRequest.Password
         };
@@ -103,8 +92,7 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
         // Assert
         response.Should().NotBeNull();
 
-        if (response.IsSuccessStatusCode)
-        {
+        if (response.IsSuccessStatusCode) {
             var signInResponse = await response.Content.ReadFromJsonAsync<SignInResponse>();
             signInResponse.Should().NotBeNull();
             signInResponse!.AccessToken.Should().NotBeNullOrEmpty();
@@ -115,13 +103,11 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
     }
 
     [Fact]
-    public async Task RefreshToken_ShouldReturnNewToken_WhenValidRefreshTokenProvided()
-    {
+    public async Task RefreshToken_ShouldReturnNewToken_WhenValidRefreshTokenProvided() {
         // Arrange - Create user and get refresh token
         var authService = _scope.ServiceProvider.GetRequiredService<IAuthService>();
 
-        var signUpRequest = new LocalSignUpRequest
-        {
+        var signUpRequest = new LocalSignUpRequest {
             Email = "refresh.test@example.com",
             Username = "refreshtest",
             Password = "RefreshTest123!"
@@ -130,8 +116,7 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
         var signUpResult = await authService.LocalSignUpAsync(signUpRequest);
         var refreshToken = signUpResult.RefreshToken;
 
-        var refreshCommand = new RefreshTokenCommand
-        {
+        var refreshCommand = new RefreshTokenCommand {
             RefreshToken = refreshToken
         };
 
@@ -141,8 +126,7 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
         // Assert
         response.Should().NotBeNull();
 
-        if (response.IsSuccessStatusCode)
-        {
+        if (response.IsSuccessStatusCode) {
             var refreshResponse = await response.Content.ReadFromJsonAsync<SignInResponse>();
             refreshResponse.Should().NotBeNull();
             refreshResponse!.AccessToken.Should().NotBeNullOrEmpty();
@@ -152,13 +136,11 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
     }
 
     [Fact]
-    public async Task RevokeToken_ShouldInvalidateRefreshToken()
-    {
+    public async Task RevokeToken_ShouldInvalidateRefreshToken() {
         // Arrange - Create user and get refresh token
         var authService = _scope.ServiceProvider.GetRequiredService<IAuthService>();
 
-        var signUpRequest = new LocalSignUpRequest
-        {
+        var signUpRequest = new LocalSignUpRequest {
             Email = "revoke.test@example.com",
             Username = "revoketest",
             Password = "RevokeTest123!"
@@ -167,8 +149,7 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
         var signUpResult = await authService.LocalSignUpAsync(signUpRequest);
         var refreshToken = signUpResult.RefreshToken;
 
-        var revokeCommand = new RevokeTokenCommand
-        {
+        var revokeCommand = new RevokeTokenCommand {
             RefreshToken = refreshToken
         };
 
@@ -179,8 +160,7 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
         response.Should().NotBeNull();
 
         // Try to use the revoked token - should fail
-        var refreshCommand = new RefreshTokenCommand
-        {
+        var refreshCommand = new RefreshTokenCommand {
             RefreshToken = refreshToken
         };
 
@@ -188,8 +168,7 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
         refreshResponse.IsSuccessStatusCode.Should().BeFalse();
     }
 
-    public void Dispose()
-    {
+    public void Dispose() {
         _scope.Dispose();
         _client.Dispose();
     }

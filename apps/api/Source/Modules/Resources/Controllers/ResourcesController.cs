@@ -1,7 +1,5 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Resources.Commands;
-using GameGuild.Modules.Resources;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Modules.Resources.Controllers;

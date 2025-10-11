@@ -1,7 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using GameGuild.Modules.Features.Abstractions;
 using GameGuild.Modules.Features.Entities;
 using GameGuild.Modules.Features.Models;

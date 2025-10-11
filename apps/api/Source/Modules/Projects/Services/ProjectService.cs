@@ -1,6 +1,4 @@
 using GameGuild.Database;
-using GameGuild.Modules.Contents.Models;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Projects;

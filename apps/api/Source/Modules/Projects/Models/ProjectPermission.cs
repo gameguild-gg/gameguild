@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Resources;
-using Microsoft.EntityFrameworkCore;
-
 namespace GameGuild.Modules.Projects;
 
 /// <summary> Resource-specific permissions for Project entities (Layer 3 of the DAC permission system) Provide granular permission control for individual projects </summary>

@@ -1,4 +1,3 @@
-using GameGuild.Modules.Users;
 using GameGuild.Modules.Feedbacks.Entities;
 
 namespace GameGuild.Modules.Feedbacks;

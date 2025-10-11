@@ -1,6 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 namespace GameGuild.Modules.Reputations.Entities;
 
 public class ReputationActionConfiguration : IEntityTypeConfiguration<ReputationAction>

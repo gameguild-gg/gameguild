@@ -1,4 +1,3 @@
-using GameGuild.Modules.Users;
 namespace GameGuild.Modules.Followers.DTOs;
 
 /// <summary> DTO for follower information </summary>

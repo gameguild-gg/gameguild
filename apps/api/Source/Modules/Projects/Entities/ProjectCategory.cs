@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
-
 namespace GameGuild.Modules.Projects.Entities;
 
 /// <summary> Represents a project category (game, tool, art, etc.) </summary>

@@ -1,7 +1,4 @@
 using GameGuild.CQRS;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
-using GameGuild.Core;
 using GameGuild.Database;
 using GameGuild.Modules.Authentication;
 

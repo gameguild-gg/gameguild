@@ -1,6 +1,6 @@
 using GameGuild.Modules.Experiments.Repositories;
 using GameGuild.Modules.Experiments.Services;
-using Microsoft.Extensions.DependencyInjection;
+
 
 namespace GameGuild.Modules.Experiments;
 

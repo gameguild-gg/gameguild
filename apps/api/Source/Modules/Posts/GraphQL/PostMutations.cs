@@ -1,6 +1,5 @@
 using GameGuild.GraphQL;
 using GameGuild.Database;
-using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Posts.Models;
 
 

@@ -1,7 +1,6 @@
 using GameGuild.Modules.DataArchival.Commands;
 using GameGuild.Modules.DataArchival.Queries;
 using GameGuild.CQRS;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Modules.DataArchival.Controllers;

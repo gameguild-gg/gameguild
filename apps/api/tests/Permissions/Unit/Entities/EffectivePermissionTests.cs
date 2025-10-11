@@ -1,6 +1,5 @@
 using FluentAssertions;
 using GameGuild.Core.Domain.Permissions;
-using GameGuild.Modules.Permissions;
 using Xunit;
 
 namespace GameGuild.Tests.Permissions.Unit.Entities;

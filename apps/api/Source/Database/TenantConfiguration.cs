@@ -1,7 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
 namespace GameGuild.Database;
 
 /// <summary> Temporary configuration for Tenant entity to handle missing AdminEmail column </summary>

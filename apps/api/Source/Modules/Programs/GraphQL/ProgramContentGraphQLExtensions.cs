@@ -1,4 +1,3 @@
-using GameGuild.Modules.Programs;
 using HotChocolate.Execution.Configuration;
 using ProgramContentTypeEnum = GameGuild.Modules.Programs.Models.ProgramContentType;
 
