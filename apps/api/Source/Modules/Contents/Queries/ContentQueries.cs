@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using GameGuild.CQRS;
-using GameGuild.Source.Modules.Contents.Models;
+using GameGuild.Modules.Contents.Models;
 
-namespace GameGuild.Source.Modules.Contents.Queries;
+namespace GameGuild.Modules.Contents.Queries;
 
 /// <summary>
 /// CQRS Queries for Content Management

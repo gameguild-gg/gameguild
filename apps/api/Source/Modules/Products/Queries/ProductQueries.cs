@@ -1,10 +1,10 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents;
-using GameGuild.Source.Modules.Products.Models;
+using GameGuild.Modules.Products.Models;
 using ProductTypeEnum = GameGuild.ProductType;
 
 
-namespace GameGuild.Source.Modules.Products.Queries;
+namespace GameGuild.Modules.Products.Queries;
 
 /// <summary> Query to get product by ID </summary>
 public record GetProductByIdQuery : IRequest<Product?> {

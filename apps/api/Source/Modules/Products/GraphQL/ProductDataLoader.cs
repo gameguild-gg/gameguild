@@ -1,8 +1,8 @@
 using GameGuild.Database;
-using GameGuild.Source.Modules.Products.Models;
+using GameGuild.Modules.Products.Models;
 
 
-namespace GameGuild.Source.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary> DataLoader interface for efficiently loading Product entities </summary>
 public interface IProductDataLoader : IDataLoader<Guid, Product?> { }

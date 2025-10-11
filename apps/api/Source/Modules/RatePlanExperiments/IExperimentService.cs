@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace GameGuild.Source.Modules.RatePlanExperiments
+namespace GameGuild.Modules.RatePlanExperiments
 {
     public interface IExperimentService
     {

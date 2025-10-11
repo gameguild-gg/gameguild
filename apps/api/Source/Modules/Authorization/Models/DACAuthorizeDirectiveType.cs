@@ -1,4 +1,4 @@
-namespace GameGuild.Source.Modules.Authorization;
+namespace GameGuild.Modules.Authorization;
 
 /// <summary> GraphQL directive for 3-layer DAC authorization </summary>
 public class DacAuthorizeDirectiveType : DirectiveType

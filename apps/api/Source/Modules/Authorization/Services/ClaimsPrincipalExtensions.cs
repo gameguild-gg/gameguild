@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using GameGuild.Modules.Tenants;
 
-namespace GameGuild.Source.Modules.Authorization.Identity;
+namespace GameGuild.Modules.Authorization.Identity;
 
 /// <summary> Extension methods for ClaimsPrincipal to extract common user information </summary>
 public static class ClaimsPrincipalExtensions

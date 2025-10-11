@@ -2,7 +2,7 @@ using GameGuild.Core.Infrastructure.Permissions;
 using GameGuild.Core.Modules;
 using GameGuild.Modules.Permissions.Contexts;
 
-namespace GameGuild.Source.Modules.Authorization;
+namespace GameGuild.Modules.Authorization;
 
 /// <summary>
 /// Authorization module implementing the standardized IModule interface.

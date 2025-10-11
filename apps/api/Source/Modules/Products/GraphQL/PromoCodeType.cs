@@ -1,10 +1,10 @@
 ﻿using GameGuild.Database;
-using GameGuild.Source.Modules.Products.Models;
-using GameGuild.Source.Modules.Products.Services;
+using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Products.Services;
 using PromoCodeTypeEnum = GameGuild.PromoCodeType;
 
 
-namespace GameGuild.Source.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary> GraphQL type for PromoCode entity </summary>
 public class PromoCodeType : ObjectType<PromoCode> {

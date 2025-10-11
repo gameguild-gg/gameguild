@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using GameGuild.Source.Modules.Products.Models;
+using GameGuild.Modules.Products.Models;
 
-namespace GameGuild.Source.Modules.Products.Interfaces;
+namespace GameGuild.Modules.Products.Interfaces;
 
 /// <summary> Interface for promotional code services </summary>
 public interface IPromoCodeService {

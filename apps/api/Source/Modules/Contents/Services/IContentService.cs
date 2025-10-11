@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using GameGuild.Source.Modules.Contents.Models;
+using GameGuild.Modules.Contents.Models;
 
-namespace GameGuild.Source.Modules.Contents.Services;
+namespace GameGuild.Modules.Contents.Services;
 
 /// <summary>
 /// Service interface for content management operations

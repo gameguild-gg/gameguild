@@ -1,6 +1,6 @@
 using GameGuild.Modules.Localization;
 using GameGuild.Modules.Tenants;
-using GameGuild.Source.Modules.Contents.Models;
+using GameGuild.Modules.Contents.Models;
 
 namespace GameGuild.Modules.Resources;
 

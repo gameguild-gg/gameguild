@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Source.Modules.Products.Controllers;
+﻿namespace GameGuild.Modules.Products.Controllers;
 
 public class GrantAccessRequest {
   public ProductAcquisitionType AcquisitionType { get; set; }

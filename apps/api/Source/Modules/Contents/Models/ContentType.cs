@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace GameGuild.Source.Modules.Contents.Models;
+namespace GameGuild.Modules.Contents.Models;
 
 /// <summary>
 /// Enumeration of content types for categorization

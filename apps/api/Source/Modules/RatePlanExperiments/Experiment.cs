@@ -1,6 +1,6 @@
 using System;
 
-namespace GameGuild.Source.Modules.RatePlanExperiments
+namespace GameGuild.Modules.RatePlanExperiments
 {
     public class Experiment
     {

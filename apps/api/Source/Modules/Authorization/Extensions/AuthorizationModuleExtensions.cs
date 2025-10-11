@@ -1,6 +1,6 @@
 ﻿using GameGuild.Core.Modules;
 
-namespace GameGuild.Source.Modules.Authorization;
+namespace GameGuild.Modules.Authorization;
 
 /// <summary>
 /// Extension methods for the Authorization module providing the standardized pattern.

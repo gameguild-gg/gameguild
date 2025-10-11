@@ -3,7 +3,7 @@ using GameGuild.Modules.TestingLab;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GameGuild.Source.Modules.TestingLab;
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary>
 /// TestingLab module implementing the standardized IModule interface.

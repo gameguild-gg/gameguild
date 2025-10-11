@@ -3,7 +3,7 @@ using GameGuild.Modules.Posts.GraphQL;
 using GameGuild.Modules.Posts.Services;
 using HotChocolate.Execution.Configuration;
 
-namespace GameGuild.Source.Modules.Posts;
+namespace GameGuild.Modules.Posts;
 
 /// <summary>
 /// Posts module implementing the standardized IModule interface.

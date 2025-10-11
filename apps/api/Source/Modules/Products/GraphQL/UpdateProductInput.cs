@@ -2,7 +2,7 @@
 using ProductTypeEnum = GameGuild.ProductType;
 
 
-namespace GameGuild.Source.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products.GraphQL;
 
 public class UpdateProductInput {
   public required Guid Id { get; set; }
