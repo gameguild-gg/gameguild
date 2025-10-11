@@ -2,7 +2,7 @@ using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Contents.Models;
-using GameGuild.Modules.Users.Abstractions;
+using GameGuild.Modules.Users;
 using GameGuild.Modules.Tenants.Abstractions;
 
 
