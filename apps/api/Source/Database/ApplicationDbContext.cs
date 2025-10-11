@@ -11,6 +11,7 @@ using GameGuild.Modules.Resources;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Users.Entities;
+using GameGuild.Modules.TestingLab.Entities;
 using GameGuild.Source.Database.Seeding;
 
 namespace GameGuild.Database;
@@ -19,8 +20,7 @@ namespace GameGuild.Database;
 /// Main application database context for GameGuild
 /// Manages all entities and provides unified data access
 /// </summary>
-public class ApplicationDbContext : DbContext
-{
+public class ApplicationDbContext : DbContext {
     /// <summary>
     /// Constructor for dependency injection
     /// </summary>
@@ -96,10 +96,49 @@ public class ApplicationDbContext : DbContext
 
     // public DbSet<FeatureFlagUsage> FeatureFlagUsage => Set<FeatureFlagUsage>();
 
+    // User Achievements (Gamification)
+    public DbSet<GameGuild.Modules.UserAchievements.Achievement> Achievements => Set<GameGuild.Modules.UserAchievements.Achievement>();
+
+    public DbSet<GameGuild.Modules.UserAchievements.UserAchievement> UserAchievements => Set<GameGuild.Modules.UserAchievements.UserAchievement>();
+
+    public DbSet<GameGuild.Modules.UserAchievements.AchievementLevel> AchievementLevels => Set<GameGuild.Modules.UserAchievements.AchievementLevel>();
+
+    public DbSet<GameGuild.Modules.UserAchievements.AchievementPrerequisite> AchievementPrerequisites => Set<GameGuild.Modules.UserAchievements.AchievementPrerequisite>();
+
+    public DbSet<GameGuild.Modules.UserAchievements.AchievementProgress> AchievementProgress => Set<GameGuild.Modules.UserAchievements.AchievementProgress>();
+
+    // TestingLab Module
+    public DbSet<TestingRequest> TestingRequests => Set<TestingRequest>();
+
+    public DbSet<TestingSession> TestingSessions => Set<TestingSession>();
+
+    public DbSet<TestingParticipant> TestingParticipants => Set<TestingParticipant>();
+
+    public DbSet<TestingFeedback> TestingFeedbacks => Set<TestingFeedback>();
+
+    public DbSet<TestingFeedbackForm> TestingFeedbackForms => Set<TestingFeedbackForm>();
+
+    public DbSet<FeedbackQualityRating> FeedbackQualityRatings => Set<FeedbackQualityRating>();
+
+    public DbSet<TestingLocation> TestingLocations => Set<TestingLocation>();
+
+    public DbSet<SessionRegistration> SessionRegistrations => Set<SessionRegistration>();
+
+    public DbSet<SessionWaitlist> SessionWaitlists => Set<SessionWaitlist>();
+
+    public DbSet<SessionProject> SessionProjects => Set<SessionProject>();
+
+    public DbSet<TestingAnalytics> TestingAnalytics => Set<TestingAnalytics>();
+
+    public DbSet<TestingContext> TestingContexts => Set<TestingContext>();
+
+    public DbSet<TestingLabSettings> TestingLabSettings => Set<TestingLabSettings>();
+
+    public DbSet<TestingFeedbackStats> TestingFeedbackStats => Set<TestingFeedbackStats>();
+
     #endregion
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
 
         // Configure base entities (timestamps, soft delete, etc.)
@@ -115,16 +154,14 @@ public class ApplicationDbContext : DbContext
         var providerName = Database.ProviderName;
         var isInMemory = providerName?.Contains("InMemory", StringComparison.OrdinalIgnoreCase) ?? false;
 
-        if (isInMemory)
-        {
+        if (isInMemory) {
             // InMemory provider doesn't support Dictionary<string, object> properties
             // Ignore these properties for InMemory database
             modelBuilder.Entity<PermissionAuditLog>().Ignore(pal => pal.Metadata);
             modelBuilder.Entity<PermissionDelegation>().Ignore(pd => pd.Conditions);
             modelBuilder.Entity<PermissionTemplate>().Ignore(pt => pt.Metadata);
         }
-        else
-        {
+        else {
             // Configure jsonb column types for Dictionary<string, object> properties (PostgreSQL)
             modelBuilder.Entity<PermissionAuditLog>()
                 .Property(pal => pal.Metadata)
@@ -154,32 +191,28 @@ public class ApplicationDbContext : DbContext
         // This ensures that even explicitly set names in configurations get transformed to snake_case
         var snakeTransformer = CaseTransformerFactory.Snake;
 
-        foreach (var entity in modelBuilder.Model.GetEntityTypes())
-        {
+        foreach (var entity in modelBuilder.Model.GetEntityTypes()) {
             // Transform table names to snake_case
             var tableName = entity.GetTableName();
 
             if (!string.IsNullOrEmpty(tableName)) { entity.SetTableName(snakeTransformer.Transform(tableName)); }
 
             // Transform column names to snake_case (including those set by configurations)
-            foreach (var property in entity.GetProperties())
-            {
+            foreach (var property in entity.GetProperties()) {
                 var columnName = property.GetColumnName();
 
                 if (!string.IsNullOrEmpty(columnName)) { property.SetColumnName(snakeTransformer.Transform(columnName)); }
             }
 
             // Transform index names to snake_case
-            foreach (var index in entity.GetIndexes())
-            {
+            foreach (var index in entity.GetIndexes()) {
                 var indexName = index.GetDatabaseName();
 
                 if (!string.IsNullOrEmpty(indexName)) { index.SetDatabaseName(snakeTransformer.Transform(indexName)); }
             }
 
             // Transform foreign key names to snake_case
-            foreach (var foreignKey in entity.GetForeignKeys())
-            {
+            foreach (var foreignKey in entity.GetForeignKeys()) {
                 var foreignKeyName = foreignKey.GetConstraintName();
 
                 if (!string.IsNullOrEmpty(foreignKeyName)) { foreignKey.SetConstraintName(snakeTransformer.Transform(foreignKeyName)); }
@@ -199,8 +232,7 @@ public class ApplicationDbContext : DbContext
     /// <summary>
     /// Override SaveChanges to handle timestamps and domain events
     /// </summary>
-    public override int SaveChanges()
-    {
+    public override int SaveChanges() {
         UpdateTimestamps();
 
         return base.SaveChanges();
@@ -209,8 +241,7 @@ public class ApplicationDbContext : DbContext
     /// <summary>
     /// Override SaveChangesAsync to handle timestamps and domain events
     /// </summary>
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) {
         UpdateTimestamps();
 
         return await base.SaveChangesAsync(cancellationToken);
@@ -219,17 +250,14 @@ public class ApplicationDbContext : DbContext
     /// <summary>
     /// Updates timestamps and version numbers for tracked entities
     /// </summary>
-    private void UpdateTimestamps()
-    {
+    private void UpdateTimestamps() {
         var entries = ChangeTracker.Entries().Where(entry => entry is { Entity: EntityBase, State: EntityState.Added or EntityState.Modified });
 
-        foreach (var entry in entries)
-        {
+        foreach (var entry in entries) {
             var entity = (EntityBase)entry.Entity;
             DateTime now = DateTime.UtcNow;
 
-            switch (entry.State)
-            {
+            switch (entry.State) {
                 case EntityState.Added:
                     entity.CreatedAt = now;
                     entity.UpdatedAt = now;
@@ -254,8 +282,7 @@ public class ApplicationDbContext : DbContext
     /// <summary>
     /// Clears domain events from all tracked entities
     /// </summary>
-    public void ClearDomainEvents()
-    {
+    public void ClearDomainEvents() {
         var entitiesWithEvents = GetEntitiesWithDomainEvents().ToList();
 
         foreach (var entity in entitiesWithEvents) { entity.ClearDomainEvents(); }
@@ -266,8 +293,7 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     /// <param name="serviceProvider">Service provider for dependency injection</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    public async Task SeedAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default)
-    {
+    public async Task SeedAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken = default) {
         var languageSeederLogger = serviceProvider.GetRequiredService<ILogger<LanguageSeeder>>();
         LanguageSeeder languageSeeder = new(languageSeederLogger);
         await languageSeeder.SeedAsync(this, cancellationToken);
