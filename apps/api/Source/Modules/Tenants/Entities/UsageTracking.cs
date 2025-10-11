@@ -26,7 +26,7 @@ public class UsageTracking : EntityBase
 {
     /// <summary> ID of the tenant </summary>
     [Required]
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary> Navigation property to the tenant </summary>
     [ForeignKey(nameof(TenantId))]
