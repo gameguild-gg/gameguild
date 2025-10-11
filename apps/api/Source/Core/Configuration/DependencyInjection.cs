@@ -287,20 +287,20 @@ public static class DependencyInjection {
     Console.WriteLine("✅ IDomainEventPublisher registered");
 
     // Register context services
-    services.AddScoped<IUserContext, GameGuild.Authorization.Identity.UserContext>();
+    services.AddScoped<IUserContext, Authorization.Identity.UserContext>();
     Console.WriteLine("✅ IUserContext registered");
 
-    services.AddScoped<ITenantContext, GameGuild.Authorization.Identity.TenantContext>();
+    services.AddScoped<ITenantContext, Authorization.Identity.TenantContext>();
     Console.WriteLine("✅ ITenantContext registered");
 
     // Register missing context services that are required by the ContextMiddleware
-    services.AddScoped<IPermissionsContext, GameGuild.Authorization.Identity.PermissionsContext>();
+    services.AddScoped<IPermissionsContext, Authorization.Identity.PermissionsContext>();
     Console.WriteLine("✅ IPermissionsContext registered");
 
     services.AddScoped<IResourceContext, ResourceContext>();
     Console.WriteLine("✅ IResourceContext registered");
 
-    services.AddScoped<ILocalizationContext, GameGuild.Authorization.Identity.LocalizationContext>();
+    services.AddScoped<ILocalizationContext, Authorization.Identity.LocalizationContext>();
     Console.WriteLine("✅ ILocalizationContext registered");
 
     services.AddHttpContextAccessor(); // Required by UserContext and TenantContext

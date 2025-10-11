@@ -1,5 +1,5 @@
 ﻿namespace GameGuild.Source.Core.Tenants;
-using GameGuild.Modules.Resources;
+using Modules.Resources;
 
 /// <summary>
 /// Data transfer object for permission definitions

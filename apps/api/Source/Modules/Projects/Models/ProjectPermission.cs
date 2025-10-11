@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Projects;
 [Index(nameof(ResourceId), nameof(UserId), Name = "IX_ProjectPermissions_Resource_User")]
 [Index(nameof(TenantId), Name = "IX_ProjectPermissions_TenantId")]
 [Index(nameof(ExpiresAt), Name = "IX_ProjectPermissions_Expiration")]
-public class ProjectPermission : GameGuild.Modules.Resources.ResourcePermission<Project> {
+public class ProjectPermission : GameGuild.Modules.Resources.ResourcePermission<GameGuild.Modules.Projects.Entities.Project> {
   // Public parameterless constructor for EF and GraphQL
   public ProjectPermission() : base() { }
 

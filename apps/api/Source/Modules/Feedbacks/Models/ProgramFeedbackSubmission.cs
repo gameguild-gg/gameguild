@@ -44,11 +44,11 @@ public class ProgramFeedbackSubmission : EntityBase {
   // Navigation properties
   public virtual User User { get; set; } = null!;
 
-  public virtual Programs.Program Program { get; set; } = null!;
+  public virtual Programs.Entities.Program Program { get; set; } = null!;
 
   public virtual ProductEntity? Product { get; set; }
 
-  public virtual ProgramUser ProgramUser { get; set; } = null!;
+  public virtual Programs.Entities.ProgramUser ProgramUser { get; set; } = null!;
 
   // Helper methods for JSON feedback data
   public T? GetFeedbackResponse<T>(string questionId) where T : class {

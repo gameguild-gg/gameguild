@@ -44,7 +44,7 @@ public class CredentialCreatedEventTests
         var eventObj = new CredentialCreatedEvent(credentialId, userId, type, createdAt);
 
         // Assert
-        eventObj.Should().BeAssignableTo<GameGuild.CQRS.DomainEventBase>();
+        eventObj.Should().BeAssignableTo<CQRS.DomainEventBase>();
         eventObj.EventId.Should().NotBeEmpty();
         eventObj.OccurredAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
     }
