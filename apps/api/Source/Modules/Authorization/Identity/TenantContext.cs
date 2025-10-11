@@ -13,10 +13,20 @@ public class TenantContext : ITenantContext {
 
   private readonly ClaimsPrincipal? _user;
 
+  private Tenant? _currentTenant;
+
   public TenantContext(IHttpContextAccessor httpContextAccessor, ILogger<TenantContext> logger) {
     _httpContextAccessor = httpContextAccessor;
     _user = _httpContextAccessor.HttpContext?.User;
     _logger = logger;
+  }
+
+  public Tenant? CurrentTenant => _currentTenant;
+
+  public Guid? CurrentTenantId => TenantId;
+
+  public void SetCurrentTenant(Tenant? tenant) {
+    _currentTenant = tenant;
   }
 
   public Guid? TenantId {

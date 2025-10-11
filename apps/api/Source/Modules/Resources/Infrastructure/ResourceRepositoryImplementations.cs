@@ -10,9 +10,9 @@ namespace GameGuild.Modules.Resources.Infrastructure;
 /// </summary>
 public class ResourceUsageRepository : IResourceUsageRepository
 {
-    private readonly IApplicationDbContext _context;
+    private readonly ApplicationDbContext _context;
 
-    public ResourceUsageRepository(IApplicationDbContext context)
+    public ResourceUsageRepository(ApplicationDbContext context)
     {
         _context = context;
     }
