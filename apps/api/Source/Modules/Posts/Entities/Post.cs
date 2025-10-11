@@ -18,7 +18,7 @@ public class Post : ContentEntity {
   public string PostType { get; set; } = "general";
 
   /// <summary> ID of the user who authored/created the post </summary>
-  public Guid? AuthorId { get; set; }
+  public new Guid? AuthorId { get; set; }
 
   /// <summary> Navigation property to the author </summary>
   public virtual User? Author { get; set; }
@@ -52,7 +52,7 @@ public class Post : ContentEntity {
   public virtual ICollection<PostLike> Likes { get; set; } = new List<PostLike>();
 
   /// <summary> Tags associated with this post </summary>
-  public virtual ICollection<PostTagAssignment> Tags { get; set; } = new List<PostTagAssignment>();
+  public new virtual ICollection<PostTagAssignment> Tags { get; set; } = new List<PostTagAssignment>();
 
   /// <summary> Users following this post for notifications </summary>
   public virtual ICollection<PostFollower> Followers { get; set; } = new List<PostFollower>();
