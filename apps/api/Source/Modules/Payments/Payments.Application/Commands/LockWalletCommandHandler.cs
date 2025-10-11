@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Payments.Commands;
 /// <summary>
 ///     Handler for LockWalletCommand
 /// </summary>
-public class LockWalletCommandHandler : IRequestHandler<LockWalletCommand, Unit>
+public class LockWalletCommandHandler : ICommandHandler<LockWalletCommand, Unit>
 {
     private readonly IWalletService _walletService;
     private readonly ILogger<LockWalletCommandHandler> _logger;
