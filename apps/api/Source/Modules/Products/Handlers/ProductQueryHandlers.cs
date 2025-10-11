@@ -19,7 +19,7 @@ namespace GameGuild.Modules.Products.Handlers;
 
 /// <summary> Query handlers for product operations </summary>
 public class ProductQueryHandlers
-  : IRequestHandler<GetProductByIdQuery, Product?>, IRequestHandler<GetProductsQuery, IEnumerable<ProductEntity>>, IRequestHandler<GetUserProductsQuery, IEnumerable<UserProduct>>, IRequestHandler<GetProductStatsQuery, ProductStats> {
+  : IRequestHandler<GetProductByIdQuery, ProductEntity?>, IRequestHandler<GetProductsQuery, IEnumerable<ProductEntity>>, IRequestHandler<GetUserProductsQuery, IEnumerable<UserProduct>>, IRequestHandler<GetProductStatsQuery, ProductStats> {
   private readonly ApplicationDbContext _context;
 
   private readonly ILogger<ProductQueryHandlers> _logger;
@@ -35,7 +35,7 @@ public class ProductQueryHandlers
     _logger = logger;
   }
 
-  public async Task<Product?> Handle(GetProductByIdQuery request, CancellationToken cancellationToken) {
+  public async Task<ProductEntity?> Handle(GetProductByIdQuery request, CancellationToken cancellationToken) {
     try {
       _logger.LogDebug("Getting product by ID: {ProductId}", request.ProductId);
 

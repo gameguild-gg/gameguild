@@ -12,7 +12,7 @@ using ProductTypeEnum = GameGuild.ProductType;
 namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary> GraphQL type definition for Product entity with DAC permission integration </summary>
-public class ProductType : ObjectType<Product> {
+public class ProductType : ObjectType<ProductEntity> {
   protected override void Configure(IObjectTypeDescriptor<ProductEntity> descriptor) {
     descriptor.Name("Product");
     descriptor.Description("Represents a product in the CMS system with full EntityBase support and DAC permissions.");

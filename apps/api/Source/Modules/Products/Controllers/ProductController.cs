@@ -3,10 +3,11 @@ using GameGuild.CQRS;
 using GameGuild.Modules.Contents.Models;
 using Microsoft.AspNetCore.Mvc;
 using ProductTypeEnum = GameGuild.ProductType;
+using Product = GameGuild.Modules.Products.Models.Product;
 
 
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
-namespace GameGuild.Modules.Products;
+namespace GameGuild.Modules.Products.Controllers;
 
 /// <summary>
 ///   REST API controller for managing products using CQRS pattern Implements 3-layer DAC permission system for all routes DAC Attribute Usage Examples: - Tenant Level: [RequireTenantPermission(PermissionType.Create)] - Content-Type Level:

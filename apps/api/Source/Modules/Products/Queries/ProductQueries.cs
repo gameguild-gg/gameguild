@@ -8,7 +8,7 @@ using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Queries;
 
 /// <summary> Query to get product by ID </summary>
-public record GetProductByIdQuery : IRequest<Product?> {
+public record GetProductByIdQuery : IRequest<ProductEntity?> {
   public Guid ProductId { get; init; }
 
   public bool IncludePricing { get; init; } = true;
