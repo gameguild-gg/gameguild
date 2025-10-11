@@ -3,6 +3,7 @@ using GameGuild.Authorization;
 using GameGuild.Authorization.Identity;
 using GameGuild.CQRS;
 using GameGuild.GraphQL;
+using GameGuild.Modules.Contents;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Programs.Commands;
 using Microsoft.Extensions.Logging;
