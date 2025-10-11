@@ -3,7 +3,7 @@ using GameGuild.Authorization;
 using GameGuild.Authorization.Identity;
 using GameGuild.CQRS;
 using GameGuild.GraphQL;
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Programs.Commands;
 using Microsoft.Extensions.Logging;
@@ -124,7 +124,7 @@ public record CreateProgramInput(
   string? Description = null,
   ProgramCategory? Category = null,
   ProgramDifficulty? Difficulty = null,
-  GameGuild.Modules.Contents.AccessLevel? Visibility = null,
+  AccessLevel? Visibility = null,
   float? EstimatedHours = null,
   string? Thumbnail = null,
   string? VideoShowcaseUrl = null
@@ -136,7 +136,7 @@ public record UpdateProgramInput(
   string? Description = null,
   ProgramCategory? Category = null,
   ProgramDifficulty? Difficulty = null,
-  GameGuild.Modules.Contents.AccessLevel? Visibility = null,
+  AccessLevel? Visibility = null,
   float? EstimatedHours = null,
   string? Thumbnail = null,
   string? VideoShowcaseUrl = null
