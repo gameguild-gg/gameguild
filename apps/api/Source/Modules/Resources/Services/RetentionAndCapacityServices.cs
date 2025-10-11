@@ -1,6 +1,7 @@
 using GameGuild.Database;
 using GameGuild.Modules.Resources.Abstractions;
 using GameGuild.Modules.Resources;
+using GameGuild.Modules.Resources.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -9,28 +10,24 @@ namespace GameGuild.Modules.Resources.Services;
 /// <summary>
 /// Implementation of usage retention and lifecycle management
 /// </summary>
-public class UsageRetentionService : IUsageRetentionService
-{
+public class UsageRetentionService : IUsageRetentionService {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<UsageRetentionService> _logger;
 
     public UsageRetentionService(
         ApplicationDbContext context,
-        ILogger<UsageRetentionService> logger)
-    {
+        ILogger<UsageRetentionService> logger) {
         _context = context;
         _logger = logger;
     }
 
     public async Task<UsageRetentionPolicy> UpsertPolicyAsync(
         UsageRetentionPolicy policy,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var existing = await _context.Set<UsageRetentionPolicy>()
             .FirstOrDefaultAsync(p => p.Id == policy.Id, cancellationToken);
 
-        if (existing != null)
-        {
+        if (existing != null) {
             existing.Name = policy.Name;
             existing.RetentionDays = policy.RetentionDays;
             existing.ArchiveAfterDays = policy.ArchiveAfterDays;
@@ -40,8 +37,7 @@ public class UsageRetentionService : IUsageRetentionService
             existing.IsActive = policy.IsActive;
             existing.UpdatedAt = DateTime.UtcNow;
         }
-        else
-        {
+        else {
             policy.CreatedAt = DateTime.UtcNow;
             policy.UpdatedAt = DateTime.UtcNow;
             _context.Set<UsageRetentionPolicy>().Add(policy);
@@ -51,13 +47,11 @@ public class UsageRetentionService : IUsageRetentionService
         return existing ?? policy;
     }
 
-    public async Task<int> ExecutePolicyAsync(Guid policyId, CancellationToken cancellationToken = default)
-    {
+    public async Task<int> ExecutePolicyAsync(Guid policyId, CancellationToken cancellationToken = default) {
         var policy = await _context.Set<UsageRetentionPolicy>()
             .FirstOrDefaultAsync(p => p.Id == policyId && p.IsActive, cancellationToken);
 
-        if (policy == null)
-        {
+        if (policy == null) {
             _logger.LogWarning("Policy {PolicyId} not found or inactive", policyId);
             return 0;
         }
@@ -67,15 +61,13 @@ public class UsageRetentionService : IUsageRetentionService
         var affected = 0;
 
         // Archive old records
-        if (policy.ArchiveAfterDays > 0)
-        {
+        if (policy.ArchiveAfterDays > 0) {
             var archiveDate = DateTime.UtcNow.AddDays(-policy.ArchiveAfterDays);
             affected += await ArchiveUsageRecordsAsync(policy.TenantId ?? Guid.Empty, archiveDate, cancellationToken);
         }
 
         // Compact data
-        if (policy.EnableCompaction)
-        {
+        if (policy.EnableCompaction) {
             affected += await CompactUsageDataAsync(
                 policy.TenantId ?? Guid.Empty,
                 policy.ResourceType,
@@ -96,8 +88,7 @@ public class UsageRetentionService : IUsageRetentionService
     public async Task<int> ArchiveUsageRecordsAsync(
         Guid tenantId,
         DateTime olderThan,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         _logger.LogInformation("Archiving usage records for tenant {TenantId} older than {Date}",
             tenantId, olderThan);
 
@@ -114,8 +105,7 @@ public class UsageRetentionService : IUsageRetentionService
         Guid tenantId,
         ResourceUsageType? resourceType,
         string samplingStrategy,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         _logger.LogInformation("Compacting usage data for tenant {TenantId}, strategy {Strategy}",
             tenantId, samplingStrategy);
 
@@ -128,16 +118,14 @@ public class UsageRetentionService : IUsageRetentionService
         var records = await query.ToListAsync(cancellationToken);
 
         // Group and downsample based on strategy
-        var compacted = samplingStrategy.ToLower() switch
-        {
+        var compacted = samplingStrategy.ToLower() switch {
             "hourly" => records.GroupBy(r => new { r.TenantId, r.UsageType, Hour = r.RecordedAt.Hour }),
             "daily" => records.GroupBy(r => new { r.TenantId, r.UsageType, Date = r.RecordedAt.Date }),
             "weekly" => records.GroupBy(r => new { r.TenantId, r.UsageType, Week = r.RecordedAt.DayOfYear / 7 }),
             _ => null
         };
 
-        if (compacted != null)
-        {
+        if (compacted != null) {
             _logger.LogInformation("Compacted {Original} records to {Compacted} aggregates",
                 records.Count, compacted.Count());
             return records.Count - compacted.Count();
@@ -146,8 +134,7 @@ public class UsageRetentionService : IUsageRetentionService
         return 0;
     }
 
-    public async Task<int> DeleteExpiredRecordsAsync(Guid policyId, CancellationToken cancellationToken = default)
-    {
+    public async Task<int> DeleteExpiredRecordsAsync(Guid policyId, CancellationToken cancellationToken = default) {
         var policy = await _context.Set<UsageRetentionPolicy>()
             .FirstOrDefaultAsync(p => p.Id == policyId, cancellationToken);
 
@@ -167,8 +154,7 @@ public class UsageRetentionService : IUsageRetentionService
         var count = await query.CountAsync(cancellationToken);
 
         // Keep minimum records
-        if (count <= policy.MinimumRecordsToKeep)
-        {
+        if (count <= policy.MinimumRecordsToKeep) {
             _logger.LogInformation("Skipping deletion: {Count} records <= minimum {Min}",
                 count, policy.MinimumRecordsToKeep);
             return 0;
@@ -179,18 +165,15 @@ public class UsageRetentionService : IUsageRetentionService
         return count;
     }
 
-    public async Task<List<UsageRetentionPolicy>> GetActivePoliciesAsync(CancellationToken cancellationToken = default)
-    {
+    public async Task<List<UsageRetentionPolicy>> GetActivePoliciesAsync(CancellationToken cancellationToken = default) {
         return await _context.Set<UsageRetentionPolicy>()
             .Where(p => p.IsActive)
             .OrderBy(p => p.Priority)
             .ToListAsync(cancellationToken);
     }
 
-    private DateTime CalculateNextExecution(UsageRetentionPolicy policy)
-    {
-        return policy.ExecutionFrequency.ToLower() switch
-        {
+    private DateTime CalculateNextExecution(UsageRetentionPolicy policy) {
+        return policy.ExecutionFrequency.ToLower() switch {
             "daily" => DateTime.UtcNow.AddDays(1),
             "weekly" => DateTime.UtcNow.AddDays(7),
             "monthly" => DateTime.UtcNow.AddMonths(1),
@@ -202,8 +185,7 @@ public class UsageRetentionService : IUsageRetentionService
 /// <summary>
 /// Implementation of reserved capacity service
 /// </summary>
-public class ReservedCapacityService : IReservedCapacityService
-{
+public class ReservedCapacityService : IReservedCapacityService {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<ReservedCapacityService> _logger;
 
@@ -216,8 +198,7 @@ public class ReservedCapacityService : IReservedCapacityService
 
     public ReservedCapacityService(
         ApplicationDbContext context,
-        ILogger<ReservedCapacityService> logger)
-    {
+        ILogger<ReservedCapacityService> logger) {
         _context = context;
         _logger = logger;
     }
@@ -227,8 +208,7 @@ public class ReservedCapacityService : IReservedCapacityService
         ResourceUsageType resourceType,
         long quantity,
         int commitmentMonths,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         _logger.LogInformation("Creating reservation for tenant {TenantId}: {Quantity} {ResourceType} for {Months} months",
             tenantId, quantity, resourceType, commitmentMonths);
 
@@ -236,8 +216,7 @@ public class ReservedCapacityService : IReservedCapacityService
         var discountRate = _discountRates.GetValueOrDefault(commitmentMonths, 0.10m);
         var discountedPrice = standardPrice * (1 - discountRate);
 
-        var reservation = new ReservedCapacity
-        {
+        var reservation = new ReservedCapacity {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             ResourceType = resourceType,
@@ -267,8 +246,7 @@ public class ReservedCapacityService : IReservedCapacityService
         Guid tenantId,
         ResourceUsageType resourceType,
         long units,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var reservation = await _context.Set<ReservedCapacity>()
             .Where(r => r.TenantId == tenantId &&
                         r.ResourceType == resourceType &&
@@ -295,8 +273,7 @@ public class ReservedCapacityService : IReservedCapacityService
 
     public async Task<List<ReservedCapacity>> GetActiveReservationsAsync(
         Guid tenantId,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         return await _context.Set<ReservedCapacity>()
             .Where(r => r.TenantId == tenantId &&
                         r.Status == "Active" &&
@@ -309,8 +286,7 @@ public class ReservedCapacityService : IReservedCapacityService
         Guid tenantId,
         ResourceUsageType resourceType,
         long units,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var reservation = await _context.Set<ReservedCapacity>()
             .Where(r => r.TenantId == tenantId &&
                         r.ResourceType == resourceType &&
@@ -318,8 +294,7 @@ public class ReservedCapacityService : IReservedCapacityService
                         r.EndDate > DateTime.UtcNow)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (reservation != null && reservation.ConsumedUnits + units <= reservation.ReservedQuantity)
-        {
+        if (reservation != null && reservation.ConsumedUnits + units <= reservation.ReservedQuantity) {
             return units * reservation.DiscountedPricePerUnit;
         }
 
@@ -330,8 +305,7 @@ public class ReservedCapacityService : IReservedCapacityService
     public async Task<ReservedCapacity> RenewReservationAsync(
         Guid reservationId,
         int newCommitmentMonths,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var existing = await _context.Set<ReservedCapacity>()
             .FirstOrDefaultAsync(r => r.Id == reservationId, cancellationToken);
 
@@ -348,8 +322,7 @@ public class ReservedCapacityService : IReservedCapacityService
 
     public async Task<Dictionary<string, object>> GetUtilizationReportAsync(
         Guid reservationId,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var reservation = await _context.Set<ReservedCapacity>()
             .FirstOrDefaultAsync(r => r.Id == reservationId, cancellationToken);
 
@@ -360,8 +333,7 @@ public class ReservedCapacityService : IReservedCapacityService
             ? (reservation.ConsumedUnits / (double)reservation.ReservedQuantity) * 100
             : 0;
 
-        return new Dictionary<string, object>
-        {
+        return new Dictionary<string, object> {
             ["ReservationId"] = reservation.Id,
             ["TenantId"] = reservation.TenantId,
             ["ResourceType"] = reservation.ResourceType.ToString(),
@@ -376,11 +348,9 @@ public class ReservedCapacityService : IReservedCapacityService
         };
     }
 
-    private Task<decimal> GetStandardPriceAsync(ResourceUsageType resourceType)
-    {
+    private Task<decimal> GetStandardPriceAsync(ResourceUsageType resourceType) {
         // In real implementation, would query pricing table
-        return Task.FromResult(resourceType switch
-        {
+        return Task.FromResult(resourceType switch {
             ResourceUsageType.Compute => 0.10m,
             ResourceUsageType.Storage => 0.05m,
             ResourceUsageType.Bandwidth => 0.02m,
