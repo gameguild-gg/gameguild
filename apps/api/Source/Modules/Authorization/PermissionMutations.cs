@@ -1,5 +1,7 @@
 ﻿using System.Security.Claims;
 using GameGuild.Core.Domain.Permissions;
+using GameGuild.Modules.Resources;
+using GameGuild.Modules.Permissions;
 
 namespace GameGuild.GraphQL;
 
@@ -8,7 +10,7 @@ namespace GameGuild.GraphQL;
 public class PermissionMutations {
     /// <summary> Share a resource with specific users </summary>
     [HotChocolate.Authorization.Authorize]
-    public async Task<ShareResult> ShareResource([Service] IResourcePermissionService service, [Service] IDacPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, ShareResourceInput input) {
+    public async Task<ShareResult> ShareResource([Service] IResourcePermissionService service, [Service] IPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, ShareResourceInput input) {
         var context = httpContextAccessor.HttpContext!;
         var userId = GetUserIdFromContext(context);
         var tenantId = GetTenantIdFromContext(context);
@@ -40,7 +42,7 @@ public class PermissionMutations {
     [HotChocolate.Authorization.Authorize]
     public async Task<PermissionUpdateResult> UpdateUserPermissions(
         [Service] IResourcePermissionService service,
-        [Service] IDacPermissionResolver resolver,
+        [Service] IPermissionResolver resolver,
         [Service] IHttpContextAccessor httpContextAccessor,
         UpdateUserPermissionsInput input
     ) {
@@ -63,7 +65,7 @@ public class PermissionMutations {
 
     /// <summary> Remove user access from a resource </summary>
     [HotChocolate.Authorization.Authorize]
-    public async Task<PermissionUpdateResult> RemoveUserAccess([Service] IResourcePermissionService service, [Service] IDacPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, RemoveUserAccessInput input) {
+    public async Task<PermissionUpdateResult> RemoveUserAccess([Service] IResourcePermissionService service, [Service] IPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, RemoveUserAccessInput input) {
         var context = httpContextAccessor.HttpContext!;
         var userId = GetUserIdFromContext(context);
         var tenantId = GetTenantIdFromContext(context);

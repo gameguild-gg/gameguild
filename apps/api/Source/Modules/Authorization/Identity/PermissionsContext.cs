@@ -1,16 +1,17 @@
 using GameGuild.Core.Domain.Identity;
 using GameGuild.Core.Domain.Permissions;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
+using GameGuild.Modules.Permissions;
 
 
 namespace GameGuild.Authorization.Identity;
 
 /// <summary> Implementation of permissions context for the current request Provides centralized permission checking and authorization services </summary>
 public class PermissionsContext : IPermissionsContext {
-  private readonly IDacPermissionResolver _dacPermissionResolver;
+  private readonly IPermissionResolver _dacPermissionResolver;
 
   private readonly ILogger<PermissionsContext> _logger;
-
-  private readonly IModulePermissionService _modulePermissionService;
 
   private readonly IPermissionService _permissionService;
 
@@ -22,15 +23,13 @@ public class PermissionsContext : IPermissionsContext {
     IUserContext userContext,
     ITenantContext tenantContext,
     IPermissionService permissionService,
-    IDacPermissionResolver dacPermissionResolver,
-    IModulePermissionService modulePermissionService,
+    IPermissionResolver dacPermissionResolver,
     ILogger<PermissionsContext> logger
   ) {
     _userContext = userContext;
     _tenantContext = tenantContext;
     _permissionService = permissionService;
     _dacPermissionResolver = dacPermissionResolver;
-    _modulePermissionService = modulePermissionService;
     _logger = logger;
   }
 

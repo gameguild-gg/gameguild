@@ -5,7 +5,8 @@ using GameGuild.Services;
 namespace GameGuild.Database;
 
 /// <summary> Seeds default role templates for the permission system </summary>
-internal class PermissionSeeder(ISimplePermissionService permissionService, ILogger<PermissionSeeder> logger) {
+internal class PermissionSeeder(IPermissionService permissionService, ILogger<PermissionSeeder> logger)
+{
   // High-performance logging using LoggerMessage delegates
   private static readonly Action<ILogger, Exception?> LogRoleTemplatesAlreadyExist = LoggerMessage.Define(LogLevel.Information, new EventId(1, nameof(LogRoleTemplatesAlreadyExist)), "Role templates already exist, skipping seed");
 
@@ -19,9 +20,10 @@ internal class PermissionSeeder(ISimplePermissionService permissionService, ILog
 
   private readonly ILogger<PermissionSeeder> _logger = logger;
 
-  private readonly ISimplePermissionService _permissionService = permissionService;
+  private readonly IPermissionService _permissionService = permissionService;
 
-  public async Task SeedDefaultRoleTemplatesAsync() {
+  public async Task SeedDefaultRoleTemplatesAsync()
+  {
     // TEMPORARILY DISABLED: RoleTemplate methods commented out due to type conflicts
     _logger.LogInformation("RoleTemplate seeding temporarily disabled due to type conflicts");
     return;
