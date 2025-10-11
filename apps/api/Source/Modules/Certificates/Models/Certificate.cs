@@ -53,7 +53,7 @@ public class Certificate : EntityBase, ITenantable {
 
   public bool IsActive { get; set; } = true;
 
-  public Guid? TenantId { get; set; }
+  public new Guid? TenantId { get; set; }
 
   // Navigation properties
   public virtual Programs.Program? Program { get; set; }

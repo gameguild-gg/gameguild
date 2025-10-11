@@ -5,8 +5,7 @@ namespace GameGuild.Modules.Notifications;
 /// <summary>
 /// Notification entity representing a user notification.
 /// </summary>
-public sealed class Notification
-{
+public sealed class Notification {
     public Guid Id { get; init; } = Guid.NewGuid();
     public required Guid UserId { get; init; }
     public required Guid TenantId { get; init; }
@@ -30,8 +29,7 @@ public sealed class Notification
 /// <summary>
 /// Notification types.
 /// </summary>
-public enum NotificationType
-{
+public enum NotificationType {
     Info = 0,
     Success = 1,
     Warning = 2,
@@ -44,8 +42,7 @@ public enum NotificationType
 /// <summary>
 /// Notification priority levels.
 /// </summary>
-public enum NotificationPriority
-{
+public enum NotificationPriority {
     Low = 0,
     Normal = 1,
     High = 2,
@@ -55,8 +52,7 @@ public enum NotificationPriority
 /// <summary>
 /// Notification status.
 /// </summary>
-public enum NotificationStatus
-{
+public enum NotificationStatus {
     Unread = 0,
     Read = 1,
     Archived = 2
@@ -66,8 +62,7 @@ public enum NotificationStatus
 /// Notification delivery channels.
 /// </summary>
 [Flags]
-public enum NotificationChannel
-{
+public enum NotificationChannel {
     None = 0,
     InApp = 1,
     Email = 2,
