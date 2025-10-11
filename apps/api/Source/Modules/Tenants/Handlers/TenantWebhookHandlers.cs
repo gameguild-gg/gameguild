@@ -225,7 +225,7 @@ public class GetTenantWebhooksHandler : IRequestHandler<GetTenantWebhooksQuery, 
 /// <summary>
 /// Handler for getting webhook deliveries.
 /// </summary>
-public class GetWebhookDeliveriesHandler : IRequestHandler<GetWebhookDeliveriesQuery, PagedResult<TenantWebhookDelivery>>
+public class GetWebhookDeliveriesHandler : IRequestHandler<GetWebhookDeliveriesQuery, Result<PagedResult<TenantWebhookDelivery>>>
 {
     private readonly ITenantWebhookRepository _repository;
 
@@ -234,7 +234,7 @@ public class GetWebhookDeliveriesHandler : IRequestHandler<GetWebhookDeliveriesQ
         _repository = repository;
     }
 
-    public async Task<PagedResult<TenantWebhookDelivery>> Handle(GetWebhookDeliveriesQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<TenantWebhookDelivery>>> Handle(GetWebhookDeliveriesQuery request, CancellationToken cancellationToken)
     {
         var (deliveries, totalCount) = await _repository.GetDeliveriesAsync(
             request.WebhookId,
@@ -245,20 +245,22 @@ public class GetWebhookDeliveriesHandler : IRequestHandler<GetWebhookDeliveriesQ
             request.PageSize,
             cancellationToken);
 
-        return new PagedResult<TenantWebhookDelivery>
+        var pagedResult = new PagedResult<TenantWebhookDelivery>
         {
             Items = deliveries,
             TotalCount = totalCount,
             PageNumber = request.PageNumber,
             PageSize = request.PageSize
         };
+
+        return Result<PagedResult<TenantWebhookDelivery>>.Success(pagedResult);
     }
 }
 
 /// <summary>
 /// Handler for getting failed webhook deliveries.
 /// </summary>
-public class GetFailedWebhookDeliveriesHandler : IRequestHandler<GetFailedWebhookDeliveriesQuery, PagedResult<TenantWebhookDelivery>>
+public class GetFailedWebhookDeliveriesHandler : IRequestHandler<GetFailedWebhookDeliveriesQuery, Result<PagedResult<TenantWebhookDelivery>>>
 {
     private readonly ITenantWebhookRepository _repository;
 
@@ -267,7 +269,7 @@ public class GetFailedWebhookDeliveriesHandler : IRequestHandler<GetFailedWebhoo
         _repository = repository;
     }
 
-    public async Task<PagedResult<TenantWebhookDelivery>> Handle(GetFailedWebhookDeliveriesQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<TenantWebhookDelivery>>> Handle(GetFailedWebhookDeliveriesQuery request, CancellationToken cancellationToken)
     {
         var (deliveries, totalCount) = await _repository.GetFailedDeliveriesAsync(
             request.TenantId,
@@ -276,13 +278,15 @@ public class GetFailedWebhookDeliveriesHandler : IRequestHandler<GetFailedWebhoo
             request.PageSize,
             cancellationToken);
 
-        return new PagedResult<TenantWebhookDelivery>
+        var pagedResult = new PagedResult<TenantWebhookDelivery>
         {
             Items = deliveries,
             TotalCount = totalCount,
             PageNumber = request.PageNumber,
             PageSize = request.PageSize
         };
+
+        return Result<PagedResult<TenantWebhookDelivery>>.Success(pagedResult);
     }
 }
 
