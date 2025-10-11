@@ -1,4 +1,5 @@
 namespace GameGuild.Modules.Authentication;
+
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 
@@ -73,7 +74,7 @@ public class AuthenticationAttempt : EntityBase
     /// <summary>
     /// Tenant ID if provided in the request
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     /// Whether this attempt was flagged as suspicious

@@ -5,7 +5,7 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 ///     Command to archive a tenant (distinct from delete)
 /// </summary>
-public record ArchiveTenantCommand(Guid TenantId, string? Reason = null) : IRequest<Result<TenantArchiveRecord>>;
+public record ArchiveTenantCommand(Guid TenantId, string? Reason = null) : IRequest<Result<TenantArchiveDto>>;
 
 /// <summary>
 ///     Command to unarchive/restore a tenant from archived state
@@ -13,9 +13,9 @@ public record ArchiveTenantCommand(Guid TenantId, string? Reason = null) : IRequ
 public record UnarchiveTenantCommand(Guid TenantId) : IRequest<Result<bool>>;
 
 /// <summary>
-///     Archive record for tracking tenant archival
+///     Archive record DTO for tracking tenant archival
 /// </summary>
-public record TenantArchiveRecord(
+public record TenantArchiveDto(
     Guid TenantId,
     DateTime ArchivedAt,
     string? Reason,

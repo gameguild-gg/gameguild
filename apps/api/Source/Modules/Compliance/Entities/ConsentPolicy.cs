@@ -8,11 +8,6 @@ namespace GameGuild.Modules.Compliance.Entities;
 public sealed class ConsentPolicy : EntityBase
 {
     /// <summary>
-    /// Gets or sets the tenant ID for multi-tenant support.
-    /// </summary>
-    public override Guid? TenantId { get; set; }
-
-    /// <summary>
     /// Gets or sets the policy name (e.g., "Privacy Policy", "Terms of Service").
     /// </summary>
     public string Name { get; set; } = string.Empty;

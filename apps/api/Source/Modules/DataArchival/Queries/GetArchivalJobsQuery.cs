@@ -1,4 +1,5 @@
 using GameGuild.Modules.DataArchival.Services;
+using GameGuild.Modules.DataArchival.Repositories;
 using GameGuild.CQRS;
 
 namespace GameGuild.Modules.DataArchival.Queries;

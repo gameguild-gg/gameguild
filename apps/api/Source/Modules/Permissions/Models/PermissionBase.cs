@@ -20,7 +20,7 @@ public abstract class PermissionBase : EntityBase
     public Guid? UserId { get; protected set; }
 
     /// <summary> Tenant ID (null means it's a global permission) </summary>
-    public Guid? TenantId { get; protected set; }
+    public override Guid? TenantId { get; protected set; }
 
     /// <summary> Permission flags for bits 0-63 </summary>
     [Column(TypeName = "bigint")]
@@ -62,7 +62,7 @@ public abstract class PermissionBase : EntityBase
     {
         if (IsExpired) return false;
 
-        var bitPos = (int) permission;
+        var bitPos = (int)permission;
 
         if (bitPos < 64) return (PermissionFlags1 & 1UL << bitPos) != 0;
         if (bitPos < 128) return (PermissionFlags2 & 1UL << bitPos - 64) != 0;
@@ -73,7 +73,7 @@ public abstract class PermissionBase : EntityBase
     /// <summary> Add a permission to this entity </summary>
     public virtual void AddPermission(PermissionType permission)
     {
-        var bitPos = (int) permission;
+        var bitPos = (int)permission;
 
         if (bitPos < 64)
         {
@@ -92,7 +92,7 @@ public abstract class PermissionBase : EntityBase
     /// <summary> Remove a permission from this entity </summary>
     public virtual void RemovePermission(PermissionType permission)
     {
-        var bitPos = (int) permission;
+        var bitPos = (int)permission;
 
         if (bitPos < 64)
         {

@@ -8,7 +8,6 @@ namespace GameGuild.Modules.Audit.Entities;
 /// </summary>
 public sealed class TamperEvidentAuditLog : EntityBase
 {
-    public Guid TenantId { get; private set; }
     public Guid? UserId { get; private set; }
     public string Action { get; private set; } = string.Empty;
     public string EntityType { get; private set; } = string.Empty;

@@ -8,11 +8,6 @@ namespace GameGuild.Modules.Compliance.Entities;
 public sealed class ComplianceAudit : EntityBase
 {
     /// <summary>
-    /// Gets or sets the tenant ID for multi-tenant support.
-    /// </summary>
-    public override Guid? TenantId { get; set; }
-
-    /// <summary>
     /// Gets or sets the user ID who performed the action.
     /// </summary>
     public Guid? UserId { get; set; }

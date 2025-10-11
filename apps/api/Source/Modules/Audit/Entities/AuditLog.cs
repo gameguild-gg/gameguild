@@ -1,4 +1,5 @@
 namespace GameGuild.Modules.Audit;
+
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Resources;
@@ -32,11 +33,6 @@ public class AuditLog : EntityBase
     /// User who performed the action
     /// </summary>
     public Guid? UserId { get; set; }
-
-    /// <summary>
-    /// Tenant context for the action
-    /// </summary>
-    public Guid? TenantId { get; set; }
 
     /// <summary>
     /// IP address of the user

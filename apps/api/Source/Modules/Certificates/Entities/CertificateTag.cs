@@ -1,4 +1,5 @@
 using GameGuild.Modules.Tags.Entities;
+using TagEntity = GameGuild.Modules.Tags.Entities.Tag;
 using GameGuild.Modules.Common.Configuration;
 using GameGuild.Modules.Tenants;
 
@@ -52,7 +53,7 @@ public class CertificateTag : EntityBase
     /// <summary>
     /// Tag representing the skill/competency
     /// </summary>
-    public virtual Tag Tag { get; set; } = null!;
+    public virtual TagEntity Tag { get; set; } = null!;
 
     // Computed Properties
     /// <summary>

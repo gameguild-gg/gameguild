@@ -1,7 +1,6 @@
 using GameGuild.Database;
 using Microsoft.EntityFrameworkCore;
 using GameGuild.Modules.SlaMonitoring.Entities;
-using GameGuild.Database;
 
 namespace GameGuild.Modules.SlaMonitoring.Repositories;
 
