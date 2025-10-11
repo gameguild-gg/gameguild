@@ -1,3 +1,4 @@
+using GameGuild.Authorization;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
@@ -24,15 +25,13 @@ public class TenantsController(
     IQueryHandler<GetDeletedTenantsQuery, Result<IEnumerable<Tenant>>> getDeletedTenantsHandler,
     IQueryHandler<GetActiveTenantsQuery, Result<IEnumerable<Tenant>>> getActiveTenantsHandler,
     IQueryHandler<GetArchivedTenantsQuery, IEnumerable<Tenant>> getArchivedTenantsHandler
-) : ControllerBase
-{
+) : ControllerBase {
     /// <summary> Get a specific tenant by ID </summary>
     /// <param name="id"> Tenant ID </param>
     /// <param name="includeDeleted"> Include soft-deleted tenants </param>
     /// <returns> Tenant details </returns>
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<Tenant>> GetTenantById(Guid id, [FromQuery] bool includeDeleted = false)
-    {
+    public async Task<ActionResult<Tenant>> GetTenantById(Guid id, [FromQuery] bool includeDeleted = false) {
         var query = new GetTenantByIdQuery(id, includeDeleted);
         var result = await getTenantByIdHandler.Handle(query, CancellationToken.None);
 
@@ -46,8 +45,7 @@ public class TenantsController(
     /// <param name="includeDeleted"> Include soft-deleted tenants </param>
     /// <returns> Tenant details </returns>
     [HttpGet("by-name/{name}")]
-    public async Task<ActionResult<Tenant>> GetTenantByName(string name, [FromQuery] bool includeDeleted = false)
-    {
+    public async Task<ActionResult<Tenant>> GetTenantByName(string name, [FromQuery] bool includeDeleted = false) {
         var query = new GetTenantByNameQuery(name, includeDeleted);
         var result = await getTenantByNameHandler.Handle(query, CancellationToken.None);
 
@@ -61,8 +59,7 @@ public class TenantsController(
     /// <param name="includeDeleted"> Include soft-deleted tenants </param>
     /// <returns> Tenant details </returns>
     [HttpGet("by-slug/{slug}")]
-    public async Task<ActionResult<Tenant>> GetTenantBySlug(string slug, [FromQuery] bool includeDeleted = false)
-    {
+    public async Task<ActionResult<Tenant>> GetTenantBySlug(string slug, [FromQuery] bool includeDeleted = false) {
         var query = new GetTenantBySlugQuery(slug, includeDeleted);
         var result = await getTenantBySlugHandler.Handle(query, CancellationToken.None);
 
@@ -74,8 +71,7 @@ public class TenantsController(
     /// <summary> Get deleted tenants </summary>
     /// <returns> List of deleted tenants </returns>
     [HttpGet("deleted")]
-    public async Task<ActionResult<IEnumerable<Tenant>>> GetDeletedTenants()
-    {
+    public async Task<ActionResult<IEnumerable<Tenant>>> GetDeletedTenants() {
         var query = new GetDeletedTenantsQuery();
         var result = await getDeletedTenantsHandler.Handle(query, CancellationToken.None);
 
@@ -87,8 +83,7 @@ public class TenantsController(
     /// <summary> Get active tenants </summary>
     /// <returns> List of active tenants </returns>
     [HttpGet("active")]
-    public async Task<ActionResult<IEnumerable<Tenant>>> GetActiveTenants()
-    {
+    public async Task<ActionResult<IEnumerable<Tenant>>> GetActiveTenants() {
         var query = new GetActiveTenantsQuery();
         var result = await getActiveTenantsHandler.Handle(query, CancellationToken.None);
 
@@ -130,8 +125,7 @@ public class TenantsController(
     /// <returns> Created tenant </returns>
     [HttpPost]
     [RequireTenantPermission(PermissionType.Create)]
-    public async Task<ActionResult<Tenant>> CreateTenant([FromBody] CreateTenantRequest request)
-    {
+    public async Task<ActionResult<Tenant>> CreateTenant([FromBody] CreateTenantRequest request) {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var command = new CreateTenantCommand(request.Name, request.Description, request.IsActive, request.Slug);
@@ -148,8 +142,7 @@ public class TenantsController(
     /// <returns> Updated tenant </returns>
     [HttpPut("{id:guid}")]
     [RequireTenantPermission(PermissionType.Edit)]
-    public async Task<ActionResult<Tenant>> UpdateTenant(Guid id, [FromBody] UpdateTenantRequest request)
-    {
+    public async Task<ActionResult<Tenant>> UpdateTenant(Guid id, [FromBody] UpdateTenantRequest request) {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var command = new UpdateTenantCommand(id, request.Name, request.Description, request.IsActive, request.Slug);
@@ -165,8 +158,7 @@ public class TenantsController(
     /// <returns> Deletion result </returns>
     [HttpDelete("{id:guid}")]
     [RequireTenantPermission(PermissionType.Delete)]
-    public async Task<ActionResult> SoftDeleteTenant(Guid id)
-    {
+    public async Task<ActionResult> SoftDeleteTenant(Guid id) {
         var command = new SoftDeleteTenantCommand(id);
         var result = await deleteTenantHandler.Handle(command, CancellationToken.None);
 
@@ -180,8 +172,7 @@ public class TenantsController(
     /// <returns> Restoration result </returns>
     [HttpPost("{id:guid}/restore")]
     [RequireTenantPermission(PermissionType.Edit)]
-    public async Task<ActionResult> RestoreTenant(Guid id)
-    {
+    public async Task<ActionResult> RestoreTenant(Guid id) {
         var command = new RestoreTenantCommand(id);
         var result = await restoreTenantHandler.Handle(command, CancellationToken.None);
 
@@ -195,8 +186,7 @@ public class TenantsController(
     /// <returns> Deletion result </returns>
     [HttpDelete("{id:guid}/permanent")]
     [RequireSystemAdmin]
-    public async Task<ActionResult> HardDeleteTenant(Guid id)
-    {
+    public async Task<ActionResult> HardDeleteTenant(Guid id) {
         var command = new HardDeleteTenantCommand(id);
         var result = await hardDeleteTenantHandler.Handle(command, CancellationToken.None);
 
@@ -210,8 +200,7 @@ public class TenantsController(
     /// <returns> Activation result </returns>
     [HttpPost("{id:guid}/activate")]
     [RequireTenantPermission(PermissionType.Edit)]
-    public async Task<ActionResult> ActivateTenant(Guid id)
-    {
+    public async Task<ActionResult> ActivateTenant(Guid id) {
         var command = new ActivateTenantCommand(id);
         var result = await activateTenantHandler.Handle(command, CancellationToken.None);
 
@@ -225,8 +214,7 @@ public class TenantsController(
     /// <returns> Deactivation result </returns>
     [HttpPost("{id:guid}/deactivate")]
     [RequireTenantPermission(PermissionType.Edit)]
-    public async Task<ActionResult> DeactivateTenant(Guid id)
-    {
+    public async Task<ActionResult> DeactivateTenant(Guid id) {
         var command = new DeactivateTenantCommand(id);
         var result = await deactivateTenantHandler.Handle(command, CancellationToken.None);
 
@@ -241,8 +229,7 @@ public class TenantsController(
     /// <returns> Archive result </returns>
     [HttpPost("{id:guid}/archive")]
     [RequireTenantPermission(PermissionType.Edit)]
-    public async Task<ActionResult> ArchiveTenant(Guid id, [FromBody] ArchiveTenantRequest? request = null)
-    {
+    public async Task<ActionResult> ArchiveTenant(Guid id, [FromBody] ArchiveTenantRequest? request = null) {
         var command = new ArchiveTenantCommand(id, request?.Reason);
         var result = await archiveTenantHandler.Handle(command, CancellationToken.None);
 
@@ -256,8 +243,7 @@ public class TenantsController(
     /// <returns> Unarchive result </returns>
     [HttpPost("{id:guid}/unarchive")]
     [RequireTenantPermission(PermissionType.Edit)]
-    public async Task<ActionResult> UnarchiveTenant(Guid id)
-    {
+    public async Task<ActionResult> UnarchiveTenant(Guid id) {
         var command = new UnarchiveTenantCommand(id);
         var result = await unarchiveTenantHandler.Handle(command, CancellationToken.None);
 
@@ -269,8 +255,7 @@ public class TenantsController(
     /// <summary> Get archived tenants </summary>
     /// <returns> List of archived tenants </returns>
     [HttpGet("archived")]
-    public async Task<ActionResult<IEnumerable<Tenant>>> GetArchivedTenants()
-    {
+    public async Task<ActionResult<IEnumerable<Tenant>>> GetArchivedTenants() {
         var query = new GetArchivedTenantsQuery();
         var result = await getArchivedTenantsHandler.Handle(query, CancellationToken.None);
 
