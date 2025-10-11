@@ -1,5 +1,6 @@
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Users;
+using GameGuild.Modules.Permissions;
 
 
 namespace GameGuild.Modules.Reputations;
@@ -35,7 +36,7 @@ public class UserReputationHistory : Resource {
 
   /// <summary> The user-tenant whose reputation changed (for tenant-specific reputation tracking) </summary>
   [ForeignKey(nameof(TenantPermissionId))]
-  public GameGuild.Modules.Tenants.TenantPermission? TenantPermission { get; set; }
+  public TenantPermission? TenantPermission { get; set; }
 
   public Guid? TenantPermissionId { get; set; }
 
