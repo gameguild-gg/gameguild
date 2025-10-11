@@ -1,6 +1,8 @@
+using GameGuild.Modules.TestingLab.Entities;
+
 namespace GameGuild.Modules.TestingLab;
 
-/// <summary> Service interface for managing testing feedback operations </summary>
+/// <summary> Service interface for managing testing feedback forms </summary>
 public interface ITestingFeedbackFormService {
   Task<TestingFeedbackForm?> GetFeedbackFormAsync(Guid testingRequestId, CancellationToken cancellationToken = default);
 

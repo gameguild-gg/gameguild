@@ -107,6 +107,19 @@ public class ApplicationDbContext : DbContext {
 
     public DbSet<GameGuild.Modules.UserAchievements.AchievementProgress> AchievementProgress => Set<GameGuild.Modules.UserAchievements.AchievementProgress>();
 
+    // Programs Module
+    public DbSet<GameGuild.Modules.Programs.Program> Programs => Set<GameGuild.Modules.Programs.Program>();
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ProgramUser> ProgramUsers => Set<GameGuild.Modules.Programs.Entities.ProgramUser>();
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ProgramContent> ProgramContents => Set<GameGuild.Modules.Programs.Entities.ProgramContent>();
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ProgramWishlist> ProgramWishlists => Set<GameGuild.Modules.Programs.Entities.ProgramWishlist>();
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ActivityGrade> ActivityGrades => Set<GameGuild.Modules.Programs.Entities.ActivityGrade>();
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ContentInteraction> ContentInteractions => Set<GameGuild.Modules.Programs.Entities.ContentInteraction>();
+
     // TestingLab Module
     public DbSet<TestingRequest> TestingRequests => Set<TestingRequest>();
 
@@ -127,14 +140,6 @@ public class ApplicationDbContext : DbContext {
     public DbSet<SessionWaitlist> SessionWaitlists => Set<SessionWaitlist>();
 
     public DbSet<SessionProject> SessionProjects => Set<SessionProject>();
-
-    public DbSet<TestingAnalytics> TestingAnalytics => Set<TestingAnalytics>();
-
-    public DbSet<TestingContext> TestingContexts => Set<TestingContext>();
-
-    public DbSet<TestingLabSettings> TestingLabSettings => Set<TestingLabSettings>();
-
-    public DbSet<TestingFeedbackStats> TestingFeedbackStats => Set<TestingFeedbackStats>();
 
     #endregion
 
