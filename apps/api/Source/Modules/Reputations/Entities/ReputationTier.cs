@@ -44,7 +44,7 @@ public class ReputationTier : Resource, ITenantable {
     /// <summary> Users who have achieved this reputation tier </summary>
     public ICollection<UserReputation> UserReputations { get; set; } = new List<UserReputation>();
 
-    public Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary> Tenant this reputation tier belongs to (null for global tiers) </summary>
     [ForeignKey(nameof(TenantId))]

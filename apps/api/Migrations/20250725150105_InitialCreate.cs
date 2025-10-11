@@ -3,6 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+#pragma warning disable IDE0058 // Expression value is never used
+#pragma warning disable IDE0300 // Simplify collection initialization
+
 namespace GameGuild.Migrations {
   /// <inheritdoc />
   public partial class InitialCreate : Migration {
@@ -7662,3 +7666,6 @@ namespace GameGuild.Migrations {
     }
   }
 }
+
+#pragma warning restore IDE0058
+#pragma warning restore IDE0300

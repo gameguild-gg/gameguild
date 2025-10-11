@@ -5,8 +5,7 @@ namespace GameGuild.Modules.Users;
 /// <summary>
 /// Service for managing user segmentation, tags, and cohorts
 /// </summary>
-public interface ISegmentationService
-{
+public interface ISegmentationService {
     // Tag operations
     Task<Result<UserTag>> AssignTagAsync(Guid userId, string tagName, string? category = null, string? value = null,
         DateTime? expiresAt = null, string source = "manual", CancellationToken cancellationToken = default);
@@ -31,8 +30,7 @@ public interface ISegmentationService
     Task<Result<List<Guid>>> GetCohortMemberIdsAsync(string cohortName, CancellationToken cancellationToken = default);
 }
 
-public sealed class SegmentationService : ISegmentationService
-{
+public sealed class SegmentationService : ISegmentationService {
     private readonly IUserRepository _userRepository;
     private readonly ILogger<SegmentationService> _logger;
     private readonly ApplicationDbContext _context;
@@ -40,8 +38,7 @@ public sealed class SegmentationService : ISegmentationService
     public SegmentationService(
         IUserRepository userRepository,
         ILogger<SegmentationService> logger,
-        ApplicationDbContext context)
-    {
+        ApplicationDbContext context) {
         _userRepository = userRepository;
         _logger = logger;
         _context = context;
@@ -49,23 +46,19 @@ public sealed class SegmentationService : ISegmentationService
 
     public async Task<Result<UserTag>> AssignTagAsync(Guid userId, string tagName, string? category = null,
         string? value = null, DateTime? expiresAt = null, string source = "manual",
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
+        CancellationToken cancellationToken = default) {
+        try {
             // Verify user exists
-            var userExists = await _userRepository.ExistsAsync(userId, cancellationToken);
-            if (!userExists)
-            {
-                return Result<UserTag>.Failure($"User with ID {userId} not found");
+            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+            if (user == null) {
+                return Result<UserTag>.Failure(Error.NotFound("User.NotFound", $"User with ID {userId} not found"));
             }
 
             // Check if tag already exists
             var existingTag = await _context.Set<UserTag>()
                 .FirstOrDefaultAsync(t => t.UserId == userId && t.TagName == tagName, cancellationToken);
 
-            if (existingTag != null)
-            {
+            if (existingTag != null) {
                 // Update existing tag
                 existingTag.Category = category;
                 existingTag.Value = value;
@@ -80,8 +73,7 @@ public sealed class SegmentationService : ISegmentationService
             }
 
             // Create new tag
-            var tag = new UserTag
-            {
+            var tag = new UserTag {
                 UserId = userId,
                 TagName = tagName,
                 Category = category,
@@ -96,23 +88,19 @@ public sealed class SegmentationService : ISegmentationService
             _logger.LogInformation("Assigned tag {TagName} to user {UserId}", tagName, userId);
             return Result<UserTag>.Success(tag);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error assigning tag {TagName} to user {UserId}", tagName, userId);
-            return Result<UserTag>.Failure($"Failed to assign tag: {ex.Message}");
+            return Result<UserTag>.Failure(Error.Failure("UserTag.AssignFailed", $"Failed to assign tag: {ex.Message}"));
         }
     }
 
-    public async Task<Result> RemoveTagAsync(Guid userId, string tagName, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result> RemoveTagAsync(Guid userId, string tagName, CancellationToken cancellationToken = default) {
+        try {
             var tag = await _context.Set<UserTag>()
                 .FirstOrDefaultAsync(t => t.UserId == userId && t.TagName == tagName, cancellationToken);
 
-            if (tag == null)
-            {
-                return Result.Failure($"Tag {tagName} not found for user {userId}");
+            if (tag == null) {
+                return Result.Failure(Error.NotFound("UserTag.NotFound", $"Tag {tagName} not found for user {userId}"));
             }
 
             _context.Set<UserTag>().Remove(tag);
@@ -121,17 +109,14 @@ public sealed class SegmentationService : ISegmentationService
             _logger.LogInformation("Removed tag {TagName} from user {UserId}", tagName, userId);
             return Result.Success();
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error removing tag {TagName} from user {UserId}", tagName, userId);
-            return Result.Failure($"Failed to remove tag: {ex.Message}");
+            return Result.Failure(Error.Failure("UserTag.RemoveFailed", $"Failed to remove tag: {ex.Message}"));
         }
     }
 
-    public async Task<Result<List<UserTag>>> GetUserTagsAsync(Guid userId, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<List<UserTag>>> GetUserTagsAsync(Guid userId, CancellationToken cancellationToken = default) {
+        try {
             var tags = await _context.Set<UserTag>()
                 .Where(t => t.UserId == userId)
                 .Where(t => !t.ExpiresAt.HasValue || t.ExpiresAt.Value > DateTime.UtcNow)
@@ -141,23 +126,19 @@ public sealed class SegmentationService : ISegmentationService
 
             return Result<List<UserTag>>.Success(tags);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error retrieving tags for user {UserId}", userId);
             return Result<List<UserTag>>.Failure($"Failed to retrieve tags: {ex.Message}");
         }
     }
 
-    public async Task<Result> RemoveExpiredTagsAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result> RemoveExpiredTagsAsync(CancellationToken cancellationToken = default) {
+        try {
             var expiredTags = await _context.Set<UserTag>()
                 .Where(t => t.ExpiresAt.HasValue && t.ExpiresAt.Value <= DateTime.UtcNow)
                 .ToListAsync(cancellationToken);
 
-            if (expiredTags.Any())
-            {
+            if (expiredTags.Any()) {
                 _context.Set<UserTag>().RemoveRange(expiredTags);
                 await _context.SaveChangesAsync(cancellationToken);
 
@@ -166,8 +147,7 @@ public sealed class SegmentationService : ISegmentationService
 
             return Result.Success();
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error removing expired tags");
             return Result.Failure($"Failed to remove expired tags: {ex.Message}");
         }
@@ -175,21 +155,17 @@ public sealed class SegmentationService : ISegmentationService
 
     public async Task<Result<UserSegment>> CreateSegmentAsync(string name, string? description, string rules,
         SegmentType type = SegmentType.Dynamic, int refreshIntervalMinutes = 60,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
+        CancellationToken cancellationToken = default) {
+        try {
             // Check if segment with same name exists
             var exists = await _context.Set<UserSegment>()
                 .AnyAsync(s => s.Name == name, cancellationToken);
 
-            if (exists)
-            {
+            if (exists) {
                 return Result<UserSegment>.Failure($"Segment with name '{name}' already exists");
             }
 
-            var segment = new UserSegment
-            {
+            var segment = new UserSegment {
                 Name = name,
                 Description = description,
                 Rules = rules,
@@ -204,8 +180,7 @@ public sealed class SegmentationService : ISegmentationService
             _logger.LogInformation("Created segment {SegmentName} with type {SegmentType}", name, type);
             return Result<UserSegment>.Success(segment);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error creating segment {SegmentName}", name);
             return Result<UserSegment>.Failure($"Failed to create segment: {ex.Message}");
         }
@@ -213,15 +188,12 @@ public sealed class SegmentationService : ISegmentationService
 
     public async Task<Result<UserSegment>> UpdateSegmentAsync(Guid segmentId, string? name = null,
         string? description = null, string? rules = null, bool? isActive = null,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
+        CancellationToken cancellationToken = default) {
+        try {
             var segment = await _context.Set<UserSegment>()
                 .FirstOrDefaultAsync(s => s.Id == segmentId, cancellationToken);
 
-            if (segment == null)
-            {
+            if (segment == null) {
                 return Result<UserSegment>.Failure($"Segment with ID {segmentId} not found");
             }
 
@@ -237,30 +209,25 @@ public sealed class SegmentationService : ISegmentationService
             _logger.LogInformation("Updated segment {SegmentId}", segmentId);
             return Result<UserSegment>.Success(segment);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error updating segment {SegmentId}", segmentId);
             return Result<UserSegment>.Failure($"Failed to update segment: {ex.Message}");
         }
     }
 
-    public async Task<Result> RefreshSegmentAsync(Guid segmentId, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result> RefreshSegmentAsync(Guid segmentId, CancellationToken cancellationToken = default) {
+        try {
             var segment = await _context.Set<UserSegment>()
                 .FirstOrDefaultAsync(s => s.Id == segmentId, cancellationToken);
 
-            if (segment == null)
-            {
+            if (segment == null) {
                 return Result.Failure($"Segment with ID {segmentId} not found");
             }
 
             // For dynamic segments, recalculate membership based on rules
             // Note: This is a simplified implementation. In production, you would parse
             // the Rules JSON and evaluate it against user data
-            if (segment.Type == SegmentType.Dynamic)
-            {
+            if (segment.Type == SegmentType.Dynamic) {
                 // Placeholder for rule evaluation logic
                 // In a real implementation, you'd parse segment.Rules and execute the query
                 segment.MemberCount = 0; // Would be calculated based on actual rule evaluation
@@ -275,17 +242,14 @@ public sealed class SegmentationService : ISegmentationService
 
             return Result.Success();
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error refreshing segment {SegmentId}", segmentId);
             return Result.Failure($"Failed to refresh segment: {ex.Message}");
         }
     }
 
-    public async Task<Result<List<UserSegment>>> GetActiveSegmentsAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<List<UserSegment>>> GetActiveSegmentsAsync(CancellationToken cancellationToken = default) {
+        try {
             var segments = await _context.Set<UserSegment>()
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.Name)
@@ -293,29 +257,24 @@ public sealed class SegmentationService : ISegmentationService
 
             return Result<List<UserSegment>>.Success(segments);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error retrieving active segments");
             return Result<List<UserSegment>>.Failure($"Failed to retrieve segments: {ex.Message}");
         }
     }
 
-    public async Task<Result<int>> GetSegmentMemberCountAsync(Guid segmentId, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<int>> GetSegmentMemberCountAsync(Guid segmentId, CancellationToken cancellationToken = default) {
+        try {
             var segment = await _context.Set<UserSegment>()
                 .FirstOrDefaultAsync(s => s.Id == segmentId, cancellationToken);
 
-            if (segment == null)
-            {
+            if (segment == null) {
                 return Result<int>.Failure($"Segment with ID {segmentId} not found");
             }
 
             return Result<int>.Success(segment.MemberCount);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error retrieving segment member count for {SegmentId}", segmentId);
             return Result<int>.Failure($"Failed to retrieve member count: {ex.Message}");
         }
@@ -323,14 +282,11 @@ public sealed class SegmentationService : ISegmentationService
 
     public async Task<Result<UserCohort>> AssignToCohortAsync(Guid userId, string cohortName,
         CohortType type = CohortType.Behavioral, string? metadata = null,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
+        CancellationToken cancellationToken = default) {
+        try {
             // Verify user exists
             var userExists = await _userRepository.ExistsAsync(userId, cancellationToken);
-            if (!userExists)
-            {
+            if (!userExists) {
                 return Result<UserCohort>.Failure($"User with ID {userId} not found");
             }
 
@@ -338,14 +294,12 @@ public sealed class SegmentationService : ISegmentationService
             var existingCohort = await _context.Set<UserCohort>()
                 .FirstOrDefaultAsync(c => c.UserId == userId && c.CohortName == cohortName, cancellationToken);
 
-            if (existingCohort != null)
-            {
+            if (existingCohort != null) {
                 return Result<UserCohort>.Success(existingCohort);
             }
 
             // Add to cohort
-            var cohort = new UserCohort
-            {
+            var cohort = new UserCohort {
                 UserId = userId,
                 CohortName = cohortName,
                 Type = type,
@@ -359,22 +313,18 @@ public sealed class SegmentationService : ISegmentationService
             _logger.LogInformation("Assigned user {UserId} to cohort {CohortName}", userId, cohortName);
             return Result<UserCohort>.Success(cohort);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error assigning user {UserId} to cohort {CohortName}", userId, cohortName);
             return Result<UserCohort>.Failure($"Failed to assign to cohort: {ex.Message}");
         }
     }
 
-    public async Task<Result> RemoveFromCohortAsync(Guid userId, string cohortName, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result> RemoveFromCohortAsync(Guid userId, string cohortName, CancellationToken cancellationToken = default) {
+        try {
             var cohort = await _context.Set<UserCohort>()
                 .FirstOrDefaultAsync(c => c.UserId == userId && c.CohortName == cohortName, cancellationToken);
 
-            if (cohort == null)
-            {
+            if (cohort == null) {
                 return Result.Failure($"User {userId} not found in cohort {cohortName}");
             }
 
@@ -384,17 +334,14 @@ public sealed class SegmentationService : ISegmentationService
             _logger.LogInformation("Removed user {UserId} from cohort {CohortName}", userId, cohortName);
             return Result.Success();
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error removing user {UserId} from cohort {CohortName}", userId, cohortName);
             return Result.Failure($"Failed to remove from cohort: {ex.Message}");
         }
     }
 
-    public async Task<Result<List<UserCohort>>> GetUserCohortsAsync(Guid userId, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<List<UserCohort>>> GetUserCohortsAsync(Guid userId, CancellationToken cancellationToken = default) {
+        try {
             var cohorts = await _context.Set<UserCohort>()
                 .Where(c => c.UserId == userId)
                 .OrderByDescending(c => c.JoinedAt)
@@ -402,17 +349,14 @@ public sealed class SegmentationService : ISegmentationService
 
             return Result<List<UserCohort>>.Success(cohorts);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error retrieving cohorts for user {UserId}", userId);
             return Result<List<UserCohort>>.Failure($"Failed to retrieve cohorts: {ex.Message}");
         }
     }
 
-    public async Task<Result<List<Guid>>> GetCohortMemberIdsAsync(string cohortName, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<List<Guid>>> GetCohortMemberIdsAsync(string cohortName, CancellationToken cancellationToken = default) {
+        try {
             var memberIds = await _context.Set<UserCohort>()
                 .Where(c => c.CohortName == cohortName)
                 .Select(c => c.UserId)
@@ -420,8 +364,7 @@ public sealed class SegmentationService : ISegmentationService
 
             return Result<List<Guid>>.Success(memberIds);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error retrieving members for cohort {CohortName}", cohortName);
             return Result<List<Guid>>.Failure($"Failed to retrieve cohort members: {ex.Message}");
         }

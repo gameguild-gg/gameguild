@@ -45,7 +45,7 @@ public class TenantWebhook : EntityBase
     public string? Headers { get; private set; }
 
     // Navigation properties
-    public virtual Tenant? Tenant { get; private set; }
+    public new virtual Tenant? Tenant { get; private set; }
 
     // Constructors
     private TenantWebhook() { }

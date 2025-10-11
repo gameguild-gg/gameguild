@@ -120,5 +120,5 @@ public class AchievementProgress : EntityBase {
   public string? Context { get; set; }
 
   /// <summary> The tenant this progress belongs to </summary>
-  public Guid? TenantId { get; set; }
+  public new Guid? TenantId { get; set; }
 }
