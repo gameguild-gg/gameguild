@@ -1,3 +1,5 @@
+using GameGuild.Modules.TestingLab.Entities;
+
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Resource-specific permissions for TestingSession entities (Layer 3 of DAC permission system) Provides granular permission control for individual testing sessions </summary>

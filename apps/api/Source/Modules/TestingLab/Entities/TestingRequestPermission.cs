@@ -1,3 +1,5 @@
+using GameGuild.Modules.TestingLab.Entities;
+
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Permission entity for testing request resource-level access control This entity manages permissions for specific testing request resources within the 3-layer DAC system </summary>
