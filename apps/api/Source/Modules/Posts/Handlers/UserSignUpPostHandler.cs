@@ -1,6 +1,6 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Authentication;
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 using IMediator = GameGuild.CQRS.IMediator;
 
 

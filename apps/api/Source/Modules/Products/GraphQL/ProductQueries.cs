@@ -2,7 +2,7 @@ using System.Security.Claims;
 using GameGuild.Authorization.Identity;
 using GameGuild.CQRS;
 using GameGuild.GraphQL;
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Products.Queries;
 using GameGuild.Modules.Products.Services;

@@ -1,6 +1,6 @@
 using GameGuild.CQRS;
 using GameGuild.GraphQL;
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Products.Commands;
 using GameGuild.Modules.Products.Models;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;

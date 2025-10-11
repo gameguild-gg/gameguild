@@ -1,5 +1,5 @@
 using GameGuild.Modules.Authentication;
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 using Microsoft.AspNetCore.Mvc;
 using ProgramEntity = GameGuild.Modules.Programs.Program;
 

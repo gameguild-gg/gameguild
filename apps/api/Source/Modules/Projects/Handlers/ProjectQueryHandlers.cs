@@ -1,6 +1,6 @@
 using GameGuild.Core.Domain.Identity;
 using GameGuild.Database;
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 
 
 namespace GameGuild.Modules.Projects;

@@ -1,5 +1,5 @@
 using GameGuild.Database;
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Products.Interfaces;
 using GameGuild.Modules.Products.Models;
 using Microsoft.EntityFrameworkCore;

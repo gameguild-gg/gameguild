@@ -1,4 +1,4 @@
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Tenants;
 
 namespace GameGuild.Modules.Programs;
