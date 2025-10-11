@@ -1,5 +1,4 @@
 using GameGuild.Database;
-using GameGuild.Database;
 using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
