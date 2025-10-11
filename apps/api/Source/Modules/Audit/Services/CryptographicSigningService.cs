@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using GameGuild.Modules.Audit.Entities;
 using System.Text;
 using System.Text.Json;
-using GameGuild.CQRS;
+
 
 namespace GameGuild.Modules.Audit.Services;
 

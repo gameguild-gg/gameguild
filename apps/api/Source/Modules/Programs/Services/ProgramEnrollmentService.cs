@@ -1,5 +1,4 @@
 using GameGuild.Database;
-using GameGuild.Modules.Programs;
 using GameGuild.Modules.Programs.Models;
 
 
@@ -18,8 +17,8 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
     if (existingEnrollment != null) {
       // Reactivate if cancelled or expired
-      if (existingEnrollment.EnrollmentStatus == EnrollmentStatus.Cancelled || existingEnrollment.EnrollmentStatus == EnrollmentStatus.Expired) {
-        existingEnrollment.EnrollmentStatus = EnrollmentStatus.Active;
+      if (existingEnrollment.EnrollmentStatus == Models.EnrollmentStatus.Cancelled || existingEnrollment.EnrollmentStatus == Models.EnrollmentStatus.Expired) {
+        existingEnrollment.EnrollmentStatus = Models.EnrollmentStatus.Active;
         existingEnrollment.EnrolledAt = DateTime.UtcNow;
         existingEnrollment.EnrollmentSource = source;
         existingEnrollment.Touch();
@@ -34,7 +33,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
     if (program == null) throw new ArgumentException("Program not found", nameof(programId));
 
-    if (program.EnrollmentStatus != EnrollmentStatus.Open) throw new InvalidOperationException("Program is not available for enrollment");
+    if (program.EnrollmentStatus != Entities.EnrollmentStatus.Open) throw new InvalidOperationException("Program is not available for enrollment");
 
     // Create new enrollment
     var enrollment = new ProgramEnrollment { UserId = userId, ProgramId = programId, EnrollmentSource = source, EnrolledAt = DateTime.UtcNow, StartDate = DateTime.UtcNow };
@@ -120,7 +119,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
     if (enrollment == null) return false;
 
-    enrollment.EnrollmentStatus = EnrollmentStatus.Cancelled;
+    enrollment.EnrollmentStatus = Models.EnrollmentStatus.Cancelled;
     enrollment.Touch();
     await _context.SaveChangesAsync();
 
@@ -128,16 +127,16 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
   }
 
   /// <summary> Check if user is enrolled in program </summary>
-  public async Task<bool> IsUserEnrolledAsync(Guid userId, Guid programId) { return await _context.ProgramEnrollments.AnyAsync(pe => pe.UserId == userId && pe.ProgramId == programId && pe.EnrollmentStatus == EnrollmentStatus.Active); }
+  public async Task<bool> IsUserEnrolledAsync(Guid userId, Guid programId) { return await _context.ProgramEnrollments.AnyAsync(pe => pe.UserId == userId && pe.ProgramId == programId && pe.EnrollmentStatus == Models.EnrollmentStatus.Active); }
 
   /// <summary> Get enrollment statistics for a program </summary>
   public async Task<ProgramEnrollmentStats> GetEnrollmentStatsAsync(Guid programId) {
     var enrollments = await _context.ProgramEnrollments.Where(pe => pe.ProgramId == programId).ToListAsync();
 
     var totalEnrollments = enrollments.Count;
-    var activeEnrollments = enrollments.Count(e => e.EnrollmentStatus == EnrollmentStatus.Active);
+    var activeEnrollments = enrollments.Count(e => e.EnrollmentStatus == Models.EnrollmentStatus.Active);
     var completedEnrollments = enrollments.Count(e => e.CompletionStatus == CompletionStatus.Completed);
-    var cancelledEnrollments = enrollments.Count(e => e.EnrollmentStatus == EnrollmentStatus.Cancelled);
+    var cancelledEnrollments = enrollments.Count(e => e.EnrollmentStatus == Models.EnrollmentStatus.Cancelled);
 
     return new ProgramEnrollmentStats {
       TotalEnrollments = totalEnrollments,

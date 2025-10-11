@@ -1,7 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Modules.Subscriptions.Abstractions;
 using GameGuild.Modules.Subscriptions.Entities;
-using GameGuild.Modules.Subscriptions.Models;
+
 
 namespace GameGuild.Modules.Subscriptions.Repositories;
 

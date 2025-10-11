@@ -1,7 +1,6 @@
 using GameGuild.CQRS;
-using GameGuild.Core;
 using GameGuild.Modules.SlaMonitoring.Entities;
-using GameGuild.Modules.SlaMonitoring.Services;
+
 
 namespace GameGuild.Modules.SlaMonitoring.Queries;
 

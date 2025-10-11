@@ -1,7 +1,4 @@
-﻿using GameGuild.Modules.Contents.Models;
-
-
-namespace GameGuild.Modules.Projects;
+﻿namespace GameGuild.Modules.Projects;
 
 /// <summary> Input type for creating a new project </summary>
 public record CreateProjectInput(

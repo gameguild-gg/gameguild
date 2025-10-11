@@ -1,5 +1,4 @@
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Resources;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security.Claims;

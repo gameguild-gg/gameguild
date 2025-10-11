@@ -1,4 +1,3 @@
-using GameGuild.Database;
 using GameGuild.Modules.Tenants;
 using GameGuild.CQRS;
 using GameGuild.Modules.Authentication;

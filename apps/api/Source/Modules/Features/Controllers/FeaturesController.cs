@@ -1,6 +1,5 @@
 ﻿using GameGuild.CQRS;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using GameGuild.Modules.Features.Models;
 using GameGuild.Modules.Features.Commands;
 using GameGuild.Modules.Features.Queries;

@@ -1,4 +1,3 @@
-using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Posts.Models;
 
 

@@ -2,7 +2,7 @@ using GameGuild.Modules.Tenants.Abstractions;
 using GameGuild.Modules.Tenants.Commands;
 using GameGuild.Modules.Tenants.Queries;
 using GameGuild.CQRS;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Tenants.Handlers;
 

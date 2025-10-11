@@ -1,4 +1,3 @@
-using GameGuild.Modules.Tenants;
 using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Tenants.Queries;

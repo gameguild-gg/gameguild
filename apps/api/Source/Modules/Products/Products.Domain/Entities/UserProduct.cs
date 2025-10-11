@@ -1,12 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild;
-using GameGuild.Modules.Products.Domain.Enums;
 using GameGuild.Modules.Subscriptions.Entities;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+
 namespace GameGuild.Modules.Products.Domain.Entities;
 
 /// <summary>Junction entity representing the relationship between a User and a Product</summary>

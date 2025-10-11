@@ -1,9 +1,7 @@
 using System.Security.Claims;
 using GameGuild.Authorization;
-using GameGuild.Authorization.Identity;
 using GameGuild.GraphQL;
-using GameGuild.Modules.Programs;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Programs.GraphQL;
 

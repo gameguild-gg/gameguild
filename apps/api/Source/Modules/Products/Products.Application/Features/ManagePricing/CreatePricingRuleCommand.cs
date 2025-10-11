@@ -1,6 +1,6 @@
 using GameGuild.CQRS;
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+
 namespace GameGuild.Modules.Products.Application.Features.ManagePricing;
 
 /// <summary>Command to create a pricing rule</summary>

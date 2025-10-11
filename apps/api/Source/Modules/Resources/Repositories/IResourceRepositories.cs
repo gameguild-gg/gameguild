@@ -1,5 +1,3 @@
-using GameGuild.Modules.Resources;
-
 namespace GameGuild.Modules.Resources.Repositories;
 
 /// <summary>

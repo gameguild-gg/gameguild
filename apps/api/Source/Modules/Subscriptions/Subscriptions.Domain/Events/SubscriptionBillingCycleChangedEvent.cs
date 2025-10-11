@@ -1,4 +1,3 @@
-using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.CQRS;
 
 

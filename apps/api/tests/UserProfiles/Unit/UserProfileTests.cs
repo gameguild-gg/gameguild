@@ -4,7 +4,6 @@ using GameGuild.Modules.Localization;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.UserProfiles;
-using GameGuild.Source.Modules.Contents.Models;
 using Xunit;
 
 namespace GameGuild.Tests.UserProfiles.Unit;

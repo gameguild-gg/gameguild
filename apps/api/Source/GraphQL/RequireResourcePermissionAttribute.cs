@@ -1,6 +1,4 @@
-﻿using GameGuild.Modules.Resources;
-
-namespace GameGuild.Authorization;
+﻿namespace GameGuild.Authorization;
 
 /// <summary> Resource-level DAC authorization attribute for GraphQL resolvers Checks permissions for specific content entries within a tenant </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]

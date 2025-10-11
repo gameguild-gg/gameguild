@@ -1,6 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 namespace GameGuild.Modules.UserAchievements;
 
 /// <summary> EntityBase configuration for Achievement </summary>

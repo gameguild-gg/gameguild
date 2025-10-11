@@ -1,5 +1,5 @@
 using GameGuild.Modules.Permissions;
-using GameGuild.Modules.Resources;
+
 
 namespace GameGuild;
 
@@ -12,8 +12,7 @@ namespace GameGuild;
 /// Implements the Specification pattern for complex permission queries
 /// and follows Domain-Driven Design principles
 /// </summary>
-public interface IPermissionService
-{
+public interface IPermissionService {
     // ===== LAYER 1: TENANT-WIDE PERMISSIONS =====
 
     /// <summary>
@@ -23,7 +22,7 @@ public interface IPermissionService
     /// <param name="tenantId">Tenant ID (null for global defaults)</param>
     /// <param name="permissions">Permissions to grant</param>
     /// <returns>The tenant permission entity</returns>
-    Task<TenantPermission> GrantTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[ ] permissions);
+    Task<TenantPermission> GrantTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions);
 
     /// <summary>
     /// Grant permissions to multiple users in a tenant efficiently in a single transaction
@@ -32,7 +31,7 @@ public interface IPermissionService
     /// <param name="tenantId">Tenant ID</param>
     /// <param name="permissions">Permissions to grant</param>
     /// <returns>List of tenant permission entities</returns>
-    Task<List<TenantPermission>> BulkGrantTenantPermissionAsync(Guid[ ] userIds, Guid tenantId, PermissionType[ ] permissions);
+    Task<List<TenantPermission>> BulkGrantTenantPermissionAsync(Guid[] userIds, Guid tenantId, PermissionType[] permissions);
 
     /// <summary>
     /// Check if user has a specific tenant permission
@@ -53,7 +52,7 @@ public interface IPermissionService
     /// <summary>
     /// Set global default permissions that apply to all users
     /// </summary>
-    Task SetGlobalDefaultPermissionsAsync(PermissionType[ ] permissions);
+    Task SetGlobalDefaultPermissionsAsync(PermissionType[] permissions);
 
     /// <summary>
     /// Get tenant default permissions for a specific tenant
@@ -63,7 +62,7 @@ public interface IPermissionService
     /// <summary>
     /// Revoke specific tenant permissions from a user
     /// </summary>
-    Task RevokeTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[ ] permissions);
+    Task RevokeTenantPermissionAsync(Guid? userId, Guid? tenantId, PermissionType[] permissions);
 
     /// <summary>
     /// Add user to tenant with minimal permissions
@@ -90,7 +89,7 @@ public interface IPermissionService
     /// <summary>
     /// Grant content-type permissions to a user
     /// </summary>
-    Task<ContentTypePermission> GrantContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType[ ] permissions);
+    Task<ContentTypePermission> GrantContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType[] permissions);
 
     /// <summary>
     /// Check if user has content-type permission
@@ -105,12 +104,12 @@ public interface IPermissionService
     /// <summary>
     /// Revoke content-type permissions from a user
     /// </summary>
-    Task RevokeContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType[ ] permissions);
+    Task RevokeContentTypePermissionAsync(Guid? userId, Guid? tenantId, string contentTypeName, PermissionType[] permissions);
 
     /// <summary>
     /// Set tenant default permissions for a specific tenant
     /// </summary>
-    Task SetTenantDefaultPermissionsAsync(Guid tenantId, PermissionType[ ] permissions);
+    Task SetTenantDefaultPermissionsAsync(Guid tenantId, PermissionType[] permissions);
 
     /// <summary>
     /// Get effective tenant permissions for a user (includes hierarchy resolution)
@@ -122,45 +121,45 @@ public interface IPermissionService
     /// <summary>
     /// Grant resource-specific permissions using generic resource type
     /// </summary>
-    Task<TPermission> GrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType[ ] permissions)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase;
+    Task<TPermission> GrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType[] permissions)
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() where TResource : EntityBase;
 
     /// <summary>
     /// Check if user has resource permission using generic resource type
     /// </summary>
     Task<bool> HasResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permission)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase;
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() where TResource : EntityBase;
 
     /// <summary>
     /// Get all resource permissions for a user using generic resource type
     /// </summary>
     Task<IEnumerable<PermissionType>> GetResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid resourceId)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase;
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() where TResource : EntityBase;
 
     // ===== BULK OPERATIONS =====
 
     /// <summary>
     /// Bulk grant resource permissions for multiple resources
     /// </summary>
-    Task BulkGrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[ ] resourceIds, PermissionType[ ] permissions)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase;
+    Task BulkGrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[] resourceIds, PermissionType[] permissions)
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() where TResource : EntityBase;
 
     /// <summary>
     /// Get bulk resource permissions for multiple resources
     /// </summary>
-    Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid[ ] resourceIds)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase;
+    Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid[] resourceIds)
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() where TResource : EntityBase;
 
     // ===== UTILITY METHODS =====
 
     /// <summary>
     /// Share a resource with another user by granting specific permissions
     /// </summary>
-    Task ShareResourceAsync<TPermission, TResource>(Guid resourceId, Guid targetUserId, Guid? tenantId, PermissionType[ ] permissions, DateTime? expiresAt = null)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase;
+    Task ShareResourceAsync<TPermission, TResource>(Guid resourceId, Guid targetUserId, Guid? tenantId, PermissionType[] permissions, DateTime? expiresAt = null)
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() where TResource : EntityBase;
 
     /// <summary>
     /// Revoke all permissions for a user from a resource
     /// </summary>
-    Task RevokeResourceAccessAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId) where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase;
+    Task RevokeResourceAccessAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId) where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() where TResource : EntityBase;
 }

@@ -1,12 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild;
-using GameGuild.Modules.Billing;
-using GameGuild.Modules.Payments;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Products.Domain.Enums;
-using Microsoft.EntityFrameworkCore;
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+
+
 namespace GameGuild.Modules.Products.Models;
 
 /// <summary> EntityBase representing promotional codes for discounts Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality </summary>

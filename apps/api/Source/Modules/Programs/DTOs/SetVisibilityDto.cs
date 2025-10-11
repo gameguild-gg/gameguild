@@ -1,7 +1,4 @@
-﻿using GameGuild.Modules.Contents.Models;
-
-
-namespace GameGuild.Modules.Programs;
+﻿namespace GameGuild.Modules.Programs;
 
 public record SetVisibilityDto(AccessLevel Visibility) {
   public AccessLevel Visibility { get; init; } = Visibility;

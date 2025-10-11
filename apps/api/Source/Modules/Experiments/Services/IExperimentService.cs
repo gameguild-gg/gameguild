@@ -1,5 +1,3 @@
-using GameGuild.CQRS;
-
 namespace GameGuild.Modules.Experiments.Services;
 
 public interface IExperimentService

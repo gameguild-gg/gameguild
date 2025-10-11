@@ -1,8 +1,7 @@
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Programs.GraphQL;
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+
 namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary>

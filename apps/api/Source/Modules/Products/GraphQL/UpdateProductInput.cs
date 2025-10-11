@@ -1,9 +1,4 @@
-﻿using GameGuild.Modules.Contents.Models;
-using ProductTypeEnum = GameGuild.ProductType;
-
-
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
-namespace GameGuild.Modules.Products.GraphQL;
+﻿namespace GameGuild.Modules.Products.GraphQL;
 
 public class UpdateProductInput {
   public required Guid Id { get; set; }

@@ -1,5 +1,4 @@
 using GameGuild.Modules.Users;
-using GameGuild.Modules.Ratings.Entities;
 
 
 namespace GameGuild.Modules.Ratings.Services;

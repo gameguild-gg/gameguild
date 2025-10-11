@@ -1,9 +1,5 @@
 namespace GameGuild.Modules.Audit;
 
-using Tenants;
-using Users;
-using Resources;
-
 /// <summary>
 /// Audit log entry for tracking security-sensitive operations
 /// </summary>

@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Products.Models;
 
 

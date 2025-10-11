@@ -1,4 +1,3 @@
-using System;
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents.Models;
 using ContentEntity = GameGuild.Modules.Contents.Models.Content;

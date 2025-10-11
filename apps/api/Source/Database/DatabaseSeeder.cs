@@ -1,13 +1,12 @@
 using System.Security.Cryptography;
 using System.Text;
-using GameGuild.Core.Domain.Permissions;
 using GameGuild.Core.Domain.Services;
 using GameGuild.Database;
-using GameGuild.Modules.Contents;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
+using ProjectEntity = GameGuild.Modules.Projects.Entities.Project;
 
 
 namespace GameGuild.Source.Database;
@@ -315,7 +314,7 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
     logger.LogInformation("Fixing projects without slugs...");
 
     // Find projects that don't have slugs (null or empty)
-    var projectsWithoutSlugs = await context.Set<Project>().Where(p => string.IsNullOrEmpty(p.Slug) && p.DeletedAt == null).ToListAsync();
+    var projectsWithoutSlugs = await context.Set<ProjectEntity>().Where(p => string.IsNullOrEmpty(p.Slug) && p.DeletedAt == null).ToListAsync();
 
     if (!projectsWithoutSlugs.Any()) {
       logger.LogInformation("All projects already have slugs, skipping fix");
@@ -329,7 +328,7 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
       var baseSlug = project.Title.ToSlugCase();
 
       // Ensure slug is unique
-      var existingSlugCount = await context.Set<Project>().Where(p => p.Slug.StartsWith(baseSlug) && p.DeletedAt == null && p.Id != project.Id).CountAsync();
+      var existingSlugCount = await context.Set<ProjectEntity>().Where(p => p.Slug.StartsWith(baseSlug) && p.DeletedAt == null && p.Id != project.Id).CountAsync();
 
       project.Slug = existingSlugCount > 0 ? $"{baseSlug}-{existingSlugCount + 1}" : baseSlug;
       project.UpdatedAt = DateTime.UtcNow;

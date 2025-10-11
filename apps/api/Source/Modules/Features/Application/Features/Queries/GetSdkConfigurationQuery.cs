@@ -1,5 +1,4 @@
 ﻿using GameGuild.CQRS;
-using GameGuild.Modules.Features.DTOs;
 using GameGuild.Modules.Features.Models;
 
 namespace GameGuild.Modules.Features.Queries;

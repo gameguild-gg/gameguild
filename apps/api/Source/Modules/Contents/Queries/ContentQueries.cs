@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents.Models;
 

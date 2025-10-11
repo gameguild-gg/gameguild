@@ -2,7 +2,6 @@ using GameGuild.Modules.ErrorTracking.Commands;
 using GameGuild.Modules.ErrorTracking.Queries;
 using GameGuild.Modules.ErrorTracking.Services;
 using GameGuild.CQRS;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Modules.ErrorTracking.Controllers;

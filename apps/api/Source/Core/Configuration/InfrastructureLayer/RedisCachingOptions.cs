@@ -1,5 +1,4 @@
 namespace GameGuild;
-using Modules.Users;
 
 /// <summary> Configuration options for Redis distributed caching </summary>
 public class RedisCachingOptions

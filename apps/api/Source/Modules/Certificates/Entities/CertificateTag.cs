@@ -1,7 +1,5 @@
-using GameGuild.Modules.Tags.Entities;
 using TagEntity = GameGuild.Modules.Tags.Entities.Tag;
-using GameGuild.Modules.Common.Configuration;
-using GameGuild.Modules.Tenants;
+
 
 namespace GameGuild.Modules.Certificates.Entities;
 

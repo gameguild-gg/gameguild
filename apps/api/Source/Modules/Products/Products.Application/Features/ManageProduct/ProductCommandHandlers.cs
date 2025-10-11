@@ -1,18 +1,11 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Products.Domain.Entities;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Tenants;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 // using GameGuild.Modules.Contents.Domain.Entities;
 
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Application.Features.ManageProduct;
 
 /// <summary>

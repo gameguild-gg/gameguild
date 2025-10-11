@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
 using GameGuild.GraphQL;
-using GameGuild.Modules.Contents.Models;
 
 
 namespace GameGuild.Modules.Projects;

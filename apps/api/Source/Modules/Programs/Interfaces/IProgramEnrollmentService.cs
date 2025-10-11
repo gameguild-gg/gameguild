@@ -1,4 +1,3 @@
-using GameGuild.Modules.Programs;
 using GameGuild.Modules.Programs.Models;
 
 namespace GameGuild.Modules.Programs;

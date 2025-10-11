@@ -1,8 +1,7 @@
-using GameGuild.Modules.Users;
 using GameGuild.Modules.Certificates.Entities;
 using GameGuild.Modules.Feedbacks.Entities;
-using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Tenants;
+
+
 // using GameGuild.Modules.Contents.Models;
 
 namespace GameGuild.Modules.Programs.Entities;
@@ -18,8 +17,7 @@ namespace GameGuild.Modules.Programs.Entities;
 [Index(nameof(EnrollmentStatus))]
 [Index(nameof(CreatedAt))]
 [Index(nameof(TenantId))]
-public class Program : EntityBase
-{
+public class Program : EntityBase {
     /// <summary>
     /// Program title
     /// </summary>
@@ -166,8 +164,7 @@ public class Program : EntityBase
     /// <summary>
     /// Opens enrollment for the program
     /// </summary>
-    public void OpenEnrollment()
-    {
+    public void OpenEnrollment() {
         EnrollmentStatus = EnrollmentStatus.Open;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -175,8 +172,7 @@ public class Program : EntityBase
     /// <summary>
     /// Closes enrollment for the program
     /// </summary>
-    public void CloseEnrollment()
-    {
+    public void CloseEnrollment() {
         EnrollmentStatus = EnrollmentStatus.Closed;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -184,8 +180,7 @@ public class Program : EntityBase
     /// <summary>
     /// Publishes the program
     /// </summary>
-    public void Publish()
-    {
+    public void Publish() {
         Status = ContentStatus.Published;
         UpdatedAt = DateTime.UtcNow;
     }
@@ -193,8 +188,7 @@ public class Program : EntityBase
     /// <summary>
     /// Archives the program
     /// </summary>
-    public void Archive()
-    {
+    public void Archive() {
         Status = ContentStatus.Archived;
         EnrollmentStatus = EnrollmentStatus.Closed;
         UpdatedAt = DateTime.UtcNow;
@@ -203,10 +197,8 @@ public class Program : EntityBase
     /// <summary>
     /// Updates the estimated completion time based on content
     /// </summary>
-    public void CalculateEstimatedHours()
-    {
-        if (ProgramContents?.Any() == true)
-        {
+    public void CalculateEstimatedHours() {
+        if (ProgramContents?.Any() == true) {
             EstimatedHours = (int?)Math.Ceiling(ProgramContents.Sum(pc => pc.EstimatedMinutes ?? 0) / 60.0);
             UpdatedAt = DateTime.UtcNow;
         }
@@ -215,8 +207,7 @@ public class Program : EntityBase
     /// <summary>
     /// Checks if a user can enroll in this program
     /// </summary>
-    public bool CanUserEnroll(Guid userId)
-    {
+    public bool CanUserEnroll(Guid userId) {
         if (!IsEnrollmentOpen)
             return false;
 

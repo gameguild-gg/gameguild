@@ -1,7 +1,5 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Projects;

@@ -1,7 +1,5 @@
-using GameGuild;
-using GameGuild.Modules.Users;
 using GameGuild.Modules.Users.Entities;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Users.Services;
 

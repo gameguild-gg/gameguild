@@ -1,4 +1,3 @@
-using GameGuild.Database;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Resources;
@@ -11,8 +10,6 @@ using GameGuild.Modules.Audit;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Features;
-using GameGuild.Modules.Localization;
-using GameGuild.Modules.Permissions.Contexts;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Authorization;
 

@@ -1,6 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-
 namespace GameGuild.Modules.Common.DistributedLocking;
 
 /// <summary>

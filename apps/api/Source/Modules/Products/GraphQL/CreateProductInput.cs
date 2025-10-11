@@ -1,4 +1,3 @@
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.GraphQL;
 
 public class CreateProductInput {

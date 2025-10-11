@@ -2,12 +2,10 @@ using GameGuild.Modules.Products.Application.DTOs;
 using GameGuild.Modules.Products.Application.Features.GetProduct;
 using GameGuild.Modules.Products.Application.Features.ManageProduct;
 using GameGuild.Modules.Products.Domain.Entities;
-using GameGuild.Modules.Products.Domain.Enums;
 using GameGuild.CQRS;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+
 namespace GameGuild.Modules.Products.Presentation.Controllers;
 
 /// <summary>

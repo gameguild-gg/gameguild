@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Modules.Core.Controllers;

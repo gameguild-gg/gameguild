@@ -1,9 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using GameGuild.Database;
-
-namespace GameGuild.Modules.Features.Entities;
+﻿namespace GameGuild.Modules.Features.Entities;
 
 /// <summary>
 ///     Represents a feature flag in the system

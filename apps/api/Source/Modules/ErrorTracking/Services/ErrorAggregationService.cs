@@ -1,5 +1,5 @@
 using GameGuild.Modules.ErrorTracking.Entities;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.ErrorTracking.Services;
 

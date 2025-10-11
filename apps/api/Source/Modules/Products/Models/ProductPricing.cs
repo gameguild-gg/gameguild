@@ -1,4 +1,3 @@
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Models;
 
 /// <summary> EntityBase representing pricing information for products Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality </summary>

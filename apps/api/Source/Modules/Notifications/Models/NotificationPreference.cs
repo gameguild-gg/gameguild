@@ -1,5 +1,3 @@
-using System;
-
 namespace GameGuild.Modules.Notifications;
 
 /// <summary>

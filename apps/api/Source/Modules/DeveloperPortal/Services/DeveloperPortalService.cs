@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using GameGuild.Modules.DeveloperPortal.Entities;
 using GameGuild.Modules.DeveloperPortal.Repositories;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.DeveloperPortal.Services;
 

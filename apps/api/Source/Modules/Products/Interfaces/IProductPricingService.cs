@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using GameGuild.Modules.Products.Models;
+﻿using GameGuild.Modules.Products.Models;
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+
 namespace GameGuild.Modules.Products.Interfaces;
 
 /// <summary> Interface for product pricing services </summary>

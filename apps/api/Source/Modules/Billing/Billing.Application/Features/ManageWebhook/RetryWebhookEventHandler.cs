@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using GameGuild.Modules.Billing.Models;
 using GameGuild.CQRS;
 

@@ -1,10 +1,6 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+
 namespace GameGuild.Modules.Products.Domain.Entities;
 
 /// <summary>Entity tracking when and how promo codes are used</summary>

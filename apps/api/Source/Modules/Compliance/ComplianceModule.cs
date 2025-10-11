@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using GameGuild.Modules.Compliance.Services;
 using GameGuild.Modules.Compliance.Repositories;
 

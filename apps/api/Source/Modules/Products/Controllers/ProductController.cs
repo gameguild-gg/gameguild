@@ -1,6 +1,4 @@
-using GameGuild.Authorization.Identity;
 using GameGuild.CQRS;
-using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Products.Commands;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Products.Queries;

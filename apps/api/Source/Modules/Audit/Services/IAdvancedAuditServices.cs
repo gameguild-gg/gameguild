@@ -1,5 +1,3 @@
-using GameGuild.CQRS;
-using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Audit.Entities;
 using GameGuild.Modules.Audit.Enums;
 

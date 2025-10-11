@@ -1,8 +1,5 @@
 using GameGuild.Authorization;
-using GameGuild.Database;
 using GameGuild.GraphQL;
-using GameGuild.Modules.Programs;
-using GameGuild.Modules.Programs.Entities;
 using ProgramContentEntity = GameGuild.Modules.Programs.Entities.ProgramContent;
 
 

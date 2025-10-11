@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Tenants.Enums;
 
 namespace GameGuild.Modules.Tenants.Commands;

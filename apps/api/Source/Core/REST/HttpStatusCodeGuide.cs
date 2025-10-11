@@ -1,5 +1,4 @@
 namespace GameGuild.Core.REST;
-using GameGuild.Modules.Resources;
 
 /// <summary>
 /// HTTP status code guidelines and semantic meanings

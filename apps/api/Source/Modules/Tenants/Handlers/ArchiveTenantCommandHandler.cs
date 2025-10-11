@@ -1,4 +1,3 @@
-using GameGuild.Core.Exceptions;
 using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Tenants;

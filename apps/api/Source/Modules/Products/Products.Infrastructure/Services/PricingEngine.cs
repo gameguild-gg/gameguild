@@ -1,10 +1,8 @@
 using GameGuild.Modules.Products.Application.Services;
 using GameGuild.Database;
 using GameGuild.Modules.Products.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+
 namespace GameGuild.Modules.Products.Infrastructure.Services;
 
 /// <summary>Implementation of dynamic pricing engine</summary>

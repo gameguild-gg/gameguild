@@ -1,9 +1,8 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Tenants.Commands;
-using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Tenants.Repositories;
 using GameGuild.Modules.Tenants.Services;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Tenants.Handlers;
 

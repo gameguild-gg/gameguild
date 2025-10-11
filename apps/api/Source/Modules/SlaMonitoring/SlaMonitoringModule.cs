@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using GameGuild.Modules.SlaMonitoring.Services;
 using GameGuild.Modules.SlaMonitoring.Repositories;
 

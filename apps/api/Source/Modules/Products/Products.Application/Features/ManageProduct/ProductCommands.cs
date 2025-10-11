@@ -1,10 +1,8 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Products.Domain.Entities;
 using GameGuild.Modules.Products.Domain.Enums;
 // using GameGuild.Modules.Contents.Domain.Entities;
 
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Application.Features.ManageProduct;
 
 /// <summary> Command to create a new product </summary>

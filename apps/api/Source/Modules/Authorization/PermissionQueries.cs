@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using GameGuild.Core.Domain.Permissions;
+using GameGuild.Core.Domain;
 using GameGuild.Modules.Permissions;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 

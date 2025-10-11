@@ -1,8 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild;
-using Microsoft.EntityFrameworkCore;
-
 namespace GameGuild.Modules.Payments.Payments.Domain.Entities;
 
 /// <summary>Entity representing an audit trail entry</summary>

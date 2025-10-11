@@ -1,6 +1,4 @@
-﻿using GameGuild.Modules.Programs;
-using GameGuild.Modules.Programs.Models;
-using ProgramContentType = GameGuild.Modules.Programs.Entities.ProgramContentType;
+﻿using ProgramContentType = GameGuild.Modules.Programs.Entities.ProgramContentType;
 using Visibility = GameGuild.Modules.Programs.Entities.Visibility;
 
 namespace GameGuild.Modules.Programs;

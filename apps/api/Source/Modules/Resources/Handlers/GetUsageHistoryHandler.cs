@@ -1,10 +1,8 @@
 using GameGuild.Database;
 using GameGuild.CQRS;
 using GameGuild.Modules.Resources.DTOs;
-using GameGuild.Modules.Resources;
 using GameGuild.Modules.Resources.Queries;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Resources.Handlers;
 

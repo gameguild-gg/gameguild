@@ -1,8 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Database;
-
-namespace GameGuild.Modules.Features.Entities;
+﻿namespace GameGuild.Modules.Features.Entities;
 
 /// <summary>
 ///     Represents feature flag usage analytics and metrics

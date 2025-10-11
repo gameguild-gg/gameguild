@@ -1,7 +1,6 @@
 using System.Text.RegularExpressions;
 using GameGuild.CQRS;
 using GameGuild.Database;
-using GameGuild.Modules.Contents.Models;
 
 
 namespace GameGuild.Modules.Posts;

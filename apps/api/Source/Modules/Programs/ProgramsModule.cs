@@ -1,10 +1,9 @@
 using FluentValidation;
 using GameGuild.Core.Modules;
-using GameGuild.CQRS;
 using GameGuild.Modules.Programs.Validators;
 using GameGuild.Modules.Programs.Commands;
 using GameGuild.Modules.Programs.Queries;
-using Microsoft.Extensions.DependencyInjection;
+
 
 namespace GameGuild.Modules.Programs;
 

@@ -1,6 +1,4 @@
 using System.Security.Claims;
-using GameGuild.Modules.Authorization;
-using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Products.Models;

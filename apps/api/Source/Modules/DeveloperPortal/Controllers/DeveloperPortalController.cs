@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using GameGuild.Modules.DeveloperPortal.Commands;
 using GameGuild.Modules.DeveloperPortal.Queries;

@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Resources;
-using Microsoft.EntityFrameworkCore;
-
 using ProductDomainEntity = GameGuild.Modules.Products.Domain.Entities.Product;
 namespace GameGuild.Modules.Products.Models;
 

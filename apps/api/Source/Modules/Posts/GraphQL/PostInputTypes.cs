@@ -1,6 +1,3 @@
-using GameGuild.Modules.Contents.Models;
-
-
 namespace GameGuild.Modules.Posts.GraphQL;
 
 /// <summary> Input for adding comments to posts </summary>

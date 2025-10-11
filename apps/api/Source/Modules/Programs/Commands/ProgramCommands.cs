@@ -1,7 +1,5 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Contents.Models;
-using GameGuild.Modules.Programs;
-using GameGuild.Modules.Programs.Entities;
+
 
 namespace GameGuild.Modules.Programs.Commands;
 

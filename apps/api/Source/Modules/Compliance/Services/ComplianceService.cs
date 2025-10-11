@@ -1,4 +1,3 @@
-using GameGuild.CQRS;
 using GameGuild.Modules.Compliance.Entities;
 using GameGuild.Modules.Compliance.Repositories;
 

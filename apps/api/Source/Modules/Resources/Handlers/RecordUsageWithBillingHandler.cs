@@ -2,7 +2,7 @@ using GameGuild.Modules.Resources.Commands;
 using GameGuild.Modules.Resources.Events;
 using GameGuild.Modules.Resources.Repositories;
 using GameGuild.CQRS;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Resources.Handlers;
 

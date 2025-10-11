@@ -1,5 +1,4 @@
 using GameGuild.Modules.Experiments.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Modules.Experiments.Controllers;

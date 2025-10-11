@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using GameGuild.Modules.DeveloperPortal.Services;
 using GameGuild.Modules.DeveloperPortal.Repositories;
 

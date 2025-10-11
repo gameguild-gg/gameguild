@@ -1,8 +1,6 @@
-using GameGuild.Modules.Users;
 using GameGuild.Modules.Followers.DTOs;
 using GameGuild.Modules.Followers.Entities;
 using GameGuild.Modules.Followers.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Modules.Followers.Controllers;

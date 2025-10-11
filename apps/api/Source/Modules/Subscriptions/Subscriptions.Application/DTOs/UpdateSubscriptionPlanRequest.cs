@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using GameGuild.Modules.Subscriptions.SubscriptionPlans.Models;
 
 namespace GameGuild.Modules.Subscriptions.DTOs;

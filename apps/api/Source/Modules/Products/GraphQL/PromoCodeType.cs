@@ -1,8 +1,8 @@
 ﻿using GameGuild.Database;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Products.Services;
-using GameGuild.Modules.Products.Domain.Enums;
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+
+
 namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary> GraphQL type for PromoCode entity </summary>
