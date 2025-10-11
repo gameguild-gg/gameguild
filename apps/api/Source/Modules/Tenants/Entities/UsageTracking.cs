@@ -30,7 +30,7 @@ public class UsageTracking : EntityBase
 
     /// <summary> Navigation property to the tenant </summary>
     [ForeignKey(nameof(TenantId))]
-    public Tenant? Tenant { get; set; }
+    public new Tenant? Tenant { get; set; }
 
     /// <summary> Type of resource being tracked </summary>
     [Required]

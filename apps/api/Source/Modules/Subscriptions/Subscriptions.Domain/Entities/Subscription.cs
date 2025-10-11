@@ -120,7 +120,7 @@ public class Subscription : EntityBase, ISubscription {
     public string? Metadata { get; private set; }
 
     // Navigation properties
-    public override Tenant Tenant { get; set; } = null!;
+    public override Tenant? Tenant { get; set; } = null!;
 
     public virtual SubscriptionPlan Plan { get; set; } = null!;
 
@@ -135,7 +135,7 @@ public class Subscription : EntityBase, ISubscription {
     ///     Reference to the tenant that owns this subscription
     /// </summary>
     [Required]
-    public Guid TenantId { get; }
+    public new Guid TenantId { get; }
 
     /// <summary>
     ///     Reference to the subscription plan

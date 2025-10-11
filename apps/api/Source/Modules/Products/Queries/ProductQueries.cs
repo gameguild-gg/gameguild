@@ -3,6 +3,10 @@ using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Products.Models;
 using ProductTypeEnum = GameGuild.ProductType;
 
+// Import domain entities for queries that return them
+using UserProduct = GameGuild.Modules.Products.Models.UserProduct;
+using ProductPricing = GameGuild.Modules.Products.Models.ProductPricing;
+using PromoCode = GameGuild.Modules.Products.Models.PromoCode;
 
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Queries;

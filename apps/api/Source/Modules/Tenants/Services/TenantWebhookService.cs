@@ -9,8 +9,7 @@ namespace GameGuild.Tenants.Services;
 /// <summary>
 /// Service implementation for managing tenant lifecycle webhooks
 /// </summary>
-public class TenantWebhookService : ITenantWebhookService
-{
+public class TenantWebhookService : ITenantWebhookService {
     private readonly ITenantWebhookRepository _webhookRepository;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<TenantWebhookService> _logger;
@@ -18,8 +17,7 @@ public class TenantWebhookService : ITenantWebhookService
     public TenantWebhookService(
         ITenantWebhookRepository webhookRepository,
         IHttpClientFactory httpClientFactory,
-        ILogger<TenantWebhookService> logger)
-    {
+        ILogger<TenantWebhookService> logger) {
         _webhookRepository = webhookRepository;
         _httpClientFactory = httpClientFactory;
         _logger = logger;
@@ -33,16 +31,14 @@ public class TenantWebhookService : ITenantWebhookService
         int retryCount = 3,
         int timeoutSeconds = 30,
         string? headers = null,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         _logger.LogInformation("Registering webhook for tenant {TenantId}, event type {EventType}", tenantId, eventType);
 
         var webhook = new TenantWebhook(url, tenantId, eventType, secret, retryCount, timeoutSeconds, headers);
-        await _webhookRepository.AddAsync(webhook, cancellationToken);
-        await _webhookRepository.SaveChangesAsync(cancellationToken);
+        var created = await _webhookRepository.CreateAsync(webhook, cancellationToken);
 
-        _logger.LogInformation("Webhook {WebhookId} registered successfully", webhook.Id);
-        return webhook;
+        _logger.LogInformation("Webhook {WebhookId} registered successfully", created.Id);
+        return created;
     }
 
     public async Task<TenantWebhook> UpdateWebhookAsync(
@@ -52,8 +48,7 @@ public class TenantWebhookService : ITenantWebhookService
         int? retryCount = null,
         int? timeoutSeconds = null,
         string? headers = null,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         _logger.LogInformation("Updating webhook {WebhookId}", webhookId);
 
         var webhook = await _webhookRepository.GetByIdAsync(webhookId, cancellationToken)
@@ -65,81 +60,68 @@ public class TenantWebhookService : ITenantWebhookService
         if (timeoutSeconds.HasValue) webhook.UpdateTimeoutSeconds(timeoutSeconds.Value);
         if (headers != null) webhook.UpdateHeaders(headers);
 
-        await _webhookRepository.UpdateAsync(webhook, cancellationToken);
-        await _webhookRepository.SaveChangesAsync(cancellationToken);
+        var updated = await _webhookRepository.UpdateAsync(webhook, cancellationToken);
 
         _logger.LogInformation("Webhook {WebhookId} updated successfully", webhookId);
-        return webhook;
+        return updated;
     }
 
-    public async Task<bool> DeleteWebhookAsync(Guid webhookId, CancellationToken cancellationToken = default)
-    {
+    public async Task<bool> DeleteWebhookAsync(Guid webhookId, CancellationToken cancellationToken = default) {
         _logger.LogInformation("Deleting webhook {WebhookId}", webhookId);
 
-        var webhook = await _webhookRepository.GetByIdAsync(webhookId, cancellationToken);
-        if (webhook == null)
-        {
+        var result = await _webhookRepository.DeleteAsync(webhookId, cancellationToken);
+
+        if (!result) {
             _logger.LogWarning("Webhook {WebhookId} not found", webhookId);
             return false;
         }
-
-        await _webhookRepository.DeleteAsync(webhook, cancellationToken);
-        await _webhookRepository.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Webhook {WebhookId} deleted successfully", webhookId);
         return true;
     }
 
-    public async Task<TenantWebhook> ActivateWebhookAsync(Guid webhookId, CancellationToken cancellationToken = default)
-    {
+    public async Task<TenantWebhook> ActivateWebhookAsync(Guid webhookId, CancellationToken cancellationToken = default) {
         _logger.LogInformation("Activating webhook {WebhookId}", webhookId);
 
         var webhook = await _webhookRepository.GetByIdAsync(webhookId, cancellationToken)
             ?? throw new InvalidOperationException($"Webhook {webhookId} not found");
 
         webhook.Activate();
-        await _webhookRepository.UpdateAsync(webhook, cancellationToken);
-        await _webhookRepository.SaveChangesAsync(cancellationToken);
+        var updated = await _webhookRepository.UpdateAsync(webhook, cancellationToken);
 
         _logger.LogInformation("Webhook {WebhookId} activated successfully", webhookId);
-        return webhook;
+        return updated;
     }
 
-    public async Task<TenantWebhook> DeactivateWebhookAsync(Guid webhookId, CancellationToken cancellationToken = default)
-    {
+    public async Task<TenantWebhook> DeactivateWebhookAsync(Guid webhookId, CancellationToken cancellationToken = default) {
         _logger.LogInformation("Deactivating webhook {WebhookId}", webhookId);
 
         var webhook = await _webhookRepository.GetByIdAsync(webhookId, cancellationToken)
             ?? throw new InvalidOperationException($"Webhook {webhookId} not found");
 
         webhook.Deactivate();
-        await _webhookRepository.UpdateAsync(webhook, cancellationToken);
-        await _webhookRepository.SaveChangesAsync(cancellationToken);
+        var updated = await _webhookRepository.UpdateAsync(webhook, cancellationToken);
 
         _logger.LogInformation("Webhook {WebhookId} deactivated successfully", webhookId);
-        return webhook;
+        return updated;
     }
 
     public async Task<int> TriggerWebhooksAsync(
         Guid tenantId,
         TenantWebhookEventType eventType,
         object payload,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         _logger.LogInformation("Triggering webhooks for tenant {TenantId}, event type {EventType}", tenantId, eventType);
 
-        var webhooks = await _webhookRepository.GetByTenantAndEventTypeAsync(tenantId, eventType, true, cancellationToken);
+        var webhooks = await _webhookRepository.GetActiveForEventAsync(tenantId, eventType, cancellationToken);
         var triggeredCount = 0;
 
-        foreach (var webhook in webhooks)
-        {
-            try
-            {
+        foreach (var webhook in webhooks) {
+            try {
                 await DeliverWebhookAsync(webhook, eventType, payload, cancellationToken);
                 triggeredCount++;
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 _logger.LogError(ex, "Failed to trigger webhook {WebhookId}", webhook.Id);
             }
         }
@@ -152,9 +134,11 @@ public class TenantWebhookService : ITenantWebhookService
         Guid tenantId,
         TenantWebhookEventType? eventType = null,
         bool? isActive = null,
-        CancellationToken cancellationToken = default)
-    {
-        return await _webhookRepository.GetByTenantAsync(tenantId, eventType, isActive, cancellationToken);
+        CancellationToken cancellationToken = default) {
+        if (eventType.HasValue) {
+            return await _webhookRepository.GetActiveForEventAsync(tenantId, eventType.Value, cancellationToken);
+        }
+        return await _webhookRepository.GetByTenantIdAsync(tenantId, isActive, cancellationToken);
     }
 
     public async Task<IEnumerable<TenantWebhookDelivery>> GetWebhookDeliveriesAsync(
@@ -162,14 +146,14 @@ public class TenantWebhookService : ITenantWebhookService
         WebhookDeliveryStatus? status = null,
         int pageSize = 50,
         int pageNumber = 1,
-        CancellationToken cancellationToken = default)
-    {
-        return await _webhookRepository.GetDeliveriesAsync(webhookId, status, pageSize, pageNumber, cancellationToken);
+        CancellationToken cancellationToken = default) {
+        bool? success = status.HasValue ? status.Value == WebhookDeliveryStatus.Delivered : null;
+        var (deliveries, _) = await _webhookRepository.GetDeliveriesAsync(webhookId, success, null, null, pageNumber, pageSize, cancellationToken);
+        return deliveries;
     }
 
-    public async Task<WebhookStatistics> GetWebhookStatisticsAsync(Guid webhookId, CancellationToken cancellationToken = default)
-    {
-        var deliveries = await _webhookRepository.GetDeliveriesAsync(webhookId, null, int.MaxValue, 1, cancellationToken);
+    public async Task<WebhookStatistics> GetWebhookStatisticsAsync(Guid webhookId, CancellationToken cancellationToken = default) {
+        var (deliveries, _) = await _webhookRepository.GetDeliveriesAsync(webhookId, null, null, null, 1, 1000, cancellationToken);
         var deliveryList = deliveries.ToList();
 
         var totalDeliveries = deliveryList.Count;
@@ -199,46 +183,37 @@ public class TenantWebhookService : ITenantWebhookService
         TenantWebhook webhook,
         TenantWebhookEventType eventType,
         object payload,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         var payloadJson = JsonSerializer.Serialize(payload);
         var delivery = new TenantWebhookDelivery(webhook.Id, eventType, payloadJson);
 
-        await _webhookRepository.AddDeliveryAsync(delivery, cancellationToken);
-        await _webhookRepository.SaveChangesAsync(cancellationToken);
+        // Record the delivery attempt
+        delivery = await _webhookRepository.RecordDeliveryAsync(delivery, cancellationToken);
 
         var httpClient = _httpClientFactory.CreateClient();
         httpClient.Timeout = TimeSpan.FromSeconds(webhook.TimeoutSeconds);
 
-        for (var attempt = 0; attempt < webhook.RetryCount; attempt++)
-        {
-            try
-            {
-                delivery.MarkAsRetrying();
-                await _webhookRepository.UpdateDeliveryAsync(delivery, cancellationToken);
-                await _webhookRepository.SaveChangesAsync(cancellationToken);
+        for (var attempt = 0; attempt < webhook.RetryCount; attempt++) {
+            try {
+                delivery.RecordAttempt();
+                await _webhookRepository.RecordDeliveryAsync(delivery, cancellationToken);
 
-                var request = new HttpRequestMessage(HttpMethod.Post, webhook.Url)
-                {
+                var request = new HttpRequestMessage(HttpMethod.Post, webhook.Url) {
                     Content = new StringContent(payloadJson, Encoding.UTF8, "application/json")
                 };
 
                 // Add custom headers
-                if (!string.IsNullOrEmpty(webhook.Headers))
-                {
+                if (!string.IsNullOrEmpty(webhook.Headers)) {
                     var headers = JsonSerializer.Deserialize<Dictionary<string, string>>(webhook.Headers);
-                    if (headers != null)
-                    {
-                        foreach (var header in headers)
-                        {
+                    if (headers != null) {
+                        foreach (var header in headers) {
                             request.Headers.TryAddWithoutValidation(header.Key, header.Value);
                         }
                     }
                 }
 
                 // Add signature if secret is provided
-                if (!string.IsNullOrEmpty(webhook.Secret))
-                {
+                if (!string.IsNullOrEmpty(webhook.Secret)) {
                     var signature = GenerateSignature(payloadJson, webhook.Secret);
                     request.Headers.Add("X-Webhook-Signature", signature);
                 }
@@ -246,13 +221,11 @@ public class TenantWebhookService : ITenantWebhookService
                 var response = await httpClient.SendAsync(request, cancellationToken);
                 var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
-                if (response.IsSuccessStatusCode)
-                {
+                if (response.IsSuccessStatusCode) {
                     delivery.MarkAsDelivered((int)response.StatusCode, responseBody);
                     webhook.RecordSuccess();
-                    await _webhookRepository.UpdateDeliveryAsync(delivery, cancellationToken);
+                    await _webhookRepository.RecordDeliveryAsync(delivery, cancellationToken);
                     await _webhookRepository.UpdateAsync(webhook, cancellationToken);
-                    await _webhookRepository.SaveChangesAsync(cancellationToken);
 
                     _logger.LogInformation("Webhook {WebhookId} delivered successfully", webhook.Id);
                     return;
@@ -263,30 +236,25 @@ public class TenantWebhookService : ITenantWebhookService
                 delivery.MarkAsFailed(errorMessage, nextRetryAt);
                 webhook.RecordFailure();
 
-                await _webhookRepository.UpdateDeliveryAsync(delivery, cancellationToken);
+                await _webhookRepository.RecordDeliveryAsync(delivery, cancellationToken);
                 await _webhookRepository.UpdateAsync(webhook, cancellationToken);
-                await _webhookRepository.SaveChangesAsync(cancellationToken);
 
-                if (nextRetryAt.HasValue)
-                {
+                if (nextRetryAt.HasValue) {
                     _logger.LogWarning("Webhook {WebhookId} delivery failed, retrying at {NextRetryAt}", webhook.Id, nextRetryAt);
                     await Task.Delay(TimeSpan.FromMinutes(Math.Pow(2, attempt)), cancellationToken);
                 }
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 var nextRetryAt = attempt < webhook.RetryCount - 1 ? DateTime.UtcNow.AddMinutes(Math.Pow(2, attempt)) : (DateTime?)null;
                 delivery.MarkAsFailed(ex.Message, nextRetryAt);
                 webhook.RecordFailure();
 
-                await _webhookRepository.UpdateDeliveryAsync(delivery, cancellationToken);
+                await _webhookRepository.RecordDeliveryAsync(delivery, cancellationToken);
                 await _webhookRepository.UpdateAsync(webhook, cancellationToken);
-                await _webhookRepository.SaveChangesAsync(cancellationToken);
 
                 _logger.LogError(ex, "Webhook {WebhookId} delivery attempt {Attempt} failed", webhook.Id, attempt + 1);
 
-                if (nextRetryAt.HasValue)
-                {
+                if (nextRetryAt.HasValue) {
                     await Task.Delay(TimeSpan.FromMinutes(Math.Pow(2, attempt)), cancellationToken);
                 }
             }
@@ -294,14 +262,12 @@ public class TenantWebhookService : ITenantWebhookService
 
         // Mark as expired after all retries exhausted
         delivery.MarkAsExpired();
-        await _webhookRepository.UpdateDeliveryAsync(delivery, cancellationToken);
-        await _webhookRepository.SaveChangesAsync(cancellationToken);
+        await _webhookRepository.RecordDeliveryAsync(delivery, cancellationToken);
 
         _logger.LogError("Webhook {WebhookId} delivery failed after {RetryCount} attempts", webhook.Id, webhook.RetryCount);
     }
 
-    private static string GenerateSignature(string payload, string secret)
-    {
+    private static string GenerateSignature(string payload, string secret) {
         using var hmac = new System.Security.Cryptography.HMACSHA256(Encoding.UTF8.GetBytes(secret));
         var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
         return Convert.ToBase64String(hash);

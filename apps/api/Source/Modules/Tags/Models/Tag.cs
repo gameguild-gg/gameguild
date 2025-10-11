@@ -10,7 +10,7 @@ namespace GameGuild.Modules.Tags.Models;
 [Index(nameof(TenantId))]
 [Index(nameof(Name), nameof(TenantId), IsUnique = true)]
 public class Tag : EntityBase, ITenantable {
-  [Required] [MaxLength(100)] public string Name { get; set; } = string.Empty;
+  [Required][MaxLength(100)] public string Name { get; set; } = string.Empty;
 
   [MaxLength(500)] public string? Description { get; set; }
 
@@ -27,7 +27,7 @@ public class Tag : EntityBase, ITenantable {
   /// <summary> Whether this tag is available for use </summary>
   public bool IsActive { get; set; } = true;
 
-  public Guid? TenantId { get; set; }
+  // TenantId inherited from EntityBase via ITenantable - no redeclaration needed
 
   // Navigation properties
   public virtual ICollection<TagRelationship> SourceRelationships { get; set; } = new List<TagRelationship>();

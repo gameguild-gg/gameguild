@@ -8,8 +8,7 @@ namespace GameGuild.Commands;
 /// <summary>
 ///     Command to export OpenAPI specification to files.
 /// </summary>
-internal static class ExportOpenApiCommand
-{
+internal static class ExportOpenApiCommand {
     /// <summary>
     ///     Exports the OpenAPI specification to JSON and YAML files.
     /// </summary>
@@ -17,8 +16,7 @@ internal static class ExportOpenApiCommand
     /// <param name="outputPath">The output directory path</param>
     /// <param name="documentName">The document name (default: "v1")</param>
     /// <returns>A task representing the export operation</returns>
-    public static async Task ExportAsync(WebApplication app, string outputPath = "./docs", string documentName = "v1")
-    {
+    public static async Task ExportAsync(WebApplication app, string outputPath = "./docs", string documentName = "v1") {
         // Ensure output directory exists
         Directory.CreateDirectory(outputPath);
 
@@ -29,16 +27,16 @@ internal static class ExportOpenApiCommand
         OpenApiDocument? openApiDocument = swaggerProvider.GetSwagger(documentName);
 
         // Export as JSON
-        string jsonPath = Path.Combine(outputPath, $"openapi-{documentName}.json");
+        string jsonPath = System.IO.Path.Combine(outputPath, $"openapi-{documentName}.json");
         await ExportAsJsonAsync(openApiDocument, jsonPath);
 
         // Export as YAML
-        string yamlPath = Path.Combine(outputPath, $"openapi-{documentName}.yaml");
+        string yamlPath = System.IO.Path.Combine(outputPath, $"openapi-{documentName}.yaml");
         await ExportAsYamlAsync(openApiDocument, yamlPath);
 
         Console.WriteLine("OpenAPI specification exported:");
-        Console.WriteLine($"  JSON: {Path.GetFullPath(jsonPath)}");
-        Console.WriteLine($"  YAML: {Path.GetFullPath(yamlPath)}");
+        Console.WriteLine($"  JSON: {System.IO.Path.GetFullPath(jsonPath)}");
+        Console.WriteLine($"  YAML: {System.IO.Path.GetFullPath(yamlPath)}");
     }
 
     /// <summary>
@@ -47,8 +45,7 @@ internal static class ExportOpenApiCommand
     /// <param name="document">The OpenAPI document</param>
     /// <param name="filePath">The output file path</param>
     /// <returns>A task representing the export operation</returns>
-    private static async Task ExportAsJsonAsync(OpenApiDocument document, string filePath)
-    {
+    private static async Task ExportAsJsonAsync(OpenApiDocument document, string filePath) {
         using FileStream fileStream = File.Create(filePath);
         using var streamWriter = new StreamWriter(fileStream, Encoding.UTF8);
 
@@ -64,8 +61,7 @@ internal static class ExportOpenApiCommand
     /// <param name="document">The OpenAPI document</param>
     /// <param name="filePath">The output file path</param>
     /// <returns>A task representing the export operation</returns>
-    private static async Task ExportAsYamlAsync(OpenApiDocument document, string filePath)
-    {
+    private static async Task ExportAsYamlAsync(OpenApiDocument document, string filePath) {
         using FileStream fileStream = File.Create(filePath);
         using var streamWriter = new StreamWriter(fileStream, Encoding.UTF8);
 
@@ -80,12 +76,10 @@ internal static class ExportOpenApiCommand
     /// </summary>
     /// <param name="document">The OpenAPI document to validate</param>
     /// <returns>A list of validation errors, if any</returns>
-    public static IList<string> ValidateDocument(OpenApiDocument document)
-    {
+    public static IList<string> ValidateDocument(OpenApiDocument document) {
         var errors = new List<string>();
 
-        try
-        {
+        try {
             // Basic validation - ensure required properties are present
             if (string.IsNullOrEmpty(document.Info?.Title))
                 errors.Add("Document title is required");
@@ -97,14 +91,12 @@ internal static class ExportOpenApiCommand
                 errors.Add("Document must contain at least one path");
 
             // Validate each path
-            foreach (var path in document.Paths ?? new Dictionary<string, OpenApiPathItem>())
-            {
+            foreach (var path in document.Paths ?? new Dictionary<string, OpenApiPathItem>()) {
                 if (path.Value?.Operations == null || !path.Value.Operations.Any())
                     errors.Add($"Path '{path.Key}' must contain at least one operation");
             }
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             errors.Add($"Validation error: {ex.Message}");
         }
 

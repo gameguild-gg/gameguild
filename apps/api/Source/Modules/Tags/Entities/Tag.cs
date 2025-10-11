@@ -6,8 +6,7 @@ namespace GameGuild.Modules.Tags.Entities;
 [Index(nameof(IsActive))]
 [Index(nameof(TenantId))]
 [Index(nameof(Name), nameof(TenantId), IsUnique = true)]
-public class Tag : EntityBase
-{
+public class Tag : EntityBase {
     [Required]
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
@@ -28,7 +27,7 @@ public class Tag : EntityBase
     /// <summary> Whether this tag is available for use </summary>
     public bool IsActive { get; set; } = true;
 
-    // TenantId inherited from EntityBase (no override needed)
+    // TenantId inherited from EntityBase - no override needed
 
     // Navigation properties
     public virtual ICollection<TagRelationship> SourceRelationships { get; set; } = new List<TagRelationship>();

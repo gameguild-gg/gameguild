@@ -31,7 +31,7 @@ public class ReputationAction : Resource {
     /// <summary>
     /// Description of what this action represents
     /// </summary>
-    public new string? Description { get; set; }
+    public string? Description { get; set; }
 
     /// <summary>
     /// Points gained/lost when this action is performed
