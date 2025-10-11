@@ -1,5 +1,5 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Payments.Services;
+using GameGuild.Modules.Payments.Payments.Application.Services;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Modules.Payments.Commands;
