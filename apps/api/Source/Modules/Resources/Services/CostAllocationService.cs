@@ -1,6 +1,7 @@
 using GameGuild.Database;
 using GameGuild.Modules.Resources.Abstractions;
 using GameGuild.Modules.Resources;
+using GameGuild.Modules.Resources.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -10,8 +11,7 @@ namespace GameGuild.Modules.Resources.Services;
 /// <summary>
 /// Implementation of cost allocation and chargeback reporting
 /// </summary>
-public class CostAllocationService : ICostAllocationService
-{
+public class CostAllocationService : ICostAllocationService {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<CostAllocationService> _logger;
 
@@ -29,8 +29,7 @@ public class CostAllocationService : ICostAllocationService
 
     public CostAllocationService(
         ApplicationDbContext context,
-        ILogger<CostAllocationService> logger)
-    {
+        ILogger<CostAllocationService> logger) {
         _context = context;
         _logger = logger;
     }
@@ -39,8 +38,7 @@ public class CostAllocationService : ICostAllocationService
         Guid tenantId,
         DateTime periodStart,
         DateTime periodEnd,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         _logger.LogInformation("Generating cost allocation report for tenant {TenantId} from {Start} to {End}",
             tenantId, periodStart, periodEnd);
 
@@ -52,8 +50,7 @@ public class CostAllocationService : ICostAllocationService
 
         var groupedByType = usageRecords
             .GroupBy(r => r.UsageType)
-            .Select(g => new
-            {
+            .Select(g => new {
                 UsageType = g.Key,
                 TotalUsage = g.Sum(r => r.Count)
             })
@@ -61,16 +58,14 @@ public class CostAllocationService : ICostAllocationService
 
         var reports = new List<CostAllocationReport>();
 
-        foreach (var group in groupedByType)
-        {
+        foreach (var group in groupedByType) {
             var costPerUnit = await CalculateCostAsync(group.UsageType, 1, cancellationToken);
             var totalCost = costPerUnit * group.TotalUsage;
 
             // Get allocation tags from resource quotas
             var tags = await GetAllocationTagsAsync(tenantId, group.UsageType, cancellationToken);
 
-            var report = new CostAllocationReport
-            {
+            var report = new CostAllocationReport {
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
                 PeriodStart = periodStart,
@@ -98,8 +93,7 @@ public class CostAllocationService : ICostAllocationService
             reports.Count, tenantId);
 
         // Return consolidated report
-        return reports.FirstOrDefault() ?? new CostAllocationReport
-        {
+        return reports.FirstOrDefault() ?? new CostAllocationReport {
             TenantId = tenantId,
             PeriodStart = periodStart,
             PeriodEnd = periodEnd,
@@ -110,8 +104,7 @@ public class CostAllocationService : ICostAllocationService
     public async Task<List<CostAllocationReport>> GenerateAllReportsAsync(
         DateTime periodStart,
         DateTime periodEnd,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         _logger.LogInformation("Generating cost allocation reports for all tenants from {Start} to {End}",
             periodStart, periodEnd);
 
@@ -123,15 +116,12 @@ public class CostAllocationService : ICostAllocationService
 
         var allReports = new List<CostAllocationReport>();
 
-        foreach (var tenantId in tenantIds)
-        {
-            try
-            {
+        foreach (var tenantId in tenantIds) {
+            try {
                 var report = await GenerateReportAsync(tenantId, periodStart, periodEnd, cancellationToken);
                 allReports.Add(report);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 _logger.LogError(ex, "Failed to generate report for tenant {TenantId}", tenantId);
             }
         }
@@ -142,8 +132,7 @@ public class CostAllocationService : ICostAllocationService
     public Task<decimal> CalculateCostAsync(
         ResourceUsageType usageType,
         long usage,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var costPerUnit = _costPerUnit.GetValueOrDefault(usageType, 0.01m);
         return Task.FromResult(costPerUnit * usage);
     }
@@ -152,8 +141,7 @@ public class CostAllocationService : ICostAllocationService
         Guid tenantId,
         DateTime? startDate = null,
         DateTime? endDate = null,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var query = _context.Set<CostAllocationReport>()
             .Where(r => r.TenantId == tenantId);
 
@@ -171,8 +159,7 @@ public class CostAllocationService : ICostAllocationService
     public async Task<int> ExportReportsAsync(
         List<Guid> reportIds,
         string invoiceReference,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         _logger.LogInformation("Exporting {Count} cost allocation reports with invoice {Invoice}",
             reportIds.Count, invoiceReference);
 
@@ -180,8 +167,7 @@ public class CostAllocationService : ICostAllocationService
             .Where(r => reportIds.Contains(r.Id) && !r.IsExported)
             .ToListAsync(cancellationToken);
 
-        foreach (var report in reports)
-        {
+        foreach (var report in reports) {
             report.IsExported = true;
             report.ExportedAt = DateTime.UtcNow;
             report.InvoiceReference = invoiceReference;
@@ -197,8 +183,7 @@ public class CostAllocationService : ICostAllocationService
     public async Task<Dictionary<string, decimal>> GetChargebackByCostCenterAsync(
         DateTime periodStart,
         DateTime periodEnd,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         return await _context.Set<CostAllocationReport>()
             .Where(r => r.PeriodStart >= periodStart &&
                         r.PeriodEnd <= periodEnd &&
@@ -211,8 +196,7 @@ public class CostAllocationService : ICostAllocationService
     public async Task<Dictionary<string, decimal>> GetChargebackByProjectAsync(
         DateTime periodStart,
         DateTime periodEnd,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         return await _context.Set<CostAllocationReport>()
             .Where(r => r.PeriodStart >= periodStart &&
                         r.PeriodEnd <= periodEnd &&
@@ -225,8 +209,7 @@ public class CostAllocationService : ICostAllocationService
     private async Task<Dictionary<string, string>> GetAllocationTagsAsync(
         Guid tenantId,
         ResourceUsageType usageType,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         var quota = await _context.Set<ResourceQuota>()
             .FirstOrDefaultAsync(q => q.TenantId == tenantId && q.UsageType == usageType, cancellationToken);
 

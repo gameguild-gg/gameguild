@@ -5,8 +5,7 @@ namespace GameGuild.Modules.SlaMonitoring.Entities;
 /// <summary>
 /// Represents a Service Level Objective (SLO) that defines target performance metrics.
 /// </summary>
-public class ServiceLevelObjective : EntityBase
-{
+public class ServiceLevelObjective : EntityBase {
     /// <summary>
     /// Gets or sets the tenant ID this SLO belongs to.
     /// </summary>
@@ -85,33 +84,27 @@ public class ServiceLevelObjective : EntityBase
     /// <summary>
     /// Calculates the error budget from the target percentage.
     /// </summary>
-    public void CalculateErrorBudget()
-    {
+    public void CalculateErrorBudget() {
         ErrorBudgetPercentage = 100.0 - TargetPercentage;
     }
 
     /// <summary>
     /// Updates the SLO status based on current metrics.
     /// </summary>
-    public void UpdateStatus(double actualPercentage)
-    {
+    public void UpdateStatus(double actualPercentage) {
         CurrentActualPercentage = actualPercentage;
         RemainingErrorBudget = ErrorBudgetPercentage - (100.0 - actualPercentage);
 
-        if (!IsEnabled)
-        {
+        if (!IsEnabled) {
             Status = SloStatus.Disabled;
         }
-        else if (actualPercentage < TargetPercentage)
-        {
+        else if (actualPercentage < TargetPercentage) {
             Status = SloStatus.Breached;
         }
-        else if (RemainingErrorBudget <= (ErrorBudgetPercentage * AlertThresholdPercentage / 100.0))
-        {
+        else if (RemainingErrorBudget <= (ErrorBudgetPercentage * AlertThresholdPercentage / 100.0)) {
             Status = SloStatus.AtRisk;
         }
-        else
-        {
+        else {
             Status = SloStatus.Active;
         }
 
@@ -121,8 +114,7 @@ public class ServiceLevelObjective : EntityBase
     /// <summary>
     /// Checks if the error budget should trigger an alert.
     /// </summary>
-    public bool ShouldTriggerAlert()
-    {
+    public bool ShouldTriggerAlert() {
         if (!IsEnabled || RemainingErrorBudget == null)
             return false;
 
@@ -134,8 +126,7 @@ public class ServiceLevelObjective : EntityBase
 /// <summary>
 /// Status of an SLO.
 /// </summary>
-public enum SloStatus
-{
+public enum SloStatus {
     Active = 0,
     Violated = 1,
     Warning = 2,
