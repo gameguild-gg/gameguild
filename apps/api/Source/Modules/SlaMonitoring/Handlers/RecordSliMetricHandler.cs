@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.CQRS;
 using GameGuild.Core;
 using GameGuild.Modules.SlaMonitoring.Commands;
 using GameGuild.Modules.SlaMonitoring.Services;

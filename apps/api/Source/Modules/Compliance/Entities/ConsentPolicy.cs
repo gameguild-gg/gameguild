@@ -10,7 +10,7 @@ public sealed class ConsentPolicy : EntityBase
     /// <summary>
     /// Gets or sets the tenant ID for multi-tenant support.
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     /// Gets or sets the policy name (e.g., "Privacy Policy", "Terms of Service").
