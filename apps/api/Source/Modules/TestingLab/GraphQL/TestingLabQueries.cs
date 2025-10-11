@@ -1,4 +1,5 @@
 using GameGuild.GraphQL;
+using GameGuild.Modules.TestingLab.Entities;
 
 
 namespace GameGuild.Modules.TestingLab;
