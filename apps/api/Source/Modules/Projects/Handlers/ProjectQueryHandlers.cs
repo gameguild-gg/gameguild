@@ -2,8 +2,6 @@ using GameGuild.Core.Domain.Identity;
 using GameGuild.Database;
 using GameGuild.Modules.Contents.Models;
 using GameGuild.CQRS;
-using GameGuild.Modules.Projects.Queries;
-using GameGuild.Modules.Projects.Repositories;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Tenants;
 
