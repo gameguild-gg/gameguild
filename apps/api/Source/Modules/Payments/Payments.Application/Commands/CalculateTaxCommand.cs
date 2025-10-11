@@ -1,4 +1,4 @@
-using GameGuild.Modules.Payments.Services;
+using GameGuild.Modules.Payments.Payments.Application.Services;
 using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Payments.Commands;

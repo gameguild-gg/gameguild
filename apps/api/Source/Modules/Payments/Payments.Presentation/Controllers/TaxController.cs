@@ -1,8 +1,8 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Payments.Commands;
-using GameGuild.Modules.Payments.Entities;
+using GameGuild.Modules.Payments.Domain.Entities;
 using GameGuild.Modules.Payments.Queries;
-using GameGuild.Modules.Payments.Services;
+using GameGuild.Modules.Payments.Payments.Application.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

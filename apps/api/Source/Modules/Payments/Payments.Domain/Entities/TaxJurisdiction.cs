@@ -1,6 +1,6 @@
 using GameGuild.Modules.Common;
 
-namespace GameGuild.Modules.Payments.Entities;
+namespace GameGuild.Modules.Payments.Domain.Entities;
 
 /// <summary>
 ///     Represents a tax jurisdiction (country, state, region)

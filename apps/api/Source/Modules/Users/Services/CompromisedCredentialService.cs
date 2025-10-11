@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using GameGuild.Helpers;
+using GameGuild;
 using GameGuild.Core.Repositories;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Users.Entities;
