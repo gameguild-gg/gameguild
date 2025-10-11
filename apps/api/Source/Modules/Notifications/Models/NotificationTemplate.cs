@@ -3,8 +3,7 @@ namespace GameGuild.Modules.Notifications;
 /// <summary>
 /// Notification template for templated notifications.
 /// </summary>
-public sealed class NotificationTemplate
-{
+public sealed class NotificationTemplate {
     public required string Id { get; init; }
     public required string Name { get; init; }
     public string? Description { get; init; }
