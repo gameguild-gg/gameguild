@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GameGuild.Tenants.Entities;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Represents a webhook subscription for tenant lifecycle events

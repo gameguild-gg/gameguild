@@ -23,7 +23,7 @@ public class CreateWalletCommandHandler : IRequestHandler<CreateWalletCommand, U
 
     public async Task<UserWallet> Handle(CreateWalletCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Creating wallet for user {UserId} with currency {Currency}", 
+        _logger.LogInformation("Creating wallet for user {UserId} with currency {Currency}",
             request.UserId, request.Currency);
 
         var wallet = await _walletService.CreateWalletAsync(request.UserId, request.Currency, cancellationToken);

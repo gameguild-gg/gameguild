@@ -1,7 +1,7 @@
 using GameGuild.CQRS;
-// using GameGuild.Modules.Contents.Domain.Entities;
 using ProductEntity = GameGuild.Modules.Products.Domain.Entities.Product;
 using GameGuild.Modules.Products.Domain.Enums;
+// using GameGuild.Modules.Contents.Domain.Entities;
 
 
 namespace GameGuild.Modules.Products.Application.Features.GetProduct;
