@@ -18,15 +18,13 @@ using GameGuild.Source.Modules.Authorization;
 
 namespace GameGuild;
 
-public static class DependencyInjection
-{
+public static class DependencyInjection {
     /// <summary> Adds the presentation layer services with custom options. </summary>
     /// <param name="services"> The service collection </param>
     /// <param name="configuration"> The application configuration </param>
     /// <param name="options"> Custom presentation layer options </param>
     /// <returns> The service collection for chaining </returns>
-    public static IServiceCollection AddPresentationLayer(this IServiceCollection services, IConfiguration configuration, PresentationLayerOptions? options = null)
-    {
+    public static IServiceCollection AddPresentationLayer(this IServiceCollection services, IConfiguration configuration, PresentationLayerOptions? options = null) {
         options ??= PresentationLayerOptionsBuilder.Create(configuration);
 
         // Validate the options to ensure they are correctly configured
@@ -128,8 +126,7 @@ public static class DependencyInjection
     /// <summary> Adds the application layer services to the service collection. Backward compatibility method for tests that still use AddApplicationLayer() </summary>
     /// <param name="services"> The service collection </param>
     /// <returns> The service collection for chaining </returns>
-    public static IServiceCollection AddApplicationLayer(this IServiceCollection services, IConfiguration configuration, ApplicationLayerOptions? options = null)
-    {
+    public static IServiceCollection AddApplicationLayer(this IServiceCollection services, IConfiguration configuration, ApplicationLayerOptions? options = null) {
         // Get all GameGuild assemblies automatically to scan for CQRS handlers
         var assemblies = GetAssembliesByPattern();
 
@@ -149,8 +146,7 @@ public static class DependencyInjection
     /// <param name="services"> The service collection </param>
     /// <param name="configuration"> The application configuration </param>
     /// <returns> The service collection for chaining </returns>
-    public static IServiceCollection AddInfrastructureLayer(this IServiceCollection services, IConfiguration configuration, InfrastructureLayerOptions? options = null)
-    {
+    public static IServiceCollection AddInfrastructureLayer(this IServiceCollection services, IConfiguration configuration, InfrastructureLayerOptions? options = null) {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
@@ -163,8 +159,7 @@ public static class DependencyInjection
         services.AddCoreServices();
 
         // Register database context only if enabled
-        if (options.EnableDatabase)
-        {
+        if (options.EnableDatabase) {
             ServiceCollectionExtensions.AddDatabaseContext(services, configuration);
 
             // Register database seeder - temporarily disabled
@@ -193,8 +188,7 @@ public static class DependencyInjection
     }
 
     /// <summary> Gets all application assemblies to scan for types with explicit entry assembly </summary>
-    public static Assembly[] GetApplicationAssemblies(Assembly entryAssembly, params Assembly[] additionalAssemblies)
-    {
+    public static Assembly[] GetApplicationAssemblies(Assembly entryAssembly, params Assembly[] additionalAssemblies) {
         ArgumentNullException.ThrowIfNull(entryAssembly);
         ArgumentNullException.ThrowIfNull(additionalAssemblies);
 
@@ -208,14 +202,12 @@ public static class DependencyInjection
     }
 
     /// <summary> Gets assemblies from the current application domain that match the specified pattern </summary>
-    public static Assembly[] GetAssembliesByPattern(string pattern = "GameGuild.*")
-    {
+    public static Assembly[] GetAssembliesByPattern(string pattern = "GameGuild.*") {
         return AppDomain.CurrentDomain.GetAssemblies().Where(assembly => assembly.FullName?.StartsWith(pattern, StringComparison.OrdinalIgnoreCase) == true).ToArray();
     }
 
     /// <summary> Retrieves registration metrics from the last registration operation </summary>
-    public static RegistrationMetrics GetRegistrationMetrics(IServiceProvider serviceProvider)
-    {
+    public static RegistrationMetrics GetRegistrationMetrics(IServiceProvider serviceProvider) {
         return serviceProvider.GetService<RegistrationMetrics>() ?? new RegistrationMetrics { TotalHandlersRegistered = 0, TotalValidatorsRegistered = 0, RegistrationDuration = TimeSpan.Zero };
     }
 
@@ -249,8 +241,7 @@ public static class DependencyInjection
     // }
 
     /// <summary> Registers external service implementations </summary>
-    private static IServiceCollection AddExternalServices(this IServiceCollection services, IConfiguration configuration)
-    {
+    private static IServiceCollection AddExternalServices(this IServiceCollection services, IConfiguration configuration) {
         // Add modules using the new standardized IModule pattern where available
 
         // Core business modules with IModule implementations
@@ -273,7 +264,7 @@ public static class DependencyInjection
         services.AddUsersModule();
         services.AddUserProfilesModule();
         services.AddFeaturesModule();
-        // services.AddUserAchievementsModule(); // Temporarily disabled
+        services.AddUserAchievementsModule(); // ✅ Enabled for gamification system
         // services.AddProductsModule(); // Temporarily disabled
         services.AddExperimentsModule(); // Rate Plan Experiment Framework
 
@@ -287,8 +278,7 @@ public static class DependencyInjection
     }
 
     /// <summary> Registers core infrastructure services required by CQRS handlers </summary>
-    private static IServiceCollection AddCoreInfrastructure(this IServiceCollection services)
-    {
+    private static IServiceCollection AddCoreInfrastructure(this IServiceCollection services) {
         // Add debug logging
         Console.WriteLine("🔧 AddCoreInfrastructure called");
 
@@ -322,8 +312,7 @@ public static class DependencyInjection
     }
 
     /// <summary> Registers core business services for tenant isolation, privacy, and role management </summary>
-    private static IServiceCollection AddCoreServices(this IServiceCollection services)
-    {
+    private static IServiceCollection AddCoreServices(this IServiceCollection services) {
         // Add debug logging
         Console.WriteLine("🔧 AddCoreServices called");
 
@@ -345,8 +334,7 @@ public static class DependencyInjection
     }
 
     /// <summary> Registers Cloudflare DNS services </summary>
-    private static IServiceCollection AddCloudflareServices(this IServiceCollection services, IConfiguration configuration)
-    {
+    private static IServiceCollection AddCloudflareServices(this IServiceCollection services, IConfiguration configuration) {
         // Configure CloudflareDynamicDnsOptions
         services.Configure<Configuration.CloudflareDynamicDnsOptions>(configuration.GetSection(Configuration.CloudflareDynamicDnsOptions.SectionName));
 
