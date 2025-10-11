@@ -5,7 +5,6 @@ using GameGuild.Modules.Programs;
 using GradingMethodEnum = GameGuild.Modules.Programs.Models.GradingMethod;
 using ProgramContentTypeEnum = GameGuild.Modules.Programs.Models.ProgramContentType;
 using ProgramEntity = GameGuild.Modules.Programs.Program;
-using VisibilityEnum = GameGuild.Visibility;
 
 namespace GameGuild.Modules.Programs.GraphQL;
 

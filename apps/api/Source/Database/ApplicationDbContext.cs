@@ -12,6 +12,7 @@ using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Users.Entities;
 using GameGuild.Modules.TestingLab.Entities;
+using GameGuild.Modules.TestingLab;
 
 namespace GameGuild.Database;
 
