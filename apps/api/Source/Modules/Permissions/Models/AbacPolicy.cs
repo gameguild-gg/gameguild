@@ -1,3 +1,5 @@
+using GameGuild.Modules.Tenants.Entities;
+
 namespace GameGuild.Modules.Permissions;
 
 /// <summary>
@@ -27,13 +29,13 @@ public class AbacPolicy : EntityBase
     /// <summary>
     /// Tenant this policy applies to (null for global policies)
     /// </summary>
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary>
     /// Navigation property to Tenant
     /// </summary>
     [GraphQLIgnore]
-    public virtual Tenant? Tenant { get; set; }
+    public new virtual Tenant? Tenant { get; set; }
 
     /// <summary>
     /// Resource type this policy applies to (e.g., "Project", "Course", "Post")

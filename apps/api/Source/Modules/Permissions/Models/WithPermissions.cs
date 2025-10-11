@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
+using GameGuild.Modules.Tenants.Entities;
 
 // do not remove this, it's needed for IQueryable extensions
 
@@ -34,7 +35,7 @@ public abstract class WithPermissions : EntityBase
     /// <summary> Tenant relationship - NULL means global defaults </summary>
     [GraphQLType(typeof(UuidType))]
     [GraphQLDescription("The tenant ID this permission applies to (null for global defaults)")]
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary> Navigation property to the Tenant entity </summary>
     [GraphQLIgnore]
@@ -92,7 +93,7 @@ public abstract class WithPermissions : EntityBase
 
     public bool HasPermission(PermissionType permission)
     {
-        var bitPos = (int) permission;
+        var bitPos = (int)permission;
 
         if (bitPos < 64) return (PermissionFlags1 & 1UL << bitPos) != 0;
         if (bitPos < 128) return (PermissionFlags2 & 1UL << bitPos - 64) != 0;
@@ -115,7 +116,7 @@ public abstract class WithPermissions : EntityBase
 
     private void SetPermission(PermissionType permission, bool value)
     {
-        var bitPos = (int) permission;
+        var bitPos = (int)permission;
 
         if (bitPos < 64)
         {

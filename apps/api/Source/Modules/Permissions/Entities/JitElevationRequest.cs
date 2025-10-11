@@ -1,3 +1,6 @@
+using GameGuild.Modules.Users.Entities;
+using GameGuild.Modules.Tenants.Entities;
+
 namespace GameGuild.Modules.Permissions;
 
 /// <summary>
@@ -25,13 +28,13 @@ public class JitElevationRequest : EntityBase
     /// <summary>
     /// Tenant context for the request
     /// </summary>
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary>
     /// Navigation property to tenant
     /// </summary>
     [GraphQLIgnore]
-    public virtual Tenant? Tenant { get; set; }
+    public new virtual Tenant? Tenant { get; set; }
 
     /// <summary>
     /// Permission type being requested
