@@ -1,6 +1,6 @@
 ﻿namespace GameGuild.Authorization;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Resources;
+using Modules.Resources;
 
 /// <summary> Base attribute for 3-layer DAC authorization in GraphQL resolvers </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]

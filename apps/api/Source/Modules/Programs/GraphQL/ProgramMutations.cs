@@ -54,7 +54,7 @@ public class ProgramMutations {
   }
 
   /// <summary> Updates an existing program </summary>
-  [GraphQLRequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "id")]
+  [GraphQLRequireResourcePermission<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "id")]
   public async Task<Program> UpdateProgram(
     Guid id,
     UpdateProgramInput input,
@@ -85,7 +85,7 @@ public class ProgramMutations {
   }
 
   /// <summary> Deletes a program </summary>
-  [GraphQLRequireResourcePermission<ProgramPermission, Program>(PermissionType.Delete, "id")]
+  [GraphQLRequireResourcePermission<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Delete, "id")]
   public async Task<bool> DeleteProgram(
     Guid id,
     [Service] IMediator mediator,
@@ -99,7 +99,7 @@ public class ProgramMutations {
   }
 
   /// <summary> Publishes a program (makes it publicly available) </summary>
-  [GraphQLRequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "id")]
+  [GraphQLRequireResourcePermission<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "id")]
   public async Task<Program> PublishProgram(
     Guid id,
     [Service] IProgramService programService,

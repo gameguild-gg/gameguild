@@ -1,7 +1,7 @@
 namespace GameGuild.Modules.Authentication;
 
-using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Users;
+using Tenants;
+using Users;
 
 /// <summary>
 /// Tracks authentication attempts for anomaly detection and security monitoring

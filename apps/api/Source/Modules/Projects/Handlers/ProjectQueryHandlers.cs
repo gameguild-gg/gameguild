@@ -12,18 +12,18 @@ namespace GameGuild.Modules.Projects;
 /// Query handlers for project operations
 /// </summary>
 public class ProjectQueryHandlers
-  : CQRS.IRequestHandler<GetAllProjectsQuery, IEnumerable<Project>>,
-    CQRS.IRequestHandler<GetProjectByIdQuery, Project?>,
-    CQRS.IRequestHandler<GetProjectBySlugQuery, Project?>,
-    CQRS.IRequestHandler<GetProjectsByCategoryQuery, IEnumerable<Project>>,
-    CQRS.IRequestHandler<GetProjectsByCreatorQuery, IEnumerable<Project>>,
-    CQRS.IRequestHandler<GetProjectsByStatusQuery, IEnumerable<Project>>,
-    CQRS.IRequestHandler<GetDeletedProjectsQuery, IEnumerable<Project>>,
-    CQRS.IRequestHandler<SearchProjectsQuery, IEnumerable<Project>>,
-    CQRS.IRequestHandler<GetProjectStatisticsQuery, ProjectStatistics>,
-    CQRS.IRequestHandler<GetPopularProjectsQuery, IEnumerable<Project>>,
-    CQRS.IRequestHandler<GetRecentProjectsQuery, IEnumerable<Project>>,
-    CQRS.IRequestHandler<GetFeaturedProjectsQuery, IEnumerable<Project>> {
+  : IRequestHandler<GetAllProjectsQuery, IEnumerable<Project>>,
+    IRequestHandler<GetProjectByIdQuery, Project?>,
+    IRequestHandler<GetProjectBySlugQuery, Project?>,
+    IRequestHandler<GetProjectsByCategoryQuery, IEnumerable<Project>>,
+    IRequestHandler<GetProjectsByCreatorQuery, IEnumerable<Project>>,
+    IRequestHandler<GetProjectsByStatusQuery, IEnumerable<Project>>,
+    IRequestHandler<GetDeletedProjectsQuery, IEnumerable<Project>>,
+    IRequestHandler<SearchProjectsQuery, IEnumerable<Project>>,
+    IRequestHandler<GetProjectStatisticsQuery, ProjectStatistics>,
+    IRequestHandler<GetPopularProjectsQuery, IEnumerable<Project>>,
+    IRequestHandler<GetRecentProjectsQuery, IEnumerable<Project>>,
+    IRequestHandler<GetFeaturedProjectsQuery, IEnumerable<Project>> {
   private readonly ApplicationDbContext _context;
 
   private readonly IUserContext _userContext;

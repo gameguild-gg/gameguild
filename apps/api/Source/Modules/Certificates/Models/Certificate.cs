@@ -56,7 +56,7 @@ public class Certificate : EntityBase, ITenantable {
   public new Guid? TenantId { get; set; }
 
   // Navigation properties
-  public virtual Programs.Program? Program { get; set; }
+  public virtual Programs.Entities.Program? Program { get; set; }
 
   public virtual ProductEntity? Product { get; set; }
 

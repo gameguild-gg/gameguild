@@ -179,7 +179,7 @@ public record UserProductAccess {
 
 /// <summary> Query to get products by type </summary>
 public record GetProductsByTypeQuery : IRequest<IEnumerable<ProductEntity>> {
-  public GameGuild.ProductType Type { get; init; }
+  public ProductType Type { get; init; }
 
   public int Skip { get; init; } = 0;
 

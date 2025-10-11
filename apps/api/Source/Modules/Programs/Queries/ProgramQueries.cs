@@ -21,7 +21,7 @@ public record GetAllProgramsQuery(
   ProgramDifficulty? Difficulty = null,
   ContentStatus? Status = null,
   AccessLevel? Visibility = null,
-  EnrollmentStatus? EnrollmentStatus = null,
+  Entities.EnrollmentStatus? EnrollmentStatus = null,
   string? CreatorId = null,
   bool IncludeArchived = false,
   string? SortBy = "CreatedAt",

@@ -1,3 +1,2 @@
-// Global usings for Programs module
+// Global usings for Programs module - imports the Entities namespace
 global using GameGuild.Modules.Programs.Entities;
-global using Program = GameGuild.Modules.Programs.Entities.Program;

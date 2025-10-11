@@ -1,5 +1,5 @@
 namespace GameGuild;
-using GameGuild.Modules.Resources;
+using Modules.Resources;
 
 /// <summary>
 /// Enumeration of access levels for resources

@@ -513,7 +513,7 @@ public static class ServiceCollectionExtensions {
     };
 
     // Add DbContextPool for improved performance and reduced allocations
-    services.AddDbContextPool<Database.ApplicationDbContext>(
+    services.AddDbContextPool<ApplicationDbContext>(
         options => {
           InfrastructureConfiguration.ConfigureDbContext(options, dbOptions);
 
@@ -528,7 +528,7 @@ public static class ServiceCollectionExtensions {
     );
 
     // Add DbContextFactory for GraphQL DataLoaders (compatible with pooling)
-    services.AddDbContextFactory<Database.ApplicationDbContext>(options => {
+    services.AddDbContextFactory<ApplicationDbContext>(options => {
       InfrastructureConfiguration.ConfigureDbContext(options, dbOptions);
 
       // DataLoader contexts also benefit from query splitting

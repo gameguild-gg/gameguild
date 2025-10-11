@@ -23,7 +23,7 @@ public class Product : ContentEntity {
 
   [MaxLength(500)] public string? ImageUrl { get; set; }
 
-  public new GameGuild.ProductType Type { get; set; } = GameGuild.ProductType.Program;
+  public new ProductType Type { get; set; } = ProductType.Program;
 
   public bool IsBundle { get; set; }
 

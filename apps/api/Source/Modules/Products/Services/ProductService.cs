@@ -377,7 +377,7 @@ public class ProductService(ApplicationDbContext context) : IProductService {
   }
 
   // Analytics and statistics
-  public async Task<int> GetProductCountAsync(GameGuild.ProductType? type = null, AccessLevel? visibility = null) {
+  public async Task<int> GetProductCountAsync(ProductType? type = null, AccessLevel? visibility = null) {
     var query = context.Products.Where(p => p.DeletedAt == null);
 
     if (type.HasValue) query = query.Where(p => p.Type == type.Value);

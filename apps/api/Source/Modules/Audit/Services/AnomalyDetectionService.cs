@@ -1,10 +1,10 @@
 namespace GameGuild.Modules.Audit.Services;
 
-using GameGuild.Modules.Users;
-using GameGuild.Modules.Resources;
-using GameGuild.Modules.Audit.Entities;
-using GameGuild.Modules.Audit.Enums;
-using GameGuild.CQRS;
+using Users;
+using Resources;
+using Entities;
+using Enums;
+using CQRS;
 
 /// <summary>
 /// Service for real-time anomaly detection on audit events with ML-based pattern recognition

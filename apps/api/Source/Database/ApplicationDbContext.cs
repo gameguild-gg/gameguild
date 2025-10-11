@@ -76,7 +76,7 @@ public class ApplicationDbContext : DbContext {
 
     public DbSet<PermissionAuditLog> PermissionAuditLogs => Set<PermissionAuditLog>();
 
-    public DbSet<GameGuild.Modules.Permissions.Entities.PermissionTemplate> PermissionTemplates => Set<GameGuild.Modules.Permissions.Entities.PermissionTemplate>();
+    public DbSet<PermissionTemplate> PermissionTemplates => Set<PermissionTemplate>();
 
     public DbSet<PermissionDelegation> PermissionDelegations => Set<PermissionDelegation>();
 
@@ -97,28 +97,28 @@ public class ApplicationDbContext : DbContext {
     // public DbSet<FeatureFlagUsage> FeatureFlagUsage => Set<FeatureFlagUsage>();
 
     // User Achievements (Gamification)
-    public DbSet<GameGuild.Modules.UserAchievements.Achievement> Achievements => Set<GameGuild.Modules.UserAchievements.Achievement>();
+    public DbSet<Modules.UserAchievements.Achievement> Achievements => Set<Modules.UserAchievements.Achievement>();
 
-    public DbSet<GameGuild.Modules.UserAchievements.UserAchievement> UserAchievements => Set<GameGuild.Modules.UserAchievements.UserAchievement>();
+    public DbSet<Modules.UserAchievements.UserAchievement> UserAchievements => Set<Modules.UserAchievements.UserAchievement>();
 
-    public DbSet<GameGuild.Modules.UserAchievements.AchievementLevel> AchievementLevels => Set<GameGuild.Modules.UserAchievements.AchievementLevel>();
+    public DbSet<Modules.UserAchievements.AchievementLevel> AchievementLevels => Set<Modules.UserAchievements.AchievementLevel>();
 
-    public DbSet<GameGuild.Modules.UserAchievements.AchievementPrerequisite> AchievementPrerequisites => Set<GameGuild.Modules.UserAchievements.AchievementPrerequisite>();
+    public DbSet<Modules.UserAchievements.AchievementPrerequisite> AchievementPrerequisites => Set<Modules.UserAchievements.AchievementPrerequisite>();
 
-    public DbSet<GameGuild.Modules.UserAchievements.AchievementProgress> AchievementProgress => Set<GameGuild.Modules.UserAchievements.AchievementProgress>();
+    public DbSet<Modules.UserAchievements.AchievementProgress> AchievementProgress => Set<Modules.UserAchievements.AchievementProgress>();
 
     // Programs Module
     public DbSet<GameGuild.Modules.Programs.Entities.Program> Programs => Set<GameGuild.Modules.Programs.Entities.Program>();
 
-    public DbSet<GameGuild.Modules.Programs.Entities.ProgramUser> ProgramUsers => Set<GameGuild.Modules.Programs.Entities.ProgramUser>();
+    public DbSet<ProgramUser> ProgramUsers => Set<ProgramUser>();
 
-    public DbSet<GameGuild.Modules.Programs.Entities.ProgramContent> ProgramContents => Set<GameGuild.Modules.Programs.Entities.ProgramContent>();
+    public DbSet<ProgramContent> ProgramContents => Set<ProgramContent>();
 
-    public DbSet<GameGuild.Modules.Programs.Entities.ProgramWishlist> ProgramWishlists => Set<GameGuild.Modules.Programs.Entities.ProgramWishlist>();
+    public DbSet<ProgramWishlist> ProgramWishlists => Set<ProgramWishlist>();
 
-    public DbSet<GameGuild.Modules.Programs.Entities.ActivityGrade> ActivityGrades => Set<GameGuild.Modules.Programs.Entities.ActivityGrade>();
+    public DbSet<ActivityGrade> ActivityGrades => Set<ActivityGrade>();
 
-    public DbSet<GameGuild.Modules.Programs.Entities.ContentInteraction> ContentInteractions => Set<GameGuild.Modules.Programs.Entities.ContentInteraction>();
+    public DbSet<ContentInteraction> ContentInteractions => Set<ContentInteraction>();
 
     // TestingLab Module
     public DbSet<TestingRequest> TestingRequests => Set<TestingRequest>();

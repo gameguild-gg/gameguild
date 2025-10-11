@@ -3,7 +3,7 @@ namespace GameGuild.Modules.Users.Queries;
 /// <summary>
 ///     Query to get multiple users by their email addresses
 /// </summary>
-public sealed class GetUsersByEmailsQuery : GameGuild.CQRS.IRequest<IEnumerable<UserDto>> {
+public sealed class GetUsersByEmailsQuery : CQRS.IRequest<IEnumerable<UserDto>> {
   /// <summary>
   ///     Collection of email addresses to retrieve
   /// </summary>
@@ -13,7 +13,7 @@ public sealed class GetUsersByEmailsQuery : GameGuild.CQRS.IRequest<IEnumerable<
 /// <summary>
 ///     Handler for GetUsersByEmailsQuery
 /// </summary>
-public sealed class GetUsersByEmailsQueryHandler(IUserRepository userRepository) : GameGuild.CQRS.IRequestHandler<GetUsersByEmailsQuery, IEnumerable<UserDto>> {
+public sealed class GetUsersByEmailsQueryHandler(IUserRepository userRepository) : CQRS.IRequestHandler<GetUsersByEmailsQuery, IEnumerable<UserDto>> {
   public async Task<IEnumerable<UserDto>> Handle(GetUsersByEmailsQuery request, CancellationToken cancellationToken) {
     var users = await userRepository.GetByEmailsAsync(request.Emails, cancellationToken);
 

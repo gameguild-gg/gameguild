@@ -74,7 +74,7 @@ public class ProgramQueries {
     }
 
     /// <summary> Gets a program by ID (with proper authorization) </summary>
-    [GraphQLRequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "id")]
+    [GraphQLRequireResourcePermission<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "id")]
     public async Task<Program?> GetProgramById(
       Guid id,
       [Service] IProgramService programService

@@ -37,7 +37,7 @@ public sealed class NotificationDeliveryService : INotificationDeliveryService
 
     public async Task DeliverAsync(Notification notification, CancellationToken cancellationToken = default)
     {
-        var deliveryTasks = new System.Collections.Generic.List<Task>();
+        var deliveryTasks = new List<Task>();
 
         // In-app is always delivered (stored in database)
         if (notification.Channel.HasFlag(NotificationChannel.InApp))

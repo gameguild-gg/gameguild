@@ -1,5 +1,5 @@
 ﻿namespace GameGuild.Modules.Audit;
-using GameGuild.Modules.Tenants;
+using Tenants;
 
 /// <summary>
 /// Service for creating and managing audit logs

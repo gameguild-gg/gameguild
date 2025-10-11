@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Programs;
 [ExtendObjectType<Query>]
 public class ContentInteractionQueries {
   /// <summary> Get content interaction by ID Requires Read permission on the parent Program </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ContentInteraction?> GetContentInteractionById(Guid programId, Guid interactionId, [Service] IContentInteractionService contentInteractionService, [Service] IProgramContentService programContentService) {
     // Get the interaction
     var interactions = await contentInteractionService.GetUserInteractionsAsync(Guid.Empty);
@@ -25,7 +25,7 @@ public class ContentInteractionQueries {
   }
 
   /// <summary> Get content interaction for a specific user and content Requires Read permission on the parent Program </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ContentInteraction?> GetUserContentInteraction(Guid programId, Guid programUserId, Guid contentId, [Service] IContentInteractionService contentInteractionService, [Service] IProgramContentService programContentService) {
     // Verify content belongs to the specified program
     var content = await programContentService.GetContentByIdAsync(contentId);
@@ -38,7 +38,7 @@ public class ContentInteractionQueries {
   }
 
   /// <summary> Get all content interactions for a user in a program Requires Read permission on the parent Program </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<IEnumerable<ContentInteraction>> GetUserContentInteractions(Guid programId, Guid programUserId, [Service] IContentInteractionService contentInteractionService) {
     var interactions = await contentInteractionService.GetUserInteractionsAsync(programUserId);
 
@@ -47,7 +47,7 @@ public class ContentInteractionQueries {
   }
 
   /// <summary> Get content interactions by status for a program Requires Read permission on the parent Program </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public Task<IEnumerable<ContentInteraction>> GetContentInteractionsByStatus(Guid programId, ProgressStatus status, [Service] IContentInteractionService contentInteractionService) {
     // This would require extending the service to support filtering by status
     // For now, we'll get all interactions and filter in memory
@@ -60,7 +60,7 @@ public class ContentInteractionQueries {
   }
 
   /// <summary> Get content interaction statistics for a program Requires Read permission on the parent Program </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public Task<ContentInteractionStats> GetContentInteractionStats(Guid programId, [Service] IContentInteractionService contentInteractionService) {
     // This would require extending the service to support statistics
     // For now, return a placeholder implementation

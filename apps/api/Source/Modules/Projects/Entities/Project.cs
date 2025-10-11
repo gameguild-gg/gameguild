@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
@@ -15,8 +16,7 @@ namespace GameGuild.Modules.Projects.Entities;
 [Index(nameof(CategoryId))]
 [Index(nameof(CreatedAt))]
 [Index(nameof(UpdatedAt))]
-public sealed class Project : EntityBase<Guid>
-{
+public sealed class Project : EntityBase {
     /// <summary> Project title </summary>
     [Required]
     [MaxLength(500)]
@@ -149,8 +149,7 @@ public sealed class Project : EntityBase<Guid>
     public int TeamCount => Teams.Count(team => team.IsActive);
 
     /// <summary> Generate URL-friendly slug from title </summary>
-    public static string GenerateSlug(string title)
-    {
+    public static string GenerateSlug(string title) {
         if (string.IsNullOrWhiteSpace(title)) return string.Empty;
 
         return title.ToLowerInvariant()
