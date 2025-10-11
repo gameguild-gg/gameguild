@@ -1,5 +1,6 @@
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Permissions;
 
 namespace GameGuild.Modules.Reputations;
 
