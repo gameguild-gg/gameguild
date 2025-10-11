@@ -1,16 +1,13 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Common.Configuration;
-using GameGuild.Tenants.Commands;
-using GameGuild.Tenants.Entities;
-using GameGuild.Tenants.Repositories;
-using GameGuild.Tenants.Services;
+using GameGuild.Modules.Tenants;
 
-namespace GameGuild.Tenants.Handlers;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Handler for registering a new tenant webhook.
 /// </summary>
-public class RegisterTenantWebhookHandler : IRequestHandler<RegisterTenantWebhookCommand, TenantWebhook>
+public class RegisterTenantWebhookHandler : IRequestHandler<RegisterTenantWebhookCommand, Result<TenantWebhook>>
 {
     private readonly ITenantWebhookRepository _repository;
 

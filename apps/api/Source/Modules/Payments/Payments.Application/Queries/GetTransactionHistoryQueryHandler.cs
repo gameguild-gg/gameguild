@@ -26,16 +26,16 @@ public class GetTransactionHistoryQueryHandler : IRequestHandler<GetTransactionH
         _logger.LogInformation("Getting transaction history for user {UserId}", request.UserId);
 
         var transactions = await _walletService.GetTransactionHistoryAsync(
-            request.UserId, 
-            request.Skip, 
-            request.Take, 
-            request.TypeFilter, 
-            request.StatusFilter, 
+            request.UserId,
+            request.Skip,
+            request.Take,
+            request.TypeFilter,
+            request.StatusFilter,
             cancellationToken);
 
-        _logger.LogInformation("Retrieved {Count} transactions for user {UserId}", 
+        _logger.LogInformation("Retrieved {Count} transactions for user {UserId}",
             transactions.Count, request.UserId);
-            
+
         return transactions;
     }
 }

@@ -1,4 +1,4 @@
-using GameGuild.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Tenants.Repositories;

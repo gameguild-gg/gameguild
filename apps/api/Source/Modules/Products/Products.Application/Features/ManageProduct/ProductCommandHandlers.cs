@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.Database;
-// using GameGuild.Modules.Contents.Domain.Entities;
 using GameGuild.Modules.Products.Domain.Entities;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+// using GameGuild.Modules.Contents.Domain.Entities;
 
 
 namespace GameGuild.Modules.Products.Application.Features.ManageProduct;

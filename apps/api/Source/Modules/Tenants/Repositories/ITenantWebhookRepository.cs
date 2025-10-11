@@ -1,6 +1,4 @@
-using GameGuild.Tenants.Entities;
-
-namespace GameGuild.Tenants.Repositories;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Repository interface for tenant webhook operations.

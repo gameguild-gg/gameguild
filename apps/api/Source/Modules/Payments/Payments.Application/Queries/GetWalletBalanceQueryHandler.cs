@@ -27,7 +27,7 @@ public class GetWalletBalanceQueryHandler : IRequestHandler<GetWalletBalanceQuer
         var balance = await _walletService.GetBalanceAsync(request.UserId, cancellationToken);
 
         _logger.LogInformation("Balance retrieved for user {UserId}: {Balance}", request.UserId, balance);
-        
+
         return balance;
     }
 }

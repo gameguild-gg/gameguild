@@ -1,6 +1,5 @@
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Followers.Entities;

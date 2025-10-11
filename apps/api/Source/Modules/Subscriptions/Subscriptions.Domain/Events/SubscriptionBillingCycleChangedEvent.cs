@@ -1,6 +1,6 @@
 using GameGuild.Modules.Subscriptions.Models;
-
 using GameGuild.CQRS;
+
 
 namespace GameGuild.Modules.Subscriptions.Events;
 

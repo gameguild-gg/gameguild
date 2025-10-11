@@ -1,7 +1,6 @@
 using GameGuild.Modules.Users;
-// using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Users;
+// using GameGuild.Modules.Contents.Models;
 
 namespace GameGuild.Modules.Programs.Entities;
 

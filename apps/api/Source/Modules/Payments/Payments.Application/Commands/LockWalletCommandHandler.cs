@@ -22,7 +22,7 @@ public class LockWalletCommandHandler : IRequestHandler<LockWalletCommand>
 
     public async Task Handle(LockWalletCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Locking wallet for user {UserId}. Reason: {Reason}", 
+        _logger.LogInformation("Locking wallet for user {UserId}. Reason: {Reason}",
             request.UserId, request.Reason);
 
         await _walletService.LockWalletAsync(request.UserId, request.Reason, cancellationToken);

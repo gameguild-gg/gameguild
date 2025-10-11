@@ -1,9 +1,9 @@
-// using GameGuild.Authorization.Middleware;
-
 using GameGuild.Core.Configuration;
 using GameGuild.Core.GraphQL;
 using GameGuild.Core.Middleware;
 using GameGuild.Modules.Tenants;
+// using GameGuild.Authorization.Middleware;
+
 
 namespace GameGuild;
 

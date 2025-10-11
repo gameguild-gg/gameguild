@@ -1,4 +1,4 @@
-using GameGuild.Modules.Audit;
+using GameGuild.Modules.Audit.Entities;
 
 namespace GameGuild.Modules.Audit.Services;
 

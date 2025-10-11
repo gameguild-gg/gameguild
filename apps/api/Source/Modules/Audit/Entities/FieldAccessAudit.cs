@@ -1,4 +1,5 @@
 using GameGuild.Core.Domain;
+using GameGuild.Modules.Audit.Enums;
 
 namespace GameGuild.Modules.Audit.Entities;
 

@@ -1,6 +1,6 @@
 using System.Text;
 using System.Text.Json;
-using GameGuild.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 using GameGuild.Tenants.Repositories;
 using Microsoft.Extensions.Logging;
 
