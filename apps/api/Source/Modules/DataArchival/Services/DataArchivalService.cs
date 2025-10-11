@@ -211,6 +211,10 @@ public class DataArchivalService : IDataArchivalService {
         throw new NotImplementedException("GetStorageTierAsync is not yet implemented");
     }
 
+    public Task<ArchivalJobDto?> GetArchivalJobStatusAsync(Guid jobId, CancellationToken cancellationToken = default) {
+        throw new NotImplementedException("GetArchivalJobStatusAsync is not yet implemented");
+    }
+
     public Task<ArchivalCostSavingsDto> CalculateCostSavingsAsync(Guid? tenantId = null, CancellationToken cancellationToken = default) {
         throw new NotImplementedException("CalculateCostSavingsAsync is not yet implemented");
     }

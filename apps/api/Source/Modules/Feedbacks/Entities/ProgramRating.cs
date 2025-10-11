@@ -10,8 +10,7 @@ namespace GameGuild.Modules.Feedbacks.Entities;
 [Index(nameof(Rating))]
 [Index(nameof(SubmittedAt))]
 [Index(nameof(ModerationStatus))]
-public class ProgramRating : EntityBase
-{
+public class ProgramRating : EntityBase {
     public Guid UserId { get; set; }
 
     public Guid ProgramId { get; set; }
@@ -35,7 +34,7 @@ public class ProgramRating : EntityBase
     /// <summary>
     /// Last updated date
     /// </summary>
-    public DateTime? UpdatedAt { get; set; }
+    public new DateTime? UpdatedAt { get; set; }
 
     /// <summary>
     /// Moderation status of the rating
