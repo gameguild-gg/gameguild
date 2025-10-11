@@ -8,12 +8,15 @@ import { ProjectSearchFilters } from "@/components/editor/extras/project-dialog/
 import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
 import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
 import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
-import { FolderOpen, Upload, Info } from "lucide-react"
+import { FolderOpen, Upload, Info, Cloud } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import type { LexicalEditor } from "lexical"
 import { ImportProjectDialog } from "./import-project-dialog"
 import { InfoDialog } from "./info-dialog"
+import type { StorageOption } from "./storage-option-selector"
+import { GoogleDriveAuthDialog } from "./google-drive-auth-dialog"
+import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
 
 interface ProjectData {
   id: string
@@ -23,14 +26,16 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
 }
 
 interface StorageAdapter {
-  save: (id: string, name: string, data: string, tags: string[]) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageOption) => Promise<void>
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete: (id: string) => Promise<void>
-  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any") => Promise<ProjectData[]>
+  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive") => Promise<ProjectData[]>
 }
 
 interface OpenProjectDialogProps {
@@ -67,6 +72,8 @@ export function OpenProjectDialog({
     setSearchTerm,
     selectedTags,
     setSelectedTags,
+    storageTypeFilter,
+    setStorageTypeFilter,
     currentPage,
     setCurrentPage,
     itemsPerPage,
@@ -84,6 +91,10 @@ export function OpenProjectDialog({
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [infoDialogOpen, setInfoDialogOpen] = useState(false)
   const [projectToEdit, setProjectToEdit] = useState<ProjectData | null>(null)
+  const [googleDriveAuthDialogOpen, setGoogleDriveAuthDialogOpen] = useState(false)
+
+  // Google Drive authentication hook
+  const { isAuthenticated, isLoading, authenticate, signOut, refreshAuthState } = useGoogleDriveAuth()
 
   const handleOpen = async (projectId: string) => {
     const projectData = await loadProject(projectId)
@@ -135,7 +146,7 @@ export function OpenProjectDialog({
     setInfoDialogOpen(true)
   }
 
-  const handleSaveInfo = async (projectId: string, newName: string, newTags: string[]) => {
+  const handleSaveInfo = async (projectId: string, newName: string, newTags: string[], storageType: StorageOption) => {
     const projectToUpdate = await storageAdapter.load(projectId)
     if (!projectToUpdate) {
       toast.error("Error finding project to update.")
@@ -143,7 +154,7 @@ export function OpenProjectDialog({
     }
 
     try {
-      await storageAdapter.save(projectId, newName, projectToUpdate.data, newTags)
+      await storageAdapter.save(projectId, newName, projectToUpdate.data, newTags, storageType)
       toast.success("Project updated", {
         description: `"${newName}" has been updated successfully.`,
       })
@@ -203,12 +214,49 @@ export function OpenProjectDialog({
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader className="flex-shrink-0">
-            <DialogTitle>{isFirstTime ? "Welcome! Choose an Option" : "Open Project"}</DialogTitle>
-            {isFirstTime && (
-              <p className="text-sm text-muted-foreground">
-                To get started, please open an existing project or create a new one.
-              </p>
-            )}
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>{isFirstTime ? "Welcome! Choose an Option" : "Open Project"}</DialogTitle>
+                {isFirstTime && (
+                  <p className="text-sm text-muted-foreground">
+                    To get started, please open an existing project or create a new one.
+                  </p>
+                )}
+              </div>
+              
+              {/* Google Drive Auth Button */}
+              <div className="flex items-center gap-2">
+                {isAuthenticated ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                      <Cloud className="h-3 w-3" />
+                      <span>Google Drive Connected</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={signOut}
+                      className="text-xs text-gray-500 hover:text-red-600"
+                      title="Disconnect Google Drive"
+                    >
+                      Disconnect
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setGoogleDriveAuthDialogOpen(true)}
+                    disabled={isLoading}
+                    className="gap-1 text-xs"
+                    title="Connect to Google Drive to access your cloud projects"
+                  >
+                    <Cloud className="h-3 w-3" />
+                    {isLoading ? "Connecting..." : "Connect Google Drive"}
+                  </Button>
+                )}
+              </div>
+            </div>
           </DialogHeader>
 
           <div className="flex flex-col flex-1 min-h-0 space-y-4">
@@ -221,6 +269,8 @@ export function OpenProjectDialog({
                 availableTags={availableTags}
                 tagFilterMode={tagFilterMode}
                 onTagFilterModeChange={setTagFilterMode}
+                storageTypeFilter={storageTypeFilter}
+                onStorageTypeFilterChange={setStorageTypeFilter}
                 itemsPerPage={itemsPerPage}
                 onItemsPerPageChange={setItemsPerPage}
                 showFilters={true}
@@ -343,6 +393,23 @@ export function OpenProjectDialog({
         onSave={handleSaveInfo}
         availableTags={availableTags}
         storageAdapter={storageAdapter}
+      />
+
+      <GoogleDriveAuthDialog
+        open={googleDriveAuthDialogOpen}
+        onOpenChange={setGoogleDriveAuthDialogOpen}
+        onAuthSuccess={() => {
+          setGoogleDriveAuthDialogOpen(false)
+          // Refresh auth state to ensure UI reflects the new authentication status
+          refreshAuthState()
+          // Refresh the projects list to include Google Drive projects
+          onProjectsListUpdate()
+          toast.success("Google Drive connected successfully!", {
+            description: "You can now access your Google Drive projects.",
+            duration: 3000,
+            icon: "☁️",
+          })
+        }}
       />
     </>
   )

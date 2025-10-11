@@ -24,6 +24,7 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
 }
 
 // Generate unique ID for projects
@@ -54,6 +55,7 @@ export default function Page() {
   const [editorState, setEditorState] = useState<string>("")
   const [currentProjectId, setCurrentProjectId] = useState<string>("")
   const [currentProjectName, setCurrentProjectName] = useState<string>("")
+  const [currentProjectStorageType, setCurrentProjectStorageType] = useState<"local" | "gameguild-cloud" | "google-drive">("local")
   const [saveAsDialogOpen, setSaveAsDialogOpen] = useState(false)
   const [openDialogOpen, setOpenDialogOpen] = useState(false)
   const [newProjectName, setNewProjectName] = useState("")
@@ -141,7 +143,7 @@ export default function Page() {
   }, [editorState])
 
   const storageAdapter = {
-    save: async (id: string, name: string, data: string, tags: string[] = []) => {
+    save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local") => {
       if (!id || !name || !data) {
         console.warn("Invalid id, name or data")
         return
@@ -152,11 +154,11 @@ export default function Page() {
       }
 
       const originalSize = estimateSize(data)
-      console.log(`Saving project "${name}" (${id}) - Size: ${formatSize(originalSize)}`)
+      console.log(`Saving project "${name}" (${id}) to ${storageType} - Size: ${formatSize(originalSize)}`)
 
       try {
-        await dbStorage.current.save(id, name, data, tags)
-        console.log(`Saved project "${name}" (${id}) successfully`)
+        await dbStorage.current.save(id, name, data, tags, storageType)
+        console.log(`Saved project "${name}" (${id}) to ${storageType} successfully`)
       } catch (error) {
         console.error("Failed to save project:", error)
         throw error
@@ -221,13 +223,14 @@ export default function Page() {
       searchTerm: string,
       tags: string[],
       filterMode: "all" | "any" = "any",
+      storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive",
     ): Promise<ProjectData[]> => {
       if (!isDbInitialized) {
         return []
       }
 
       try {
-        return await dbStorage.current.searchProjects(searchTerm, tags, filterMode)
+        return await dbStorage.current.searchProjects(searchTerm, tags, filterMode, storageTypeFilter)
       } catch (error) {
         console.error("Failed to search projects:", error)
         return []
@@ -338,10 +341,10 @@ export default function Page() {
     }
 
     try {
-      await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags)
+      await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags, currentProjectStorageType)
 
       toast.success("Project saved successfully", {
-        description: `"${currentProjectName}" was saved in the database.`,
+        description: `"${currentProjectName}" was saved to ${currentProjectStorageType}.`,
         duration: 3000,
         icon: "💾",
       })
@@ -355,7 +358,7 @@ export default function Page() {
     }
   }
 
-  const handleSaveAs = async () => {
+  const handleSaveAs = async (storageOption: "local" | "gameguild-cloud" | "google-drive" = "local") => {
     if (!newProjectName.trim()) {
       toast.error("Name required", {
         description: "Please enter a name for the project",
@@ -416,15 +419,16 @@ export default function Page() {
 
     try {
       const newProjectId = generateProjectId()
-      await storageAdapter.save(newProjectId, newProjectName, stateToSave, projectTags)
+      await storageAdapter.save(newProjectId, newProjectName, stateToSave, projectTags, storageOption)
       setCurrentProjectId(newProjectId)
       setCurrentProjectName(newProjectName)
+      setCurrentProjectStorageType(storageOption)
       setNewProjectName("")
       setSaveAsDialogOpen(false)
       await loadSavedProjectsList()
 
       toast.success("New project created", {
-        description: `"${newProjectName}" was created and saved successfully.`,
+        description: `"${newProjectName}" was created and saved to ${storageOption}.`,
         duration: 3000,
         icon: "🎉",
       })
@@ -693,11 +697,19 @@ export default function Page() {
                       onProjectLoad={(projectData) => {
                         setCurrentProjectId(projectData.id)
                         setCurrentProjectName(projectData.name)
+                        setCurrentProjectStorageType(projectData.storageType || "local")
                         setProjectTags(projectData.tags || [])
                         setIsFirstTime(false)
                       }}
                       onProjectsListUpdate={loadSavedProjectsList}
-                      onCreateNew={() => setCreateDialogOpen(true)}
+                      onCreateNew={() => {
+                        // Reset current project data when creating new
+                        setCurrentProjectId("")
+                        setCurrentProjectName("")
+                        setCurrentProjectStorageType("local")
+                        setProjectTags([])
+                        setCreateDialogOpen(true)
+                      }}
                       currentProjectName={currentProjectName}
                     />
                   </div>
@@ -824,6 +836,7 @@ export default function Page() {
                     }
                     setCurrentProjectId(projectData.id)
                     setCurrentProjectName(projectData.name)
+                    setCurrentProjectStorageType(projectData.storageType)
                     setProjectTags(projectData.tags)
                     setEditorState(
                       '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',

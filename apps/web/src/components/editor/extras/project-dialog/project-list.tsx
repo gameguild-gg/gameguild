@@ -4,8 +4,9 @@ import type React from "react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { FolderOpen, Trash2, Download, Info } from "lucide-react"
+import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud, Database, Wifi, WifiOff } from "lucide-react"
 import { DownloadConfirmDialog } from "@/components/editor/extras/dialogs/download-confirm-dialog"
+import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
 
 interface ProjectData {
   id: string
@@ -15,6 +16,8 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
 }
 
 interface ProjectListProps {
@@ -58,6 +61,9 @@ export function ProjectList({
     project: ProjectData | null
   }>({ open: false, project: null })
 
+  // Google Drive authentication hook to check connection status
+  const { isAuthenticated: isGoogleDriveAuthenticated } = useGoogleDriveAuth()
+
   // Format file size
   const formatSize = (sizeInKB: number): string => {
     if (sizeInKB < 1024) {
@@ -83,6 +89,62 @@ export function ProjectList({
       )
     }
     setDownloadDialog({ open: false, project: null })
+  }
+
+    // Render storage type indicator
+  const renderStorageIndicator = (
+    storageType: "local" | "gameguild-cloud" | "google-drive" | undefined,
+    isLocallyAvailable?: boolean
+  ) => {
+    if (!storageType || storageType === "local") {
+      return (
+        <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" title="Stored locally on this device">
+          <HardDrive className="h-3 w-3" />
+          <span>Local</span>
+        </div>
+      )
+    }
+
+    if (storageType === "gameguild-cloud") {
+      return (
+        <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400" title="Stored on GameGuild Cloud - Always accessible">
+          <Database className="h-3 w-3" />
+          <span>GameGuild</span>
+          <Wifi className="h-2 w-2" />
+        </div>
+      )
+    }
+
+    if (storageType === "google-drive") {
+      const isConnected = isGoogleDriveAuthenticated
+      const isAvailableLocally = isLocallyAvailable === true
+      
+      return (
+        <div className={`flex items-center gap-1 text-xs ${
+          isConnected 
+            ? (isAvailableLocally ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400")
+            : "text-orange-600 dark:text-orange-400"
+        }`} title={
+          !isConnected 
+            ? "Stored on Google Drive - Connect to access"
+            : isAvailableLocally
+              ? "Stored on Google Drive - Downloaded and ready"
+              : "Stored on Google Drive - Click to download"
+        }>
+          <Cloud className="h-3 w-3" />
+          <span>Google Drive</span>
+          {!isConnected ? (
+            <WifiOff className="h-2 w-2" />
+          ) : isAvailableLocally ? (
+            <Wifi className="h-2 w-2" />
+          ) : (
+            <Download className="h-2 w-2" />
+          )}
+        </div>
+      )
+    }
+
+    return null
   }
 
   const paginatedProjects = projects.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
@@ -120,13 +182,14 @@ export function ProjectList({
               onClick={() => onOpen(project.id)}
             >
               <div className="flex flex-col p-4">
-                <div className="mb-2">
+                <div className="mb-2 flex items-start justify-between">
                   <span
                     className="block truncate font-semibold text-gray-900 dark:text-gray-100"
                     title={project.name}
                   >
                     {project.name}
                   </span>
+                  {renderStorageIndicator(project.storageType, project.isLocallyAvailable)}
                 </div>
                 {project.tags && project.tags.length > 0 && (
                   <div className="mb-3 flex flex-wrap gap-1" title={project.tags.join(", ")}>

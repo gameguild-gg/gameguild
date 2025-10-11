@@ -1,4 +1,6 @@
+import { syncConfig } from "../../sync/editor/sync-config"
 import { SyncManager } from "../../sync/editor/sync-manager"
+import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"
 
 interface ProjectData {
@@ -9,8 +11,10 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
-  hash?: string
+  hash: string
   syncStatus?: "synced" | "pending" | "conflict" | "local-only"
+  storageType: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean // Computed dynamically based on local storage check
 }
 
 interface TagData {
@@ -28,15 +32,17 @@ interface ProjectMetadata {
   createdAt: string
   updatedAt: string
   syncStatus?: "synced" | "pending" | "conflict" | "local-only"
+  storageType: "local" | "gameguild-cloud" | "google-drive"
 }
 
 export class EnhancedStorageAdapter {
   private db: IDBDatabase | null = null
   private syncManager: SyncManager
+  private googleDriveSync: GoogleDriveSync
   private isInitialized = false
 
   private readonly DB_NAME = "GGEditorDB"
-  private readonly DB_VERSION = 2 // Incremented for TagData support
+  private readonly DB_VERSION = 3 // Incremented for storageType support
   private readonly STORE_NAME = "projects"
   private readonly TAGS_STORE_NAME = "tags" // Kept for migration/compatibility, can be removed later
   private readonly METADATA_STORE_NAME = "project_metadata"
@@ -44,6 +50,7 @@ export class EnhancedStorageAdapter {
 
   constructor() {
     this.syncManager = new SyncManager()
+    this.googleDriveSync = new GoogleDriveSync()
   }
 
   async init(): Promise<void> {
@@ -67,6 +74,7 @@ export class EnhancedStorageAdapter {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result
+        const oldVersion = event.oldVersion
 
         // Create projects store
         if (!db.objectStoreNames.contains(this.STORE_NAME)) {
@@ -89,11 +97,70 @@ export class EnhancedStorageAdapter {
           const tagDataStore = db.createObjectStore(this.TAG_DATA_STORE_NAME, { keyPath: "id" })
           tagDataStore.createIndex("name", "name", { unique: true })
         }
+
+        // Migration for storageType field (version 2 -> 3)
+        if (oldVersion < 3) {
+          // This migration will run after the stores are created
+          event.target!.addEventListener('success', () => {
+            this.migrateToStorageType()
+          })
+        }
       }
     })
   }
 
-  async save(id: string, name: string, data: string, tags: string[] = []): Promise<void> {
+  private async migrateToStorageType(): Promise<void> {
+    if (!this.db) return
+
+    try {
+      const transaction = this.db.transaction([this.STORE_NAME, this.METADATA_STORE_NAME], "readwrite")
+      const projectStore = transaction.objectStore(this.STORE_NAME)
+      const metadataStore = transaction.objectStore(this.METADATA_STORE_NAME)
+
+      // Get all projects
+      const projectsRequest = projectStore.getAll()
+      projectsRequest.onsuccess = () => {
+        const projects = projectsRequest.result as (ProjectData & { storageType?: string })[]
+        
+        projects.forEach(project => {
+          // Add storageType if it doesn't exist
+          if (!project.storageType) {
+            const updatedProject: ProjectData = {
+              ...project,
+              storageType: "local", // Default to local for existing projects
+            }
+            projectStore.put(updatedProject)
+
+            // Update metadata as well
+            const metadata: ProjectMetadata = {
+              id: project.id,
+              name: project.name,
+              tags: project.tags,
+              size: project.size,
+              hash: project.hash || "",
+              createdAt: project.createdAt,
+              updatedAt: project.updatedAt,
+              syncStatus: project.syncStatus,
+              storageType: "local",
+            }
+            metadataStore.put(metadata)
+          }
+        })
+      }
+
+      transaction.oncomplete = () => {
+        console.log("Migration to storageType completed successfully")
+      }
+
+      transaction.onerror = () => {
+        console.error("Migration to storageType failed:", transaction.error)
+      }
+    } catch (error) {
+      console.error("Failed to migrate to storageType:", error)
+    }
+  }
+
+  async save(id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local"): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const hash = await HashManager.generateHash(data)
@@ -113,6 +180,7 @@ export class EnhancedStorageAdapter {
       createdAt: existing ? existing.createdAt : now,
       updatedAt: now,
       syncStatus: "pending",
+      storageType,
     }
 
     // Save to IndexedDB
@@ -121,10 +189,34 @@ export class EnhancedStorageAdapter {
     // Update tag relationships
     await this.updateTagProjectRelationships(id, oldTags, tags)
 
-    // Queue for sync
-    await this.syncManager.queueProjectUpdate(projectData)
+    // Handle sync based on storage type
+    if (storageType === "google-drive") {
+      // Sync to Google Drive
+      console.log("Attempting Google Drive sync for project:", name)
+      console.log("GoogleDriveService isReady:", this.googleDriveSync ? "GoogleDriveSync initialized" : "GoogleDriveSync NOT initialized")
+      
+      try {
+        const syncResult = await this.googleDriveSync.syncToGoogleDrive(projectData)
+        if (syncResult.success) {
+          console.log("Google Drive sync successful for project:", name)
+          // Update sync status to synced
+          projectData.syncStatus = "synced"
+          await this.saveToIndexedDB(projectData)
+        } else {
+          console.error("Google Drive sync failed:", syncResult.error)
+          // Keep as pending for retry
+        }
+      } catch (error) {
+        console.error("Google Drive sync error:", error)
+        // Keep as pending for retry
+      }
+    } else if (storageType === "gameguild-cloud") {
+      // Queue for GameGuild cloud sync
+      await this.syncManager.queueProjectUpdate(projectData)
+    }
+    // For local storage, no additional sync needed
 
-    console.log(`Saved project "${name}" (${id}) - Size: ${this.formatSize(projectData.size)}`)
+    console.log(`Saved project "${name}" (${id}) to ${storageType} - Size: ${this.formatSize(projectData.size)}`)
   }
 
   private async saveToIndexedDB(projectData: ProjectData): Promise<void> {
@@ -148,6 +240,7 @@ export class EnhancedStorageAdapter {
         createdAt: projectData.createdAt,
         updatedAt: projectData.updatedAt,
         syncStatus: projectData.syncStatus,
+        storageType: projectData.storageType,
       }
       metadataStore.put(metadata)
 
@@ -163,31 +256,102 @@ export class EnhancedStorageAdapter {
     const localProject = await this.loadFromIndexedDB(id)
 
     if (!localProject) {
-      // Project not found locally, try to download from server
+      // Project not found locally, try to download based on storage preferences
       console.log(`Project ${id} not found locally, attempting download`)
+      
+      // Try Google Drive first (if available)
+      if (await this.googleDriveSync.isGoogleDriveAvailable()) {
+        const googleDriveProject = await this.googleDriveSync.loadFromGoogleDrive(id)
+        if (googleDriveProject) {
+          // Ensure hash exists for the project
+          const hash = googleDriveProject.hash || await HashManager.generateHash(googleDriveProject.data)
+          
+          // Save downloaded project locally
+          await this.saveToIndexedDB({
+            ...googleDriveProject,
+            hash,
+            syncStatus: "synced",
+            storageType: "google-drive",
+          })
+          return {
+            ...googleDriveProject,
+            hash,
+            storageType: "google-drive" as const,
+          }
+        }
+      }
+      
+      // Try GameGuild cloud server
       const serverProject = await this.syncManager.downloadProject(id)
-
       if (serverProject) {
+        // Ensure hash exists for the project
+        const hash = serverProject.hash || await HashManager.generateHash(serverProject.data)
+        
         // Save downloaded project locally
         await this.saveToIndexedDB({
           ...serverProject,
+          hash,
           syncStatus: "synced",
+          storageType: "gameguild-cloud", // Server projects are cloud-based
         })
-        return serverProject
+        return {
+          ...serverProject,
+          hash,
+          storageType: "gameguild-cloud" as const,
+        }
       }
 
       return null
     }
 
-    // Check if local project needs sync with server
-    const syncedProject = await this.syncManager.syncProjectIfNeeded(localProject)
-    if (syncedProject) {
-      // Update local project with server version
-      await this.saveToIndexedDB({
-        ...syncedProject,
-        syncStatus: "synced",
-      })
-      return syncedProject
+    // Handle sync based on storage type
+    if (localProject.storageType === "google-drive") {
+      // For Google Drive projects, always check if we have the latest version
+      if (await this.googleDriveSync.isGoogleDriveAvailable()) {
+        try {
+          const googleDriveProject = await this.googleDriveSync.loadFromGoogleDrive(id)
+          if (googleDriveProject && googleDriveProject.updatedAt > localProject.updatedAt) {
+            // Ensure hash exists for the project
+            const hash = googleDriveProject.hash || await HashManager.generateHash(googleDriveProject.data)
+            
+            // Update local copy with newer version from Google Drive
+            await this.saveToIndexedDB({
+              ...googleDriveProject,
+              hash,
+              syncStatus: "synced",
+              storageType: "google-drive",
+            })
+            return {
+              ...googleDriveProject,
+              hash,
+              storageType: "google-drive" as const,
+            }
+          }
+        } catch (error) {
+          console.error("Failed to sync from Google Drive:", error)
+          // Continue with local version
+        }
+      }
+    } else if (localProject.storageType === "gameguild-cloud") {
+      // Check if local project needs sync with server
+      const syncedProject = await this.syncManager.syncProjectIfNeeded(localProject)
+      if (syncedProject) {
+        // Ensure hash exists for the project
+        const hash = syncedProject.hash || await HashManager.generateHash(syncedProject.data)
+        
+        // Update local project with server version, preserving storage type
+        await this.saveToIndexedDB({
+          ...syncedProject,
+          hash,
+          syncStatus: "synced",
+          storageType: localProject.storageType,
+        })
+        return {
+          ...syncedProject,
+          hash,
+          storageType: localProject.storageType,
+        }
+      }
     }
 
     return localProject
@@ -249,13 +413,53 @@ export class EnhancedStorageAdapter {
 
     // Get local projects
     const localProjects = await this.listFromIndexedDB()
+    
+    // Get Google Drive projects metadata efficiently (if authenticated)
+    let googleDriveProjects: ProjectData[] = []
+    if (await this.googleDriveSync.isGoogleDriveAvailable()) {
+      try {
+        googleDriveProjects = await this.googleDriveSync.listFromGoogleDrive()
+        console.log(`Found ${googleDriveProjects.length} Google Drive projects`)
+      } catch (error) {
+        console.error("Failed to list Google Drive projects:", error)
+      }
+    }
+
+    // Efficiently determine which projects are locally available
+    const localGoogleDriveProjectIds = new Set(
+      localProjects
+        .filter(p => p.storageType === "google-drive")
+        .map(p => p.id)
+    )
+    
+    // Mark Google Drive projects as locally available or not
+    const googleDriveProjectsWithAvailability = googleDriveProjects.map(project => ({
+      ...project,
+      isLocallyAvailable: localGoogleDriveProjectIds.has(project.id)
+    }))
+    
+    // Mark local projects as locally available
+    const localProjectsMarked = localProjects.map(project => ({
+      ...project,
+      isLocallyAvailable: true
+    }))
+    
+    // Merge projects, removing duplicates (prioritize local versions for actual data)
+    const localProjectIds = new Set(localProjects.map(p => p.id))
+    const uniqueGoogleDriveProjects = googleDriveProjectsWithAvailability
+      .filter(p => !localProjectIds.has(p.id))
+    
+    const allProjects = [...localProjectsMarked, ...uniqueGoogleDriveProjects]
+    
+    // Sort by last updated
+    allProjects.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
 
     // Fetch server metadata in parallel (non-blocking)
     this.syncServerMetadata().catch((error) => {
       console.error("Failed to sync server metadata:", error)
     })
 
-    return localProjects
+    return allProjects
   }
 
   private async listFromIndexedDB(): Promise<ProjectData[]> {
@@ -309,6 +513,7 @@ export class EnhancedStorageAdapter {
     searchTerm: string,
     tags: string[],
     filterMode: "all" | "any" = "any",
+    storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive",
   ): Promise<ProjectData[]> {
     if (!this.db) throw new Error("IndexedDB not initialized")
 
@@ -361,15 +566,24 @@ export class EnhancedStorageAdapter {
 
     // 2. Load projects
     // If filtered by tags, load only those projects. Otherwise, load all.
-    const projectsToFilter = await this.getProjectsByIds(projectIdsToLoad ? Array.from(projectIdsToLoad) : null)
+    const allProjects = await this.list() // Use list() method which includes Google Drive projects
+    const projectsToFilter = projectIdsToLoad 
+      ? allProjects.filter(project => projectIdsToLoad!.has(project.id))
+      : allProjects
 
-    // 3. Filter by search term
-    if (searchTerm) {
-      const lowerCaseSearchTerm = searchTerm.toLowerCase()
-      return projectsToFilter.filter((project) => project.name.toLowerCase().includes(lowerCaseSearchTerm))
+    // 3. Filter by storage type
+    let filteredByStorage = projectsToFilter
+    if (storageTypeFilter) {
+      filteredByStorage = projectsToFilter.filter((project) => project.storageType === storageTypeFilter)
     }
 
-    return projectsToFilter
+    // 4. Filter by search term
+    if (searchTerm) {
+      const lowerCaseSearchTerm = searchTerm.toLowerCase()
+      return filteredByStorage.filter((project) => project.name.toLowerCase().includes(lowerCaseSearchTerm))
+    }
+
+    return filteredByStorage
   }
 
   private async getProjectsByIds(ids: string[] | null): Promise<ProjectData[]> {
@@ -522,6 +736,64 @@ export class EnhancedStorageAdapter {
     }
 
     return null
+  }
+
+  // Storage type management
+  async updateProjectStorageType(id: string, storageType: "local" | "gameguild-cloud" | "google-drive"): Promise<void> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const project = await this.loadFromIndexedDB(id)
+    if (!project) {
+      throw new Error(`Project ${id} not found`)
+    }
+
+    const updatedProject: ProjectData = {
+      ...project,
+      storageType,
+      updatedAt: new Date().toISOString(),
+      syncStatus: "pending",
+    }
+
+    await this.saveToIndexedDB(updatedProject)
+    await this.syncManager.queueProjectUpdate(updatedProject)
+
+    console.log(`Updated storage type for project "${project.name}" to: ${storageType}`)
+  }
+
+  async getProjectsByStorageType(storageType: "local" | "gameguild-cloud" | "google-drive"): Promise<ProjectData[]> {
+    const allProjects = await this.listFromIndexedDB()
+    return allProjects.filter((project) => project.storageType === storageType)
+  }
+
+  async getStorageTypeStats(): Promise<{
+    local: number
+    gameguildCloud: number
+    googleDrive: number
+    total: number
+  }> {
+    const allProjects = await this.listFromIndexedDB()
+    const stats = {
+      local: 0,
+      gameguildCloud: 0,
+      googleDrive: 0,
+      total: allProjects.length,
+    }
+
+    allProjects.forEach((project) => {
+      switch (project.storageType) {
+        case "local":
+          stats.local++
+          break
+        case "gameguild-cloud":
+          stats.gameguildCloud++
+          break
+        case "google-drive":
+          stats.googleDrive++
+          break
+      }
+    })
+
+    return stats
   }
 
   // Sync management
