@@ -103,7 +103,7 @@ public class PermissionsController : ControllerBase
     /// Grant resource-level permissions to a user
     /// </summary>
     [HttpPost("resource/grant")]
-    public async Task<ActionResult<ResourcePermission>> GrantResourcePermission(
+    public async Task<ActionResult<ResourcePermission<EntityBase>>> GrantResourcePermission(
         [FromBody] GrantResourcePermissionCommand command)
     {
         try
