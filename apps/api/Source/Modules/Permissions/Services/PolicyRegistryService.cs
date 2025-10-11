@@ -165,8 +165,7 @@ public class PolicyRegistryService : IPolicyRegistryService {
             _logger.LogInformation("Approved policy bundle {BundleId}", bundleId);
             return Result<PolicyBundle>.Success(bundle);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to approve policy bundle {BundleId}", bundleId);
             await LogActionAsync(bundleId, PolicyRegistryAction.Approve, approvedBy, false, ex.Message, cancellationToken);
             return Result<PolicyBundle>.Failure($"Failed to approve bundle: {ex.Message}");

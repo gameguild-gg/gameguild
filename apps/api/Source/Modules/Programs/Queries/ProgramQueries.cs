@@ -2,7 +2,6 @@ using GameGuild.CQRS;
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Programs.Models;
-using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 namespace GameGuild.Modules.Programs.Queries;
 
@@ -27,16 +26,16 @@ public record GetAllProgramsQuery(
   bool IncludeArchived = false,
   string? SortBy = "CreatedAt",
   bool SortDescending = true
-) : IQuery<IEnumerable<ProgramEntity>>;
+) : IQuery<IEnumerable<Program>>;
 
 /// <summary> Query to get a program by ID </summary>
-public record GetProgramByIdQuery(Guid Id, bool IncludeContent = false, bool IncludeEnrollments = false, bool IncludeRatings = false) : IQuery<ProgramEntity?>;
+public record GetProgramByIdQuery(Guid Id, bool IncludeContent = false, bool IncludeEnrollments = false, bool IncludeRatings = false) : IQuery<Program?>;
 
 /// <summary> Query to get a program by slug </summary>
-public record GetProgramBySlugQuery(string Slug, bool IncludeContent = false, bool IncludeEnrollments = false, bool IncludeRatings = false) : IQuery<ProgramEntity?>;
+public record GetProgramBySlugQuery(string Slug, bool IncludeContent = false, bool IncludeEnrollments = false, bool IncludeRatings = false) : IQuery<Program?>;
 
 /// <summary> Query to get published program by slug (public access) </summary>
-public record GetPublishedProgramBySlugQuery(string Slug, bool IncludeContent = false) : IQuery<ProgramEntity?>;
+public record GetPublishedProgramBySlugQuery(string Slug, bool IncludeContent = false) : IQuery<Program?>;
 
 // ===== SEARCH AND FILTER QUERIES =====
 
@@ -51,21 +50,21 @@ public record SearchProgramsQuery(
   bool AvailableForEnrollment = false,
   int Skip = 0,
   int Take = 50
-) : IQuery<IEnumerable<ProgramEntity>>;
+) : IQuery<IEnumerable<Program>>;
 
 /// <summary> Query to get programs by category </summary>
-public record GetProgramsByCategoryQuery(ProgramCategory Category, int Skip = 0, int Take = 50, bool OnlyPublished = true) : IQuery<IEnumerable<ProgramEntity>>;
+public record GetProgramsByCategoryQuery(ProgramCategory Category, int Skip = 0, int Take = 50, bool OnlyPublished = true) : IQuery<IEnumerable<Program>>;
 
 /// <summary> Query to get programs by difficulty </summary>
-public record GetProgramsByDifficultyQuery(ProgramDifficulty Difficulty, int Skip = 0, int Take = 50, bool OnlyPublished = true) : IQuery<IEnumerable<ProgramEntity>>;
+public record GetProgramsByDifficultyQuery(ProgramDifficulty Difficulty, int Skip = 0, int Take = 50, bool OnlyPublished = true) : IQuery<IEnumerable<Program>>;
 
 /// <summary> Query to get programs by creator </summary>
-public record GetProgramsByCreatorQuery(string CreatorId, int Skip = 0, int Take = 50, bool OnlyPublished = false) : IQuery<IEnumerable<ProgramEntity>>;
+public record GetProgramsByCreatorQuery(string CreatorId, int Skip = 0, int Take = 50, bool OnlyPublished = false) : IQuery<IEnumerable<Program>>;
 
 // ===== ENROLLMENT QUERIES =====
 
 /// <summary> Query to get enrolled programs for a user </summary>
-public record GetUserEnrolledProgramsQuery(string UserId, int Skip = 0, int Take = 50, bool OnlyActive = true) : IQuery<IEnumerable<ProgramEntity>>;
+public record GetUserEnrolledProgramsQuery(string UserId, int Skip = 0, int Take = 50, bool OnlyActive = true) : IQuery<IEnumerable<Program>>;
 
 /// <summary> Query to get program enrollments </summary>
 public record GetProgramEnrollmentsQuery(Guid ProgramId, int Skip = 0, int Take = 50, bool OnlyActive = true) : IQuery<IEnumerable<ProgramUser>>;
@@ -95,16 +94,16 @@ public record GetCreatorProgramStatisticsQuery(string CreatorId, DateTime? FromD
 // ===== TRENDING AND RECOMMENDATIONS =====
 
 /// <summary> Query to get popular programs </summary>
-public record GetPopularProgramsQuery(int Skip = 0, int Take = 10, int DaysBack = 30) : IQuery<IEnumerable<ProgramEntity>>;
+public record GetPopularProgramsQuery(int Skip = 0, int Take = 10, int DaysBack = 30) : IQuery<IEnumerable<Program>>;
 
 /// <summary> Query to get recent programs </summary>
-public record GetRecentProgramsQuery(int Skip = 0, int Take = 10, int DaysBack = 7) : IQuery<IEnumerable<ProgramEntity>>;
+public record GetRecentProgramsQuery(int Skip = 0, int Take = 10, int DaysBack = 7) : IQuery<IEnumerable<Program>>;
 
 /// <summary> Query to get featured programs </summary>
-public record GetFeaturedProgramsQuery(int Skip = 0, int Take = 10) : IQuery<IEnumerable<ProgramEntity>>;
+public record GetFeaturedProgramsQuery(int Skip = 0, int Take = 10) : IQuery<IEnumerable<Program>>;
 
 /// <summary> Query to get recommended programs for user </summary>
-public record GetRecommendedProgramsQuery(string UserId, int Take = 10) : IQuery<IEnumerable<ProgramEntity>>;
+public record GetRecommendedProgramsQuery(string UserId, int Take = 10) : IQuery<IEnumerable<Program>>;
 
 // ===== RATING QUERIES =====
 
@@ -117,7 +116,7 @@ public record GetUserProgramRatingQuery(Guid ProgramId, string UserId) : IQuery<
 // ===== WISHLIST QUERIES =====
 
 /// <summary> Query to get user's wishlist programs </summary>
-public record GetUserWishlistQuery(string UserId, int Skip = 0, int Take = 50) : IQuery<IEnumerable<ProgramEntity>>;
+public record GetUserWishlistQuery(string UserId, int Skip = 0, int Take = 50) : IQuery<IEnumerable<Program>>;
 
 /// <summary> Query to check if program is in user's wishlist </summary>
 public record CheckProgramInWishlistQuery(Guid ProgramId, string UserId) : IQuery<bool>;

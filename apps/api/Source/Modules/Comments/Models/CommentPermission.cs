@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +10,7 @@ namespace GameGuild.Modules.Comments;
 [Index(nameof(ResourceId), nameof(UserId), Name = "IX_CommentPermissions_Resource_User")]
 [Index(nameof(TenantId), Name = "IX_CommentPermissions_TenantId")]
 [Index(nameof(ExpiresAt), Name = "IX_CommentPermissions_Expiration")]
-public class CommentPermission : ResourcePermission<Comment> {
+public class CommentPermission : GameGuild.Modules.Resources.ResourcePermission<Comment> {
   // Public parameterless constructor for EF and GraphQL
   public CommentPermission() { }
 

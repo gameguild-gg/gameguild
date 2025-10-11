@@ -1,6 +1,5 @@
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
-using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 
 namespace GameGuild.Modules.Programs.Models;
@@ -27,7 +26,7 @@ public class ProgramEnrollment : EntityBase {
 
   /// <summary> Navigation property to the Program entity </summary>
   [ForeignKey(nameof(ProgramId))]
-  public virtual ProgramEntity Program { get; set; } = null!;
+  public virtual Program Program { get; set; } = null!;
 
   /// <summary> Current enrollment status </summary>
   public EnrollmentStatus EnrollmentStatus { get; set; } = EnrollmentStatus.Active;

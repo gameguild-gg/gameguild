@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +11,7 @@ namespace GameGuild.Modules.Products.Models;
 [Index(nameof(ResourceId), nameof(UserId), Name = "IX_ProductPermissions_Resource_User")]
 [Index(nameof(TenantId), Name = "IX_ProductPermissions_TenantId")]
 [Index(nameof(ExpiresAt), Name = "IX_ProductPermissions_Expiration")]
-public class ProductPermission : ResourcePermission<ProductDomainEntity> {
+public class ProductPermission : GameGuild.Modules.Resources.ResourcePermission<ProductDomainEntity> {
   // Public parameterless constructor for EF and GraphQL
   public ProductPermission() : base() { }
 

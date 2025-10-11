@@ -9,8 +9,7 @@ namespace GameGuild.Modules.Tenants;
 [Table("TenantWebhooks")]
 [Index(nameof(TenantId), nameof(IsActive))]
 [Index(nameof(EventType), nameof(IsActive))]
-public class TenantWebhook : EntityBase
-{
+public class TenantWebhook : EntityBase {
     [Required]
     [MaxLength(200)]
     public string Url { get; private set; } = string.Empty;
@@ -57,8 +56,7 @@ public class TenantWebhook : EntityBase
         string? secret = null,
         int retryCount = 3,
         int timeoutSeconds = 30,
-        string? headers = null)
-    {
+        string? headers = null) {
         Url = url;
         TenantId = tenantId;
         EventType = eventType;
@@ -73,14 +71,12 @@ public class TenantWebhook : EntityBase
     public void Activate() => IsActive = true;
     public void Deactivate() => IsActive = false;
 
-    public void RecordSuccess()
-    {
+    public void RecordSuccess() {
         SuccessCount++;
         LastTriggeredAt = DateTime.UtcNow;
     }
 
-    public void RecordFailure()
-    {
+    public void RecordFailure() {
         FailureCount++;
         LastTriggeredAt = DateTime.UtcNow;
     }
@@ -95,8 +91,7 @@ public class TenantWebhook : EntityBase
 /// <summary>
 /// Represents the type of tenant lifecycle event
 /// </summary>
-public enum TenantWebhookEventType
-{
+public enum TenantWebhookEventType {
     Created = 1,
     Updated = 2,
     Activated = 3,
@@ -106,7 +101,8 @@ public enum TenantWebhookEventType
     Downgraded = 7,
     Deleted = 8,
     Restored = 9,
-    Archived = 10
+    Archived = 10,
+    Test = 99
 }
 
 /// <summary>
@@ -115,8 +111,7 @@ public enum TenantWebhookEventType
 [Table("TenantWebhookDeliveries")]
 [Index(nameof(WebhookId), nameof(CreatedAt))]
 [Index(nameof(Status), nameof(CreatedAt))]
-public class TenantWebhookDelivery : EntityBase
-{
+public class TenantWebhookDelivery : EntityBase {
     [Required]
     public Guid WebhookId { get; private set; }
 
@@ -155,8 +150,7 @@ public class TenantWebhookDelivery : EntityBase
     public TenantWebhookDelivery(
         Guid webhookId,
         TenantWebhookEventType eventType,
-        string payload)
-    {
+        string payload) {
         WebhookId = webhookId;
         EventType = eventType;
         Payload = payload;
@@ -165,36 +159,31 @@ public class TenantWebhookDelivery : EntityBase
     }
 
     // Domain methods
-    public void MarkAsDelivered(int statusCode, string? responseBody)
-    {
+    public void MarkAsDelivered(int statusCode, string? responseBody) {
         Status = WebhookDeliveryStatus.Delivered;
         DeliveredAt = DateTime.UtcNow;
         ResponseStatusCode = statusCode;
         ResponseBody = responseBody;
     }
 
-    public void MarkAsFailed(string errorMessage, DateTime? nextRetryAt = null)
-    {
+    public void MarkAsFailed(string errorMessage, DateTime? nextRetryAt = null) {
         AttemptCount++;
         Status = WebhookDeliveryStatus.Failed;
         ErrorMessage = errorMessage;
         NextRetryAt = nextRetryAt;
     }
 
-    public void MarkAsRetrying()
-    {
+    public void MarkAsRetrying() {
         AttemptCount++;
         Status = WebhookDeliveryStatus.Retrying;
     }
 
-    public void MarkAsExpired()
-    {
+    public void MarkAsExpired() {
         Status = WebhookDeliveryStatus.Expired;
     }
 }
 
-public enum WebhookDeliveryStatus
-{
+public enum WebhookDeliveryStatus {
     Pending = 1,
     Delivered = 2,
     Failed = 3,

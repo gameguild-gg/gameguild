@@ -46,7 +46,9 @@ public enum NotificationPriority {
     Low = 0,
     Normal = 1,
     High = 2,
-    Urgent = 3
+    Urgent = 3,
+    // Backward compatibility
+    Medium = 1
 }
 
 /// <summary>
