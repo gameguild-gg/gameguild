@@ -1,8 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
-
 namespace GameGuild.Modules.UserAchievements;
 
 /// <summary> 

@@ -1,6 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
-
 namespace GameGuild.Modules.Projects;
 
 /// <summary>

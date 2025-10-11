@@ -1,7 +1,3 @@
-using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 namespace GameGuild.Modules.Reputations.Entities;
 
 internal sealed class UserTenantReputationConfiguration : IEntityTypeConfiguration<UserTenantReputation>

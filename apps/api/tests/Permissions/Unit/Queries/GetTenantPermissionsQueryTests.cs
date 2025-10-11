@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Permissions.Queries;
 using Xunit;
 

@@ -1,6 +1,3 @@
-using System;
-using System.Threading.Tasks;
-
 namespace GameGuild.Modules.RatePlanExperiments
 {
     public interface IExperimentService

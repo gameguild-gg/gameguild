@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Tenants;
 

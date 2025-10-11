@@ -1,6 +1,4 @@
 using GameGuild.Modules.Products.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ProductEntity = GameGuild.Modules.Products.Domain.Entities.Product;
 
 namespace GameGuild.Modules.Products.Infrastructure.Configuration;

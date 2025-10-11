@@ -7,8 +7,7 @@ using Serilog;
 // Bootstrap Serilog early to capture startup logs
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
-try
-{
+try {
     Log.Information("Starting GameGuild API");
 
     var builder = WebApplication.CreateBuilder(args);
@@ -55,8 +54,7 @@ try
     app.ConfigurePipeline();
 
     // Migrate and seed the database (skip in Testing environment for integration tests)
-    if (!app.Environment.IsEnvironment("Testing"))
-    {
+    if (!app.Environment.IsEnvironment("Testing")) {
         using var scope = app.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Log.Information("Applying database migrations and seeding initial data...");
@@ -68,17 +66,14 @@ try
 
     app.Run();
 }
-catch (Exception ex) when (ex is not HostAbortedException)
-{
+catch (Exception ex) when (ex is not HostAbortedException) {
     Log.Fatal(ex, "GameGuild API application terminated unexpectedly");
 }
-finally
-{
+finally {
     await Log.CloseAndFlushAsync().ConfigureAwait(false);
 }
 
 // REMARK: Required for functional and integration tests to work.
-namespace GameGuild
-{
-    public partial class Program { }
+namespace GameGuild {
+    public partial class WebApplicationEntryPoint { }
 }

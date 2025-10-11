@@ -1,7 +1,7 @@
 using GameGuild.Modules.Products.Application.Services;
 using GameGuild.CQRS;
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+
 namespace GameGuild.Modules.Products.Application.Features.CalculatePricing;
 
 /// <summary>Handler for calculating dynamic pricing</summary>

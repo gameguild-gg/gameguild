@@ -1,14 +1,9 @@
 using System.Text.Json;
-using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Users;
-using GameGuild.Modules.Products.Models;
-using Microsoft.EntityFrameworkCore;
-using ProductType = GameGuild.ProductType;
 using ContentEntity = GameGuild.Modules.Contents.Models.Content;
 
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Models;
 
 [Table("Products")]

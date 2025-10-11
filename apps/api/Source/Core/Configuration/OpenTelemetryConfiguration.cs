@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using GameGuild.Modules.Users;
 using System.Diagnostics.Metrics;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;

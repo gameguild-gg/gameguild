@@ -1,7 +1,8 @@
 using GameGuild.Modules.TestingLab.Entities;
 using GameGuild.Database;
-using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Projects;
+using ProjectEntity = GameGuild.Modules.Projects.Entities.Project;
+using ProjectReleaseEntity = GameGuild.Modules.Projects.Entities.ProjectRelease;
 
 
 namespace GameGuild.Modules.TestingLab;
@@ -317,10 +318,17 @@ public class TestService(ApplicationDbContext context) : ITestService {
     if (existingWaitlist != null) return existingWaitlist;
 
     // Get next position in waitlist
-    var maxPosition = await context.SessionWaitlists.Where(sw => sw.SessionId == sessionId).MaxAsync(sw => (int?) sw.Position) ?? 0;
+    var maxPosition = await context.SessionWaitlists.Where(sw => sw.SessionId == sessionId).MaxAsync(sw => (int?)sw.Position) ?? 0;
 
     var waitlistEntry = new SessionWaitlist {
-      Id = Guid.NewGuid(), SessionId = sessionId, UserId = userId, RegistrationType = registrationType, Position = maxPosition + 1, RegistrationNotes = notes, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow,
+      Id = Guid.NewGuid(),
+      SessionId = sessionId,
+      UserId = userId,
+      RegistrationType = registrationType,
+      Position = maxPosition + 1,
+      RegistrationNotes = notes,
+      CreatedAt = DateTime.UtcNow,
+      UpdatedAt = DateTime.UtcNow,
     };
 
     context.SessionWaitlists.Add(waitlistEntry);
@@ -440,7 +448,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
     if (existingProject == null) {
       // Create a new project for this team
-      var newProject = new Project {
+      var newProject = new ProjectEntity {
         Id = Guid.NewGuid(),
         Title = requestDto.TeamIdentifier,
         ShortDescription = $"Capstone project for {requestDto.TeamIdentifier}",
@@ -461,7 +469,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
     else { projectId = existingProject.Id; }
 
     // Create a project release instead of project version
-    var projectRelease = new ProjectRelease {
+    var projectRelease = new ProjectReleaseEntity {
       Id = Guid.NewGuid(),
       ProjectId = projectId,
       ReleaseVersion = requestDto.VersionNumber,
@@ -570,7 +578,7 @@ public class TestService(ApplicationDbContext context) : ITestService {
 
   public Task<object> GetStudentAttendanceReportAsync() {
     // For now, return mock data until we have proper relationships set up
-    var mockData = new[ ] {
+    var mockData = new[] {
       new {
         Id = "1",
         Name = "John Developer",
@@ -606,16 +614,16 @@ public class TestService(ApplicationDbContext context) : ITestService {
     var sessions = await context.TestingSessions.Where(ts => ts.DeletedAt == null)
                                 .Include(ts => ts.Location)
                                 .Select(ts => new {
-                                    ts.Id,
-                                    ts.SessionName,
-                                    Date = ts.SessionDate.ToString("yyyy-MM-dd"),
-                                    Location = ts.Location.Name,
-                                    TotalCapacity = ts.Location.MaxTestersCapacity,
-                                    StudentsRegistered = ts.RegisteredTesterCount,
-                                    StudentsAttended = ts.RegisteredTesterCount, // Placeholder - would need actual attendance tracking
-                                    AttendanceRate = ts.RegisteredTesterCount > 0 ? (double) ts.RegisteredTesterCount / ts.RegisteredTesterCount * 100 : 0,
-                                    GamesTested = 1, // Placeholder - would need actual count
-                                  }
+                                  ts.Id,
+                                  ts.SessionName,
+                                  Date = ts.SessionDate.ToString("yyyy-MM-dd"),
+                                  Location = ts.Location.Name,
+                                  TotalCapacity = ts.Location.MaxTestersCapacity,
+                                  StudentsRegistered = ts.RegisteredTesterCount,
+                                  StudentsAttended = ts.RegisteredTesterCount, // Placeholder - would need actual attendance tracking
+                                  AttendanceRate = ts.RegisteredTesterCount > 0 ? (double)ts.RegisteredTesterCount / ts.RegisteredTesterCount * 100 : 0,
+                                  GamesTested = 1, // Placeholder - would need actual count
+                                }
                                 )
                                 .ToListAsync();
 

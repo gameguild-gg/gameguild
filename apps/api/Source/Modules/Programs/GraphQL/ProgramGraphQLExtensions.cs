@@ -1,4 +1,3 @@
-using GameGuild.Modules.Programs;
 using HotChocolate.Execution.Configuration;
 
 namespace GameGuild.Modules.Programs.GraphQL;

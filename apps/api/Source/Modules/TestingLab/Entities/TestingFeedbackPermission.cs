@@ -1,4 +1,3 @@
-using GameGuild.Modules.Resources;
 using GameGuild.Modules.TestingLab.Entities;
 
 namespace GameGuild.Modules.TestingLab;

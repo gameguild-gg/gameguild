@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 using GameGuild.CQRS;
 using GameGuild.Modules.Payments.Features.ProcessPayment;
 using GameGuild.Modules.Payments.Features.GetPayment;

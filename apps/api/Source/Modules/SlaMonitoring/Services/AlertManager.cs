@@ -1,5 +1,5 @@
 using GameGuild.Modules.SlaMonitoring.Entities;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.SlaMonitoring.Services;
 

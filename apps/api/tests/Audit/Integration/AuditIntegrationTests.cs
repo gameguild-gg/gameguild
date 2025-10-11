@@ -10,32 +10,26 @@ using Xunit;
 namespace GameGuild.Tests.Audit.Integration;
 
 /// <summary>
-/// Integration tests for Audit module
-/// Tests audit logging with real database and services
+/// Integration tests for audit features
+/// Tests audit logging, compliance reporting, and query capabilities
 /// </summary>
-public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
-{
-    private readonly WebApplicationFactory<Program> _factory;
+public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<ApiProgram>>, IDisposable {
+    private readonly WebApplicationFactory<ApiProgram> _factory;
     private readonly IServiceScope _scope;
     private readonly ApplicationDbContext _context;
     private readonly IAuditService _auditService;
 
-    public AuditIntegrationTests(WebApplicationFactory<Program> factory)
-    {
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
+    public AuditIntegrationTests(WebApplicationFactory<ApiProgram> factory) {
+        _factory = factory.WithWebHostBuilder(builder => {
             builder.UseEnvironment("Testing");
-            builder.ConfigureServices(services =>
-            {
+            builder.ConfigureServices(services => {
                 // Replace the database with in-memory database for testing
                 var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (descriptor != null)
-                {
+                if (descriptor != null) {
                     services.Remove(descriptor);
                 }
 
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
+                services.AddDbContext<ApplicationDbContext>(options => {
                     options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}");
                 });
 
@@ -53,12 +47,10 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task AuditService_ShouldPersistAuditLog_WhenLoggingAction()
-    {
+    public async Task AuditService_ShouldPersistAuditLog_WhenLoggingAction() {
         // Arrange
         var userId = Guid.NewGuid();
-        var request = new CreateAuditLogRequest
-        {
+        var request = new CreateAuditLogRequest {
             ActionType = "Integration.Test",
             ResourceType = "TestResource",
             ResourceId = Guid.NewGuid().ToString(),
@@ -88,16 +80,14 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task AuditService_ShouldQueryAuditLogs_WithFiltering()
-    {
+    public async Task AuditService_ShouldQueryAuditLogs_WithFiltering() {
         // Arrange
         var userId1 = Guid.NewGuid();
         var userId2 = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
 
         // Create multiple audit logs
-        await _auditService.LogAsync(new CreateAuditLogRequest
-        {
+        await _auditService.LogAsync(new CreateAuditLogRequest {
             ActionType = "Login",
             ResourceType = "User",
             UserId = userId1,
@@ -106,8 +96,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<Program
             Category = AuditCategory.Authentication
         });
 
-        await _auditService.LogAsync(new CreateAuditLogRequest
-        {
+        await _auditService.LogAsync(new CreateAuditLogRequest {
             ActionType = "Logout",
             ResourceType = "User",
             UserId = userId1,
@@ -116,8 +105,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<Program
             Category = AuditCategory.Authentication
         });
 
-        await _auditService.LogAsync(new CreateAuditLogRequest
-        {
+        await _auditService.LogAsync(new CreateAuditLogRequest {
             ActionType = "Login",
             ResourceType = "User",
             UserId = userId2,
@@ -126,8 +114,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<Program
         });
 
         // Act - Query for specific user
-        var query = new AuditLogQuery
-        {
+        var query = new AuditLogQuery {
             UserId = userId1,
             TenantId = tenantId
         };
@@ -143,8 +130,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task AuditService_ShouldLogPermissionEvents_Correctly()
-    {
+    public async Task AuditService_ShouldLogPermissionEvents_Correctly() {
         // Arrange
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
@@ -176,8 +162,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task AuditService_ShouldLogAuthenticationEvents_Correctly()
-    {
+    public async Task AuditService_ShouldLogAuthenticationEvents_Correctly() {
         // Arrange
         var userId = Guid.NewGuid();
 
@@ -205,8 +190,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task AuditService_ShouldLogSecurityViolations_WithCriticalRiskLevel()
-    {
+    public async Task AuditService_ShouldLogSecurityViolations_WithCriticalRiskLevel() {
         // Arrange
         var userId = Guid.NewGuid();
         var violationType = "BruteForce";
@@ -231,8 +215,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task AuditService_ShouldLogTenantOperations_WithProperContext()
-    {
+    public async Task AuditService_ShouldLogTenantOperations_WithProperContext() {
         // Arrange
         var tenantId = Guid.NewGuid();
         var userId = Guid.NewGuid();
@@ -258,18 +241,15 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task AuditService_ShouldHandleConcurrentAuditLogging()
-    {
+    public async Task AuditService_ShouldHandleConcurrentAuditLogging() {
         // Arrange
         var userId = Guid.NewGuid();
         var tasks = new List<Task>();
 
         // Act - Create multiple concurrent audit log tasks
-        for (int i = 0; i < 10; i++)
-        {
+        for (int i = 0; i < 10; i++) {
             var index = i;
-            tasks.Add(_auditService.LogAsync(new CreateAuditLogRequest
-            {
+            tasks.Add(_auditService.LogAsync(new CreateAuditLogRequest {
                 ActionType = $"ConcurrentTest_{index}",
                 ResourceType = "TestResource",
                 ResourceId = index.ToString(),
@@ -290,8 +270,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<Program
         auditLogs.Should().OnlyContain(log => log.ActionType.StartsWith("ConcurrentTest_"));
     }
 
-    public void Dispose()
-    {
+    public void Dispose() {
         _scope.Dispose();
     }
 }

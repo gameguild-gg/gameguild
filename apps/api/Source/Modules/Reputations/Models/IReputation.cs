@@ -1,5 +1,3 @@
-using GameGuild;
-
 namespace GameGuild.Modules.Reputations;
 
 /// <summary>

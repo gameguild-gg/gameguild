@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using GameGuild.Core.Domain.Permissions;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Permissions;
 

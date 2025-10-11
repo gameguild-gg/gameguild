@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using GameGuild.Modules.Billing.Entities;
 using GameGuild.Modules.Billing.Models;
 using GameGuild.Modules.Billing.Exceptions;

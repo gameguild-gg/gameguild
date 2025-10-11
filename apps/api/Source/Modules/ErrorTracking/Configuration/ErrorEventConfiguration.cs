@@ -1,6 +1,5 @@
 using GameGuild.Modules.ErrorTracking.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 
 namespace GameGuild.Modules.ErrorTracking.Configuration;
 

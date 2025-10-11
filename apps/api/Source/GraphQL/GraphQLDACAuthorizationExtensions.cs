@@ -1,5 +1,4 @@
 using GameGuild.Authorization;
-using GameGuild.Modules.Authorization;
 using HotChocolate.Execution.Configuration;
 
 namespace GameGuild.Source.GraphQL;

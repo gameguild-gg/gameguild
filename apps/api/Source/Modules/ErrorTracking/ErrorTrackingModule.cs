@@ -1,7 +1,6 @@
-using GameGuild.Modules.ErrorTracking.Configuration;
 using GameGuild.Modules.ErrorTracking.Repositories;
 using GameGuild.Modules.ErrorTracking.Services;
-using Microsoft.Extensions.DependencyInjection;
+
 
 namespace GameGuild.Modules.ErrorTracking;
 

@@ -1,6 +1,4 @@
 using GameGuild.CQRS;
-using Microsoft.Extensions.Logging;
-using GameGuild.Core;
 using GameGuild.Modules.Users.Services;
 
 namespace GameGuild.Modules.Users.Commands;

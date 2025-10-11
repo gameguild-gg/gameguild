@@ -1,10 +1,7 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using GameGuild.Modules.Billing.Features.ProcessWebhook;
 using GameGuild.Modules.Billing.Features.ManageWebhook;
 using GameGuild.Modules.Billing.Features.GetWebhook;
-using GameGuild.Modules.Billing.Models;
 using GameGuild.Modules.Billing.Exceptions;
 using GameGuild.CQRS;
 

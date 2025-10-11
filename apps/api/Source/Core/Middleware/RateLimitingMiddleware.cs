@@ -1,5 +1,4 @@
 using System.Net;
-using GameGuild.Modules.Users;
 using System.Text.RegularExpressions;
 using GameGuild.Core.Services;
 using Microsoft.Extensions.Options;

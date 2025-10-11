@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Database;
-
 namespace GameGuild.Modules.Billing.Entities;
 
 /// <summary>

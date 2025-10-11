@@ -1,5 +1,3 @@
-using GameGuild.CQRS;
-
 namespace GameGuild.Modules.Authentication;
 
 /// <summary>

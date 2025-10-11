@@ -1,7 +1,5 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
-using GameGuild.Core.Domain;
+
 
 namespace GameGuild.Modules.Payments.Payments.Domain.Entities;
 

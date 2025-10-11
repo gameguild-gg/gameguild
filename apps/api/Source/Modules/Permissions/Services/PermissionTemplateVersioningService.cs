@@ -1,6 +1,5 @@
 using GameGuild.Database;
 using GameGuild.Modules.Permissions.Abstractions;
-using GameGuild.Modules.Permissions.Constants;
 using GameGuild.Modules.Permissions.Entities;
 
 namespace GameGuild.Modules.Permissions.Services;

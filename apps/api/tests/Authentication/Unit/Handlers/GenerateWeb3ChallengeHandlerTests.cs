@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.CQRS;
 using GameGuild.Modules.Authentication;
 using Moq;
 using Xunit;

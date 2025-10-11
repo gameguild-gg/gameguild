@@ -1,7 +1,5 @@
 using GameGuild.Modules.Users;
 using System.Text.Json;
-using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Programs.Entities;
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
 
 namespace GameGuild.Modules.Feedbacks.Entities;

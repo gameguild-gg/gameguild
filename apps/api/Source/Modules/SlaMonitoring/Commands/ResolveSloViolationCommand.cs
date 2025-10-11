@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
-using GameGuild.Core;
-using System.ComponentModel.DataAnnotations;
+
 
 namespace GameGuild.Modules.SlaMonitoring.Commands;
 

@@ -2,7 +2,7 @@ using System.IO.Compression;
 using GameGuild.Modules.Audit.Entities;
 using GameGuild.Modules.Audit.Enums;
 using System.Text.Json;
-using GameGuild.CQRS;
+
 
 namespace GameGuild.Modules.Audit.Services;
 

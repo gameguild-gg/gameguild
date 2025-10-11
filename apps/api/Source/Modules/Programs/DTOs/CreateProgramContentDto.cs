@@ -1,6 +1,3 @@
-using GameGuild.Modules.Programs;
-using GameGuild.Modules.Programs.Entities;
-
 namespace GameGuild.Modules.Programs;
 
 /// <summary> DTO for creating new program content </summary>

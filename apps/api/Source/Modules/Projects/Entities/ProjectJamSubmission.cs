@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-
 namespace GameGuild.Modules.Projects.Entities;
 
 /// <summary> Represents a project submitted to a game jam </summary>

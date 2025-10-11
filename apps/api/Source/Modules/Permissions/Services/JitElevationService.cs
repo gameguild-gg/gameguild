@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using GameGuild.Database;
 using GameGuild.Modules.Permissions.Abstractions;
 

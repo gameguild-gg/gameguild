@@ -1,5 +1,3 @@
-using GameGuild.Modules.Products.Models;
-using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
 
 using ProductEntity = GameGuild.Modules.Products.Models.Product;

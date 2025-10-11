@@ -1,7 +1,7 @@
 using GameGuild.Modules.Payments.Domain.Entities;
 using GameGuild.Modules.Payments.Payments.Application.Services;
 using GameGuild.CQRS;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Payments.Commands;
 
