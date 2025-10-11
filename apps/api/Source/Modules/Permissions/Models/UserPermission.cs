@@ -9,7 +9,7 @@ public class UserPermission : EntityBase
     [Required]
     public Guid UserId { get; set; }
 
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     [Required]
     [MaxLength(50)]
