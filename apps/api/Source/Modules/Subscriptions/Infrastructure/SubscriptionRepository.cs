@@ -1,160 +1,224 @@
-using System.Linq.Expressions;
+using GameGuild;
 using GameGuild.Database;
 using GameGuild.Modules.Subscriptions.Abstractions;
+using GameGuild.Modules.Subscriptions.Entities;
 using GameGuild.Modules.Subscriptions.Models;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace GameGuild.Modules.Subscriptions.Infrastructure;
 
-/// <summary> Repository implementation for subscription data access </summary>
-public class SubscriptionRepository : ISubscriptionRepository {
+/// <summary>
+/// Repository implementation for subscription data access
+/// </summary>
+public class SubscriptionRepository : ISubscriptionRepository
+{
   private readonly ApplicationDbContext _context;
 
-  public SubscriptionRepository(ApplicationDbContext context) { _context = context; }
-
-  public async Task<UserSubscription?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) {
-    return await _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan).FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+  public SubscriptionRepository(ApplicationDbContext context)
+  {
+    _context = context;
   }
 
-  public async Task<IEnumerable<UserSubscription>> GetAllAsync(CancellationToken cancellationToken = default) { return await _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan).ToListAsync(cancellationToken); }
+  public async Task<Subscription?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .Include(s => s.Plan)
+        .Include(s => s.Tenant)
+        .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+  }
 
-  public async Task<(IEnumerable<UserSubscription> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken = default) {
-    var query = _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan);
+  public async Task<Subscription?> GetByExternalIdAsync(string externalId, CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .Include(s => s.Plan)
+        .Include(s => s.Tenant)
+        .FirstOrDefaultAsync(s => s.ExternalId == externalId, cancellationToken);
+  }
+
+  public async Task<IEnumerable<Subscription>> GetByTenantIdAsync(Guid tenantId, CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .Include(s => s.Plan)
+        .Where(s => s.TenantId == tenantId)
+        .OrderByDescending(s => s.CreatedAt)
+        .ToListAsync(cancellationToken);
+  }
+
+  public async Task<Subscription?> GetActiveTenantSubscriptionAsync(Guid tenantId, CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .Include(s => s.Plan)
+        .FirstOrDefaultAsync(s => s.TenantId == tenantId && s.Status == SubscriptionStatus.Active, cancellationToken);
+  }
+
+  public async Task<IEnumerable<Subscription>> GetByPlanIdAsync(Guid planId, CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .Include(s => s.Tenant)
+        .Where(s => s.PlanId == planId)
+        .ToListAsync(cancellationToken);
+  }
+
+  public async Task<IEnumerable<Subscription>> GetByStatusAsync(SubscriptionStatus status, CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .Include(s => s.Plan)
+        .Include(s => s.Tenant)
+        .Where(s => s.Status == status)
+        .ToListAsync(cancellationToken);
+  }
+
+  public async Task<IEnumerable<Subscription>> GetByCreatedUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .Include(s => s.Plan)
+        .Include(s => s.Tenant)
+        .Where(s => s.CreatedByUserId == userId)
+        .OrderByDescending(s => s.CreatedAt)
+        .ToListAsync(cancellationToken);
+  }
+
+  public async Task<IEnumerable<Subscription>> GetExpiringSoonAsync(int days, CancellationToken cancellationToken = default)
+  {
+    var cutoffDate = DateTime.UtcNow.AddDays(days);
+    return await _context.Subscriptions
+        .Include(s => s.Plan)
+        .Include(s => s.Tenant)
+        .Where(s => s.Status == SubscriptionStatus.Active &&
+                    s.NextBillingDate.HasValue &&
+                    s.NextBillingDate <= cutoffDate)
+        .ToListAsync(cancellationToken);
+  }
+
+  public async Task<IEnumerable<Subscription>> GetDueForRenewalAsync(int days, CancellationToken cancellationToken = default)
+  {
+    var cutoffDate = DateTime.UtcNow.AddDays(days);
+    return await _context.Subscriptions
+        .Include(s => s.Plan)
+        .Include(s => s.Tenant)
+        .Where(s => s.Status == SubscriptionStatus.Active &&
+                    s.AutoRenew &&
+                    s.NextBillingDate.HasValue &&
+                    s.NextBillingDate <= cutoffDate)
+        .ToListAsync(cancellationToken);
+  }
+
+  public async Task<IEnumerable<Subscription>> GetTrialsExpiringSoonAsync(int days, CancellationToken cancellationToken = default)
+  {
+    var cutoffDate = DateTime.UtcNow.AddDays(days);
+    return await _context.Subscriptions
+        .Include(s => s.Plan)
+        .Include(s => s.Tenant)
+        .Where(s => s.Status == SubscriptionStatus.Trialing &&
+                    s.TrialEndDate.HasValue &&
+                    s.TrialEndDate <= cutoffDate)
+        .ToListAsync(cancellationToken);
+  }
+
+  public async Task<IEnumerable<Subscription>> GetSuspendedAsync(CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .Include(s => s.Plan)
+        .Include(s => s.Tenant)
+        .Where(s => s.Status == SubscriptionStatus.Suspended)
+        .ToListAsync(cancellationToken);
+  }
+
+  public async Task<IEnumerable<Subscription>> GetByBillingCycleAsync(BillingCycle billingCycle, CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .Include(s => s.Plan)
+        .Include(s => s.Tenant)
+        .Where(s => s.BillingCycle == billingCycle)
+        .ToListAsync(cancellationToken);
+  }
+
+  public async Task<IEnumerable<Subscription>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .Include(s => s.Plan)
+        .Include(s => s.Tenant)
+        .Where(s => s.StartDate >= startDate && s.StartDate <= endDate)
+        .ToListAsync(cancellationToken);
+  }
+
+  public async Task<Dictionary<SubscriptionStatus, int>> GetCountByStatusAsync(CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .GroupBy(s => s.Status)
+        .Select(g => new { Status = g.Key, Count = g.Count() })
+        .ToDictionaryAsync(x => x.Status, x => x.Count, cancellationToken);
+  }
+
+  public async Task<decimal> GetRevenueForPeriodAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .Where(s => s.StartDate >= startDate && s.StartDate <= endDate &&
+                    s.Status != SubscriptionStatus.Cancelled)
+        .SumAsync(s => s.Amount.Amount, cancellationToken);
+  }
+
+  public async Task<Subscription> AddAsync(Subscription subscription, CancellationToken cancellationToken = default)
+  {
+    var entry = await _context.Subscriptions.AddAsync(subscription, cancellationToken);
+    await _context.SaveChangesAsync(cancellationToken);
+    return entry.Entity;
+  }
+
+  public async Task<Subscription> UpdateAsync(Subscription subscription, CancellationToken cancellationToken = default)
+  {
+    _context.Subscriptions.Update(subscription);
+    await _context.SaveChangesAsync(cancellationToken);
+    return subscription;
+  }
+
+  public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+  {
+    var subscription = await GetByIdAsync(id, cancellationToken);
+    if (subscription != null)
+    {
+      subscription.DeletedAt = DateTime.UtcNow;
+      _context.Subscriptions.Update(subscription);
+      await _context.SaveChangesAsync(cancellationToken);
+    }
+  }
+
+  public async Task<bool> HasActiveSubscriptionAsync(Guid tenantId, CancellationToken cancellationToken = default)
+  {
+    return await _context.Subscriptions
+        .AnyAsync(s => s.TenantId == tenantId && s.Status == SubscriptionStatus.Active, cancellationToken);
+  }
+
+  public async Task<PagedResult<Subscription>> GetPagedAsync(
+      int page,
+      int pageSize,
+      SubscriptionStatus? status = null,
+      Guid? tenantId = null,
+      Guid? planId = null,
+      CancellationToken cancellationToken = default)
+  {
+    var query = _context.Subscriptions
+        .Include(s => s.Plan)
+        .Include(s => s.Tenant)
+        .AsQueryable();
+
+    if (status.HasValue)
+      query = query.Where(s => s.Status == status.Value);
+
+    if (tenantId.HasValue)
+      query = query.Where(s => s.TenantId == tenantId.Value);
+
+    if (planId.HasValue)
+      query = query.Where(s => s.PlanId == planId.Value);
 
     var totalCount = await query.CountAsync(cancellationToken);
-    var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+    var skip = (page - 1) * pageSize;
+    var items = await query
+        .OrderByDescending(s => s.CreatedAt)
+        .Skip(skip)
+        .Take(pageSize)
+        .ToListAsync(cancellationToken);
 
-    return (items, totalCount);
-  }
-
-  public async Task<IEnumerable<UserSubscription>> FindAsync(Expression<Func<UserSubscription, bool>> predicate, CancellationToken cancellationToken = default) {
-    return await _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan).Where(predicate).ToListAsync(cancellationToken);
-  }
-
-  public async Task<UserSubscription?> FirstOrDefaultAsync(Expression<Func<UserSubscription, bool>> predicate, CancellationToken cancellationToken = default) {
-    return await _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan).FirstOrDefaultAsync(predicate, cancellationToken);
-  }
-
-  public async Task<bool> AnyAsync(Expression<Func<UserSubscription, bool>> predicate, CancellationToken cancellationToken = default) { return await _context.UserSubscriptions.AnyAsync(predicate, cancellationToken); }
-
-  public async Task<int> CountAsync(Expression<Func<UserSubscription, bool>>? predicate = null, CancellationToken cancellationToken = default) {
-    var query = _context.UserSubscriptions.AsQueryable();
-    if (predicate != null) query = query.Where(predicate);
-
-    return await query.CountAsync(cancellationToken);
-  }
-
-  public async Task<UserSubscription> AddAsync(UserSubscription entity, CancellationToken cancellationToken = default) {
-    var result = await _context.UserSubscriptions.AddAsync(entity, cancellationToken);
-
-    return result.Entity;
-  }
-
-  public async Task AddRangeAsync(IEnumerable<UserSubscription> entities, CancellationToken cancellationToken = default) { await _context.UserSubscriptions.AddRangeAsync(entities, cancellationToken); }
-
-  public async Task<UserSubscription> UpdateAsync(UserSubscription entity, CancellationToken cancellationToken = default) {
-    _context.UserSubscriptions.Update(entity);
-
-    return await Task.FromResult(entity);
-  }
-
-  public async Task UpdateRangeAsync(IEnumerable<UserSubscription> entities, CancellationToken cancellationToken = default) {
-    _context.UserSubscriptions.UpdateRange(entities);
-    await Task.CompletedTask;
-  }
-
-  public async Task RemoveAsync(UserSubscription entity, CancellationToken cancellationToken = default) {
-    _context.UserSubscriptions.Remove(entity);
-    await Task.CompletedTask;
-  }
-
-  public async Task RemoveAsync(Guid id, CancellationToken cancellationToken = default) {
-    var entity = await GetByIdAsync(id, cancellationToken);
-    if (entity != null) _context.UserSubscriptions.Remove(entity);
-  }
-
-  public async Task RemoveRangeAsync(IEnumerable<UserSubscription> entities, CancellationToken cancellationToken = default) {
-    _context.UserSubscriptions.RemoveRange(entities);
-    await Task.CompletedTask;
-  }
-
-  public async Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default) {
-    var entity = await GetByIdAsync(id, cancellationToken);
-
-    if (entity != null) {
-      // Assuming UserSubscription has soft delete functionality
-      entity.DeletedAt = DateTime.UtcNow;
-      _context.UserSubscriptions.Update(entity);
-    }
-  }
-
-  public async Task RestoreAsync(Guid id, CancellationToken cancellationToken = default) {
-    var entity = await _context.UserSubscriptions.IgnoreQueryFilters() // To include soft deleted items
-                               .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-
-    if (entity != null) {
-      entity.DeletedAt = null;
-      _context.UserSubscriptions.Update(entity);
-    }
-  }
-
-  public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) { return await _context.SaveChangesAsync(cancellationToken); }
-
-  // Subscription-specific methods
-
-  public async Task<IEnumerable<UserSubscription>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default) {
-    return await _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan).Where(s => s.UserId == userId).OrderByDescending(s => s.CreatedAt).ToListAsync(cancellationToken);
-  }
-
-  public async Task<UserSubscription?> GetActiveUserSubscriptionAsync(Guid userId, CancellationToken cancellationToken = default) {
-    return await _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan).FirstOrDefaultAsync(s => s.UserId == userId && s.Status == SubscriptionStatus.Active, cancellationToken);
-  }
-
-  public async Task<IEnumerable<UserSubscription>> GetByPlanIdAsync(Guid planId, CancellationToken cancellationToken = default) {
-    return await _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan).Where(s => s.SubscriptionPlanId == planId).ToListAsync(cancellationToken);
-  }
-
-  public async Task<IEnumerable<UserSubscription>> GetByStatusAsync(SubscriptionStatus status, CancellationToken cancellationToken = default) {
-    return await _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan).Where(s => s.Status == status).ToListAsync(cancellationToken);
-  }
-
-  public async Task<IEnumerable<UserSubscription>> GetExpiringSoonAsync(int withinDays, CancellationToken cancellationToken = default) {
-    var cutoffDate = DateTime.UtcNow.AddDays(withinDays);
-
-    return await _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan).Where(s => s.Status == SubscriptionStatus.Active && s.NextBillingAt.HasValue && s.NextBillingAt <= cutoffDate).ToListAsync(cancellationToken);
-  }
-
-  public async Task<IEnumerable<UserSubscription>> GetPendingBillingAsync(CancellationToken cancellationToken = default) {
-    var now = DateTime.UtcNow;
-
-    return await _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan).Where(s => s.Status == SubscriptionStatus.Active && s.NextBillingAt.HasValue && s.NextBillingAt <= now).ToListAsync(cancellationToken);
-  }
-
-  public async Task<IEnumerable<UserSubscription>> GetTrialsEndingSoonAsync(int withinDays, CancellationToken cancellationToken = default) {
-    var cutoffDate = DateTime.UtcNow.AddDays(withinDays);
-
-    return await _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan).Where(s => s.Status == SubscriptionStatus.Trialing && s.TrialEndsAt.HasValue && s.TrialEndsAt <= cutoffDate).ToListAsync(cancellationToken);
-  }
-
-  public async Task<UserSubscription?> GetByExternalIdAsync(string externalId, CancellationToken cancellationToken = default) {
-    return await _context.UserSubscriptions.Include(s => s.User).Include(s => s.SubscriptionPlan).FirstOrDefaultAsync(s => s.ExternalSubscriptionId == externalId, cancellationToken);
-  }
-
-  public async Task<int> GetCountByStatusAsync(SubscriptionStatus status, CancellationToken cancellationToken = default) { return await _context.UserSubscriptions.CountAsync(s => s.Status == status, cancellationToken); }
-
-  public async Task<int> GetActiveSubscriptionCountAsync(Guid userId, CancellationToken cancellationToken = default) {
-    return await _context.UserSubscriptions.CountAsync(s => s.UserId == userId && s.Status == SubscriptionStatus.Active, cancellationToken);
-  }
-
-  public UserSubscription Add(UserSubscription entity) { return _context.UserSubscriptions.Add(entity).Entity; }
-
-  public UserSubscription Update(UserSubscription entity) { return _context.UserSubscriptions.Update(entity).Entity; }
-
-  public void Remove(UserSubscription entity) { _context.UserSubscriptions.Remove(entity); }
-
-  public async Task RemoveByIdAsync(Guid id, CancellationToken cancellationToken = default) {
-    var entity = await GetByIdAsync(id, cancellationToken);
-    if (entity != null) Remove(entity);
+    return new PagedResult<Subscription>(items, totalCount, skip, pageSize);
   }
 }
