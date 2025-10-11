@@ -21,7 +21,7 @@ public class ProgramContentMutations {
     string body,
     string description,
     int estimatedMinutes,
-    VisibilityEnum visibility = VisibilityEnum.Published,
+    VisibilityEnum visibility = VisibilityEnum.Public,
     Guid? parentId = null,
     int? sortOrder = null,
     bool isRequired = false,
