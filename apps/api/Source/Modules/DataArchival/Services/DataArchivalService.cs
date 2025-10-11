@@ -1,5 +1,6 @@
 using GameGuild.Modules.DataArchival.DTOs;
 using GameGuild.Modules.DataArchival.Entities;
+using GameGuild.Modules.DataArchival.Repositories;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Modules.DataArchival.Services;
@@ -7,8 +8,7 @@ namespace GameGuild.Modules.DataArchival.Services;
 /// <summary>
 /// Service implementation for data archival operations.
 /// </summary>
-public class DataArchivalService : IDataArchivalService
-{
+public class DataArchivalService : IDataArchivalService {
     private readonly IArchivalPolicyRepository _policyRepository;
     private readonly IArchivalJobRepository _jobRepository;
     private readonly IStorageLifecycleManager _lifecycleManager;
@@ -18,18 +18,15 @@ public class DataArchivalService : IDataArchivalService
         IArchivalPolicyRepository policyRepository,
         IArchivalJobRepository jobRepository,
         IStorageLifecycleManager lifecycleManager,
-        ILogger<DataArchivalService> logger)
-    {
+        ILogger<DataArchivalService> logger) {
         _policyRepository = policyRepository;
         _jobRepository = jobRepository;
         _lifecycleManager = lifecycleManager;
         _logger = logger;
     }
 
-    public async Task<ArchivalPolicyDto> CreatePolicyAsync(CreateArchivalPolicyRequest request, CancellationToken cancellationToken = default)
-    {
-        var policy = new ArchivalPolicy
-        {
+    public async Task<ArchivalPolicyDto> CreatePolicyAsync(CreateArchivalPolicyRequest request, CancellationToken cancellationToken = default) {
+        var policy = new ArchivalPolicy {
             TenantId = request.TenantId,
             Name = request.Name,
             Description = request.Description,
@@ -44,29 +41,25 @@ public class DataArchivalService : IDataArchivalService
         };
 
         await _policyRepository.AddAsync(policy, cancellationToken);
-        
+
         _logger.LogInformation("Created archival policy {PolicyId} for entity type {EntityType}", policy.Id, policy.EntityType);
 
         return MapToDto(policy);
     }
 
-    public async Task<ArchivalPolicyDto?> GetPolicyAsync(Guid policyId, CancellationToken cancellationToken = default)
-    {
+    public async Task<ArchivalPolicyDto?> GetPolicyAsync(Guid policyId, CancellationToken cancellationToken = default) {
         var policy = await _policyRepository.GetByIdAsync(policyId, cancellationToken);
         return policy == null ? null : MapToDto(policy);
     }
 
-    public async Task<List<ArchivalPolicyDto>> GetPoliciesAsync(Guid? tenantId, string? entityType, CancellationToken cancellationToken = default)
-    {
+    public async Task<List<ArchivalPolicyDto>> GetPoliciesAsync(Guid? tenantId, string? entityType, CancellationToken cancellationToken = default) {
         var policies = await _policyRepository.GetAllAsync(tenantId, entityType, cancellationToken);
         return policies.Select(MapToDto).ToList();
     }
 
-    public async Task UpdatePolicyAsync(Guid policyId, UpdateArchivalPolicyRequest request, CancellationToken cancellationToken = default)
-    {
+    public async Task UpdatePolicyAsync(Guid policyId, UpdateArchivalPolicyRequest request, CancellationToken cancellationToken = default) {
         var policy = await _policyRepository.GetByIdAsync(policyId, cancellationToken);
-        if (policy == null)
-        {
+        if (policy == null) {
             throw new InvalidOperationException($"Policy {policyId} not found");
         }
 
@@ -84,28 +77,23 @@ public class DataArchivalService : IDataArchivalService
         _logger.LogInformation("Updated archival policy {PolicyId}", policyId);
     }
 
-    public async Task DeletePolicyAsync(Guid policyId, CancellationToken cancellationToken = default)
-    {
+    public async Task DeletePolicyAsync(Guid policyId, CancellationToken cancellationToken = default) {
         await _policyRepository.DeleteAsync(policyId, cancellationToken);
         _logger.LogInformation("Deleted archival policy {PolicyId}", policyId);
     }
 
-    public async Task<Guid> ExecutePolicyAsync(Guid policyId, CancellationToken cancellationToken = default)
-    {
+    public async Task<Guid> ExecutePolicyAsync(Guid policyId, CancellationToken cancellationToken = default) {
         var policy = await _policyRepository.GetByIdAsync(policyId, cancellationToken);
-        if (policy == null)
-        {
+        if (policy == null) {
             throw new InvalidOperationException($"Policy {policyId} not found");
         }
 
-        if (!policy.IsEnabled)
-        {
+        if (!policy.IsEnabled) {
             throw new InvalidOperationException($"Policy {policyId} is disabled");
         }
 
         // Create archival job
-        var job = new ArchivalJob
-        {
+        var job = new ArchivalJob {
             PolicyId = policyId,
             TenantId = policy.TenantId,
             Status = ArchivalJobStatus.Pending,
@@ -122,16 +110,13 @@ public class DataArchivalService : IDataArchivalService
         return job.Id;
     }
 
-    public async Task<ArchivalJobDto?> GetJobStatusAsync(Guid jobId, CancellationToken cancellationToken = default)
-    {
+    public async Task<ArchivalJobDto?> GetJobStatusAsync(Guid jobId, CancellationToken cancellationToken = default) {
         var job = await _jobRepository.GetByIdAsync(jobId, cancellationToken);
         return job == null ? null : MapJobToDto(job);
     }
 
-    private async Task ExecuteJobAsync(Guid jobId, CancellationToken cancellationToken)
-    {
-        try
-        {
+    private async Task ExecuteJobAsync(Guid jobId, CancellationToken cancellationToken) {
+        try {
             var job = await _jobRepository.GetByIdAsync(jobId, cancellationToken);
             if (job == null) return;
 
@@ -159,13 +144,11 @@ public class DataArchivalService : IDataArchivalService
             _logger.LogInformation("Completed archival job {JobId}: {ItemsArchived} archived, {ItemsDeleted} deleted",
                 jobId, result.ItemsArchived, result.ItemsDeleted);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error executing archival job {JobId}", jobId);
 
             var job = await _jobRepository.GetByIdAsync(jobId, cancellationToken);
-            if (job != null)
-            {
+            if (job != null) {
                 job.Status = ArchivalJobStatus.Failed;
                 job.CompletedAt = DateTime.UtcNow;
                 job.ErrorMessage = ex.Message;
@@ -174,8 +157,7 @@ public class DataArchivalService : IDataArchivalService
         }
     }
 
-    private ArchivalPolicyDto MapToDto(ArchivalPolicy policy)
-    {
+    private ArchivalPolicyDto MapToDto(ArchivalPolicy policy) {
         return new ArchivalPolicyDto(
             policy.Id,
             policy.TenantId,
@@ -194,8 +176,7 @@ public class DataArchivalService : IDataArchivalService
         );
     }
 
-    private ArchivalJobDto MapJobToDto(ArchivalJob job)
-    {
+    private ArchivalJobDto MapJobToDto(ArchivalJob job) {
         return new ArchivalJobDto(
             job.Id,
             job.PolicyId,
@@ -210,33 +191,27 @@ public class DataArchivalService : IDataArchivalService
     }
 
     // TODO: Implement remaining IDataArchivalService methods
-    public Task<Guid> ExecuteArchivalPolicyAsync(Guid policyId, CancellationToken cancellationToken = default)
-    {
+    public Task<Guid> ExecuteArchivalPolicyAsync(Guid policyId, CancellationToken cancellationToken = default) {
         throw new NotImplementedException("ExecuteArchivalPolicyAsync is not yet implemented");
     }
 
-    public Task MoveToCoolStorageAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
-    {
+    public Task MoveToCoolStorageAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default) {
         throw new NotImplementedException("MoveToCoolStorageAsync is not yet implemented");
     }
 
-    public Task MoveToArchiveStorageAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
-    {
+    public Task MoveToArchiveStorageAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default) {
         throw new NotImplementedException("MoveToArchiveStorageAsync is not yet implemented");
     }
 
-    public Task<bool> RestoreFromArchiveAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
-    {
+    public Task<bool> RestoreFromArchiveAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default) {
         throw new NotImplementedException("RestoreFromArchiveAsync is not yet implemented");
     }
 
-    public Task<StorageTier> GetStorageTierAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
-    {
+    public Task<StorageTier> GetStorageTierAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default) {
         throw new NotImplementedException("GetStorageTierAsync is not yet implemented");
     }
 
-    public Task<ArchivalCostSavingsDto> CalculateCostSavingsAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
-    {
+    public Task<ArchivalCostSavingsDto> CalculateCostSavingsAsync(Guid? tenantId = null, CancellationToken cancellationToken = default) {
         throw new NotImplementedException("CalculateCostSavingsAsync is not yet implemented");
     }
 }
