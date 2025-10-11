@@ -166,7 +166,7 @@ public class TenantTestCoverageVerificationTests
         {
             typeof(FactAttribute),          // xUnit
             typeof(TheoryAttribute),        // xUnit
-            typeof(FluentAssertions.AssertionExtensions), // FluentAssertions
+            typeof(AssertionExtensions), // FluentAssertions
             typeof(Moq.Mock),              // Moq
         };
 

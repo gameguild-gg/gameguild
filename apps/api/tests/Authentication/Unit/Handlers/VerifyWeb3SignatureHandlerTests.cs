@@ -24,7 +24,7 @@ public class VerifyWeb3SignatureHandlerTests
         };
         var response = new SignInResponse
         {
-            User = new GameGuild.Modules.Users.UserDto { Id = Guid.NewGuid(), Email = "test@example.com" },
+            User = new Modules.Users.UserDto { Id = Guid.NewGuid(), Email = "test@example.com" },
             AccessToken = "access",
             RefreshToken = "refresh"
         };

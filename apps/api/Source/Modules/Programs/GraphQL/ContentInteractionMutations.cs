@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Programs;
 [ExtendObjectType<Mutation>]
 public class ContentInteractionMutations {
   /// <summary> Start or resume content interaction Requires Read permission on the parent Program If the interaction was previously submitted, creates a new interaction based on the previous data </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ContentInteractionResult> StartContentInteraction(Guid programId, StartContentInput input, [Service] IContentInteractionService contentInteractionService, [Service] IProgramContentService programContentService) {
     try {
       // Verify content belongs to the specified program
@@ -24,7 +24,7 @@ public class ContentInteractionMutations {
   }
 
   /// <summary> Update progress for a content interaction Requires Edit permission on the parent Program Cannot update submitted interactions </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ContentInteractionResult> UpdateContentProgress(Guid programId, UpdateProgressInput input, [Service] IContentInteractionService contentInteractionService) {
     try {
       var interaction = await contentInteractionService.UpdateProgressAsync(input.InteractionId, input.CompletionPercentage);
@@ -39,7 +39,7 @@ public class ContentInteractionMutations {
   }
 
   /// <summary> Submit content interaction (makes it immutable) Requires Edit permission on the parent Program Once submitted, the interaction cannot be modified </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ContentInteractionResult> SubmitContentInteraction(Guid programId, SubmitContentInput input, [Service] IContentInteractionService contentInteractionService) {
     try {
       var interaction = await contentInteractionService.SubmitContentAsync(input.InteractionId, input.SubmissionData);
@@ -54,7 +54,7 @@ public class ContentInteractionMutations {
   }
 
   /// <summary> Mark content as completed Requires Edit permission on the parent Program Cannot complete submitted interactions </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ContentInteractionResult> CompleteContentInteraction(Guid programId, CompleteContentInput input, [Service] IContentInteractionService contentInteractionService) {
     try {
       var interaction = await contentInteractionService.CompleteContentAsync(input.InteractionId);
@@ -69,7 +69,7 @@ public class ContentInteractionMutations {
   }
 
   /// <summary> Update time spent on content Requires Edit permission on the parent Program Cannot update time on submitted interactions </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ContentInteractionResult> UpdateTimeSpent(Guid programId, UpdateTimeSpentInput input, [Service] IContentInteractionService contentInteractionService) {
     try {
       var interaction = await contentInteractionService.UpdateTimeSpentAsync(input.InteractionId, input.AdditionalMinutes);

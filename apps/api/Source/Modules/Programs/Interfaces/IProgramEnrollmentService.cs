@@ -15,7 +15,7 @@ public interface IProgramEnrollmentService {
   Task<ProgramEnrollment?> GetEnrollmentAsync(Guid userId, Guid programId);
 
   /// <summary> Get all user's enrollments </summary>
-  Task<IEnumerable<ProgramEnrollment>> GetUserEnrollmentsAsync(Guid userId, EnrollmentStatus? status = null);
+  Task<IEnumerable<ProgramEnrollment>> GetUserEnrollmentsAsync(Guid userId, GameGuild.Modules.Programs.Entities.EnrollmentStatus? status = null);
 
   /// <summary> Update enrollment progress </summary>
   Task<ProgramEnrollment> UpdateProgressAsync(Guid enrollmentId, decimal progressPercentage);
