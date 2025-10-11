@@ -5,8 +5,7 @@ namespace GameGuild.Modules.DeveloperPortal.Entities;
 /// <summary>
 /// Represents a log entry for API usage tracking.
 /// </summary>
-public class ApiUsageLog : EntityBase
-{
+public class ApiUsageLog : EntityBase {
     /// <summary>
     /// Gets or sets the API key used for this request.
     /// </summary>
@@ -76,6 +75,9 @@ public class ApiUsageLog : EntityBase
     /// Gets or sets whether the request was successful.
     /// </summary>
     public bool IsSuccessful { get; set; }
+
+    // Backward compatibility alias
+    public string Method { get => HttpMethod; set => HttpMethod = value; }
 
     /// <summary>
     /// Gets or sets the error message if the request failed.

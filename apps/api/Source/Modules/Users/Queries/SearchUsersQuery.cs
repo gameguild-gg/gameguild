@@ -1,4 +1,3 @@
-using GameGuild.Modules.Users;
 using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Users.Queries;
@@ -6,8 +5,7 @@ namespace GameGuild.Modules.Users.Queries;
 /// <summary>
 ///     Query to search users with pagination
 /// </summary>
-public sealed class SearchUsersQuery : IRequest<PagedResult<UserDto>>
-{
+public sealed class SearchUsersQuery : IRequest<PagedResult<UserDto>> {
     /// <summary>
     ///     Search term to match against name or email
     /// </summary>
@@ -27,45 +25,30 @@ public sealed class SearchUsersQuery : IRequest<PagedResult<UserDto>>
 /// <summary>
 ///     Handler for SearchUsersQuery
 /// </summary>
-public sealed class SearchUsersQueryHandler : IRequestHandler<SearchUsersQuery, PagedResult<UserDto>>
-{
-    private readonly IUserRepository _userRepository;
-
-    public SearchUsersQueryHandler(IUserRepository userRepository)
-    {
-        _userRepository = userRepository;
-    }
-
-    public async Task<PagedResult<UserDto>> Handle(SearchUsersQuery request, CancellationToken cancellationToken)
-    {
-        var (users, totalCount) = await _userRepository.SearchAsync(
-            request.SearchTerm,
-            request.PageNumber,
-            request.PageSize,
-            cancellationToken
+public sealed class SearchUsersQueryHandler(IUserRepository userRepository) : IRequestHandler<SearchUsersQuery, PagedResult<UserDto>> {
+    public async Task<PagedResult<UserDto>> Handle(SearchUsersQuery request, CancellationToken cancellationToken) {
+        var (users, totalCount) = await userRepository.SearchAsync(
+          request.SearchTerm,
+          request.PageNumber,
+          request.PageSize,
+          cancellationToken
         );
 
-        var userDtos = users.Select(user => new UserDto
-        {
+        var userDtos = users.Select(user => new UserDto {
             Id = user.Id,
             Email = user.Email,
             Username = user.Username,
             GivenName = user.GivenName,
             FamilyName = user.FamilyName,
-            DisplayName = user.DisplayName,
-            Title = user.Title,
-            Description = user.Description,
-            IsEmailVerified = user.IsEmailVerified,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         }).ToList();
 
-        return new PagedResult<UserDto>
-        {
-            Items = userDtos,
-            TotalCount = totalCount,
-            PageNumber = request.PageNumber,
-            PageSize = request.PageSize
-        };
+        return new PagedResult<UserDto>(
+          userDtos,
+          totalCount,
+          request.PageNumber,
+          request.PageSize
+        );
     }
 }

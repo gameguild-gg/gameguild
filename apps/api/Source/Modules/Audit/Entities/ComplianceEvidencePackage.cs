@@ -7,8 +7,7 @@ namespace GameGuild.Modules.Audit.Entities;
 /// Compliance evidence package for audit compliance reports (SOC2, ISO 27001, GDPR, HIPAA).
 /// Bundles audit logs, cryptographic proofs, and metadata for regulatory submissions.
 /// </summary>
-public sealed class ComplianceEvidencePackage : EntityBase
-{
+public sealed class ComplianceEvidencePackage : EntityBase {
     public string PackageName { get; private set; } = string.Empty;
     public ComplianceFramework Framework { get; private set; }
     public string PackageVersion { get; private set; } = string.Empty;
@@ -49,15 +48,13 @@ public sealed class ComplianceEvidencePackage : EntityBase
         string version,
         DateTime periodStart,
         DateTime periodEnd,
-        string preparedBy)
-    {
-        return new ComplianceEvidencePackage
-        {
+        string preparedBy) {
+        return new ComplianceEvidencePackage {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             PackageName = packageName,
             Framework = framework,
-            Version = version,
+            PackageVersion = version,
             PeriodStart = periodStart,
             PeriodEnd = periodEnd,
             Status = CompliancePackageStatus.Draft,
@@ -66,23 +63,20 @@ public sealed class ComplianceEvidencePackage : EntityBase
         };
     }
 
-    public void SetPackageContents(int auditLogs, int anomalies, int accessLogs, long sizeBytes)
-    {
+    public void SetPackageContents(int auditLogs, int anomalies, int accessLogs, long sizeBytes) {
         TotalAuditLogs = auditLogs;
         TotalAnomalies = anomalies;
         TotalAccessLogs = accessLogs;
         PackageSizeBytes = sizeBytes;
     }
 
-    public void Sign(string packageHash, string digitalSignature)
-    {
+    public void Sign(string packageHash, string digitalSignature) {
         PackageHash = packageHash;
         DigitalSignature = digitalSignature;
         Status = CompliancePackageStatus.Signed;
     }
 
-    public void MarkAsReviewed(string reviewedBy, string? notes = null)
-    {
+    public void MarkAsReviewed(string reviewedBy, string? notes = null) {
         ReviewedBy = reviewedBy;
         ReviewedAt = DateTime.UtcNow;
         Status = CompliancePackageStatus.Reviewed;
@@ -90,20 +84,17 @@ public sealed class ComplianceEvidencePackage : EntityBase
             Notes = notes;
     }
 
-    public void Approve(string approvedBy)
-    {
+    public void Approve(string approvedBy) {
         ApprovedBy = approvedBy;
         ApprovedAt = DateTime.UtcNow;
         Status = CompliancePackageStatus.Approved;
     }
 
-    public void SetStoragePath(string storagePath)
-    {
+    public void SetStoragePath(string storagePath) {
         StoragePath = storagePath;
     }
 
-    public void MarkAsDelivered(string deliveryMethod, string deliveredTo, string trackingId)
-    {
+    public void MarkAsDelivered(string deliveryMethod, string deliveredTo, string trackingId) {
         DeliveryMethod = deliveryMethod;
         DeliveredTo = deliveredTo;
         DeliveryTrackingId = trackingId;
@@ -111,14 +102,12 @@ public sealed class ComplianceEvidencePackage : EntityBase
         Status = CompliancePackageStatus.Delivered;
     }
 
-    public void SetAttachmentMetadata(string metadata)
-    {
+    public void SetAttachmentMetadata(string metadata) {
         AttachmentMetadata = metadata;
     }
 }
 
-public enum CompliancePackageStatus
-{
+public enum CompliancePackageStatus {
     Draft,
     InProgress,
     Signed,
