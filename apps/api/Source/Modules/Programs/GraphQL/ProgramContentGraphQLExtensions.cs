@@ -1,8 +1,8 @@
 using GameGuild.Modules.Programs;
 using HotChocolate.Execution.Configuration;
-using ProgramContentTypeEnum = GameGuild.Source.Modules.Programs.Models.ProgramContentType;
+using ProgramContentTypeEnum = GameGuild.Modules.Programs.Models.ProgramContentType;
 
-namespace GameGuild.Source.Modules.Programs.GraphQL;
+namespace GameGuild.Modules.Programs.GraphQL;
 
 /// <summary> Extension methods for configuring ProgramContent GraphQL integration </summary>
 public static class ProgramContentGraphQLExtensions {

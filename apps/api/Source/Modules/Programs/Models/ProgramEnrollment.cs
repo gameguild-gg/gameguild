@@ -3,7 +3,7 @@ using GameGuild.Modules.Users;
 using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 
-namespace GameGuild.Source.Modules.Programs.Models;
+namespace GameGuild.Modules.Programs.Models;
 
 /// <summary> Represents a user's enrollment in a program (course) Tracks enrollment status, progress, and completion </summary>
 [Table("program_enrollments")]

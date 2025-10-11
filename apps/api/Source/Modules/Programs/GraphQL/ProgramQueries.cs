@@ -3,11 +3,11 @@ using GameGuild.Authorization;
 using GameGuild.Authorization.Identity;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Programs;
-using GameGuild.Source.Modules.Programs.Models;
+using GameGuild.Modules.Programs;
 using Microsoft.Extensions.Logging;
 using ProgramEntity = GameGuild.Modules.Programs.Program;
 
-namespace GameGuild.Source.Modules.Programs.GraphQL;
+namespace GameGuild.Modules.Programs.GraphQL;
 
 /// <summary> GraphQL queries for Program module using proper authorization and user access </summary>
 [ExtendObjectType<Query>]

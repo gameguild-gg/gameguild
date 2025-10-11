@@ -1,3 +1,5 @@
+using GameGuild.Modules.TestingLab.Entities;
+
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Permission class for TestingParticipant entities Manages access control for testing participants </summary>

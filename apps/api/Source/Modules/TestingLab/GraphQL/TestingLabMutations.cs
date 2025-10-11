@@ -1,4 +1,5 @@
 using GameGuild.GraphQL;
+using GameGuild.Modules.TestingLab.Entities;
 using System.Security.Claims;
 
 

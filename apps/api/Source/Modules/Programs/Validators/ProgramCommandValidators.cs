@@ -1,8 +1,8 @@
 using FluentValidation;
 using GameGuild.Modules.Contents;
-using GameGuild.Source.Modules.Programs.Commands;
-using GameGuild.Source.Modules.Programs.Models;
-using ProgramAvailabilityStatus = GameGuild.Source.Modules.Programs.Models.EnrollmentStatus;
+using GameGuild.Modules.Programs.Commands;
+using GameGuild.Modules.Programs;
+using ProgramAvailabilityStatus = GameGuild.Modules.Programs.Models.EnrollmentStatus;
 
 namespace GameGuild.Modules.Programs.Validators;
 

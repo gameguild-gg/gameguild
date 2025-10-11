@@ -4,13 +4,13 @@ using GameGuild.Authorization.Identity;
 using GameGuild.CQRS;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Programs;
-using GameGuild.Source.Modules.Programs.Commands;
-using GameGuild.Source.Modules.Programs.Models;
+using GameGuild.Modules.Programs.Commands;
+using GameGuild.Modules.Programs;
 using Microsoft.Extensions.Logging;
 using IMediator = GameGuild.CQRS.IMediator;
 using ProgramEntity = GameGuild.Modules.Programs.Program;
 
-namespace GameGuild.Source.Modules.Programs.GraphQL;
+namespace GameGuild.Modules.Programs.GraphQL;
 
 /// <summary> GraphQL mutations for Program module </summary>
 [ExtendObjectType<Mutation>]

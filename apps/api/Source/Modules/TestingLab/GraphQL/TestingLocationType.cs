@@ -1,4 +1,6 @@
-﻿namespace GameGuild.Modules.TestingLab;
+﻿using GameGuild.Modules.TestingLab.Entities;
+
+namespace GameGuild.Modules.TestingLab;
 
 /// <summary> GraphQL type definition for TestingLocation entity </summary>
 public class TestingLocationType : ObjectType<TestingLocation> {
