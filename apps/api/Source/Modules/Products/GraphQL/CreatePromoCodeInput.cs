@@ -11,7 +11,7 @@ public class CreatePromoCodeInput {
 
   public DateTime? ExpiryDate { get; set; }
 
-  public required PromoCodeTypeEnum DiscountType { get; set; }
+  public required PromoCodeType DiscountType { get; set; }
 
   public DateTime? ValidFrom { get; set; }
 
