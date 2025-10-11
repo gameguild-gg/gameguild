@@ -1,6 +1,6 @@
 using GameGuild.CQRS;
 using GameGuild.Database;
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 
 
 namespace GameGuild.Modules.Posts.Services;

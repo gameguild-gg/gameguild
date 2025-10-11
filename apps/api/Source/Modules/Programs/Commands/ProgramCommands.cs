@@ -1,5 +1,5 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Programs;
 using ProgramEntity = GameGuild.Modules.Programs.Program;

@@ -1,6 +1,6 @@
 using GameGuild.Modules.TestingLab.Entities;
 using GameGuild.Database;
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Projects;
 
 
