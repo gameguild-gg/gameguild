@@ -1,8 +1,7 @@
 ﻿namespace GameGuild;
 
 /// <summary> Resource-specific permissions (permissions for a specific resource instance) </summary>
-public class ResourcePermission<TResource> : PermissionBase where TResource : class
-{
+public class ResourcePermission<TResource> : PermissionBase where TResource : class {
     public ResourcePermission() { }
 
     public ResourcePermission(Guid userId, Guid? tenantId, Guid resourceId) : base(userId, tenantId) { ResourceId = resourceId; }
