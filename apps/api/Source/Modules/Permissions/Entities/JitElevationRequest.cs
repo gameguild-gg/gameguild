@@ -25,7 +25,7 @@ public class JitElevationRequest : EntityBase
     /// <summary>
     /// Tenant context for the request
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     /// Navigation property to tenant

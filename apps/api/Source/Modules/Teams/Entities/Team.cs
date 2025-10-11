@@ -23,7 +23,7 @@ public class Team : EntityBase
     /// <summary>
     /// Gets or sets the tenant ID this team belongs to.
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     /// Gets or sets the user ID of the team creator/owner.

@@ -89,7 +89,7 @@ public class TestingParticipant : EntityBase
     /// <summary>
     /// Whether this participant is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public override bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Whether participation is active

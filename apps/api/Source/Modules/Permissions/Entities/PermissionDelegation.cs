@@ -25,7 +25,7 @@ public class PermissionDelegation : EntityBase
     /// <summary>
     /// Tenant where the delegation applies (null for global delegation)
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     /// Specific resource the delegation applies to (null for tenant-wide delegation)

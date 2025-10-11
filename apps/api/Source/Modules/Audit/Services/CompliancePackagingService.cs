@@ -2,6 +2,7 @@ using System.IO.Compression;
 using GameGuild.Modules.Audit.Entities;
 using GameGuild.Modules.Audit.Enums;
 using System.Text.Json;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Audit.Services;
 
@@ -30,24 +31,23 @@ public class CompliancePackagingService : ICompliancePackagingService
         _logger = logger;
     }
 
-    public async Task<ComplianceEvidencePackage> CreatePackageAsync(
+    public async Task<Result<ComplianceEvidencePackage>> CreatePackageAsync(
         Guid tenantId,
         string packageName,
         ComplianceFramework framework,
         DateTime periodStart,
         DateTime periodEnd,
-        string version,
-        Guid preparedBy,
+        string preparedBy,
         CancellationToken cancellationToken = default)
     {
         var package = ComplianceEvidencePackage.Create(
             tenantId,
             packageName,
             framework,
-            version,
+            "1.0", // Default version
             periodStart,
             periodEnd,
-            preparedBy);
+            Guid.TryParse(preparedBy, out var userId) ? userId : Guid.Empty);
 
         await _repository.AddAsync(package, cancellationToken);
 
@@ -56,17 +56,17 @@ public class CompliancePackagingService : ICompliancePackagingService
             package.Id,
             framework);
 
-        return package;
+        return Result<ComplianceEvidencePackage>.Success(package);
     }
 
-    public async Task AddAuditLogsToPackageAsync(
+    public async Task<Result> AddAuditLogsToPackageAsync(
         Guid packageId,
-        List<Guid> auditLogIds,
+        IEnumerable<Guid> auditLogIds,
         CancellationToken cancellationToken = default)
     {
         var package = await _repository.GetByIdAsync(packageId, cancellationToken);
-        if (package == null)
-            throw new InvalidOperationException($"Package {packageId} not found");
+        if (package is null)
+            return Result.Failure("Package not found");
 
         var auditLogs = await _auditLogRepository
             .AsQueryable()
@@ -87,16 +87,18 @@ public class CompliancePackagingService : ICompliancePackagingService
             "Added {Count} audit logs to package {PackageId}",
             auditLogs.Count,
             packageId);
+
+        return Result.Success();
     }
 
-    public async Task AddAnomaliesAsync(
+    public async Task<Result> AddAnomaliesAsync(
         Guid packageId,
-        List<Guid> anomalyIds,
+        IEnumerable<Guid> anomalyIds,
         CancellationToken cancellationToken = default)
     {
         var package = await _repository.GetByIdAsync(packageId, cancellationToken);
-        if (package == null)
-            throw new InvalidOperationException($"Package {packageId} not found");
+        if (package is null)
+            return Result.Failure("Package not found");
 
         var anomalies = await _anomalyRepository
             .AsQueryable()
@@ -115,15 +117,17 @@ public class CompliancePackagingService : ICompliancePackagingService
             "Added {Count} anomalies to package {PackageId}",
             anomalies.Count,
             packageId);
+
+        return Result.Success();
     }
 
-    public async Task SignPackageAsync(
+    public async Task<Result> SignPackageAsync(
         Guid packageId,
         CancellationToken cancellationToken = default)
     {
         var package = await _repository.GetByIdAsync(packageId, cancellationToken);
-        if (package == null)
-            throw new InvalidOperationException($"Package {packageId} not found");
+        if (package is null)
+            return Result.Failure("Package not found");
 
         var packageHash = ComputePackageHash(package);
         var signature = await _signingService.SignData(packageHash, cancellationToken);
@@ -132,72 +136,77 @@ public class CompliancePackagingService : ICompliancePackagingService
         await _repository.UpdateAsync(package, cancellationToken);
 
         _logger.LogInformation("Signed compliance package {PackageId}", packageId);
+        return Result.Success();
     }
 
-    public async Task ReviewPackageAsync(
+    public async Task<Result> ReviewPackageAsync(
         Guid packageId,
-        Guid reviewedBy,
-        CancellationToken cancellationToken = default)
-    {
-        var package = await _repository.GetByIdAsync(packageId, cancellationToken);
-        if (package == null)
-            throw new InvalidOperationException($"Package {packageId} not found");
-
-        package.MarkAsReviewed(reviewedBy);
-        await _repository.UpdateAsync(package, cancellationToken);
-
-        _logger.LogInformation("Package {PackageId} reviewed by {UserId}", packageId, reviewedBy);
-    }
-
-    public async Task ApprovePackageAsync(
-        Guid packageId,
-        Guid approvedBy,
+        string reviewedBy,
         string? notes = null,
         CancellationToken cancellationToken = default)
     {
         var package = await _repository.GetByIdAsync(packageId, cancellationToken);
-        if (package == null)
-            throw new InvalidOperationException($"Package {packageId} not found");
+        if (package is null)
+            return Result.Failure("Package not found");
 
-        package.Approve(approvedBy, notes);
+        var reviewerId = Guid.TryParse(reviewedBy, out var userId) ? userId : Guid.Empty;
+        package.MarkAsReviewed(reviewerId);
+        await _repository.UpdateAsync(package, cancellationToken);
+
+        _logger.LogInformation("Package {PackageId} reviewed by {UserId}", packageId, reviewedBy);
+        return Result.Success();
+    }
+
+    public async Task<Result> ApprovePackageAsync(
+        Guid packageId,
+        string approvedBy,
+        CancellationToken cancellationToken = default)
+    {
+        var package = await _repository.GetByIdAsync(packageId, cancellationToken);
+        if (package is null)
+            return Result.Failure("Package not found");
+
+        var approverId = Guid.TryParse(approvedBy, out var userId) ? userId : Guid.Empty;
+        package.Approve(approverId, null);
         await _repository.UpdateAsync(package, cancellationToken);
 
         _logger.LogInformation("Package {PackageId} approved by {UserId}", packageId, approvedBy);
+        return Result.Success();
     }
 
-    public async Task<byte[]> ExportPackageAsync(
+    public async Task<Result<Stream>> ExportPackageAsync(
         Guid packageId,
         CancellationToken cancellationToken = default)
     {
         var package = await _repository.GetByIdAsync(packageId, cancellationToken);
-        if (package == null)
-            throw new InvalidOperationException($"Package {packageId} not found");
+        if (package is null)
+            return Result<Stream>.Failure("Package not found");
 
         // Export as JSON with compression
         var json = JsonSerializer.Serialize(package, new JsonSerializerOptions { WriteIndented = true });
-        using var outputStream = new MemoryStream();
-        using (var gzipStream = new GZipStream(outputStream, CompressionMode.Compress))
+        var outputStream = new MemoryStream();
+        using (var gzipStream = new GZipStream(outputStream, CompressionMode.Compress, leaveOpen: true))
         using (var writer = new StreamWriter(gzipStream))
         {
             await writer.WriteAsync(json);
         }
 
+        outputStream.Position = 0;
         _logger.LogInformation("Exported compliance package {PackageId}", packageId);
-        return outputStream.ToArray();
+        return Result<Stream>.Success(outputStream);
     }
 
-    public async Task DeliverPackageAsync(
+    public async Task<Result> DeliverPackageAsync(
         Guid packageId,
-        string deliveredTo,
         string deliveryMethod,
-        string? trackingId = null,
+        string deliveredTo,
         CancellationToken cancellationToken = default)
     {
         var package = await _repository.GetByIdAsync(packageId, cancellationToken);
-        if (package == null)
-            throw new InvalidOperationException($"Package {packageId} not found");
+        if (package is null)
+            return Result.Failure("Package not found");
 
-        package.MarkAsDelivered(deliveredTo, deliveryMethod, trackingId);
+        package.MarkAsDelivered(deliveredTo, deliveryMethod, null);
         await _repository.UpdateAsync(package, cancellationToken);
 
         _logger.LogInformation(
@@ -205,6 +214,8 @@ public class CompliancePackagingService : ICompliancePackagingService
             packageId,
             deliveredTo,
             deliveryMethod);
+
+        return Result.Success();
     }
 
     private string ComputePackageHash(ComplianceEvidencePackage package)

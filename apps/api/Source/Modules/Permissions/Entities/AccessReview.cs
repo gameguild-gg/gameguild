@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Permissions.Entities;
 /// </summary>
 public class AccessReviewCampaign : EntityBase<Guid>
 {
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public AccessReviewType ReviewType { get; set; }

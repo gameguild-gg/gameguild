@@ -11,7 +11,7 @@ public class ErrorIssue : EntityBase
     /// <summary>
     /// Gets or sets the tenant ID this issue belongs to.
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     /// Gets or sets the unique fingerprint for this issue.

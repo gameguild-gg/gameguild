@@ -104,7 +104,7 @@ public class TestingLocation : EntityBase
     /// <summary>
     /// Whether this location is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public override bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Whether this location is currently available

@@ -4,7 +4,7 @@ namespace GameGuild.Modules.FileUpload.Entities;
 
 public class UploadedFile : EntityBase
 {
-    public Guid TenantId { get; set; }
+    public override Guid TenantId { get; set; }
     public Guid UserId { get; set; }
     public string OriginalFileName { get; set; } = string.Empty;
     public string StoredFileName { get; set; } = string.Empty;

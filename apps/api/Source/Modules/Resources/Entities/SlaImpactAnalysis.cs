@@ -9,7 +9,7 @@ public class SlaImpactAnalysis : EntityBase
     /// <summary>
     /// Tenant ID
     /// </summary>
-    public Guid TenantId { get; set; }
+    public override Guid TenantId { get; set; }
 
     /// <summary>
     /// Resource type being analyzed

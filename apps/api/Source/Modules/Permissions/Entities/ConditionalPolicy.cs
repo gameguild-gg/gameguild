@@ -11,7 +11,7 @@ public class ConditionalPolicy : EntityBase<Guid>
     /// <summary>
     /// Tenant ID to which this policy belongs (null for global policies)
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     /// Name of the conditional policy

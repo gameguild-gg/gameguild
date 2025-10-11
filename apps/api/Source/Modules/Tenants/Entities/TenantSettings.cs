@@ -12,7 +12,7 @@ namespace GameGuild.Modules.Tenants;
 public class TenantSettings : Resource
 {
     /// <summary> Reference to the tenant (null for global default settings) </summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary> Navigation property to the tenant </summary>
     public new virtual Tenant? Tenant { get; set; }
